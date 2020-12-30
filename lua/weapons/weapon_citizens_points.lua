@@ -32,14 +32,20 @@ SWEP.Lock = false
 SWEP.DrawAmmo = false
 SWEP.Distance = 1000
 SWEP.Points = {}
+SWEP.RangePoints = {}
 
 SWEP.Delays = {}
 
 function SWEP:Initialize()
+	self.Points = {}
+	for index, v in pairs(bgCitizens.points) do
+		self.Points[index] = v.pos
+	end
+
 	if SERVER then return end
 
 	hook.Add('PostDrawOpaqueRenderables', self, function()	
-		if #self.Points ~= 0 then
+		if #self.RangePoints ~= 0 then
 			local cam_angle = LocalPlayer():EyeAngles()
 			cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
 			cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
@@ -58,7 +64,9 @@ function SWEP:Initialize()
 			local ply = LocalPlayer()
 			render.SetColorMaterial()
 
-			for index, pos in pairs(self.Points) do
+			for _, value in pairs(self.RangePoints) do
+				local index = value.index
+				local pos = value.pos
 				local color
 
 				if index % 2 == 0 then
@@ -67,43 +75,37 @@ function SWEP:Initialize()
 					color = Color(255, 23, 23, 100)
 				end
 				
-				if bgCitizens:PlayerIsViewVector(ply, pos) and ply:GetPos():Distance(pos) < 1500 then
+				for _, otherValue in pairs(self.RangePoints) do
+					local otherPos = otherValue.pos
+					if otherPos:Distance(pos) <= 500 then
+						local mainZ = pos.z
+						local otherZ = otherPos.z
 
-					for _, otherPos in pairs(self.Points) do
-						if otherPos:Distance(pos) <= 500 then
-							local mainZ = pos.z
-							local otherZ = otherPos.z
-
-							if mainZ >= otherZ - 100 and mainZ <= otherZ + 100 then
-								local tr = util.TraceLine( {
-									start = pos + Vector(0, 0, 30),
-									endpos = otherPos,
-									filter = function(ent)
-										if ent:IsWorld() then
-											return true
-										end
+						if mainZ >= otherZ - 100 and mainZ <= otherZ + 100 then
+							local tr = util.TraceLine( {
+								start = pos + Vector(0, 0, 30),
+								endpos = otherPos,
+								filter = function(ent)
+									if ent:IsWorld() then
+										return true
 									end
-								})
-
-								if not tr.Hit then
-									render.DrawLine(pos, otherPos, color)
 								end
+							})
+
+							if not tr.Hit then
+								render.DrawLine(pos, otherPos, color)
 							end
 						end
 					end
-
-					render.DrawSphere(pos, 10, 30, 30, color)
-
-					cam.Start3D2D(pos + Vector(0, 0, 20), cam_angle, 0.9)
-						draw.SimpleTextOutlined(tostring(index), 
-							"TargetID", 0, 0, Color(255, 255, 255), 
-							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
-
-						-- draw.SimpleTextOutlined('Z: ' .. tostring(pos.z), 
-						-- 	"TargetID", 0, 30, Color(255, 255, 255), 
-						-- 	TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
-					cam.End3D2D()
 				end
+
+				render.DrawSphere(pos, 10, 30, 30, color)
+
+				cam.Start3D2D(pos + Vector(0, 0, 20), cam_angle, 0.9)
+					draw.SimpleTextOutlined(tostring(index), 
+						"TargetID", 0, 0, Color(255, 255, 255), 
+						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+				cam.End3D2D()
             end
         end
 	end)
@@ -112,7 +114,18 @@ end
 function SWEP:Think()
 	local owner = self.Owner
 
-	if IsValid(owner) and owner:IsPlayer() and owner:Alive() then
+	if IsValid(owner) and owner:Alive() then
+		local NewRangePoints = {}
+		for index, pos in pairs(self.Points) do
+			if bgCitizens:PlayerIsViewVector(owner, pos) and owner:GetPos():Distance(pos) < 1500 then
+				table.insert(NewRangePoints, {
+					index = index,
+					pos = pos,
+				})
+			end
+		end
+		self.RangePoints = NewRangePoints
+
 		self.Trace = util.TraceLine( {
 			start = owner:GetShootPos(),
 			endpos = owner:GetShootPos() + owner:GetAimVector() * self.Distance,

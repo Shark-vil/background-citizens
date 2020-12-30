@@ -34,6 +34,8 @@ end
 local function updateMovement(npc, positions)
     local v, key = table.Random(positions)
 
+    npc:SetNWVector('bgCitizen_CurrentTargetPos', v.pos)
+
     movement_map[npc] = {
         pos = v.pos,
         index = key,
@@ -50,11 +52,14 @@ local function nextMovement(npc, positions)
 
         if #parents ~= 0 then
             local index = table.Random(parents)
-            local dist = movement_map[npc].pos:Distance(bgCitizens.points[index].pos)
+            local pos = bgCitizens.points[index].pos
+            local dist = movement_map[npc].pos:Distance(pos)
 
-            if dist <= 500 then
+            if dist <= 500 and bgCitizens:NPCIsViewVector(npc, pos) then
+                npc:SetNWVector('bgCitizen_CurrentTargetPos', pos)
+
                 movement_map[npc] = {
-                    pos = bgCitizens.points[index].pos,
+                    pos = pos,
                     index = index,
                     resetTime = CurTime() + 10
                 }

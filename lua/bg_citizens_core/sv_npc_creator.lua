@@ -134,8 +134,9 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     bgCitizens.fnpcs[npc_object.type] = bgCitizens.fnpcs[npc_object.type] or {}
                     table.insert(bgCitizens.fnpcs[npc_object.type], npc)
 
-                    hook.Run('bgCitizens_PostSpawnNPC', npc)
+                    npc:SetNWString('bgCitizenType', npc_object.type)
 
+                    hook.Run('bgCitizens_PostSpawnNPC', npc)
                     ::skip::
                 end
             end

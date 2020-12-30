@@ -8,3 +8,11 @@ function bgCitizens:PlayerIsViewVector(ply, pos)
     end
     return false
 end
+
+function bgCitizens:NPCIsViewVector(npc, pos)
+	local directionAngCos = math.pi / 90
+    local aimVector = npc:GetAimVector()
+    local entVector = pos - npc:GetShootPos() 
+    local angCos = aimVector:Dot(entVector) / entVector:Length()
+    return angCos >= directionAngCos
+end

@@ -4,6 +4,7 @@ if SERVER then
     util.AddNetworkString('bgCitizensUnloadToolFromServer')
     util.AddNetworkString('bgCitizensLoadToolFromClient')
     util.AddNetworkString('bgCitizensAddRouteVectorFromClient')
+    util.AddNetworkString('bgCitizensRemoveRouteVectorFromClient')
 
     net.Receive('bgCitizensSaveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -69,6 +70,8 @@ if SERVER then
 
     net.Receive('bgCitizensLoadToolFromServer', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+
+        ply:ConCommand('cl_citizens_load_route_from_client')
     
         local wep = ply:GetWeapon('weapon_citizens_points')
     
@@ -77,27 +80,6 @@ if SERVER then
         end
     
         ply:SelectWeapon(wep)
-    
-        local load_table = {}
-
-        if file.Exists('citizens_points/' .. game.GetMap() .. '.dat', 'DATA') then
-            local file_data = file.Read('citizens_points/' .. game.GetMap() .. '.dat', 'DATA')
-            load_table = util.JSONToTable(util.Decompress(file_data))
-        elseif file.Exists('citizens_points/' .. game.GetMap() .. '.json', 'DATA') then
-            local file_data = file.Read('citizens_points/' .. game.GetMap() .. '.json', 'DATA')
-            load_table = util.JSONToTable(file_data)
-        end
-
-        wep.Points = {}
-        for _, v in pairs(load_table) do
-            table.insert(wep.Points, v.pos)
-        end
-
-        timer.Simple(0.5, function()
-            net.Start('bgCitizensLoadToolFromClient')
-            net.WriteTable(wep.Points)
-            net.Send(ply)
-        end)
     end)
 else
     concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
@@ -127,18 +109,20 @@ else
         net.SendToServer()
     end)
 
-    net.Receive('bgCitizensLoadToolFromClient', function()
-        local wep = LocalPlayer():GetWeapon('weapon_citizens_points')
-        if IsValid(wep) then
-            wep.Points = net.ReadTable()
-        end
-    end)
-
     net.Receive('bgCitizensAddRouteVectorFromClient', function()
         local wep = LocalPlayer():GetWeapon('weapon_citizens_points')
         if IsValid(wep) then
             table.insert(wep.Points, net.ReadVector())
             surface.PlaySound('common/wpn_select.wav')
+        end
+    end)
+
+    net.Receive('bgCitizensRemoveRouteVectorFromClient', function()
+        local wep = LocalPlayer():GetWeapon('weapon_citizens_points')
+        if IsValid(wep) then
+            local id = net.ReadInt(10)
+            table.remove(wep.Points, id)
+            surface.PlaySound('common/wpn_denyselect.wav')
         end
     end)
 end
