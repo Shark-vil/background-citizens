@@ -1,0 +1,16 @@
+{ 
+"title"		:	"Background NPCs - Fill the world", 
+"type"		:	"npc", 
+"tags"		:	[ "fun", "roleplay" ], 
+"ignore"	: 
+    [ 
+        "*.psd*", 
+        "*.vcproj*", 
+        "*.svn*",
+        "*.git*",
+        "*LICENSE*",
+        "*.md*",
+        "*.code-workspace*",
+        ".vscode"
+    ] 
+} 

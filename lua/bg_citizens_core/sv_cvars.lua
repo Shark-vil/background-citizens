@@ -1,0 +1,1 @@
+CreateConVar('bg_citizens_max_npc', 30, FCVAR_ARCHIVE, 'The maximum number of background NPCs on the map.')
