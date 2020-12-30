@@ -33,6 +33,8 @@ SWEP.DrawAmmo = false
 SWEP.Distance = 1000
 SWEP.Points = {}
 
+SWEP.Delays = {}
+
 function SWEP:Initialize()
 	if SERVER then return end
 
@@ -47,7 +49,7 @@ function SWEP:Initialize()
 
 				render.DrawSphere(pos, 10, 20, 20, Color(255, 225, 0, 200))
 				cam.Start3D2D(pos + Vector(0, 0, 20), cam_angle, 0.9)
-					draw.SimpleTextOutlined('Слишком далеко от других точек', 
+					draw.SimpleTextOutlined('Too far from other points', 
 						"TargetID", 0, 0, Color(255, 255, 255), 
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
 				cam.End3D2D()
@@ -109,46 +111,51 @@ end
 
 function SWEP:Think()
 	local owner = self.Owner
-	self.Trace = util.TraceLine( {
-		start = owner:GetShootPos(),
-		endpos = owner:GetShootPos() + owner:GetAimVector() * self.Distance,
-		filter = function(ent)
-			if IsValid(ent) and ent:IsPlayer() then 
-				return false
+
+	if IsValid(owner) and owner:IsPlayer() and owner:Alive() then
+		self.Trace = util.TraceLine( {
+			start = owner:GetShootPos(),
+			endpos = owner:GetShootPos() + owner:GetAimVector() * self.Distance,
+			filter = function(ent)
+				if IsValid(ent) and ent:IsPlayer() then 
+					return false
+				end
+				return true
 			end
-			return true
-		end
-	} )
+		} )
 
-	if #self.Points ~= 0 then
-		if self.Trace ~= nil then
-			local awayAllow = true
-			local pos = self.Trace.HitPos
+		if #self.Points ~= 0 then
+			if self.Trace ~= nil then
+				local awayAllow = true
+				local pos = self.Trace.HitPos
 
-			for _, pointPos in pairs(self.Points) do
-				if pos:Distance(pointPos) <= 500 then
-					awayAllow = false
-					break
+				for _, pointPos in pairs(self.Points) do
+					if pos:Distance(pointPos) <= 500 then
+						awayAllow = false
+						break
+					end
+				end
+
+				if awayAllow then
+					self.Lock = true
+					return
 				end
 			end
-
-			if awayAllow then
-				self.Lock = true
-				return
-			end
 		end
-	end
 
-	self.Lock = false
+		self.Lock = false
+	else
+		self.Lock = true
+	end
 end
 
-function SWEP:IsReloadDelay()
-	self.ReloadDelay = self.ReloadDelay or 0
-	if self.ReloadDelay > CurTime() then 
-		self.ReloadDelay = CurTime() + 0.3
+function SWEP:IsDelay(name)
+	self.Delays[name] = self.Delays[name] or 0
+	if self.Delays[name] > CurTime() then 
+		self.Delays[name] = CurTime() + 0.1
 		return true
 	end
-	self.ReloadDelay = CurTime() + 0.5
+	self.Delays[name] = CurTime() + 0.1
 	return false
 end
 
@@ -171,33 +178,35 @@ function SWEP:ClearPoints()
 	end
 end
 
-function SWEP:CallOnClient(hookType)
-	if game.SinglePlayer() then self:CallOnClient(hookType) end
+function SWEP:ClientRPC(hookType)
+	if SERVER and game.SinglePlayer() then self:CallOnClient(hookType) end
 end
 
 function SWEP:PrimaryAttack()
-	if SERVER and game.SinglePlayer() then self:CallOnClient('PrimaryAttack') end
-	if not IsFirstTimePredicted() then return end
+	if self:IsDelay("PrimaryAttack") then return end
+	if CLIENT then return end
 
 	local hit_vector = self.Trace.HitPos
 	if hit_vector ~= nil and not self.Lock then
-		self:AddPointPosition(hit_vector + Vector(0, 0, 15))
-		if CLIENT then
-			surface.PlaySound('common/wpn_select.wav')
-		end
+		local place_vector = hit_vector + Vector(0, 0, 15)
+		self:AddPointPosition(place_vector)
+
+		net.Start('bgCitizensAddRouteVectorFromClient')
+		net.WriteVector(place_vector)
+		net.Send(self.Owner)
 	end
 end
 
 function SWEP:Reload()
-	if SERVER and game.SinglePlayer() then self:CallOnClient('Reload') end
-	if self:IsReloadDelay() then return end
+	if self:IsDelay("Reload") then return end
+	self:ClientRPC('Reload')
 
 	self:ClearPoints()
 end
 
 function SWEP:SecondaryAttack()
-	if SERVER and game.SinglePlayer() then self:CallOnClient('SecondaryAttack') end
-	if not IsFirstTimePredicted() then return end
+	if self:IsDelay("SecondaryAttack") then return end
+	self:ClientRPC('SecondaryAttack')
 
 	self:RemoveLastPoint()
 end

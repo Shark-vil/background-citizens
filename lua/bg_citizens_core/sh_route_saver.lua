@@ -3,6 +3,7 @@ if SERVER then
     util.AddNetworkString('bgCitizensLoadToolFromServer')
     util.AddNetworkString('bgCitizensUnloadToolFromServer')
     util.AddNetworkString('bgCitizensLoadToolFromClient')
+    util.AddNetworkString('bgCitizensAddRouteVectorFromClient')
 
     net.Receive('bgCitizensSaveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -92,9 +93,11 @@ if SERVER then
             table.insert(wep.Points, v.pos)
         end
 
-        net.Start('bgCitizensLoadToolFromClient')
-        net.WriteTable(wep.Points)
-        net.Send(ply)
+        timer.Simple(0.5, function()
+            net.Start('bgCitizensLoadToolFromClient')
+            net.WriteTable(wep.Points)
+            net.Send(ply)
+        end)
     end)
 else
     concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
@@ -128,6 +131,14 @@ else
         local wep = LocalPlayer():GetWeapon('weapon_citizens_points')
         if IsValid(wep) then
             wep.Points = net.ReadTable()
+        end
+    end)
+
+    net.Receive('bgCitizensAddRouteVectorFromClient', function()
+        local wep = LocalPlayer():GetWeapon('weapon_citizens_points')
+        if IsValid(wep) then
+            table.insert(wep.Points, net.ReadVector())
+            surface.PlaySound('common/wpn_select.wav')
         end
     end)
 end
