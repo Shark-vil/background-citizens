@@ -33,16 +33,15 @@ SWEP.DrawAmmo = false
 SWEP.Distance = 1000
 SWEP.Points = {}
 SWEP.RangePoints = {}
-
 SWEP.Delays = {}
+SWEP.SelectedPointId = -1
 
 function SWEP:Initialize()
+	if SERVER then return end
 	self.Points = {}
 	for index, v in pairs(bgCitizens.points) do
 		self.Points[index] = v.pos
 	end
-
-	if SERVER then return end
 
 	hook.Add('PostDrawOpaqueRenderables', self, function()	
 		if #self.RangePoints ~= 0 then
@@ -61,7 +60,6 @@ function SWEP:Initialize()
 				cam.End3D2D()
 			end
 
-			local ply = LocalPlayer()
 			render.SetColorMaterial()
 
 			for _, value in pairs(self.RangePoints) do
@@ -105,25 +103,49 @@ function SWEP:Initialize()
 					draw.SimpleTextOutlined(tostring(index), 
 						"TargetID", 0, 0, Color(255, 255, 255), 
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+
+					if value.index == self.SelectedPointId then
+						draw.SimpleTextOutlined('Selected', 
+							"TargetID", 0, 25, Color(255, 255, 255), 
+							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+					end
 				cam.End3D2D()
             end
         end
 	end)
 end
 
+function SWEP:IsLookingVector(vec)
+	local diff = vec - self.Owner:GetShootPos()
+	return self.Owner:GetAimVector():Dot(diff) / diff:Length() >= 0.998
+end
+
 function SWEP:Think()
+	if SERVER then return end
+
 	local owner = self.Owner
 
 	if IsValid(owner) and owner:Alive() then
+		local isSelectedPoint = false
 		local NewRangePoints = {}
 		for index, pos in pairs(self.Points) do
 			if bgCitizens:PlayerIsViewVector(owner, pos) and owner:GetPos():Distance(pos) < 1500 then
 				table.insert(NewRangePoints, {
 					index = index,
-					pos = pos,
+					pos = pos
 				})
+
+				if not isSelectedPoint and self:IsLookingVector(pos) then
+					self.SelectedPointId = index
+					isSelectedPoint = true
+				end
 			end
 		end
+
+		if not isSelectedPoint then
+			self.SelectedPointId = -1
+		end
+
 		self.RangePoints = NewRangePoints
 
 		self.Trace = util.TraceLine( {
@@ -155,11 +177,9 @@ function SWEP:Think()
 				end
 			end
 		end
-
-		self.Lock = false
-	else
-		self.Lock = true
 	end
+
+	self.Lock = false
 end
 
 function SWEP:IsDelay(name)
@@ -174,33 +194,35 @@ end
 
 function SWEP:AddPointPosition(value)
 	table.insert(self.Points, value)
+	surface.PlaySound('common/wpn_select.wav')
 end
 
 function SWEP:RemoveLastPoint()
     local max = #self.Points
     if max - 1 >= 0 then
-        table.remove(self.Points, max)
+		table.remove(self.Points, max)
+		surface.PlaySound('common/wpn_denyselect.wav')
     end
 end
 
 function SWEP:ClearPoints()
 	table.Empty(self.Points)
-	
-	if CLIENT then
-		surface.PlaySound('common/wpn_denyselect.wav')
-	end
+	surface.PlaySound('common/wpn_denyselect.wav')
 end
 
 function SWEP:ClientRPC(hookType)
-	if SERVER and game.SinglePlayer() then self:CallOnClient(hookType) end
+	if game.SinglePlayer() then self:CallOnClient(hookType) end
 end
 
 function SWEP:PrimaryAttack()
-	if self:IsDelay("PrimaryAttack") then return end
-	if CLIENT then return end
+	if SERVER then
+		self:ClientRPC('PrimaryAttack')
+		return
+	end
+	if self:IsDelay('PrimaryAttack') then return end
 
 	local hit_vector = self.Trace.HitPos
-	if hit_vector ~= nil and not self.Lock then
+	if hit_vector ~= nil then
 		local place_vector = hit_vector + Vector(0, 0, 15)
 		self:AddPointPosition(place_vector)
 
@@ -211,15 +233,21 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:Reload()
-	if self:IsDelay("Reload") then return end
-	self:ClientRPC('Reload')
+	if SERVER then
+		self:ClientRPC('Reload')
+		return
+	end
+	if self:IsDelay('Reload') then return end
 
 	self:ClearPoints()
 end
 
 function SWEP:SecondaryAttack()
-	if self:IsDelay("SecondaryAttack") then return end
-	self:ClientRPC('SecondaryAttack')
+	if SERVER then
+		self:ClientRPC('SecondaryAttack')
+		return
+	end
+	if self:IsDelay('SecondaryAttack') then return end
 
 	self:RemoveLastPoint()
 end
