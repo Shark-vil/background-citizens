@@ -42,7 +42,6 @@ timer.Create('bgCitizens_AccidentalAttack', 30, 0, function()
             end
 
             local target = table.Random(targets)
-            -- print(target)
             if IsValid(target) and npc:Disposition(target) ~= D_LI then
                 npc:bgCitizenStateUpdate('attacked', {
                     target = target,
@@ -105,8 +104,7 @@ hook.Add('EntityTakeDamage', 'bgCitizens_AttackedEvent', function(target, dmginf
                 end
                 
                 npc:bgCitizenTaskClear()
-
-                print(fearTarget)
+                
                 local state = npc:bgCitizenStateUpdate('attacked', {
                     target = fearTarget,
                     delay = 0,
