@@ -11,6 +11,8 @@
         "*LICENSE*",
         "*.md*",
         "*.code-workspace*",
+        "README.md",
+        ".git*",
         ".vscode"
     ] 
 } 
