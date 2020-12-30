@@ -35,6 +35,12 @@ SWEP.Points = {}
 SWEP.RangePoints = {}
 SWEP.Delays = {}
 SWEP.SelectedPointId = -1
+SWEP.Types = {
+	[1] = 'creator',
+	[2] = 'remover',
+	[3] = 'last_remover'
+}
+SWEP.CurrentTypeId = 1
 
 function SWEP:Initialize()
 	if SERVER then return end
@@ -42,6 +48,13 @@ function SWEP:Initialize()
 	for index, v in pairs(bgCitizens.points) do
 		self.Points[index] = v.pos
 	end
+
+	hook.Add('HUDPaint', self, function()
+		surface.SetFont("Trebuchet24")
+		surface.SetTextColor(255, 255, 255)
+		surface.SetTextPos(30, 30) 
+		surface.DrawText(self:GetCurrentType())
+	end)
 
 	hook.Add('PostDrawOpaqueRenderables', self, function()	
 		if #self.RangePoints ~= 0 then
@@ -113,6 +126,19 @@ function SWEP:Initialize()
             end
         end
 	end)
+end
+
+function SWEP:SwitchType()
+	local id = self.CurrentTypeId
+	if id + 1 > #self.Types then
+		self.CurrentTypeId = 1
+	else
+		self.CurrentTypeId = id + 1
+	end
+end
+
+function SWEP:GetCurrentType()
+	return self.Types[self.CurrentTypeId]
 end
 
 function SWEP:IsLookingVector(vec)
@@ -223,12 +249,17 @@ function SWEP:PrimaryAttack()
 
 	local hit_vector = self.Trace.HitPos
 	if hit_vector ~= nil then
-		local place_vector = hit_vector + Vector(0, 0, 15)
-		self:AddPointPosition(place_vector)
-
-		net.Start('bgCitizensAddRouteVectorFromClient')
-		net.WriteVector(place_vector)
-		net.Send(self.Owner)
+		local type = self:GetCurrentType()
+		if type == 'creator' then
+			local place_vector = hit_vector + Vector(0, 0, 15)
+			self:AddPointPosition(place_vector)
+		elseif type == 'remover' and self.SelectedPointId ~= -1 then
+			table.remove(self.Points, self.SelectedPointId)
+			self.SelectedPointId = -1
+			surface.PlaySound('common/wpn_denyselect.wav')
+		elseif type == 'last_remover' then
+			self:RemoveLastPoint()
+		end
 	end
 end
 
@@ -249,7 +280,8 @@ function SWEP:SecondaryAttack()
 	end
 	if self:IsDelay('SecondaryAttack') then return end
 
-	self:RemoveLastPoint()
+	self:SwitchType()
+	surface.PlaySound('buttons/blip1.wav')
 end
 
 function SWEP:OnDrop()
