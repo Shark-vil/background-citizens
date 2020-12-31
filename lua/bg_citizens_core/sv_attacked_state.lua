@@ -7,7 +7,7 @@ local function GiveWeaponFromNPC(npc)
 
     local weapons = npc:GetWeapons()
     local isExist = false
-    for _, weapon in pairs(weapons) do
+    for _, weapon in ipairs(weapons) do
         local weapon_class = weapon:GetClass()
         if weapon_class == select_weapon then
             isExist = true
@@ -30,7 +30,7 @@ timer.Create('bgCitizens_AccidentalAttack', 30, 0, function()
             local target_from_zone = ents.FindInSphere(npc:GetPos(), 500)
             local targets = {}
 
-            for _, ent in pairs(target_from_zone) do
+            for _, ent in ipairs(target_from_zone) do
                 if ent:IsPlayer() or ent:IsNPC() and ent ~= npc then
                     if ent:IsNPC() and not table.HasValue(bgCitizens.npcs, ent) then
                         goto skip
@@ -79,10 +79,10 @@ hook.Add('EntityTakeDamage', 'bgCitizens_AttackedEvent', function(target, dmginf
         end
         
         local otherNPCs = ents.FindInSphere(target:GetPos(), 2000)
-        for _, npc in pairs(otherNPCs) do
+        for _, npc in ipairs(otherNPCs) do
             if IsValid(npc) and table.HasValue(bgCitizens.npcs, npc) and npc:GetState() ~= 'attacked' then
                 if npc ~= target then
-                    if npc:GetPos():Distance(target:GetPos()) > 1000 then
+                    if npc:GetPos():DistToSqr(target:GetPos()) > 1000000 then
                         local tr = util.TraceLine({
                             start = npc:EyePos(),
                             endpos = target:EyePos(),
@@ -145,7 +145,7 @@ hook.Add('bgCitizens_PreGiveWeapon', 'bgCitizens_GivePoliceWeapon', function(npc
 end)
 
 hook.Add('Think', 'bgCitizens_AttackedEvent', function()
-    for _, npc in pairs(bgCitizens.npcs) do
+    for _, npc in ipairs(bgCitizens.npcs) do
         if IsValid(npc) then
             local data = npc:GetStateData()
             
