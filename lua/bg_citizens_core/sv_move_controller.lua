@@ -72,14 +72,15 @@ local function nextMovement(npc, positions)
 end
 
 timer.Create('bgCitizensMoveController', 0.3, 0, function()
-    if #bgCitizens.npcs ~= 0 and #bgCitizens.points ~= 0 then
-        for _, npc in pairs(bgCitizens.npcs) do
-            if IsValid(npc) and npc:GetState() == 'walk' then
+    if #bgCitizens.points ~= 0 then
+        for _, actor in pairs(bgCitizens:GetAll()) do
+            local npc = actor:GetNPC()
+            if IsValid(npc) and actor:GetState() == 'walk' then
 
                 if bgCitizens:IsFearNPC(npc) then
-                    npc:bgCitizenTaskClear()
+                    npc:ClearSchedule()
 
-                    npc:bgCitizenStateUpdate('attacked', {
+                    actor:SetState('attacked', {
                         target = NULL,
                         delay = 0
                     })
@@ -92,7 +93,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         if enemy:Disposition(npc) == D_HT then
                             if movement_map[npc] ~= nil then
                                 movement_map[npc] = nil
-                                npc:bgCitizenTaskClear()
+                                npc:ClearSchedule()
                             end
                             goto skip
                         end
@@ -102,7 +103,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
 
                 local map = movement_map[npc]
                 local positions = getPositionsInRadius(npc)
-                local data = npc:GetStateData()
+                local data = actor:GetStateData()
 
                 if hook.Run('bgCitizens_PreMovementNPC', npc, map) ~= nil then
                     goto skip
@@ -122,7 +123,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         movement_ignore[npc] = movement_ignore[npc] or {}
                         table.insert(movement_ignore[npc], {
                             pos = map.pos,
-                            resetTime = CurTime() + 30
+                            resetTime = CurTime() + 60
                         })
                     else
                         local getNewPos = false
@@ -154,7 +155,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                             movement_ignore[npc] = movement_ignore[npc] or {}
                             table.insert(movement_ignore[npc], {
                                 pos = map.pos,
-                                resetTime = CurTime() + 30
+                                resetTime = CurTime() + 60
                             })
                         end
                     end
@@ -169,9 +170,10 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
 end)
 
 timer.Create('bgCitizensOtherTask', 1, 0, function()
-    for _, npc in pairs(bgCitizens.npcs) do
-        if IsValid(npc) and npc:GetState() == 'walk' then
-            local data = npc:GetStateData()
+    for _, actor in pairs(bgCitizens:GetAll()) do
+        local npc = actor:GetNPC()
+        if IsValid(npc) and actor:GetState() == 'walk' then
+            local data = actor:GetStateData()
             if data.schedule == SCHED_FORCED_GO_RUN then
                 if data.runReset < CurTime() then
                     npc.bgCitizenState.data = { 

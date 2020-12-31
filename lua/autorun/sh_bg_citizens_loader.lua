@@ -18,6 +18,7 @@ if SERVER then
 
     _AddCSLuaFile('sh_config.lua')
     _AddCSLuaFile('global/sh_meta.lua')
+    _AddCSLuaFile('classes/sh_bg_npc_class.lua')
     _AddCSLuaFile('sh_route_saver.lua')
     _AddCSLuaFile('sh_points_loader.lua')
     _include('sv_cvars.lua')
@@ -30,6 +31,7 @@ if SERVER then
 
     _include('global/sv_meta.lua')
     _include('global/sh_meta.lua')
+    _include('classes/sh_bg_npc_class.lua')
     _include('sh_route_saver.lua')
     _include('sh_points_loader.lua')
     _include('sv_npc_remover.lua')
@@ -39,6 +41,7 @@ if SERVER then
 else
     _include('sh_config.lua')
     _include('global/sh_meta.lua')
+    _include('classes/sh_bg_npc_class.lua')
     _include('sh_route_saver.lua')
     _include('sh_points_loader.lua')
 end

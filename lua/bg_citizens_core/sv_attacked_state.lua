@@ -22,11 +22,13 @@ local function GiveWeaponFromNPC(npc)
     npc:SelectWeapon(select_weapon)
 end
 
-timer.Create('bgCitizens_AccidentalAttack', 30, 0, function()
-    if math.random(0, 10) == 0 and bgCitizens.fnpcs['gangster'] ~= nil then
-        local npc = table.Random(bgCitizens.fnpcs['gangster'])
+timer.Create('bgCitizens_AccidentalAttack', 1, 0, function()
+    local npcs = bgCitizens:GetAllByType('gangster')
+    if math.random(0, 10) == 0 and #npcs ~= 0 then
+        local actor = table.Random(npcs)
+        local npc = actor:GetNPC()
 
-        if IsValid(npc) then
+        if IsValid(npc) and actor:GetState() ~= 'attacked' then
             local target_from_zone = ents.FindInSphere(npc:GetPos(), 500)
             local targets = {}
 
@@ -43,7 +45,7 @@ timer.Create('bgCitizens_AccidentalAttack', 30, 0, function()
 
             local target = table.Random(targets)
             if IsValid(target) and npc:Disposition(target) ~= D_LI then
-                npc:bgCitizenStateUpdate('attacked', {
+                actor:SetState('attacked', {
                     target = target,
                     delay = 0,
                     oldDisposition = npc:Disposition(target),
@@ -80,8 +82,10 @@ hook.Add('EntityTakeDamage', 'bgCitizens_AttackedEvent', function(target, dmginf
         
         local otherNPCs = ents.FindInSphere(target:GetPos(), 2000)
         for _, npc in pairs(otherNPCs) do
-            if IsValid(npc) and table.HasValue(bgCitizens.npcs, npc) and npc:GetState() ~= 'attacked' then
-                if npc ~= target then
+            if IsValid(npc) and bgCitizens:HasNPC(npc) then
+                local actor = bgCitizens:GetActor(npc)
+
+                if actor ~= nil and npc ~= target and actor:GetState() ~= 'attacked' then
                     if npc:GetPos():Distance(target:GetPos()) > 1000 then
                         local tr = util.TraceLine({
                             start = npc:EyePos(),
@@ -103,9 +107,9 @@ hook.Add('EntityTakeDamage', 'bgCitizens_AttackedEvent', function(target, dmginf
                     goto skip
                 end
                 
-                npc:bgCitizenTaskClear()
+                actor:ClearSchedule()
                 
-                local state = npc:bgCitizenStateUpdate('attacked', {
+                local state = actor:SetState('attacked', {
                     target = fearTarget,
                     delay = 0,
                     oldDisposition = npc:Disposition(attacker)
@@ -145,17 +149,18 @@ hook.Add('bgCitizens_PreGiveWeapon', 'bgCitizens_GivePoliceWeapon', function(npc
 end)
 
 hook.Add('Think', 'bgCitizens_AttackedEvent', function()
-    for _, npc in pairs(bgCitizens.npcs) do
+    for _, actor in pairs(bgCitizens:GetAll()) do
+        local npc = actor:GetNPC()
         if IsValid(npc) then
-            local data = npc:GetStateData()
+            local data = actor:GetStateData()
             
-            if npc:GetState() == 'attacked' then
+            if actor:GetState() == 'attacked' then
                 if not IsValid(data.target) or data.target:Health() <= 0 then
                     if data.oldDisposition ~= nil and IsValid(data.target) then
                         npc:AddEntityRelationship(data.target, data.oldDisposition, 99)
                     end
 
-                    npc:bgCitizenStateUpdate('walk', {
+                    actor:SetState('walk', {
                         schedule = SCHED_FORCED_GO,
                         runReset = 0
                     })
@@ -173,23 +178,32 @@ hook.Add('Think', 'bgCitizens_AttackedEvent', function()
                                 npc:AddEntityRelationship(data.target, D_FR, 99)
                             end
 
-                            npc:bgCitizenTaskClear()
+                            actor:ClearSchedule()
 
                             if math.random(0, 10) <= 1 then
                                 data.schedule = 'fear'
                             else
-                                npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
                                 data.schedule = 'run'
+                                data.update_run = 0
                             end
 
                             data.delay = CurTime() + 10
                         end
 
-                        if not data.isAttack and data.schedule == 'fear' then
+                        if data.schedule == 'run' 
+                            and npc:GetPos():Distance(data.target:GetPos()) < 150 
+                            and math.random(0, 100) == 0 
+                        then
+                            data.schedule = 'fear'
+                        end
+                        
+                        if data.schedule == 'fear' then
+                            npc:ClearSchedule()
                             npc:SetSchedule(SCHED_NONE)
-                            npc:ResetSequence(npc:LookupSequence('Fear_Reaction_Idle'))
-                            npc:ResetSequenceInfo()
-                            npc:SetCycle(0)
+                            npc:SetSequence(npc:LookupSequence('Fear_Reaction_Idle'))
+                        elseif data.schedule == 'run' and data.update_run < CurTime() then
+                            npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
+                            data.update_run = CurTime() + 3
                         end
                     end
                 end
