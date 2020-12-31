@@ -12,10 +12,10 @@ local function getPositionsInRadius(npc)
     local npc_pos = npc:GetPos()
     local radius_positions = {}
 
-    for _, v in pairs(bgCitizens.points) do
-        if v.pos:Distance(npc_pos) <= 500 then
+    for _, v in ipairs(bgCitizens.points) do
+        if v.pos:DistToSqr(npc_pos) <= 500000 then
             if movement_ignore[npc] ~= nil then
-                for _, data in pairs(movement_ignore[npc]) do
+                for _, data in ipairs(movement_ignore[npc]) do
                     if data.resetTime > CurTime() and data.pos == v.pos then
                         goto skip
                     end
@@ -50,9 +50,9 @@ local function nextMovement(npc, positions)
 
         if #parents ~= 0 then
             local index = table.Random(parents)
-            local dist = movement_map[npc].pos:Distance(bgCitizens.points[index].pos)
+            local dist = movement_map[npc].pos:DistToSqr(bgCitizens.points[index].pos)
 
-            if dist <= 500 then
+            if dist <= 500000 then
                 movement_map[npc] = {
                     pos = bgCitizens.points[index].pos,
                     index = index,
@@ -68,7 +68,7 @@ end
 
 timer.Create('bgCitizensMoveController', 0.3, 0, function()
     if #bgCitizens.npcs ~= 0 and #bgCitizens.points ~= 0 then
-        for _, npc in pairs(bgCitizens.npcs) do
+        for _, npc in ipairs(bgCitizens.npcs) do
             if IsValid(npc) and npc:GetState() == 'walk' then
 
                 if bgCitizens:IsFearNPC(npc) then
@@ -82,7 +82,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                     goto skip
                 end
 
-                for _, enemy in pairs(ents.FindInSphere(npc:GetPos(), 600)) do
+                for _, enemy in ipairs(ents.FindInSphere(npc:GetPos(), 600)) do
                     if IsValid(enemy) and enemy:IsNPC() then
                         if enemy:Disposition(npc) == D_HT then
                             if movement_map[npc] ~= nil then
@@ -129,7 +129,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
 
                         if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
-                            if npc:GetPos():Distance(data.startWalkPos) < 10 then
+                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10000 then
                                 getNewPos = true
                             else
                                 data.startWalkTime = nil
@@ -164,7 +164,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
 end)
 
 timer.Create('bgCitizensOtherTask', 1, 0, function()
-    for _, npc in pairs(bgCitizens.npcs) do
+    for _, npc in ipairs(bgCitizens.npcs) do
         if IsValid(npc) and npc:GetState() == 'walk' then
             local data = npc:GetStateData()
             if data.schedule == SCHED_FORCED_GO_RUN then
@@ -212,7 +212,7 @@ timer.Create('bgCitizensOtherTask', 1, 0, function()
 end)
 
 timer.Create('bgCitizensMoveResetIgnore', 1, 0, function()
-    for npc, tbl in pairs(movement_ignore) do
+    for npc, tbl in next, movement_ignore do
         for i = #tbl, 1, -1 do
             if tbl[i].resetTime < CurTime() then
                 table.remove(tbl, i)
