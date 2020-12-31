@@ -23,32 +23,32 @@ timer.Create('bgCitizensCreator', 1, 0, function()
         if #bgCitizens.points ~= 0 then
             local points_close = {}
 
-            for _, v in pairs(bgCitizens.points) do
-                for _, ply in pairs(player.GetAll()) do
-                    if v.pos:Distance(ply:GetPos()) < 3000 then
+            for _, v in ipairs(bgCitizens.points) do
+                for _, ply in ipairs(player.GetAll()) do
+                    if v.pos:DistToSqr(ply:GetPos()) < 3000000 then
                         table.insert(points_close, v.pos)
                     end
                 end
             end
 
             if #points_close ~= 0 then
-                for _, npc_object in pairs(bgCitizens.npc_classes) do
+                for _, npc_object in ipairs(bgCitizens.npc_classes) do
                     local pos = table.Random(points_close)
                 
-                    for _, ent in pairs(ents.FindInSphere(pos, 10)) do
+                    for _, ent in ipairs(ents.FindInSphere(pos, 10)) do
                         if IsValid(ent) and ent:IsNPC() then
                             return
                         end
                     end
 
-                    for _, ply in pairs(player.GetAll()) do
-                        if pos:Distance(ply:GetPos()) < 2000 and bgCitizens:PlayerIsViewVector(ply, pos) then
+                    for _, ply in ipairs(player.GetAll()) do
+                        if pos:DistToSqr(ply:GetPos()) < 2000000 and bgCitizens:PlayerIsViewVector(ply, pos) then
                             return
                         end
                     end
                     
                     local count = 0
-                    for _, npc in pairs(bgCitizens.npcs) do
+                    for _, npc in ipairs(bgCitizens.npcs) do
                         if IsValid(npc) and npc:GetClass() == npc_object.class then
                             count = count + 1
                         end
@@ -71,7 +71,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     table.Merge(entities, player.GetAll())
 
                     if npc_object.relationship ~= nil then
-                        for _, ent in pairs(entities) do
+                        for _, ent in ipairs(entities) do
                             if IsValid(ent) then
                                 if ent:IsPlayer() then
                                     npc:AddEntityRelationship(ent, npc_object.relationship, 99)
@@ -89,7 +89,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                             end
                         end
                     else
-                        for _, ent in pairs(entities) do
+                        for _, ent in ipairs(entities) do
                             if IsValid(ent) and ent:IsNPC() and ent:GetClass() == npc_object.class then
                                 npc:AddEntityRelationship(ent, D_LI, 99)
                                 ent:AddEntityRelationship(npc, D_LI, 99)
