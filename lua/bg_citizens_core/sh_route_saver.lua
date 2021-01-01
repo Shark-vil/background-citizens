@@ -17,19 +17,19 @@ if SERVER then
 
             local save_table = {}
 
-            for _, pos in pairs(wep.Points) do
+            for _, pos in ipairs(wep.Points) do
                 table.insert(save_table, {
                     pos = pos,
                     parents = {}
                 })
             end
 
-            for index, v in pairs(save_table) do
-                for id, v2 in pairs(save_table) do
+            for index, v in next, save_table do
+                for id, v2 in next, save_table do
                     local pos = v.pos
                     local otherPos = v2.pos
 
-                    if pos ~= otherPos and otherPos:Distance(pos) <= 500 then
+                    if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500000 then
                         if pos ~= otherPos and pos.z >= otherPos.z - 100 and pos.z <= otherPos.z + 100 then
                             local tr = util.TraceLine( {
                                 start = pos + Vector(0, 0, 30),
@@ -89,7 +89,7 @@ if SERVER then
         end
 
         wep.Points = {}
-        for _, v in pairs(load_table) do
+        for _, v in ipairs(load_table) do
             table.insert(wep.Points, v.pos)
         end
 
