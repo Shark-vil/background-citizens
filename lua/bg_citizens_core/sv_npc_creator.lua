@@ -31,12 +31,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                         end
                     end
                     
-                    local count = 0
-                    for _, npc in pairs(bgCitizens:GetAllNPCs()) do
-                        if IsValid(npc) and npc:GetClass() == npc_data.class then
-                            count = count + 1
-                        end
-                    end
+                    local count = table.Count(bgCitizens:GetAllNPCsByType(npc_data.type))
 
                     if count > math.Round(((npc_data.fullness / 100) * max_npc_count)) then
                         goto skip
@@ -54,29 +49,19 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     table.Merge(entities, bgCitizens:GetAllNPCs())
                     table.Merge(entities, player.GetAll())
 
-                    if npc_data.relationship ~= nil then
-                        for _, ent in pairs(entities) do
-                            if IsValid(ent) then
-                                if ent:IsPlayer() then
-                                    npc:AddEntityRelationship(ent, npc_data.relationship, 99)
-                                end
-
-                                if ent:IsNPC() then
-                                    if ent:GetClass() == npc_data.class then
-                                        npc:AddEntityRelationship(ent, D_LI, 99)
-                                        ent:AddEntityRelationship(npc, D_LI, 99)
-                                    else
-                                        npc:AddEntityRelationship(ent, npc_data.relationship, 99)
-                                        ent:AddEntityRelationship(npc, npc_data.relationship, 99)
-                                    end
+                    for _, ent in pairs(entities) do
+                        if IsValid(ent) then
+                            if ent:IsPlayer() then
+                                if table.HasValue(npc_data.team, 'players') then
+                                    npc:AddEntityRelationship(ent, D_LI, 99)
+                                else
+                                    npc:AddEntityRelationship(ent, D_NU, 99)
                                 end
                             end
-                        end
-                    else
-                        for _, ent in pairs(entities) do
-                            if IsValid(ent) and ent:IsNPC() and ent:GetClass() == npc_data.class then
-                                npc:AddEntityRelationship(ent, D_LI, 99)
-                                ent:AddEntityRelationship(npc, D_LI, 99)
+
+                            if ent:IsNPC() then
+                                npc:AddEntityRelationship(ent, D_NU, 99)
+                                ent:AddEntityRelationship(npc, D_NU, 99)
                             end
                         end
                     end
@@ -89,10 +74,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     npc:Spawn()
 
                     local npc_object = BG_NPC_CLASS:Instance(npc, npc_data)
-                    npc_object:SetState('walk', {
-                        schedule = SCHED_FORCED_GO,
-                        runReset = 0
-                    })
+                    npc_object:SetDefaultState()
 
                     bgCitizens:AddNPC(npc_object)
 

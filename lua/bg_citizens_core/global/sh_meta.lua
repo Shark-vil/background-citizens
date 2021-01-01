@@ -97,6 +97,31 @@ function bgCitizens:ClearRemovedNPCs()
                 end
             end
         end
-        self.fnpc = new_table
+        self.fnpcs = new_table
     end
+
+    -- for key, data in pairs(self.fnpcs) do
+    --     print('['.. key .. '] ' .. tostring(#data))
+    -- end
+end
+
+function bgCitizens:IsTeamOnce(npc1, npc2)
+    local actor1 = self:GetActor(npc1)
+    local actor2 = self:GetActor(npc2)
+    if actor1 ~= nil and actor2 ~= nil then
+        local data1 = actor1:GetData()
+        local data2 = actor2:GetData()
+
+        if data1.team ~= nil and data2.team ~= nil then
+            for _, team_1 in pairs(data1.team) do
+                for _, team_2 in pairs(data2.team) do
+                    if team_1 == team_2 then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+
+    return false
 end

@@ -37,6 +37,17 @@ function BG_NPC_CLASS:Instance(npc, data)
         return self.npc.bgCitizenState
     end
 
+    function obj:SetDefaultState()
+        self:SetState('walk', {
+            schedule = SCHED_FORCED_GO,
+            runReset = 0
+        })
+    end
+
+    function obj:UpdateStateData(data)
+        self.npc.bgCitizenState.data = data
+    end
+
     function obj:HasState(state)
         return (self:GetState() == state)
     end

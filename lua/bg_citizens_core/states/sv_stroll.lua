@@ -1,11 +1,9 @@
 local movement_map = {}
 local movement_ignore = {}
 
-hook.Add('PostCleanupMap', 'bgCitizensUpdateMovementTable', function()
+hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsMovementMaps', function()
     movement_map = {}
     movement_ignore = {}
-    bgCitizens.npcs = {}
-    bgCitizens.fnpcs = {}
 end)
 
 local function getPositionsInRadius(npc)
@@ -34,8 +32,6 @@ end
 local function updateMovement(npc, positions)
     local v, key = table.Random(positions)
 
-    npc:SetNWVector('bgCitizen_CurrentTargetPos', v.pos)
-
     movement_map[npc] = {
         pos = v.pos,
         index = key,
@@ -56,8 +52,6 @@ local function nextMovement(npc, positions)
             local dist = movement_map[npc].pos:Distance(pos)
 
             if dist <= 500 and bgCitizens:NPCIsViewVector(npc, pos) then
-                npc:SetNWVector('bgCitizen_CurrentTargetPos', pos)
-
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
@@ -76,36 +70,11 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
         for _, actor in pairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) and actor:GetState() == 'walk' then
-
-                if bgCitizens:IsFearNPC(npc) then
-                    npc:ClearSchedule()
-
-                    actor:SetState('attacked', {
-                        target = NULL,
-                        delay = 0
-                    })
-
-                    goto skip
-                end
-
-                for _, enemy in pairs(ents.FindInSphere(npc:GetPos(), 600)) do
-                    if IsValid(enemy) and enemy:IsNPC() then
-                        if enemy:Disposition(npc) == D_HT then
-                            if movement_map[npc] ~= nil then
-                                movement_map[npc] = nil
-                                npc:ClearSchedule()
-                            end
-                            goto skip
-                        end
-                    end
-                end
-
-
                 local map = movement_map[npc]
                 local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
 
-                if hook.Run('bgCitizens_PreMovementNPC', npc, map) ~= nil then
+                if hook.Run('bgCitizens_PreStollNPC', npc, map) ~= nil then
                     goto skip
                 end
 
@@ -114,11 +83,9 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         map = updateMovement(npc, positions)
 
                         npc:SetSaveValue("m_vecLastPosition", map.pos)
-                        if hook.Run('bgCitizens_SetScheduleNPC', npc, map) == nil then
-                            npc:SetSchedule(data.schedule)
-                            data.startWalkTime = CurTime()
-                            data.startWalkPos = npc:GetPos()
-                        end
+                        npc:SetSchedule(data.schedule)
+                        data.startWalkTime = CurTime()
+                        data.startWalkPos = npc:GetPos()
 
                         movement_ignore[npc] = movement_ignore[npc] or {}
                         table.insert(movement_ignore[npc], {
@@ -146,11 +113,9 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                             map = nextMovement(npc, positions)
 
                             npc:SetSaveValue("m_vecLastPosition", map.pos)
-                            if hook.Run('bgCitizens_SetScheduleNPC', npc, map) == nil then
-                                npc:SetSchedule(data.schedule)
-                                data.startWalkTime = CurTime()
-                                data.startWalkPos = npc:GetPos()
-                            end
+                            npc:SetSchedule(data.schedule)
+                            data.startWalkTime = CurTime()
+                            data.startWalkPos = npc:GetPos()
 
                             movement_ignore[npc] = movement_ignore[npc] or {}
                             table.insert(movement_ignore[npc], {
@@ -160,7 +125,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
                     end
 
-                    hook.Run('bgCitizens_PostMovementNPC', npc, map)
+                    hook.Run('bgCitizens_PostStollNPC', npc, map)
                 end
 
                 ::skip::
@@ -169,56 +134,27 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
     end
 end)
 
-timer.Create('bgCitizensOtherTask', 1, 0, function()
+timer.Create('bgCitizensSwitchStollMovementType', 1, 0, function()
     for _, actor in pairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and actor:GetState() == 'walk' then
             local data = actor:GetStateData()
             if data.schedule == SCHED_FORCED_GO_RUN then
                 if data.runReset < CurTime() then
-                    npc.bgCitizenState.data = { 
+                    actor:UpdateStateData({ 
                         schedule = SCHED_FORCED_GO,
                         runReset = 0
-                    }
+                    })
                 end
             elseif math.random(0, 100) == 0 then
-                npc.bgCitizenState.data = { 
+                actor:UpdateStateData({ 
                     schedule = SCHED_FORCED_GO_RUN,
                     runReset = CurTime() + 20
-                }
-            end
-
-            local door_class = {
-				"func_door",
-				"func_door_rotating",
-				"prop_door_rotating",
-				"func_movelinear",
-				"prop_dynamic",
-            }
-            
-            local tr = util.TraceLine({
-                start = npc:EyePos(),
-                endpos = npc:EyePos() + npc:EyeAngles():Forward() * 150,
-                filter = function(ent) 
-                    if table.HasValue(door_class, ent:GetClass()) then
-                        return true
-                    end
-                end
-            })
-
-            local door = tr.Entity
-
-            if tr.Hit and IsValid(door) and hook.Run('bgCitizens_PreOpenDoorNPC', npc, door) == nil then
-                door:Fire("unlock", "", 0)
-                door:Fire("open", "", 0)
-                
-                hook.Run('bgCitizens_PostOpenDoorNPC', npc, door)
+                })
             end
         end
     end
-end)
 
-timer.Create('bgCitizensMoveResetIgnore', 1, 0, function()
     for npc, tbl in pairs(movement_ignore) do
         for i = #tbl, 1, -1 do
             if tbl[i].resetTime < CurTime() then

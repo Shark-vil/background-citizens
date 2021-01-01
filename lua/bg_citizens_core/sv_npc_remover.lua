@@ -1,3 +1,8 @@
+hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsTables', function()
+    bgCitizens.npcs = {}
+    bgCitizens.fnpcs = {}
+end)
+
 timer.Create('bgCitizensRemover', 1, 0, function()
     local npcs = bgCitizens:GetAllNPCs()
 
@@ -25,7 +30,5 @@ timer.Create('bgCitizensRemover', 1, 0, function()
                 end
             end
         end
-
-        bgCitizens:ClearRemovedNPCs()
     end
 end)

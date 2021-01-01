@@ -8,20 +8,69 @@ bgCitizens.npc_classes = {
     {
         class = 'npc_citizen',
         type = 'citizen',
-        fullness = 70,
-        relationship = D_NU
+        fullness = 85,
+        relationship = D_NU,
+        team = { 'residents' },
+        weapons = {'weapon_pistol', 'weapon_357'},
+        at_damage = {
+            ['fear'] = 90,
+            ['defense'] = 10,
+        },
+        at_protect = {
+            ['fear'] = 90,
+            ['defense'] = 10,
+        },
+        protect = true,
+        protect_ignore = {
+            'gangster',
+        },
+        attack = false,
     },
     {
         class = 'npc_citizen',
         type = 'gangster',
-        fullness = 20,
-        relationship = D_NU
+        fullness = 5,
+        team = { 'bandits' },
+        weapons = {'weapon_pistol', 'weapon_357', 'weapon_shotgun', 'weapon_smg1'},
+        at_damage = {
+            ['defense'] = 100,
+        },
+        at_protect = {
+            ['ignore'] = 50,
+            ['defense'] = 50,
+        },
+        protect = true,
+        protect_ignore = {
+            'citizen',
+            'police',
+        },
+        attack = true,
+        attack_player = true,
+        chance_of_attack = 10,
+        attack_ignore = {
+            'player',
+            'gangster',
+            'police'
+        }
     },
     {
         class = 'npc_metropolice',
         type = 'police',
         fullness = 10,
-        relationship = D_NU
+        team = { 'residents' },
+        friends = {
+            'citizen',
+        },
+        weapons = {'weapon_smg1', 'weapon_pistol'},
+        at_damage = {
+            ['defense'] = 100,
+        },
+        at_protect = {
+            ['defense'] = 100,
+        },
+        protect = true,
+        protect_ignore = {},
+        attack = false,
     }
 }
 
