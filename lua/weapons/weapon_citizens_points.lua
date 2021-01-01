@@ -54,7 +54,7 @@ function SWEP:Initialize()
 				local pos = self.Trace.HitPos
 
 				render.DrawSphere(pos, 10, 20, 20, clr)
-				cam.Start3D2D(pos + vec, cam_angle, 0.9)
+				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined('Too far from other points', 
 						"TargetID", 0, 0, color_white, 
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
