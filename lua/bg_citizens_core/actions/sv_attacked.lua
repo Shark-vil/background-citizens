@@ -41,7 +41,7 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
         end
     end
 
-    for _, actor in pairs(bgCitizens:GetAllByRadius(target:GetPos(), 2000)) do
+    for _, actor in ipairs(bgCitizens:GetAllByRadius(target:GetPos(), 2000)) do
         local reaction = actor:GetReactionForProtect()
         local targetFromActor = NULL
 
@@ -97,7 +97,7 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
 end)
 
 hook.Add('Think', 'bgCitizens_ResetAttackedEvent', function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()

@@ -44,6 +44,14 @@ SWEP.CurrentTypeId = 1
 
 function SWEP:Initialize()
 	if SERVER then return end
+	local clr = Color(255, 225, 0, 200)
+	local clr_58 = Color(58, 23, 255, 100)
+	local clr_255 = Color(255, 23, 23, 100)
+	local vec_20 = Vector(0, 0, 20)
+	local vec_30 = Vector(0, 0, 30)
+	local color_white = Color(255, 255, 255)
+	local color_black = Color(0, 0, 0)
+
 	self.Points = {}
 	for index, v in pairs(bgCitizens.points) do
 		self.Points[index] = v.pos
@@ -65,36 +73,36 @@ function SWEP:Initialize()
 			if self.Trace ~= nil and self.Lock then
 				local pos = self.Trace.HitPos
 
-				render.DrawSphere(pos, 10, 20, 20, Color(255, 225, 0, 200))
-				cam.Start3D2D(pos + Vector(0, 0, 20), cam_angle, 0.9)
+				render.DrawSphere(pos, 10, 20, 20, clr)
+				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined('Too far from other points', 
-						"TargetID", 0, 0, Color(255, 255, 255), 
-						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+						"TargetID", 0, 0, color_white, 
+						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 				cam.End3D2D()
 			end
 
 			render.SetColorMaterial()
 
-			for _, value in pairs(self.RangePoints) do
+			for _, value in ipairs(self.RangePoints) do
 				local index = value.index
 				local pos = value.pos
 				local color
 
 				if index % 2 == 0 then
-					color = Color(58, 23, 255, 100)
+					color = clr_58
 				else
-					color = Color(255, 23, 23, 100)
+					color = clr_255
 				end
 				
-				for _, otherValue in pairs(self.RangePoints) do
+				for _, otherValue in ipairs(self.RangePoints) do
 					local otherPos = otherValue.pos
-					if otherPos:Distance(pos) <= 500 then
+					if otherPos:DistToSqr(pos) <= 500000 then -- 500 * 1000
 						local mainZ = pos.z
 						local otherZ = otherPos.z
 
 						if mainZ >= otherZ - 100 and mainZ <= otherZ + 100 then
 							local tr = util.TraceLine( {
-								start = pos + Vector(0, 0, 30),
+								start = pos + vec_30,
 								endpos = otherPos,
 								filter = function(ent)
 									if ent:IsWorld() then
@@ -112,15 +120,15 @@ function SWEP:Initialize()
 
 				render.DrawSphere(pos, 10, 30, 30, color)
 
-				cam.Start3D2D(pos + Vector(0, 0, 20), cam_angle, 0.9)
+				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined(tostring(index), 
-						"TargetID", 0, 0, Color(255, 255, 255), 
-						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+						"TargetID", 0, 0, color_white, 
+						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 
 					if value.index == self.SelectedPointId then
 						draw.SimpleTextOutlined('Selected', 
-							"TargetID", 0, 25, Color(255, 255, 255), 
-							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, Color(0, 0, 0))
+							"TargetID", 0, 25, color_white, 
+							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 					end
 				cam.End3D2D()
             end
@@ -154,8 +162,11 @@ function SWEP:Think()
 	if IsValid(owner) and owner:Alive() then
 		local isSelectedPoint = false
 		local NewRangePoints = {}
-		for index, pos in pairs(self.Points) do
-			if bgCitizens:PlayerIsViewVector(owner, pos) and owner:GetPos():Distance(pos) < 1500 then
+		
+		for index, pos in ipairs(self.Points) do
+			if bgCitizens:PlayerIsViewVector(owner, pos) 
+				and owner:GetPos():DistToSqr(pos) < 1500000 -- 1500 * 1000
+			then
 				table.insert(NewRangePoints, {
 					index = index,
 					pos = pos
@@ -190,8 +201,8 @@ function SWEP:Think()
 				local awayAllow = true
 				local pos = self.Trace.HitPos
 
-				for _, pointPos in pairs(self.Points) do
-					if pos:Distance(pointPos) <= 500 then
+				for _, pointPos in ipairs(self.Points) do
+					if pos:DistToSqr(pointPos) <= 500000 then -- 500 * 1000
 						awayAllow = false
 						break
 					end

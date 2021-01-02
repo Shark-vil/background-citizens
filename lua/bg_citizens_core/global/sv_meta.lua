@@ -26,7 +26,7 @@ function bgCitizens:SetActorWeapon(actor)
         local wep = NULL
         local weapons = npc:GetWeapons()
         local isExist = false
-        for _, weapon in pairs(weapons) do
+        for _, weapon in ipairs(weapons) do
             local weapon_class = weapon:GetClass()
             if weapon_class == select_weapon then
                 wep = weapon

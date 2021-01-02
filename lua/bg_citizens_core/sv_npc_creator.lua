@@ -6,9 +6,9 @@ timer.Create('bgCitizensCreator', 1, 0, function()
     end
 
     local bg_citizens_max_npc = GetConVar('bg_citizens_max_npc'):GetInt()
-    local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat()
-    local bg_citizens_spawn_radius_visibility = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat()
-    local bg_citizens_spawn_radius_ray_tracing = GetConVar('bg_citizens_spawn_radius_ray_tracing'):GetFloat()
+    local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat() * 1000
+    local bg_citizens_spawn_radius_visibility = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat() * 1000
+    local bg_citizens_spawn_radius_ray_tracing = GetConVar('bg_citizens_spawn_radius_ray_tracing'):GetFloat() * 1000
     
     bgCitizens:ClearRemovedNPCs()
 
@@ -16,26 +16,26 @@ timer.Create('bgCitizensCreator', 1, 0, function()
         if #bgCitizens.points ~= 0 then
             local points_close = {}
 
-            for _, v in pairs(bgCitizens.points) do
-                for _, ply in pairs(player.GetAll()) do
-                    if v.pos:Distance(ply:GetPos()) < bg_citizens_spawn_radius then
+            for _, v in ipairs(bgCitizens.points) do
+                for _, ply in ipairs(player.GetAll()) do
+                    if v.pos:DistToSqr(ply:GetPos()) < bg_citizens_spawn_radius then
                         table.insert(points_close, v.pos)
                     end
                 end
             end
 
             if #points_close ~= 0 then
-                for _, npc_data in pairs(bgCitizens.npc_classes) do
+                for _, npc_data in ipairs(bgCitizens.npc_classes) do
                     local pos = table.Random(points_close)
                 
-                    for _, ent in pairs(ents.FindInSphere(pos, 10)) do
+                    for _, ent in ipairs(ents.FindInSphere(pos, 10)) do
                         if IsValid(ent) and ent:IsNPC() then
                             return
                         end
                     end
 
-                    for _, ply in pairs(player.GetAll()) do
-                        local distance = pos:Distance(ply:GetPos())
+                    for _, ply in ipairs(player.GetAll()) do
+                        local distance = pos:DistToSqr(ply:GetPos())
                         if distance < bg_citizens_spawn_radius_visibility 
                             and bgCitizens:PlayerIsViewVector(ply, pos)
                         then
@@ -78,7 +78,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     table.Merge(entities, bgCitizens:GetAllNPCs())
                     table.Merge(entities, player.GetAll())
 
-                    for _, ent in pairs(entities) do
+                    for _, ent in ipairs(entities) do
                         if IsValid(ent) then
                             if ent:IsPlayer() then
                                 npc:AddEntityRelationship(ent, D_NU, 99)

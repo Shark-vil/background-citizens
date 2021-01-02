@@ -1,5 +1,5 @@
 timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
-    for _, actor in pairs(bgCitizens:GetAllByType('gangster')) do
+    for _, actor in ipairs(bgCitizens:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
 
         if math.random(0, 100) > 10 then
@@ -39,13 +39,13 @@ end)
 
 
 hook.Add('Think', 'bgCitizens_StateAttackAction', function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
             local data = actor:GetStateData()
 
-            for _, target in pairs(actor.targets) do
+            for _, target in ipairs(actor.targets) do
                 if state == 'attacked' then
                     bgCitizens:SetActorWeapon(actor)
 
@@ -61,15 +61,17 @@ hook.Add('Think', 'bgCitizens_StateAttackAction', function()
                         local target = table.Random(actor.targets)
                         if IsValid(target) then
                             local point = nil
-                            local current_distance = npc:GetPos():Distance(target:GetPos())
+                            local current_distance = npc:GetPos():DistToSqr(target:GetPos())
     
-                            if current_distance >= 500 then
+                            if current_distance >= 500000 then
                                 if math.random(0, 10) > 4 then
                                     point = actor:GetMovementPointToTarget(target:GetPos())
                                 else
                                     point = target:GetPos()
                                 end
-                            elseif current_distance < 500 and current_distance > 200 then
+                            elseif current_distance < 500000 
+                                and current_distance > 200000
+                            then
                                 point = target:GetPos()
                             end
 

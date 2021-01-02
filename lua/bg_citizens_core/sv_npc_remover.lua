@@ -7,17 +7,17 @@ timer.Create('bgCitizensRemover', 1, 0, function()
     local npcs = bgCitizens:GetAllNPCs()
 
     if #npcs ~= 0 then
-        local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat()
+        local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat() * 1000
 
-        for _, npc in pairs(npcs) do
+        for _, npc in ipairs(npcs) do
             if IsValid(npc) and npc:Health() > 0 then
                 local isRemove = true
 
-                for _, ply in pairs(player.GetAll()) do
+                for _, ply in ipairs(player.GetAll()) do
                     if IsValid(ply) then
                         local npcPos = npc:GetPos()
                         local plyPos = ply:GetPos()
-                        if npcPos:Distance(plyPos) < bg_citizens_spawn_radius 
+                        if npcPos:DistToSqr(plyPos) < bg_citizens_spawn_radius 
                             or bgCitizens:PlayerIsViewVector(ply, npcPos)
                         then
                             isRemove = false

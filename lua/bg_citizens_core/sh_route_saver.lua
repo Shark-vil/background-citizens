@@ -31,7 +31,7 @@ if SERVER then
 
         ply:ConCommand('cl_citizens_load_route_from_client')
     
-        timer.Simple(0.7, function()
+        timer.Simple(1, function()
             local wep = ply:GetWeapon('weapon_citizens_points')
     
             if not IsValid(wep) then
@@ -56,19 +56,19 @@ else
             local save_table = {}
 
             if table.Count(wep.Points) ~= 0 then
-                for _, pos in pairs(wep.Points) do
+                for _, pos in ipairs(wep.Points) do
                     table.insert(save_table, {
                         pos = pos,
                         parents = {}
                     })
                 end
 
-                for index, v in pairs(save_table) do
-                    for id, v2 in pairs(save_table) do
+                for index, v in ipairs(save_table) do
+                    for id, v2 in ipairs(save_table) do
                         local pos = v.pos
                         local otherPos = v2.pos
 
-                        if pos ~= otherPos and otherPos:Distance(pos) <= 500 then
+                        if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500000 then -- 500 * 1000
                             if pos ~= otherPos and pos.z >= otherPos.z - 100 and pos.z <= otherPos.z + 100 then
                                 local tr = util.TraceLine( {
                                     start = pos + Vector(0, 0, 30),
