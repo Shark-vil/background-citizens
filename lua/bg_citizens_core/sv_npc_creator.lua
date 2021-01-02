@@ -1,4 +1,10 @@
 timer.Create('bgCitizensCreator', 1, 0, function()
+    local bg_citizens_enable = GetConVar('bg_citizens_enable'):GetInt()
+
+    if bg_citizens_enable <= 0 then
+        return
+    end
+
     local bg_citizens_max_npc = GetConVar('bg_citizens_max_npc'):GetInt()
     local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat()
     local bg_citizens_spawn_radius_visibility = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat()
