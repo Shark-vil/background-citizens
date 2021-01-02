@@ -1,3 +1,5 @@
+bgCitizens.wanted = {}
+
 function bgCitizens:PlayerIsViewVector(ply, pos)
     local DirectionAngle = math.pi / 80 -- 90
     local EntityDifference = pos - ply:EyePos()
@@ -25,6 +27,18 @@ function bgCitizens:AddNPC(npc_object)
     table.insert(self.fnpcs[type], npc_object)
 end
 
+function bgCitizens:GetAllPointsInRadius(center, radius)
+    local radius_positions = {}
+
+    for _, v in pairs(bgCitizens.points) do
+        if v.pos:Distance(center) <= radius then
+            table.insert(radius_positions, v)
+        end
+    end
+
+    return radius_positions
+end
+
 function bgCitizens:GetAll()
     return self.npcs
 end
@@ -33,9 +47,20 @@ function bgCitizens:GetAllByType(type)
     return self.fnpcs[type] or {}
 end
 
+function bgCitizens:GetAllByRadius(center, radius)
+    local npcs = {}
+    for _, actor in pairs(self.npcs) do
+        local npc = actor:GetNPC()
+        if IsValid(npc) and npc:GetPos():Distance(center) <= radius then
+            table.insert(npcs, actor)
+        end
+    end
+    return npcs
+end
+
 function bgCitizens:GetAllNPCs()
     local npcs = {}
-    for _, actor in pairs(self:GetAll()) do
+    for _, actor in pairs(self.npcs) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             table.insert(npcs, npc)

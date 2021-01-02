@@ -3,41 +3,44 @@ hook.Add('Think', 'bgCitizens_StateFearAction', function()
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
+            local data = actor:GetStateData()
 
-            for _, stData in pairs(actor:GetStateData()) do
-                if state == 'fear' and IsValid(stData.target) then
-                    if stData.delay < CurTime() then
-                        if npc:Disposition(stData.target) ~= D_FR then
-                            npc:AddEntityRelationship(stData.target, D_FR, 99)
+            if state == 'fear' and actor:TargetsCount() ~= 0  then
+                if data.delay < CurTime() then
+                    for _, target in pairs(actor.targets) do
+                        if npc:Disposition(target) ~= D_FR then
+                            npc:AddEntityRelationship(target, D_FR, 99)
                         end
+                    end
 
-                        actor:ClearSchedule()
+                    actor:ClearSchedule()
 
-                        if math.random(0, 10) <= 1 then
-                            stData.schedule = 'fear'
-                        else
-                            stData.schedule = 'run'
-                            stData.update_run = 0
+                    if math.random(0, 10) <= 1 then
+                        data.schedule = 'fear'
+                    else
+                        data.schedule = 'run'
+                        data.update_run = 0
+                    end
+
+                    data.delay = CurTime() + 10
+                end
+
+                if data.schedule == 'run' and math.random(0, 100) == 0 then
+                    for _, target in pairs(actor.targets) do
+                        if npc:GetPos():Distance(target:GetPos()) < 150 then
+                            data.schedule = 'fear'
+                            break
                         end
-
-                        stData.delay = CurTime() + 10
                     end
-
-                    if stData.schedule == 'run'
-                        and npc:GetPos():Distance(stData.target:GetPos()) < 150 
-                        and math.random(0, 100) == 0
-                    then
-                        stData.schedule = 'fear'
-                    end
-                    
-                    if stData.schedule == 'fear' then
-                        npc:ClearSchedule()
-                        npc:SetSchedule(SCHED_NONE)
-                        npc:SetSequence(npc:LookupSequence('Fear_Reaction_Idle'))
-                    elseif stData.schedule == 'run' and stData.update_run < CurTime() then
-                        npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
-                        stData.update_run = CurTime() + 3
-                    end
+                end
+                
+                if data.schedule == 'fear' then
+                    npc:ClearSchedule()
+                    npc:SetSchedule(SCHED_NONE)
+                    npc:SetSequence(npc:LookupSequence('Fear_Reaction_Idle'))
+                elseif data.schedule == 'run' and data.update_run < CurTime() then
+                    npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
+                    data.update_run = CurTime() + 3
                 end
             end
         end

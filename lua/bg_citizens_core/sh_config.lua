@@ -8,8 +8,7 @@ bgCitizens.npc_classes = {
     {
         class = 'npc_citizen',
         type = 'citizen',
-        fullness = 85,
-        relationship = D_NU,
+        fullness = 90,
         team = { 'residents' },
         weapons = {'weapon_pistol', 'weapon_357'},
         at_damage = {
@@ -17,14 +16,9 @@ bgCitizens.npc_classes = {
             ['defense'] = 10,
         },
         at_protect = {
-            ['fear'] = 90,
-            ['defense'] = 10,
-        },
-        protect = true,
-        protect_ignore = {
-            'gangster',
-        },
-        attack = false,
+            ['fear'] = 99,
+            ['defense'] = 1,
+        }
     },
     {
         class = 'npc_citizen',
@@ -36,45 +30,26 @@ bgCitizens.npc_classes = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['ignore'] = 50,
-            ['defense'] = 50,
-        },
-        protect = true,
-        protect_ignore = {
-            'citizen',
-            'police',
-        },
-        attack = true,
-        attack_player = true,
-        chance_of_attack = 10,
-        attack_ignore = {
-            'player',
-            'gangster',
-            'police'
+            ['ignore'] = 80,
+            ['defense'] = 20,
         }
     },
     {
         class = 'npc_metropolice',
         type = 'police',
-        fullness = 10,
-        team = { 'residents' },
-        friends = {
-            'citizen',
-        },
+        fullness = 5,
+        team = { 'residents', 'police' },
         weapons = {'weapon_smg1', 'weapon_pistol'},
         at_damage = {
             ['defense'] = 100,
         },
         at_protect = {
             ['defense'] = 100,
-        },
-        protect = true,
-        protect_ignore = {},
-        attack = false,
+        }
     }
 }
 
-hook.Add('bgCitizens_PreSpawnNPC', 'bgCitizensSeCustomModelFromNPC', function(npc, data)
+hook.Add('bgCitizens_PreSpawnNPC', 'bgCitizensSetCustomModelFromNPC', function(npc, data)
     if data.type == 'gangster' then
         npc:SetKeyValue('citizentype', 3)
     elseif data.type == 'citizen' then

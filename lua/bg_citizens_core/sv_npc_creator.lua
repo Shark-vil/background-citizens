@@ -26,7 +26,25 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     end
 
                     for _, ply in pairs(player.GetAll()) do
-                        if pos:Distance(ply:GetPos()) < 2000 and bgCitizens:PlayerIsViewVector(ply, pos) then
+                        local distance = pos:Distance(ply:GetPos())
+                        if distance < 2000 and bgCitizens:PlayerIsViewVector(ply, pos) then
+                            if distance > 1000 then
+                                local tr = util.TraceLine({
+                                    start = ply:EyePos(),
+                                    endpos = pos,
+                                    filter = function(ent)
+                                        if ent ~= ply then 
+                                            return true 
+                                        end
+                                    end
+                                })
+
+                                -- print(tr.Entity)
+                                if not IsValid(tr.Entity) then
+                                    -- print('spawn')
+                                    return
+                                end
+                            end
                             return
                         end
                     end
@@ -52,14 +70,8 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     for _, ent in pairs(entities) do
                         if IsValid(ent) then
                             if ent:IsPlayer() then
-                                if table.HasValue(npc_data.team, 'players') then
-                                    npc:AddEntityRelationship(ent, D_LI, 99)
-                                else
-                                    npc:AddEntityRelationship(ent, D_NU, 99)
-                                end
-                            end
-
-                            if ent:IsNPC() then
+                                npc:AddEntityRelationship(ent, D_NU, 99)
+                            elseif ent:IsNPC() then
                                 npc:AddEntityRelationship(ent, D_NU, 99)
                                 ent:AddEntityRelationship(npc, D_NU, 99)
                             end
@@ -73,14 +85,14 @@ timer.Create('bgCitizensCreator', 1, 0, function()
 
                     npc:Spawn()
 
-                    local npc_object = BG_NPC_CLASS:Instance(npc, npc_data)
-                    npc_object:SetDefaultState()
+                    local actor = BG_NPC_CLASS:Instance(npc, npc_data)
+                    actor:SetDefaultState()
 
-                    bgCitizens:AddNPC(npc_object)
+                    bgCitizens:AddNPC(actor)
 
                     npc:SetNWString('bgCitizenType', npc_data.type)
 
-                    hook.Run('bgCitizens_PostSpawnNPC', npc)
+                    hook.Run('bgCitizens_PostSpawnNPC', actor)
                     ::skip::
                 end
             end

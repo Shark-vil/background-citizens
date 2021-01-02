@@ -1,12 +1,8 @@
-timer.Create('bgCitizens_GangstersAssassination', 3, 0, function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
+timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
+    for _, actor in pairs(bgCitizens:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
-        local data = actor:GetData()
-        if not data.attack or math.random(0, 100) > data.chance_of_attack then
-            goto skip
-        end
 
-        if not data.attack then
+        if math.random(0, 100) > 10 then
             goto skip
         end
 
@@ -15,23 +11,13 @@ timer.Create('bgCitizens_GangstersAssassination', 3, 0, function()
             local targets = {}
 
             for _, ent in pairs(target_from_zone) do
-                if not IsValid(ent) or npc:Disposition(ent) == D_LI then
-                    break
-                end
-
-                if ent:IsPlayer() and data.attack_player then
+                if ent:IsPlayer() then
                     table.insert(targets, ent)
                 end
 
                 if ent:IsNPC() and ent ~= npc then
-                    local zActor = bgCitizens:GetActor(ent)
-                    if zActor ~= nil then
-                        if data.attack_ignore ~= nil then
-                            if table.HasValue(data.attack_ignore, zActor:GetType()) then
-                                break
-                            end
-                        end
-                        
+                    local ActorTarget = bgCitizens:GetActor(ent)
+                    if ActorTarget ~= nil and not actor:HasTeam(ActorTarget:GetData().team) then
                         table.insert(targets, ent)
                     end
                 end
@@ -39,11 +25,11 @@ timer.Create('bgCitizens_GangstersAssassination', 3, 0, function()
 
             local target = table.Random(targets)
             if IsValid(target) then
+                actor:AddTarget(target)
                 actor:SetState('attacked', {
-                    target = target,
-                    delay = 0,
-                    old_relationship = npc:Disposition(target),
+                    delay = 0
                 })
+                break
             end
         end
 
@@ -57,20 +43,48 @@ hook.Add('Think', 'bgCitizens_StateAttackAction', function()
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
-            local stData = actor:GetStateData()
+            local data = actor:GetStateData()
 
-            if state == 'attacked' and IsValid(stData.target) then
-                bgCitizens:SetActorWeapon(actor)
+            for _, target in pairs(actor.targets) do
+                if state == 'attacked' then
+                    bgCitizens:SetActorWeapon(actor)
 
-                if npc:Disposition(stData.target) ~= D_HT then
-                    npc:AddEntityRelationship(stData.target, D_HT, 99)
+                    if npc:Disposition(target) ~= D_HT then
+                        npc:AddEntityRelationship(target, D_HT, 99)
+                    end
+
+                    if npc:GetTarget() ~= target then
+                        npc:SetTarget(target)
+                    end
+
+                    if data.delay < CurTime() then
+                        local target = table.Random(actor.targets)
+                        if IsValid(target) then
+                            local point = nil
+                            local current_distance = npc:GetPos():Distance(target:GetPos())
+    
+                            if current_distance > 1000 then
+                                point = actor:GetMovementPointToTarget(target:GetPos())
+                            elseif current_distance < 1000 and current_distance >= 500 then
+                                point = target:GetPos()
+                            end
+
+                            if point ~= nil then
+                                npc:SetSaveValue("m_vecLastPosition", point)
+                                npc:SetSchedule(SCHED_FORCED_GO_RUN)
+                                -- print('gangster move to ' .. tostring(point))
+                            end
+                            data.delay = CurTime() + 5
+                        end
+                    end
+                elseif state == 'attacked' and not IsValid(target) then
+                    local wep = npc:GetActiveWeapon()
+                    if IsValid(wep) then
+                        wep:Remove()
+                    end
+                    
+                    actor:SetDefaultState()
                 end
-
-                if npc:GetTarget() ~= stData.target then
-                    npc:SetTarget(stData.target)
-                end
-            elseif state == 'attacked' and not IsValid(stData.target) then
-                actor:SetDefaultState()
             end
         end
     end

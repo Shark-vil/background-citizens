@@ -23,20 +23,23 @@ function bgCitizens:SetActorWeapon(actor)
 
         local select_weapon = table.Random(weapons)
 
+        local wep = NULL
         local weapons = npc:GetWeapons()
         local isExist = false
         for _, weapon in pairs(weapons) do
             local weapon_class = weapon:GetClass()
             if weapon_class == select_weapon then
+                wep = weapon
                 isExist = true
                 break
             end
         end
 
         if not isExist then
-            npc:Give(select_weapon)
+            wep = npc:Give(select_weapon)
         end
 
+        wep:SetClip2(1000)
         npc:SelectWeapon(select_weapon)
     end
 end

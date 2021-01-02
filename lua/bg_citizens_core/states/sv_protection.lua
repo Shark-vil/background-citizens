@@ -3,23 +3,37 @@ hook.Add('Think', 'bgCitizens_StateProtectionAction', function()
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
+            local data = actor:GetStateData()
 
-            for _, stData in pairs(actor:GetStateData()) do
-                if state == 'defense' and IsValid(stData.target) then
-                    bgCitizens:SetActorWeapon(actor)
+            actor:RecalculationTargets()
 
-                    if npc:Disposition(stData.target) ~= D_HT then
-                        npc:AddEntityRelationship(stData.target, D_HT, 99)
+            if state == 'defense' and actor:TargetsCount() ~= 0  then
+                bgCitizens:SetActorWeapon(actor)
+
+                for _, target in pairs(actor.targets) do
+                    if npc:Disposition(target) ~= D_HT then
+                        npc:AddEntityRelationship(target, D_HT, 99)
                     end
+                end
 
-                    if npc:GetTarget() ~= stData.target then
-                        npc:SetTarget(stData.target)
-                    end
+                if data.delay < CurTime() then
+                    local target = table.Random(actor.targets)
+                    if IsValid(target) then
+                        local point = nil
+                        local current_distance = npc:GetPos():Distance(target:GetPos())
 
-                    if stData.delay < CurTime() then
-                        npc:SetSaveValue("m_vecLastPosition", stData.target:GetPos())
-                        npc:SetSchedule(SCHED_FORCED_GO_RUN)
-                        stData.delay = CurTime() + 5
+                        if current_distance > 1000 then
+                            point = actor:GetMovementPointToTarget(target:GetPos())
+                        elseif current_distance < 1000 and current_distance >= 500 then
+                            point = target:GetPos()
+                        end
+
+                        if point ~= nil then
+                            npc:SetSaveValue("m_vecLastPosition", point)
+                            npc:SetSchedule(SCHED_FORCED_GO_RUN)
+                            -- print('police move to ' .. tostring(point))
+                        end
+                        data.delay = CurTime() + 5
                     end
                 end
             end
