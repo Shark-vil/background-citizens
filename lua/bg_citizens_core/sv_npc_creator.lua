@@ -1,15 +1,18 @@
 timer.Create('bgCitizensCreator', 1, 0, function()
-    local max_npc_count = GetConVar('bg_citizens_max_npc'):GetInt()
+    local bg_citizens_max_npc = GetConVar('bg_citizens_max_npc'):GetInt()
+    local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat()
+    local bg_citizens_spawn_radius_visibility = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat()
+    local bg_citizens_spawn_radius_ray_tracing = GetConVar('bg_citizens_spawn_radius_ray_tracing'):GetFloat()
     
     bgCitizens:ClearRemovedNPCs()
 
-    if #bgCitizens:GetAll() < max_npc_count then
+    if #bgCitizens:GetAll() < bg_citizens_max_npc then
         if #bgCitizens.points ~= 0 then
             local points_close = {}
 
             for _, v in pairs(bgCitizens.points) do
                 for _, ply in pairs(player.GetAll()) do
-                    if v.pos:Distance(ply:GetPos()) < 3000 then
+                    if v.pos:Distance(ply:GetPos()) < bg_citizens_spawn_radius then
                         table.insert(points_close, v.pos)
                     end
                 end
@@ -27,8 +30,10 @@ timer.Create('bgCitizensCreator', 1, 0, function()
 
                     for _, ply in pairs(player.GetAll()) do
                         local distance = pos:Distance(ply:GetPos())
-                        if distance < 2000 and bgCitizens:PlayerIsViewVector(ply, pos) then
-                            if distance > 1000 then
+                        if distance < bg_citizens_spawn_radius_visibility 
+                            and bgCitizens:PlayerIsViewVector(ply, pos)
+                        then
+                            if distance > bg_citizens_spawn_radius_ray_tracing then
                                 local tr = util.TraceLine({
                                     start = ply:EyePos(),
                                     endpos = pos,
@@ -51,7 +56,7 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     
                     local count = table.Count(bgCitizens:GetAllNPCsByType(npc_data.type))
 
-                    if count > math.Round(((npc_data.fullness / 100) * max_npc_count)) then
+                    if count > math.Round(((npc_data.fullness / 100) * bg_citizens_max_npc)) then
                         goto skip
                     end
 
