@@ -63,9 +63,13 @@ hook.Add('Think', 'bgCitizens_StateAttackAction', function()
                             local point = nil
                             local current_distance = npc:GetPos():Distance(target:GetPos())
     
-                            if current_distance > 1000 then
-                                point = actor:GetMovementPointToTarget(target:GetPos())
-                            elseif current_distance < 1000 and current_distance >= 500 then
+                            if current_distance >= 500 then
+                                if math.random(0, 10) > 4 then
+                                    point = actor:GetMovementPointToTarget(target:GetPos())
+                                else
+                                    point = target:GetPos()
+                                end
+                            elseif current_distance < 500 and current_distance > 200 then
                                 point = target:GetPos()
                             end
 
@@ -74,7 +78,7 @@ hook.Add('Think', 'bgCitizens_StateAttackAction', function()
                                 npc:SetSchedule(SCHED_FORCED_GO_RUN)
                                 -- print('gangster move to ' .. tostring(point))
                             end
-                            data.delay = CurTime() + 5
+                            data.delay = CurTime() + 3
                         end
                     end
                 elseif state == 'attacked' and not IsValid(target) then
