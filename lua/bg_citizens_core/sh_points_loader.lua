@@ -11,6 +11,8 @@ if SERVER then
             bgCitizens.points = load_table
         elseif file.Exists('citizens_points/' .. game.GetMap() .. '.json', 'DATA') then
             bgCitizens.points = util.JSONToTable(file.Read('citizens_points/' .. game.GetMap() .. '.json', 'DATA'))
+        else
+            bgCitizens.points = {}
         end
 
         MsgN('Load citizens walk points - ' .. tostring(#bgCitizens.points))
@@ -46,20 +48,24 @@ else
 
         net.Start('bgCitizensLoadRoute')
         net.SendToServer()
-    end)
+    end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
     concommand.Add('cl_citizens_load_route_from_client', function(ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
         net.Start('bgCitizensLoadExistsRoutesFromClient')
         net.SendToServer()
-    end)
+    end, nil, 'Technical command. Used to get an array of points from the server.')
 
     net.Receive('bgCitizensLoadRouteFromClient', function()
         local compressed_lenght = net.ReadUInt(24)
         local compressed_table = net.ReadData(compressed_lenght)
         local data_table = util.JSONToTable(util.Decompress(compressed_table))
 
+        MsgN('Client routes is loading! (' .. table.Count(data_table) .. ')')
+
         bgCitizens.points = data_table
+
+        hook.Run('bgCitizens_LoadingClientRoutes', bgCitizens.points)
     end)
 end
