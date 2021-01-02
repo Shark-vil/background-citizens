@@ -10,10 +10,10 @@ local function getPositionsInRadius(npc)
     local npc_pos = npc:GetPos()
     local radius_positions = {}
 
-    for _, v in pairs(bgCitizens.points) do
-        if v.pos:Distance(npc_pos) <= 500 then
+    for _, v in ipairs(bgCitizens.points) do
+        if v.pos:DistToSqr(npc_pos) <= 500000 then -- 500 * 1000
             if movement_ignore[npc] ~= nil then
-                for _, data in pairs(movement_ignore[npc]) do
+                for _, data in ipairs(movement_ignore[npc]) do
                     if data.resetTime > CurTime() and data.pos == v.pos then
                         goto skip
                     end
@@ -49,9 +49,9 @@ local function nextMovement(npc, positions)
         if #parents ~= 0 then
             local index = table.Random(parents)
             local pos = bgCitizens.points[index].pos
-            local dist = movement_map[npc].pos:Distance(pos)
+            local dist = movement_map[npc].pos:DistToSqr(pos)
 
-            if dist <= 500 and bgCitizens:NPCIsViewVector(npc, pos) then
+            if dist <= 500000 and bgCitizens:NPCIsViewVector(npc, pos) then -- 500 * 1000
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
@@ -67,7 +67,7 @@ end
 
 timer.Create('bgCitizensMoveController', 0.3, 0, function()
     if #bgCitizens.points ~= 0 then
-        for _, actor in pairs(bgCitizens:GetAll()) do
+        for _, actor in ipairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) and actor:GetState() == 'walk' then
                 local map = movement_map[npc]
@@ -102,7 +102,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
 
                         if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
-                            if npc:GetPos():Distance(data.startWalkPos) < 10 then
+                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10000 then -- 10 * 1000
                                 getNewPos = true
                             else
                                 data.startWalkTime = nil
@@ -135,7 +135,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
 end)
 
 timer.Create('bgCitizensSwitchStollMovementType', 1, 0, function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and actor:GetState() == 'walk' then
             local data = actor:GetStateData()

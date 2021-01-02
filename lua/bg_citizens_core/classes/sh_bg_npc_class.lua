@@ -39,7 +39,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:RemoveTarget(ent)
-        for key, target in pairs(self.targets) do
+        for key, target in ipairs(self.targets) do
             if target == ent then
                 table.remove(self.targets, key)
                 break
@@ -57,7 +57,7 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     function obj:RecalculationTargets()
         local new_table = {}
-        for _, ent in pairs(self.targets) do
+        for _, ent in ipairs(self.targets) do
             if IsValid(ent) then
                 if ent:Health() > 0 then
                     table.insert(new_table, ent)
@@ -100,8 +100,8 @@ function BG_NPC_CLASS:Instance(npc, data)
     function obj:HasTeam(team_value)
         if self.data.team ~= nil and team_value ~= nil then
             if istable(team_value) then
-                for _, team_1 in pairs(self.data.team) do
-                    for _, team_2 in pairs(team_value) do
+                for _, team_1 in ipairs(self.data.team) do
+                    for _, team_2 in ipairs(team_value) do
                         if team_1 == team_2 then
                             return true
                         end
@@ -138,13 +138,13 @@ function BG_NPC_CLASS:Instance(npc, data)
         local npc = self:GetNPC()
         local points = bgCitizens:GetAllPointsInRadius(npc:GetPos(), radius)
 
-        for _, value in pairs(points) do
+        for _, value in ipairs(points) do
             if point == nil then
                 point = value.pos
-                dist = point:Distance(pos)
-            elseif value.pos:Distance(pos) < dist then
+                dist = point:DistToSqr(pos)
+            elseif value.pos:DistToSqr(pos) < dist then
                 point = value.pos
-                dist = point:Distance(pos)
+                dist = point:DistToSqr(pos)
             end
         end
 
