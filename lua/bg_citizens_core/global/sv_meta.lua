@@ -101,10 +101,9 @@ function bgCitizens:SpawnActor(type)
                             filter = function(ent)
                                 if IsValid(ent) and ent ~= ply 
                                     and not ent:IsVehicle() and ent:IsWorld() 
+                                    and string.sub(ent:GetClass(), 1, 5) ~= 'prop_'
                                 then
-                                    if string.sub(ent:GetClass(), 1, 5) ~= 'prop_' then
-                                        return true
-                                    end
+                                    return true
                                 end
                             end
                         })
