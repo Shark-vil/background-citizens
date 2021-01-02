@@ -30,7 +30,7 @@ SWEP.Secondary.Ammo = "none"
 SWEP.Trace = nil
 SWEP.Lock = false
 SWEP.DrawAmmo = false
-SWEP.Distance = 1000
+SWEP.Distance = 10000
 SWEP.Points = {}
 SWEP.RangePoints = {}
 SWEP.Delays = {}
@@ -96,7 +96,7 @@ function SWEP:Initialize()
 				
 				for _, otherValue in ipairs(self.RangePoints) do
 					local otherPos = otherValue.pos
-					if otherPos:DistToSqr(pos) <= 500000 then -- 500 * 1000
+					if otherPos:DistToSqr(pos) <= 500 ^ 2 then
 						local mainZ = pos.z
 						local otherZ = otherPos.z
 
@@ -165,7 +165,7 @@ function SWEP:Think()
 		
 		for index, pos in ipairs(self.Points) do
 			if bgCitizens:PlayerIsViewVector(owner, pos) 
-				and owner:GetPos():DistToSqr(pos) < 1500000 -- 1500 * 1000
+				and owner:GetPos():DistToSqr(pos) < 1500 ^ 2
 			then
 				table.insert(NewRangePoints, {
 					index = index,
@@ -202,7 +202,7 @@ function SWEP:Think()
 				local pos = self.Trace.HitPos
 
 				for _, pointPos in ipairs(self.Points) do
-					if pos:DistToSqr(pointPos) <= 500000 then -- 500 * 1000
+					if pos:DistToSqr(pointPos) <= 500 ^ 2 then
 						awayAllow = false
 						break
 					end

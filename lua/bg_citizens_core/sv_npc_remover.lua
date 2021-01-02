@@ -7,7 +7,8 @@ timer.Create('bgCitizensRemover', 1, 0, function()
     local npcs = bgCitizens:GetAllNPCs()
 
     if #npcs ~= 0 then
-        local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat() * 1000
+        local bg_citizens_spawn_radius 
+            = GetConVar('bg_citizens_spawn_radius'):GetFloat() ^ 2
 
         for _, npc in ipairs(npcs) do
             if IsValid(npc) and npc:Health() > 0 then

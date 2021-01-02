@@ -11,7 +11,7 @@ local function getPositionsInRadius(npc)
     local radius_positions = {}
 
     for _, v in ipairs(bgCitizens.points) do
-        if v.pos:DistToSqr(npc_pos) <= 500000 then -- 500 * 1000
+        if v.pos:DistToSqr(npc_pos) <= 500 ^ 2 then
             if movement_ignore[npc] ~= nil then
                 for _, data in ipairs(movement_ignore[npc]) do
                     if data.resetTime > CurTime() and data.pos == v.pos then
@@ -35,7 +35,7 @@ local function updateMovement(npc, positions)
     movement_map[npc] = {
         pos = v.pos,
         index = key,
-        resetTime = CurTime() + 10
+        resetTime = CurTime() + 6
     }
 
     return movement_map[npc]
@@ -51,11 +51,11 @@ local function nextMovement(npc, positions)
             local pos = bgCitizens.points[index].pos
             local dist = movement_map[npc].pos:DistToSqr(pos)
 
-            if dist <= 500000 and bgCitizens:NPCIsViewVector(npc, pos) then -- 500 * 1000
+            if dist <= 500 ^ 2 and bgCitizens:NPCIsViewVector(npc, pos) then
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
-                    resetTime = CurTime() + 10
+                    resetTime = CurTime() + 6
                 }
 
                 return movement_map[npc]
@@ -102,7 +102,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
 
                         if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
-                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10000 then -- 10 * 1000
+                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10 ^ 2 then
                                 getNewPos = true
                             else
                                 data.startWalkTime = nil

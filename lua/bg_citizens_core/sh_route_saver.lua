@@ -68,7 +68,7 @@ else
                         local pos = v.pos
                         local otherPos = v2.pos
 
-                        if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500000 then -- 500 * 1000
+                        if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500 ^ 2 then
                             if pos ~= otherPos and pos.z >= otherPos.z - 100 and pos.z <= otherPos.z + 100 then
                                 local tr = util.TraceLine( {
                                     start = pos + Vector(0, 0, 30),
