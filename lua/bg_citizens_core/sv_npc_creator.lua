@@ -1,38 +1,31 @@
 timer.Create('bgCitizensCreator', 1, 0, function()
-    local max_npc_count = GetConVar('bg_citizens_max_npc'):GetInt()
-    local npcs_count = #bgCitizens.npcs
-    local fnpcs_count = #bgCitizens.fnpcs
+    local bg_citizens_enable = GetConVar('bg_citizens_enable'):GetInt()
 
-    if npcs_count > 0 then
-        for i = npcs_count, 1, -1 do
-            if not IsValid(bgCitizens.npcs[i]) then
-                table.remove(bgCitizens.npcs, i)
-            end
-        end
+    if bg_citizens_enable <= 0 then
+        return
     end
 
-    if fnpcs_count > 0 then
-        for i = fnpcs_count, 1, -1 do
-            if not IsValid(bgCitizens.fnpcs[i]) then
-                table.remove(bgCitizens.fnpcs, i)
-            end
-        end
-    end
+    local bg_citizens_max_npc = GetConVar('bg_citizens_max_npc'):GetInt()
+    local bg_citizens_spawn_radius = GetConVar('bg_citizens_spawn_radius'):GetFloat()
+    local bg_citizens_spawn_radius_visibility = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat()
+    local bg_citizens_spawn_radius_ray_tracing = GetConVar('bg_citizens_spawn_radius_ray_tracing'):GetFloat()
+    
+    bgCitizens:ClearRemovedNPCs()
 
-    if npcs_count < max_npc_count then
+    if #bgCitizens:GetAll() < bg_citizens_max_npc then
         if #bgCitizens.points ~= 0 then
             local points_close = {}
 
             for _, v in pairs(bgCitizens.points) do
                 for _, ply in pairs(player.GetAll()) do
-                    if v.pos:Distance(ply:GetPos()) < 3000 then
+                    if v.pos:Distance(ply:GetPos()) < bg_citizens_spawn_radius then
                         table.insert(points_close, v.pos)
                     end
                 end
             end
 
             if #points_close ~= 0 then
-                for _, npc_object in pairs(bgCitizens.npc_classes) do
+                for _, npc_data in pairs(bgCitizens.npc_classes) do
                     local pos = table.Random(points_close)
                 
                     for _, ent in pairs(ents.FindInSphere(pos, 10)) do
@@ -42,100 +35,75 @@ timer.Create('bgCitizensCreator', 1, 0, function()
                     end
 
                     for _, ply in pairs(player.GetAll()) do
-                        if pos:Distance(ply:GetPos()) < 2000 and bgCitizens:PlayerIsViewVector(ply, pos) then
+                        local distance = pos:Distance(ply:GetPos())
+                        if distance < bg_citizens_spawn_radius_visibility 
+                            and bgCitizens:PlayerIsViewVector(ply, pos)
+                        then
+                            if distance > bg_citizens_spawn_radius_ray_tracing then
+                                local tr = util.TraceLine({
+                                    start = ply:EyePos(),
+                                    endpos = pos,
+                                    filter = function(ent)
+                                        if ent ~= ply then 
+                                            return true 
+                                        end
+                                    end
+                                })
+
+                                -- print(tr.Entity)
+                                if not IsValid(tr.Entity) then
+                                    -- print('spawn')
+                                    return
+                                end
+                            end
                             return
                         end
                     end
                     
-                    local count = 0
-                    for _, npc in pairs(bgCitizens.npcs) do
-                        if IsValid(npc) and npc:GetClass() == npc_object.class then
-                            count = count + 1
-                        end
-                    end
+                    local count = table.Count(bgCitizens:GetAllNPCsByType(npc_data.type))
 
-                    if count > math.Round(((npc_object.fullness / 100) * max_npc_count)) then
+                    if count > math.Round(((npc_data.fullness / 100) * bg_citizens_max_npc)) then
                         goto skip
                     end
 
-                    if hook.Run('bgCitizens_PreValidSpawnNPC', npc_object) ~= nil then
+                    if hook.Run('bgCitizens_PreValidSpawnNPC', npc_data) ~= nil then
                         goto skip
                     end
 
-                    local npc = ents.Create(npc_object.class)
+                    local npc = ents.Create(npc_data.class)
                     npc:SetPos(pos)
                     npc:SetSpawnEffect(true)
 
                     local entities = {}
-                    table.Merge(entities, bgCitizens.npcs)
+                    table.Merge(entities, bgCitizens:GetAllNPCs())
                     table.Merge(entities, player.GetAll())
 
-                    if npc_object.relationship ~= nil then
-                        for _, ent in pairs(entities) do
-                            if IsValid(ent) then
-                                if ent:IsPlayer() then
-                                    npc:AddEntityRelationship(ent, npc_object.relationship, 99)
-                                end
-
-                                if ent:IsNPC() then
-                                    if ent:GetClass() == npc_object.class then
-                                        npc:AddEntityRelationship(ent, D_LI, 99)
-                                        ent:AddEntityRelationship(npc, D_LI, 99)
-                                    else
-                                        npc:AddEntityRelationship(ent, npc_object.relationship, 99)
-                                        ent:AddEntityRelationship(npc, npc_object.relationship, 99)
-                                    end
-                                end
-                            end
-                        end
-                    else
-                        for _, ent in pairs(entities) do
-                            if IsValid(ent) and ent:IsNPC() and ent:GetClass() == npc_object.class then
-                                npc:AddEntityRelationship(ent, D_LI, 99)
-                                ent:AddEntityRelationship(npc, D_LI, 99)
+                    for _, ent in pairs(entities) do
+                        if IsValid(ent) then
+                            if ent:IsPlayer() then
+                                npc:AddEntityRelationship(ent, D_NU, 99)
+                            elseif ent:IsNPC() then
+                                npc:AddEntityRelationship(ent, D_NU, 99)
+                                ent:AddEntityRelationship(npc, D_NU, 99)
                             end
                         end
                     end
 
-                    npc.bgCitizenType = npc_object.type
-                    npc.bgCitizenState = { 
-                        state = 'walk', 
-                        data = {
-                            schedule = SCHED_FORCED_GO,
-                            runReset = 0
-                        } 
-                    }
-                    
-                    function npc:bgCitizenTaskClear()
-                        self:ClearSchedule()
-                    end
-
-                    function npc:bgCitizenStateUpdate(state, data)
-                        self.bgCitizenState = { state = state, data = (data or {}) }
-                        return self.bgCitizenState
-                    end
-
-                    function npc:GetState()
-                        return self.bgCitizenState.state
-                    end
-
-                    function npc:GetStateData()
-                        return self.bgCitizenState.data
-                    end
-
-                    if hook.Run('bgCitizens_PreSpawnNPC', npc, npc_object) ~= nil then
+                    if hook.Run('bgCitizens_PreSpawnNPC', npc, npc_data) ~= nil then
                         npc:Remove()
                         goto skip
                     end
 
                     npc:Spawn()
 
-                    table.insert(bgCitizens.npcs, npc)
-                    bgCitizens.fnpcs[npc_object.type] = bgCitizens.fnpcs[npc_object.type] or {}
-                    table.insert(bgCitizens.fnpcs[npc_object.type], npc)
+                    local actor = BG_NPC_CLASS:Instance(npc, npc_data)
+                    actor:SetDefaultState()
 
-                    hook.Run('bgCitizens_PostSpawnNPC', npc)
+                    bgCitizens:AddNPC(actor)
 
+                    npc:SetNWString('bgCitizenType', npc_data.type)
+
+                    hook.Run('bgCitizens_PostSpawnNPC', actor)
                     ::skip::
                 end
             end
