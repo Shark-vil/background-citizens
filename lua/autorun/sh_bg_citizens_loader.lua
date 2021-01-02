@@ -13,14 +13,16 @@ local function _include(filename)
     include(root_directory .. '/' .. filename)
 end
 
-if SERVER then
-    file.CreateDir('citizens_points')
+file.CreateDir('citizens_points')
+file.CreateDir('citizens_points_compile')
 
+if SERVER then
     _AddCSLuaFile('sh_config.lua')
     _AddCSLuaFile('global/sh_meta.lua')
     _AddCSLuaFile('classes/sh_bg_npc_class.lua')
     _AddCSLuaFile('sh_route_saver.lua')
     _AddCSLuaFile('sh_points_loader.lua')
+    _AddCSLuaFile('cl_compile.lua')
     _include('sv_cvars.lua')
     _include('sh_config.lua')
 
@@ -50,4 +52,5 @@ else
     _include('classes/sh_bg_npc_class.lua')
     _include('sh_route_saver.lua')
     _include('sh_points_loader.lua')
+    _include('cl_compile.lua')
 end

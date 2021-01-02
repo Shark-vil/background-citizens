@@ -138,10 +138,16 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:GetState()
+        if self.npc.bgCitizenState == nil then
+            return 'none'
+        end
         return self.npc.bgCitizenState.state
     end
 
     function obj:GetStateData()
+        if self.npc.bgCitizenState == nil then
+            return {}
+        end
         return self.npc.bgCitizenState.data
     end
 
