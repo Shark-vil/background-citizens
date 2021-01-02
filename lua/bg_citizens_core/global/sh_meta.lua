@@ -1,7 +1,7 @@
 bgCitizens.wanted = {}
 
 function bgCitizens:PlayerIsViewVector(ply, pos)
-    local DirectionAngle = math.pi / 80 -- 90
+    local DirectionAngle = math.pi / 90 -- 90
     local EntityDifference = pos - ply:EyePos()
     local EntityDifferenceDot = ply:GetAimVector():Dot(EntityDifference) / EntityDifference:Length()
     local IsView = EntityDifferenceDot > DirectionAngle
@@ -29,7 +29,7 @@ end
 
 function bgCitizens:GetAllPointsInRadius(center, radius)
     local radius_positions = {}
-    radius = radius * 1000
+    radius = radius ^ 2
 
     for _, v in ipairs(bgCitizens.points) do
         if v.pos:DistToSqr(center) <= radius then
@@ -50,8 +50,8 @@ end
 
 function bgCitizens:GetAllByRadius(center, radius)
     local npcs = {}
-    radius = radius * 1000
-
+    radius = radius ^ 2
+    
     for _, actor in ipairs(self.npcs) do
         local npc = actor:GetNPC()
         if IsValid(npc) and npc:GetPos():DistToSqr(center) <= radius then

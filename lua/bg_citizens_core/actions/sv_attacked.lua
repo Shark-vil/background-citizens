@@ -1,3 +1,10 @@
+hook.Add("OnNPCKilled", "bgCitizens_OnNPCKilled", function(npc, attacker, inflictor)
+    local actor = bgCitizens:GetActor(npc)
+    if actor ~= nil then
+        hook.Run('bgCitizens_OnKilledActor', actor, attacker, inflictor)
+    end
+end)
+
 hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmginfo)
     if not target:IsPlayer() and not target:IsNPC() then return end
 
@@ -12,10 +19,15 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
             return
         else
             if attacker:IsPlayer() and ActorTarget:HasTeam('player') then
-                return true
+                return
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
                 if ActorTarget:HasTeam(ActorAttacker:GetData().team) then
-                    return true
+                    ActorTarget:RemoveTarget(attacker)
+                    ActorAttacker:RemoveTarget(target)
+
+                    attacker:AddEntityRelationship(target, D_NU, 99)
+                    target:AddEntityRelationship(attacker, D_NU, 99)
+                    return
                 end
             end
         end
@@ -27,7 +39,7 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
         local state = ActorTarget:GetState()
         ActorTarget:AddTarget(attacker)
 
-        if state ~= 'fear' and state ~= 'defense' and state ~= 'attacked' then
+        if state ~= 'fear' and state ~= 'defense'then
             local reaction = ActorTarget:GetReactionForDamage()
             ActorTarget:SetState(reaction, {
                 delay = 0
@@ -50,15 +62,19 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
         end
 
         local state = actor:GetState()
-        if state == 'fear' or state == 'defense' or state == 'attacked' then
+        if state == 'fear' or state == 'defense' then
             goto skip
         end
 
         if target:IsNPC() then
-            if attacker:IsPlayer() and target:Disposition(attacker) ~= D_HT then
-                if actor:GetType() == 'police' and target:Disposition(attacker) ~= D_HT then
-                    targetFromActor = attacker
-                elseif actor:HasTeam(ActorTarget:GetData().team) then
+            if attacker:IsPlayer() then
+                if actor:GetType() == 'police' then
+                    if bgCitizens:IsEnemyTeam(target, 'residents') then
+                        targetFromActor = target
+                    else
+                        targetFromActor = attacker
+                    end
+                elseif target:Disposition(attacker) ~= D_HT then
                     targetFromActor = attacker
                 end
             elseif attacker:IsNPC() then
@@ -69,9 +85,15 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
                 end
             end
         elseif target:IsPlayer() then
-            if attacker:IsNPC() then
-                if ActorAttacker ~= nil and actor:HasTeam(ActorAttacker:GetData().team) then
-                    targetFromActor = target
+            if attacker:IsNPC() and attacker:Disposition(target) == D_HT then
+                if ActorAttacker ~= nil then
+                    if actor:HasTeam(ActorAttacker:GetData().team) then
+                        targetFromActor = target
+                    else
+                        targetFromActor = attacker
+                    end
+                else
+                    targetFromActor = attacker
                 end
             end
         end
@@ -96,6 +118,25 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
     end
 end)
 
+timer.Create('bgCitizens_ActorsFriendServices', 5, 0, function()
+    local actors = bgCitizens:GetAll()
+    for _, ActorOne in ipairs(actors) do
+        for _, ActorTwo in ipairs(actors) do
+            if ActorOne ~= ActorTwo and ActorOne:HasTeam(ActorTwo:GetData().team) then
+                local npc_1 = ActorOne:GetNPC()
+                local npc_2 = ActorTwo:GetNPC()
+
+                if IsValid(npc_1) and IsValid(npc_2) then
+                    if npc_1:Disposition(npc_2) ~= D_LI or npc_2:Disposition(npc_1) ~= D_LI then
+                        npc_1:AddEntityRelationship(npc_2, D_LI, 99)
+                        npc_2:AddEntityRelationship(npc_1, D_LI, 99)
+                    end
+                end
+            end
+        end
+    end
+end)
+
 hook.Add('Think', 'bgCitizens_ResetAttackedEvent', function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
@@ -110,6 +151,11 @@ hook.Add('Think', 'bgCitizens_ResetAttackedEvent', function()
                     if IsValid(wep) then
                         wep:Remove()
                     end
+
+                    -- if actor:GetType() == 'police' then
+                    --     npc:Give('weapon_stunstick')
+                    --     npc:SelectWeapon('weapon_stunstick')
+                    -- end
 
                     actor:SetState('walk', {
                         schedule = SCHED_FORCED_GO,

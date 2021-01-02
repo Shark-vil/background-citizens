@@ -39,12 +39,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:RemoveTarget(ent)
-        for key, target in ipairs(self.targets) do
-            if target == ent then
-                table.remove(self.targets, key)
-                break
-            end
-        end
+        table.RemoveByValue(self.targets, ent)
     end
 
     function obj:HasTarget(ent)
@@ -53,6 +48,26 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     function obj:TargetsCount()
         return table.Count(self.targets)
+    end
+
+    function obj:GetNearTarget()
+        local target = NULL
+        local dist = 0
+        local self_npc = self:GetNPC()
+
+        for _, npc in ipairs(self.targets) do
+            if IsValid(npc) then
+                if not IsValid(target) then
+                    target = npc
+                    dist = npc:GetPos():DistToSqr(self_npc:GetPos())
+                elseif npc:GetPos():DistToSqr(self_npc:GetPos()) < dist then
+                    target = npc
+                    dist = npc:GetPos():DistToSqr(self_npc:GetPos())
+                end
+            end
+        end
+
+        return target
     end
 
     function obj:RecalculationTargets()
@@ -192,6 +207,12 @@ function BG_NPC_CLASS:Instance(npc, data)
 
         return reaction
     end
+
+    function npc:GetActor()
+        return obj
+    end
+
+    npc.isActor = true
 
     return obj
 end

@@ -2,7 +2,7 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
 
-        if math.random(0, 100) > 10 then
+        if math.random(0, 100) > 1 then
             goto skip
         end
 
@@ -26,7 +26,7 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
             local target = table.Random(targets)
             if IsValid(target) then
                 actor:AddTarget(target)
-                actor:SetState('attacked', {
+                actor:SetState('defense', {
                     delay = 0
                 })
                 break
@@ -34,64 +34,5 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
         end
 
         ::skip::
-    end
-end)
-
-
-hook.Add('Think', 'bgCitizens_StateAttackAction', function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            local state = actor:GetState()
-            local data = actor:GetStateData()
-
-            for _, target in ipairs(actor.targets) do
-                if state == 'attacked' then
-                    bgCitizens:SetActorWeapon(actor)
-
-                    if npc:Disposition(target) ~= D_HT then
-                        npc:AddEntityRelationship(target, D_HT, 99)
-                    end
-
-                    if npc:GetTarget() ~= target then
-                        npc:SetTarget(target)
-                    end
-
-                    if data.delay < CurTime() then
-                        local target = table.Random(actor.targets)
-                        if IsValid(target) then
-                            local point = nil
-                            local current_distance = npc:GetPos():DistToSqr(target:GetPos())
-    
-                            if current_distance >= 500000 then
-                                if math.random(0, 10) > 4 then
-                                    point = actor:GetMovementPointToTarget(target:GetPos())
-                                else
-                                    point = target:GetPos()
-                                end
-                            elseif current_distance < 500000 
-                                and current_distance > 200000
-                            then
-                                point = target:GetPos()
-                            end
-
-                            if point ~= nil then
-                                npc:SetSaveValue("m_vecLastPosition", point)
-                                npc:SetSchedule(SCHED_FORCED_GO_RUN)
-                                -- print('gangster move to ' .. tostring(point))
-                            end
-                            data.delay = CurTime() + 3
-                        end
-                    end
-                elseif state == 'attacked' and not IsValid(target) then
-                    local wep = npc:GetActiveWeapon()
-                    if IsValid(wep) then
-                        wep:Remove()
-                    end
-                    
-                    actor:SetDefaultState()
-                end
-            end
-        end
     end
 end)

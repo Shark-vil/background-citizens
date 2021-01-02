@@ -7,9 +7,14 @@ hook.Add('Think', 'bgCitizens_StateFearAction', function()
 
             if state == 'fear' and actor:TargetsCount() ~= 0  then
                 if data.delay < CurTime() then
-                    for _, target in pairs(actor.targets) do
+                    for _, target in ipairs(actor.targets) do
                         if npc:Disposition(target) ~= D_FR then
                             npc:AddEntityRelationship(target, D_FR, 99)
+                            local ActorTarget = bgCitizens:GetActor(target)
+                            if ActorTarget ~= nil then
+                                ActorTarget:AddTarget(npc)
+                                target:AddEntityRelationship(target, D_HT, 99)
+                            end
                         end
                     end
 
@@ -26,7 +31,7 @@ hook.Add('Think', 'bgCitizens_StateFearAction', function()
                 end
 
                 if data.schedule == 'run' and math.random(0, 100) == 0 then
-                    for _, target in pairs(actor.targets) do
+                    for _, target in ipairs(actor.targets) do
                         if npc:GetPos():Distance(target:GetPos()) < 150 then
                             data.schedule = 'fear'
                             break
