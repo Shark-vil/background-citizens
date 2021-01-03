@@ -69,7 +69,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
     if #bgCitizens.points ~= 0 then
         for _, actor in ipairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
-            if IsValid(npc) and actor:GetState() == 'walk' then
+            if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
                 local map = movement_map[npc]
                 local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
@@ -110,6 +110,13 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
 
                         if getNewPos then
+                            if math.random(0, 100) <= 10 then
+                                local id = tostring(math.random(1, 4))
+                                if actor:PlayStaticSequence('LineIdle0' .. id, true, 10) then
+                                    return
+                                end
+                            end
+
                             map = nextMovement(npc, positions)
 
                             npc:SetSaveValue("m_vecLastPosition", map.pos)

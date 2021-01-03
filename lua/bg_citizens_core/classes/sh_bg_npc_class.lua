@@ -6,6 +6,14 @@ function BG_NPC_CLASS:Instance(npc, data)
     obj.class = npc:GetClass()
     obj.data = data
     obj.type = data.type
+
+    obj.next_anim = nil
+    obj.anim_time = 0
+    obj.loop_time = 0
+    obj.anim_is_loop = false
+    obj.anim_name = ''
+    obj.is_animated = false
+
     obj.targets = {}
 
     function obj:GetNPC()
@@ -29,6 +37,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:ClearSchedule()
+        self.npc:SetNPCState(NPC_STATE_IDLE)
         self.npc:ClearSchedule()
     end
 
@@ -86,7 +95,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:SetState(state, data)
-        self.npc:ClearSchedule()
+        self:ClearSchedule()
         self.npc.bgCitizenState = { state = state, data = (data or {}) }
 
         if state == 'fear' and math.random(0, 10) <= 1 then
@@ -106,6 +115,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:SetDefaultState()
+        self:ClearSchedule()
         self:SetState('walk', {
             schedule = SCHED_FORCED_GO,
             runReset = 0
@@ -151,7 +161,28 @@ function BG_NPC_CLASS:Instance(npc, data)
         return self.npc.bgCitizenState.data
     end
 
-    function obj:GetMovementPointToTarget(pos, radius)
+    function obj:GetDistantPointInRadius(pos, radius)
+        radius = radius or 500
+        
+        local point = nil
+        local dist = 0
+        local npc = self:GetNPC()
+        local points = bgCitizens:GetAllPointsInRadius(npc:GetPos(), radius)
+
+        for _, value in ipairs(points) do
+            if point == nil then
+                point = value.pos
+                dist = point:DistToSqr(pos)
+            elseif value.pos:DistToSqr(pos) > dist then
+                point = value.pos
+                dist = point:DistToSqr(pos)
+            end
+        end
+
+        return point 
+    end
+
+    function obj:GetClosestPointToPosition(pos, radius)
         radius = radius or 500
         
         local point = nil
@@ -212,6 +243,100 @@ function BG_NPC_CLASS:Instance(npc, data)
         reaction = reaction or 'ignore'
 
         return reaction
+    end
+
+    function obj:SetSchedule(schedule)
+        if self:IsSequenceFinished() then
+            self.npc:SetSchedule(schedule)
+        end
+    end
+
+    function obj:IsValidSequence(sequence_name)
+        if self.npc:LookupSequence(sequence_name) == -1 then return false end
+        return true
+    end
+
+    function obj:PlayStaticSequence(sequence_name, loop, loop_time)
+        if self:IsValidSequence(sequence_name) then
+            if self:HasSequence(sequence_name) and not self:IsSequenceFinished() then
+                return true
+            end
+
+            self.anim_is_loop = loop or false
+            self.anim_name = sequence_name
+            if loop_time ~= nil and loop_time ~= 0 then
+                self.loop_time = RealTime() + loop_time
+            else
+                self.loop_time = 0
+            end
+            local sequence = self.npc:LookupSequence(sequence_name)
+            self.anim_time = RealTime() + self.npc:SequenceDuration(sequence)
+            self.is_animated = true
+            
+            self.npc:SetNPCState(NPC_STATE_SCRIPT)
+            self.npc:SetSchedule(SCHED_SLEEP)
+            self.npc:ResetSequenceInfo()
+            self.npc:ResetSequence(sequence)
+
+            -- print(tostring(self.anim_is_loop) .. ' - ' .. self.anim_name)
+
+            return true
+        end
+        return false
+    end
+
+    function obj:SetNextSequence(sequence_name, loop, loop_time, action)
+        self.next_anim = {
+            sequence_name = sequence_name,
+            loop = loop,
+            loop_time = loop_time,
+            action = action,
+        }
+    end
+
+    function obj:HasSequence(sequence_name)
+        return self.anim_name == sequence_name
+    end
+
+    function obj:IsAnimationPlayed()
+        return self.is_animated
+    end
+
+    function obj:IsSequenceLoopFinished()
+        if self:IsLoopSequence() then
+            if self.loop_time == 0 then return false end
+            return self.loop_time < RealTime()
+        end
+        return true
+    end
+
+    function obj:IsLoopSequence()
+        return self.anim_is_loop
+    end
+
+    function obj:IsSequenceFinished()
+        return self.anim_time <= RealTime()
+    end
+
+    function obj:ResetSequence()
+        -- self.anim_name = ''
+        -- self.anim_time = 0
+        -- self.anim_is_loop = false
+        
+        if self.next_anim ~= nil and self.next_anim.sequence_name ~= self.anim_name then
+            self:PlayStaticSequence(self.next_anim.sequence_name,
+                self.next_anim.loop, self.next_anim.loop_time)
+            if self.next_anim.action ~= nil then
+                self.next_anim.action(self)
+            end
+
+            self.next_anim = nil
+            return
+        end
+
+        self.is_animated = false
+        self.next_anim = nil
+        self:ClearSchedule()
     end
 
     function npc:GetActor()

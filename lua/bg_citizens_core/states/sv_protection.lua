@@ -27,7 +27,7 @@ hook.Add('Think', 'bgCitizens_StateProtectionAction', function()
 
                         if current_distance > 500 ^ 2 then
                             if math.random(0, 10) > 4 then
-                                point = actor:GetMovementPointToTarget(target:GetPos())
+                                point = actor:GetClosestPointToPosition(target:GetPos())
                             else
                                 point = target:GetPos()
                             end

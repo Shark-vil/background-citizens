@@ -6,48 +6,130 @@ hook.Add('Think', 'bgCitizens_StateFearAction', function()
             local data = actor:GetStateData()
 
             if state == 'fear' and actor:TargetsCount() ~= 0  then
-                if data.delay < CurTime() then
-                    for _, target in ipairs(actor.targets) do
-                        if npc:Disposition(target) ~= D_FR then
-                            npc:AddEntityRelationship(target, D_FR, 99)
-                            local ActorTarget = bgCitizens:GetActor(target)
-                            if ActorTarget ~= nil then
-                                ActorTarget:AddTarget(npc)
-                                target:AddEntityRelationship(target, D_HT, 99)
+                local target = actor:GetNearTarget()     
+                if IsValid(target) then
+                    data.anim = data.anim or 0
+
+                    if data.delay < CurTime() then
+                        for _, target in ipairs(actor.targets) do
+                            if npc:Disposition(target) ~= D_FR then
+                                npc:AddEntityRelationship(target, D_FR, 99)
+                                local ActorTarget = bgCitizens:GetActor(target)
+                                if ActorTarget ~= nil then
+                                    ActorTarget:AddTarget(npc)
+                                    target:AddEntityRelationship(target, D_HT, 99)
+                                end
                             end
                         end
+
+                        if data.schedule == 'run' 
+                            and npc:GetPos():DistToSqr(target:GetPos()) > 300 ^ 2 
+                            and math.random(0, 10) == 0
+                        then
+                            data.schedule = 'dyspnea'
+
+                            actor:ResetSequence()
+
+                            data.sequence = 'd2_coast03_PostBattle_Idle02_Entry'
+                            if not actor:IsValidSequence(data.sequence) then
+                                data.sequence = 'corpse_idle_to_inspect'
+                            end
+
+                            data.delay = CurTime() + 7
+                        else
+                            if data.schedule == 'dyspnea' then
+                                if actor:HasSequence('corpse_inspect_idle') then
+                                    actor:PlayStaticSequence('corpse_inspect_to_idle')
+                                end
+                                data.schedule = 'dyspnea_to_idle'
+                            end
+
+                            if data.schedule == 'dyspnea_to_idle' then
+                                if not actor:IsSequenceFinished() then
+                                    goto skip
+                                end
+                            end
+
+                            actor:ResetSequence()
+
+                            if math.random(0, 10) <= 1 then
+                                data.schedule = 'fear'
+                            else
+                                data.schedule = 'run'
+                                data.update_run = 0
+                            end
+
+                            data.delay = CurTime() + 10
+                        end
+
+                        actor:ClearSchedule()
                     end
 
-                    actor:ClearSchedule()
-
-                    if math.random(0, 10) <= 1 then
-                        data.schedule = 'fear'
-                    else
-                        data.schedule = 'run'
-                        data.update_run = 0
-                    end
-
-                    data.delay = CurTime() + 10
-                end
-
-                if data.schedule == 'run' and math.random(0, 100) == 0 then
-                    for _, target in ipairs(actor.targets) do
-                        if npc:GetPos():Distance(target:GetPos()) < 150 then
+                    if math.random(0, 100) == 0 then
+                        if npc:GetPos():DistToSqr(target:GetPos()) < 150 ^ 2 then
                             data.schedule = 'fear'
                             break
                         end
                     end
-                end
-                
-                if data.schedule == 'fear' then
-                    npc:ClearSchedule()
-                    npc:SetSchedule(SCHED_NONE)
-                    npc:SetSequence(npc:LookupSequence('Fear_Reaction_Idle'))
-                elseif data.schedule == 'run' and data.update_run < CurTime() then
-                    npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
-                    data.update_run = CurTime() + 3
+
+                    if data.schedule == 'dyspnea' then
+                        if data.sequence == 'corpse_idle_to_inspect' then
+                            if not actor:HasSequence(data.sequence) then
+                                actor:SetNextSequence('corpse_inspect_idle', true, 0, function(a)
+                                    data.sequence = 'corpse_inspect_idle'
+                                end)
+                                actor:PlayStaticSequence(data.sequence)
+                            end
+                        elseif data.sequence == 'd2_coast03_PostBattle_Idle02_Entry' then
+                            if not actor:HasSequence(data.sequence) then
+                                actor:SetNextSequence('d2_coast03_PostBattle_Idle02', true, 0, function(a)
+                                    data.sequence = 'd2_coast03_PostBattle_Idle02'
+                                end)
+                                actor:PlayStaticSequence(data.sequence)
+                            end
+                        end
+                    elseif data.schedule == 'fear' then                        
+                        local is_idle = math.random(0, 100)
+                        
+                        data.update_anim = data.update_anim or 0
+                        if data.update_anim < CurTime() then
+                            data.update_anim = CurTime() + 2
+                            data.anim = math.random(0, 100)
+                        end
+
+                        if data.anim > 30 then
+                            if is_idle >= 10 then
+                                actor:PlayStaticSequence('Fear_Reaction_Idle', true)
+                            else
+                                actor:PlayStaticSequence('Fear_Reaction', true)
+                            end
+                        else
+                            if is_idle >= 10 then
+                                actor:PlayStaticSequence('cower_Idle', true)
+                            else
+                                actor:PlayStaticSequence('cower', true)
+                            end
+                        end
+                    elseif data.schedule == 'run' and data.update_run < CurTime() then
+                        if math.random(0, 10) > 5 then
+                            npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
+                        else               
+                            local pos = actor:GetDistantPointInRadius(target:GetPos(), 1500)
+                            local move_pos = actor:GetClosestPointToPosition(pos)
+
+                            if move_pos == nil then
+                                npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
+                            else
+                                npc:SetSaveValue("m_vecLastPosition", move_pos)
+                                npc:SetSchedule(SCHED_FORCED_GO_RUN)
+                            end
+                        end
+                        data.update_run = CurTime() + 3
+                    end
                 end
             end
         end
+
+        ::skip::
     end
 end)
