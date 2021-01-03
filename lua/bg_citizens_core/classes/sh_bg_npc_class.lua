@@ -99,16 +99,32 @@ function BG_NPC_CLASS:Instance(npc, data)
         self.npc.bgCitizenState = { state = state, data = (data or {}) }
 
         if state == 'fear' and math.random(0, 10) <= 1 then
-            self.npc:EmitSound(table.Random({
-                'ambient/voices/f_scream1.wav',
+            local male_scream = {
                 'ambient/voices/m_scream1.wav',
-                'vo/canals/arrest_helpme.wav',
                 'vo/coast/bugbait/sandy_help.wav',
-                'vo/npc/female01/help01.wav',
                 'vo/npc/male01/help01.wav',
                 'vo/Streetwar/sniper/male01/c17_09_help01.wav',
                 'vo/Streetwar/sniper/male01/c17_09_help02.wav'
-            }), 500, 100, 1, CHAN_AUTO)
+            }
+
+            local female_scream = {
+                'ambient/voices/f_scream1.wav',
+                'vo/canals/arrest_helpme.wav',
+                'vo/npc/female01/help01.wav',
+                'vo/npc/male01/help01.wav',
+            }
+
+            local npc_model = self.npc:GetModel()
+            local scream_sound = nil
+            if tobool(string.find(npc_model, '*male_*')) then
+                scream_sound = table.Random(male_scream)
+            elseif tobool(string.find(npc_model, '*female_*')) then
+                scream_sound = table.Random(female_scream)
+            else
+                scream_sound = table.Random(table.Merge(male_scream, female_scream))
+            end
+
+            self.npc:EmitSound(scream_sound, 500, 100, 1, CHAN_AUTO)
         end
 
         return self.npc.bgCitizenState

@@ -5,11 +5,12 @@ hook.Add("bgCitizens_NPCLookAtObject", "bgCitizensOpenDoorAction", function(acto
         "func_door",
         "func_door_rotating",
         "prop_door_rotating",
-        "func_movelinear",
-        "prop_dynamic",
+        -- "func_movelinear",
+        -- "prop_dynamic",
     }
 
     if not table.HasValue(door_class, door:GetClass()) then return end
+    -- if not tobool(string.find(door:GetModel(), '*door*')) then return end
 
     local npc = actor:GetNPC()
 
