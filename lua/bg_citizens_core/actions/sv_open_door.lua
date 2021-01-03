@@ -1,4 +1,6 @@
-hook.Add("bgCitizens_ObjectBeforeNPC", "bgCitizensOpenDoorAction", function(actor, door)
+hook.Add("bgCitizens_NPCLookAtObject", "bgCitizensOpenDoorAction", function(actor, door)
+    if door:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 100 ^ 2 then return end
+
     local door_class = {
         "func_door",
         "func_door_rotating",
