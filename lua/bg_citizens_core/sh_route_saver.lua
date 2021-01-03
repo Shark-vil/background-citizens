@@ -56,7 +56,18 @@ if SERVER then
         if not IsValid(wep) then
             wep = ply:Give('weapon_citizens_points')
         end
-    
+
+        local limit = GetConVar('bg_citizens_tool_limit'):GetFloat()
+		if limit > 500 then
+			if navmesh.IsLoaded() then
+				wep.PointToPointLimit = limit
+			else
+				ply:ChatPrint('Attention! Navigation mesh not found, limit between points - 500 units')
+			end
+		end
+        
+        wep:SetNWFloat('bg_citizens_tool_limit', limit)
+
         ply:SelectWeapon(wep)
     end)
 else

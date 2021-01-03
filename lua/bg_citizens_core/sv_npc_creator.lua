@@ -26,7 +26,7 @@ timer.Create('bgCitizensCreator', GetConVar('bg_citizens_spawn_period'):GetFloat
 end)
 
 hook.Add("Think", "bgCitizensLoopAnimatorController", function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             if actor:IsAnimationPlayed() then

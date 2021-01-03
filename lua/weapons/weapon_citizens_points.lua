@@ -41,17 +41,20 @@ SWEP.Types = {
 	[3] = 'last_remover'
 }
 SWEP.CurrentTypeId = 1
+SWEP.PointToPointLimit = 500
+
+local clr = Color(255, 225, 0, 200)
+local clr_green = Color(72, 232, 9, 200)
+local clr_58 = Color(58, 23, 255, 100)
+local clr_255 = Color(255, 23, 23, 100)
+local vec_20 = Vector(0, 0, 20)
+local vec_30 = Vector(0, 0, 30)
+local color_white = Color(255, 255, 255)
+local color_black = Color(0, 0, 0)
 
 function SWEP:Initialize()
 	if SERVER then return end
-	local clr = Color(255, 225, 0, 200)
-	local clr_58 = Color(58, 23, 255, 100)
-	local clr_255 = Color(255, 23, 23, 100)
-	local vec_20 = Vector(0, 0, 20)
-	local vec_30 = Vector(0, 0, 30)
-	local color_white = Color(255, 255, 255)
-	local color_black = Color(0, 0, 0)
-
+	
 	self.Points = {}
 	for index, v in pairs(bgCitizens.points) do
 		self.Points[index] = v.pos
@@ -61,25 +64,44 @@ function SWEP:Initialize()
 		surface.SetFont("Trebuchet24")
 		surface.SetTextColor(255, 255, 255)
 		surface.SetTextPos(30, 30) 
-		surface.DrawText(self:GetCurrentType())
+		local type = self:GetCurrentType()
+		if type == 'creator' then
+			surface.DrawText('Creating points')
+		elseif type == 'remover' then
+			surface.DrawText('Deleting a selected point')
+		elseif type == 'last_remover' then
+			surface.DrawText('Delete last point - ' .. tostring(#self.Points))
+		end
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', self, function()	
-		if #self.RangePoints ~= 0 then
-			local cam_angle = LocalPlayer():EyeAngles()
-			cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
-			cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
+		local cam_angle = LocalPlayer():EyeAngles()
+		cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
+		cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 
-			if self.Trace ~= nil and self.Lock then
-				local pos = self.Trace.HitPos
+		if self.Trace ~= nil and self:GetCurrentType() == 'creator' then
+			local pos = self.Trace.HitPos
 
+			if self.Lock then
 				render.DrawSphere(pos, 10, 20, 20, clr)
 				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined('Too far from other points', 
 						"TargetID", 0, 0, color_white, 
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 				cam.End3D2D()
+			else
+				if self.SelectedPointId == -1 then
+					render.DrawSphere(pos, 10, 20, 20, clr_green)
+					cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
+						draw.SimpleTextOutlined('Good place', 
+							"TargetID", 0, 0, color_white, 
+							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
+					cam.End3D2D()
+				end
 			end
+		end
+
+		if #self.RangePoints ~= 0 then
 
 			render.SetColorMaterial()
 
@@ -96,12 +118,12 @@ function SWEP:Initialize()
 				
 				for _, otherValue in ipairs(self.RangePoints) do
 					local otherPos = otherValue.pos
-					if otherPos:DistToSqr(pos) <= 500 ^ 2 then
+					if otherPos:DistToSqr(pos) <= self.PointToPointLimit ^ 2 then
 						local mainZ = pos.z
 						local otherZ = otherPos.z
 
 						if mainZ >= otherZ - 100 and mainZ <= otherZ + 100 then
-							local tr = util.TraceLine( {
+							local tr = util.TraceLine({
 								start = pos + vec_30,
 								endpos = otherPos,
 								filter = function(ent)
@@ -160,6 +182,8 @@ function SWEP:Think()
 	local owner = self.Owner
 
 	if IsValid(owner) and owner:Alive() then
+		self.PointToPointLimit = self:GetNWFloat('bg_citizens_tool_limit', 500)
+
 		local isSelectedPoint = false
 		local NewRangePoints = {}
 		
@@ -189,10 +213,9 @@ function SWEP:Think()
 			start = owner:GetShootPos(),
 			endpos = owner:GetShootPos() + owner:GetAimVector() * self.Distance,
 			filter = function(ent)
-				if IsValid(ent) and ent:IsPlayer() then 
-					return false
+				if ent ~= LocalPlayer() then 
+					return true
 				end
-				return true
 			end
 		} )
 
@@ -202,9 +225,26 @@ function SWEP:Think()
 				local pos = self.Trace.HitPos
 
 				for _, pointPos in ipairs(self.Points) do
-					if pos:DistToSqr(pointPos) <= 500 ^ 2 then
-						awayAllow = false
-						break
+					if pos:DistToSqr(pointPos) <= self.PointToPointLimit ^ 2 then
+						local mainZ = pos.z
+						local otherZ = pointPos.z
+
+						if mainZ >= otherZ - 100 and mainZ <= otherZ + 100 then
+							local tr = util.TraceLine({
+								start = pos + vec_30,
+								endpos = pointPos,
+								filter = function(ent)
+									if ent:IsWorld() then
+										return true
+									end
+								end
+							})
+
+							if not tr.Hit then
+								awayAllow = false
+								break
+							end
+						end
 					end
 				end
 
@@ -221,11 +261,11 @@ end
 
 function SWEP:IsDelay(name)
 	self.Delays[name] = self.Delays[name] or 0
-	if self.Delays[name] > CurTime() then 
-		self.Delays[name] = CurTime() + 0.1
+	if self.Delays[name] > RealTime() then 
+		self.Delays[name] = RealTime() + 0.2
 		return true
 	end
-	self.Delays[name] = CurTime() + 0.1
+	self.Delays[name] = RealTime() + 0.2
 	return false
 end
 
@@ -262,8 +302,12 @@ function SWEP:PrimaryAttack()
 	if hit_vector ~= nil then
 		local type = self:GetCurrentType()
 		if type == 'creator' then
-			local place_vector = hit_vector + Vector(0, 0, 15)
-			self:AddPointPosition(place_vector)
+			if self.SelectedPointId == -1 then
+				local place_vector = hit_vector + Vector(0, 0, 15)
+				self:AddPointPosition(place_vector)
+			else
+				LocalPlayer():ChatPrint('Don\'t place the points too close to each other!')
+			end
 		elseif type == 'remover' and self.SelectedPointId ~= -1 then
 			table.remove(self.Points, self.SelectedPointId)
 			self.SelectedPointId = -1
