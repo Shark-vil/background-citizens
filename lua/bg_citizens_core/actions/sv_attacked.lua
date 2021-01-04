@@ -32,7 +32,9 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
             end
         end
 
-        if hook.Run('bgCitizens_TakeDamageReaction', attacker, target, dmginfo) ~= nil then
+        local hook_result = hook.Run('bgCitizens_TakeDamageReaction', attacker, target, dmginfo)
+        if hook_result ~= nil then
+            if isbool(hook_result) then return hook_result end
             return
         end
 
