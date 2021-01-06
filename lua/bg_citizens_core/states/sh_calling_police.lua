@@ -76,6 +76,7 @@ if SERVER then
                     end
 
                     enemy.bgCitizenWantedReset = 0
+                    bgCitizens.killing_statistic[enemy] = {}
                     table.remove(bgCitizens.wanted, i)
                 end
             end
