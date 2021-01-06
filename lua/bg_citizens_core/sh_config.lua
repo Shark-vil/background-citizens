@@ -1,3 +1,8 @@
+--[[
+    WIKI:
+    https://background-npcs.itpony.ru/wik
+--]]
+
 -- Creates files with preset points for maps:
 -- gm_bigcity_improved
 -- rp_southside

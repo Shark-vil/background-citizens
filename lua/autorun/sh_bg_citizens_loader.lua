@@ -1,3 +1,8 @@
+--[[
+    WIKI:
+    https://background-npcs.itpony.ru/wik
+--]]
+
 file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
