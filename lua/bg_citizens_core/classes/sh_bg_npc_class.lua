@@ -100,6 +100,8 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:SetOldState()
+        if self:GetData().disableStates then return end
+        
         if self.old_state ~= nil then
             self.npc.bgCitizenState = self.old_state
             self.old_state = nil
@@ -112,6 +114,8 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:SetState(state, data)
+        if self:GetData().disableStates then return end
+
         if SERVET then
             self:ResetSequence()
             self:ClearSchedule()

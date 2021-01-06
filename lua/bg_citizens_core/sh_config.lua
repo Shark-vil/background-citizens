@@ -86,10 +86,23 @@ bgCitizens.npc_classes = {
     {
         class = 'npc_metropolice',
         type = 'police',
-        fullness = 10,
+        fullness = 8,
         team = { 'residents', 'police' },
         weapons = {'weapon_smg1', 'weapon_pistol'},
         money = { 0, 600 }, -- does nothing yet
+        at_damage = {
+            ['defense'] = 100,
+        },
+        at_protect = {
+            ['defense'] = 100,
+        }
+    },
+    {
+        class = 'npc_cscanner',
+        type = 'police_cscanner',
+        fullness = 2,
+        team = { 'residents', 'police' },
+        disableStates = true,
         at_damage = {
             ['defense'] = 100,
         },
