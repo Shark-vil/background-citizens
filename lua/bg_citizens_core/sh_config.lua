@@ -3,6 +3,7 @@
 -- rp_southside
 bgCitizens.loadPresets = true
 
+bgCitizens.wanted_mode = true
 bgCitizens.wanted_time = 30
 
 -- NPC classes that fill the streets

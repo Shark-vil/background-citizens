@@ -116,6 +116,13 @@ if SERVER then
                 local data = actor:GetStateData()
     
                 if state == 'calling_police' then
+                    if not bgCitizens.wanted_mode then
+                        actor:SetState('fear', {
+                            delay = 0
+                        })
+                        goto skip
+                    end
+
                     local target = actor:GetNearTarget()     
                     if IsValid(target) then
                         if npc:GetPos():DistToSqr(target:GetPos()) < 90000 then -- 300 ^ 2
