@@ -48,6 +48,9 @@ end
 
 using('global/sv_meta.lua')
 using('global/sh_meta.lua')
+using('global/sh_actors_finder.lua')
+using('global/sh_actors_register.lua')
+using('global/sh_killing_statistic.lua')
 
 using('classes/sh_bg_npc_class.lua')
 
