@@ -41,7 +41,9 @@ if SERVER then
         bgCitizens.SendRoutesFromClient(ply)
     end)
 
-    bgCitizens.LoadRoutes()
+    hook.Add("Initialize", "BGN_FirstInitializeRoutesOnMap", function()
+        bgCitizens.LoadRoutes()
+    end)
 else
     concommand.Add('cl_citizens_load_route', function(ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end

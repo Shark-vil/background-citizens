@@ -1,4 +1,14 @@
-bgCitizens.wanted = {}
+if CLIENT then
+    net.Receive('bgCitizensAddActorFromClient', function()
+        local id = net.ReadInt(10)
+        local npc = net.ReadEntity()
+
+        if IsValid(npc) then
+            local actor = BG_NPC_CLASS:Instance(npc, bgCitizens.npc_classes[id])
+            bgCitizens:AddNPC(actor)
+        end
+    end)
+end
 
 function bgCitizens:PlayerIsViewVector(ply, pos, radius)
     radius = radius or 90
@@ -21,12 +31,18 @@ function bgCitizens:NPCIsViewVector(npc, pos, radius)
     return angCos >= directionAngCos
 end
 
-function bgCitizens:AddNPC(npc_object)
-    table.insert(self.npcs, npc_object)
+function bgCitizens:AddNPC(actor)    
+    table.insert(self.actors, actor)
 
-    local type = npc_object:GetType()
+    local npc = actor:GetNPC()
+    table.insert(self.npcs, npc)
+
+    local type = actor:GetType()
+    self.factors[type] = self.factors[type] or {}
+    table.insert(self.factors[type], actor)
+
     self.fnpcs[type] = self.fnpcs[type] or {}
-    table.insert(self.fnpcs[type], npc_object)
+    table.insert(self.fnpcs[type], npc)
 end
 
 function bgCitizens:GetAllPointsInRadius(center, radius)
@@ -43,10 +59,18 @@ function bgCitizens:GetAllPointsInRadius(center, radius)
 end
 
 function bgCitizens:GetAll()
-    return self.npcs
+    return self.actors
 end
 
 function bgCitizens:GetAllByType(type)
+    return self.factors[type] or {}
+end
+
+function bgCitizens:GetAllNPCs()
+    return self.npcs
+end
+
+function bgCitizens:GetAllNPCsByType(type)
     return self.fnpcs[type] or {}
 end
 
@@ -54,44 +78,18 @@ function bgCitizens:GetAllByRadius(center, radius)
     local npcs = {}
     radius = radius ^ 2
     
-    for _, actor in ipairs(self.npcs) do
+    for _, actor in ipairs(self:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and npc:GetPos():DistToSqr(center) <= radius then
             table.insert(npcs, actor)
         end
     end
-    return npcs
-end
 
-function bgCitizens:GetAllNPCs()
-    local npcs = {}
-    for _, actor in ipairs(self.npcs) do
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            table.insert(npcs, npc)
-        end
-    end
-    return npcs
-end
-
-function bgCitizens:GetAllNPCsByType(type)
-    local npcs = {}
-    for _, actor in ipairs(self:GetAllByType(type)) do
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            table.insert(npcs, npc)
-        end
-    end
     return npcs
 end
 
 function bgCitizens:HasNPC(npc)
-    for _, bgNPC in ipairs(bgCitizens:GetAllNPCs()) do
-        if bgNPC == npc then
-            return true
-        end
-    end
-    return false
+    return table.HasValue(bgCitizens:GetAllNPCs(), npc)
 end
 
 function bgCitizens:GetActor(npc)
@@ -104,35 +102,37 @@ function bgCitizens:GetActor(npc)
 end
 
 function bgCitizens:ClearRemovedNPCs()
-    do
-        local new_table = {}
-        for _, object in ipairs(bgCitizens.npcs) do
-            local npc = object:GetNPC()
-            if IsValid(npc) and npc:Health() > 0 then
-                table.insert(new_table, object)
-            end
+    for i = #self.actors, 1, -1 do
+        local npc = self.actors[i]:GetNPC()
+        if not IsValid(npc) or npc:Health() <= 0 then
+            table.remove(self.actors, i)
         end
-
-        self.npcs = new_table
     end
 
-    do
-        local new_table = {}
-        for key, data in pairs(self.fnpcs) do
-            for _, object in ipairs(data) do
-                local npc = object:GetNPC()
-                if IsValid(npc) and npc:Health() > 0 then
-                    new_table[key] = new_table[key] or {}
-                    table.insert(new_table[key], object)
-                end
-            end
+    for i = #self.npcs, 1, -1 do
+        local npc = self.npcs[i]
+        if not IsValid(npc) or npc:Health() <= 0 then
+            table.remove(self.npcs, i)
         end
-        self.fnpcs = new_table
     end
 
-    -- for key, data in pairs(self.fnpcs) do
-    --     print('['.. key .. '] ' .. tostring(#data))
-    -- end
+    for key, data in pairs(self.factors) do
+        for i = #data, 1, -1 do
+            local npc = data[i]:GetNPC()
+            if not IsValid(npc) or npc:Health() <= 0 then
+                table.remove(self.factors[key], i)
+            end
+        end
+    end
+
+    for key, data in pairs(self.fnpcs) do
+        for i = #data, 1, -1 do
+            local npc = data[i]
+            if not IsValid(npc) or npc:Health() <= 0 then
+                table.remove(self.fnpcs[key], i)
+            end
+        end
+    end
 end
 
 function bgCitizens:IsTeamOnce(npc1, npc2)

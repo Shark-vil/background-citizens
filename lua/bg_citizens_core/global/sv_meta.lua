@@ -1,3 +1,27 @@
+util.AddNetworkString('bgCitizensAddActorFromClient')
+
+bgCitizens.killing_statistic = {}
+
+function bgCitizens:AddKillingStatistic(attacker, actor)
+    self.killing_statistic[attacker] = self.killing_statistic[attacker] or {}
+
+    local type = actor:GetType()
+    self.killing_statistic[attacker][type] = self.killing_statistic[attacker][type] or 0
+    self.killing_statistic[attacker][type] = self.killing_statistic[attacker][type] + 1
+
+    return self.killing_statistic[attacker][type]
+end
+
+function bgCitizens:GetKillingStatistic(attacker, type)
+    self.killing_statistic[attacker] = self.killing_statistic[attacker] or {}
+    if type == nil then
+        return self.killing_statistic[attacker]
+    else
+        self.killing_statistic[attacker][type] = self.killing_statistic[attacker][type] or 0
+        return self.killing_statistic[attacker][type]
+    end
+end
+
 function bgCitizens:IsFearNPC(npc)
     if IsValid(npc) and npc:IsNPC() then
         local schedule = npc:GetCurrentSchedule()
@@ -56,7 +80,7 @@ function bgCitizens:SpawnActor(type)
     local bg_citizens_spawn_block_radius
         = GetConVar('bg_citizens_spawn_block_radius'):GetFloat() ^ 2
 
-    for _, data in ipairs(bgCitizens.npc_classes) do
+    for id, data in ipairs(bgCitizens.npc_classes) do
         if data.type == type then
             local points_close = {}
             local players = player.GetAll()
@@ -123,7 +147,7 @@ function bgCitizens:SpawnActor(type)
 
             local npc = ents.Create(data.class)
             npc:SetPos(pos)
-            npc:SetSpawnEffect(true)
+            -- npc:SetSpawnEffect(true)
 
             --[[
                 ATTENTION! Be careful, this hook is called before the NPC spawns. If you give out a weapon or something similar, it will crash the game!
@@ -135,6 +159,16 @@ function bgCitizens:SpawnActor(type)
 
             npc:Spawn()
 
+            if data.models then
+                if data.defaultModels then
+                    if math.random(0, 10) <= 5 then
+                        npc:SetModel(table.Random(data.models))
+                    end
+                else
+                    npc:SetModel(table.Random(data.models))
+                end
+            end
+
             local entities = {}
             table.Merge(entities, bgCitizens:GetAllNPCs())
             table.Merge(entities, player.GetAll())
@@ -143,24 +177,26 @@ function bgCitizens:SpawnActor(type)
                 if IsValid(ent) then
                     if ent:IsPlayer() then
                         npc:AddEntityRelationship(ent, D_NU, 99)
-                    elseif ent:IsNPC() then
-                        local actor = bgCitizens:GetActor(ent)
-                        if actor ~= nil and actor:HasTeam(data.team) then
-                            npc:AddEntityRelationship(ent, D_LI, 99)
-                            ent:AddEntityRelationship(npc, D_LI, 99)
-                        else
-                            npc:AddEntityRelationship(ent, D_NU, 99)
-                            ent:AddEntityRelationship(npc, D_NU, 99)
-                        end
+                    elseif ent:IsNPC() and bgCitizens:GetActor(ent) ~= nil then
+                        npc:AddEntityRelationship(ent, D_NU, 99)
+                        ent:AddEntityRelationship(npc, D_NU, 99)
                     end
                 end
             end
             -- end)
 
             local actor = BG_NPC_CLASS:Instance(npc, data)
-            actor:SetDefaultState()
+            actor:Walk()
 
             bgCitizens:AddNPC(actor)
+
+            timer.Simple(1, function()
+                if not IsValid(npc) then return end
+                net.Start('bgCitizensAddActorFromClient')
+                net.WriteInt(id, 10)
+                net.WriteEntity(npc)
+                net.Broadcast()
+            end)
 
             -- npc:SetNWString('bgCitizenType', data.type)
 

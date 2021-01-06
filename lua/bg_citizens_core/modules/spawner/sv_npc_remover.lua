@@ -1,7 +1,21 @@
 hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsTables', function()
+    bgCitizens.actors = {}
+    bgCitizens.factors = {}
     bgCitizens.npcs = {}
     bgCitizens.fnpcs = {}
+    bgCitizens.wanted = {}
+
+    for _, ply in ipairs(player.GetAll()) do
+        ply:SetNWBool('bgCitizenWanted', false)
+        bgCitizens.killing_statistic[ply] = {}
+    end
 end)
+
+local function CleanupNPCsIfRemovedOrKilled()
+    bgCitizens:ClearRemovedNPCs()
+end
+hook.Add('bgCitizens_OnKilledActor', 'bgCitizensCleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
+hook.Add('EntityRemoved', 'bgCitizensCleanupNPCsTablesEntityRemoved', CleanupNPCsIfRemovedOrKilled)
 
 timer.Create('bgCitizensRemover', 1, 0, function()
     local npcs = bgCitizens:GetAllNPCs()

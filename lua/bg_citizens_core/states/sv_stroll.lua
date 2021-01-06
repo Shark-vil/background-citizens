@@ -11,7 +11,7 @@ local function getPositionsInRadius(npc)
     local radius_positions = {}
 
     for _, v in ipairs(bgCitizens.points) do
-        if v.pos:DistToSqr(npc_pos) <= 500 ^ 2 then
+        if v.pos:DistToSqr(npc_pos) <= 250000 then -- 500 ^ 2
             if movement_ignore[npc] ~= nil then
                 for _, data in ipairs(movement_ignore[npc]) do
                     if data.resetTime > CurTime() and data.pos == v.pos then
@@ -51,7 +51,7 @@ local function nextMovement(npc, positions)
             local pos = bgCitizens.points[index].pos
             local dist = movement_map[npc].pos:DistToSqr(pos)
 
-            if dist <= 500 ^ 2 and bgCitizens:NPCIsViewVector(npc, pos) then
+            if dist <= 250000 and bgCitizens:NPCIsViewVector(npc, pos) then -- 500 ^ 2
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
@@ -65,7 +65,17 @@ local function nextMovement(npc, positions)
     return updateMovement(npc, positions)
 end
 
-timer.Create('bgCitizensMoveController', 0.3, 0, function()
+hook.Run('bgCitizens_PostOpenDoor', 'ReloadNPCStateAfterDoorOpen', function(actor)
+    if actor:GetState() == 'walk' then
+        local npc = actor:GetNPC()
+        local map = movement_map[npc]
+        if map ~= nil then
+            map.resetTime = 0
+        end
+    end
+end)
+
+timer.Create('bgCitizensMoveController', 0.5, 0, function()
     if #bgCitizens.points ~= 0 then
         for _, actor in ipairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
@@ -111,10 +121,8 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
 
                         if getNewPos then
                             if math.random(0, 100) <= 10 then
-                                local id = tostring(math.random(1, 4))
-                                if actor:PlayStaticSequence('LineIdle0' .. id, true, 10) then
-                                    return
-                                end
+                                actor:Idle(10)
+                                return
                             end
 
                             map = nextMovement(npc, positions)

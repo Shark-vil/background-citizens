@@ -6,7 +6,7 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
             goto skip
         end
 
-        if IsValid(npc) and actor:GetState() ~= 'attacked' then
+        if IsValid(npc) and actor:GetState() ~= 'defense' then
             local target_from_zone = ents.FindInSphere(npc:GetPos(), 500)
             local targets = {}
 
@@ -17,7 +17,7 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
 
                 if ent:IsNPC() and ent ~= npc then
                     local ActorTarget = bgCitizens:GetActor(ent)
-                    if ActorTarget ~= nil and not actor:HasTeam(ActorTarget:GetData().team) then
+                    if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
                         table.insert(targets, ent)
                     end
                 end

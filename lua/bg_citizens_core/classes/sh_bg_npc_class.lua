@@ -13,7 +13,9 @@ function BG_NPC_CLASS:Instance(npc, data)
     obj.anim_is_loop = false
     obj.anim_name = ''
     obj.is_animated = false
+    obj.old_state = nil
 
+    obj.isBgnActor = true
     obj.targets = {}
 
     function obj:GetNPC()
@@ -37,17 +39,22 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:ClearSchedule()
+        if not IsValid(self.npc) then return end
+        
         self.npc:SetNPCState(NPC_STATE_IDLE)
         self.npc:ClearSchedule()
     end
 
     function obj:AddTarget(ent)
-        if not table.HasValue(self.targets, ent) then
+        if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
             table.insert(self.targets, ent)
         end
     end
 
     function obj:RemoveTarget(ent)
+        if IsValid(ent) and IsValid(self.npc) and ent:IsPlayer() then
+            self.npc:AddEntityRelationship(ent, D_NU, 99)
+        end
         table.RemoveByValue(self.targets, ent)
     end
 
@@ -80,67 +87,117 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:RecalculationTargets()
-        local new_table = {}
-        for _, ent in ipairs(self.targets) do
-            if IsValid(ent) then
-                if ent:Health() > 0 then
-                    table.insert(new_table, ent)
-                else
-                    self:GetNPC():AddEntityRelationship(ent, D_NU, 99)
-                end
+        for i = #self.targets, 1, -1 do
+            local target = self.targets[i]
+            if not IsValid(target) then
+                table.remove(self.targets, i)
+            elseif target:IsPlayer() and target:Health() <= 0 then
+                self:GetNPC():AddEntityRelationship(target, D_NU, 99)
+                table.remove(self.targets, i)
             end
         end
-        self.targets = new_table
         return self.targets
     end
 
+    function obj:SetOldState()
+        if self.old_state ~= nil then
+            self.npc.bgCitizenState = self.old_state
+            self.old_state = nil
+
+            if IsValid(self.npc) then
+                hook.Run('bgCitizen_SetNPCState', self, 
+                    self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
+            end
+        end
+    end
+
     function obj:SetState(state, data)
-        self:ClearSchedule()
+        if SERVET then
+            self:ResetSequence()
+            self:ClearSchedule()
+        end
+
+        -- if IsValid(self.npc) then
+        --     print(self.npc:EntIndex(), self.type, state)
+        -- end
+
+        if SERVER and (self.npc.bgCitizenState == nil or self.npc.bgCitizenState.state ~= state) 
+            and state == 'fear' and math.random(0, 10) <= 1 
+        then
+            local target = self:GetNearTarget()
+            if IsValid(target) and target:GetPos():DistToSqr(self.npc:GetPos()) < 250000 then
+                local male_scream = {
+                    'ambient/voices/m_scream1.wav',
+                    'vo/coast/bugbait/sandy_help.wav',
+                    'vo/npc/male01/help01.wav',
+                    'vo/Streetwar/sniper/male01/c17_09_help01.wav',
+                    'vo/Streetwar/sniper/male01/c17_09_help02.wav'
+                }
+
+                local female_scream = {
+                    'ambient/voices/f_scream1.wav',
+                    'vo/canals/arrest_helpme.wav',
+                    'vo/npc/female01/help01.wav',
+                    'vo/npc/male01/help01.wav',
+                }
+
+                local npc_model = self.npc:GetModel()
+                local scream_sound = nil
+                if tobool(string.find(npc_model, 'male_*')) then
+                    scream_sound = table.Random(male_scream)
+                elseif tobool(string.find(npc_model, 'female_*')) then
+                    scream_sound = table.Random(female_scream)
+                else
+                    scream_sound = table.Random(table.Merge(male_scream, female_scream))
+                end
+
+                self.npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
+            end
+        end
+
+        self.old_state = self.npc.bgCitizenState
         self.npc.bgCitizenState = { state = state, data = (data or {}) }
 
-        if state == 'fear' and math.random(0, 10) <= 1 then
-            local male_scream = {
-                'ambient/voices/m_scream1.wav',
-                'vo/coast/bugbait/sandy_help.wav',
-                'vo/npc/male01/help01.wav',
-                'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-                'vo/Streetwar/sniper/male01/c17_09_help02.wav'
-            }
-
-            local female_scream = {
-                'ambient/voices/f_scream1.wav',
-                'vo/canals/arrest_helpme.wav',
-                'vo/npc/female01/help01.wav',
-                'vo/npc/male01/help01.wav',
-            }
-
-            local npc_model = self.npc:GetModel()
-            local scream_sound = nil
-            if tobool(string.find(npc_model, '*male_*')) then
-                scream_sound = table.Random(male_scream)
-            elseif tobool(string.find(npc_model, '*female_*')) then
-                scream_sound = table.Random(female_scream)
-            else
-                scream_sound = table.Random(table.Merge(male_scream, female_scream))
-            end
-
-            self.npc:EmitSound(scream_sound, 500, 100, 1, CHAN_AUTO)
+        if IsValid(self.npc) then
+            hook.Run('bgCitizen_SetNPCState', self, 
+                self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
         end
 
         return self.npc.bgCitizenState
     end
 
-    function obj:SetDefaultState()
-        self:ClearSchedule()
+    function obj:Walk()
         self:SetState('walk', {
             schedule = SCHED_FORCED_GO,
             runReset = 0
         })
     end
 
+    function obj:Idle(idle_time)
+        self:SetState('idle', {
+            delay = CurTime() + idle_time
+        })
+    end
+
+    function obj:Fear()
+        self:SetState('fear', {
+            delay = 0
+        })
+    end
+
+    function obj:Defense()
+        self:SetState('defense', {
+            delay = 0
+        })
+    end
+
     function obj:HasTeam(team_value)
         if self.data.team ~= nil and team_value ~= nil then
             if istable(team_value) then
+                if team_value.isBgnActor then
+                    team_value = team_value:GetData().team
+                end
+
                 for _, team_1 in ipairs(self.data.team) do
                     for _, team_2 in ipairs(team_value) do
                         if team_1 == team_2 then
@@ -221,12 +278,12 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     function obj:GetReactionForDamage()
         local probability = math.random(1, 100)
-        local percent, reaction = table.Random(data.at_damage)
+        local percent, reaction = table.Random(self.data.at_damage)
 
         if probability > percent then
             local last_percent = 0
             
-            for _reaction, _percent in pairs(data.at_damage) do
+            for _reaction, _percent in pairs(self.data.at_damage) do
                 if _percent > last_percent then
                     percent = _percent
                     reaction = _reaction
@@ -242,12 +299,12 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     function obj:GetReactionForProtect()
         local probability = math.random(1, 100)
-        local percent, reaction = table.Random(data.at_protect)
+        local percent, reaction = table.Random(self.data.at_protect)
 
         if probability > percent then
             local last_percent = 0
             
-            for _reaction, _percent in pairs(data.at_protect) do
+            for _reaction, _percent in pairs(self.data.at_protect) do
                 if _percent > last_percent then
                     percent = _percent
                     reaction = _reaction
@@ -278,6 +335,13 @@ function BG_NPC_CLASS:Instance(npc, data)
                 return true
             end
 
+            local hook_result = hook.Run('bgCitizen_PreNPCStartAnimation', 
+                self, sequence_name, loop, loop_time)
+
+            if hook_result ~= nil and isbool(hook_result) and not hook_result then
+                return
+            end
+
             self.anim_is_loop = loop or false
             self.anim_name = sequence_name
             if loop_time ~= nil and loop_time ~= 0 then
@@ -293,6 +357,8 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.npc:SetSchedule(SCHED_SLEEP)
             self.npc:ResetSequenceInfo()
             self.npc:ResetSequence(sequence)
+
+            hook.Run('bgCitizen_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
             -- print(tostring(self.anim_is_loop) .. ' - ' .. self.anim_name)
 
@@ -362,4 +428,36 @@ function BG_NPC_CLASS:Instance(npc, data)
     npc.isActor = true
 
     return obj
+end
+
+if CLIENT then
+    net.RegisterCallback('bg_citizen_change_npc_state', function(ply, npc, state, data)
+        if IsValid(npc) then
+            local actor = bgCitizens:GetActor(npc)
+            if actor ~= nil then
+                print(tostring(npc), state)
+                actor:SetState(state, data)
+            end
+        end
+    end)
+else
+    hook.Add("bgCitizen_SetNPCState", "InvokeAllNpcChangeState", function(actor, state, data)
+        local npc = actor:GetNPC()
+        if IsValid(npc) then
+            npc.bgCitizenVisibility = true
+            npc.bgCitizenVisibilityDelay = CurTime() + 3
+            timer.Simple(1.5, function()
+                net.InvokeAll('bg_citizen_change_npc_state', npc, state, data)
+            end)
+        end
+    end)
+
+    hook.Add('SetupPlayerVisibility', 'SetupPlayerVisiblyOnSetState', function(ent)
+        if ent.bgCitizenVisibility then
+            AddOriginToPVS(ent:GetPos())
+            if npc.bgCitizenVisibilityDelay < CurTime() then
+                ent.bgCitizenVisibility = false
+            end
+        end
+    end)
 end

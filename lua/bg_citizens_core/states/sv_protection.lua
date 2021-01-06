@@ -1,22 +1,18 @@
-hook.Add('Think', 'bgCitizens_StateProtectionAction', function()
+timer.Create('bgCitizens_StateProtectionAction', 0.5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
             local data = actor:GetStateData()
 
-            actor:RecalculationTargets()
-
             if state == 'defense' and actor:TargetsCount() ~= 0  then
                 local target = actor:GetNearTarget()
 
-                if IsValid(target) then
+                if not IsValid(target) then
+                    actor:RecalculationTargets()
+                else
                     if npc:Disposition(target) ~= D_HT then
                         npc:AddEntityRelationship(target, D_HT, 99)
-                    end
-                    
-                    if npc:GetTarget() ~= target then
-                        npc:SetTarget(target)
                     end
 
                     if data.delay < CurTime() then
