@@ -56,6 +56,13 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.npc:AddEntityRelationship(ent, D_NU, 99)
         end
         table.RemoveByValue(self.targets, ent)
+        if #self.targets == 0 then
+            if math.random(0, 10) > 4 then
+                self:Walk()
+            else
+                self:Idle()
+            end
+        end
     end
 
     function obj:HasTarget(ent)
@@ -126,36 +133,42 @@ function BG_NPC_CLASS:Instance(npc, data)
         -- end
 
         if SERVER and (self.npc.bgCitizenState == nil or self.npc.bgCitizenState.state ~= state) 
-            and state == 'fear' and math.random(0, 10) <= 1 
+            and math.random(0, 10) <= 1 
         then
             local target = self:GetNearTarget()
             if IsValid(target) and target:GetPos():DistToSqr(self.npc:GetPos()) < 250000 then
-                local male_scream = {
-                    'ambient/voices/m_scream1.wav',
-                    'vo/coast/bugbait/sandy_help.wav',
-                    'vo/npc/male01/help01.wav',
-                    'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-                    'vo/Streetwar/sniper/male01/c17_09_help02.wav'
-                }
+                if state == 'fear' then
+                    local male_scream = {
+                        'ambient/voices/m_scream1.wav',
+                        'vo/coast/bugbait/sandy_help.wav',
+                        'vo/npc/male01/help01.wav',
+                        'vo/Streetwar/sniper/male01/c17_09_help01.wav',
+                        'vo/Streetwar/sniper/male01/c17_09_help02.wav'
+                    }
 
-                local female_scream = {
-                    'ambient/voices/f_scream1.wav',
-                    'vo/canals/arrest_helpme.wav',
-                    'vo/npc/female01/help01.wav',
-                    'vo/npc/male01/help01.wav',
-                }
+                    local female_scream = {
+                        'ambient/voices/f_scream1.wav',
+                        'vo/canals/arrest_helpme.wav',
+                        'vo/npc/female01/help01.wav',
+                        'vo/npc/male01/help01.wav',
+                    }
 
-                local npc_model = self.npc:GetModel()
-                local scream_sound = nil
-                if tobool(string.find(npc_model, 'male_*')) then
-                    scream_sound = table.Random(male_scream)
-                elseif tobool(string.find(npc_model, 'female_*')) then
-                    scream_sound = table.Random(female_scream)
-                else
-                    scream_sound = table.Random(table.Merge(male_scream, female_scream))
+                    local npc_model = self.npc:GetModel()
+                    local scream_sound = nil
+                    if tobool(string.find(npc_model, 'male_*')) then
+                        scream_sound = table.Random(male_scream)
+                    elseif tobool(string.find(npc_model, 'female_*')) then
+                        scream_sound = table.Random(female_scream)
+                    else
+                        scream_sound = table.Random(table.Merge(male_scream, female_scream))
+                    end
+
+                    self.npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
+                elseif state == 'defense' and self.type == 'police' then
+                    self.npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
+                elseif state == 'arrest' and self.type == 'police' then
+                    self.npc:EmitSound('npc/metropolice/vo/movetoarrestpositions.wav', 300, 100, 1, CHAN_AUTO)
                 end
-
-                self.npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
             end
         end
 
@@ -178,6 +191,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:Idle(idle_time)
+        idle_time = idle_time or 10
         self:SetState('idle', {
             delay = CurTime() + idle_time
         })

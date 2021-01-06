@@ -11,6 +11,9 @@ bgCitizens.loadPresets = true
 bgCitizens.wanted_mode = true
 bgCitizens.wanted_time = 30
 
+bgCitizens.arrest_moode = true
+bgCitizens.arrest_time_limit = 15
+
 -- NPC classes that fill the streets
 bgCitizens.npc_classes = {
     {
@@ -99,7 +102,8 @@ bgCitizens.npc_classes = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['defense'] = 100,
+            ['defense'] = 50,
+            ['arrest'] = 50
         }
     },
 --[[

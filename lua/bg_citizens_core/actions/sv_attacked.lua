@@ -56,8 +56,11 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
 
         local hook_result = hook.Run('bgCitizens_TakeDamageReaction', attacker, target, dmginfo)
         if hook_result ~= nil then
-            if isbool(hook_result) then return hook_result end
-            return
+            if isbool(hook_result) then
+                return hook_result
+            else
+                goto skip_to_protect
+            end
         end
 
         local state = ActorTarget:GetState()
@@ -80,6 +83,8 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
             end
         end
     end
+
+    ::skip_to_protect::
 
     for _, actor in ipairs(bgCitizens:GetAllByRadius(target:GetPos(), 2000)) do
         local reaction = actor:GetReactionForProtect()

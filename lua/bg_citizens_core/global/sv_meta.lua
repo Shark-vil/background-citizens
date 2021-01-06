@@ -11,24 +11,40 @@ function bgCitizens:IsFearNPC(npc)
     return false
 end
 
-function bgCitizens:SetActorWeapon(actor)
-    local weapons = actor:GetData().weapons
-    if weapons ~= nil and #weapons ~= 0 then
+function bgCitizens:SetActorWeapon(actor, weapon_class)
+    if weapon_class ~= nil then
         local npc = actor:GetNPC()
         local active_weapon = npc:GetActiveWeapon()
 
-        if IsValid(active_weapon) and table.HasValue(weapons, active_weapon:GetClass()) then
+        if IsValid(active_weapon) and active_weapon:GetClass() ~= weapon_class then
             return
         end
-
-        local select_weapon = table.Random(weapons)
-
-        local weapon = npc:GetWeapon(select_weapon)
+        
+        local weapon = npc:GetWeapon(weapon_class)
         if not IsValid(weapon) then
-            weapon = npc:Give(select_weapon)
+            weapon = npc:Give(weapon_class)
         end
 
-        npc:SelectWeapon(select_weapon)
+        npc:SelectWeapon(weapon_class)
+    else
+        local weapons = actor:GetData().weapons
+        if weapons ~= nil and #weapons ~= 0 then
+            local npc = actor:GetNPC()
+            local active_weapon = npc:GetActiveWeapon()
+
+            if IsValid(active_weapon) and table.HasValue(weapons, active_weapon:GetClass()) then
+                return
+            end
+
+            local select_weapon = table.Random(weapons)
+
+            local weapon = npc:GetWeapon(select_weapon)
+            if not IsValid(weapon) then
+                weapon = npc:Give(select_weapon)
+            end
+
+            npc:SelectWeapon(select_weapon)
+        end
     end
 end
 
