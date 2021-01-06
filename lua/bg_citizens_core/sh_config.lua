@@ -56,7 +56,7 @@ bgCitizens.npc_classes = {
     {
         class = 'npc_citizen',
         type = 'gangster',
-        fullness = 5,
+        fullness = 10,
         team = { 'bandits' },
         weapons = {'weapon_shotgun', 'weapon_ar2'},
         money = { 0, 500 }, -- does nothing yet
@@ -91,7 +91,7 @@ bgCitizens.npc_classes = {
     {
         class = 'npc_metropolice',
         type = 'police',
-        fullness = 8,
+        fullness = 5,
         team = { 'residents', 'police' },
         weapons = {'weapon_smg1', 'weapon_pistol'},
         money = { 0, 600 }, -- does nothing yet
@@ -102,6 +102,9 @@ bgCitizens.npc_classes = {
             ['defense'] = 100,
         }
     },
+--[[
+    Too active camera shake. I don't know if it's a bug or not. 
+    Temporarily commented out.
     {
         class = 'npc_cscanner',
         type = 'police_cscanner',
@@ -115,4 +118,5 @@ bgCitizens.npc_classes = {
             ['defense'] = 100,
         }
     }
+]]
 }
