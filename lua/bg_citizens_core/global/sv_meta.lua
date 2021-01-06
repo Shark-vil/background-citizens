@@ -148,7 +148,7 @@ function bgCitizens:SpawnActor(type)
             local npc = ents.Create(data.class)
             npc:SetPos(pos)
             -- npc:SetSpawnEffect(true)
-
+            
             --[[
                 ATTENTION! Be careful, this hook is called before the NPC spawns. If you give out a weapon or something similar, it will crash the game!
             --]]
@@ -160,12 +160,15 @@ function bgCitizens:SpawnActor(type)
             npc:Spawn()
 
             if data.models then
-                if data.defaultModels then
-                    if math.random(0, 10) <= 5 then
-                        npc:SetModel(table.Random(data.models))
+                local model = table.Random(data.models)
+                if util.IsValidModel(model) then
+                    if data.defaultModels then
+                        if math.random(0, 10) <= 5 then
+                            npc:SetModel(model)
+                        end
+                    else
+                        npc:SetModel(model)
                     end
-                else
-                    npc:SetModel(table.Random(data.models))
                 end
             end
 

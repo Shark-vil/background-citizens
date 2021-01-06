@@ -435,7 +435,7 @@ if CLIENT then
         if IsValid(npc) then
             local actor = bgCitizens:GetActor(npc)
             if actor ~= nil then
-                print(tostring(npc), state)
+                -- print(tostring(npc), state)
                 actor:SetState(state, data)
             end
         end
