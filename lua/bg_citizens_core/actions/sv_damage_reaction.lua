@@ -1,9 +1,9 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
-    local ActorTarget = bgCitizens:GetActor(target)
-    local ActorAttacker = bgCitizens:GetActor(attacker)
+    local ActorTarget = bgNPC:GetActor(target)
+    local ActorAttacker = bgNPC:GetActor(attacker)
 
-    for _, actor in ipairs(bgCitizens:GetAllByRadius(target:GetPos(), 2000)) do
+    for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2000)) do
         local reaction = actor:GetReactionForProtect()
         local targetFromActor = NULL
 
@@ -23,7 +23,7 @@ function(attacker, target, dmginfo)
         if target:IsNPC() then
             if attacker:IsPlayer() then
                 if actor:GetType() == 'police' then
-                    if bgCitizens:IsEnemyTeam(target, 'residents') then
+                    if bgNPC:IsEnemyTeam(target, 'residents') then
                         targetFromActor = target
                     else
                         targetFromActor = attacker

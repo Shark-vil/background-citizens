@@ -116,12 +116,12 @@ function BG_NPC_CLASS:Instance(npc, data)
         if self:GetData().disableStates then return end
         
         if self.old_state ~= nil then
-            self.npc.bgCitizenState = self.old_state
+            self.npc.bgNPCtate = self.old_state
             self.old_state = nil
 
             if IsValid(self.npc) then
                 hook.Run('BGN_SetNPCState', self, 
-                    self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
+                    self.npc.bgNPCtate.state, self.npc.bgNPCtate.data)
             end
         end
     end
@@ -138,7 +138,7 @@ function BG_NPC_CLASS:Instance(npc, data)
         --     print(self.npc:EntIndex(), self.type, state)
         -- end
 
-        if SERVER and (self.npc.bgCitizenState == nil or self.npc.bgCitizenState.state ~= state) 
+        if SERVER and (self.npc.bgNPCtate == nil or self.npc.bgNPCtate.state ~= state) 
             and math.random(0, 10) <= 1 
         then
             local target = self:GetNearTarget()
@@ -178,15 +178,15 @@ function BG_NPC_CLASS:Instance(npc, data)
             end
         end
 
-        self.old_state = self.npc.bgCitizenState
-        self.npc.bgCitizenState = { state = state, data = (data or {}) }
+        self.old_state = self.npc.bgNPCtate
+        self.npc.bgNPCtate = { state = state, data = (data or {}) }
 
         if IsValid(self.npc) then
             hook.Run('BGN_SetNPCState', self, 
-                self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
+                self.npc.bgNPCtate.state, self.npc.bgNPCtate.data)
         end
 
-        return self.npc.bgCitizenState
+        return self.npc.bgNPCtate
     end
 
     function obj:Walk()
@@ -237,7 +237,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:UpdateStateData(data)
-        self.npc.bgCitizenState.data = data
+        self.npc.bgNPCtate.data = data
     end
 
     function obj:HasState(state)
@@ -245,17 +245,17 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:GetState()
-        if self.npc.bgCitizenState == nil then
+        if self.npc.bgNPCtate == nil then
             return 'none'
         end
-        return self.npc.bgCitizenState.state
+        return self.npc.bgNPCtate.state
     end
 
     function obj:GetStateData()
-        if self.npc.bgCitizenState == nil then
+        if self.npc.bgNPCtate == nil then
             return {}
         end
-        return self.npc.bgCitizenState.data
+        return self.npc.bgNPCtate.data
     end
 
     function obj:GetDistantPointInRadius(pos, radius)
@@ -264,7 +264,7 @@ function BG_NPC_CLASS:Instance(npc, data)
         local point = nil
         local dist = 0
         local npc = self:GetNPC()
-        local points = bgCitizens:GetAllPointsInRadius(npc:GetPos(), radius)
+        local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
         for _, value in ipairs(points) do
             if point == nil then
@@ -285,7 +285,7 @@ function BG_NPC_CLASS:Instance(npc, data)
         local point = nil
         local dist = 0
         local npc = self:GetNPC()
-        local points = bgCitizens:GetAllPointsInRadius(npc:GetPos(), radius)
+        local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
         for _, value in ipairs(points) do
             if point == nil then
@@ -457,7 +457,7 @@ end
 if CLIENT then
     net.RegisterCallback('bgn_change_npc_state', function(ply, npc, state, data)
         if IsValid(npc) then
-            local actor = bgCitizens:GetActor(npc)
+            local actor = bgNPC:GetActor(npc)
             if actor ~= nil then
                 actor:SetState(state, data)
             end
@@ -467,8 +467,8 @@ else
     hook.Add("BGN_SetNPCState", "BGN_SyncChangedNPCState", function(actor, state, data)
         local npc = actor:GetNPC()
         if IsValid(npc) then
-            npc.bgCitizenVisibility = true
-            npc.bgCitizenVisibilityDelay = CurTime() + 3
+            npc.bgNPCVisibility = true
+            npc.bgNPCVisibilityDelay = CurTime() + 3
             timer.Simple(1.5, function()
                 if not IsValid(npc) then return end
                 net.InvokeAll('bgn_change_npc_state', npc, state, data)
@@ -477,10 +477,10 @@ else
     end)
 
     hook.Add('SetupPlayerVisibility', 'BGN_TemporarilyShowVectorToPlayerForSyncEntities', function(ent)
-        if ent.bgCitizenVisibility then
+        if ent.bgNPCVisibility then
             AddOriginToPVS(ent:GetPos())
-            if ent.bgCitizenVisibilityDelay < CurTime() then
-                ent.bgCitizenVisibility = false
+            if ent.bgNPCVisibilityDelay < CurTime() then
+                ent.bgNPCVisibility = false
             end
         end
     end)

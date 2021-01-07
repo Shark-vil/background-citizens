@@ -8,7 +8,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetIdleNPCAnimationIfStateEqualIdle", function(
 end)
 
 timer.Create('BGN_ChangeIdleStateToWalk', 1, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local state = actor:GetState()
         local data = actor:GetStateData()
         if state == 'idle' and data.delay < CurTime() then

@@ -1,25 +1,25 @@
 hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
-    bgCitizens.actors = {}
-    bgCitizens.factors = {}
-    bgCitizens.npcs = {}
-    bgCitizens.fnpcs = {}
-    bgCitizens.wanted = {}
-    bgCitizens.arrest_players = {}
+    bgNPC.actors = {}
+    bgNPC.factors = {}
+    bgNPC.npcs = {}
+    bgNPC.fnpcs = {}
+    bgNPC.wanted = {}
+    bgNPC.arrest_players = {}
 
     for _, ply in ipairs(player.GetAll()) do
-        bgCitizens:SetEntityVariable(ply, 'is_wanted', false, true)
-        bgCitizens.killing_statistic[ply] = {}
+        bgNPC:SetEntityVariable(ply, 'is_wanted', false, true)
+        bgNPC.killing_statistic[ply] = {}
     end
 end)
 
 local function CleanupNPCsIfRemovedOrKilled()
-    bgCitizens:ClearRemovedNPCs()
+    bgNPC:ClearRemovedNPCs()
 end
 hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
 hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
 
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
-    local npcs = bgCitizens:GetAllNPCs()
+    local npcs = bgNPC:GetAllNPCs()
 
     if #npcs ~= 0 then
         local bg_citizens_spawn_radius 
@@ -34,7 +34,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
                         local npcPos = npc:GetPos()
                         local plyPos = ply:GetPos()
                         if npcPos:DistToSqr(plyPos) < bg_citizens_spawn_radius 
-                            or bgCitizens:PlayerIsViewVector(ply, npcPos)
+                            or bgNPC:PlayerIsViewVector(ply, npcPos)
                         then
                             isRemove = false
                             break

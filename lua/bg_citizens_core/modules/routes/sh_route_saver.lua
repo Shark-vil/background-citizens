@@ -1,11 +1,11 @@
 if SERVER then
-    util.AddNetworkString('bgCitizensSaveRoute')
-    util.AddNetworkString('bgCitizensRemoveRoute')
-    util.AddNetworkString('bgCitizensLoadToolFromServer')
-    util.AddNetworkString('bgCitizensUnloadToolFromServer')
-    util.AddNetworkString('bgCitizensLoadToolFromClient')
+    util.AddNetworkString('bgNPCSaveRoute')
+    util.AddNetworkString('bgNPCRemoveRoute')
+    util.AddNetworkString('bgNPCLoadToolFromServer')
+    util.AddNetworkString('bgNPCUnloadToolFromServer')
+    util.AddNetworkString('bgNPCLoadToolFromClient')
 
-    net.Receive('bgCitizensRemoveRoute', function(len, ply)
+    net.Receive('bgNPCRemoveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
         if not net.ReadBool() then return end
 
@@ -26,7 +26,7 @@ if SERVER then
         ply:ConCommand('cl_citizens_load_route')
     end)
 
-    net.Receive('bgCitizensSaveRoute', function(len, ply)
+    net.Receive('bgNPCSaveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
         local from_json = net.ReadBool()
@@ -40,7 +40,7 @@ if SERVER then
         end
     end)
 
-    net.Receive('bgCitizensUnloadToolFromServer', function(len, ply)
+    net.Receive('bgNPCUnloadToolFromServer', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
         if ply:HasWeapon('weapon_citizens_points') then
@@ -48,7 +48,7 @@ if SERVER then
         end
     end)
 
-    net.Receive('bgCitizensLoadToolFromServer', function(len, ply)
+    net.Receive('bgNPCLoadToolFromServer', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
     
         local wep = ply:GetWeapon('weapon_citizens_points')
@@ -75,7 +75,7 @@ else
         if args[1] ~= nil and args[1] == 'yes' then
             local map_name = args[2] or game.GetMap()
 
-            net.Start('bgCitizensRemoveRoute')
+            net.Start('bgNPCRemoveRoute')
             net.WriteBool(true)
             net.WriteString(map_name)
             net.SendToServer()
@@ -135,7 +135,7 @@ else
             local compressed_data = util.Compress(util.TableToJSON(save_table))
             local compressed_lenght = string.len(compressed_data)
 
-            net.Start('bgCitizensSaveRoute')
+            net.Start('bgNPCSaveRoute')
             net.WriteBool(from_json)
             net.WriteUInt(compressed_lenght, 24)
             net.WriteData(compressed_data, compressed_lenght)
@@ -150,9 +150,9 @@ else
         ply:ConCommand('cl_citizens_load_route_from_client')
     end, nil, 'Gives the player a tool for editing movement points. LMB - put a point / delete a point / delete the last point, RMB - switch the editing mode, R - clear all points')
 
-    hook.Add("bgCitizens_LoadingClientRoutes", 'bgCitizensLoadRoutesFromTool', function()
+    hook.Add("bgNPC_LoadingClientRoutes", 'bgNPCLoadRoutesFromTool', function()
         if not is_load_tool then return end
-        net.Start('bgCitizensLoadToolFromServer')
+        net.Start('bgNPCLoadToolFromServer')
         net.SendToServer()
         is_load_tool = false
     end)
@@ -160,7 +160,7 @@ else
     concommand.Add('cl_citizens_unload_tool', function(ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-        net.Start('bgCitizensUnloadToolFromServer')
+        net.Start('bgNPCUnloadToolFromServer')
         net.SendToServer()
     end, nil, 'Removes the editing tool from the player')
 end

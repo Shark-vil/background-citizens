@@ -56,7 +56,7 @@ function SWEP:Initialize()
 	if SERVER then return end
 	
 	self.Points = {}
-	for index, v in pairs(bgCitizens.points) do
+	for index, v in pairs(bgNPC.points) do
 		self.Points[index] = v.pos
 	end
 
@@ -188,7 +188,7 @@ function SWEP:Think()
 		local NewRangePoints = {}
 		
 		for index, pos in ipairs(self.Points) do
-			if bgCitizens:PlayerIsViewVector(owner, pos) 
+			if bgNPC:PlayerIsViewVector(owner, pos) 
 				and owner:GetPos():DistToSqr(pos) < 1500 ^ 2
 			then
 				table.insert(NewRangePoints, {

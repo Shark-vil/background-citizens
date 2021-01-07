@@ -1,5 +1,5 @@
 timer.Create('BGN_Timer_ImpingementController', 5, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAllByType('gangster')) do
+    for _, actor in ipairs(bgNPC:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
 
         if math.random(0, 100) > 1 then
@@ -16,7 +16,7 @@ timer.Create('BGN_Timer_ImpingementController', 5, 0, function()
                 end
 
                 if ent:IsNPC() and ent ~= npc then
-                    local ActorTarget = bgCitizens:GetActor(ent)
+                    local ActorTarget = bgNPC:GetActor(ent)
                     if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
                         table.insert(targets, ent)
                     end

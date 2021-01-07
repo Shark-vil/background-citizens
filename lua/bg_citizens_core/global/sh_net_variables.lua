@@ -3,28 +3,28 @@ local variables = {}
 
 if SERVER then
     -- Entity
-    function bgCitizens:SetEntityVariable(ent, key, data, not_delay)
+    function bgNPC:SetEntityVariable(ent, key, data, not_delay)
         not_delay = not_delay or false
 
         entity_variables[ent] = entity_variables[ent] or {}
         entity_variables[ent][key] = data
         
-        ent.bgCitizenVisibility = true
+        ent.bgNPCVisibility = true
 
         if not not_delay then
-            ent.bgCitizenVisibilityDelay = CurTime() + 3
+            ent.bgNPCVisibilityDelay = CurTime() + 3
             timer.Simple(1.5, function()
                 if not IsValid(ent) then return end
                 net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
             end)
         else
-            ent.bgCitizenVisibilityDelay = CurTime() + 1.5
+            ent.bgNPCVisibilityDelay = CurTime() + 1.5
             net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
         end
     end
 
     -- Global
-    function bgCitizens:SetGlobalVariable(key, data)
+    function bgNPC:SetGlobalVariable(key, data)
         variables[key] = data
         net.InvokeAll('bgn_citizens_add_global_variable', key, data)
     end
@@ -32,7 +32,7 @@ else
     -- Entity
     net.RegisterCallback('bgn_citizens_add_entity_variable', function(ply, ent, key, data)
         if not IsValid(ent) then
-            MsgN('[bgCitizens][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
+            MsgN('[bgNPC][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
             return
         end
 
@@ -42,7 +42,7 @@ else
 
     net.RegisterCallback('bgn_citizens_remove_entity_variable', function(ply, ent, key)
         if not IsValid(ent) then
-            MsgN('[bgCitizens][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
+            MsgN('[bgNPC][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
             return
         end
 
@@ -61,7 +61,7 @@ else
 end
 
 -- Entity
-function bgCitizens:RemoveEntityVariable(ent, key)
+function bgNPC:RemoveEntityVariable(ent, key)
     entity_variables[ent] = entity_variables[ent] or {}
     entity_variables[ent][key] = nil
     if SERVER then
@@ -69,19 +69,19 @@ function bgCitizens:RemoveEntityVariable(ent, key)
     end
 end
 
-function bgCitizens:GetEntityVariable(ent, key, default)
+function bgNPC:GetEntityVariable(ent, key, default)
     entity_variables[ent] = entity_variables[ent] or {}
     return entity_variables[ent][key] or default
 end
 
 -- Global
-function bgCitizens:RemoveGlobalVariable(key)
+function bgNPC:RemoveGlobalVariable(key)
     variables[key] = nil
     if SERVER then
         net.InvokeAll('bgn_citizens_remove_global_variable', key)
     end
 end
 
-function bgCitizens:GetGlobalVariable(ent, key, default)
+function bgNPC:GetGlobalVariable(ent, key, default)
     return variables[key] or default
 end

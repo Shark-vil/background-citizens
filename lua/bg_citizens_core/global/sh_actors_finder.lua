@@ -1,5 +1,5 @@
-function bgCitizens:GetActor(npc)
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+function bgNPC:GetActor(npc)
+    for _, actor in ipairs(bgNPC:GetAll()) do
         if actor:GetNPC() == npc then
             return actor
         end
@@ -7,11 +7,11 @@ function bgCitizens:GetActor(npc)
     return nil
 end
 
-function bgCitizens:GetAllPointsInRadius(center, radius)
+function bgNPC:GetAllPointsInRadius(center, radius)
     local radius_positions = {}
     radius = radius ^ 2
 
-    for _, v in ipairs(bgCitizens.points) do
+    for _, v in ipairs(bgNPC.points) do
         if v.pos:DistToSqr(center) <= radius then
             table.insert(radius_positions, v)
         end
@@ -20,23 +20,23 @@ function bgCitizens:GetAllPointsInRadius(center, radius)
     return radius_positions
 end
 
-function bgCitizens:GetAll()
+function bgNPC:GetAll()
     return self.actors
 end
 
-function bgCitizens:GetAllByType(type)
+function bgNPC:GetAllByType(type)
     return self.factors[type] or {}
 end
 
-function bgCitizens:GetAllNPCs()
+function bgNPC:GetAllNPCs()
     return self.npcs
 end
 
-function bgCitizens:GetAllNPCsByType(type)
+function bgNPC:GetAllNPCsByType(type)
     return self.fnpcs[type] or {}
 end
 
-function bgCitizens:GetAllByRadius(center, radius)
+function bgNPC:GetAllByRadius(center, radius)
     local npcs = {}
     radius = radius ^ 2
     
@@ -50,11 +50,11 @@ function bgCitizens:GetAllByRadius(center, radius)
     return npcs
 end
 
-function bgCitizens:HasNPC(npc)
-    return table.HasValue(bgCitizens:GetAllNPCs(), npc)
+function bgNPC:HasNPC(npc)
+    return table.HasValue(bgNPC:GetAllNPCs(), npc)
 end
 
-function bgCitizens:IsTeamOnce(npc1, npc2)
+function bgNPC:IsTeamOnce(npc1, npc2)
     local actor1 = self:GetActor(npc1)
     local actor2 = self:GetActor(npc2)
     if actor1 ~= nil and actor2 ~= nil then

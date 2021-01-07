@@ -12,10 +12,10 @@ hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
     if not table.HasValue(door_class, door:GetClass()) then return end
     -- if not tobool(string.find(door:GetModel(), '*door*')) then return end
 
-    if not door.bgCitizenOpenDoor and hook.Run('BGN_PreOpenDoor', actor, door) == nil then
+    if not door.bgNPCOpenDoor and hook.Run('BGN_PreOpenDoor', actor, door) == nil then
         actor:PlayStaticSequence('Open_door_away')
 
-        door.bgCitizenOpenDoor = true
+        door.bgNPCOpenDoor = true
         
         door:Fire("unlock", "", 0)
         door:Fire("open", "", 0)
@@ -23,11 +23,11 @@ hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
         hook.Run('BGN_PostOpenDoor', actor, door)
 
         timer.Simple(10, function()
-            if IsValid(door) and door.bgCitizenOpenDoor and 
+            if IsValid(door) and door.bgNPCOpenDoor and 
                 hook.Run('BGN_PreCloseDoor', door) == nil
             then
                 door:Fire("close", "", 0)
-                door.bgCitizenOpenDoor = false
+                door.bgNPCOpenDoor = false
 
                 hook.Run('BGN_PostCloseDoor', door)
             end

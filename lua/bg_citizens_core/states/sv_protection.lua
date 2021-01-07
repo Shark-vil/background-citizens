@@ -1,5 +1,5 @@
 timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
@@ -16,7 +16,7 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
                     end
 
                     if data.delay < CurTime() then
-                        bgCitizens:SetActorWeapon(actor)
+                        bgNPC:SetActorWeapon(actor)
 
                         local point = nil
                         local current_distance = npc:GetPos():DistToSqr(target:GetPos())

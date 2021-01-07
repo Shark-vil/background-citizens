@@ -1,5 +1,5 @@
 timer.Create('BGN_Timer_FearStateController', 0.3, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         local state = actor:GetState()
         local data = actor:GetStateData()
@@ -18,7 +18,7 @@ timer.Create('BGN_Timer_FearStateController', 0.3, 0, function()
                 if data.delay < CurTime() then
                     if math.random(0, 100) == 0 
                         and npc:GetPos():DistToSqr(target:GetPos()) > 90000 
-                        and not bgCitizens:NPCIsViewVector(target, npc:GetPos(), 70) 
+                        and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
                     then
                         actor:SetState('calling_police', {
                             delay = 0

@@ -1,5 +1,5 @@
 timer.Create('BGN_FixNPCRelationship', 1, 0, function()
-    local actors = bgCitizens:GetAll()
+    local actors = bgNPC:GetAll()
 
     for _, ActorOne in ipairs(actors) do
         local npc_1 = ActorOne:GetNPC()

@@ -1,4 +1,4 @@
-function bgCitizens:IsFearNPC(npc)
+function bgNPC:IsFearNPC(npc)
     if IsValid(npc) and npc:IsNPC() then
         local schedule = npc:GetCurrentSchedule()
         if npc:IsCurrentSchedule(SCHED_RUN_FROM_ENEMY) 
@@ -11,7 +11,7 @@ function bgCitizens:IsFearNPC(npc)
     return false
 end
 
-function bgCitizens:SetActorWeapon(actor, weapon_class)
+function bgNPC:SetActorWeapon(actor, weapon_class)
     if weapon_class ~= nil then
         local npc = actor:GetNPC()
         local active_weapon = npc:GetActiveWeapon()
@@ -48,7 +48,7 @@ function bgCitizens:SetActorWeapon(actor, weapon_class)
     end
 end
 
-function bgCitizens:IsEnemyTeam(npc, team_name)
+function bgNPC:IsEnemyTeam(npc, team_name)
     for _, actor in ipairs(self:GetAll()) do
         if IsValid(npc) and IsValid(actor:GetNPC()) then
             if actor:HasTeam(team_name) and npc:Disposition(actor:GetNPC()) == D_HT then

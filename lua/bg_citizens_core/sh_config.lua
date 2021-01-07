@@ -6,16 +6,16 @@
 -- Creates files with preset points for maps:
 -- gm_bigcity_improved
 -- rp_southside
-bgCitizens.loadPresets = true
+bgNPC.loadPresets = true
 
-bgCitizens.wanted_mode = true
-bgCitizens.wanted_time = 30
+bgNPC.wanted_mode = true
+bgNPC.wanted_time = 30
 
-bgCitizens.arrest_moode = true
-bgCitizens.arrest_time_limit = 15
+bgNPC.arrest_moode = true
+bgNPC.arrest_time_limit = 15
 
 -- NPC classes that fill the streets
-bgCitizens.npc_classes = {
+bgNPC.npc_classes = {
     {
         class = 'npc_citizen',
         type = 'citizen',

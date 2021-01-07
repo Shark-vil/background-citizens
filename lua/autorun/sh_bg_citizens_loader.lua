@@ -6,17 +6,17 @@
 file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
-bgCitizens = {}
+bgNPC = {}
 
 -- Do not change -------------
-bgCitizens.actors = {}
-bgCitizens.factors = {}
-bgCitizens.npcs = {}
-bgCitizens.fnpcs = {}
-bgCitizens.points = {}
-bgCitizens.wanted = {}
-bgCitizens.arrest_players = {}
-bgCitizens.killing_statistic = {}
+bgNPC.actors = {}
+bgNPC.factors = {}
+bgNPC.npcs = {}
+bgNPC.fnpcs = {}
+bgNPC.points = {}
+bgNPC.wanted = {}
+bgNPC.arrest_players = {}
+bgNPC.killing_statistic = {}
 -- ---------------------------
 
 local root_directory = 'bg_citizens_core'
@@ -51,7 +51,7 @@ end
 using('sv_cvars.lua')
 using('sh_config.lua')
 
-if bgCitizens.loadPresets then
+if bgNPC.loadPresets then
     using('map_presets/rp_southside.lua', 'sv')
     using('map_presets/gm_bigcity_improved.lua', 'sv')
 end

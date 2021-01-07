@@ -10,7 +10,7 @@ local function getPositionsInRadius(npc)
     local npc_pos = npc:GetPos()
     local radius_positions = {}
 
-    for _, v in ipairs(bgCitizens.points) do
+    for _, v in ipairs(bgNPC.points) do
         if v.pos:DistToSqr(npc_pos) <= 250000 then -- 500 ^ 2
             if movement_ignore[npc] ~= nil then
                 for _, data in ipairs(movement_ignore[npc]) do
@@ -44,14 +44,14 @@ end
 local function nextMovement(npc, positions)
     if movement_map[npc] ~= nil then
         local map = movement_map[npc]
-        local parents = bgCitizens.points[map.index].parents
+        local parents = bgNPC.points[map.index].parents
 
         if #parents ~= 0 then
             local index = table.Random(parents)
-            local pos = bgCitizens.points[index].pos
+            local pos = bgNPC.points[index].pos
             local dist = movement_map[npc].pos:DistToSqr(pos)
 
-            if dist <= 250000 and bgCitizens:NPCIsViewVector(npc, pos) then -- 500 ^ 2
+            if dist <= 250000 and bgNPC:NPCIsViewVector(npc, pos) then -- 500 ^ 2
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
@@ -76,8 +76,8 @@ hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 end)
 
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
-    if #bgCitizens.points ~= 0 then
-        for _, actor in ipairs(bgCitizens:GetAll()) do
+    if #bgNPC.points ~= 0 then
+        for _, actor in ipairs(bgNPC:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
                 local map = movement_map[npc]
@@ -150,7 +150,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 end)
 
 timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and actor:GetState() == 'walk' then
             local data = actor:GetStateData()

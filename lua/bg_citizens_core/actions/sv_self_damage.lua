@@ -4,8 +4,8 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
     local attacker = dmginfo:GetAttacker()
     if not attacker:IsPlayer() and not attacker:IsNPC() then return end
 
-    local ActorTarget = bgCitizens:GetActor(target)
-    local ActorAttacker = bgCitizens:GetActor(attacker)
+    local ActorTarget = bgNPC:GetActor(target)
+    local ActorAttacker = bgNPC:GetActor(attacker)
 
     if target:IsNPC() then
         if ActorTarget == nil then
@@ -14,8 +14,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
             if attacker:IsPlayer() then
                 if ActorTarget:HasTeam('player') then
                     return true
-                elseif bgCitizens:GetEntityVariable(attacker, 'is_wanted', false) then
-                    attacker.bgCitizenWantedReset = CurTime() + 30
+                elseif bgNPC:GetEntityVariable(attacker, 'is_wanted', false) then
+                    bgNPC:SetEntityVariable(attacker, 'wanted_time_reset', CurTime() + bgNPC.wanted_time)
+                    bgNPC:SetEntityVariable(attacker, 'wanted_time', bgNPC.wanted_time)
                 end
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
                 if ActorTarget:HasTeam(ActorAttacker) then
@@ -49,8 +50,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
         hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
     elseif target:IsPlayer() then
         if attacker:IsNPC() and ActorAttacker ~= nil then
-            if bgCitizens:GetEntityVariable(attacker, 'is_wanted', false) then
-                target.bgCitizenWantedReset = CurTime() + 30
+            if bgNPC:GetEntityVariable(attacker, 'is_wanted', false) then
+                bgNPC:SetEntityVariable(attacker, 'wanted_time_reset', CurTime() + bgNPC.wanted_time)
+                bgNPC:SetEntityVariable(attacker, 'wanted_time', bgNPC.wanted_time)
             end
 
             if ActorAttacker:HasTeam('player') then

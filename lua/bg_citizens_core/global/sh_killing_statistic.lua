@@ -1,10 +1,10 @@
 if CLIENT then
     net.RegisterCallback('bgn_sync_killing_statistic', function(ply, data)
-        bgCitizens.killing_statistic = data
+        bgNPC.killing_statistic = data
     end)
 end
 
-function bgCitizens:AddKillingStatistic(attacker, actor)
+function bgNPC:AddKillingStatistic(attacker, actor)
     self.killing_statistic[attacker] = self.killing_statistic[attacker] or {}
 
     local type = actor:GetType()
@@ -18,7 +18,7 @@ function bgCitizens:AddKillingStatistic(attacker, actor)
     return self.killing_statistic[attacker][type]
 end
 
-function bgCitizens:GetKillingStatistic(attacker, type)
+function bgNPC:GetKillingStatistic(attacker, type)
     self.killing_statistic[attacker] = self.killing_statistic[attacker] or {}
     if type == nil then
         return self.killing_statistic[attacker]

@@ -1,42 +1,42 @@
 if SERVER then
     hook.Add("BGN_PostSpawnNPC", "BGN_AddWantedTargetsForNewNPCs", function(actor)
-        if #bgCitizens.wanted == 0 then return end
+        if #bgNPC.wanted == 0 then return end
         if actor:GetType() == 'police' or actor:GetType() == 'citizen' then
-            for _, enemy in pairs(bgCitizens.wanted) do
+            for _, enemy in pairs(bgNPC.wanted) do
                 actor:AddTarget(enemy)
             end
         end
     end)
 
     hook.Add("PlayerDeath", "BGN_ResetWantedModeForDeceasedPlayer", function(victim, inflictor, attacker)
-        if bgCitizens:GetEntityVariable(victim, 'is_wanted', false) then
+        if bgNPC:GetEntityVariable(victim, 'is_wanted', false) then
 
-            bgCitizens:SetEntityVariable(victim, 'is_wanted', false)
-            bgCitizens:SetEntityVariable(victim, 'wanted_time', 0)
-            bgCitizens:SetEntityVariable(victim, 'wanted_time_reset', 0)
+            bgNPC:SetEntityVariable(victim, 'is_wanted', false)
+            bgNPC:SetEntityVariable(victim, 'wanted_time', 0)
+            bgNPC:SetEntityVariable(victim, 'wanted_time_reset', 0)
 
-            table.RemoveByValue(bgCitizens.wanted, victim)
+            table.RemoveByValue(bgNPC.wanted, victim)
         end
     end)
 
     timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
-        local polices = bgCitizens:GetAllByType('police')
-        local citizens = bgCitizens:GetAllByType('citizen')
+        local polices = bgNPC:GetAllByType('police')
+        local citizens = bgNPC:GetAllByType('citizen')
 
         local witnesses = {}
         table.Inherit(witnesses, polices)
         table.Inherit(witnesses, citizens)
 
-        for i = #bgCitizens.wanted, 1, -1 do
-            local enemy = bgCitizens.wanted[i]
+        for i = #bgNPC.wanted, 1, -1 do
+            local enemy = bgNPC.wanted[i]
             if not IsValid(enemy) then
-                table.remove(bgCitizens.wanted, i)
+                table.remove(bgNPC.wanted, i)
             elseif enemy:IsPlayer() then
-                local wanted_time = bgCitizens:GetEntityVariable(enemy, 'wanted_time_reset', 0)
+                local wanted_time = bgNPC:GetEntityVariable(enemy, 'wanted_time_reset', 0)
                 local wait_time = wanted_time - CurTime()
                 if wait_time < 0 then wait_time = 0 end
 
-                bgCitizens:SetEntityVariable(enemy, 'wanted_time', math.Round(wait_time))
+                bgNPC:SetEntityVariable(enemy, 'wanted_time', math.Round(wait_time))
                 
                 for _, actor in ipairs(witnesses) do
                     local npc = actor:GetNPC()
@@ -44,10 +44,10 @@ if SERVER then
                         local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
                         if dist <= 360000 then -- 600 ^ 2
-                            bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
-                                CurTime() + bgCitizens.wanted_time)
+                            bgNPC:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                CurTime() + bgNPC.wanted_time)
 
-                            bgCitizens:SetEntityVariable(enemy, 'wanted_time', bgCitizens.wanted_time)
+                            bgNPC:SetEntityVariable(enemy, 'wanted_time', bgNPC.wanted_time)
 
                             goto skip
                         end
@@ -64,10 +64,10 @@ if SERVER then
                             })
 
                             if tr.Hit and IsValid(tr.Entity) and tr.Entity == enemy then
-                                bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
-                                    CurTime() + bgCitizens.wanted_time)
+                                bgNPC:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                    CurTime() + bgNPC.wanted_time)
 
-                                bgCitizens:SetEntityVariable(enemy, 'wanted_time', bgCitizens.wanted_time)
+                                bgNPC:SetEntityVariable(enemy, 'wanted_time', bgNPC.wanted_time)
 
                                 goto skip
                             end
@@ -75,20 +75,20 @@ if SERVER then
                     end
                 end
 
-                local wanted_time_reset = bgCitizens:GetEntityVariable(enemy, 'wanted_time_reset', 0)
+                local wanted_time_reset = bgNPC:GetEntityVariable(enemy, 'wanted_time_reset', 0)
                 
                 if wanted_time_reset < CurTime() then
-                    for _, actor in ipairs(bgCitizens:GetAll()) do
+                    for _, actor in ipairs(bgNPC:GetAll()) do
                         actor:RemoveTarget(enemy)
                     end
 
-                    bgCitizens:SetEntityVariable(enemy, 'is_wanted', false)
-                    bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 0)
-                    bgCitizens:SetEntityVariable(enemy, 'wanted_time', 0)
+                    bgNPC:SetEntityVariable(enemy, 'is_wanted', false)
+                    bgNPC:SetEntityVariable(enemy, 'wanted_time_reset', 0)
+                    bgNPC:SetEntityVariable(enemy, 'wanted_time', 0)
 
-                    bgCitizens.killing_statistic[enemy] = {}
+                    bgNPC.killing_statistic[enemy] = {}
 
-                    table.remove(bgCitizens.wanted, i)
+                    table.remove(bgNPC.wanted, i)
                 end
             end
 
@@ -96,7 +96,7 @@ if SERVER then
         end
     
         for _, actor in pairs(polices) do
-            if #bgCitizens.wanted == 0 then
+            if #bgNPC.wanted == 0 then
                 break
             end
             
@@ -106,7 +106,7 @@ if SERVER then
         end
 
         for _, actor in pairs(citizens) do
-            if #bgCitizens.wanted == 0 then
+            if #bgNPC.wanted == 0 then
                 break
             end
     
@@ -117,14 +117,14 @@ if SERVER then
     end)
 
     timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
-        for _, actor in pairs(bgCitizens:GetAll()) do
+        for _, actor in pairs(bgNPC:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) then
                 local state = actor:GetState()
                 local data = actor:GetStateData()
     
                 if state == 'calling_police' then
-                    if not bgCitizens.wanted_mode then
+                    if not bgNPC.wanted_mode then
                         actor:Fear()
                         goto skip
                     end
@@ -143,23 +143,23 @@ if SERVER then
                     else
                         if data.calling_time < CurTime() then
                             for _, enemy in pairs(actor.targets) do
-                                if IsValid(enemy) and not table.HasValue(bgCitizens.wanted, enemy) then
-                                    local ActorEnemy = bgCitizens:GetActor(enemy)
+                                if IsValid(enemy) and not table.HasValue(bgNPC.wanted, enemy) then
+                                    local ActorEnemy = bgNPC:GetActor(enemy)
                                     if ActorEnemy == nil or ActorEnemy:GetType() ~= 'police' then
-                                        table.insert(bgCitizens.wanted, enemy)
+                                        table.insert(bgNPC.wanted, enemy)
                                         
-                                        bgCitizens:SetEntityVariable(enemy, 'is_wanted', true)
+                                        bgNPC:SetEntityVariable(enemy, 'is_wanted', true)
 
-                                        bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
-                                            CurTime() + bgCitizens.wanted_time)
+                                        bgNPC:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                            CurTime() + bgNPC.wanted_time)
 
-                                        bgCitizens:SetEntityVariable(enemy, 'wanted_time', 
-                                            bgCitizens.wanted_time)
+                                        bgNPC:SetEntityVariable(enemy, 'wanted_time', 
+                                            bgNPC.wanted_time)
                                     end
                                 end
                             end
 
-                            for _, ActorPolice in pairs(bgCitizens:GetAllByType('police')) do
+                            for _, ActorPolice in pairs(bgNPC:GetAllByType('police')) do
                                 for _, enemy in pairs(actor.targets) do
                                     ActorPolice:AddTarget(enemy)
                                 end
@@ -196,10 +196,10 @@ else
     local color_black = Color(0, 0, 0)
 
     hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
-        if not bgCitizens:GetEntityVariable(LocalPlayer(), 'is_wanted', false) then return end
+        if not bgNPC:GetEntityVariable(LocalPlayer(), 'is_wanted', false) then return end
 
-        local timeleft = bgCitizens:GetEntityVariable(LocalPlayer(), 'wanted_time', 
-            bgCitizens.wanted_time)
+        local timeleft = bgNPC:GetEntityVariable(LocalPlayer(), 'wanted_time', 
+            bgNPC.wanted_time)
         
         if timeleft < 0 then timeleft = 0 end
         
@@ -213,7 +213,7 @@ else
     hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
         local npcs = {}
 
-        for _, actor in ipairs(bgCitizens:GetAll()) do
+        for _, actor in ipairs(bgNPC:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) then
                 if actor:GetState() == 'calling_police' then
@@ -230,7 +230,7 @@ else
     end)
 
     hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', function()	
-        for _, actor in ipairs(bgCitizens:GetAll()) do
+        for _, actor in ipairs(bgNPC:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) then
                 if actor:GetState() == 'calling_police' then

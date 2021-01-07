@@ -1,4 +1,4 @@
-function bgCitizens:PlayerIsViewVector(ply, pos, radius)
+function bgNPC:PlayerIsViewVector(ply, pos, radius)
     radius = radius or 90
     local DirectionAngle = math.pi / radius -- 90
     local EntityDifference = pos - ply:EyePos()
@@ -10,7 +10,7 @@ function bgCitizens:PlayerIsViewVector(ply, pos, radius)
     return false
 end
 
-function bgCitizens:NPCIsViewVector(npc, pos, radius)
+function bgNPC:NPCIsViewVector(npc, pos, radius)
     radius = radius or 90
 	local directionAngCos = math.pi / radius
     local aimVector = npc:GetAimVector()

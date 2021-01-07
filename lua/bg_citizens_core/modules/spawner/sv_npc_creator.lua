@@ -7,18 +7,18 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bg_citizens_spawn_period'):GetFl
 
     local bg_citizens_max_npc = GetConVar('bg_citizens_max_npc'):GetInt()
     
-    bgCitizens:ClearRemovedNPCs()
+    bgNPC:ClearRemovedNPCs()
     
-    if #bgCitizens:GetAll() < bg_citizens_max_npc then
-        for _, npc_data in ipairs(bgCitizens.npc_classes) do
-            local count = table.Count(bgCitizens:GetAllNPCsByType(npc_data.type))
+    if #bgNPC:GetAll() < bg_citizens_max_npc then
+        for _, npc_data in ipairs(bgNPC.npc_classes) do
+            local count = table.Count(bgNPC:GetAllNPCsByType(npc_data.type))
             local max = math.Round(((npc_data.fullness / 100) * bg_citizens_max_npc))
 
             if max <= 0 or count > max then
                 goto skip
             end
 
-            bgCitizens:SpawnActor(npc_data.type)
+            bgNPC:SpawnActor(npc_data.type)
 
             ::skip::
         end

@@ -1,5 +1,5 @@
 timer.Create('BGN_Timer_NPCLookAtObject', 0.5, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local npc = actor:GetNPC()

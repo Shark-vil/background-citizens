@@ -1,15 +1,15 @@
 if CLIENT then
     net.RegisterCallback('bgn_add_actor_from_client', function(ply, id, npc)
         if IsValid(npc) then
-            local actor = BG_NPC_CLASS:Instance(npc, bgCitizens.npc_classes[id])
-            bgCitizens:AddNPC(actor)
+            local actor = BG_NPC_CLASS:Instance(npc, bgNPC.npc_classes[id])
+            bgNPC:AddNPC(actor)
             if actor:GetState() == 'none' then
                 actor:Walk()
             end
         end
     end)
 else
-    function bgCitizens:SpawnActor(type)
+    function bgNPC:SpawnActor(type)
         local bg_citizens_spawn_radius 
             = GetConVar('bg_citizens_spawn_radius'):GetFloat()
     
@@ -22,7 +22,7 @@ else
         local bg_citizens_spawn_block_radius
             = GetConVar('bg_citizens_spawn_block_radius'):GetFloat() ^ 2
     
-        for id, data in ipairs(bgCitizens.npc_classes) do
+        for id, data in ipairs(bgNPC.npc_classes) do
             if data.type == type then
                 local points_close = {}
                 local players = player.GetAll()
@@ -32,7 +32,7 @@ else
                 do
                     local ply = table.Random(players)
                     if IsValid(ply) then
-                        points_close = bgCitizens:GetAllPointsInRadius(ply:GetPos(), 
+                        points_close = bgNPC:GetAllPointsInRadius(ply:GetPos(), 
                             bg_citizens_spawn_radius)
                     end
                 end
@@ -52,7 +52,7 @@ else
                 for _, ply in ipairs(players) do
                     local distance = pos:DistToSqr(ply:GetPos())
                     if distance < bg_citizens_spawn_radius_visibility 
-                        and bgCitizens:PlayerIsViewVector(ply, pos)
+                        and bgNPC:PlayerIsViewVector(ply, pos)
                     then
                         if distance <= bg_citizens_spawn_block_radius then
                             return
@@ -115,14 +115,14 @@ else
                 end
     
                 local entities = {}
-                table.Merge(entities, bgCitizens:GetAllNPCs())
+                table.Merge(entities, bgNPC:GetAllNPCs())
                 table.Merge(entities, player.GetAll())
     
                 for _, ent in ipairs(entities) do
                     if IsValid(ent) then
                         if ent:IsPlayer() then
                             npc:AddEntityRelationship(ent, D_NU, 99)
-                        elseif ent:IsNPC() and bgCitizens:GetActor(ent) ~= nil then
+                        elseif ent:IsNPC() and bgNPC:GetActor(ent) ~= nil then
                             npc:AddEntityRelationship(ent, D_NU, 99)
                             ent:AddEntityRelationship(npc, D_NU, 99)
                         end
@@ -133,7 +133,7 @@ else
                 local actor = BG_NPC_CLASS:Instance(npc, data)
                 actor:Walk()
     
-                bgCitizens:AddNPC(actor)
+                bgNPC:AddNPC(actor)
     
                 timer.Simple(1, function()
                     if not IsValid(npc) then return end
@@ -148,7 +148,7 @@ else
     end
 end
 
-function bgCitizens:AddNPC(actor)    
+function bgNPC:AddNPC(actor)    
     table.insert(self.actors, actor)
 
     local npc = actor:GetNPC()
@@ -162,7 +162,7 @@ function bgCitizens:AddNPC(actor)
     table.insert(self.fnpcs[type], npc)
 end
 
-function bgCitizens:ClearRemovedNPCs()
+function bgNPC:ClearRemovedNPCs()
     for i = #self.actors, 1, -1 do
         local npc = self.actors[i]:GetNPC()
         if not IsValid(npc) or npc:Health() <= 0 then
