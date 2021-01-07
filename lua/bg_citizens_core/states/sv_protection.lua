@@ -1,4 +1,4 @@
-timer.Create('bgCitizens_StateProtectionAction', 0.5, 0, function()
+timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then

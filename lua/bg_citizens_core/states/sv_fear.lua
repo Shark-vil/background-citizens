@@ -1,4 +1,4 @@
-timer.Create('bgCitizens_StateFearAction', 0.3, 0, function()
+timer.Create('BGN_Timer_FearStateController', 0.3, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         local state = actor:GetState()

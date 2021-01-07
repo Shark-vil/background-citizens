@@ -1,5 +1,5 @@
 if CLIENT then
-    net.RegisterCallback('bgCitizens_AddActorFromClient', function(ply, id, npc)
+    net.RegisterCallback('bgn_add_actor_from_client', function(ply, id, npc)
         if IsValid(npc) then
             local actor = BG_NPC_CLASS:Instance(npc, bgCitizens.npc_classes[id])
             bgCitizens:AddNPC(actor)
@@ -83,7 +83,7 @@ else
                     end
                 end
     
-                if hook.Run('bgCitizens_PreValidSpawnNPC', data) ~= nil then
+                if hook.Run('BGN_OnValidSpawnNPC', data) ~= nil then
                     return
                 end
     
@@ -94,7 +94,7 @@ else
                 --[[
                     ATTENTION! Be careful, this hook is called before the NPC spawns. If you give out a weapon or something similar, it will crash the game!
                 --]]
-                if hook.Run('bgCitizens_PreSpawnNPC', npc, data) ~= nil then
+                if hook.Run('BGN_PreSpawnNPC', npc, data) ~= nil then
                     if IsValid(npc) then npc:Remove() end
                     return
                 end
@@ -137,10 +137,10 @@ else
     
                 timer.Simple(1, function()
                     if not IsValid(npc) then return end
-                    net.InvokeAll('bgCitizens_AddActorFromClient', id, npc)
+                    net.InvokeAll('bgn_add_actor_from_client', id, npc)
                 end)
     
-                hook.Run('bgCitizens_PostSpawnNPC', actor)
+                hook.Run('BGN_PostSpawnNPC', actor)
     
                 return
             end

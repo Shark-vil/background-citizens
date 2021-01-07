@@ -1,4 +1,4 @@
-timer.Create('bgn_timer_player_look_at_object', 0.3, 0, function()
+timer.Create('BGN_Timer_PlayerLookAtObject', 0.3, 0, function()
     for _, ply in ipairs(player.GetAll()) do
         if IsValid(ply) and ply:Alive() then
             local tr = util.TraceLine({
@@ -22,7 +22,7 @@ timer.Create('bgn_timer_player_look_at_object', 0.3, 0, function()
 
                 local LookTime = RealTime() - ply.bgCitizensLookObjectTime
 
-                local result = hook.Run('bgCitizens_PlayerLookAtObject', ply, ent, LookTime)
+                local result = hook.Run('BGN_PlayerLookAtObject', ply, ent, LookTime)
                 if result ~= nil and isbool(result) and result then
                     ply.bgCitizensLookObjectTime = RealTime()
                 end

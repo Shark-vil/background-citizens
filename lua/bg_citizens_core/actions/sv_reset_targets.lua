@@ -1,4 +1,4 @@
-hook.Add("PlayerDeath", "bgCitizens_PlayerDeathRemoveTargets", function(victim, inflictor, attacker)
+hook.Add("PlayerDeath", "BGN_ClearingTargetsForNPCsInThePlayerDeath", function(victim, inflictor, attacker)
     bgCitizens.killing_statistic[victim] = {}
     bgCitizens.arrest_players[victim] = nil
     
@@ -7,7 +7,7 @@ hook.Add("PlayerDeath", "bgCitizens_PlayerDeathRemoveTargets", function(victim, 
     end
 end)
 
-timer.Create('bgCitizens_ResetAttackedEvent', 0.5, 0, function()
+timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then

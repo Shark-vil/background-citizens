@@ -1,4 +1,4 @@
-hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsTables', function()
+hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
     bgCitizens.actors = {}
     bgCitizens.factors = {}
     bgCitizens.npcs = {}
@@ -15,10 +15,10 @@ end)
 local function CleanupNPCsIfRemovedOrKilled()
     bgCitizens:ClearRemovedNPCs()
 end
-hook.Add('bgCitizens_OnKilledActor', 'bgCitizensCleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
-hook.Add('EntityRemoved', 'bgCitizensCleanupNPCsTablesEntityRemoved', CleanupNPCsIfRemovedOrKilled)
+hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
+hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
 
-timer.Create('bgCitizensRemover', 1, 0, function()
+timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
     local npcs = bgCitizens:GetAllNPCs()
 
     if #npcs ~= 0 then
@@ -43,7 +43,7 @@ timer.Create('bgCitizensRemover', 1, 0, function()
                 end
 
                 if isRemove then
-                    if hook.Run('bgCitizens_PreRemoveNPC', npc) ~= nil then
+                    if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
                         return
                     end
                     npc:Remove()

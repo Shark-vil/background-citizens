@@ -1,4 +1,4 @@
-hook.Add('bgCitizens_TakeDamageReaction', 'bgCitizensAttackedOtherNPCAction', 
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
     local ActorTarget = bgCitizens:GetActor(target)
     local ActorAttacker = bgCitizens:GetActor(attacker)
@@ -53,7 +53,7 @@ function(attacker, target, dmginfo)
         end
 
         if IsValid(targetFromActor) then
-            if hook.Run('bgCitizens_ProtectReaction', actor, attacker, target) ~= nil then
+            if hook.Run('BGN_DamageToAnotherActor', actor, attacker, target) ~= nil then
                 goto skip
             end
 

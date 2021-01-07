@@ -1,7 +1,5 @@
-bgCitizens.killing_statistic = {}
-
 if CLIENT then
-    net.RegisterCallback('bgCitizens_SyncKillingStatistic', function(ply, data)
+    net.RegisterCallback('bgn_sync_killing_statistic', function(ply, data)
         bgCitizens.killing_statistic = data
     end)
 end
@@ -14,7 +12,7 @@ function bgCitizens:AddKillingStatistic(attacker, actor)
     self.killing_statistic[attacker][type] = self.killing_statistic[attacker][type] + 1
 
     if SERVER then
-        net.InvokeAll('bgCitizens_SyncKillingStatistic', self.killing_statistic)
+        net.InvokeAll('bgn_sync_killing_statistic', self.killing_statistic)
     end
 
     return self.killing_statistic[attacker][type]

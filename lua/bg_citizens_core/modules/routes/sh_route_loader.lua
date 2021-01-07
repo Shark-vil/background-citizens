@@ -68,6 +68,6 @@ else
 
         bgCitizens.points = data_table
 
-        hook.Run('bgCitizens_LoadingClientRoutes', bgCitizens.points)
+        hook.Run('BGN_LoadingClientRoutes', bgCitizens.points)
     end)
 end

@@ -120,7 +120,7 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.old_state = nil
 
             if IsValid(self.npc) then
-                hook.Run('bgCitizen_SetNPCState', self, 
+                hook.Run('BGN_SetNPCState', self, 
                     self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
             end
         end
@@ -182,7 +182,7 @@ function BG_NPC_CLASS:Instance(npc, data)
         self.npc.bgCitizenState = { state = state, data = (data or {}) }
 
         if IsValid(self.npc) then
-            hook.Run('bgCitizen_SetNPCState', self, 
+            hook.Run('BGN_SetNPCState', self, 
                 self.npc.bgCitizenState.state, self.npc.bgCitizenState.data)
         end
 
@@ -359,7 +359,7 @@ function BG_NPC_CLASS:Instance(npc, data)
                 return true
             end
 
-            local hook_result = hook.Run('bgCitizen_PreNPCStartAnimation', 
+            local hook_result = hook.Run('BGN_PreNPCStartAnimation', 
                 self, sequence_name, loop, loop_time)
 
             if hook_result ~= nil and isbool(hook_result) and not hook_result then
@@ -382,7 +382,7 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.npc:ResetSequenceInfo()
             self.npc:ResetSequence(sequence)
 
-            hook.Run('bgCitizen_StartedNPCAnimation', self, sequence_name, loop, loop_time)
+            hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
             -- print(tostring(self.anim_is_loop) .. ' - ' .. self.anim_name)
 
@@ -455,7 +455,7 @@ function BG_NPC_CLASS:Instance(npc, data)
 end
 
 if CLIENT then
-    net.RegisterCallback('bg_citizen_change_npc_state', function(ply, npc, state, data)
+    net.RegisterCallback('bgn_change_npc_state', function(ply, npc, state, data)
         if IsValid(npc) then
             local actor = bgCitizens:GetActor(npc)
             if actor ~= nil then
@@ -464,19 +464,19 @@ if CLIENT then
         end
     end)
 else
-    hook.Add("bgCitizen_SetNPCState", "InvokeAllNpcChangeState", function(actor, state, data)
+    hook.Add("BGN_SetNPCState", "BGN_SyncChangedNPCState", function(actor, state, data)
         local npc = actor:GetNPC()
         if IsValid(npc) then
             npc.bgCitizenVisibility = true
             npc.bgCitizenVisibilityDelay = CurTime() + 3
             timer.Simple(1.5, function()
                 if not IsValid(npc) then return end
-                net.InvokeAll('bg_citizen_change_npc_state', npc, state, data)
+                net.InvokeAll('bgn_change_npc_state', npc, state, data)
             end)
         end
     end)
 
-    hook.Add('SetupPlayerVisibility', 'SetupPlayerVisiblyOnSetState', function(ent)
+    hook.Add('SetupPlayerVisibility', 'BGN_TemporarilyShowVectorToPlayerForSyncEntities', function(ent)
         if ent.bgCitizenVisibility then
             AddOriginToPVS(ent:GetPos())
             if ent.bgCitizenVisibilityDelay < CurTime() then

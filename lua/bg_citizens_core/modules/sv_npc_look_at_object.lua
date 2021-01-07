@@ -1,4 +1,4 @@
-timer.Create('bgn_timer_npc_look_at_object', 0.5, 0, function()
+timer.Create('BGN_Timer_NPCLookAtObject', 0.5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
@@ -13,7 +13,7 @@ timer.Create('bgn_timer_npc_look_at_object', 0.5, 0, function()
             })
 
             if tr.Hit and IsValid(tr.Entity) then
-                hook.Run('bgCitizens_NPCLookAtObject', actor, tr.Entity)
+                hook.Run('BGN_NPCLookAtObject', actor, tr.Entity)
             end
         end
     end

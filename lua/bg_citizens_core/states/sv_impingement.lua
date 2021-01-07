@@ -1,4 +1,4 @@
-timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
+timer.Create('BGN_Timer_ImpingementController', 5, 0, function()
     for _, actor in ipairs(bgCitizens:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
 

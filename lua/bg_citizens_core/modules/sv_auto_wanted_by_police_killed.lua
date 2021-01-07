@@ -1,10 +1,14 @@
-hook.Add("bgCitizens_OnKilledActor", "bgCitizens_AutoLargeMurderWanted", function(actor, attacker)
+hook.Add("BGN_OnKilledActor", "BGN_AutomaticWantedModeAfterKillingManyPolice", function(actor, attacker)
     if attacker:IsPlayer() then
         local count = bgCitizens:AddKillingStatistic(attacker, actor)
-        if not attacker:GetNWBool('bgCitizenWanted') and actor:GetType() == 'police' and count > 3 then
+
+        if bgCitizens:GetEntityVariable(attacker, 'is_wanted', false) 
+            and actor:GetType() == 'police' and count > 3
+        then
             table.insert(bgCitizens.wanted, attacker)
-            attacker.bgCitizenWantedReset = CurTime() + 30
-            attacker:SetNWBool('bgCitizenWanted', true)
+            bgCitizens:SetEntityVariable(attacker, 'wanted_time_reset', CurTime() + bgCitizens.wanted_time)
+            bgCitizens:SetEntityVariable(attacker, 'wanted_time', bgCitizens.wanted_time)
+            bgCitizens:SetEntityVariable(attacker, 'is_wanted', true)
         end
     end
 end)

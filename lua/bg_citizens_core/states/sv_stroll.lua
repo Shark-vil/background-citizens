@@ -1,7 +1,7 @@
 local movement_map = {}
 local movement_ignore = {}
 
-hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsMovementMaps', function()
+hook.Add('PostCleanupMap', 'BGN_CleanupNPCsMovementMaps', function()
     movement_map = {}
     movement_ignore = {}
 end)
@@ -65,7 +65,7 @@ local function nextMovement(npc, positions)
     return updateMovement(npc, positions)
 end
 
-hook.Run('bgCitizens_PostOpenDoor', 'ReloadNPCStateAfterDoorOpen', function(actor)
+hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
     if actor:GetState() == 'walk' then
         local npc = actor:GetNPC()
         local map = movement_map[npc]
@@ -75,7 +75,7 @@ hook.Run('bgCitizens_PostOpenDoor', 'ReloadNPCStateAfterDoorOpen', function(acto
     end
 end)
 
-timer.Create('bgCitizensMoveController', 0.5, 0, function()
+timer.Create('BGN_Timer_StollController', 0.5, 0, function()
     if #bgCitizens.points ~= 0 then
         for _, actor in ipairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
@@ -84,7 +84,7 @@ timer.Create('bgCitizensMoveController', 0.5, 0, function()
                 local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
 
-                if hook.Run('bgCitizens_PreStollNPC', npc, map) ~= nil then
+                if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
                     goto skip
                 end
 
@@ -140,7 +140,7 @@ timer.Create('bgCitizensMoveController', 0.5, 0, function()
                         end
                     end
 
-                    hook.Run('bgCitizens_PostStollNPC', npc, map)
+                    hook.Run('BGN_PostStollNPC', npc, map)
                 end
 
                 ::skip::
@@ -149,7 +149,7 @@ timer.Create('bgCitizensMoveController', 0.5, 0, function()
     end
 end)
 
-timer.Create('bgCitizensSwitchStollMovementType', 1, 0, function()
+timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
     for _, actor in ipairs(bgCitizens:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and actor:GetState() == 'walk' then

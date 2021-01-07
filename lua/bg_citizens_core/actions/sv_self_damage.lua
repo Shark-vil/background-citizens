@@ -1,4 +1,4 @@
-hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmginfo)
+hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
     if not target:IsPlayer() and not target:IsNPC() then return end
 
     local attacker = dmginfo:GetAttacker()
@@ -14,7 +14,7 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
             if attacker:IsPlayer() then
                 if ActorTarget:HasTeam('player') then
                     return true
-                elseif attacker:GetNWBool('bgCitizenWanted') then
+                elseif bgCitizens:GetEntityVariable(attacker, 'is_wanted', false) then
                     attacker.bgCitizenWantedReset = CurTime() + 30
                 end
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
@@ -29,7 +29,7 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
             end
         end
 
-        local hook_result = hook.Run('bgCitizens_TakeDamageReaction', attacker, target, dmginfo)
+        local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
         if hook_result ~= nil then
             if isbool(hook_result) then
                 return hook_result
@@ -45,15 +45,26 @@ hook.Add('EntityTakeDamage', 'bgCitizensAttackedNPCAction', function(target, dmg
                 delay = 0
             })
         end
+
+        hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
     elseif target:IsPlayer() then
         if attacker:IsNPC() and ActorAttacker ~= nil then
-            if target:GetNWBool('bgCitizenWanted') then
+            if bgCitizens:GetEntityVariable(attacker, 'is_wanted', false) then
                 target.bgCitizenWantedReset = CurTime() + 30
             end
 
             if ActorAttacker:HasTeam('player') then
                 return
             end
+
+            local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
+            if hook_result ~= nil then
+                if isbool(hook_result) then
+                    return hook_result
+                end
+            end
+
+            hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
         end
     end
 end)

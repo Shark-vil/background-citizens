@@ -23,7 +23,7 @@ local function TargetPlayerPush(npc, target, velocity)
 end
 
 
-hook.Add("bgCitizens_NPCLookAtObject", "PoliceNPCFirstDefensePush", function(actor, ent)
+hook.Add("BGN_NPCLookAtObject", "BGN_PolicePushPlayerWhileProtectedIfHeIsClose", function(actor, ent)
     if ent:IsPlayer() and actor:GetType() == 'police' 
         and actor:GetState() == 'defense'
         and actor:IsSequenceFinished()
@@ -43,7 +43,7 @@ hook.Add("bgCitizens_NPCLookAtObject", "PoliceNPCFirstDefensePush", function(act
     end
 end)
 
-hook.Add("bgCitizens_NPCLookAtObject", "PolicePushAnotherNPC", function(actor, ent)
+hook.Add("BGN_NPCLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", function(actor, ent)
     if ent:IsPlayer() and actor:GetType() == 'police' 
         and actor:GetState() == 'walk'
         and actor:IsSequenceFinished()

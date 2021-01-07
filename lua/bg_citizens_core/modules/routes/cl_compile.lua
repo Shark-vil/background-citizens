@@ -6,7 +6,7 @@ concommand.Add('cl_citizens_compile_route', function(ply, cmd, args)
     ply:ConCommand('cl_citizens_load_route_from_client')
 end, nil, 'Saves your points as a lua script so you can place your mesh in the workshop.')
 
-hook.Add("bgCitizens_LoadingClientRoutes", 'bgCitizensRoutesCompiler', function(points)
+hook.Add("BGN_LoadingClientRoutes", 'BGN_RoutesCompiler', function(points)
     if not is_load_compiler then return end
     MsgN('Start compile...')
     is_load_compiler = false

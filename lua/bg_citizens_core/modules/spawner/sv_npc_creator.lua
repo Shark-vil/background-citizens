@@ -1,4 +1,4 @@
-timer.Create('bgCitizensCreator', GetConVar('bg_citizens_spawn_period'):GetFloat(), 0, function()
+timer.Create('BGN_Timer_NPCSpawner', GetConVar('bg_citizens_spawn_period'):GetFloat(), 0, function()
     local bg_citizens_enable = GetConVar('bg_citizens_enable'):GetInt()
 
     if bg_citizens_enable <= 0 then

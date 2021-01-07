@@ -7,13 +7,17 @@ file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
 bgCitizens = {}
-bgCitizens.actors = {} -- Do not change
-bgCitizens.factors = {} -- Do not change
-bgCitizens.npcs = {} -- Do not change
-bgCitizens.fnpcs = {} -- Do not change
-bgCitizens.points = {} -- Do not change
-bgCitizens.wanted = {} -- Do not change
-bgCitizens.arrest_players = {} -- Do not change
+
+-- Do not change -------------
+bgCitizens.actors = {}
+bgCitizens.factors = {}
+bgCitizens.npcs = {}
+bgCitizens.fnpcs = {}
+bgCitizens.points = {}
+bgCitizens.wanted = {}
+bgCitizens.arrest_players = {}
+bgCitizens.killing_statistic = {}
+-- ---------------------------
 
 local root_directory = 'bg_citizens_core'
 
@@ -76,7 +80,6 @@ using('modules/spawner/sv_npc_remover.lua')
 using('modules/spawner/sv_npc_creator.lua')
 
 using('actions/sv_open_door.lua')
-using('actions/sv_attacked.lua')
 using('actions/sv_police_luggage.lua')
 using('actions/sv_damage_reaction.lua')
 using('actions/sv_killed_actor.lua')

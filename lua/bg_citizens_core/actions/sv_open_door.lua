@@ -1,4 +1,4 @@
-hook.Add("bgCitizens_NPCLookAtObject", "bgCitizensOpenDoorAction", function(actor, door)
+hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
     if door:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
 
     local door_class = {
@@ -12,7 +12,7 @@ hook.Add("bgCitizens_NPCLookAtObject", "bgCitizensOpenDoorAction", function(acto
     if not table.HasValue(door_class, door:GetClass()) then return end
     -- if not tobool(string.find(door:GetModel(), '*door*')) then return end
 
-    if not door.bgCitizenOpenDoor and hook.Run('bgCitizens_PreOpenDoor', actor, door) == nil then
+    if not door.bgCitizenOpenDoor and hook.Run('BGN_PreOpenDoor', actor, door) == nil then
         actor:PlayStaticSequence('Open_door_away')
 
         door.bgCitizenOpenDoor = true
@@ -20,16 +20,16 @@ hook.Add("bgCitizens_NPCLookAtObject", "bgCitizensOpenDoorAction", function(acto
         door:Fire("unlock", "", 0)
         door:Fire("open", "", 0)
         
-        hook.Run('bgCitizens_PostOpenDoor', actor, door)
+        hook.Run('BGN_PostOpenDoor', actor, door)
 
         timer.Simple(10, function()
             if IsValid(door) and door.bgCitizenOpenDoor and 
-                hook.Run('bgCitizens_PreCloseDoor', door) == nil
+                hook.Run('BGN_PreCloseDoor', door) == nil
             then
                 door:Fire("close", "", 0)
                 door.bgCitizenOpenDoor = false
 
-                hook.Run('bgCitizens_PostCloseDoor', door)
+                hook.Run('BGN_PostCloseDoor', door)
             end
         end)
     end

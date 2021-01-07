@@ -1,4 +1,4 @@
-hook.Add("bgCitizens_OnKilledActor", "bgCitizensDropMoney", function(actor)
+hook.Add("BGN_OnKilledActor", "BGN_DarkRP_DefaultNPCDropMoney", function(actor)
     if engine.ActiveGamemode() ~= 'darkrp' then return end
 
     local data = actor:GetData()

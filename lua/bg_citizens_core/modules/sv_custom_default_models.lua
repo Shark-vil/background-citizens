@@ -1,4 +1,4 @@
-hook.Add('bgCitizens_PreSpawnNPC', 'bgCitizensSetCustomModelFromNPC', function(npc, data)
+hook.Add('BGN_PreSpawnNPC', 'BGN_SetCustomCitizenTypeFromDefaultModels', function(npc, data)
     if data.type == 'gangster' then
         npc:SetKeyValue('citizentype', 3)
     elseif data.type == 'citizen' then

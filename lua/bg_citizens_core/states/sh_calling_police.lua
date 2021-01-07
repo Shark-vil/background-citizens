@@ -1,5 +1,5 @@
 if SERVER then
-    hook.Add("bgCitizens_PostSpawnNPC", "bgCitizens_AddWantedTargetsFromPolice", function(actor)
+    hook.Add("BGN_PostSpawnNPC", "BGN_AddWantedTargetsForNewNPCs", function(actor)
         if #bgCitizens.wanted == 0 then return end
         if actor:GetType() == 'police' or actor:GetType() == 'citizen' then
             for _, enemy in pairs(bgCitizens.wanted) do
@@ -8,7 +8,7 @@ if SERVER then
         end
     end)
 
-    hook.Add("PlayerDeath", "bgCitizens_WantedResetDeath", function(victim, inflictor, attacker)
+    hook.Add("PlayerDeath", "BGN_ResetWantedModeForDeceasedPlayer", function(victim, inflictor, attacker)
         if bgCitizens:GetEntityVariable(victim, 'is_wanted', false) then
 
             bgCitizens:SetEntityVariable(victim, 'is_wanted', false)
@@ -19,7 +19,7 @@ if SERVER then
         end
     end)
 
-    timer.Create('bgCitizens_WantedChecker', 1, 0, function()
+    timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
         local polices = bgCitizens:GetAllByType('police')
         local citizens = bgCitizens:GetAllByType('citizen')
 
@@ -116,7 +116,7 @@ if SERVER then
         end
     end)
 
-    timer.Create('bgCitizens_CallingPolice', 0.5, 0, function()
+    timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
         for _, actor in pairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) then
@@ -195,7 +195,7 @@ else
     local color_text = Color(82, 223, 255)
     local color_black = Color(0, 0, 0)
 
-    hook.Add('HUDPaint', 'bgCitizensWantedTextDrawing', function()
+    hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
         if not bgCitizens:GetEntityVariable(LocalPlayer(), 'is_wanted', false) then return end
 
         local timeleft = bgCitizens:GetEntityVariable(LocalPlayer(), 'wanted_time', 
@@ -210,7 +210,7 @@ else
 	end)
 
     local halo_color = Color(0, 60, 255)
-    hook.Add("PreDrawHalos", "bgCitizensCallingPoliceHalpDrawing", function()
+    hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
         local npcs = {}
 
         for _, actor in ipairs(bgCitizens:GetAll()) do
@@ -229,7 +229,7 @@ else
         end
     end)
 
-    hook.Add('PostDrawOpaqueRenderables', 'bgCitizensCallingPoliceTextDrawing', function()	
+    hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', function()	
         for _, actor in ipairs(bgCitizens:GetAll()) do
             local npc = actor:GetNPC()
             if IsValid(npc) then

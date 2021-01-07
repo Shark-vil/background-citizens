@@ -1,4 +1,5 @@
-hook.Add("bgCitizens_TakeDamageReaction", "EnableArrestModeFirstDamage", function(attacker, target, dmginfo)
+hook.Add("BGN_PreReactionTakeDamage", "BGN_AttackerRegistrationOnArrestTable", 
+function(attacker, target, dmginfo)
     if not bgCitizens.arrest_moode then return end
     
     local ActorTarget = bgCitizens:GetActor(target)
@@ -24,13 +25,13 @@ hook.Add("bgCitizens_TakeDamageReaction", "EnableArrestModeFirstDamage", functio
     end
 end)
 
-hook.Add("bgCitizens_OnKilledActor", "ResetArrestModeIfKilledNPC", function(actor, attacker)
+hook.Add("BGN_OnKilledActor", "BGN_ResettingNPCFromTheArrestTableAfterDeath", function(actor, attacker)
     if bgCitizens.arrest_players[attacker] ~= nil then
         bgCitizens.arrest_players[attacker].delayIgnore = 0
     end
 end)
 
-hook.Add("bgCitizens_ProtectReaction", "EnableArrestModeFirstDamage", function(actor, attacker, target)
+hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", function(actor, attacker, target)
     if not IsValid(attacker) or not IsValid(target) then
         return
     end
@@ -73,7 +74,7 @@ hook.Add("bgCitizens_ProtectReaction", "EnableArrestModeFirstDamage", function(a
     end
 end)
 
-timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()    
+timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()    
     for _, actor in ipairs(bgCitizens:GetAllByType('police')) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
@@ -149,7 +150,7 @@ timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
                             if time <= 0 then
                                 bgCitizens.arrest_players[data.attacker] = nil
 
-                                hook.Run('bgCitizens_PlayerArrest', data.attacker, actor)
+                                hook.Run('BGN_PlayerArrest', data.attacker, actor)
                                 for _, actor in ipairs(bgCitizens:GetAll()) do
                                     actor:RemoveTarget(data.attacker)
                                 end
@@ -170,7 +171,7 @@ timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
     end
 end)
 
-hook.Add("bgCitizens_PlayerArrest", "DarkRPArestedNPC", function(ply, actor)
+hook.Add("BGN_PlayerArrest", "BGN_DarkRP_DefaultPlayerArrest", function(ply, actor)
     if ply.arrest ~= nil then
         ply:arrest(nil, actor:GetNPC())
     end
