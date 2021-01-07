@@ -9,10 +9,12 @@ if SERVER then
     end)
 
     hook.Add("PlayerDeath", "bgCitizens_WantedResetDeath", function(victim, inflictor, attacker)
-        if victim:GetNWBool('bgCitizenWanted') then
-            victim:SetNWBool('bgCitizenWanted', false)
-            victim.bgCitizenWantedReset = 0
-            bgCitizens.killing_statistic[victim] = {}
+        if bgCitizens:GetEntityVariable(victim, 'is_wanted', false) then
+
+            bgCitizens:SetEntityVariable(victim, 'is_wanted', false)
+            bgCitizens:SetEntityVariable(victim, 'wanted_time', 0)
+            bgCitizens:SetEntityVariable(victim, 'wanted_time_reset', 0)
+
             table.RemoveByValue(bgCitizens.wanted, victim)
         end
     end)
@@ -30,10 +32,11 @@ if SERVER then
             if not IsValid(enemy) then
                 table.remove(bgCitizens.wanted, i)
             elseif enemy:IsPlayer() then
-                local to_end_time = enemy.bgCitizenWantedReset - CurTime()
-                if to_end_time < 0 then to_end_time = 0 end
+                local wanted_time = bgCitizens:GetEntityVariable(enemy, 'wanted_time_reset', 0)
+                local wait_time = wanted_time - CurTime()
+                if wait_time < 0 then wait_time = 0 end
 
-                enemy:SetNWInt('bgCitizenWantedReset', math.Round(to_end_time))
+                bgCitizens:SetEntityVariable(enemy, 'wanted_time', math.Round(wait_time))
                 
                 for _, actor in ipairs(witnesses) do
                     local npc = actor:GetNPC()
@@ -41,8 +44,11 @@ if SERVER then
                         local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
                         if dist <= 360000 then -- 600 ^ 2
-                            enemy.bgCitizenWantedReset = CurTime() + bgCitizens.wanted_time
-                            enemy:SetNWInt('bgCitizenWantedReset', bgCitizens.wanted_time)
+                            bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                CurTime() + bgCitizens.wanted_time)
+
+                            bgCitizens:SetEntityVariable(enemy, 'wanted_time', bgCitizens.wanted_time)
+
                             goto skip
                         end
 
@@ -58,25 +64,30 @@ if SERVER then
                             })
 
                             if tr.Hit and IsValid(tr.Entity) and tr.Entity == enemy then
-                                enemy.bgCitizenWantedReset = CurTime() + bgCitizens.wanted_time
-                                enemy:SetNWInt('bgCitizenWantedReset', bgCitizens.wanted_time)
+                                bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                    CurTime() + bgCitizens.wanted_time)
+
+                                bgCitizens:SetEntityVariable(enemy, 'wanted_time', bgCitizens.wanted_time)
+
                                 goto skip
                             end
                         end
                     end
                 end
+
+                local wanted_time_reset = bgCitizens:GetEntityVariable(enemy, 'wanted_time_reset', 0)
                 
-                if enemy.bgCitizenWantedReset < CurTime() then
+                if wanted_time_reset < CurTime() then
                     for _, actor in ipairs(bgCitizens:GetAll()) do
                         actor:RemoveTarget(enemy)
                     end
 
-                    if enemy:IsPlayer() then
-                        enemy:SetNWBool('bgCitizenWanted', false)
-                    end
+                    bgCitizens:SetEntityVariable(enemy, 'is_wanted', false)
+                    bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 0)
+                    bgCitizens:SetEntityVariable(enemy, 'wanted_time', 0)
 
-                    enemy.bgCitizenWantedReset = 0
                     bgCitizens.killing_statistic[enemy] = {}
+
                     table.remove(bgCitizens.wanted, i)
                 end
             end
@@ -90,9 +101,7 @@ if SERVER then
             end
             
             if actor:GetState() ~= 'defense' then
-                actor:SetState('defense', {
-                    delay = 0
-                })
+                actor:Defense()
             end
         end
 
@@ -102,9 +111,7 @@ if SERVER then
             end
     
             if actor:GetState() ~= 'fear' then
-                actor:SetState('fear', {
-                    delay = 0
-                })
+                actor:Fear()
             end
         end
     end)
@@ -118,18 +125,14 @@ if SERVER then
     
                 if state == 'calling_police' then
                     if not bgCitizens.wanted_mode then
-                        actor:SetState('fear', {
-                            delay = 0
-                        })
+                        actor:Fear()
                         goto skip
                     end
 
                     local target = actor:GetNearTarget()     
                     if IsValid(target) then
                         if npc:GetPos():DistToSqr(target:GetPos()) < 90000 then -- 300 ^ 2
-                            actor:SetState('fear', {
-                                delay = 0
-                            })
+                            actor:Fear()
                             goto skip
                         end
                     end
@@ -144,11 +147,14 @@ if SERVER then
                                     local ActorEnemy = bgCitizens:GetActor(enemy)
                                     if ActorEnemy == nil or ActorEnemy:GetType() ~= 'police' then
                                         table.insert(bgCitizens.wanted, enemy)
-                                        if enemy:IsPlayer() then
-                                            enemy:SetNWBool('bgCitizenWanted', true)
-                                        end
-                                        enemy.bgCitizenWantedReset = CurTime() + bgCitizens.wanted_time
-                                        enemy:SetNWInt('bgCitizenWantedReset', bgCitizens.wanted_time)
+                                        
+                                        bgCitizens:SetEntityVariable(enemy, 'is_wanted', true)
+
+                                        bgCitizens:SetEntityVariable(enemy, 'wanted_time_reset', 
+                                            CurTime() + bgCitizens.wanted_time)
+
+                                        bgCitizens:SetEntityVariable(enemy, 'wanted_time', 
+                                            bgCitizens.wanted_time)
                                     end
                                 end
                             end
@@ -159,17 +165,13 @@ if SERVER then
                                 end
                         
                                 if ActorPolice:GetState() ~= 'defense' then
-                                    ActorPolice:SetState('defense', {
-                                        delay = 0
-                                    })
+                                    ActorPolice:Defense()
                                 end
                             end
 
                             npc:EmitSound('buttons/combine_button1.wav', 500, 100, 1, CHAN_AUTO)
 
-                            actor:SetState('fear', {
-                                delay = 0
-                            })
+                            actor:Fear()
                         else
                             if not actor:HasSequence('Crouch_IdleD') then
                                 actor:SetNextSequence('Crouch_To_Stand')
@@ -194,14 +196,17 @@ else
     local color_black = Color(0, 0, 0)
 
     hook.Add('HUDPaint', 'bgCitizensWantedTextDrawing', function()
-        if not LocalPlayer():GetNWBool('bgCitizenWanted') then return end
+        if not bgCitizens:GetEntityVariable(LocalPlayer(), 'is_wanted', false) then return end
 
-        local to_end_time = LocalPlayer():GetNWInt('bgCitizenWantedReset')
+        local timeleft = bgCitizens:GetEntityVariable(LocalPlayer(), 'wanted_time', 
+            bgCitizens.wanted_time)
+        
+        if timeleft < 0 then timeleft = 0 end
         
 		surface.SetFont("Trebuchet24")
 		surface.SetTextColor(255, 0, 0)
 		surface.SetTextPos(30, 30) 
-		surface.DrawText('YOU WANTED! The search will end in '..to_end_time..' seconds...')
+        surface.DrawText('YOU WANTED! The search will end in ' .. timeleft .. ' seconds...')
 	end)
 
     local halo_color = Color(0, 60, 255)
@@ -212,7 +217,7 @@ else
             local npc = actor:GetNPC()
             if IsValid(npc) then
                 if actor:GetState() == 'calling_police' then
-                    if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 4000000 then -- 2000 ^ 2
+                    if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 then -- 2500 ^ 2
                         table.insert(npcs, npc)
                     end
                 end
@@ -229,7 +234,7 @@ else
             local npc = actor:GetNPC()
             if IsValid(npc) then
                 if actor:GetState() == 'calling_police' then
-                    if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 4000000 then -- 2000 ^ 2
+                    if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 then -- 2500 ^ 2
                         local angle = LocalPlayer():EyeAngles()
                         angle:RotateAroundAxis(angle:Forward(), 90)
                         angle:RotateAroundAxis(angle:Right(), 90)

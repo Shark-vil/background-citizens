@@ -4,9 +4,10 @@ hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsTables', function()
     bgCitizens.npcs = {}
     bgCitizens.fnpcs = {}
     bgCitizens.wanted = {}
+    bgCitizens.arrest_players = {}
 
     for _, ply in ipairs(player.GetAll()) do
-        ply:SetNWBool('bgCitizenWanted', false)
+        bgCitizens:SetEntityVariable(ply, 'is_wanted', false, true)
         bgCitizens.killing_statistic[ply] = {}
     end
 end)

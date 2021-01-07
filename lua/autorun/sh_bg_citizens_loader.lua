@@ -13,6 +13,7 @@ bgCitizens.npcs = {} -- Do not change
 bgCitizens.fnpcs = {} -- Do not change
 bgCitizens.points = {} -- Do not change
 bgCitizens.wanted = {} -- Do not change
+bgCitizens.arrest_players = {} -- Do not change
 
 local root_directory = 'bg_citizens_core'
 
@@ -53,6 +54,7 @@ end
 
 using('global/sv_meta.lua')
 using('global/sh_meta.lua')
+using('global/sh_net_variables.lua')
 using('global/sh_actors_finder.lua')
 using('global/sh_actors_register.lua')
 using('global/sh_killing_statistic.lua')
@@ -65,6 +67,8 @@ using('modules/sv_player_look_at_object.lua')
 using('modules/sv_custom_default_models.lua')
 using('modules/sv_darkrp_drop_money.lua')
 using('modules/sv_static_animation_controller.lua')
+using('modules/sv_auto_wanted_by_police_killed.lua')
+using('modules/sv_friend_fixed.lua')
 using('modules/routes/sh_route_saver.lua')
 using('modules/routes/sh_route_loader.lua')
 using('modules/routes/cl_compile.lua')
@@ -74,6 +78,10 @@ using('modules/spawner/sv_npc_creator.lua')
 using('actions/sv_open_door.lua')
 using('actions/sv_attacked.lua')
 using('actions/sv_police_luggage.lua')
+using('actions/sv_damage_reaction.lua')
+using('actions/sv_killed_actor.lua')
+using('actions/sv_reset_targets.lua')
+using('actions/sv_self_damage.lua')
 
 using('states/sv_impingement.lua')
 using('states/sv_protection.lua')

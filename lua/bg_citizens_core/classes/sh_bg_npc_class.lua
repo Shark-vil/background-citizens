@@ -65,6 +65,12 @@ function BG_NPC_CLASS:Instance(npc, data)
         end
     end
 
+    function obj:RemoveAllTargets()
+        for _, t in ipairs(self.targets) do
+            self:RemoveTarget(t)
+        end
+    end
+
     function obj:HasTarget(ent)
         return table.HasValue(self.targets, ent)
     end
@@ -453,7 +459,6 @@ if CLIENT then
         if IsValid(npc) then
             local actor = bgCitizens:GetActor(npc)
             if actor ~= nil then
-                -- print(tostring(npc), state)
                 actor:SetState(state, data)
             end
         end
@@ -465,6 +470,7 @@ else
             npc.bgCitizenVisibility = true
             npc.bgCitizenVisibilityDelay = CurTime() + 3
             timer.Simple(1.5, function()
+                if not IsValid(npc) then return end
                 net.InvokeAll('bg_citizen_change_npc_state', npc, state, data)
             end)
         end
@@ -473,7 +479,7 @@ else
     hook.Add('SetupPlayerVisibility', 'SetupPlayerVisiblyOnSetState', function(ent)
         if ent.bgCitizenVisibility then
             AddOriginToPVS(ent:GetPos())
-            if npc.bgCitizenVisibilityDelay < CurTime() then
+            if ent.bgCitizenVisibilityDelay < CurTime() then
                 ent.bgCitizenVisibility = false
             end
         end

@@ -1,19 +1,21 @@
-local arrest_players = {}
-
 hook.Add("bgCitizens_TakeDamageReaction", "EnableArrestModeFirstDamage", function(attacker, target, dmginfo)
     if not bgCitizens.arrest_moode then return end
     
     local ActorTarget = bgCitizens:GetActor(target)
     if attacker:IsPlayer() and ActorTarget ~= nil and ActorTarget:GetType() == 'citizen' then
-        if arrest_players[attacker] ~= nil then 
-            arrest_players[attacker].count = arrest_players[attacker].count + 1
-            if arrest_players[attacker].delayIgnore > CurTime() and arrest_players[attacker].count >= 3 then
-                arrest_players[attacker].delayIgnore = 0
+        if bgCitizens.arrest_players[attacker] ~= nil then 
+            bgCitizens.arrest_players[attacker].count = bgCitizens.arrest_players[attacker].count + 1
+
+            if bgCitizens.arrest_players[attacker].delayIgnore > CurTime() 
+                and bgCitizens.arrest_players[attacker].count >= 3 
+            then
+                bgCitizens.arrest_players[attacker].delayIgnore = 0
             end
+
             return 
         end
         
-        arrest_players[attacker] = {
+        bgCitizens.arrest_players[attacker] = {
             target = target,
             delay = CurTime() + 1.5,
             delayIgnore = CurTime() + bgCitizens.arrest_time_limit,
@@ -23,10 +25,8 @@ hook.Add("bgCitizens_TakeDamageReaction", "EnableArrestModeFirstDamage", functio
 end)
 
 hook.Add("bgCitizens_OnKilledActor", "ResetArrestModeIfKilledNPC", function(actor, attacker)
-    if arrest_players[attacker] ~= nil then
-        if arrest_players[attacker].target == actor:GetNPC() then
-            arrest_players[attacker].delayIgnore = 0
-        end
+    if bgCitizens.arrest_players[attacker] ~= nil then
+        bgCitizens.arrest_players[attacker].delayIgnore = 0
     end
 end)
 
@@ -35,31 +35,36 @@ hook.Add("bgCitizens_ProtectReaction", "EnableArrestModeFirstDamage", function(a
         return
     end
 
-    if arrest_players == nil or arrest_players[attacker] == nil 
-        or arrest_players[attacker].target == nil or not IsValid(arrest_players[attacker].target)
+    if bgCitizens.arrest_players == nil or bgCitizens.arrest_players[attacker] == nil 
+        or bgCitizens.arrest_players[attacker].target == nil 
+        or not IsValid(bgCitizens.arrest_players[attacker].target)
     then
         return
     end
 
-    if arrest_players[attacker].arrest ~= nil and not arrest_players[attacker].arrest then
+    if bgCitizens.arrest_players[attacker].arrest ~= nil 
+        and not bgCitizens.arrest_players[attacker].arrest 
+    then
         return
     end
 
     if actor:GetType() == 'police' then
         if actor:GetReactionForProtect() ~= 'arrest' then
-            arrest_players[attacker].arrest = false
+            bgCitizens.arrest_players[attacker].arrest = false
             return
         end
     else
-        if arrest_players[attacker].delay > CurTime() then
+        if bgCitizens.arrest_players[attacker].delay > CurTime() then
             return true
         end
     end
 
-    arrest_players[attacker].arrest = true
+    bgCitizens.arrest_players[attacker].arrest = true
     
-    if arrest_players[attacker].target == target then
-        arrest_players[attacker].notify_delay = arrest_players[attacker].notify_delay or 0
+    if bgCitizens.arrest_players[attacker].target == target then
+        bgCitizens.arrest_players[attacker].notify_delay 
+            = bgCitizens.arrest_players[attacker].notify_delay or 0
+
         actor:SetState('arrest', {
             targets = target,
             attacker = attacker,
@@ -68,7 +73,7 @@ hook.Add("bgCitizens_ProtectReaction", "EnableArrestModeFirstDamage", function(a
     end
 end)
 
-timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
+timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()    
     for _, actor in ipairs(bgCitizens:GetAllByType('police')) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
@@ -81,7 +86,7 @@ timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
                 else
                     data.delay = data.delay or 0
 
-                    local delayIgnore = arrest_players[data.attacker].delayIgnore
+                    local delayIgnore = bgCitizens.arrest_players[data.attacker].delayIgnore
 
                     if delayIgnore < CurTime() then
                         actor:AddTarget(data.attacker)
@@ -127,20 +132,22 @@ timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
                             data.arrest_time = CurTime() + 5
                         end
 
-                        if not data.arrested and arrest_players[data.attacker].notify_delay < CurTime() then
+                        if not data.arrested 
+                            and bgCitizens.arrest_players[data.attacker].notify_delay < CurTime() 
+                        then
                             data.attacker:ChatPrint('Опусти голову!')
 
                             npc:EmitSound('npc/metropolice/vo/firstwarningmove.wav', 
                                 300, 100, 1, CHAN_AUTO)
                                 
-                            arrest_players[data.attacker].notify_delay = CurTime() + 3
+                            bgCitizens.arrest_players[data.attacker].notify_delay = CurTime() + 3
                         elseif data.arrested then
                             delayIgnore = delayIgnore + 1
-                            arrest_players[data.attacker].delayIgnore = delayIgnore
+                            bgCitizens.arrest_players[data.attacker].delayIgnore = delayIgnore
 
                             local time = data.arrest_time - CurTime()
                             if time <= 0 then
-                                arrest_players[data.attacker] = nil
+                                bgCitizens.arrest_players[data.attacker] = nil
 
                                 hook.Run('bgCitizens_PlayerArrest', data.attacker, actor)
                                 for _, actor in ipairs(bgCitizens:GetAll()) do
@@ -148,9 +155,9 @@ timer.Create('bgCitizens_StateArrestAction', 0.5, 0, function()
                                 end
                                 return
                             else
-                                if arrest_players[data.attacker].notify_delay < CurTime() then
+                                if bgCitizens.arrest_players[data.attacker].notify_delay < CurTime() then
                                     data.attacker:ChatPrint('Арест через ' .. math.floor(time) .. ' секунд')
-                                    arrest_players[data.attacker].notify_delay = CurTime() + 1
+                                    bgCitizens.arrest_players[data.attacker].notify_delay = CurTime() + 1
                                 end
                             end
                         end

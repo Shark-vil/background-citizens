@@ -102,8 +102,8 @@ bgCitizens.npc_classes = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['defense'] = 50,
-            ['arrest'] = 50
+            ['defense'] = 20,
+            ['arrest'] = 80
         }
     },
 --[[
