@@ -177,6 +177,7 @@ else
     local color_black = Color(0, 0, 0)
 
     hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
+        if not IsValid(LocalPlayer()) then return end
         if not bgNPC:GetEntityVariable(LocalPlayer(), 'is_wanted', false) then return end
 
         local timeleft = bgNPC:GetEntityVariable(LocalPlayer(), 'wanted_time', 
