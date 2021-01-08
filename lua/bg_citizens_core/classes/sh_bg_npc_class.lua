@@ -14,6 +14,7 @@ function BG_NPC_CLASS:Instance(npc, data)
     obj.anim_name = ''
     obj.is_animated = false
     obj.old_state = nil
+    obj.state_lock = false
 
     obj.isBgnActor = true
     obj.targets = {}
@@ -112,8 +113,18 @@ function BG_NPC_CLASS:Instance(npc, data)
         return self.targets
     end
 
+    function obj:StateLock(lock)
+        lock = lock or false
+        self.state_lock = lock
+    end
+
+    function obj:IsStateLock()
+        return self.state_lock
+    end
+
     function obj:SetOldState()
         if self:GetData().disableStates then return end
+        if self.state_lock then return end
         
         if self.old_state ~= nil then
             self.npc.bgNPCtate = self.old_state
@@ -128,6 +139,7 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     function obj:SetState(state, data)
         if self:GetData().disableStates then return end
+        if self.state_lock then return end
 
         if SERVET then
             self:ResetSequence()
@@ -467,21 +479,11 @@ else
     hook.Add("BGN_SetNPCState", "BGN_SyncChangedNPCState", function(actor, state, data)
         local npc = actor:GetNPC()
         if IsValid(npc) then
-            npc.bgNPCVisibility = true
-            npc.bgNPCVisibilityDelay = CurTime() + 3
+            bgNPC:TemporaryVectorVisibility(npc, 3)
             timer.Simple(1.5, function()
                 if not IsValid(npc) then return end
                 net.InvokeAll('bgn_change_npc_state', npc, state, data)
             end)
-        end
-    end)
-
-    hook.Add('SetupPlayerVisibility', 'BGN_TemporarilyShowVectorToPlayerForSyncEntities', function(ent)
-        if ent.bgNPCVisibility then
-            AddOriginToPVS(ent:GetPos())
-            if ent.bgNPCVisibilityDelay < CurTime() then
-                ent.bgNPCVisibility = false
-            end
         end
     end)
 end

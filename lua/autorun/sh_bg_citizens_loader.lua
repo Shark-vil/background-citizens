@@ -48,8 +48,8 @@ local function using(local_file_path, network_type, not_root_directory)
     end
 end
 
-using('sv_cvars.lua')
 using('sh_config.lua')
+using('sv_cvars.lua')
 
 if bgNPC.loadPresets then
     using('map_presets/rp_southside.lua', 'sv')
@@ -73,6 +73,7 @@ using('modules/sv_darkrp_drop_money.lua')
 using('modules/sv_static_animation_controller.lua')
 using('modules/sv_auto_wanted_by_police_killed.lua')
 using('modules/sv_friend_fixed.lua')
+using('modules/sh_wanted_mode.lua')
 using('modules/routes/sh_route_saver.lua')
 using('modules/routes/sh_route_loader.lua')
 using('modules/routes/cl_compile.lua')
@@ -90,6 +91,8 @@ using('states/sv_impingement.lua')
 using('states/sv_protection.lua')
 using('states/sv_fear.lua')
 using('states/sv_stroll.lua')
-using('states/sh_calling_police.lua')
+using('states/sv_calling_police.lua')
 using('states/sv_idle.lua')
 using('states/sv_arrest.lua')
+
+using('tool_options/cl_bgn_settings_menu.lua')

@@ -8,12 +8,6 @@
 -- rp_southside
 bgNPC.loadPresets = true
 
-bgNPC.wanted_mode = true
-bgNPC.wanted_time = 30
-
-bgNPC.arrest_moode = true
-bgNPC.arrest_time_limit = 15
-
 -- NPC classes that fill the streets
 bgNPC.npc_classes = {
     {
@@ -22,7 +16,7 @@ bgNPC.npc_classes = {
         fullness = 85,
         team = { 'residents' },
         weapons = {'weapon_pistol', 'weapon_357'},
-        money = { 0, 250 }, -- does nothing yet
+        money = { 0, 250 },
         defaultModels = true,
         models = {
             'models/smalls_civilians/pack1/hoodie_male_01_f_npc.mdl',
@@ -51,9 +45,9 @@ bgNPC.npc_classes = {
             ['defense'] = 10,
         },
         at_protect = {
-            ['fear'] = 50,
+            ['fear'] = 80,
             ['defense'] = 10,
-            ['calling_police'] = 40,
+            ['calling_police'] = 10,
         }
     },
     {
@@ -62,7 +56,7 @@ bgNPC.npc_classes = {
         fullness = 10,
         team = { 'bandits' },
         weapons = {'weapon_shotgun', 'weapon_ar2'},
-        money = { 0, 500 }, -- does nothing yet
+        money = { 0, 500 },
         defaultModels = true,
         models = {
             'models/survivors/npc/amy.mdl',
@@ -97,7 +91,7 @@ bgNPC.npc_classes = {
         fullness = 5,
         team = { 'residents', 'police' },
         weapons = {'weapon_smg1', 'weapon_pistol'},
-        money = { 0, 600 }, -- does nothing yet
+        money = { 0, 600 },
         at_damage = {
             ['defense'] = 100,
         },
@@ -106,21 +100,4 @@ bgNPC.npc_classes = {
             ['arrest'] = 80
         }
     },
---[[
-    Too active camera shake. I don't know if it's a bug or not. 
-    Temporarily commented out.
-    {
-        class = 'npc_cscanner',
-        type = 'police_cscanner',
-        fullness = 2,
-        team = { 'residents', 'police' },
-        disableStates = true,
-        at_damage = {
-            ['defense'] = 100,
-        },
-        at_protect = {
-            ['defense'] = 100,
-        }
-    }
-]]
 }

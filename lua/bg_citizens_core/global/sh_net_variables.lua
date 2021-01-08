@@ -8,17 +8,15 @@ if SERVER then
 
         entity_variables[ent] = entity_variables[ent] or {}
         entity_variables[ent][key] = data
-        
-        ent.bgNPCVisibility = true
 
         if not not_delay then
-            ent.bgNPCVisibilityDelay = CurTime() + 3
+            bgNPC:TemporaryVectorVisibility(ent, 3)
             timer.Simple(1.5, function()
                 if not IsValid(ent) then return end
                 net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
             end)
         else
-            ent.bgNPCVisibilityDelay = CurTime() + 1.5
+            bgNPC:TemporaryVectorVisibility(ent)
             net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
         end
     end
@@ -61,11 +59,23 @@ else
 end
 
 -- Entity
-function bgNPC:RemoveEntityVariable(ent, key)
+function bgNPC:RemoveEntityVariable(ent, key, not_delay)
+    not_delay = not_delay or false
+    
     entity_variables[ent] = entity_variables[ent] or {}
     entity_variables[ent][key] = nil
+
     if SERVER then
-        net.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
+        if not not_delay then
+            bgNPC:TemporaryVectorVisibility(ent, 3)
+            timer.Simple(1.5, function()
+                if not IsValid(ent) then return end
+                net.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
+            end)
+        else
+            bgNPC:TemporaryVectorVisibility(ent)
+            net.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
+        end
     end
 end
 

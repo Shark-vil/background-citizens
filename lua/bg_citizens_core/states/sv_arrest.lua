@@ -1,6 +1,7 @@
 hook.Add("BGN_PreReactionTakeDamage", "BGN_AttackerRegistrationOnArrestTable", 
 function(attacker, target, dmginfo)
-    if not bgNPC.arrest_moode then return end
+    if not GetConVar('bgn_arrest_mode'):GetBool() then return end
+    if #bgNPC:GetAllByType('police') == 0 then return end
     
     local ActorTarget = bgNPC:GetActor(target)
     if attacker:IsPlayer() and ActorTarget ~= nil and ActorTarget:GetType() == 'citizen' then
@@ -15,13 +16,24 @@ function(attacker, target, dmginfo)
 
             return 
         end
-        
-        bgNPC.arrest_players[attacker] = {
-            target = target,
-            delay = CurTime() + 1.5,
-            delayIgnore = CurTime() + bgNPC.arrest_time_limit,
-            count = 1
-        }
+
+        local state = ActorTarget:GetState()
+        if state == 'idle' or state == 'walk' then
+            local reaction = ActorTarget:GetReactionForDamage()
+            ActorTarget:SetState(reaction)
+            
+            if reaction ~= 'defense' then
+                bgNPC.arrest_players[attacker] = {
+                    target = target,
+                    delay = CurTime() + 1.5,
+                    delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
+                    arrestTime = GetConVar('bgn_arrest_time'):GetFloat(),
+                    count = 1
+                }
+
+                return false
+            end
+        end
     end
 end)
 
@@ -88,6 +100,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()
                     data.delay = data.delay or 0
 
                     local delayIgnore = bgNPC.arrest_players[data.attacker].delayIgnore
+                    local arrestTime = bgNPC.arrest_players[data.attacker].arrestTime
 
                     if delayIgnore < CurTime() then
                         actor:AddTarget(data.attacker)
@@ -124,24 +137,22 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()
                             if not data.arrested then
                                 npc:EmitSound('npc/metropolice/vo/apply.wav', 
                                     300, 100, 1, CHAN_AUTO)
-                                data.attacker:ChatPrint('Так и стой')
-                                data.arrest_time = CurTime() + 5
+                                data.attacker:ChatPrint('Stay in this position, don\'t move!')
+                                data.arrest_time = CurTime() + arrestTime
                             end
                             data.arrested = true
                         elseif data.arrested then
                             data.arrested = false
-                            data.arrest_time = CurTime() + 5
+                            data.arrest_time = CurTime() + arrestTime
                         end
 
                         if not data.arrested 
                             and bgNPC.arrest_players[data.attacker].notify_delay < CurTime() 
                         then
-                            data.attacker:ChatPrint('Опусти голову!')
-
+                            bgNPC.arrest_players[data.attacker].notify_delay = CurTime() + 3
+                            data.attacker:ChatPrint('Put your head down!')
                             npc:EmitSound('npc/metropolice/vo/firstwarningmove.wav', 
                                 300, 100, 1, CHAN_AUTO)
-                                
-                            bgNPC.arrest_players[data.attacker].notify_delay = CurTime() + 3
                         elseif data.arrested then
                             delayIgnore = delayIgnore + 1
                             bgNPC.arrest_players[data.attacker].delayIgnore = delayIgnore
@@ -156,9 +167,13 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()
                                 end
                                 return
                             else
-                                if bgNPC.arrest_players[data.attacker].notify_delay < CurTime() then
-                                    data.attacker:ChatPrint('Арест через ' .. math.floor(time) .. ' секунд')
-                                    bgNPC.arrest_players[data.attacker].notify_delay = CurTime() + 1
+                                bgNPC.arrest_players[data.attacker].notify_arrest = 
+                                    bgNPC.arrest_players[data.attacker].notify_arrest or 0
+
+                                if bgNPC.arrest_players[data.attacker].notify_arrest < CurTime() then
+                                    data.attacker:ChatPrint('Arrest after ' 
+                                        .. math.floor(time) .. ' sec.')
+                                    bgNPC.arrest_players[data.attacker].notify_arrest = CurTime() + 1
                                 end
                             end
                         end

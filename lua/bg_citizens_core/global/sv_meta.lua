@@ -58,3 +58,19 @@ function bgNPC:IsEnemyTeam(npc, team_name)
     end
     return false
 end
+
+function bgNPC:TemporaryVectorVisibility(ent, time)
+    if IsValid(ent) then
+        ent.bgNPCVisibilityDelay = CurTime() + (time or 1)
+        ent.bgNPCVisibility = true
+    end
+end
+
+hook.Add('SetupPlayerVisibility', 'BGN_TemporarilyShowVectorToPlayerForSyncEntities', function(ent)
+    if ent.bgNPCVisibility then
+        AddOriginToPVS(ent:GetPos())
+        if ent.bgNPCVisibilityDelay < CurTime() then
+            ent.bgNPCVisibility = false
+        end
+    end
+end)

@@ -8,6 +8,7 @@ timer.Create('BGN_Timer_FearStateController', 0.3, 0, function()
             local target = actor:GetNearTarget()
             if IsValid(target) then
                 data.anim = data.anim or 0
+                data.delay = data.delay or 0
 
                 if npc:GetPos():DistToSqr(target:GetPos()) == 1000000 then -- 1000 ^ 2
                     actor:RemoveTarget(target)

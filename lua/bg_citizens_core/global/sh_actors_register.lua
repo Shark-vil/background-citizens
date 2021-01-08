@@ -10,17 +10,17 @@ if CLIENT then
     end)
 else
     function bgNPC:SpawnActor(type)
-        local bg_citizens_spawn_radius 
-            = GetConVar('bg_citizens_spawn_radius'):GetFloat()
+        local bgn_spawn_radius 
+            = GetConVar('bgn_spawn_radius'):GetFloat()
     
-        local bg_citizens_spawn_radius_visibility 
-            = GetConVar('bg_citizens_spawn_radius_visibility'):GetFloat() ^ 2
+        local bgn_spawn_radius_visibility 
+            = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
     
-        local bg_citizens_spawn_radius_raytracing 
-            = GetConVar('bg_citizens_spawn_radius_raytracing'):GetFloat() ^ 2
+        local bgn_spawn_radius_raytracing 
+            = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
     
-        local bg_citizens_spawn_block_radius
-            = GetConVar('bg_citizens_spawn_block_radius'):GetFloat() ^ 2
+        local bgn_spawn_block_radius
+            = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
     
         for id, data in ipairs(bgNPC.npc_classes) do
             if data.type == type then
@@ -33,7 +33,7 @@ else
                     local ply = table.Random(players)
                     if IsValid(ply) then
                         points_close = bgNPC:GetAllPointsInRadius(ply:GetPos(), 
-                            bg_citizens_spawn_radius)
+                            bgn_spawn_radius)
                     end
                 end
     
@@ -51,15 +51,15 @@ else
     
                 for _, ply in ipairs(players) do
                     local distance = pos:DistToSqr(ply:GetPos())
-                    if distance < bg_citizens_spawn_radius_visibility 
+                    if distance < bgn_spawn_radius_visibility 
                         and bgNPC:PlayerIsViewVector(ply, pos)
                     then
-                        if distance <= bg_citizens_spawn_block_radius then
+                        if distance <= bgn_spawn_block_radius then
                             return
                         end
                         
-                        if bg_citizens_spawn_radius_raytracing ~= 0 
-                            and bg_citizens_spawn_radius_raytracing < distance
+                        if bgn_spawn_radius_raytracing ~= 0 
+                            and bgn_spawn_radius_raytracing < distance
                         then
                             local tr = util.TraceLine({
                                 start = ply:EyePos(),

@@ -3,7 +3,7 @@ function(attacker, target, dmginfo)
     local ActorTarget = bgNPC:GetActor(target)
     local ActorAttacker = bgNPC:GetActor(attacker)
 
-    for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2000)) do
+    for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
         local reaction = actor:GetReactionForProtect()
         local targetFromActor = NULL
 
@@ -15,15 +15,10 @@ function(attacker, target, dmginfo)
             goto skip
         end
 
-        local state = actor:GetState()
-        if state == 'fear' or state == 'defense' or state == 'calling_police' then
-            goto skip
-        end
-
         if target:IsNPC() then
             if attacker:IsPlayer() then
                 if actor:GetType() == 'police' then
-                    if bgNPC:IsEnemyTeam(target, 'residents') then
+                    if bgNPC:IsEnemyTeam(target, 'residents') or bgNPC:IsWanted(target) then
                         targetFromActor = target
                     else
                         targetFromActor = attacker
@@ -57,10 +52,14 @@ function(attacker, target, dmginfo)
                 goto skip
             end
 
+            local state = actor:GetState()
+            if state == 'idle' or state == 'walk' then
+                actor:SetState(reaction, {
+                    delay = 0
+                })
+            end
+
             actor:AddTarget(targetFromActor)
-            actor:SetState(reaction, {
-                delay = 0
-            })
         end
 
         ::skip::

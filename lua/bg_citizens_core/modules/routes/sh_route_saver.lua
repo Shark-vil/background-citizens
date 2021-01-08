@@ -1,9 +1,6 @@
 if SERVER then
     util.AddNetworkString('bgNPCSaveRoute')
     util.AddNetworkString('bgNPCRemoveRoute')
-    util.AddNetworkString('bgNPCLoadToolFromServer')
-    util.AddNetworkString('bgNPCUnloadToolFromServer')
-    util.AddNetworkString('bgNPCLoadToolFromClient')
 
     net.Receive('bgNPCRemoveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -32,43 +29,15 @@ if SERVER then
         local from_json = net.ReadBool()
         local compressed_lenght = net.ReadUInt(24)
         local compressed_data = net.ReadData(compressed_lenght)
+        local json_string = util.Decompress(compressed_data)
 
         if from_json then
-            file.Write('citizens_points/' .. game.GetMap() .. '.json', util.Decompress(compressed_data))
+            file.Write('citizens_points/' .. game.GetMap() .. '.json', json_string)
         else
             file.Write('citizens_points/' .. game.GetMap() .. '.dat', compressed_data)
         end
-    end)
 
-    net.Receive('bgNPCUnloadToolFromServer', function(len, ply)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-        if ply:HasWeapon('weapon_citizens_points') then
-            ply:StripWeapon('weapon_citizens_points')
-        end
-    end)
-
-    net.Receive('bgNPCLoadToolFromServer', function(len, ply)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-    
-        local wep = ply:GetWeapon('weapon_citizens_points')
-
-        if not IsValid(wep) then
-            wep = ply:Give('weapon_citizens_points')
-        end
-
-        local limit = GetConVar('bg_citizens_tool_limit'):GetFloat()
-		if limit > 500 then
-			if navmesh.IsLoaded() then
-				wep.PointToPointLimit = limit
-			else
-				ply:ChatPrint('Attention! Navigation mesh not found, limit between points - 500 units')
-			end
-		end
-        
-        wep:SetNWFloat('bg_citizens_tool_limit', limit)
-
-        ply:SelectWeapon(wep)
+        bgNPC.points = util.JSONToTable(json_string)
     end)
 else
     concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
@@ -88,79 +57,61 @@ else
     concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-        local wep = ply:GetWeapon('weapon_citizens_points')
-        if IsValid(wep) then
-            local from_json = false
+        local tool = LocalPlayer():GetTool()
+        if tool == nil or not tool.IsBGNPointEditor then return end
 
-            if args[1] == 'json' then
-                from_json = true
+        local from_json = false
+
+        if args[1] == 'json' then
+            from_json = true
+        end
+
+        local save_table = {}
+
+        if table.Count(tool.Points) ~= 0 then
+            for _, pos in ipairs(tool.Points) do
+                table.insert(save_table, {
+                    pos = pos,
+                    parents = {}
+                })
             end
 
-            local save_table = {}
+            local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
+            for index, v in ipairs(save_table) do
+                for id, v2 in ipairs(save_table) do
+                    local pos = v.pos
+                    local otherPos = v2.pos
 
-            if table.Count(wep.Points) ~= 0 then
-                for _, pos in ipairs(wep.Points) do
-                    table.insert(save_table, {
-                        pos = pos,
-                        parents = {}
-                    })
-                end
-
-                for index, v in ipairs(save_table) do
-                    for id, v2 in ipairs(save_table) do
-                        local pos = v.pos
-                        local otherPos = v2.pos
-
-                        if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500 ^ 2 then
-                            if pos ~= otherPos and pos.z >= otherPos.z - 100 and pos.z <= otherPos.z + 100 then
-                                local tr = util.TraceLine( {
-                                    start = pos + Vector(0, 0, 30),
-                                    endpos = otherPos,
-                                    filter = function(ent)
-                                        if ent:IsWorld() then
-                                            return true
-                                        end
+                    if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500 ^ 2 then
+                        if pos ~= otherPos and pos.z >= otherPos.z - z_limit 
+                            and pos.z <= otherPos.z + z_limit 
+                        then
+                            local tr = util.TraceLine( {
+                                start = pos + Vector(0, 0, 30),
+                                endpos = otherPos,
+                                filter = function(ent)
+                                    if ent:IsWorld() then
+                                        return true
                                     end
-                                })
-
-                                if not tr.Hit then
-                                    table.insert(save_table[index].parents, id)
                                 end
+                            })
+
+                            if not tr.Hit then
+                                table.insert(save_table[index].parents, id)
                             end
                         end
                     end
                 end
             end
-
-            local compressed_data = util.Compress(util.TableToJSON(save_table))
-            local compressed_lenght = string.len(compressed_data)
-
-            net.Start('bgNPCSaveRoute')
-            net.WriteBool(from_json)
-            net.WriteUInt(compressed_lenght, 24)
-            net.WriteData(compressed_data, compressed_lenght)
-            net.SendToServer()
         end
+
+        local compressed_data = util.Compress(util.TableToJSON(save_table))
+        local compressed_lenght = string.len(compressed_data)
+
+        net.Start('bgNPCSaveRoute')
+        net.WriteBool(from_json)
+        net.WriteUInt(compressed_lenght, 24)
+        net.WriteData(compressed_data, compressed_lenght)
+        net.SendToServer()
     end, nil, 'Saves movement points (Only if the player has a tool weapon!)')
-    
-    local is_load_tool = false
-    concommand.Add('cl_citizens_load_tool', function(ply)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-        is_load_tool = true
-        ply:ConCommand('cl_citizens_load_route_from_client')
-    end, nil, 'Gives the player a tool for editing movement points. LMB - put a point / delete a point / delete the last point, RMB - switch the editing mode, R - clear all points')
-
-    hook.Add("bgNPC_LoadingClientRoutes", 'bgNPCLoadRoutesFromTool', function()
-        if not is_load_tool then return end
-        net.Start('bgNPCLoadToolFromServer')
-        net.SendToServer()
-        is_load_tool = false
-    end)
-
-    concommand.Add('cl_citizens_unload_tool', function(ply)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-        net.Start('bgNPCUnloadToolFromServer')
-        net.SendToServer()
-    end, nil, 'Removes the editing tool from the player')
 end
