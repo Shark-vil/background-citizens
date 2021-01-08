@@ -1,5 +1,6 @@
 hook.Add("BGN_PreReactionTakeDamage", "BGN_AttackerRegistrationOnArrestTable", 
-function(attacker, target, dmginfo)
+function(attacker, target, dmginfo, reaction)
+    if reaction == 'defense' then return end
     if not GetConVar('bgn_arrest_mode'):GetBool() then return end
     if #bgNPC:GetAllByType('police') == 0 then return end
     
@@ -17,23 +18,13 @@ function(attacker, target, dmginfo)
             return 
         end
 
-        local state = ActorTarget:GetState()
-        if state == 'idle' or state == 'walk' then
-            local reaction = ActorTarget:GetReactionForDamage()
-            ActorTarget:SetState(reaction)
-            
-            if reaction ~= 'defense' then
-                bgNPC.arrest_players[attacker] = {
-                    target = target,
-                    delay = CurTime() + 1.5,
-                    delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
-                    arrestTime = GetConVar('bgn_arrest_time'):GetFloat(),
-                    count = 1
-                }
-
-                return false
-            end
-        end
+        bgNPC.arrest_players[attacker] = {
+            target = target,
+            delay = CurTime() + 1.5,
+            delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
+            arrestTime = GetConVar('bgn_arrest_time'):GetFloat(),
+            count = 1
+        }
     end
 end)
 
@@ -43,7 +34,12 @@ hook.Add("BGN_OnKilledActor", "BGN_ResettingNPCFromTheArrestTableAfterDeath", fu
     end
 end)
 
-hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", function(actor, attacker, target)
+hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
+function(actor, attacker, target, reaction)
+    if not GetConVar('bgn_arrest_mode'):GetBool() and reaction == 'arrest' then 
+        return 'defense'
+    end
+
     if not IsValid(attacker) or not IsValid(target) then
         return
     end
@@ -96,7 +92,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()
             if state == 'arrest'  then
                 if not IsValid(data.attacker) then
                     actor:Idle()
-                else
+                else                    
                     data.delay = data.delay or 0
 
                     local delayIgnore = bgNPC.arrest_players[data.attacker].delayIgnore

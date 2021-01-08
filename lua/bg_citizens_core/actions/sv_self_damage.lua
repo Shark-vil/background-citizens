@@ -6,6 +6,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
     local ActorTarget = bgNPC:GetActor(target)
     local ActorAttacker = bgNPC:GetActor(attacker)
+    local reaction
 
     if target:IsNPC() then
         if ActorTarget ~= nil then
@@ -17,25 +18,28 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
                 end
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
                 if ActorTarget:HasTeam(ActorAttacker) then
-                    -- ActorTarget:RemoveTarget(attacker)
-                    -- ActorAttacker:RemoveTarget(target)
-
-                    -- attacker:AddEntityRelationship(target, D_NU, 99)
-                    -- target:AddEntityRelationship(attacker, D_NU, 99)
                     return true
                 end
             end
 
-            local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
+            reaction = ActorTarget:GetReactionForDamage()
+            
+            --[[
+                Заметка: нужно как-то потом переделать последовательность вызоыва для крючков. Чтобы установка состояния не зависела от idle или walk
+            --]]
+            local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)
             if hook_result ~= nil then
-                if isbool(hook_result) then
+                if isbool(hook_result) and not hook_result then
                     return hook_result
+                end
+
+                if isstring(hook_result) then
+                    reaction = hook_result
                 end
             end
             
             local state = ActorTarget:GetState()
             if state == 'idle' or state == 'walk' then
-                local reaction = ActorTarget:GetReactionForDamage()
                 ActorTarget:SetState(reaction, {
                     delay = 0
                 })
@@ -44,7 +48,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
             ActorTarget:AddTarget(attacker)
         end
 
-        hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
+        hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
     elseif target:IsPlayer() then
         if attacker:IsNPC() and ActorAttacker ~= nil then
             if bgNPC:IsWanted(target) then

@@ -48,15 +48,20 @@ function(attacker, target, dmginfo)
         end
 
         if IsValid(targetFromActor) then
-            if hook.Run('BGN_DamageToAnotherActor', actor, attacker, target) ~= nil then
-                goto skip
+            local hook_result = hook.Run('BGN_DamageToAnotherActor', actor, attacker, target, reaction) 
+            if hook_result ~= nil then
+                if isbool(hook_result) and not hook_result then
+                    goto skip
+                end
+
+                if isstring(hook_result) then
+                    reaction = hook_result
+                end
             end
 
             local state = actor:GetState()
             if state == 'idle' or state == 'walk' then
-                actor:SetState(reaction, {
-                    delay = 0
-                })
+                actor:SetState(reaction)
             end
 
             actor:AddTarget(targetFromActor)

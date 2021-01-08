@@ -110,6 +110,10 @@ if SERVER then
 
                         if dist <= 360000 then -- 600 ^ 2
                             bgNPC:UpdateWanted(enemy)
+                            actor:AddTarget(enemy)
+                            if actor:HasState('idle') or actor:HasState('walk') then
+                                actor:SetState(actor:GetReactionForProtect())
+                            end
                             goto skip
                         end
 
@@ -126,6 +130,10 @@ if SERVER then
 
                             if tr.Hit and IsValid(tr.Entity) and tr.Entity == enemy then
                                 bgNPC:UpdateWanted(enemy)
+                                actor:AddTarget(enemy)
+                                if actor:HasState('idle') or actor:HasState('walk') then
+                                    actor:SetState(actor:GetReactionForProtect())
+                                end
                                 goto skip
                             end
                         end
@@ -141,26 +149,6 @@ if SERVER then
 
             ::skip::
         end
-    
-        -- for _, actor in pairs(polices) do
-        --     if #bgNPC.wanted == 0 then
-        --         break
-        --     end
-            
-        --     if actor:GetState() ~= 'defense' then
-        --         actor:Defense()
-        --     end
-        -- end
-
-        -- for _, actor in pairs(citizens) do
-        --     if #bgNPC.wanted == 0 then
-        --         break
-        --     end
-    
-        --     if actor:GetState() ~= 'fear' then
-        --         actor:Fear()
-        --     end
-        -- end
     end)
 else
     net.RegisterCallback('bgn_add_wanted_target', function(ply, target)

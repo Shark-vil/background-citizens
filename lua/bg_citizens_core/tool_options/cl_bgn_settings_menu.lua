@@ -17,6 +17,15 @@ local function GeneralSettingsMenu(Panel)
     })
 
     Panel:AddControl("Button", {
+        ["Label"] = "Load points",
+        ["Command"] = "cl_citizens_load_route ",
+    })
+
+    Panel:AddControl('Label', {
+        Text = '________________'
+    })
+
+    Panel:AddControl("Button", {
         ["Label"] = "Reset to factory settings",
         ["Command"] = "bgn_reset_cvars_to_factory_settings",
     })
