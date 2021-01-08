@@ -54,6 +54,7 @@ using('sv_cvars.lua')
 if bgNPC.loadPresets then
     using('map_presets/rp_southside.lua', 'sv')
     using('map_presets/gm_bigcity_improved.lua', 'sv')
+    using('map_presets/rp_bangclaw.lua', 'sv')
 end
 
 using('global/sv_meta.lua')
