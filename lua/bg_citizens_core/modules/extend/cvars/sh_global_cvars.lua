@@ -14,8 +14,6 @@ if SERVER then
         if bgNPC.GlobalCvars[cvar_name] ~= nil and tobool(GetConVar(cvar_name)) then
             RunConsoleCommand(cvar_name, value)
             bgNPC.GlobalCvars[cvar_name] = value
-
-            print('Change server cvar - ' .. cvar_name)
         end
     end)
 
@@ -42,25 +40,6 @@ if SERVER then
         ply.bgNPCGlobalConvarSync = true
     end)
 else
-    -- net.Receive('bgn_gcvars_register_from_client', function()
-    --     local cvar_name = net.ReadString()
-    --     local value = net.ReadType()
-    --     gcvars[cvar_name] = value
-
-    --     if not GetConVar(cvar_name) then
-    --         CreateConVar(cvar_name, value, FCVAR_NONE)
-
-    --         cvars.AddChangeCallback(cvar_name, function(convar_name, value_old, value_new)
-    --             gcvars[cvar_name] = value_new
-
-    --             net.Start('bgn_gcvars_change_from_server')
-    --             net.WriteString(cvar_name)
-    --             net.WriteType(value_new)
-    --             net.Broadcast()
-    --         end)
-    --     end
-    -- end)
-
     net.Receive('bgn_gcvars_register_all_from_client', function()
         bgNPC.GlobalCvars = net.ReadTable()
         for cvar_name, value in pairs(bgNPC.GlobalCvars) do
