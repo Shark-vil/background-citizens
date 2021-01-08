@@ -1,7 +1,7 @@
 local movement_map = {}
 local movement_ignore = {}
 
-hook.Add('PostCleanupMap', 'bgCitizensCleanupNPCsMovementMaps', function()
+hook.Add('PostCleanupMap', 'BGN_CleanupNPCsMovementMaps', function()
     movement_map = {}
     movement_ignore = {}
 end)
@@ -10,8 +10,8 @@ local function getPositionsInRadius(npc)
     local npc_pos = npc:GetPos()
     local radius_positions = {}
 
-    for _, v in ipairs(bgCitizens.points) do
-        if v.pos:DistToSqr(npc_pos) <= 500 ^ 2 then
+    for _, v in ipairs(bgNPC.points) do
+        if v.pos:DistToSqr(npc_pos) <= 250000 then -- 500 ^ 2
             if movement_ignore[npc] ~= nil then
                 for _, data in ipairs(movement_ignore[npc]) do
                     if data.resetTime > CurTime() and data.pos == v.pos then
@@ -44,14 +44,14 @@ end
 local function nextMovement(npc, positions)
     if movement_map[npc] ~= nil then
         local map = movement_map[npc]
-        local parents = bgCitizens.points[map.index].parents
+        local parents = bgNPC.points[map.index].parents
 
         if #parents ~= 0 then
             local index = table.Random(parents)
-            local pos = bgCitizens.points[index].pos
+            local pos = bgNPC.points[index].pos
             local dist = movement_map[npc].pos:DistToSqr(pos)
 
-            if dist <= 500 ^ 2 and bgCitizens:NPCIsViewVector(npc, pos) then
+            if dist <= 250000 and bgNPC:NPCIsViewVector(npc, pos) then -- 500 ^ 2
                 movement_map[npc] = {
                     pos = pos,
                     index = index,
@@ -65,16 +65,26 @@ local function nextMovement(npc, positions)
     return updateMovement(npc, positions)
 end
 
-timer.Create('bgCitizensMoveController', 0.3, 0, function()
-    if #bgCitizens.points ~= 0 then
-        for _, actor in ipairs(bgCitizens:GetAll()) do
+hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
+    if actor:GetState() == 'walk' then
+        local npc = actor:GetNPC()
+        local map = movement_map[npc]
+        if map ~= nil then
+            map.resetTime = 0
+        end
+    end
+end)
+
+timer.Create('BGN_Timer_StollController', 0.5, 0, function()
+    if #bgNPC.points ~= 0 then
+        for _, actor in ipairs(bgNPC:GetAll()) do
             local npc = actor:GetNPC()
-            if IsValid(npc) and actor:GetState() == 'walk' then
+            if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
                 local map = movement_map[npc]
                 local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
 
-                if hook.Run('bgCitizens_PreStollNPC', npc, map) ~= nil then
+                if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
                     goto skip
                 end
 
@@ -110,6 +120,11 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
 
                         if getNewPos then
+                            if math.random(0, 100) <= 10 then
+                                actor:Idle(10)
+                                return
+                            end
+
                             map = nextMovement(npc, positions)
 
                             npc:SetSaveValue("m_vecLastPosition", map.pos)
@@ -125,7 +140,7 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
                         end
                     end
 
-                    hook.Run('bgCitizens_PostStollNPC', npc, map)
+                    hook.Run('BGN_PostStollNPC', npc, map)
                 end
 
                 ::skip::
@@ -134,8 +149,8 @@ timer.Create('bgCitizensMoveController', 0.3, 0, function()
     end
 end)
 
-timer.Create('bgCitizensSwitchStollMovementType', 1, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) and actor:GetState() == 'walk' then
             local data = actor:GetStateData()

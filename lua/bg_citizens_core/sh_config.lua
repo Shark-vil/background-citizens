@@ -1,78 +1,103 @@
+--[[
+    WIKI:
+    https://background-npcs.itpony.ru/wik
+--]]
+
 -- Creates files with preset points for maps:
 -- gm_bigcity_improved
 -- rp_southside
-bgCitizens.loadPresets = true
+bgNPC.loadPresets = true
 
 -- NPC classes that fill the streets
-bgCitizens.npc_classes = {
+bgNPC.npc_classes = {
     {
         class = 'npc_citizen',
         type = 'citizen',
         fullness = 85,
         team = { 'residents' },
         weapons = {'weapon_pistol', 'weapon_357'},
-        money = { 0, 250 }, -- does nothing yet
+        money = { 0, 250 },
+        defaultModels = true,
+        models = {
+            'models/smalls_civilians/pack1/hoodie_male_01_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_02_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_03_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_04_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_05_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_07_f_npc.mdl',
+            'models/smalls_civilians/pack1/hoodie_male_09_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_01_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_02_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_03_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_04_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_05_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_07_f_npc.mdl',
+            'models/smalls_civilians/pack1/puffer_male_09_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_01_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_02_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_03_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_04_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_06_f_npc.mdl',
+            'models/smalls_civilians/pack1/zipper_female_07_f_npc.mdl',
+        },
         at_damage = {
             ['fear'] = 90,
             ['defense'] = 10,
         },
         at_protect = {
-            ['fear'] = 99,
-            ['defense'] = 1,
+            ['fear'] = 80,
+            ['defense'] = 10,
+            ['calling_police'] = 10,
         }
     },
     {
         class = 'npc_citizen',
         type = 'gangster',
-        fullness = 5,
+        fullness = 10,
         team = { 'bandits' },
-        weapons = {'weapon_pistol', 'weapon_357', 'weapon_shotgun', 'weapon_smg1'},
-        money = { 0, 500 }, -- does nothing yet
+        weapons = {'weapon_shotgun', 'weapon_ar2'},
+        money = { 0, 500 },
+        defaultModels = true,
+        models = {
+            'models/survivors/npc/amy.mdl',
+            'models/survivors/npc/candace.mdl',
+            'models/survivors/npc/carson.mdl',
+            'models/survivors/npc/chris.mdl',
+            'models/survivors/npc/damian.mdl',
+            'models/survivors/npc/gregory.mdl',
+            'models/survivors/npc/isa.mdl',
+            'models/survivors/npc/john.mdl',
+            'models/survivors/npc/julius.mdl',
+            'models/survivors/npc/lucus.mdl',
+            'models/survivors/npc/lyndsay.mdl',
+            'models/survivors/npc/margaret.mdl',
+            'models/survivors/npc/matt.mdl',
+            'models/survivors/npc/rachel.mdl',
+            'models/survivors/npc/rufus.mdl',
+            'models/survivors/npc/tyler.mdl',
+            'models/survivors/npc/wolfgang.mdl'
+        },
         at_damage = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['ignore'] = 99,
-            ['defense'] = 1,
+            ['ignore'] = 95,
+            ['defense'] = 5,
         }
     },
     {
         class = 'npc_metropolice',
         type = 'police',
-        fullness = 10,
+        fullness = 5,
         team = { 'residents', 'police' },
         weapons = {'weapon_smg1', 'weapon_pistol'},
-        money = { 0, 600 }, -- does nothing yet
+        money = { 0, 600 },
         at_damage = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['defense'] = 100,
+            ['defense'] = 20,
+            ['arrest'] = 80
         }
-    }
+    },
 }
-
-hook.Add('bgCitizens_PreSpawnNPC', 'bgCitizensSetCustomModelFromNPC', function(npc, data)
-    if data.type == 'gangster' then
-        npc:SetKeyValue('citizentype', 3)
-    elseif data.type == 'citizen' then
-        if math.random(0, 10) > 5 then
-            npc:SetKeyValue('citizentype', 2)
-        end
-    end
-end)
-
-hook.Add("bgCitizens_OnKilledActor", "bgCitizensDropMoney", function(actor)
-    if engine.ActiveGamemode() ~= 'darkrp' then return end
-
-    local data = actor:GetData()
-    local npc = actor:GetNPC()
-
-    if IsValid(npc) then
-        local pos = npc:GetPos()
-        if data.money ~= nil then
-            local money = math.random(data.money[1], data.money[2])
-            -- next update
-        end
-    end
-end)

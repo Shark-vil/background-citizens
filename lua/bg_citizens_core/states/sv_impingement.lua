@@ -1,12 +1,12 @@
-timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
-    for _, actor in ipairs(bgCitizens:GetAllByType('gangster')) do
+timer.Create('BGN_Timer_ImpingementController', 5, 0, function()
+    for _, actor in ipairs(bgNPC:GetAllByType('gangster')) do
         local npc = actor:GetNPC()
 
         if math.random(0, 100) > 1 then
             goto skip
         end
 
-        if IsValid(npc) and actor:GetState() ~= 'attacked' then
+        if IsValid(npc) and actor:GetState() ~= 'defense' then
             local target_from_zone = ents.FindInSphere(npc:GetPos(), 500)
             local targets = {}
 
@@ -16,8 +16,8 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
                 end
 
                 if ent:IsNPC() and ent ~= npc then
-                    local ActorTarget = bgCitizens:GetActor(ent)
-                    if ActorTarget ~= nil and not actor:HasTeam(ActorTarget:GetData().team) then
+                    local ActorTarget = bgNPC:GetActor(ent)
+                    if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
                         table.insert(targets, ent)
                     end
                 end
@@ -26,9 +26,7 @@ timer.Create('bgCitizens_GangstersAssassination', 5, 0, function()
             local target = table.Random(targets)
             if IsValid(target) then
                 actor:AddTarget(target)
-                actor:SetState('defense', {
-                    delay = 0
-                })
+                actor:SetState('defense')
                 break
             end
         end

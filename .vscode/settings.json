@@ -2,5 +2,8 @@
     "Lua.diagnostics.disable": [
         "undefined-global",
         "undefined-field"
+    ],
+    "Lua.diagnostics.globals": [
+        "bgNPC"
     ]
 }

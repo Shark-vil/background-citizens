@@ -1,56 +1,99 @@
-bgCitizens = {}
-bgCitizens.npcs = {} -- Do not change
-bgCitizens.fnpcs = {} -- Do not change
-bgCitizens.points = {} -- Do not change
-
-local root_directory = 'bg_citizens_core'
-
-local function _AddCSLuaFile(filename)
-    AddCSLuaFile(root_directory .. '/' .. filename)
-end
-
-local function _include(filename)
-    include(root_directory .. '/' .. filename)
-end
+--[[
+    WIKI:
+    https://background-npcs.itpony.ru/wik
+--]]
 
 file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
-if SERVER then
-    _AddCSLuaFile('sh_config.lua')
-    _AddCSLuaFile('global/sh_meta.lua')
-    _AddCSLuaFile('classes/sh_bg_npc_class.lua')
-    _AddCSLuaFile('sh_route_saver.lua')
-    _AddCSLuaFile('sh_points_loader.lua')
-    _AddCSLuaFile('cl_compile.lua')
-    _include('sv_cvars.lua')
-    _include('sh_config.lua')
+bgNPC = {}
 
-    if bgCitizens.loadPresets then
-        _include('map_presets/rp_southside.lua')
-        _include('map_presets/gm_bigcity_improved.lua')
+-- Do not change -------------
+bgNPC.actors = {}
+bgNPC.factors = {}
+bgNPC.npcs = {}
+bgNPC.fnpcs = {}
+bgNPC.points = {}
+bgNPC.wanted = {}
+bgNPC.arrest_players = {}
+bgNPC.killing_statistic = {}
+-- ---------------------------
+
+local root_directory = 'bg_citizens_core'
+
+local function p_include(file_path)
+    include(file_path)
+    MsgN('[Background NPCs] script load - ' .. file_path)
+end
+
+local function using(local_file_path, network_type, not_root_directory)
+    local file_path = local_file_path
+
+    if not not_root_directory then
+        file_path = root_directory .. '/' .. local_file_path
     end
 
-    _include('global/sv_meta.lua')
-    _include('global/sh_meta.lua')
-    _include('classes/sh_bg_npc_class.lua')
-    _include('sh_route_saver.lua')
-    _include('sh_points_loader.lua')
-    _include('sv_npc_remover.lua')
-    _include('sv_npc_creator.lua')
+    network_type = network_type or string.sub(string.GetFileFromFilename(local_file_path), 1, 2)
+    network_type = string.lower(network_type)
 
-    _include('actions/sv_open_door.lua')
-    _include('actions/sv_attacked.lua')
-
-    _include('states/sv_impingement.lua')
-    _include('states/sv_protection.lua')
-    _include('states/sv_fear.lua')
-    _include('states/sv_stroll.lua')
-else
-    _include('sh_config.lua')
-    _include('global/sh_meta.lua')
-    _include('classes/sh_bg_npc_class.lua')
-    _include('sh_route_saver.lua')
-    _include('sh_points_loader.lua')
-    _include('cl_compile.lua')
+    if network_type == 'cl' or network_type == 'sh' then
+        if SERVER then AddCSLuaFile(file_path) end
+        if CLIENT and network_type == 'cl' then
+            p_include(file_path)
+        elseif network_type == 'sh' then
+            p_include(file_path)
+        end
+    elseif network_type == 'sv' and SERVER then
+        p_include(file_path)
+    end
 end
+
+using('sh_config.lua')
+using('sv_cvars.lua')
+
+if bgNPC.loadPresets then
+    using('map_presets/rp_southside.lua', 'sv')
+    using('map_presets/gm_bigcity_improved.lua', 'sv')
+    using('map_presets/rp_bangclaw.lua', 'sv')
+end
+
+using('global/sv_meta.lua')
+using('global/sh_meta.lua')
+using('global/sh_net_variables.lua')
+using('global/sh_actors_finder.lua')
+using('global/sh_actors_register.lua')
+using('global/sh_killing_statistic.lua')
+
+using('classes/sh_bg_npc_class.lua')
+
+using('modules/net/sh_callback.lua')
+using('modules/sv_npc_look_at_object.lua')
+using('modules/sv_player_look_at_object.lua')
+using('modules/sv_custom_default_models.lua')
+using('modules/sv_darkrp_drop_money.lua')
+using('modules/sv_static_animation_controller.lua')
+using('modules/sv_auto_wanted_by_police_killed.lua')
+using('modules/sv_friend_fixed.lua')
+using('modules/sh_wanted_mode.lua')
+using('modules/routes/sh_route_saver.lua')
+using('modules/routes/sh_route_loader.lua')
+using('modules/routes/cl_compile.lua')
+using('modules/spawner/sv_npc_remover.lua')
+using('modules/spawner/sv_npc_creator.lua')
+
+using('actions/sv_open_door.lua')
+using('actions/sv_police_luggage.lua')
+using('actions/sv_damage_reaction.lua')
+using('actions/sv_killed_actor.lua')
+using('actions/sv_reset_targets.lua')
+using('actions/sv_self_damage.lua')
+
+using('states/sv_impingement.lua')
+using('states/sv_protection.lua')
+using('states/sv_fear.lua')
+using('states/sv_stroll.lua')
+using('states/sv_calling_police.lua')
+using('states/sv_idle.lua')
+using('states/sv_arrest.lua')
+
+using('tool_options/cl_bgn_settings_menu.lua')

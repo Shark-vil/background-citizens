@@ -1,39 +1,36 @@
-timer.Create('bgCitizensTimerOpenDoorAction', 1, 0, function()
-    for _, actor in pairs(bgCitizens:GetAll()) do
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            local door_class = {
-				"func_door",
-				"func_door_rotating",
-				"prop_door_rotating",
-				"func_movelinear",
-				"prop_dynamic",
-            }
-            
-            local tr = util.TraceLine({
-                start = npc:EyePos(),
-                endpos = npc:EyePos() + npc:EyeAngles():Forward() * 150,
-                filter = function(ent) 
-                    if table.HasValue(door_class, ent:GetClass()) then
-                        return true
-                    end
-                end
-            })
+hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
+    if door:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
 
-            local door = tr.Entity
+    local door_class = {
+        "func_door",
+        "func_door_rotating",
+        "prop_door_rotating",
+        -- "func_movelinear",
+        -- "prop_dynamic",
+    }
 
-            if tr.Hit and IsValid(door) and hook.Run('bgCitizens_PreOpenDoor', npc, door) == nil then
-                door:Fire("unlock", "", 0)
-                door:Fire("open", "", 0)
-                
-                hook.Run('bgCitizens_PostOpenDoor', npc, door)
+    if not table.HasValue(door_class, door:GetClass()) then return end
+    -- if not tobool(string.find(door:GetModel(), '*door*')) then return end
 
-                timer.Simple(10, function()
-                    if IsValid(door) and hook.Run('bgCitizens_PreCloseDoor', door) == nil then
-                        door:Fire("close", "", 0)
-                    end
-                end)
+    if not door.bgNPCOpenDoor and hook.Run('BGN_PreOpenDoor', actor, door) == nil then
+        actor:PlayStaticSequence('Open_door_away')
+
+        door.bgNPCOpenDoor = true
+        
+        door:Fire("unlock", "", 0)
+        door:Fire("open", "", 0)
+        
+        hook.Run('BGN_PostOpenDoor', actor, door)
+
+        timer.Simple(10, function()
+            if IsValid(door) and door.bgNPCOpenDoor and 
+                hook.Run('BGN_PreCloseDoor', door) == nil
+            then
+                door:Fire("close", "", 0)
+                door.bgNPCOpenDoor = false
+
+                hook.Run('BGN_PostCloseDoor', door)
             end
-        end
+        end)
     end
 end)

@@ -1,33 +1,31 @@
-hook.Add('Think', 'bgCitizens_StateProtectionAction', function()
-    for _, actor in ipairs(bgCitizens:GetAll()) do
+timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
+    for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
             local state = actor:GetState()
             local data = actor:GetStateData()
 
-            actor:RecalculationTargets()
-
             if state == 'defense' and actor:TargetsCount() ~= 0  then
                 local target = actor:GetNearTarget()
 
-                if IsValid(target) then
+                if not IsValid(target) then
+                    actor:RecalculationTargets()
+                else
                     if npc:Disposition(target) ~= D_HT then
                         npc:AddEntityRelationship(target, D_HT, 99)
                     end
-                    
-                    if npc:GetTarget() ~= target then
-                        npc:SetTarget(target)
-                    end
+
+                    data.delay = data.delay or 0
 
                     if data.delay < CurTime() then
-                        bgCitizens:SetActorWeapon(actor)
+                        bgNPC:SetActorWeapon(actor)
 
                         local point = nil
                         local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 
                         if current_distance > 500 ^ 2 then
                             if math.random(0, 10) > 4 then
-                                point = actor:GetMovementPointToTarget(target:GetPos())
+                                point = actor:GetClosestPointToPosition(target:GetPos())
                             else
                                 point = target:GetPos()
                             end
