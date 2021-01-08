@@ -9,7 +9,7 @@ if SERVER then
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
         local cvar_name = net.ReadString()
-        local value = net.ReadType()
+        local value = net.ReadFloat()
 
         if bgNPC.GlobalCvars[cvar_name] ~= nil and tobool(GetConVar(cvar_name)) then
             RunConsoleCommand(cvar_name, value)
@@ -72,7 +72,7 @@ else
     
                     net.Start('bgn_gcvars_change_from_server')
                     net.WriteString(cvar_name)
-                    net.WriteType(value_new)
+                    net.WriteFloat(value_new)
                     net.Broadcast()
                 end)
             end

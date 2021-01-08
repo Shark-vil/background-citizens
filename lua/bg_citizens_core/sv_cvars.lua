@@ -100,15 +100,15 @@ for k, v in ipairs(bgNPC.npc_classes) do
         table.insert(exists_types, v.type)
 
         bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. v.type, 
-            GetConVar('bgn_npc_type_' .. v.type):GetBool())
+            GetConVar('bgn_npc_type_' .. v.type):GetInt())
     end
 end
 
 bgNPC:RegisterGlobalCvar('bgn_enable', 
-    GetConVar('bgn_enable'):GetBool())
+    GetConVar('bgn_enable'):GetInt())
 
 bgNPC:RegisterGlobalCvar('bgn_enable_wanted_mode', 
-    GetConVar('bgn_enable_wanted_mode'):GetBool())
+    GetConVar('bgn_enable_wanted_mode'):GetInt())
 
 bgNPC:RegisterGlobalCvar('bgn_wanted_time', 
     GetConVar('bgn_wanted_time'):GetFloat())
