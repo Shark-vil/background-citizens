@@ -73,7 +73,7 @@ else
                     net.Start('bgn_gcvars_change_from_server')
                     net.WriteString(cvar_name)
                     net.WriteFloat(value_new)
-                    net.Broadcast()
+                    net.SendToServer()
                 end)
             end
         end
