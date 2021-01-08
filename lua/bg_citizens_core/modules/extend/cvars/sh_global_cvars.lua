@@ -52,14 +52,13 @@ else
                     if not LocalPlayer():IsAdmin() and not LocalPlayer():IsSuperAdmin() then
                         if not cvar_locker[cvar_name] then
                             cvar_locker[cvar_name] = true
-                            timer.Create('bgn_timer_back_cvar_' .. cvar_name, 0.5, 1, function()
+                            timer.Create('bgn_timer_back_cvar_' .. cvar_name, 0.1, 1, function()
                                 if not cvar_locker[cvar_name] then return end
                                 RunConsoleCommand(cvar_name, value_old)
-                            end)
-
-                            timer.Create('bgn_timer_reset_back_cvar_' .. cvar_name, 1, 1, function()
-                                if not cvar_locker[cvar_name] then return end
-                                cvar_locker[cvar_name] = false
+                                timer.Create('bgn_timer_reset_back_cvar_' .. cvar_name, 0.1, 1, function()
+                                    if not cvar_locker[cvar_name] then return end
+                                    cvar_locker[cvar_name] = false
+                                end)
                             end)
                         end
                         return
