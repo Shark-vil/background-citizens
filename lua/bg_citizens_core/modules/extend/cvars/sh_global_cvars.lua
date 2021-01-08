@@ -40,16 +40,27 @@ if SERVER then
         ply.bgNPCGlobalConvarSync = true
     end)
 else
+    local cvar_locker = {}
     net.Receive('bgn_gcvars_register_all_from_client', function()
         bgNPC.GlobalCvars = net.ReadTable()
         for cvar_name, value in pairs(bgNPC.GlobalCvars) do
             if not tobool(GetConVar(cvar_name)) then
                 CreateConVar(cvar_name, value, FCVAR_NONE)
+                cvar_locker[cvar_name] = cvar_locker[cvar_name] or false
     
                 cvars.AddChangeCallback(cvar_name, function(convar_name, value_old, value_new)
                     if not LocalPlayer():IsAdmin() and not LocalPlayer():IsSuperAdmin() then
-                        if value_old ~= value_new then
-                            RunConsoleCommand(cvar_name, value_old)
+                        if not cvar_locker[cvar_name] then
+                            cvar_locker[cvar_name] = true
+                            timer.Create('bgn_timer_back_cvar_' .. cvar_name, 0.5, 1, function()
+                                if not cvar_locker[cvar_name] then return end
+                                RunConsoleCommand(cvar_name, value_old)
+                            end)
+
+                            timer.Create('bgn_timer_reset_back_cvar_' .. cvar_name, 1, 1, function()
+                                if not cvar_locker[cvar_name] then return end
+                                cvar_locker[cvar_name] = false
+                            end)
                         end
                         return
                     end
