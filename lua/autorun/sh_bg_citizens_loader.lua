@@ -59,7 +59,9 @@ using('modules/extend/net/sh_callback.lua')
 using('modules/extend/cvars/sh_global_cvars.lua')
 
 using('sh_config.lua')
-using('sv_cvars.lua')
+using('cvars/sh_cvars.lua')
+using('cvars/sv_cvars.lua')
+using('cvars/cl_cvars.lua')
 
 using('global/sv_meta.lua')
 using('global/sh_meta.lua')
