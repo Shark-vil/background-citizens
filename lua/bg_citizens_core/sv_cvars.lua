@@ -98,5 +98,50 @@ for k, v in ipairs(bgNPC.npc_classes) do
     if not table.HasValue(exists_types, v.type) then
         CreateConVar('bgn_npc_type_' .. v.type, 1, FCVAR_ARCHIVE)
         table.insert(exists_types, v.type)
+
+        bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. v.type, 
+            GetConVar('bgn_npc_type_' .. v.type):GetBool())
     end
 end
+
+bgNPC:RegisterGlobalCvar('bgn_enable', 
+    GetConVar('bgn_enable'):GetBool())
+
+bgNPC:RegisterGlobalCvar('bgn_enable_wanted_mode', 
+    GetConVar('bgn_enable_wanted_mode'):GetBool())
+
+bgNPC:RegisterGlobalCvar('bgn_wanted_time', 
+    GetConVar('bgn_wanted_time'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_max_npc', 
+    GetConVar('bgn_max_npc'):GetInt())
+
+bgNPC:RegisterGlobalCvar('bgn_spawn_radius', 
+    GetConVar('bgn_spawn_radius'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_spawn_radius_visibility', 
+    GetConVar('bgn_spawn_radius_visibility'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_spawn_radius_raytracing', 
+    GetConVar('bgn_spawn_radius_raytracing'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_spawn_block_radius', 
+    GetConVar('bgn_spawn_block_radius'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_spawn_period', 
+    GetConVar('bgn_spawn_period'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_ptp_distance_limit', 
+    GetConVar('bgn_ptp_distance_limit'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_point_z_limit', 
+    GetConVar('bgn_point_z_limit'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_arrest_time', 
+    GetConVar('bgn_arrest_time'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_arrest_time_limit', 
+    GetConVar('bgn_arrest_time_limit'):GetFloat())
+
+bgNPC:RegisterGlobalCvar('bgn_ignore_another_npc', 
+    GetConVar('bgn_ignore_another_npc'):GetFloat())
