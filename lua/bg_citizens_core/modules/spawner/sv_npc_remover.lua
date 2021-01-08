@@ -27,11 +27,11 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
         local bgn_spawn_radius 
             = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
 
-        local bgn_enable = GetConVar('bgn_enable'):GetInt()
+        local bgn_enable = GetConVar('bgn_enable'):GetBool()
 
         for _, npc in ipairs(npcs) do
             if IsValid(npc) and npc:Health() > 0 then
-                if bgn_enable <= 0 then
+                if not bgn_enable or #player.GetAll() == 0 then
                     npc:Remove()
                 else
                     local isRemove = true
