@@ -48,14 +48,20 @@ local function using(local_file_path, network_type, not_root_directory)
     end
 end
 
-using('sh_config.lua')
-using('sv_cvars.lua')
-
 if bgNPC.loadPresets then
     using('map_presets/rp_southside.lua', 'sv')
     using('map_presets/gm_bigcity_improved.lua', 'sv')
     using('map_presets/rp_bangclaw.lua', 'sv')
 end
+
+
+using('modules/extend/net/sh_callback.lua')
+using('modules/extend/cvars/sh_global_cvars.lua')
+
+using('sh_config.lua')
+using('cvars/sh_cvars.lua')
+using('cvars/sv_cvars.lua')
+using('cvars/cl_cvars.lua')
 
 using('global/sv_meta.lua')
 using('global/sh_meta.lua')
@@ -66,7 +72,6 @@ using('global/sh_killing_statistic.lua')
 
 using('classes/sh_bg_npc_class.lua')
 
-using('modules/net/sh_callback.lua')
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
 using('modules/sv_custom_default_models.lua')

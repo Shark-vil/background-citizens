@@ -80,6 +80,9 @@ function bgNPC:RemoveEntityVariable(ent, key, not_delay)
 end
 
 function bgNPC:GetEntityVariable(ent, key, default)
+    if not IsValid(ent) then
+        return default
+    end
     entity_variables[ent] = entity_variables[ent] or {}
     return entity_variables[ent][key] or default
 end
