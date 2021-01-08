@@ -1,3 +1,24 @@
+hook.Add("OnEntityCreated", "BGN_OnAnotherEntityCreatedEvent", function(ent)
+    if ent:IsNPC() then
+        if GetConVar('bgn_ignore_another_npc'):GetBool() then
+            timer.Simple(1, function()
+                if not IsValid(ent) then return end
+                if bgNPC:GetActor(ent) == nil then
+                    for _, actor in ipairs(bgNPC:GetAll()) do
+                        local npc = actor:GetNPC()
+                        if IsValid(npc) then
+                            actor:RemoveTarget(ent)
+                            ent:AddEntityRelationship(npc, D_NU, 99)
+                            npc:AddEntityRelationship(ent, D_NU, 99)
+                            ent.bgNPCIgnore = true
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
 timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0, function()
     local bgn_enable = GetConVar('bgn_enable'):GetInt()
 

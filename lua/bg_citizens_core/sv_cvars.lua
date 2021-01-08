@@ -12,6 +12,7 @@ local bgn_wanted_time = 30
 local bgn_arrest_mode = 0
 local bgn_arrest_time = 5
 local bgn_arrest_time_limit = 20
+local bgn_ignore_another_npc = 0
 
 function bgNPC:IsActiveNPCType(type)
     return GetConVar('bgn_npc_type_' .. type):GetBool()
@@ -36,6 +37,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
     RunConsoleCommand('bgn_arrest_mode', bgn_arrest_mode)
     RunConsoleCommand('bgn_arrest_time', bgn_arrest_time)
     RunConsoleCommand('bgn_arrest_time_limit', bgn_arrest_time_limit)
+    RunConsoleCommand('bgn_ignore_another_npc', bgn_ignore_another_npc)
 
     local exists_types = {}
     for k, v in ipairs(bgNPC.npc_classes) do
@@ -87,6 +89,9 @@ CreateConVar('bgn_arrest_time', bgn_arrest_time, FCVAR_ARCHIVE,
 
 CreateConVar('bgn_arrest_time_limit', bgn_arrest_time_limit, FCVAR_ARCHIVE, 
 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
+
+CreateConVar('bgn_ignore_another_npc', bgn_ignore_another_npc, FCVAR_ARCHIVE, 
+'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
 
 local exists_types = {}
 for k, v in ipairs(bgNPC.npc_classes) do

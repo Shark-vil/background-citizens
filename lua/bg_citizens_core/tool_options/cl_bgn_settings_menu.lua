@@ -16,6 +16,13 @@ local function GeneralSettingsMenu(Panel)
         Text = 'Description: The maximum number of background NPCs on the map.'
     })
 
+    Panel:AddControl('CheckBox', {
+        Label = 'Ignore another NPCs',
+        Command = 'bgn_ignore_another_npc' 
+    }); Panel:AddControl('Label', {
+        Text = 'Description: If this parameter is active, then NPCs will ignore any other spawned NPCs.'
+    })
+
     Panel:AddControl("Button", {
         ["Label"] = "Load points",
         ["Command"] = "cl_citizens_load_route ",
