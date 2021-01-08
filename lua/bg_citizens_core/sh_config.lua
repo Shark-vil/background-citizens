@@ -81,8 +81,8 @@ bgNPC.npc_classes = {
             ['defense'] = 100,
         },
         at_protect = {
-            ['ignore'] = 99,
-            ['defense'] = 1,
+            ['ignore'] = 95,
+            ['defense'] = 5,
         }
     },
     {

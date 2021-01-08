@@ -59,12 +59,12 @@ function(attacker, target, dmginfo)
                 end
             end
 
+            actor:AddTarget(targetFromActor)
+
             local state = actor:GetState()
             if state == 'idle' or state == 'walk' then
                 actor:SetState(reaction)
             end
-
-            actor:AddTarget(targetFromActor)
         end
 
         ::skip::

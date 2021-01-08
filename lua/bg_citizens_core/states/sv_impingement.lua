@@ -26,9 +26,7 @@ timer.Create('BGN_Timer_ImpingementController', 5, 0, function()
             local target = table.Random(targets)
             if IsValid(target) then
                 actor:AddTarget(target)
-                actor:SetState('defense', {
-                    delay = 0
-                })
+                actor:SetState('defense')
                 break
             end
         end
