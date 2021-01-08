@@ -57,6 +57,26 @@ function(actor, attacker, target, reaction)
         return
     end
 
+    local police = bgNPC:GetNearByType(attacker:GetPos(), 'police')
+    if IsValid(police) then
+        bgNPC.arrest_players[attacker].notify_delay 
+            = bgNPC.arrest_players[attacker].notify_delay or 0
+
+        -- attacker:SetPos(police:GetNPC():GetPos())
+
+        police:AddTarget(attacker)
+        police:SetState('arrest', {
+            targets = target,
+            attacker = attacker,
+        })
+
+        bgNPC.arrest_players[attacker].arrest = true
+        return false
+    else
+        bgNPC.arrest_players[attacker].arrest = false
+    end
+
+    --[[
     if actor:GetType() == 'police' then
         if actor:GetReactionForProtect() ~= 'arrest' then
             bgNPC.arrest_players[attacker].arrest = false
@@ -80,9 +100,10 @@ function(actor, attacker, target, reaction)
         })
         return true
     end
+    ]]
 end)
 
-timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()    
+timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()    
     for _, actor in ipairs(bgNPC:GetAllByType('police')) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
@@ -119,7 +140,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 0.5, 0, function()
                         else
                             point = data.attacker:GetPos()
                         end
-
+                        
                         if point ~= nil then
                             npc:SetSaveValue("m_vecLastPosition", point)
                             npc:SetSchedule(SCHED_FORCED_GO_RUN)

@@ -36,6 +36,51 @@ function bgNPC:GetAllNPCsByType(type)
     return self.fnpcs[type] or {}
 end
 
+function bgNPC:GetNear(center)
+    local near_actor = nil
+    local dist = nil
+    
+    for _, actor in ipairs(self:GetAll()) do
+        local npc = actor:GetNPC()
+        if dist == nil then
+            dist = npc:GetPos():DistToSqr(center)
+            near_actor = actor
+        else
+            local new_dist = npc:GetPos():DistToSqr(center)
+            if new_dist < dist then
+                dist = new_dist
+                near_actor = actor
+            end
+        end
+    end
+
+    return near_actor
+end
+
+
+function bgNPC:GetNearByType(center, type)
+    local near_actor = nil
+    local dist = nil
+    
+    for _, actor in ipairs(self:GetAll()) do
+        if actor:GetType() == type then
+            local npc = actor:GetNPC()
+            if dist == nil then
+                dist = npc:GetPos():DistToSqr(center)
+                near_actor = actor
+            else
+                local new_dist = npc:GetPos():DistToSqr(center)
+                if new_dist < dist then
+                    dist = new_dist
+                    near_actor = actor
+                end
+            end
+        end
+    end
+
+    return near_actor
+end
+
 function bgNPC:GetAllByRadius(center, radius)
     local npcs = {}
     radius = radius ^ 2
