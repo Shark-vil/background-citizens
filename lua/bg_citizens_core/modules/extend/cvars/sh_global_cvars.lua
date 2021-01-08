@@ -47,6 +47,13 @@ else
                 CreateConVar(cvar_name, value, FCVAR_NONE)
     
                 cvars.AddChangeCallback(cvar_name, function(convar_name, value_old, value_new)
+                    if not LocalPlayer():IsAdmin() and not LocalPlayer():IsSuperAdmin() then
+                        if value_old ~= value_new then
+                            RunConsoleCommand(cvar_name, value_old)
+                        end
+                        return
+                    end
+
                     bgNPC.GlobalCvars[cvar_name] = value_new
     
                     net.Start('bgn_gcvars_change_from_server')
