@@ -138,13 +138,13 @@ end
 
 local function ActiveNPCsMenu(Panel)
     local exists_types = {}
-    for k, v in ipairs(bgNPC.npc_classes) do
-        if not table.HasValue(exists_types, v.type) then
+    for npcType, v in pairs(bgNPC.npc_classes) do
+        if not table.HasValue(exists_types, npcType) then
             Panel:AddControl('CheckBox', {
-                Label = v.type,
-                Command = 'bgn_npc_type_' .. v.type
+                Label = npcType,
+                Command = 'bgn_npc_type_' .. npcType
             })
-            table.insert(exists_types, v.type)
+            table.insert(exists_types, npcType)
         end
     end
 

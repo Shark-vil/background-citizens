@@ -1,4 +1,4 @@
--- if net.Invoke ~= nil then return end
+if net.Invoke ~= nil then return end
 
 local storage = {}
 

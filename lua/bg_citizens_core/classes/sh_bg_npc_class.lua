@@ -1,11 +1,11 @@
 BG_NPC_CLASS = {}
 
-function BG_NPC_CLASS:Instance(npc, data)
+function BG_NPC_CLASS:Instance(npc, type, data)
     local obj = {}
     obj.npc = npc
     obj.class = npc:GetClass()
     obj.data = data
-    obj.type = data.type
+    obj.type = type
 
     obj.next_anim = nil
     obj.anim_time = 0
@@ -57,13 +57,6 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.npc:AddEntityRelationship(ent, D_NU, 99)
         end
         table.RemoveByValue(self.targets, ent)
-        if #self.targets == 0 then
-            if math.random(0, 10) > 4 then
-                self:Walk()
-            else
-                self:Idle()
-            end
-        end
     end
 
     function obj:RemoveAllTargets()
