@@ -83,6 +83,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
                 local map = movement_map[npc]
                 local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
+                data.schedule = data.schedule or SCHED_FORCED_GO
 
                 if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
                     goto skip

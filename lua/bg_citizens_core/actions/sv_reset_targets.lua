@@ -16,7 +16,7 @@ timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
             if state ~= 'idle' and state ~= 'walk' then
                 actor:RecalculationTargets()
                 
-                if actor:TargetsCount() == 0 then                    
+                if actor:TargetsCount() == 0 then            
                     local wep = npc:GetActiveWeapon()
                     if IsValid(wep) then
                         wep:Remove()

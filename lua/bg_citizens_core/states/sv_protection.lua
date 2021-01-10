@@ -5,12 +5,10 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
             local state = actor:GetState()
             local data = actor:GetStateData()
 
-            if state == 'defense' and actor:TargetsCount() ~= 0  then
+            if state == 'defense'  then
                 local target = actor:GetNearTarget()
 
-                if not IsValid(target) then
-                    actor:RecalculationTargets()
-                else
+                if IsValid(target) then
                     if npc:Disposition(target) ~= D_HT then
                         npc:AddEntityRelationship(target, D_HT, 99)
                     end

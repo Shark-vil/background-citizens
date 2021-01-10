@@ -1,3 +1,6 @@
+
+bgNPC.arrest_players = {}
+
 hook.Add("BGN_PreReactionTakeDamage", "BGN_AttackerRegistrationOnArrestTable", 
 function(attacker, target, dmginfo, reaction)
     if reaction == 'defense' then return end
@@ -19,10 +22,11 @@ function(attacker, target, dmginfo, reaction)
         end
 
         bgNPC.arrest_players[attacker] = {
-            target = target,
             delay = CurTime() + 1.5,
             delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
             arrestTime = GetConVar('bgn_arrest_time'):GetFloat(),
+            notify_delay = 0,
+            not_arrest = false,
             count = 1
         }
     end
@@ -36,71 +40,28 @@ end)
 
 hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
 function(actor, attacker, target, reaction)
-    if not GetConVar('bgn_arrest_mode'):GetBool() and reaction == 'arrest' then 
+    if not IsValid(attacker) then return end
+    if not GetConVar('bgn_arrest_mode'):GetBool() or bgNPC.arrest_players[attacker] == nil 
+        or bgNPC.arrest_players[attacker].not_arrest
+    then
         return 'defense'
     end
 
-    if not IsValid(attacker) or not IsValid(target) then
-        return
-    end
-
-    if bgNPC.arrest_players == nil or bgNPC.arrest_players[attacker] == nil 
-        or bgNPC.arrest_players[attacker].target == nil 
-        or not IsValid(bgNPC.arrest_players[attacker].target)
-    then
-        return
-    end
-
-    if bgNPC.arrest_players[attacker].arrest ~= nil 
-        and not bgNPC.arrest_players[attacker].arrest 
-    then
-        return
-    end
+    if reaction ~= 'arrest' then return false end
 
     local police = bgNPC:GetNearByType(attacker:GetPos(), 'police')
     if IsValid(police) then
-        bgNPC.arrest_players[attacker].notify_delay 
-            = bgNPC.arrest_players[attacker].notify_delay or 0
-
-        -- attacker:SetPos(police:GetNPC():GetPos())
+        police:AddTarget(attacker)
+        
+        if police:GetState() == 'arrest' then return end
 
         police:AddTarget(attacker)
-        police:SetState('arrest', {
-            targets = target,
-            attacker = attacker,
-        })
+        police:SetState('arrest')
 
-        bgNPC.arrest_players[attacker].arrest = true
         return false
     else
-        bgNPC.arrest_players[attacker].arrest = false
+        bgNPC.arrest_players[attacker].not_arrest = true
     end
-
-    --[[
-    if actor:GetType() == 'police' then
-        if actor:GetReactionForProtect() ~= 'arrest' then
-            bgNPC.arrest_players[attacker].arrest = false
-            return
-        end
-    else
-        if bgNPC.arrest_players[attacker].delay > CurTime() then
-            return true
-        end
-    end
-
-    bgNPC.arrest_players[attacker].arrest = true
-    
-    if bgNPC.arrest_players[attacker].target == target then
-        bgNPC.arrest_players[attacker].notify_delay 
-            = bgNPC.arrest_players[attacker].notify_delay or 0
-
-        actor:SetState('arrest', {
-            targets = target,
-            attacker = attacker,
-        })
-        return true
-    end
-    ]]
 end)
 
 timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()    
@@ -111,34 +72,39 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
             local data = actor:GetStateData()
 
             if state == 'arrest'  then
-                if not IsValid(data.attacker) then
+                local target = actor:GetNearTarget()
+
+                if actor:TargetsCount() == 0 then
                     actor:Idle()
                 else                    
                     data.delay = data.delay or 0
 
-                    local delayIgnore = bgNPC.arrest_players[data.attacker].delayIgnore
-                    local arrestTime = bgNPC.arrest_players[data.attacker].arrestTime
-
-                    if delayIgnore < CurTime() then
-                        actor:AddTarget(data.attacker)
-                        actor:Defense()
-                        return
+                    if bgNPC.arrest_players[target] == nil then
+                        goto skip
                     end
 
-                    if npc:GetTarget() ~= data.attacker then
-                        npc:SetTarget(data.attacker)
+                    local delayIgnore = bgNPC.arrest_players[target].delayIgnore
+                    local arrestTime = bgNPC.arrest_players[target].arrestTime
+
+                    if delayIgnore < CurTime() then
+                        actor:Defense()
+                        goto skip
+                    end
+
+                    if npc:GetTarget() ~= target then
+                        npc:SetTarget(target)
                     end
 
                     if data.delay < CurTime() then
                         bgNPC:SetActorWeapon(actor)
 
                         local point = nil
-                        local current_distance = npc:GetPos():DistToSqr(data.attacker:GetPos())
+                        local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 
                         if current_distance > 1000 ^ 2 then
-                            point = actor:GetClosestPointToPosition(data.attacker:GetPos())
+                            point = actor:GetClosestPointToPosition(target:GetPos())
                         else
-                            point = data.attacker:GetPos()
+                            point = target:GetPos()
                         end
                         
                         if point ~= nil then
@@ -146,7 +112,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
                             npc:SetSchedule(SCHED_FORCED_GO_RUN)
                         end
 
-                        local eyeAngles = data.attacker:EyeAngles()
+                        local eyeAngles = target:EyeAngles()
                         data.arrest_time = data.arrest_time or 0
                         data.arrested = data.arrested or false
 
@@ -154,7 +120,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
                             if not data.arrested then
                                 npc:EmitSound('npc/metropolice/vo/apply.wav', 
                                     300, 100, 1, CHAN_AUTO)
-                                data.attacker:ChatPrint('Stay in this position, don\'t move!')
+                                    target:ChatPrint('Stay in this position, don\'t move!')
                                 data.arrest_time = CurTime() + arrestTime
                             end
                             data.arrested = true
@@ -164,33 +130,32 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
                         end
 
                         if not data.arrested 
-                            and bgNPC.arrest_players[data.attacker].notify_delay < CurTime() 
+                            and bgNPC.arrest_players[target].notify_delay < CurTime() 
                         then
-                            bgNPC.arrest_players[data.attacker].notify_delay = CurTime() + 3
-                            data.attacker:ChatPrint('Put your head down!')
+                            bgNPC.arrest_players[target].notify_delay = CurTime() + 3
+                            target:ChatPrint('Put your head down!')
                             npc:EmitSound('npc/metropolice/vo/firstwarningmove.wav', 
                                 300, 100, 1, CHAN_AUTO)
                         elseif data.arrested then
                             delayIgnore = delayIgnore + 1
-                            bgNPC.arrest_players[data.attacker].delayIgnore = delayIgnore
+                            bgNPC.arrest_players[target].delayIgnore = delayIgnore
 
                             local time = data.arrest_time - CurTime()
                             if time <= 0 then
-                                bgNPC.arrest_players[data.attacker] = nil
+                                bgNPC.arrest_players[target] = nil
 
-                                hook.Run('BGN_PlayerArrest', data.attacker, actor)
+                                hook.Run('BGN_PlayerArrest', target, actor)
                                 for _, actor in ipairs(bgNPC:GetAll()) do
-                                    actor:RemoveTarget(data.attacker)
+                                    actor:RemoveTarget(target)
                                 end
                                 return
                             else
-                                bgNPC.arrest_players[data.attacker].notify_arrest = 
-                                    bgNPC.arrest_players[data.attacker].notify_arrest or 0
+                                bgNPC.arrest_players[target].notify_arrest = 
+                                    bgNPC.arrest_players[target].notify_arrest or 0
 
-                                if bgNPC.arrest_players[data.attacker].notify_arrest < CurTime() then
-                                    data.attacker:ChatPrint('Arrest after ' 
-                                        .. math.floor(time) .. ' sec.')
-                                    bgNPC.arrest_players[data.attacker].notify_arrest = CurTime() + 1
+                                if bgNPC.arrest_players[target].notify_arrest < CurTime() then
+                                    target:ChatPrint('Arrest after ' .. math.floor(time) .. ' sec.')
+                                    bgNPC.arrest_players[target].notify_arrest = CurTime() + 1
                                 end
                             end
                         end
@@ -200,6 +165,8 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
                 end
             end
         end
+
+        ::skip::
     end
 end)
 
