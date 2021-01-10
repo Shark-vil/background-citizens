@@ -43,10 +43,6 @@ FCVAR_ARCHIVE, 'Sets how long the police will ignore you during your arrest. If 
 bgNPC:RegisterGlobalCvar('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 
 FCVAR_ARCHIVE, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
 
-local exists_types = {}
 for npcType, v in pairs(bgNPC.npc_classes) do
-    if not table.HasValue(exists_types, npcType) then
-        bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)
-        table.insert(exists_types, npcType)
-    end
+    bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)
 end
