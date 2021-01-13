@@ -37,48 +37,50 @@ function bgNPC:GetAllNPCsByType(type)
 end
 
 function bgNPC:GetNear(center)
-	local near_actor = nil
-	local dist = nil
+    local near_actor = nil
+    local dist = nil
+    
+    for _, actor in ipairs(self:GetAll()) do
+        local npc = actor:GetNPC()
+        if IsValid(npc) then
+            if dist == nil then
+                dist = npc:GetPos():DistToSqr(center)
+                near_actor = actor
+            else
+                local new_dist = npc:GetPos():DistToSqr(center)
+                if new_dist < dist then
+                    dist = new_dist
+                    near_actor = actor
+                end
+            end
+        end
+    end
 
-	for _, actor in ipairs(self:GetAll()) do
-		local npc = actor:GetNPC()
-		if dist == nil then
-			dist = npc:GetPos():DistToSqr(center)
-			near_actor = actor
-		else
-			local new_dist = npc:GetPos():DistToSqr(center)
-			if new_dist < dist then
-				dist = new_dist
-				near_actor = actor
-			end
-		end
-	end
-
-	return near_actor
+    return near_actor
 end
 
 
 function bgNPC:GetNearByType(center, type)
-	local near_actor = nil
-	local dist = nil
+    local near_actor = nil
+    local dist = nil
+    
+    for _, actor in ipairs(self:GetAll()) do
+        local npc = actor:GetNPC()
+        if actor:GetType() == type and IsValid(npc) then
+            if dist == nil then
+                dist = npc:GetPos():DistToSqr(center)
+                near_actor = actor
+            else
+                local new_dist = npc:GetPos():DistToSqr(center)
+                if new_dist < dist then
+                    dist = new_dist
+                    near_actor = actor
+                end
+            end
+        end
+    end
 
-	for _, actor in ipairs(self:GetAll()) do
-		local npc = actor:GetNPC()
-		if actor:GetType() == type and IsValid(npc) then
-				if dist == nil then
-					dist = npc:GetPos():DistToSqr(center)
-					near_actor = actor
-				else
-					local new_dist = npc:GetPos():DistToSqr(center)
-					if new_dist < dist then
-						dist = new_dist
-						near_actor = actor
-					end
-			end
-		end
-	end
-
-	return near_actor
+    return near_actor
 end
 
 function bgNPC:GetAllByRadius(center, radius)

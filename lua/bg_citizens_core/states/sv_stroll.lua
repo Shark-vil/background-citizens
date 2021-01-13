@@ -76,77 +76,78 @@ hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 end)
 
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
-	if #bgNPC.points ~= 0 then
-		for _, actor in ipairs(bgNPC:GetAll()) do
-			local npc = actor:GetNPC()
-			if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
-				local map = movement_map[npc]
-				local positions = getPositionsInRadius(npc)
-				local data = actor:GetStateData()
+    if #bgNPC.points ~= 0 then
+        for _, actor in ipairs(bgNPC:GetAll()) do
+            local npc = actor:GetNPC()
+            if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
+                local map = movement_map[npc]
+                local positions = getPositionsInRadius(npc)
+                local data = actor:GetStateData()
+                data.schedule = data.schedule or SCHED_FORCED_GO
 
-				if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
-					goto skip
-				end
+                if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
+                    goto skip
+                end
 
-				if #positions ~= 0 then
-					if map == nil then
-						map = updateMovement(npc, positions)
+                if #positions ~= 0 then
+                    if map == nil then
+                        map = updateMovement(npc, positions)
 
-						npc:SetSaveValue('m_vecLastPosition', map.pos)
-						npc:SetSchedule(data.schedule)
-						data.startWalkTime = CurTime()
-						data.startWalkPos = npc:GetPos()
+                        npc:SetSaveValue("m_vecLastPosition", map.pos)
+                        npc:SetSchedule(data.schedule)
+                        data.startWalkTime = CurTime()
+                        data.startWalkPos = npc:GetPos()
 
-						movement_ignore[npc] = movement_ignore[npc] or {}
-						table.insert(movement_ignore[npc], {
-							pos = map.pos,
-							resetTime = CurTime() + 60
-						})
-					else
-						local getNewPos = false
+                        movement_ignore[npc] = movement_ignore[npc] or {}
+                        table.insert(movement_ignore[npc], {
+                            pos = map.pos,
+                            resetTime = CurTime() + 60
+                        })
+                    else
+                        local getNewPos = false
 
-						if map.resetTime < CurTime() then
-							getNewPos = true
-						elseif table.HasValue(ents.FindInSphere(map.pos, 10), npc) then
-							getNewPos = true
-						end
+                        if map.resetTime < CurTime() then
+                            getNewPos = true
+                        elseif table.HasValue(ents.FindInSphere(map.pos, 10), npc) then
+                            getNewPos = true
+                        end
 
-						if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
-							if npc:GetPos():DistToSqr(data.startWalkPos) < 10 ^ 2 then
-								getNewPos = true
-							else
-								data.startWalkTime = nil
-							end
-						end
+                        if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
+                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10 ^ 2 then
+                                getNewPos = true
+                            else
+                                data.startWalkTime = nil
+                            end
+                        end
 
-						if getNewPos then
-							if math.random(0, 100) <= 10 then
-								actor:Idle(10)
-								return
-							end
+                        if getNewPos then
+                            if math.random(0, 100) <= 10 then
+                                actor:Idle(10)
+                                return
+                            end
 
-							map = nextMovement(npc, positions)
+                            map = nextMovement(npc, positions)
 
-							npc:SetSaveValue('m_vecLastPosition', map.pos)
-							npc:SetSchedule(data.schedule)
-							data.startWalkTime = CurTime()
-							data.startWalkPos = npc:GetPos()
+                            npc:SetSaveValue("m_vecLastPosition", map.pos)
+                            npc:SetSchedule(data.schedule)
+                            data.startWalkTime = CurTime()
+                            data.startWalkPos = npc:GetPos()
 
-							movement_ignore[npc] = movement_ignore[npc] or {}
-							table.insert(movement_ignore[npc], {
-								pos = map.pos,
-								resetTime = CurTime() + 60
-							})
-						end
-					end
+                            movement_ignore[npc] = movement_ignore[npc] or {}
+                            table.insert(movement_ignore[npc], {
+                                pos = map.pos,
+                                resetTime = CurTime() + 60
+                            })
+                        end
+                    end
 
-					hook.Run('BGN_PostStollNPC', npc, map)
-				end
+                    hook.Run('BGN_PostStollNPC', npc, map)
+                end
 
-				::skip::
-			end
-		end
-	end
+                ::skip::
+            end
+        end
+    end
 end)
 
 timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
