@@ -1,6 +1,8 @@
-hook.Add("OnNPCKilled", "BGN_OnKilledActor", function(npc, attacker, inflictor)
-    local actor = bgNPC:GetActor(npc)
-    if actor ~= nil then
-        hook.Run('BGN_OnKilledActor', actor, attacker)
-    end
+hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
+	local actor = bgNPC:GetActor(npc)
+
+	if not actor then return end
+
+	hook.Run('BGN_OnKilledActor', actor, attacker)
 end)
+

@@ -1,101 +1,121 @@
 function bgNPC:IsActiveNPCType(type)
-    return GetConVar('bgn_npc_type_' .. type):GetBool()
+	return GetConVar('bgn_npc_type_' .. type):GetBool()
 end
 
-CreateConVar('bgn_enable', bgNPC.cvar.bgn_enable, FCVAR_ARCHIVE, 
-'Toggles the modification activity. 1 - enabled, 0 - disabled.')
+local convars = {
+	{
+		name = 'bgn_enable',
+		description = 'Toggles the modification activity. 1 - enabled, 0 - disabled.',
+		type = 'number'
+	},
 
-CreateConVar('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode, FCVAR_ARCHIVE, 
-'Enables or disables wanted mode.')
+	{
+		name = 'bgn_enable_wanted_mode',
+		description = 'Enables or disables wanted mode.',
+		type = 'number'
+	},
 
-CreateConVar('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time, FCVAR_ARCHIVE, 
-'The time you need to go through to remove the wanted level.')
+	{
+		name = 'bgn_wanted_time',
+		description = 'The time you need to go through to remove the wanted level.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_max_npc', bgNPC.cvar.bgn_max_npc, FCVAR_ARCHIVE, 
-'The maximum number of background NPCs on the map.')
+	{
+		name = 'bgn_max_npc',
+		description = 'The maximum number of background NPCs on the map.',
+		type = 'number'
+	},
 
-CreateConVar('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, FCVAR_ARCHIVE, 
-'NPC spawn radius relative to the player.')
+	{
+		name = 'bgn_spawn_radius',
+		description = 'NPC spawn radius relative to the player.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, FCVAR_ARCHIVE, 
-'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
+	{
+		name = 'bgn_spawn_radius_visibility',
+		description = 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_spawn_radius_raytracing', bgNPC.cvar.bgn_spawn_radius_raytracing, FCVAR_ARCHIVE, 
-'Checks the spawn points of NPCs using ray tracing in a given radius. This parameter must not be more than - bgn_spawn_radius_visibility. 0 - Disable checker')
+	{
+		name = 'bgn_spawn_radius_raytracing',
+		description = 'Checks the spawn points of NPCs using ray tracing in a given radius. This parameter must not be more than - bgn_spawn_radius_visibility. 0 - Disable checker',
+		type = 'float',
+	},
 
-CreateConVar('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, FCVAR_ARCHIVE, 
-'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
+	{
+		name = 'bgn_spawn_block_radius',
+		description = 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker',
+		type = 'float'
+	},
 
-CreateConVar('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, FCVAR_ARCHIVE, 
-'The period between the spawn of the NPC. Changes require a server restart.')
+	{
+		name = 'bgn_spawn_period',
+		description = 'The period between the spawn of the NPC. Changes require a server restart.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, FCVAR_ARCHIVE, 
-'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
+	{
+		name = 'bgn_ptp_distance_limit',
+		description = 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, FCVAR_ARCHIVE, 
-'Height limit between points. Used to correctly define child points.')
+	{
+		name = 'bgn_point_z_limit',
+		description = 'Height limit between points. Used to correctly define child points.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, FCVAR_ARCHIVE, 
-'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.')
+	{
+		name = 'bgn_arrest_mode',
+		description = 'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.'
+	},
 
-CreateConVar('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time, FCVAR_ARCHIVE, 
-'Sets the time allotted for your detention.')
+	{
+		name = 'bgn_arrest_time',
+		description = 'Sets the time allotted for your detention.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit, FCVAR_ARCHIVE, 
-'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
+	{
+		name = 'bgn_arrest_time_limit',
+		description = 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.',
+		type = 'float'
+	},
 
-CreateConVar('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, FCVAR_ARCHIVE, 
-'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
+	{
+		name = 'bgn_ignore_another_npc',
+		description = 'If this parameter is active, then NPCs will ignore any other spawned NPCs.',
+		type = 'float'
+	},
+}
+
+for _, v in ipairs(convars) do
+	CreateConVar(v.name, bgNPC.cvar[v.name], FCVAR_ARCHIVE, v.description)
+end
+
 
 local exists_types = {}
-for k, v in ipairs(bgNPC.npc_classes) do
-    if not table.HasValue(exists_types, v.type) then
-        CreateConVar('bgn_npc_type_' .. v.type, 1, FCVAR_ARCHIVE)
-        table.insert(exists_types, v.type)
 
-        bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. v.type, 
-            GetConVar('bgn_npc_type_' .. v.type):GetInt())
-    end
+for k, v in ipairs(bgNPC.npc_classes) do
+	if table.HasValue(exists_types, v.type) then continue end
+
+	CreateConVar('bgn_npc_type_' .. v.type, 1, FCVAR_ARCHIVE)
+	table.insert(exists_types, v.type)
+
+	bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. v.type, GetConVar('bgn_npc_type_' .. v.type):GetInt())
 end
 
-bgNPC:RegisterGlobalCvar('bgn_enable', 
-    GetConVar('bgn_enable'):GetInt())
+for _, v in ipairs(convars) do
+	if not v.type then return end
 
-bgNPC:RegisterGlobalCvar('bgn_enable_wanted_mode', 
-    GetConVar('bgn_enable_wanted_mode'):GetInt())
-
-bgNPC:RegisterGlobalCvar('bgn_wanted_time', 
-    GetConVar('bgn_wanted_time'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_max_npc', 
-    GetConVar('bgn_max_npc'):GetInt())
-
-bgNPC:RegisterGlobalCvar('bgn_spawn_radius', 
-    GetConVar('bgn_spawn_radius'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_spawn_radius_visibility', 
-    GetConVar('bgn_spawn_radius_visibility'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_spawn_radius_raytracing', 
-    GetConVar('bgn_spawn_radius_raytracing'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_spawn_block_radius', 
-    GetConVar('bgn_spawn_block_radius'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_spawn_period', 
-    GetConVar('bgn_spawn_period'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_ptp_distance_limit', 
-    GetConVar('bgn_ptp_distance_limit'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_point_z_limit', 
-    GetConVar('bgn_point_z_limit'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_arrest_time', 
-    GetConVar('bgn_arrest_time'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_arrest_time_limit', 
-    GetConVar('bgn_arrest_time_limit'):GetFloat())
-
-bgNPC:RegisterGlobalCvar('bgn_ignore_another_npc', 
-    GetConVar('bgn_ignore_another_npc'):GetFloat())
+	if v.type == 'number' then
+		bgNPC:RegisterGlobalCvar(v.name, GetConVar(v.name):GetInt())
+	elseif v.type == 'float' then
+		bgNPC:RegisterGlobalCvar(v.name, GetConVar(v.name):GetFloat())
+	end
+	-- and next
+end

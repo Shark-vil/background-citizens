@@ -1,38 +1,39 @@
-hook.Add("PlayerDeath", "BGN_ClearingTargetsForNPCsInThePlayerDeath", function(victim, inflictor, attacker)
-    bgNPC.killing_statistic[victim] = {}
-    bgNPC.arrest_players[victim] = nil
-    
-    for _, actor in ipairs(bgNPC:GetAll()) do
-        actor:RemoveTarget(victim)
-    end
+hook.Add('PlayerDeath', 'BGN_ClearingTargetsForNPCsInThePlayerDeath', function(victim, inflictor, attacker)
+	bgNPC.killing_statistic[victim] = {}
+	bgNPC.arrest_players[victim] = nil
+
+	for _, actor in ipairs(bgNPC:GetAll()) do
+		actor:RemoveTarget(victim)
+	end
 end)
 
 timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
-    for _, actor in ipairs(bgNPC:GetAll()) do
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            local state = actor:GetState()
+	for _, actor in ipairs(bgNPC:GetAll()) do
+		local npc = actor:GetNPC()
 
-            if state ~= 'idle' and state ~= 'walk' then
-                actor:RecalculationTargets()
-                
-                if actor:TargetsCount() == 0 then                    
-                    local wep = npc:GetActiveWeapon()
-                    if IsValid(wep) then
-                        wep:Remove()
-                    end
+		if not IsValid(npc) then continue end
 
-                    if math.random(0, 10) > 5 then
-                        actor:Walk()
-                    else
-                        actor:Idle()
-                    end
+		local state = actor:GetState()
 
-                    goto skip
-                end
-            end
-        end
+		if state ~= 'idle' and state ~= 'walk' then
+			actor:RecalculationTargets()
 
-        ::skip::
-    end
+			if actor:TargetsCount() == 0 then
+				local wep = npc:GetActiveWeapon()
+				if IsValid(wep) then
+					wep:Remove()
+				end
+
+				if math.random(0, 10) > 5 then
+					actor:Walk()
+				else
+					actor:Idle()
+				end
+
+				goto skip
+			end
+		end
+
+		::skip::
+	end
 end)
