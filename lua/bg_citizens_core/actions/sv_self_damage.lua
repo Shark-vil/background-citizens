@@ -23,42 +23,47 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 				end
 			end
 
-            reaction = ActorTarget:GetReactionForDamage()
-
-            local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)
-            if hook_result ~= nil then
-                if isbool(hook_result) and not hook_result then
-                    return hook_result
-                end
+			reaction = ActorTarget:GetReactionForDamage()
+			--[[
+				Заметка: нужно как-то потом переделать последовательность вызоыва для крючков. Чтобы установка состояния не зависела от idle или walk
+			--]]
+			local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)
+			if hook_result ~= nil then
+				if isbool(hook_result) and not hook_result then
+					return hook_result
+				end
 
 				if isstring(hook_result) then
 					reaction = hook_result
 				end
 			end
 
-            local state = ActorTarget:GetState()
-            if state == 'idle' or state == 'walk' or state == 'arrest' then
-                ActorTarget:SetState(reaction)
-            end
-        end
+			ActorTarget:AddTarget(attacker)
 
-        hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
-    elseif target:IsPlayer() then
-        if ActorAttacker ~= nil and ActorAttacker:HasTeam('player') then
-            return true
-        end
+			local state = ActorTarget:GetState()
+			if state == 'idle' or state == 'walk' then
+				ActorTarget:SetState(reaction)
+			end
+		end
 
-        if bgNPC:IsWanted(target) then
-            bgNPC:UpdateWanted(target)
-        end
+		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
+	elseif target:IsPlayer() then
+		if not (attacker:IsNPC() and ActorAttacker ~= nil) then return end
 
-        local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
-        if hook_result ~= nil then
-            if isbool(hook_result) then
-                return hook_result
-            end
-        end
+		if bgNPC:IsWanted(target) then
+			bgNPC:UpdateWanted(target)
+		end
 
-        hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
-    end
+		if ActorAttacker:HasTeam('player') then
+			return true
+		end
+
+		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
+
+		if hook_result ~= nil and isbool(hook_result) then
+			return hook_result
+		end
+
+		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
+	end
 end)

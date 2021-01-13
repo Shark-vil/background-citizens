@@ -137,20 +137,20 @@ local function StatesSettingsMenu(Panel)
 end
 
 local function ActiveNPCsMenu(Panel)
-    local exists_types = {}
-    for npcType, v in pairs(bgNPC.npc_classes) do
-        if not table.HasValue(exists_types, npcType) then
-            Panel:AddControl('CheckBox', {
-                Label = npcType,
-                Command = 'bgn_npc_type_' .. npcType
-            })
-            table.insert(exists_types, npcType)
-        end
-    end
+	local exists_types = {}
+	for k, v in ipairs(bgNPC.npc_classes) do
+		if not table.HasValue(exists_types, v.type) then
+			Panel:AddControl('CheckBox', {
+				Label = v.type,
+				Command = 'bgn_npc_type_' .. v.type
+			})
+			table.insert(exists_types, v.type)
+		end
+	end
 
-    Panel:AddControl('Label', {
-        Text = 'Description: You can disable some NPCs if you don\'t want to spawn them anymore. ATTENTION! If you disable an NPC, it will not automatically change the fullness relative to other NPCs! If you want to customize the configuration in detail, download the addon sources and change the configuration file!'
-    })
+	Panel:AddControl('Label', {
+		Text = 'Description: You can disable some NPCs if you don\'t want to spawn them anymore. ATTENTION! If you disable an NPC, it will not automatically change the fullness relative to other NPCs! If you want to customize the configuration in detail, download the addon sources and change the configuration file!'
+	})
 end
 
 local function WorkshopServicesMenu(Panel)

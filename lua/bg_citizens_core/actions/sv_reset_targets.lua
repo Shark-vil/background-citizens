@@ -11,7 +11,7 @@ timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		local npc = actor:GetNPC()
 
-		if not IsValid(npc) then goto skip end
+		if not IsValid(npc) then continue end
 
 		local state = actor:GetState()
 
@@ -29,6 +29,8 @@ timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
 				else
 					actor:Idle()
 				end
+
+				goto skip
 			end
 		end
 

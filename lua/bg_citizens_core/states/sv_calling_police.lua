@@ -19,20 +19,23 @@ timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
 					goto skip
 				end
 
-                if data.calling_time == nil then
-                    data.calling_time = CurTime() + 15
-                    npc:EmitSound('buttons/button19.wav', 500, 100, 1, CHAN_AUTO)
-                else
-                    if data.calling_time < CurTime() then
-                        for _, enemy in pairs(actor.targets) do
-                            if IsValid(enemy) then
-                                if bgNPC:IsWanted(enemy) then
-                                    bgNPC:UpdateWanted(enemy)
-                                else
-                                    bgNPC:AddWanted(enemy)
-                                end
-                            end
-                        end
+				if data.calling_time == nil then
+					data.calling_time = CurTime() + 15
+					npc:EmitSound('buttons/button19.wav', 500, 100, 1, CHAN_AUTO)
+				else
+					if data.calling_time < CurTime() then
+						for _, enemy in pairs(actor.targets) do
+							if IsValid(enemy) and not table.HasValue(bgNPC.wanted, enemy) then
+								local ActorEnemy = bgNPC:GetActor(enemy)
+								if ActorEnemy == nil or ActorEnemy:GetType() ~= 'police' then
+									if bgNPC:IsWanted(enemy) then
+										bgNPC:UpdateWanted(enemy)
+									else
+										bgNPC:AddWanted(enemy)
+									end
+								end
+							end
+						end
 
 						npc:EmitSound('buttons/combine_button1.wav', 500, 100, 1, CHAN_AUTO)
 						actor:Fear()
