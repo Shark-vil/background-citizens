@@ -1,27 +1,27 @@
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
-    if not target:IsPlayer() and not target:IsNPC() then return end
+	if not target:IsPlayer() and not target:IsNPC() then return end
 
-    local attacker = dmginfo:GetAttacker()
-    if not attacker:IsPlayer() and not attacker:IsNPC() then return end
-    if attacker.bgNPCIgnore then return end
+	local attacker = dmginfo:GetAttacker()
+	if not attacker:IsPlayer() and not attacker:IsNPC() then return end
+	if attacker.bgNPCIgnore then return end
 
-    local ActorTarget = bgNPC:GetActor(target)
-    local ActorAttacker = bgNPC:GetActor(attacker)
-    local reaction
+	local ActorTarget = bgNPC:GetActor(target)
+	local ActorAttacker = bgNPC:GetActor(attacker)
+	local reaction
 
-    if target:IsNPC() then
-        if ActorTarget ~= nil then
-            if attacker:IsPlayer() then
-                if ActorTarget:HasTeam('player') then
-                    return true
-                elseif bgNPC:IsWanted(attacker) then
-                    bgNPC:UpdateWanted(attacker)
-                end
-            elseif attacker:IsNPC() and ActorAttacker ~= nil then
-                if ActorTarget:HasTeam(ActorAttacker) then
-                    return true
-                end
-            end
+	if target:IsNPC() then
+		if ActorTarget ~= nil then
+			if attacker:IsPlayer() then
+				if ActorTarget:HasTeam('player') then
+					return true
+				elseif bgNPC:IsWanted(attacker) then
+					bgNPC:UpdateWanted(attacker)
+				end
+			elseif attacker:IsNPC() and ActorAttacker ~= nil then
+				if ActorTarget:HasTeam(ActorAttacker) then
+					return true
+				end
+			end
 
             reaction = ActorTarget:GetReactionForDamage()
 
@@ -31,12 +31,10 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
                     return hook_result
                 end
 
-                if isstring(hook_result) then
-                    reaction = hook_result
-                end
-            end
-            
-            ActorTarget:AddTarget(attacker)
+				if isstring(hook_result) then
+					reaction = hook_result
+				end
+			end
 
             local state = ActorTarget:GetState()
             if state == 'idle' or state == 'walk' or state == 'arrest' then

@@ -1,12 +1,11 @@
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
-function(attacker, target, dmginfo)
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target, dmginfo)
     local ActorTarget = bgNPC:GetActor(target)
     local ActorAttacker = bgNPC:GetActor(attacker)
 
     for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
         local reaction = actor:GetReactionForProtect()
 
-        if actor == ActorTarget then
+        if actor == ActorTarget or reaction == 'ignore' then
             goto skip
         end
 

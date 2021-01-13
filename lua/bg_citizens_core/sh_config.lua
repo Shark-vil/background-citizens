@@ -1,6 +1,6 @@
 --[[
-    WIKI:
-    https://background-npcs.itpony.ru/wik
+	WIKI:
+	https://background-npcs.itpony.ru/wiki
 --]]
 
 -- Creates files with preset points for maps:

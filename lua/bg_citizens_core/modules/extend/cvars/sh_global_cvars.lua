@@ -1,15 +1,15 @@
 bgNPC.GlobalCvars = bgNPC.GlobalCvars or {}
 
 if SERVER then
-    util.AddNetworkString('bgn_gcvars_register_from_client')
-    util.AddNetworkString('bgn_gcvars_register_all_from_client')
-    util.AddNetworkString('bgn_gcvars_change_from_server')
+	util.AddNetworkString('bgn_gcvars_register_from_client')
+	util.AddNetworkString('bgn_gcvars_register_all_from_client')
+	util.AddNetworkString('bgn_gcvars_change_from_server')
 
-    net.Receive('bgn_gcvars_change_from_server', function(len, ply)
-        if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	net.Receive('bgn_gcvars_change_from_server', function(len, ply)
+		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-        local cvar_name = net.ReadString()
-        local value = net.ReadFloat()
+		local cvar_name = net.ReadString()
+		local value = net.ReadFloat()
 
         if bgNPC.GlobalCvars[cvar_name] ~= nil and tobool(GetConVar(cvar_name)) then
             RunConsoleCommand(cvar_name, value)
@@ -33,22 +33,22 @@ if SERVER then
         end
     end
 
-    hook.Add("PlayerSpawn", "BGN_SyncPlayerGlobalConvars", function(ply)
-        if ply.bgNPCGlobalConvarSync then return end
-        
-        timer.Simple(3, function()
-            if not IsValid(ply) then
-                MsgN('Failed to sync global cvars')
-                return
-            end
+	hook.Add('PlayerSpawn', 'BGN_SyncPlayerGlobalConvars', function(ply)
+		if ply.bgNPCGlobalConvarSync then return end
 
-            net.Start('bgn_gcvars_register_all_from_client')
-            net.WriteTable(bgNPC.GlobalCvars)
-            net.Send(ply)
-        end)
+		timer.Simple(3, function()
+			if not IsValid(ply) then
+				MsgN('Failed to sync global cvars')
+				return
+			end
 
-        ply.bgNPCGlobalConvarSync = true
-    end)
+			net.Start('bgn_gcvars_register_all_from_client')
+			net.WriteTable(bgNPC.GlobalCvars)
+			net.Send(ply)
+		end)
+
+		ply.bgNPCGlobalConvarSync = true
+	end)
 else
     local cvar_locker = {}
     net.Receive('bgn_gcvars_register_all_from_client', function()

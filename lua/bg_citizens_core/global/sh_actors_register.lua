@@ -178,50 +178,50 @@ else
     end
 end
 
-function bgNPC:AddNPC(actor)    
-    table.insert(self.actors, actor)
+function bgNPC:AddNPC(actor)
+	table.insert(self.actors, actor)
 
-    local npc = actor:GetNPC()
-    table.insert(self.npcs, npc)
+	local npc = actor:GetNPC()
+	table.insert(self.npcs, npc)
 
-    local type = actor:GetType()
-    self.factors[type] = self.factors[type] or {}
-    table.insert(self.factors[type], actor)
+	local type = actor:GetType()
+	self.factors[type] = self.factors[type] or {}
+	table.insert(self.factors[type], actor)
 
-    self.fnpcs[type] = self.fnpcs[type] or {}
-    table.insert(self.fnpcs[type], npc)
+	self.fnpcs[type] = self.fnpcs[type] or {}
+	table.insert(self.fnpcs[type], npc)
 end
 
 function bgNPC:ClearRemovedNPCs()
-    for i = #self.actors, 1, -1 do
-        local npc = self.actors[i]:GetNPC()
-        if not IsValid(npc) or npc:Health() <= 0 then
-            table.remove(self.actors, i)
-        end
-    end
+	for i = #self.actors, 1, -1 do
+		local npc = self.actors[i]:GetNPC()
+		if not IsValid(npc) or npc:Health() <= 0 then
+			table.remove(self.actors, i)
+		end
+	end
 
-    for i = #self.npcs, 1, -1 do
-        local npc = self.npcs[i]
-        if not IsValid(npc) or npc:Health() <= 0 then
-            table.remove(self.npcs, i)
-        end
-    end
+	for i = #self.npcs, 1, -1 do
+		local npc = self.npcs[i]
+		if not IsValid(npc) or npc:Health() <= 0 then
+			table.remove(self.npcs, i)
+		end
+	end
 
-    for key, data in pairs(self.factors) do
-        for i = #data, 1, -1 do
-            local npc = data[i]:GetNPC()
-            if not IsValid(npc) or npc:Health() <= 0 then
-                table.remove(self.factors[key], i)
-            end
-        end
-    end
+	for key, data in pairs(self.factors) do
+		for i = #data, 1, -1 do
+			local npc = data[i]:GetNPC()
+			if not IsValid(npc) or npc:Health() <= 0 then
+				table.remove(self.factors[key], i)
+			end
+		end
+	end
 
-    for key, data in pairs(self.fnpcs) do
-        for i = #data, 1, -1 do
-            local npc = data[i]
-            if not IsValid(npc) or npc:Health() <= 0 then
-                table.remove(self.fnpcs[key], i)
-            end
-        end
-    end
+	for key, data in pairs(self.fnpcs) do
+		for i = #data, 1, -1 do
+			local npc = data[i]
+			if not IsValid(npc) or npc:Health() <= 0 then
+				table.remove(self.fnpcs[key], i)
+			end
+		end
+	end
 end

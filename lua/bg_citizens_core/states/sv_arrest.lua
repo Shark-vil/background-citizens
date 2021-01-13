@@ -1,4 +1,3 @@
-
 bgNPC.arrest_players = {}
 
 hook.Add("BGN_PreReactionTakeDamage", "BGN_AttackerRegistrationOnArrestTable", 
@@ -32,10 +31,10 @@ function(attacker, target, dmginfo, reaction)
     end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_ResettingNPCFromTheArrestTableAfterDeath", function(actor, attacker)
-    if bgNPC.arrest_players[attacker] ~= nil then
-        bgNPC.arrest_players[attacker].delayIgnore = 0
-    end
+hook.Add('BGN_OnKilledActor', 'BGN_ResettingNPCFromTheArrestTableAfterDeath', function(actor, attacker)
+	if bgNPC.arrest_players[attacker] ~= nil then
+		bgNPC.arrest_players[attacker].delayIgnore = 0
+	end
 end)
 
 hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
@@ -170,8 +169,8 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
     end
 end)
 
-hook.Add("BGN_PlayerArrest", "BGN_DarkRP_DefaultPlayerArrest", function(ply, actor)
-    if ply.arrest ~= nil then
-        ply:arrest(nil, actor:GetNPC())
-    end
+hook.Add('BGN_PlayerArrest', 'BGN_DarkRP_DefaultPlayerArrest', function(ply, actor)
+	if ply.arrest then
+		ply:arrest(nil, actor:GetNPC())
+	end
 end)

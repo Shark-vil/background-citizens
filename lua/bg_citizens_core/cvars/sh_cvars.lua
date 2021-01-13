@@ -1,4 +1,5 @@
 bgNPC.cvar = bgNPC.cvar or {}
+
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_max_npc = 20
 bgNPC.cvar.bgn_spawn_radius = 3000

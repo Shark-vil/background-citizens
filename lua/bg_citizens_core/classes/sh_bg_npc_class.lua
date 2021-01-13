@@ -460,23 +460,24 @@ function BG_NPC_CLASS:Instance(npc, type, data)
 end
 
 if CLIENT then
-    net.RegisterCallback('bgn_change_npc_state', function(ply, npc, state, data)
-        if IsValid(npc) then
-            local actor = bgNPC:GetActor(npc)
-            if actor ~= nil then
-                actor:SetState(state, data)
-            end
-        end
-    end)
+	net.RegisterCallback('bgn_change_npc_state', function(ply, npc, state, data)
+		if not IsValid(npc) then return end
+
+		local actor = bgNPC:GetActor(npc)
+		if not actor then return end
+
+		actor:SetState(state, data)
+	end)
 else
-    hook.Add("BGN_SetNPCState", "BGN_SyncChangedNPCState", function(actor, state, data)
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            bgNPC:TemporaryVectorVisibility(npc, 3)
-            timer.Simple(1.5, function()
-                if not IsValid(npc) then return end
-                net.InvokeAll('bgn_change_npc_state', npc, state, data)
-            end)
-        end
-    end)
+	hook.Add('BGN_SetNPCState', 'BGN_SyncChangedNPCState', function(actor, state, data)
+		local npc = actor:GetNPC()
+		if not IsValid(npc) then return end
+
+		bgNPC:TemporaryVectorVisibility(npc, 3)
+
+		timer.Simple(1.5, function()
+			if not IsValid(npc) then return end
+			net.InvokeAll('bgn_change_npc_state', npc, state, data)
+		end)
+	end)
 end
