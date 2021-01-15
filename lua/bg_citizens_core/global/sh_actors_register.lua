@@ -75,7 +75,7 @@ else
                 end
 
                 local worked, result = coroutine.resume(thread)
-                if result ~= nil and isvector(result) then                        
+                if result ~= nil and isvector(result) then                   
                     local pos = result
                 
                     for _, ent in ipairs(ents.FindInSphere(pos, 100)) do
@@ -119,10 +119,11 @@ else
                     if hook.Run('BGN_OnValidSpawnNPC', data) ~= nil then
                         return
                     end
-            
+                    
+                    
                     local npc = ents.Create(data.class)
                     npc:SetPos(pos)
-                    npc:SetSpawnEffect(true)
+                    -- npc:SetSpawnEffect(true)
                     
                     --[[
                         ATTENTION! Be careful, this hook is called before the NPC spawns. 

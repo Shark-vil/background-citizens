@@ -85,6 +85,7 @@ using('modules/routes/sh_route_loader.lua')
 using('modules/routes/cl_compile.lua')
 using('modules/spawner/sv_npc_remover.lua')
 using('modules/spawner/sv_npc_creator.lua')
+using('modules/quest_dialogue/sv_parent_dialogue.lua')
 
 using('actions/sv_open_door.lua')
 using('actions/sv_police_luggage.lua')
