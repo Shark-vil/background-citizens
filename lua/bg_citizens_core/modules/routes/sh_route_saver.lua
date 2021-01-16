@@ -1,6 +1,7 @@
 if SERVER then
     util.AddNetworkString('bgNPCSaveRoute')
     util.AddNetworkString('bgNPCRemoveRoute')
+    util.AddNetworkString('bgNPCSyncNavmeshInfoFromPlayer')
 
     net.Receive('bgNPCRemoveRoute', function(len, ply)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -39,6 +40,23 @@ if SERVER then
 
         bgNPC.points = util.JSONToTable(json_string)
     end)
+
+    hook.Add("PlayerSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
+        if ply.bgNPCNavmeshInfoSync then return end
+        
+        timer.Simple(3, function()
+            if not IsValid(ply) then
+                MsgN('Failed to sync navmesh info')
+                return
+            end
+
+            net.Start('bgNPCSyncNavmeshInfoFromPlayer')
+            net.WriteBool(navmesh.IsLoaded())
+            net.Send(ply)
+        end)
+
+        ply.bgNPCNavmeshInfoSync = true
+    end)
 else
     concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
         if args[1] ~= nil and args[1] == 'yes' then
@@ -53,6 +71,11 @@ else
             MsgN('Example: cl_citizens_remove_route yes')
         end
     end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
+
+    local navmesh_is_loaded = false
+    net.Receive('bgNPCSyncNavmeshInfoFromPlayer', function()
+        navmesh_is_loaded = net.ReadBool()
+    end)
 
     concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
         if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -77,15 +100,18 @@ else
             end
 
             local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
+            local dist_limit = 250000
+            if navmesh_is_loaded then
+                dist_limit = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
+            end
+
             for index, v in ipairs(save_table) do
+                local pos = v.pos
                 for id, v2 in ipairs(save_table) do
-                    local pos = v.pos
                     local otherPos = v2.pos
 
-                    if pos ~= otherPos and otherPos:DistToSqr(pos) <= 500 ^ 2 then
-                        if pos ~= otherPos and pos.z >= otherPos.z - z_limit 
-                            and pos.z <= otherPos.z + z_limit 
-                        then
+                    if pos ~= otherPos and otherPos:DistToSqr(pos) <= dist_limit then
+                        if pos.z >= otherPos.z - z_limit and pos.z <= otherPos.z + z_limit then
                             local tr = util.TraceLine( {
                                 start = pos + Vector(0, 0, 30),
                                 endpos = otherPos,

@@ -147,10 +147,10 @@ if CLIENT then
                     local awayAllow = true
                     local pos = self.Trace.HitPos
                     local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
-    
+                    local mainZ = pos.z
+
                     for _, pointPos in ipairs(self.Points) do
                         if pos:DistToSqr(pointPos) <= self.PointToPointLimit ^ 2 then
-                            local mainZ = pos.z
                             local otherZ = pointPos.z
     
                             if mainZ >= otherZ - z_limit and mainZ <= otherZ + z_limit then
@@ -270,13 +270,17 @@ if CLIENT then
     hook.Add("BGN_LoadingClientRoutes", "BGN_TOOL_LoadPointRoutes", function(points)
         local tool = LocalPlayer():GetTool()
         if tool == nil or not tool.IsBGNPointEditor then return end
+
         tool.Points = {}
         for index, v in pairs(points) do
             tool.Points[index] = v.pos
         end
     end)
 
-    hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()	
+    hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
+        local wep = LocalPlayer():GetActiveWeapon()
+        if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+
         local tool = LocalPlayer():GetTool()
         if tool == nil or not tool.IsBGNPointEditor then return end
 
@@ -313,6 +317,7 @@ if CLIENT then
             for _, value in ipairs(tool.RangePoints) do
                 local index = value.index
                 local pos = value.pos
+                local mainZ = pos.z
                 local color
 
                 if index % 2 == 0 then
@@ -324,7 +329,6 @@ if CLIENT then
                 for _, otherValue in ipairs(tool.RangePoints) do
                     local otherPos = otherValue.pos
                     if otherPos:DistToSqr(pos) <= tool.PointToPointLimit ^ 2 then
-                        local mainZ = pos.z
                         local otherZ = otherPos.z
 
                         if mainZ >= otherZ - z_limit and mainZ <= otherZ + z_limit then
