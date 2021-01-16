@@ -51,21 +51,21 @@ function(actor, attacker, target, reaction)
         return
     end
 
-    if reaction ~= 'arrest' then return false end
-
     local police = bgNPC:GetNearByType(attacker:GetPos(), 'police')
-    if IsValid(police) then
-        police:AddTarget(attacker)
-        
-        if police:GetState() == 'arrest' then return end
-
-        police:AddTarget(attacker)
-        police:SetState('arrest')
-
-        return false
-    else
+    if not IsValid(police) then
+        ReactionOverride(actor, reaction)
         bgNPC.arrest_players[attacker].not_arrest = true
+        return
     end
+
+    if not actor:HasTeam('police') then
+        return false
+    end
+
+    police:AddTarget(attacker)
+    police:SetState('arrest')
+
+    return false
 end)
 
 timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()    
@@ -75,7 +75,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
             local state = actor:GetState()
             local data = actor:GetStateData()
 
-            if state == 'arrest'  then
+            if state == 'arrest' then
                 local target = actor:GetNearTarget()
 
                 if actor:TargetsCount() == 0 then
