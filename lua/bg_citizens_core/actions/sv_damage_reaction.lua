@@ -31,7 +31,7 @@ function(attacker, target, dmginfo)
         end
 
         if not IsTargetRay(npc, attacker) and not IsTargetRay(npc, target) then
-            return
+            goto skip
         end
 
         local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction) 
