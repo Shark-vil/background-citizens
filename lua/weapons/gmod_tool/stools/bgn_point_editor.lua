@@ -208,11 +208,12 @@ if CLIENT then
         surface.SetTextPos(30, ScrH() / 2) 
         local type = self:GetCurrentType()
         if type == 'creator' then
-            surface.DrawText('Creating points')
+            surface.DrawText('#tool.bgn_point_editor.vis.creator')
         elseif type == 'remover' then
-            surface.DrawText('Deleting a selected point')
+            surface.DrawText('#tool.bgn_point_editor.vis.remover')
         elseif type == 'last_remover' then
-            surface.DrawText('Delete last point - ' .. tostring(#self.Points))
+            surface.DrawText(language.GetPhrase('tool.bgn_point_editor.vis.last_remover')
+                .. ' - ' .. tostring(#self.Points))
         end
     end
     
@@ -226,37 +227,76 @@ if CLIENT then
         Panel:ClearControls()
     
         Panel:AddControl("Button", {
-            ["Label"] = "Load points",
+            ["Label"] = "#tool.bgn_point_editor.pnl.load_points",
             ["Command"] = "cl_citizens_load_route_from_client",
         })
     
         Panel:AddControl("Button", {
-            ["Label"] = "Save points",
+            ["Label"] = "#tool.bgn_point_editor.pnl.save_points",
             ["Command"] = "cl_citizens_save_route",
         })
     
         Panel:AddControl("Slider", {
-            ["Label"] = "Distance between points limit (Works only on maps with a navigation mesh)",
+            ["Label"] = "#tool.bgn_point_editor.pnl.ptp_dist",
             ["Command"] = "bgn_ptp_distance_limit",
             ["Type"] = "Float",
             ["Min"] = "0",
             ["Max"] = "3000"
         }); Panel:AddControl('Label', {
-            Text = 'Description: You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.'
+            Text = '#tool.bgn_point_editor.pnl.ptp_dist.desc'
         })
     
         Panel:AddControl("Slider", {
-            ["Label"] = "Height limit between points.",
+            ["Label"] = "#tool.bgn_point_editor.pnl.z_limit",
             ["Command"] = "bgn_point_z_limit",
             ["Type"] = "Float",
             ["Min"] = "0",
             ["Max"] = "500"
         }); Panel:AddControl('Label', {
-            Text = 'Description: Height limit between points. Used to correctly define child points.'
+            Text = '#tool.bgn_point_editor.pnl.z_limit.desc'
         })
     end
     
-    language.Add( "tool.bgn_point_editor.name", "Points Editor" )
+    local en_lang = {
+        ['tool.bgn_point_editor.name'] = 'Points Editor',
+        ['tool.bgn_point_editor.desc'] = 'Tool for editing the points of movement of background NPCs.',
+        ['tool.bgn_point_editor.0'] = 'Left click - Interaction. Right click - Change tool type. Reload - Clear all points.',
+        ['tool.bgn_point_editor.pnl.load_points'] = 'Load points',
+        ['tool.bgn_point_editor.pnl.save_points'] = 'Save points',
+        ['tool.bgn_point_editor.pnl.ptp_dist'] = 'Distance between points limit (Works only on maps with a navigation mesh)',
+        ['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Description: You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.',
+        ['tool.bgn_point_editor.pnl.z_limit'] = 'Height limit between points',
+        ['tool.bgn_point_editor.pnl.z_limit.desc'] = 'Description: Height limit between points. Used to correctly define child points.',
+        ['tool.bgn_point_editor.vis.good_place'] = 'Good place',
+        ['tool.bgn_point_editor.vis.lock_pos'] = 'Too far from other points',
+        ['tool.bgn_point_editor.vis.creator'] = 'Creating points',
+        ['tool.bgn_point_editor.vis.remover'] = 'Deleting a selected point',
+        ['tool.bgn_point_editor.vis.last_remover'] = 'Delete last point',
+        ['tool.bgn_point_editor.vis.selected'] = 'Selected',
+    }
+
+    local ru_lang = {
+        ['tool.bgn_point_editor.name'] = 'Редактор точек',
+        ['tool.bgn_point_editor.desc'] = 'Инструмент для редактирования точек перемещения фоновых НПС.',
+        ['tool.bgn_point_editor.0'] = 'Левый клик - Взаимодействие. Правый клик - Сменить тип инструмента. Перезарядка - Очистить все точки.',
+        ['tool.bgn_point_editor.pnl.load_points'] = 'Загрузить точки',
+        ['tool.bgn_point_editor.pnl.save_points'] = 'Сохранить точки',
+        ['tool.bgn_point_editor.pnl.ptp_dist'] = 'Ограничение расстояния между точками (работает только на картах с навигационной сеткой)',
+        ['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Описание: вы можете изменить ограничение «от точки до точки» для инструмента, если на вашей карте есть навигационная сетка.',
+        ['tool.bgn_point_editor.pnl.z_limit'] = 'Ограничение высоты между точками',
+        ['tool.bgn_point_editor.pnl.z_limit.desc'] = 'Описание: Ограничение высоты между точками. Используется для правильного определения дочерних точек.',
+        ['tool.bgn_point_editor.vis.good_place'] = 'Хорошая позиция',
+        ['tool.bgn_point_editor.vis.lock_pos'] = 'Слишком далеко от других точек',
+        ['tool.bgn_point_editor.vis.creator'] = 'Создание точек',
+        ['tool.bgn_point_editor.vis.remover'] = 'Удаление выбранной точки',
+        ['tool.bgn_point_editor.vis.last_remover'] = 'Удалить последнюю точку',
+        ['tool.bgn_point_editor.vis.selected'] = 'Выбрано',
+    }
+
+    local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
+    for k, v in pairs(lang) do
+        language.Add(k, v)
+    end
 
     local clr = Color(255, 225, 0, 200)
     local clr_green = Color(72, 232, 9, 200)
@@ -296,7 +336,7 @@ if CLIENT then
             if tool.Lock then
                 render.DrawSphere(pos, 10, 20, 20, clr)
                 cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-                    draw.SimpleTextOutlined('Too far from other points', 
+                    draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos', 
                         "TargetID", 0, 0, color_white, 
                         TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
                 cam.End3D2D()
@@ -304,7 +344,7 @@ if CLIENT then
                 if tool.SelectedPointId == -1 then
                     render.DrawSphere(pos, 10, 20, 20, clr_green)
                     cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-                        draw.SimpleTextOutlined('Good place', 
+                        draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place', 
                             "TargetID", 0, 0, color_white, 
                             TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
                     cam.End3D2D()
@@ -357,7 +397,7 @@ if CLIENT then
                         TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 
                     if value.index == tool.SelectedPointId then
-                        draw.SimpleTextOutlined('Selected', 
+                        draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected', 
                             "TargetID", 0, 25, color_white, 
                             TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
                     end
