@@ -41,12 +41,7 @@ else
             ['link'] = "https://itpony.ru/background-citizen/en.html"
         }
 
-        if language.GetPhrase( "limit_physgun" ) == "Ограниченная физпушка" then
-            lang = ru_lang
-        else
-            lang = en_lang
-        end
-
+        local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
         local Width = ScrW() - 25
         local Height = ScrH() - 25
 
