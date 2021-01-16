@@ -1,18 +1,14 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
-    local ActorTarget = bgNPC:GetActor(target)
-    local ActorAttacker = bgNPC:GetActor(attacker)
-
     for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
         local reaction = actor:GetReactionForProtect()
+        actor:SetReaction(reaction)
 
-        if actor == ActorTarget then
+        if actor:GetNPC() == target then
             goto skip
         end
 
-        hook.Run('BGN_DamageToAnotherActor', actor, attacker, target, reaction)
-
-        local hook_result = hook.Run('BGN_DamageToAnotherActor', actor, attacker, target, reaction) 
+        local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction) 
         if hook_result ~= nil then
             if isbool(hook_result) and not hook_result then
                 goto skip
@@ -25,14 +21,15 @@ function(attacker, target, dmginfo)
 
         local state = actor:GetState()
         if state == 'idle' or state == 'walk' or state == 'arrest' then
-            actor:SetState(reaction)
+            actor:SetState(actor:GetLastReaction())
+            hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
         end
 
         ::skip::
     end
 end)
 
-hook.Add("BGN_DamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
+hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
     if target:IsNPC() then
         local ActorTarget = bgNPC:GetActor(target)

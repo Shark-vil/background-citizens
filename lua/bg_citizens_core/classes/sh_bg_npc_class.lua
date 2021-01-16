@@ -6,6 +6,7 @@ function BG_NPC_CLASS:Instance(npc, type, data)
     obj.class = npc:GetClass()
     obj.data = data
     obj.type = type
+    obj.reaction = ''
 
     obj.next_anim = nil
     obj.anim_time = 0
@@ -18,6 +19,14 @@ function BG_NPC_CLASS:Instance(npc, type, data)
 
     obj.isBgnActor = true
     obj.targets = {}
+
+    function obj:SetReaction(reaction)
+        self.reaction = reaction
+    end
+
+    function obj:GetLastReaction()
+        return self.reaction
+    end
 
     function obj:GetNPC()
         return self.npc

@@ -24,6 +24,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
             end
 
             reaction = ActorTarget:GetReactionForDamage()
+            ActorTarget:SetReaction(reaction)
 
             local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)
             if hook_result ~= nil then
@@ -40,7 +41,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
             local state = ActorTarget:GetState()
             if state == 'idle' or state == 'walk' or state == 'arrest' then
-                ActorTarget:SetState(reaction)
+                ActorTarget:SetState(ActorTarget:GetLastReaction())
             end
         end
 

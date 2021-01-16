@@ -38,13 +38,17 @@ hook.Add("BGN_OnKilledActor", "BGN_ResettingNPCFromTheArrestTableAfterDeath", fu
     end
 end)
 
-hook.Add("BGN_DamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
+local function ReactionOverride(actor, reaction)
+    actor:SetReaction(reaction == 'arrest' and 'defense' or reaction)
+end
+
+hook.Add("BGN_PreDamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
 function(actor, attacker, target, reaction)
-    if not IsValid(attacker) then return end
-    if not GetConVar('bgn_arrest_mode'):GetBool() or bgNPC.arrest_players[attacker] == nil 
-        or bgNPC.arrest_players[attacker].not_arrest
+    if not IsValid(attacker) or not GetConVar('bgn_arrest_mode'):GetBool() 
+        or bgNPC.arrest_players[attacker] == nil or bgNPC.arrest_players[attacker].not_arrest
     then
-        return 'defense'
+        ReactionOverride(actor, reaction)
+        return
     end
 
     if reaction ~= 'arrest' then return false end
