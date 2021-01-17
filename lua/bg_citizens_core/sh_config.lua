@@ -19,7 +19,7 @@ bgNPC.npc_classes = {
         class = 'npc_citizen',
         fullness = 85,
         team = { 'residents' },
-        weapons = {'weapon_pistol', 'weapon_357'},
+        weapons = { 'weapon_pistol', 'weapon_357' },
         money = { 0, 250 },
         defaultModels = true,
         models = {
@@ -44,11 +44,6 @@ bgNPC.npc_classes = {
             'models/smalls_civilians/pack1/zipper_female_06_f_npc.mdl',
             'models/smalls_civilians/pack1/zipper_female_07_f_npc.mdl',
         },
-        -- Does nothing yet.
-        at_idle = {
-            ['idle'] = 50,
-            ['walk'] = 50
-        },
         at_damage = {
             ['fear'] = 90,
             ['defense'] = 10,
@@ -63,7 +58,7 @@ bgNPC.npc_classes = {
         class = 'npc_citizen',
         fullness = 10,
         team = { 'bandits' },
-        weapons = {'weapon_shotgun', 'weapon_ar2'},
+        weapons = { 'weapon_shotgun', 'weapon_ar2' },
         money = { 0, 500 },
         defaultModels = true,
         models = {
@@ -85,11 +80,6 @@ bgNPC.npc_classes = {
             'models/survivors/npc/tyler.mdl',
             'models/survivors/npc/wolfgang.mdl'
         },
-        -- Does nothing yet.
-        at_idle = {
-            ['idle'] = 50,
-            ['walk'] = 50
-        },
         at_damage = {
             ['defense'] = 100,
         },
@@ -102,13 +92,8 @@ bgNPC.npc_classes = {
         class = 'npc_metropolice',
         fullness = 5,
         team = { 'residents', 'police' },
-        weapons = {'weapon_smg1', 'weapon_pistol'},
+        weapons = { 'weapon_smg1', 'weapon_pistol' },
         money = { 0, 600 },
-        -- Does nothing yet.
-        at_idle = {
-            ['idle'] = 50,
-            ['walk'] = 50
-        },
         at_damage = {
             ['defense'] = 100,
         },

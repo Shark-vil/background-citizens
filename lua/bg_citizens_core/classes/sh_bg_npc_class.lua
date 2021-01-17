@@ -348,9 +348,17 @@ function BG_NPC_CLASS:Instance(npc, type, data)
         if self:GetData().disableStates then return end
         if self.state_lock then return end
 
-        -- if IsValid(self.npc) then
-        --     print(self.npc:EntIndex(), self.type, state)
-        -- end
+        local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
+        if hook_result ~= nil then
+            if isbool(hook_result) and not hook_result then
+                return
+            end
+            
+            if istable(hook_result) and hook_result.state ~= nil then
+                state = hook_result.state
+                data = hook_result.data
+            end
+        end
 
         if SERVER and self.state_data.state ~= state and math.random(0, 10) <= 1 then
             local target = self:GetNearTarget()
