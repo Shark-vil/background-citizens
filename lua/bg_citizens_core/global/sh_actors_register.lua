@@ -3,9 +3,6 @@ if CLIENT then
         if IsValid(npc) then
             local actor = BG_NPC_CLASS:Instance(npc, npcType, bgNPC.npc_classes[npcType])
             bgNPC:AddNPC(actor)
-            if actor:GetState() == 'none' then
-                actor:Walk()
-            end
         end
     end)
 else
@@ -135,6 +132,7 @@ else
                     end
             
                     npc:Spawn()
+                    bgNPC:TemporaryVectorVisibility(npc, 3)
             
                     if data.models then
                         local model = table.Random(data.models)
@@ -163,13 +161,16 @@ else
                     end
             
                     local actor = BG_NPC_CLASS:Instance(npc, type, data)
-                    actor:Walk()
-            
                     bgNPC:AddNPC(actor)
-            
-                    timer.Simple(1, function()
+                    
+                    timer.Simple(1.5, function()
                         if not IsValid(npc) then return end
                         net.InvokeAll('bgn_add_actor_from_client', type, npc)
+
+                        timer.Simple(0.5, function()
+                            if not IsValid(npc) then return end
+                            actor:Walk()
+                        end)
                     end)
             
                     hook.Run('BGN_PostSpawnNPC', actor)

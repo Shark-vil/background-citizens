@@ -43,6 +43,7 @@ if CLIENT then
             if actor ~= nil then
                 tool.Actor = actor
                 tool.Target = actor:GetNPC()
+                surface.PlaySound('common/wpn_select.wav')
             end
         end
     end)
@@ -56,42 +57,48 @@ if CLIENT then
         surface.PlaySound('buttons/blip1.wav')
     end)
 
-    function TOOL:DrawHUD()
-        if self.Actor == nil or not IsValid(self.Target) then return end
+    hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
+        local tool = LocalPlayer():GetTool()
+        if tool == nil or not tool.IsBGNDebuggerEditor then return end
+
+        if tool.Actor == nil or not IsValid(tool.Target) then return end
 
         local ypos = ScrH() / 3
         local add = 25
 
+        surface.SetDrawColor(0, 0, 0, 150)
+        surface.DrawRect(25, ypos - 10, 240, 250)
+
         surface.SetFont("Trebuchet18")
         surface.SetTextColor(255, 255, 255)
         surface.SetTextPos(30, ypos) 
-        surface.DrawText('State - ' .. self.Actor:GetState())
+        surface.DrawText('State - ' .. tool.Actor:GetState())
 
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Is animated - ' .. tostring(self.Actor.is_animated))
+        surface.DrawText('Is animated - ' .. tostring(tool.Actor.is_animated))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Animation time - ' .. tostring(self.Actor.anim_time_normal))
+        surface.DrawText('Animation time - ' .. tostring(tool.Actor.anim_time_normal))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Animation loop time - ' .. tostring(self.Actor.loop_time_normal))
+        surface.DrawText('Animation loop time - ' .. tostring(tool.Actor.loop_time_normal))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Animation is loop - ' .. tostring(self.Actor.anim_is_loop))
+        surface.DrawText('Animation is loop - ' .. tostring(tool.Actor.anim_is_loop))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Animation name - ' .. tostring(self.Actor.anim_name))
+        surface.DrawText('Animation name - ' .. tostring(tool.Actor.anim_name))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('Target count - ' .. tostring(#self.Actor.targets))
+        surface.DrawText('Target count - ' .. tostring(#tool.Actor.targets))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('NPC schedule - ' .. tostring(self.Actor.npc_schedule))
+        surface.DrawText('NPC schedule - ' .. tostring(tool.Actor.npc_schedule))
         ypos = ypos + add
         surface.SetTextPos(30, ypos)
-        surface.DrawText('NPC state - ' .. tostring(self.Actor.npc_state))
-    end
+        surface.DrawText('NPC state - ' .. tostring(tool.Actor.npc_state))
+    end)
     
     function TOOL:UpdateControlPanel()
         local Panel = controlpanel.Get("bgn_debugger")

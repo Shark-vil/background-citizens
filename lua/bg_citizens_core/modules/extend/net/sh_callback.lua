@@ -31,31 +31,31 @@ local function network_callback(len, ply)
 end
 
 if SERVER then
-    util.AddNetworkString('sv_qsystem_callback')
-    util.AddNetworkString('cl_qsystem_callback')
+    util.AddNetworkString('sv_network_rpc_callback')
+    util.AddNetworkString('cl_network_rpc_callback')
 
-    net.Receive('sv_qsystem_callback', network_callback)
+    net.Receive('sv_network_rpc_callback', network_callback)
 else
-    net.Receive('cl_qsystem_callback', network_callback)
+    net.Receive('cl_network_rpc_callback', network_callback)
 end
 
-net.Invoke = function(name, ply, ...)    
+net.Invoke = function(name, ply, ...)
     if SERVER then
-        net.Start('cl_qsystem_callback')
+        net.Start('cl_network_rpc_callback')
         net.WriteString(name)
         net.WriteType({ ... })
         net.Send(ply)
     else
-        net.Start('sv_qsystem_callback')
+        net.Start('sv_network_rpc_callback')
         net.WriteString(name)
         net.WriteType({ ... })
         net.SendToServer()
     end
 end
 
-net.InvokeAll = function(name, ...)    
+net.InvokeAll = function(name, ...)
     if SERVER then
-        net.Start('cl_qsystem_callback')
+        net.Start('cl_network_rpc_callback')
         net.WriteString(name)
         net.WriteType({ ... })
         net.Broadcast()

@@ -8,6 +8,11 @@
 -- rp_southside
 bgNPC.loadPresets = true
 
+-- Optional parameter to synchronize animation timing with clients.
+-- Requires a lot of network bandwidth.
+-- Use this only when necessary.
+bgNPC.syncUpdateAnimationForClient = false
+
 -- NPC classes that fill the streets
 bgNPC.npc_classes = {
     ['citizen'] = {
