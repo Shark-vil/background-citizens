@@ -17,11 +17,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
     RunConsoleCommand('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit)
     RunConsoleCommand('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc)
 
-    local exists_types = {}
-    for k, v in ipairs(bgNPC.npc_classes) do
-        if not table.HasValue(exists_types, v.type) then
-            RunConsoleCommand('bgn_npc_type_' .. v.type, 1)
-            table.insert(exists_types, v.type)
-        end
+    for npcType, v in pairs(bgNPC.npc_classes) do
+        RunConsoleCommand('bgn_npc_type_' .. npcType, 1)
     end
 end)

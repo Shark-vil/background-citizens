@@ -1,23 +1,41 @@
 local movement_map = {}
 local movement_ignore = {}
+local dist_limit
+
+local function UpdateDistLimit()
+    dist_limit = 250000
+    if navmesh.IsLoaded() then
+        dist_limit = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
+    end
+end
+
+UpdateDistLimit()
 
 hook.Add('PostCleanupMap', 'BGN_CleanupNPCsMovementMaps', function()
     movement_map = {}
     movement_ignore = {}
+    UpdateDistLimit()
 end)
+
+local function IsIgnorePosition(npc, pos)
+    if movement_ignore[npc] ~= nil then
+        for _, data in ipairs(movement_ignore[npc]) do
+            if data.resetTime > CurTime() and data.pos == pos then
+                return true
+            end
+        end
+    end
+    return false
+end
 
 local function getPositionsInRadius(npc)
     local npc_pos = npc:GetPos()
     local radius_positions = {}
 
     for _, v in ipairs(bgNPC.points) do
-        if v.pos:DistToSqr(npc_pos) <= 250000 then -- 500 ^ 2
-            if movement_ignore[npc] ~= nil then
-                for _, data in ipairs(movement_ignore[npc]) do
-                    if data.resetTime > CurTime() and data.pos == v.pos then
-                        goto skip
-                    end
-                end
+        if v.pos:DistToSqr(npc_pos) <= dist_limit then
+            if IsIgnorePosition(npc, v.pos) then
+                goto skip
             end
 
             table.insert(radius_positions, v)
@@ -29,40 +47,64 @@ local function getPositionsInRadius(npc)
     return radius_positions
 end
 
-local function updateMovement(npc, positions)
+local function updateMovement(npc)
+    local positions = getPositionsInRadius(npc)
+    if #positions == 0 then return nil end
+
     local v, key = table.Random(positions)
 
     movement_map[npc] = {
         pos = v.pos,
         index = key,
-        resetTime = CurTime() + 6
+        resetTime = CurTime() + 10
     }
 
     return movement_map[npc]
 end
 
-local function nextMovement(npc, positions)
+local function nextMovement(npc)
     if movement_map[npc] ~= nil then
         local map = movement_map[npc]
         local parents = bgNPC.points[map.index].parents
 
         if #parents ~= 0 then
-            local index = table.Random(parents)
-            local pos = bgNPC.points[index].pos
-            local dist = movement_map[npc].pos:DistToSqr(pos)
+            local npc_pos = npc:GetPos()
 
-            if dist <= 250000 and bgNPC:NPCIsViewVector(npc, pos) then -- 500 ^ 2
-                movement_map[npc] = {
-                    pos = pos,
-                    index = index,
-                    resetTime = CurTime() + 6
-                }
+            for _, index in ipairs(parents) do
+                local pos = bgNPC.points[index].pos
 
-                return movement_map[npc]
+                if IsIgnorePosition(npc, pos) then
+                    goto skip
+                end
+
+                if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
+                    local other_entities = ents.FindInSphere(pos, 100)
+                    local other_npc_count = 0
+                    for _, ent in ipairs(other_entities) do
+                        if ent:IsNPC() and ent ~= npc then
+                            other_npc_count = other_npc_count + 1
+                        end
+
+                        if other_npc_count > 3 then
+                            goto skip
+                        end
+                    end
+
+                    movement_map[npc] = {
+                        pos = pos,
+                        index = index,
+                        resetTime = CurTime() + 10
+                    }
+
+                    return movement_map[npc]
+                end
+
+                ::skip::
             end
         end
     end
-    return updateMovement(npc, positions)
+
+    return nil
 end
 
 hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
@@ -81,67 +123,60 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
             local npc = actor:GetNPC()
             if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
                 local map = movement_map[npc]
-                local positions = getPositionsInRadius(npc)
                 local data = actor:GetStateData()
+                data.schedule = data.schedule or SCHED_FORCED_GO
 
                 if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
                     goto skip
                 end
 
-                if #positions ~= 0 then
-                    if map == nil then
-                        map = updateMovement(npc, positions)
+                if map == nil then
+                    map = updateMovement(npc)
+
+                    npc:SetSaveValue("m_vecLastPosition", map.pos)
+                    npc:SetSchedule(data.schedule)
+
+                    movement_ignore[npc] = movement_ignore[npc] or {}
+                    table.insert(movement_ignore[npc], {
+                        pos = map.pos,
+                        resetTime = CurTime() + 60
+                    })
+                else
+                    local getNewPos = false
+
+                    if table.HasValue(ents.FindInSphere(map.pos, 5), npc) then
+                        getNewPos = true
+                    elseif map.resetTime < CurTime() then
+                        getNewPos = true
+                    end
+
+                    if getNewPos then
+                        if math.random(0, 100) <= 10 then
+                            actor:Idle(10)
+                            return
+                        end
+
+                        map = nextMovement(npc)
+                        if map == nil then
+                            map = updateMovement(npc)
+                            if map == nil then
+                                MsgN('Unable to find a good position to move.')
+                                goto skip
+                            end
+                        end
 
                         npc:SetSaveValue("m_vecLastPosition", map.pos)
                         npc:SetSchedule(data.schedule)
-                        data.startWalkTime = CurTime()
-                        data.startWalkPos = npc:GetPos()
 
                         movement_ignore[npc] = movement_ignore[npc] or {}
                         table.insert(movement_ignore[npc], {
                             pos = map.pos,
                             resetTime = CurTime() + 60
                         })
-                    else
-                        local getNewPos = false
-
-                        if map.resetTime < CurTime() then
-                            getNewPos = true
-                        elseif table.HasValue(ents.FindInSphere(map.pos, 10), npc) then
-                            getNewPos = true
-                        end
-
-                        if data.startWalkTime ~= nil and data.startWalkTime + 3 < CurTime() then
-                            if npc:GetPos():DistToSqr(data.startWalkPos) < 10 ^ 2 then
-                                getNewPos = true
-                            else
-                                data.startWalkTime = nil
-                            end
-                        end
-
-                        if getNewPos then
-                            if math.random(0, 100) <= 10 then
-                                actor:Idle(10)
-                                return
-                            end
-
-                            map = nextMovement(npc, positions)
-
-                            npc:SetSaveValue("m_vecLastPosition", map.pos)
-                            npc:SetSchedule(data.schedule)
-                            data.startWalkTime = CurTime()
-                            data.startWalkPos = npc:GetPos()
-
-                            movement_ignore[npc] = movement_ignore[npc] or {}
-                            table.insert(movement_ignore[npc], {
-                                pos = map.pos,
-                                resetTime = CurTime() + 60
-                            })
-                        end
                     end
-
-                    hook.Run('BGN_PostStollNPC', npc, map)
                 end
+
+                hook.Run('BGN_PostStollNPC', npc, map)
 
                 ::skip::
             end

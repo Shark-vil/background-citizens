@@ -27,14 +27,11 @@ timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
                 else
                     if data.calling_time < CurTime() then
                         for _, enemy in pairs(actor.targets) do
-                            if IsValid(enemy) and not table.HasValue(bgNPC.wanted, enemy) then
-                                local ActorEnemy = bgNPC:GetActor(enemy)
-                                if ActorEnemy == nil or ActorEnemy:GetType() ~= 'police' then
-                                    if bgNPC:IsWanted(enemy) then
-                                        bgNPC:UpdateWanted(enemy)
-                                    else
-                                        bgNPC:AddWanted(enemy)
-                                    end
+                            if IsValid(enemy) then
+                                if bgNPC:IsWanted(enemy) then
+                                    bgNPC:UpdateWanted(enemy)
+                                else
+                                    bgNPC:AddWanted(enemy)
                                 end
                             end
                         end

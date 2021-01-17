@@ -42,14 +42,16 @@ function bgNPC:GetNear(center)
     
     for _, actor in ipairs(self:GetAll()) do
         local npc = actor:GetNPC()
-        if dist == nil then
-            dist = npc:GetPos():DistToSqr(center)
-            near_actor = actor
-        else
-            local new_dist = npc:GetPos():DistToSqr(center)
-            if new_dist < dist then
-                dist = new_dist
+        if IsValid(npc) then
+            if dist == nil then
+                dist = npc:GetPos():DistToSqr(center)
                 near_actor = actor
+            else
+                local new_dist = npc:GetPos():DistToSqr(center)
+                if new_dist < dist then
+                    dist = new_dist
+                    near_actor = actor
+                end
             end
         end
     end
@@ -63,8 +65,8 @@ function bgNPC:GetNearByType(center, type)
     local dist = nil
     
     for _, actor in ipairs(self:GetAll()) do
-        if actor:GetType() == type then
-            local npc = actor:GetNPC()
+        local npc = actor:GetNPC()
+        if actor:GetType() == type and IsValid(npc) then
             if dist == nil then
                 dist = npc:GetPos():DistToSqr(center)
                 near_actor = actor

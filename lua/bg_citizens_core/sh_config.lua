@@ -8,14 +8,18 @@
 -- rp_southside
 bgNPC.loadPresets = true
 
+-- Optional parameter to synchronize animation timing with clients.
+-- Requires a lot of network bandwidth.
+-- Use this only when necessary.
+bgNPC.syncUpdateAnimationForClient = false
+
 -- NPC classes that fill the streets
 bgNPC.npc_classes = {
-    {
+    ['citizen'] = {
         class = 'npc_citizen',
-        type = 'citizen',
         fullness = 85,
         team = { 'residents' },
-        weapons = {'weapon_pistol', 'weapon_357'},
+        weapons = { 'weapon_pistol', 'weapon_357' },
         money = { 0, 250 },
         defaultModels = true,
         models = {
@@ -50,12 +54,11 @@ bgNPC.npc_classes = {
             ['calling_police'] = 10,
         }
     },
-    {
+    ['gangster'] = {
         class = 'npc_citizen',
-        type = 'gangster',
         fullness = 10,
         team = { 'bandits' },
-        weapons = {'weapon_shotgun', 'weapon_ar2'},
+        weapons = { 'weapon_shotgun', 'weapon_ar2' },
         money = { 0, 500 },
         defaultModels = true,
         models = {
@@ -85,12 +88,11 @@ bgNPC.npc_classes = {
             ['defense'] = 5,
         }
     },
-    {
+    ['police'] = {
         class = 'npc_metropolice',
-        type = 'police',
         fullness = 5,
         team = { 'residents', 'police' },
-        weapons = {'weapon_smg1', 'weapon_pistol'},
+        weapons = { 'weapon_smg1', 'weapon_pistol' },
         money = { 0, 600 },
         at_damage = {
             ['defense'] = 100,

@@ -1,15 +1,107 @@
 BG_NPC_CLASS = {}
 
-function BG_NPC_CLASS:Instance(npc, data)
+if CLIENT then
+    net.RegisterCallback('bgn_actor_set_state_client', function(ply, npc, state, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor:SetState(state, data)
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.reaction = data.reaction
+            actor.anim_time = data.anim_time
+            actor.loop_time = data.loop_time
+            actor.anim_is_loop = data.anim_is_loop
+            actor.is_animated = data.is_animated
+            actor.old_state = data.old_state
+            actor.state_lock = data.state_lock
+            actor.targets = data.targets
+            actor.state_data = data.state_data
+            actor.npc_schedule = data.npc_schedule
+            actor.npc_state = data.npc_state
+            actor.anim_name = data.anim_name
+            actor.anim_time_normal = data.anim_time_normal
+            actor.loop_time_normal = data.loop_time_normal
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_reaction_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.reaction = data.reaction
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_schedule_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.npc_schedule = data.npc_schedule
+            actor.npc_state = data.npc_state
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.targets = data.targets
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.old_state = data.old_state
+            actor.state_lock = data.state_lock
+            actor.state_data = data.state_data
+        end
+    end)
+
+    net.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, npc, data)
+        if not IsValid(npc) then return end
+        local actor = bgNPC:GetActor(npc)
+        if actor ~= nil then
+            actor.anim_time = data.anim_time
+            actor.loop_time = data.loop_time
+            actor.anim_is_loop = data.anim_is_loop
+            actor.is_animated = data.is_animated
+            actor.anim_name = data.anim_name
+            actor.anim_time_normal = data.anim_time_normal
+            actor.loop_time_normal = data.loop_time_normal
+        end
+    end)
+end
+
+function BG_NPC_CLASS:Instance(npc, type, data)
     local obj = {}
     obj.npc = npc
     obj.class = npc:GetClass()
     obj.data = data
-    obj.type = data.type
+    obj.type = type
+    obj.reaction = ''
 
-    obj.next_anim = nil
+    obj.state_data = {
+        state = 'none',
+        data = {}
+    }
+
+    if SERVER then
+        obj.next_anim = nil
+        obj.sync_animation_delay = 0
+    end
+
     obj.anim_time = 0
+    obj.anim_time_normal = 0
     obj.loop_time = 0
+    obj.loop_time_normal = 0
     obj.anim_is_loop = false
     obj.anim_name = ''
     obj.is_animated = false
@@ -18,6 +110,106 @@ function BG_NPC_CLASS:Instance(npc, data)
 
     obj.isBgnActor = true
     obj.targets = {}
+
+    obj.npc_schedule = -1
+    obj.npc_state = -1
+
+    function obj:SyncData()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_client', npc, {
+            anim_name = self.anim_name,
+            reaction = self.reaction,
+            anim_time = self.anim_time,
+            loop_time = self.loop_time,
+            anim_is_loop = self.anim_is_loop,
+            is_animated = self.is_animated,
+            old_state = self.old_state,
+            state_lock = self.state_lock,
+            targets = self.targets,
+            state_data = self.state_data,
+            npc_schedule = self.npc_schedule,
+            npc_state = self.npc_state,
+            anim_time_normal = self.anim_time_normal,
+            loop_time_normal = self.loop_time_normal,
+        })
+    end
+
+    function obj:SyncReaction()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
+            reaction = self.reaction,
+        })
+    end
+
+    function obj:SyncSchedule()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
+            npc_schedule = self.npc_schedule,
+            npc_state = self.npc_state,
+        })
+    end
+
+    function obj:SyncTargets()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
+            targets = self.targets,
+        })
+    end
+
+    function obj:SyncState()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_state_client', npc, {
+            old_state = self.old_state,
+            state_lock = self.state_lock,
+            state_data = self.state_data,
+        })
+    end
+
+    function obj:SyncAnimation()
+        if CLIENT then return end
+
+        local npc = self:GetNPC()
+        if not IsValid(npc) then return end
+
+        net.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
+            anim_name = self.anim_name,
+            anim_time = self.anim_time,
+            loop_time = self.loop_time,
+            anim_is_loop = self.anim_is_loop,
+            is_animated = self.is_animated,
+            anim_time_normal = self.anim_time_normal,
+            loop_time_normal = self.loop_time_normal,
+        })
+    end
+
+    function obj:SetReaction(reaction)
+        self.reaction = reaction
+        self:SyncReaction()
+    end
+
+    function obj:GetLastReaction()
+        return self.reaction
+    end
 
     function obj:GetNPC()
         return self.npc
@@ -44,26 +236,39 @@ function BG_NPC_CLASS:Instance(npc, data)
         
         self.npc:SetNPCState(NPC_STATE_IDLE)
         self.npc:ClearSchedule()
+
+        self.npc_schedule = self.npc:GetCurrentSchedule()
+        self.npc_state = self.npc:GetNPCState()
+
+        self:SyncSchedule()
     end
 
     function obj:AddTarget(ent)
         if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
             table.insert(self.targets, ent)
+
+            self:SyncTargets()
         end
     end
 
-    function obj:RemoveTarget(ent)
+    function obj:RemoveTarget(ent, index)
+        local count = #self.targets
+
         if IsValid(ent) and IsValid(self.npc) and ent:IsPlayer() then
             self.npc:AddEntityRelationship(ent, D_NU, 99)
         end
-        table.RemoveByValue(self.targets, ent)
-        if #self.targets == 0 then
-            if math.random(0, 10) > 4 then
-                self:Walk()
-            else
-                self:Idle()
-            end
+
+        if index ~= nil and isnumber(index) then
+            table.remove(self.targets, index)
+        else
+            table.RemoveByValue(self.targets, ent)
         end
+
+        if count > 0 and #self.targets <= 0 then
+            hook.Run('BGN_ResetTargetsForActor', self)
+        end
+
+        self:SyncTargets()
     end
 
     function obj:RemoveAllTargets()
@@ -104,18 +309,20 @@ function BG_NPC_CLASS:Instance(npc, data)
         for i = #self.targets, 1, -1 do
             local target = self.targets[i]
             if not IsValid(target) then
-                table.remove(self.targets, i)
+                self:RemoveTarget(nil, i)
             elseif target:IsPlayer() and target:Health() <= 0 then
-                self:GetNPC():AddEntityRelationship(target, D_NU, 99)
-                table.remove(self.targets, i)
+                self:RemoveTarget(nil, i)
             end
         end
+
         return self.targets
     end
 
     function obj:StateLock(lock)
         lock = lock or false
         self.state_lock = lock
+
+        self:SyncState()
     end
 
     function obj:IsStateLock()
@@ -127,12 +334,12 @@ function BG_NPC_CLASS:Instance(npc, data)
         if self.state_lock then return end
         
         if self.old_state ~= nil then
-            self.npc.bgNPCtate = self.old_state
+            self.state_data = self.old_state
             self.old_state = nil
 
             if IsValid(self.npc) then
                 hook.Run('BGN_SetNPCState', self, 
-                    self.npc.bgNPCtate.state, self.npc.bgNPCtate.data)
+                    self.state_data.state, self.state_data.data)
             end
         end
     end
@@ -141,18 +348,19 @@ function BG_NPC_CLASS:Instance(npc, data)
         if self:GetData().disableStates then return end
         if self.state_lock then return end
 
-        if SERVET then
-            self:ResetSequence()
-            self:ClearSchedule()
+        local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
+        if hook_result ~= nil then
+            if isbool(hook_result) and not hook_result then
+                return
+            end
+            
+            if istable(hook_result) and hook_result.state ~= nil then
+                state = hook_result.state
+                data = hook_result.data
+            end
         end
 
-        -- if IsValid(self.npc) then
-        --     print(self.npc:EntIndex(), self.type, state)
-        -- end
-
-        if SERVER and (self.npc.bgNPCtate == nil or self.npc.bgNPCtate.state ~= state) 
-            and math.random(0, 10) <= 1 
-        then
+        if SERVER and self.state_data.state ~= state and math.random(0, 10) <= 1 then
             local target = self:GetNearTarget()
             if IsValid(target) and target:GetPos():DistToSqr(self.npc:GetPos()) < 250000 then
                 if state == 'fear' then
@@ -190,15 +398,22 @@ function BG_NPC_CLASS:Instance(npc, data)
             end
         end
 
-        self.old_state = self.npc.bgNPCtate
-        self.npc.bgNPCtate = { state = state, data = (data or {}) }
+        self.old_state = self.state_data
+        self.state_data = { state = state, data = (data or {}) }
+
+        if SERVER then
+            net.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
+                self.state_data.state, self.state_data.data)
+
+            self:ResetSequence()
+        end
 
         if IsValid(self.npc) then
             hook.Run('BGN_SetNPCState', self, 
-                self.npc.bgNPCtate.state, self.npc.bgNPCtate.data)
+                self.state_data.state, self.state_data.data)
         end
-
-        return self.npc.bgNPCtate
+        
+        return self.state_data
     end
 
     function obj:Walk()
@@ -249,25 +464,39 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:UpdateStateData(data)
-        self.npc.bgNPCtate.data = data
+        self.state_data.data = data
     end
 
     function obj:HasState(state)
         return (self:GetState() == state)
     end
 
-    function obj:GetState()
-        if self.npc.bgNPCtate == nil then
+    function obj:GetOldState()
+        if self.old_state == nil then
             return 'none'
         end
-        return self.npc.bgNPCtate.state
+        return self.old_state.state
+    end
+
+    function obj:GetOldStateData()
+        if self.old_state == nil then
+            return {}
+        end
+        return self.old_state.data
+    end
+
+    function obj:GetState()
+        if self.state_data == nil then
+            return 'none'
+        end
+        return self.state_data.state
     end
 
     function obj:GetStateData()
-        if self.npc.bgNPCtate == nil then
+        if self.state_data == nil then
             return {}
         end
-        return self.npc.bgNPCtate.data
+        return self.state_data.data
     end
 
     function obj:GetDistantPointInRadius(pos, radius)
@@ -357,6 +586,11 @@ function BG_NPC_CLASS:Instance(npc, data)
     function obj:SetSchedule(schedule)
         if self:IsSequenceFinished() then
             self.npc:SetSchedule(schedule)
+            
+            self.npc_schedule = self.npc:GetCurrentSchedule()
+            self.npc_state = self.npc:GetNPCState()
+
+            self:SyncSchedule()
         end
     end
 
@@ -382,24 +616,33 @@ function BG_NPC_CLASS:Instance(npc, data)
             self.anim_name = sequence_name
             if loop_time ~= nil and loop_time ~= 0 then
                 self.loop_time = RealTime() + loop_time
+                self.loop_time_normal = self.loop_time - RealTime()
             else
                 self.loop_time = 0
             end
             local sequence = self.npc:LookupSequence(sequence_name)
             self.anim_time = RealTime() + self.npc:SequenceDuration(sequence)
+            self.anim_time_normal = self.anim_time - RealTime()
             self.is_animated = true
+
+            self.npc_schedule = SCHED_SLEEP
+            self.npc_state = NPC_STATE_SCRIPT
             
             self.npc:SetNPCState(NPC_STATE_SCRIPT)
             self.npc:SetSchedule(SCHED_SLEEP)
             self.npc:ResetSequenceInfo()
             self.npc:ResetSequence(sequence)
 
+            self.npc_schedule = self.npc:GetCurrentSchedule()
+            self.npc_state = self.npc:GetNPCState()
+
             hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
-            -- print(tostring(self.anim_is_loop) .. ' - ' .. self.anim_name)
+            self:SyncAnimation()
 
             return true
         end
+
         return false
     end
 
@@ -423,6 +666,15 @@ function BG_NPC_CLASS:Instance(npc, data)
     function obj:IsSequenceLoopFinished()
         if self:IsLoopSequence() then
             if self.loop_time == 0 then return false end
+            
+            if self.loop_time_normal > 0 then
+                self.loop_time_normal = self.loop_time - RealTime()
+                if bgNPC.syncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
+                    self:SyncAnimation()
+                    self.sync_animation_delay = CurTime() + 0.5
+                end
+            end
+
             return self.loop_time < RealTime()
         end
         return true
@@ -433,27 +685,43 @@ function BG_NPC_CLASS:Instance(npc, data)
     end
 
     function obj:IsSequenceFinished()
+        if self.anim_time_normal > 0 then
+            self.anim_time_normal = self.anim_time - RealTime()
+            if bgNPC.syncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
+                self:SyncAnimation()
+                self.sync_animation_delay = CurTime() + 0.5
+            end
+        end
+
         return self.anim_time <= RealTime()
+    end
+
+    function obj:PlayNextStaticSequence()
+        if self.next_anim ~= nil and self.next_anim.sequence_name ~= self.anim_name then
+
+            self:PlayStaticSequence(self.next_anim.sequence_name,
+                self.next_anim.loop, self.next_anim.loop_time)
+
+            if self.next_anim.action ~= nil then
+                self.next_anim.action(self)
+            end
+
+            self.next_anim = nil
+            return true
+        end
+
+        return false
     end
 
     function obj:ResetSequence()
         -- self.anim_name = ''
         -- self.anim_time = 0
         -- self.anim_is_loop = false
-        
-        if self.next_anim ~= nil and self.next_anim.sequence_name ~= self.anim_name then
-            self:PlayStaticSequence(self.next_anim.sequence_name,
-                self.next_anim.loop, self.next_anim.loop_time)
-            if self.next_anim.action ~= nil then
-                self.next_anim.action(self)
-            end
-
-            self.next_anim = nil
-            return
-        end
 
         self.is_animated = false
         self.next_anim = nil
+        
+        self:SyncAnimation()
         self:ClearSchedule()
     end
 
@@ -464,26 +732,4 @@ function BG_NPC_CLASS:Instance(npc, data)
     npc.isActor = true
 
     return obj
-end
-
-if CLIENT then
-    net.RegisterCallback('bgn_change_npc_state', function(ply, npc, state, data)
-        if IsValid(npc) then
-            local actor = bgNPC:GetActor(npc)
-            if actor ~= nil then
-                actor:SetState(state, data)
-            end
-        end
-    end)
-else
-    hook.Add("BGN_SetNPCState", "BGN_SyncChangedNPCState", function(actor, state, data)
-        local npc = actor:GetNPC()
-        if IsValid(npc) then
-            bgNPC:TemporaryVectorVisibility(npc, 3)
-            timer.Simple(1.5, function()
-                if not IsValid(npc) then return end
-                net.InvokeAll('bgn_change_npc_state', npc, state, data)
-            end)
-        end
-    end)
 end
