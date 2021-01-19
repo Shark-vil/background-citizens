@@ -48,11 +48,38 @@ function bgNPC:SetActorWeapon(actor, weapon_class)
     end
 end
 
-function bgNPC:IsEnemyTeam(npc, team_name)
+function bgNPC:IsEnemyTeam(target, team_name)
     for _, actor in ipairs(self:GetAll()) do
-        if IsValid(npc) and IsValid(actor:GetNPC()) then
-            if actor:HasTeam(team_name) and npc:Disposition(actor:GetNPC()) == D_HT then
-                return true
+        local npc = actor:GetNPC()
+        if IsValid(target) and IsValid(npc) then
+            if actor:HasTeam(team_name) then
+                if target:IsNPC() and (target:Disposition(npc) == D_HT 
+                    or npc:Disposition(target) == D_HT)
+                then
+                    return true
+                elseif target:IsPlayer() and actor:HasTarget(target) then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function bgNPC:IsEnemyTeams(target, team_table)
+    for _, actor in ipairs(self:GetAll()) do
+        local npc = actor:GetNPC()
+        if IsValid(target) and IsValid(npc) then
+            for _, team_name in ipairs(team_table) do
+                if actor:HasTeam(team_name) then
+                    if target:IsNPC() and (target:Disposition(npc) == D_HT 
+                        or npc:Disposition(target) == D_HT)
+                    then
+                        return true
+                    elseif target:IsPlayer() and actor:HasTarget(target) then
+                        return true
+                    end
+                end
             end
         end
     end

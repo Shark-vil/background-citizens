@@ -74,9 +74,7 @@ function(actor, attacker, target, reaction)
                 end
             end
         end
-    end
-
-    if target:IsPlayer() then
+    elseif target:IsPlayer() then
         if actor:HasTeam('player') then
             actor:AddTarget(attacker)
             return
@@ -84,7 +82,8 @@ function(actor, attacker, target, reaction)
 
         local ActorAttacker = bgNPC:GetActor(attacker)
         if ActorAttacker ~= nil then
-            if actor:HasTeam(ActorAttacker) then
+            local team = ActorAttacker:GetData().team
+            if actor:HasTeam(ActorAttacker) and bgNPC:IsEnemyTeams(target, team) then
                 actor:AddTarget(target)
                 return
             end
