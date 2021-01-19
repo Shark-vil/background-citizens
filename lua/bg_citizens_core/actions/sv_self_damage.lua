@@ -19,6 +19,8 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
                 end
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
                 if ActorTarget:HasTeam(ActorAttacker) then
+                    ActorTarget:RemoveTarget(attacker)
+                    ActorAttacker:RemoveTarget(target)
                     return true
                 end
             end
