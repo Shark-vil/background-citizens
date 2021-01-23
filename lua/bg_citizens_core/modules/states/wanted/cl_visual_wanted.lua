@@ -13,6 +13,11 @@ hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
 end)
 
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
+    local is_draw_text = GetConVar('bgn_wanted_hud_text'):GetBool()
+    local is_draw_stars = GetConVar('bgn_wanted_hud_stars'):GetBool()
+
+    if not is_draw_text and not is_draw_stars then return end
+
     local wanted_list = asset:GetAllWanted()
 
     if table.Count(wanted_list) == 0 then return end
@@ -22,29 +27,33 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 
     local c_Wanted = asset:GetWanted(LocalPlayer())
     
-    surface.SetFont("Trebuchet24")
-    surface.SetTextColor(255, 0, 0)
-    surface.SetTextPos(30, 30)
+    if is_draw_text then
+        surface.SetFont("Trebuchet24")
+        surface.SetTextColor(255, 0, 0)
+        surface.SetTextPos(30, 30)
 
-    local wanted_text
-    local time = c_Wanted.wait_time
-    if time > 60 then
-        time = math.Round(time / 60)
-        wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_m'], '%time%', time)
-    else
-        wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_s'], '%time%', time)
+        local wanted_text
+        local time = c_Wanted.wait_time
+        if time > 60 then
+            time = math.Round(time / 60)
+            wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_m'], '%time%', time)
+        else
+            wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_s'], '%time%', time)
+        end
+
+        surface.DrawText(wanted_text)
     end
 
-    surface.DrawText(wanted_text)
+    if is_draw_stars then
+        local x = 35
+        local x_update = x
 
-    local x = 35
-    local x_update = x
-
-    for i = 1, c_Wanted.level do
-        surface.SetDrawColor(255, 255, 255, 255)
-        surface.SetMaterial(bgNPC.cfg.wanted.texture['wanted_star'])
-        surface.DrawTexturedRect(x_update, 60, 30, 30)
-        x_update = x_update + 40
+        for i = 1, c_Wanted.level do
+            surface.SetDrawColor(255, 255, 255, 255)
+            surface.SetMaterial(bgNPC.cfg.wanted.texture['wanted_star'])
+            surface.DrawTexturedRect(x_update, 60, 30, 30)
+            x_update = x_update + 40
+        end
     end
 end)
 

@@ -137,6 +137,12 @@ en_lang['bgn.settings.states.bgn_enable_wanted_mode'] = 'Enable wanted mode'
 en_lang['bgn.settings.states.bgn_enable_wanted_mode.description'] = 'Description: enables or disables wanted mode.'
 en_lang['bgn.settings.states.bgn_wanted_time'] = 'Wanted time'
 en_lang['bgn.settings.states.bgn_wanted_time.description'] = 'Description: the time you need to go through to remove the wanted level.'
+en_lang['bgn.settings.states.bgn_wanted_level'] = 'Wanted level'
+en_lang['bgn.settings.states.bgn_wanted_level.description'] = 'Description: enable the function of increasing the wanted level depending on the number of murders.'
+en_lang['bgn.settings.states.bgn_wanted_hud_text'] = 'Wanted time text'
+en_lang['bgn.settings.states.bgn_wanted_hud_text.description'] = 'Description: display text about the remaining wanted time.'
+en_lang['bgn.settings.states.bgn_wanted_hud_stars'] = 'Wanted stars'
+en_lang['bgn.settings.states.bgn_wanted_hud_stars.description'] = 'Description: Display the wanted level as a star.'
 en_lang['bgn.settings.states.bgn_arrest_mode'] = 'Enable arrest mode'
 en_lang['bgn.settings.states.bgn_arrest_mode.description'] = 'Description: includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.'
 en_lang['bgn.settings.states.bgn_arrest_time'] = 'Arrest time'
@@ -148,6 +154,12 @@ ru_lang['bgn.settings.states.bgn_enable_wanted_mode'] = 'Включить реж
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode.description'] = 'Описание: включает или отключает режим розыска.'
 ru_lang['bgn.settings.states.bgn_wanted_time'] = 'Время розыска'
 ru_lang['bgn.settings.states.bgn_wanted_time.description'] = 'Описание: время которое нужно переждать чтобы убрать уровень розыска.'
+ru_lang['bgn.settings.states.bgn_wanted_level'] = 'Уровень розыска'
+ru_lang['bgn.settings.states.bgn_wanted_level.description'] = 'Описание: включить функцию повышения уровня розыска в зависимости от количества убийств.'
+ru_lang['bgn.settings.states.bgn_wanted_hud_text'] = 'Текст времени розыска'
+ru_lang['bgn.settings.states.bgn_wanted_hud_text.description'] = 'Описание: отображать текст об оставшеся времени розыска.'
+ru_lang['bgn.settings.states.bgn_wanted_hud_stars'] = 'Звёзды розыска'
+ru_lang['bgn.settings.states.bgn_wanted_hud_stars.description'] = 'Описание: отображать уровень розыска в виде звёзды.'
 ru_lang['bgn.settings.states.bgn_arrest_mode'] = 'Включить режим ареста'
 ru_lang['bgn.settings.states.bgn_arrest_mode.description'] = 'Описание: включает модуль ареста игрока. Внимание! В песочнице он ничего не делает. По умолчанию есть крючок только для DarkRP. Если вы активируете этот модуль в неподдерживаемом игровом режиме, то после ареста NPC просто исключат вас из списка целей.'
 ru_lang['bgn.settings.states.bgn_arrest_time'] = 'Время ареста'
@@ -178,6 +190,27 @@ local function StatesSettingsMenu(Panel)
         Command = 'bgn_arrest_mode' 
     }); Panel:AddControl('Label', {
         Text = '#bgn.settings.states.bgn_arrest_mode.description'
+    })
+
+    Panel:AddControl('CheckBox', {
+        Label = '#bgn.settings.states.bgn_wanted_level',
+        Command = 'bgn_wanted_level' 
+    }); Panel:AddControl('Label', {
+        Text = '#bgn.settings.states.bgn_wanted_level.description'
+    })
+
+    Panel:AddControl('CheckBox', {
+        Label = '#bgn.settings.states.bgn_wanted_hud_text',
+        Command = 'bgn_wanted_hud_text' 
+    }); Panel:AddControl('Label', {
+        Text = '#bgn.settings.states.bgn_wanted_hud_text.description'
+    })
+
+    Panel:AddControl('CheckBox', {
+        Label = '#bgn.settings.states.bgn_wanted_hud_stars',
+        Command = 'bgn_wanted_hud_stars' 
+    }); Panel:AddControl('Label', {
+        Text = '#bgn.settings.states.bgn_wanted_hud_stars.description'
     })
 
     Panel:AddControl("Slider", {

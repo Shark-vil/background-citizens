@@ -7,6 +7,15 @@ FCVAR_ARCHIVE, 'Enables or disables wanted mode.')
 bgNPC:RegisterGlobalCvar('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time, 
 FCVAR_ARCHIVE, 'The time you need to go through to remove the wanted level.')
 
+bgNPC:RegisterGlobalCvar('bgn_wanted_level', bgNPC.cvar.bgn_wanted_level, 
+FCVAR_ARCHIVE, 'Enables or disables the boost wanted level mode.')
+
+bgNPC:RegisterGlobalCvar('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text, 
+FCVAR_ARCHIVE, 'Enables or disables the text about wanted time.')
+
+bgNPC:RegisterGlobalCvar('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars, 
+FCVAR_ARCHIVE, 'Enables or disables drawing of stars in wanted mode.')
+
 bgNPC:RegisterGlobalCvar('bgn_max_npc', bgNPC.cvar.bgn_max_npc, 
 FCVAR_ARCHIVE, 'The maximum number of background NPCs on the map.')
 
