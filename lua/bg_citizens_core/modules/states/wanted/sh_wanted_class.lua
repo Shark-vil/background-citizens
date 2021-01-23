@@ -40,6 +40,8 @@ function ASSET:AddWanted(ent)
             end,
 
             LevelUp = function(self)
+                if not GetConVar('bgn_wanted_level'):GetBool() then return end
+                
                 if self.level + 1 <= self.level_max then
                     self.level = self.level + 1
 
