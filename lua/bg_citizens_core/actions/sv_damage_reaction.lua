@@ -1,24 +1,3 @@
-local function IsTargetRay(watcher, ent)
-    if not IsValid(ent) then return false end
-    local center_pos = LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
-
-    local tr = util.TraceLine({
-        start = watcher:EyePos(),
-        endpos = center_pos,
-        filter = function(e)
-            if e ~= watcher then
-                return true
-            end
-        end
-    })
-
-    if not tr.Hit or tr.Entity ~= ent then
-        return false
-    end
-
-    return true
-end
-
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
     for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
@@ -30,7 +9,7 @@ function(attacker, target, dmginfo)
             goto skip
         end
 
-        if not IsTargetRay(npc, attacker) and not IsTargetRay(npc, target) then
+        if not bgNPC:IsTargetRay(npc, attacker) and not bgNPC:IsTargetRay(npc, target) then
             goto skip
         end
 

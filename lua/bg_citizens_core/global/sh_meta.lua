@@ -22,3 +22,24 @@ end
 function bgNPC:GetModule(module_name)
     return list.Get('BGN_Modules')[module_name]
 end
+
+function bgNPC:IsTargetRay(watcher, ent)
+    if not IsValid(ent) then return false end
+    local center_pos = LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
+
+    local tr = util.TraceLine({
+        start = watcher:EyePos(),
+        endpos = center_pos,
+        filter = function(e)
+            if e ~= watcher then
+                return true
+            end
+        end
+    })
+
+    if not tr.Hit or tr.Entity ~= ent then
+        return false
+    end
+
+    return true
+end

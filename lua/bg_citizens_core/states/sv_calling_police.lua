@@ -7,7 +7,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
 
             if state == 'calling_police' then
                 if not GetConVar('bgn_enable_wanted_mode'):GetBool() 
-                    or #bgNPC:GetAllByType('police') == 0 
+                    or #bgNPC:GetAllByType('police') == 0
                 then
                     actor:Fear()
                     goto skip
@@ -15,7 +15,9 @@ timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
 
                 local target = actor:GetNearTarget()
                 if IsValid(target) then
-                    if npc:GetPos():DistToSqr(target:GetPos()) < 90000 then -- 300 ^ 2
+                    if not bgNPC:IsTargetRay(npc, target) or 
+                        npc:GetPos():DistToSqr(target:GetPos()) < 90000
+                    then -- 300 ^ 2
                         actor:Fear()
                         goto skip
                     end

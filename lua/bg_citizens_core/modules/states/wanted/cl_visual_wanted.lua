@@ -29,22 +29,27 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     
     surface.SetFont("Trebuchet24")
     surface.SetTextColor(255, 0, 0)
-    surface.SetTextPos(30, 30) 
-    surface.DrawText('YOU ARE WANTED! The search will end in ' .. c_Wanted.wait_time .. ' seconds...')
+    surface.SetTextPos(30, 30)
+
+    local text_time
+    local time = c_Wanted.wait_time
+    if time > 60 then
+        time = math.Round(time / 60)
+        text_time = time .. ' minutes...'
+    else
+        text_time = time .. ' seconds...'
+    end
+
+    surface.DrawText('YOU ARE WANTED! The search will end in ' .. text_time)
 
     local x = 35
-
-    surface.SetDrawColor(255, 255, 255, 10)
-    surface.DrawRect(x - 15, 55, 250, 55)
-    
     local x_update = x
 
     for i = 1, c_Wanted.level do
-        -- surface.DrawCircle(x, 80, 10, Color(255, 120, 0))
         surface.SetDrawColor(255, 255, 255, 255)
         surface.SetMaterial(m_wanted_star)
-        surface.DrawTexturedRect(x_update, 60, 40, 40)
-        x_update = x_update + 45
+        surface.DrawTexturedRect(x_update, 60, 30, 30)
+        x_update = x_update + 40
     end
 end)
 
