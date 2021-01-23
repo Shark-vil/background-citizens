@@ -1,7 +1,7 @@
 if CLIENT then
     net.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
         if IsValid(npc) then
-            local actor = BG_NPC_CLASS:Instance(npc, npcType, bgNPC.npc_classes[npcType])
+            local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.npc_classes[npcType])
             bgNPC:AddNPC(actor)
         end
     end)
@@ -160,7 +160,7 @@ else
                         end
                     end
             
-                    local actor = BG_NPC_CLASS:Instance(npc, type, data)
+                    local actor = BGN_ACTOR:Instance(npc, type, data)
                     bgNPC:AddNPC(actor)
                     
                     timer.Simple(1.5, function()

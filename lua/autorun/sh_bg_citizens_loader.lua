@@ -73,7 +73,8 @@ using('global/sh_actors_finder.lua')
 using('global/sh_actors_register.lua')
 using('global/sh_killing_statistic.lua')
 
-using('classes/sh_bg_npc_class.lua')
+using('classes/cl_actor_sync.lua')
+using('classes/sh_actor_class.lua')
 
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
