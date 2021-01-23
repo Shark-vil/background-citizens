@@ -7,10 +7,10 @@
 bgNPC.cfg.npcs_template = {
     ['citizen'] = {
         class = 'npc_citizen',
-        fullness = 85,
+        fullness = 72,
         team = { 'residents' },
         weapons = { 'weapon_pistol', 'weapon_357' },
-        money = { 0, 250 },
+        money = { 0, 100 },
         defaultModels = true,
         models = {
             'models/smalls_civilians/pack1/hoodie_male_01_f_npc.mdl',
@@ -39,9 +39,9 @@ bgNPC.cfg.npcs_template = {
             ['defense'] = 10,
         },
         at_protect = {
-            ['fear'] = 80,
+            ['fear'] = 70,
             ['defense'] = 10,
-            ['calling_police'] = 10,
+            ['calling_police'] = 20,
         }
     },
     ['gangster'] = {
@@ -49,7 +49,7 @@ bgNPC.cfg.npcs_template = {
         fullness = 10,
         team = { 'bandits' },
         weapons = { 'weapon_shotgun', 'weapon_ar2' },
-        money = { 0, 500 },
+        money = { 0, 150 },
         defaultModels = true,
         models = {
             'models/survivors/npc/amy.mdl',
@@ -80,10 +80,10 @@ bgNPC.cfg.npcs_template = {
     },
     ['police'] = {
         class = 'npc_metropolice',
-        fullness = 5,
+        fullness = 6,
         team = { 'residents', 'police' },
-        weapons = { 'weapon_smg1', 'weapon_pistol' },
-        money = { 0, 600 },
+        weapons = { 'weapon_stunstick', 'weapon_pistol' },
+        money = { 0, 170 },
         at_damage = {
             ['defense'] = 100,
         },
@@ -91,5 +91,43 @@ bgNPC.cfg.npcs_template = {
             ['defense'] = 20,
             ['arrest'] = 80
         }
+    },
+    ['civil_defense'] = {
+        class = 'npc_metropolice',
+        fullness = 5,
+        wanted_level = 2,
+        team = { 'residents', 'police' },
+        weapons = { 'weapon_smg1', 'weapon_pistol' },
+        money = { 0, 200 },
+        at_damage = { ['defense'] = 100 },
+        at_protect = { ['defense'] = 100 },
+    },
+    ['special_forces'] = {
+        class = 'npc_combine_s',
+        fullness = 5,
+        wanted_level = 3,
+        team = { 'residents', 'police' },
+        weapons = { 'weapon_ar2', 'weapon_shotgun' },
+        money = { 0, 250 },
+        at_damage = { ['defense'] = 100 },
+        at_protect = { ['defense'] = 100 },
+    },
+    ['special_hunters'] = {
+        class = 'npc_hunter',
+        fullness = 2,
+        wanted_level = 4,
+        team = { 'residents', 'police' },
+        money = { 0, 300 },
+        at_damage = { ['defense'] = 100 },
+        at_protect = { ['defense'] = 100 },
+    },
+    ['npc_helicopter'] = {
+        class = 'npc_helicopter',
+        fullness = 2,
+        wanted_level = 5,
+        team = { 'residents', 'police' },
+        money = { 0, 500 },
+        at_damage = { ['defense'] = 100 },
+        at_protect = { ['defense'] = 100 },
     },
 }

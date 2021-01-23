@@ -7,3 +7,10 @@ hook.Add('BGN_PreSpawnNPC', 'BGN_SetCustomCitizenTypeFromDefaultModels', functio
         end
     end
 end)
+
+hook.Add('BGN_PreSpawnNPC', 'BGN_SetNPCUpperPosition', function(npc, type, data)
+    if type ~= 'npc_helicopter' then return end
+    
+    local pos = npc:GetPos()
+    npc:SetPos(pos + Vector(0, 0, 600))
+end)

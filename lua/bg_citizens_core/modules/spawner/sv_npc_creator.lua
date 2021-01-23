@@ -49,16 +49,67 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
                 goto skip
             end
 
-            local count = table.Count(bgNPC:GetAllNPCsByType(npcType))
-            local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
+            if npc_data.fullness ~= nil then
+                local count = table.Count(bgNPC:GetAllNPCsByType(npcType))
+                local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
 
-            if max <= 0 or count > max then
-                goto skip
+                if max <= 0 or count > max then
+                    goto skip
+                end
+
+                if npc_data.wanted_level ~= nil then
+                    local asset = bgNPC:GetModule('wanted')
+                    local success = false
+                    for target, c_Wanted in pairs(asset:GetAllWanted()) do
+                        if c_Wanted.level >= npc_data.wanted_level then
+                            success = true
+                            break
+                        end
+                    end
+
+                    if not success then
+                        goto skip
+                    end
+                end
+
+                bgNPC:SpawnActor(npcType)
             end
-
-            bgNPC:SpawnActor(npcType)
 
             ::skip::
         end
+    end
+end)
+
+hook.Add("BGN_PostSpawnNPC", "BGN_CheckActorSpawnWantedLevel", function(actor)
+    if not actor:HasTeam('police') then return end
+
+    local data = actor:GetData()
+    if data.wanted_level ~= nil then
+        local asset = bgNPC:GetModule('wanted')
+
+        for target, c_Wanted in pairs(asset:GetAllWanted()) do
+            if c_Wanted.level >= data.wanted_level then
+                actor:AddTarget(target)
+                if actor:GetState() ~= 'defense' then
+                    actor:Defense()
+                    bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
+                end
+            end
+        end
+    end
+end)
+
+hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
+    if not actor:HasTeam('police') then return end
+
+    local data = actor:GetData()
+    if data.wanted_level ~= nil then
+        local npc = actor:GetNPC()
+
+        if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
+            return
+        end
+
+        npc:Remove()
     end
 end)
