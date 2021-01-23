@@ -1,14 +1,14 @@
 local is_load_compiler = false
 concommand.Add('cl_citizens_compile_route', function(ply, cmd, args)
     if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-    MsgN('Wait for all points to load...')
+    bgNPC:Log('Wait for all points to load...', 'Route')
     is_load_compiler = true
     ply:ConCommand('cl_citizens_load_route_from_client')
 end, nil, 'Saves your points as a lua script so you can place your mesh in the workshop.')
 
 hook.Add("BGN_LoadingClientRoutes", 'BGN_RoutesCompiler', function(points)
     if not is_load_compiler then return end
-    MsgN('Start compile...')
+    bgNPC:Log('Start compile...', 'Route')
     is_load_compiler = false
 
     local compile_file_path = 'citizens_points_compile/bgn_compile_' .. game.GetMap() .. '.txt'

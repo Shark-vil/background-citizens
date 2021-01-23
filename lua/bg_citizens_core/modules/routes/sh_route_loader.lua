@@ -15,7 +15,7 @@ if SERVER then
             bgNPC.points = {}
         end
 
-        MsgN('Load citizens walk points - ' .. tostring(#bgNPC.points))
+        bgNPC:Log('Load citizens walk points - ' .. tostring(#bgNPC.points), 'Route')
 
         return bgNPC.points
     end
@@ -64,7 +64,7 @@ else
         local compressed_table = net.ReadData(compressed_lenght)
         local data_table = util.JSONToTable(util.Decompress(compressed_table))
 
-        MsgN('Client routes is loading! (' .. table.Count(data_table) .. ')')
+        bgNPC:Log('Client routes is loading! (' .. table.Count(data_table) .. ')', 'Route')
 
         bgNPC.points = data_table
 

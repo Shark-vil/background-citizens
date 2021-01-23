@@ -38,7 +38,7 @@ if SERVER then
         
         timer.Simple(3, function()
             if not IsValid(ply) then
-                MsgN('Failed to sync global cvars')
+                bgNPC:Log('Failed to sync global cvars', 'Global Cvars')
                 return
             end
 

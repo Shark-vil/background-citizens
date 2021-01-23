@@ -27,7 +27,7 @@ local root_directory = 'bg_citizens_core'
 
 local function p_include(file_path)
     include(file_path)
-    MsgN('[Background NPCs] script load - ' .. file_path)
+    MsgN('[Background NPCs] Script load - ' .. file_path)
 end
 
 local function using(local_file_path, network_type, not_root_directory)

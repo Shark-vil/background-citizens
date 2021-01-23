@@ -30,7 +30,7 @@ else
     -- Entity
     net.RegisterCallback('bgn_citizens_add_entity_variable', function(ply, ent, key, data)
         if not IsValid(ent) then
-            MsgN('[bgNPC][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
+            bgNPC:Log('Error synchronizing entity variables. The data was sent too sooner or later.', 'Network')
             return
         end
 
@@ -40,7 +40,7 @@ else
 
     net.RegisterCallback('bgn_citizens_remove_entity_variable', function(ply, ent, key)
         if not IsValid(ent) then
-            MsgN('[bgNPC][Network] Error synchronizing entity variables. The data was sent too sooner or later.')
+            bgNPC:Log('Error synchronizing entity variables. The data was sent too sooner or later.', 'Network')
             return
         end
 

@@ -13,12 +13,12 @@ if SERVER then
 
         if file.Exists(json_file, 'DATA') then
             file.Delete(json_file)
-            MsgN('Remove route file - ' .. json_file)
+            bgNPC:Log('Remove route file - ' .. json_file, 'Route')
         end
 
         if file.Exists(dat_file, 'DATA') then
             file.Delete(dat_file)
-            MsgN('Remove route file - ' .. dat_file)
+            bgNPC:Log('Remove route file - ' .. dat_file, 'Route')
         end
 
         ply:ConCommand('cl_citizens_load_route')
@@ -46,7 +46,7 @@ if SERVER then
         
         timer.Simple(3, function()
             if not IsValid(ply) then
-                MsgN('Failed to sync navmesh info')
+                bgNPC:Log('Failed to sync navmesh info', 'Route')
                 return
             end
 
@@ -67,8 +67,8 @@ else
             net.WriteString(map_name)
             net.SendToServer()
         else
-            MsgN('If you want to delete the mesh file, add as the first command argument - yes')
-            MsgN('Example: cl_citizens_remove_route yes')
+            bgNPC:Log('If you want to delete the mesh file, add as the first command argument - yes', 'Route')
+            bgNPC:Log('Example: cl_citizens_remove_route yes', 'Route')
         end
     end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
 

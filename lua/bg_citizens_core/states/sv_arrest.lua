@@ -100,11 +100,6 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
                     data.delay = data.delay or 0
 
                     local asset = bgNPC:GetModule('player_arrest')
-                    if asset == nil then
-                        MsgN('[Background NPCs] Notification: "player_arrest" module not found, timer for state stopped.')
-                        timer.Remove('BGN_Timer_CheckingTheStateOfArrest')
-                        return
-                    end
 
                     if not asset:HasPlayer(target) then
                         goto skip
