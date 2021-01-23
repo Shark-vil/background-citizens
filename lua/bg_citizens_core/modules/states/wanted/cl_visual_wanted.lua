@@ -1,6 +1,5 @@
 local asset = bgNPC:GetModule('wanted')
 
-local wanted_halo_color = Color(240, 34, 34)
 hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
     local wanted_list = asset:GetAllWanted()
 
@@ -8,15 +7,11 @@ hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
     
     for ent, _ in ipairs(wanted_list) do
         if IsValid(ent) then
-            halo.Add(ent, wanted_halo_color, 3, 3, 2)
+            halo.Add(ent, bgNPC.cfg.wanted.color['wanted_halo'], 3, 3, 2)
         end
     end
 end)
 
-local color_text = Color(82, 223, 255)
-local color_black = Color(0, 0, 0)
-
-local m_wanted_star = Material('background_npcs/vgui/wanted_star.png')
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     local wanted_list = asset:GetAllWanted()
 
@@ -31,29 +26,28 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     surface.SetTextColor(255, 0, 0)
     surface.SetTextPos(30, 30)
 
-    local text_time
+    local wanted_text
     local time = c_Wanted.wait_time
     if time > 60 then
         time = math.Round(time / 60)
-        text_time = time .. ' minutes...'
+        wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_m'], '%time%', time)
     else
-        text_time = time .. ' seconds...'
+        wanted_text = string.Replace(bgNPC.cfg.wanted.language['wanted_text_s'], '%time%', time)
     end
 
-    surface.DrawText('YOU ARE WANTED! The search will end in ' .. text_time)
+    surface.DrawText(wanted_text)
 
     local x = 35
     local x_update = x
 
     for i = 1, c_Wanted.level do
         surface.SetDrawColor(255, 255, 255, 255)
-        surface.SetMaterial(m_wanted_star)
+        surface.SetMaterial(bgNPC.cfg.wanted.texture['wanted_star'])
         surface.DrawTexturedRect(x_update, 60, 30, 30)
         x_update = x_update + 40
     end
 end)
 
-local halo_color = Color(0, 60, 255)
 hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
     local npcs = {}
 
@@ -69,11 +63,15 @@ hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
     end
 
     if #npcs ~= 0 then
-        halo.Add(npcs, halo_color, 3, 3, 2)
+        halo.Add(npcs, bgNPC.cfg.wanted.color['calling_police_halo'], 3, 3, 2)
     end
 end)
 
-hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', function()	
+hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', function()
+    local color_text = bgNPC.cfg.wanted.color['calling_police_text']
+    local color_text_outline = bgNPC.cfg.wanted.color['calling_police_text_outline']
+    local text = bgNPC.cfg.wanted.language['calling_police']
+
     for _, actor in ipairs(bgNPC:GetAll()) do
         local npc = actor:GetNPC()
         if IsValid(npc) then
@@ -84,9 +82,8 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', fun
                     angle:RotateAroundAxis(angle:Right(), 90)
             
                     cam.Start3D2D(npc:GetPos() + npc:GetForward() + npc:GetUp() * 78, angle, 0.25)
-                        draw.SimpleTextOutlined('Calling police...', 
-                            "DermaLarge", 0, -15, color_text, 
-                            TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
+                        draw.SimpleTextOutlined(text, "DermaLarge", 0, -15, color_text, 
+                            TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_text_outline)
                     cam.End3D2D()
                 end
             end

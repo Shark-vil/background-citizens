@@ -13,6 +13,7 @@ end
 bgNPC = {}
 
 -- Do not change -------------
+bgNPC.cfg = {}
 bgNPC.actors = {}
 bgNPC.factors = {}
 bgNPC.npcs = {}
@@ -54,9 +55,11 @@ end
 using('modules/extend/net/sh_callback.lua')
 using('modules/extend/cvars/sh_global_cvars.lua')
 
-using('sh_config.lua')
+using('config/sh_main.lua')
+using('config/sh_npcs.lua')
+using('config/states/sh_wanted.lua')
 
-if bgNPC.loadPresets then
+if bgNPC.cfg.loadPresets then
     using('map_presets/rp_southside.lua', 'sv')
     using('map_presets/gm_bigcity_improved.lua', 'sv')
     using('map_presets/rp_bangclaw.lua', 'sv')

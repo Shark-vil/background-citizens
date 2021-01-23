@@ -1,20 +1,10 @@
 --[[
     WIKI:
-    https://background-npcs.itpony.ru/wik
+    https://background-npcs.itpony.ru/wiki/Config%20Structure
 --]]
 
--- Creates files with preset points for maps:
--- gm_bigcity_improved
--- rp_southside
-bgNPC.loadPresets = true
-
--- Optional parameter to synchronize animation timing with clients.
--- Requires a lot of network bandwidth.
--- Use this only when necessary.
-bgNPC.syncUpdateAnimationForClient = false
-
 -- NPC classes that fill the streets
-bgNPC.npc_classes = {
+bgNPC.cfg.npcs_template = {
     ['citizen'] = {
         class = 'npc_citizen',
         fullness = 85,

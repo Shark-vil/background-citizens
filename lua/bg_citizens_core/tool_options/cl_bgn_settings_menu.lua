@@ -207,7 +207,7 @@ ru_lang['bgn.settings.active_npcs.description'] = 'Описание: вы мож
 
 local function ActiveNPCsMenu(Panel)
     local exists_types = {}
-    for npcType, v in pairs(bgNPC.npc_classes) do
+    for npcType, v in pairs(bgNPC.cfg.npcs_template) do
         if not table.HasValue(exists_types, npcType) then
             Panel:AddControl('CheckBox', {
                 Label = npcType,

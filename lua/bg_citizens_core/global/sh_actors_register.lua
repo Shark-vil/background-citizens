@@ -1,7 +1,7 @@
 if CLIENT then
     net.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
         if IsValid(npc) then
-            local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.npc_classes[npcType])
+            local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType])
             bgNPC:AddNPC(actor)
         end
     end)
@@ -25,7 +25,7 @@ else
         local bgn_spawn_block_radius
             = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
-        local data = bgNPC.npc_classes[type]
+        local data = bgNPC.cfg.npcs_template[type]
         local players = player.GetAll()
 
         local ply = table.Random(players)
