@@ -1,3 +1,5 @@
+bgNPC.cfg.debugMode = true
+
 -- Creates files with preset points for maps:
 -- gm_bigcity_improved
 -- rp_southside

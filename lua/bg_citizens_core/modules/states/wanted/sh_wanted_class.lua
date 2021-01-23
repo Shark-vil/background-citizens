@@ -82,7 +82,7 @@ function ASSET:AddWanted(ent)
         end
 
         hook.Run('BGN_AddWantedTarget', ent)
-        print('[BGN Module][Wanted]', 'AddWanted - ', tostring(ent))
+        bgNPC:Log('AddWanted - ' .. tostring(ent), 'Module | Wanted')
 
         return true
     end
@@ -102,7 +102,7 @@ function ASSET:RemoveWanted(ent)
         end
 
         hook.Run('BGN_RemoveWantedTarget', ent)
-        print('[BGN Module][Wanted]', 'RemoveWanted - ', tostring(ent))
+        bgNPC:Log('RemoveWanted - ' .. tostring(ent), 'Module | Wanted')
 
         return true
     end
@@ -110,7 +110,7 @@ function ASSET:RemoveWanted(ent)
 end
 
 function ASSET:ClearAll()
-    print('[BGN Module][Wanted]', 'ClearAll')
+    bgNPC:Log('ClearAll', 'Module | Wanted')
     table.Empty(wanted_list)
 end
 
@@ -121,7 +121,7 @@ function ASSET:ClearDeath()
         if IsValid(ent) and ent:Health() > 0 then
             t[ent] = c_Wanted
         else
-            print('[BGN Module][Wanted]', 'RemoveWanted - ', tostring(ent))
+            bgNPC:Log('RemoveWanted - ' .. tostring(ent), 'Module | Wanted')
         end
     end
 

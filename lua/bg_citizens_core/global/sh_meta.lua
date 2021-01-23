@@ -1,3 +1,12 @@
+function bgNPC:Log(message, tag)
+    if not bgNPC.cfg.debugMode then return end
+    if tag ~= nil then
+        MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
+    else
+        MsgN('[Background NPCs] ' .. tostring(message))
+    end
+end
+
 function bgNPC:PlayerIsViewVector(ply, pos, radius)
     radius = radius or 90
     local DirectionAngle = math.pi / radius -- 90

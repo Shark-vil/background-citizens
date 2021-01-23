@@ -1,18 +1,18 @@
 local asset = bgNPC:GetModule('wanted')
 
 net.RegisterCallback('bgn_module_wanted_AddWanted', function(_, ent)
-    print('[BGN Module][Wanted]', 'AddWanted Sync')
+    bgNPC:Log('AddWanted Sync', 'Module | Wanted')
     asset:AddWanted(ent)
 end)
 
 net.RegisterCallback('bgn_module_wanted_RemoveWanted', function(_, ent)
-    print('[BGN Module][Wanted]', 'RemoveWanted Sync')
+    bgNPC:Log('RemoveWanted Sync', 'Module | Wanted')
     asset:RemoveWanted(ent)
 end)
 
 net.RegisterCallback('bgn_module_wanted_UpdateWanted', function(_, ent)
     if asset:HasWanted(ent) then
-        print('[BGN Module][Wanted]', 'UpdateWanted Sync')
+        bgNPC:Log('UpdateWanted Sync', 'Module | Wanted')
 
         local c_Wanted = asset:GetWanted(ent)
         c_Wanted:UpdateWanted()
@@ -21,7 +21,7 @@ end)
 
 net.RegisterCallback('bgn_module_wanted_UpdateWaitTime', function(_, ent, time)
     if asset:HasWanted(ent) then
-        print('[BGN Module][Wanted]', 'UpdateWaitTime Sync')
+        bgNPC:Log('UpdateWaitTime Sync', 'Module | Wanted')
 
         local c_Wanted = asset:GetWanted(ent)
         c_Wanted:UpdateWaitTime(time)
@@ -30,7 +30,7 @@ end)
 
 net.RegisterCallback('bgn_module_wanted_UpdateLevel', function(_, ent, level)
     if asset:HasWanted(ent) then
-        print('[BGN Module][Wanted]', 'UpdateLevel Sync')
+        bgNPC:Log('UpdateLevel Sync', 'Module | Wanted')
 
         local c_Wanted = asset:GetWanted(ent)
         c_Wanted.level = level
