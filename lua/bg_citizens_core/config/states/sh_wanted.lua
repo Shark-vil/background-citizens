@@ -1,5 +1,5 @@
 --[[
-    Template variables
+	Template variables
 --]]
 
 local cfg_texture = {}
@@ -7,7 +7,7 @@ local cfg_color = {}
 local cfg_lang = {}
 
 --[[
-    Config setting
+	Config setting
 --]]
 
 -- TEXTURE --
@@ -25,7 +25,7 @@ cfg_lang['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% minut
 cfg_lang['calling_police'] = 'Calling police...'
 
 --[[
-    Assigning settings
+	Assigning settings
 --]]
 
 bgNPC.cfg.wanted = {}

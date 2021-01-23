@@ -19,5 +19,5 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 
 function bgNPC:IsActiveNPCType(type)
-    return GetConVar('bgn_npc_type_' .. type):GetBool()
+	return GetConVar('bgn_npc_type_' .. type):GetBool()
 end

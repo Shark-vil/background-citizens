@@ -1,13 +1,13 @@
 --[[
-    WIKI:
-    https://background-npcs.itpony.ru/wik
+	WIKI:
+	https://background-npcs.itpony.ru/wik
 --]]
 
 file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
 if SERVER then
-    resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
+	resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
 end
 
 bgNPC = {}
@@ -26,30 +26,30 @@ bgNPC.killing_statistic = {}
 local root_directory = 'bg_citizens_core'
 
 local function p_include(file_path)
-    include(file_path)
-    MsgN('[Background NPCs] Script load - ' .. file_path)
+	include(file_path)
+	MsgN('[Background NPCs] Script load - ' .. file_path)
 end
 
 local function using(local_file_path, network_type, not_root_directory)
-    local file_path = local_file_path
+	local file_path = local_file_path
 
-    if not not_root_directory then
-        file_path = root_directory .. '/' .. local_file_path
-    end
+	if not not_root_directory then
+		file_path = root_directory .. '/' .. local_file_path
+	end
 
-    network_type = network_type or string.sub(string.GetFileFromFilename(local_file_path), 1, 2)
-    network_type = string.lower(network_type)
+	network_type = network_type or string.sub(string.GetFileFromFilename(local_file_path), 1, 2)
+	network_type = string.lower(network_type)
 
-    if network_type == 'cl' or network_type == 'sh' then
-        if SERVER then AddCSLuaFile(file_path) end
-        if CLIENT and network_type == 'cl' then
-            p_include(file_path)
-        elseif network_type == 'sh' then
-            p_include(file_path)
-        end
-    elseif network_type == 'sv' and SERVER then
-        p_include(file_path)
-    end
+	if network_type == 'cl' or network_type == 'sh' then
+		if SERVER then AddCSLuaFile(file_path) end
+		if CLIENT and network_type == 'cl' then
+			p_include(file_path)
+		elseif network_type == 'sh' then
+			p_include(file_path)
+		end
+	elseif network_type == 'sv' and SERVER then
+		p_include(file_path)
+	end
 end
 
 using('modules/extend/net/sh_callback.lua')
@@ -60,9 +60,9 @@ using('config/sh_npcs.lua')
 using('config/states/sh_wanted.lua')
 
 if bgNPC.cfg.loadPresets then
-    using('map_presets/rp_southside.lua', 'sv')
-    using('map_presets/gm_bigcity_improved.lua', 'sv')
-    using('map_presets/rp_bangclaw.lua', 'sv')
+	using('map_presets/rp_southside.lua', 'sv')
+	using('map_presets/gm_bigcity_improved.lua', 'sv')
+	using('map_presets/rp_bangclaw.lua', 'sv')
 end
 
 using('cvars/sh_cvars.lua')
