@@ -25,13 +25,16 @@ timer.Create('BGN_Timer_CallingPoliceController', 0.5, 0, function()
                     data.calling_time = CurTime() + 15
                     npc:EmitSound('buttons/button19.wav', 500, 100, 1, CHAN_AUTO)
                 else
+                    local asset = bgNPC:GetModule('wanted')
+
                     if data.calling_time < CurTime() then
                         for _, enemy in pairs(actor.targets) do
                             if IsValid(enemy) then
-                                if bgNPC:IsWanted(enemy) then
-                                    bgNPC:UpdateWanted(enemy)
+                                if asset:HasWanted(enemy) then
+                                    local c_Wanted = asset:GetWanted(enemy)
+                                    c_Wanted:UpdateWanted(enemy)
                                 else
-                                    bgNPC:AddWanted(enemy)
+                                    asset:AddWanted(enemy)
                                 end
                             end
                         end

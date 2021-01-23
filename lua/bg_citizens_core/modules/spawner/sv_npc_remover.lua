@@ -3,13 +3,8 @@ hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
     bgNPC.factors = {}
     bgNPC.npcs = {}
     bgNPC.fnpcs = {}
-    bgNPC.wanted = {}
-    bgNPC.arrest_players = {}
-
-    bgNPC:ClearWanted()
 
     for _, ply in ipairs(player.GetAll()) do
-        bgNPC:SetEntityVariable(ply, 'is_wanted', false, true)
         bgNPC.killing_statistic[ply] = {}
     end
 end)
@@ -24,9 +19,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
     local npcs = bgNPC:GetAllNPCs()
 
     if #npcs ~= 0 then
-        local bgn_spawn_radius 
-            = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
-
+        local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
         local bgn_enable = GetConVar('bgn_enable'):GetBool()
 
         for _, npc in ipairs(npcs) do

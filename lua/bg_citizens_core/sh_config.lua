@@ -49,9 +49,9 @@ bgNPC.npc_classes = {
             ['defense'] = 10,
         },
         at_protect = {
-            ['fear'] = 80,
+            ['fear'] = 50,
             ['defense'] = 10,
-            ['calling_police'] = 10,
+            ['calling_police'] = 40,
         }
     },
     ['gangster'] = {

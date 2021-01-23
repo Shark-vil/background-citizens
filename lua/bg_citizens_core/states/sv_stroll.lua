@@ -133,6 +133,10 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
                 if map == nil then
                     map = updateMovement(npc)
 
+                    if map == nil then
+                        goto skip
+                    end
+                    
                     npc:SetSaveValue("m_vecLastPosition", map.pos)
                     npc:SetSchedule(data.schedule)
 
@@ -160,7 +164,6 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
                         if map == nil then
                             map = updateMovement(npc)
                             if map == nil then
-                                MsgN('Unable to find a good position to move.')
                                 goto skip
                             end
                         end

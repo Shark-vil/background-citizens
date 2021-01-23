@@ -170,10 +170,10 @@ else
                         timer.Simple(0.5, function()
                             if not IsValid(npc) then return end
                             actor:Walk()
+
+                            hook.Run('BGN_PostSpawnNPC', actor)
                         end)
                     end)
-            
-                    hook.Run('BGN_PostSpawnNPC', actor)
                 end
             end)
         end

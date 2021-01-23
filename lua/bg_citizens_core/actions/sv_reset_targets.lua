@@ -1,6 +1,5 @@
 hook.Add("PlayerDeath", "BGN_ClearingTargetsForNPCsInThePlayerDeath", function(victim, inflictor, attacker)
     bgNPC.killing_statistic[victim] = {}
-    bgNPC.arrest_players[victim] = nil
     
     for _, actor in ipairs(bgNPC:GetAll()) do
         actor:RemoveTarget(victim)

@@ -15,7 +15,6 @@ bgNPC.npcs = {}
 bgNPC.fnpcs = {}
 bgNPC.points = {}
 bgNPC.wanted = {}
-bgNPC.arrest_players = {}
 bgNPC.killing_statistic = {}
 -- ---------------------------
 
@@ -77,15 +76,18 @@ using('modules/sv_player_look_at_object.lua')
 using('modules/sv_custom_default_models.lua')
 using('modules/sv_darkrp_drop_money.lua')
 using('modules/sv_static_animation_controller.lua')
-using('modules/sv_auto_wanted_by_police_killed.lua')
 using('modules/sv_friend_fixed.lua')
-using('modules/sh_wanted_mode.lua')
 using('modules/routes/sh_route_saver.lua')
 using('modules/routes/sh_route_loader.lua')
 using('modules/routes/cl_compile.lua')
 using('modules/spawner/sv_npc_remover.lua')
 using('modules/spawner/sv_npc_creator.lua')
 using('modules/quest_dialogue/sv_parent_dialogue.lua')
+using('modules/states/sv_arrest.lua')
+using('modules/states/wanted/sh_wanted_class.lua')
+using('modules/states/wanted/sv_wanted_actions.lua')
+using('modules/states/wanted/cl_wanted_sync.lua')
+using('modules/states/wanted/cl_visual_wanted.lua')
 
 using('actions/sv_open_door.lua')
 using('actions/sv_police_luggage.lua')

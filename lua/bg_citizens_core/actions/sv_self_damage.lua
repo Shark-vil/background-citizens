@@ -14,8 +14,6 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
             if attacker:IsPlayer() then
                 if ActorTarget:HasTeam('player') then
                     return true
-                elseif bgNPC:IsWanted(attacker) then
-                    bgNPC:UpdateWanted(attacker)
                 end
             elseif attacker:IsNPC() and ActorAttacker ~= nil then
                 if ActorTarget:HasTeam(ActorAttacker) then
@@ -51,10 +49,6 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
     elseif target:IsPlayer() then
         if ActorAttacker ~= nil and ActorAttacker:HasTeam('player') then
             return true
-        end
-
-        if bgNPC:IsWanted(target) then
-            bgNPC:UpdateWanted(target)
         end
 
         local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)

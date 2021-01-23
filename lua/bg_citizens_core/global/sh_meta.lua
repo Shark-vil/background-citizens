@@ -18,3 +18,7 @@ function bgNPC:NPCIsViewVector(npc, pos, radius)
     local angCos = aimVector:Dot(entVector) / entVector:Length()
     return angCos >= directionAngCos
 end
+
+function bgNPC:GetModule(module_name)
+    return list.Get('BGN_Modules')[module_name]
+end

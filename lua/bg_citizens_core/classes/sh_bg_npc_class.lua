@@ -202,6 +202,13 @@ function BG_NPC_CLASS:Instance(npc, type, data)
         })
     end
 
+    function obj:IsAlive()
+        if IsValid(self.npc) and self.npc:Health() > 0 then
+            return true
+        end
+        return false
+    end
+
     function obj:SetReaction(reaction)
         self.reaction = reaction
         self:SyncReaction()
