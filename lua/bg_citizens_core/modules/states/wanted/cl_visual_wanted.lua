@@ -17,6 +17,9 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     local is_draw_stars = GetConVar('bgn_wanted_hud_stars'):GetBool()
 
     if not is_draw_text and not is_draw_stars then return end
+    if not GetConVar('bgn_wanted_level'):GetBool() then
+        is_draw_stars = false
+    end
 
     local wanted_list = asset:GetAllWanted()
 
