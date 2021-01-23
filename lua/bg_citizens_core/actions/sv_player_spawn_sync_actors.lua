@@ -1,18 +1,31 @@
 hook.Add("PlayerSpawn", "BGN_SyncActorsOnPlayerSpawn", function(ply)
     if ply.BGN_SyncActorsOnPlayerSpawn then return end
     
-    timer.Simple(4, function()
+    timer.Simple(3, function()
         if not IsValid(ply) then return end
 
-        local period = 0.01
-        local sync_time = period
+        local sync_time = 1
 
         for _, actor in ipairs(bgNPC:GetAll()) do
-            timer.Simple(sync_time, function()
-                if actor == nil or not actor:IsAlive() then return end
-                actor:SyncData()
-            end)
-            sync_time = sync_time + period
+            if actor:IsAlive() then
+                local type = actor:GetType()
+                local npc = actor:GetNPC()
+                bgNPC:TemporaryVectorVisibility(npc, 3)
+
+                timer.Simple(sync_time, function()
+                    if not IsValid(npc) then return end
+
+                    net.InvokeAll('bgn_add_actor_from_client', type, npc)
+
+                    timer.Simple(1, function()
+                        if not IsValid(npc) then return end
+
+                        actor:SyncData()
+                    end)
+                end)
+                
+                sync_time = sync_time + 0.05
+            end
         end
     end)
 
