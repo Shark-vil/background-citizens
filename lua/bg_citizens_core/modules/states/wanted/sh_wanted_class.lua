@@ -10,6 +10,9 @@ function ASSET:AddWanted(ent)
             time_reset =  wanted_time_reset,
             time = wanted_time,
             wait_time = wanted_time,
+            level = 1,
+            level_max = 5,
+            next_kill_update = 5,
 
             UpdateWanted = function(self)
                 self.time_reset = CurTime() + self.time
@@ -33,6 +36,37 @@ function ASSET:AddWanted(ent)
                         if not IsValid(ent) then return end
                         net.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
                     end)
+                end
+            end,
+
+            LevelUp = function(self)
+                if self.level + 1 <= self.level_max then
+                    self.level = self.level + 1
+
+                    bgNPC:TemporaryVectorVisibility(ent, 3)
+                    timer.Simple(1, function() 
+                        if not IsValid(ent) then return end
+                        net.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+                    end)
+
+                    self.next_kill_update = self.next_kill_update + 10
+                end
+            end,
+
+            LevelDown = function(self)
+                if self.level - 1 > 0 then
+                    self.level = self.level - 1
+                    if self.level == 0 then
+                        ASSET:RemoveWanted(ent)
+                    else
+                        bgNPC:TemporaryVectorVisibility(ent, 3)
+                        timer.Simple(1, function() 
+                            if not IsValid(ent) then return end
+                            net.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+                        end)
+                    end
+
+                    self.next_kill_update = self.next_kill_update - 10
                 end
             end,
         }
@@ -113,14 +147,7 @@ hook.Add('PostCleanupMap', 'BGN_WantedModule_ClearWantedListOnCleanupMap', funct
     ASSET:ClearAll()
 end)
 
-if SERVER then
-    hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker)
-        if ASSET:HasWanted(attacker) then
-            local c_Wanted = ASSET:GetWanted(attacker)
-            c_Wanted:UpdateWanted()
-        end
-    end)
-else
+if CLIENT then
     timer.Create('BGN_WantedModule_AutoClearDeathTargets', 1, 0, function()
         ASSET:ClearDeath()
     end)

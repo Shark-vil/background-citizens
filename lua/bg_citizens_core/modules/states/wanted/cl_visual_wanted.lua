@@ -16,6 +16,7 @@ end)
 local color_text = Color(82, 223, 255)
 local color_black = Color(0, 0, 0)
 
+local m_wanted_star = Material('background_npcs/vgui/wanted_star.png')
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     local wanted_list = asset:GetAllWanted()
 
@@ -30,6 +31,21 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
     surface.SetTextColor(255, 0, 0)
     surface.SetTextPos(30, 30) 
     surface.DrawText('YOU ARE WANTED! The search will end in ' .. c_Wanted.wait_time .. ' seconds...')
+
+    local x = 35
+
+    surface.SetDrawColor(255, 255, 255, 10)
+    surface.DrawRect(x - 15, 55, 250, 55)
+    
+    local x_update = x
+
+    for i = 1, c_Wanted.level do
+        -- surface.DrawCircle(x, 80, 10, Color(255, 120, 0))
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetMaterial(m_wanted_star)
+        surface.DrawTexturedRect(x_update, 60, 40, 40)
+        x_update = x_update + 45
+    end
 end)
 
 local halo_color = Color(0, 60, 255)

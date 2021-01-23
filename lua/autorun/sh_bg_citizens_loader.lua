@@ -6,6 +6,10 @@
 file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
+if SERVER then
+    resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
+end
+
 bgNPC = {}
 
 -- Do not change -------------

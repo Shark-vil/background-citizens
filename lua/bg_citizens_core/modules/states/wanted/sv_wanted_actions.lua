@@ -1,5 +1,24 @@
 local asset = bgNPC:GetModule('wanted')
 
+hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker)
+    if asset:HasWanted(attacker) then
+        local c_Wanted = asset:GetWanted(attacker)
+        c_Wanted:UpdateWanted()
+    end
+end)
+
+hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(_, attacker)
+    if asset:HasWanted(attacker) then
+        local c_Wanted = asset:GetWanted(attacker)
+        c_Wanted:UpdateWanted()
+
+        local kills = bgNPC:GetKillingStatisticSumm(attacker)
+        if c_Wanted.next_kill_update <= kills then
+            c_Wanted:LevelUp()
+        end
+    end
+end)
+
 hook.Add("BGN_AddWantedTarget", "BGN_AddWantedTargetFromResidents", function(target)
     for _, actor in ipairs(bgNPC:GetAll()) do
         if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
@@ -18,6 +37,8 @@ hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", functi
             actor:RemoveTarget(target)
         end
     end
+
+    bgNPC:ResetKillingStatistic(target)
 end)
 
 hook.Add("BGN_PostSpawnNPC", "BGN_AddWantedTargetsForNewNPCs", function(actor)

@@ -27,3 +27,12 @@ net.RegisterCallback('bgn_module_wanted_UpdateWaitTime', function(_, ent, time)
         c_Wanted:UpdateWaitTime(time)
     end
 end)
+
+net.RegisterCallback('bgn_module_wanted_UpdateLevel', function(_, ent, level)
+    if asset:HasWanted(ent) then
+        print('[BGN Module][Wanted]', 'UpdateLevel Sync')
+
+        local c_Wanted = asset:GetWanted(ent)
+        c_Wanted.level = level
+    end
+end)

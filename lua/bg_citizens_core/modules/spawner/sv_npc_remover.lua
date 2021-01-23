@@ -3,10 +3,6 @@ hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
     bgNPC.factors = {}
     bgNPC.npcs = {}
     bgNPC.fnpcs = {}
-
-    for _, ply in ipairs(player.GetAll()) do
-        bgNPC.killing_statistic[ply] = {}
-    end
 end)
 
 local function CleanupNPCsIfRemovedOrKilled()
