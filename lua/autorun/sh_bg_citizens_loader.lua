@@ -103,7 +103,7 @@ using('actions/sv_damage_reaction.lua')
 using('actions/sv_killed_actor.lua')
 using('actions/sv_reset_targets.lua')
 using('actions/sv_self_damage.lua')
-using('actions/sv_player_spawn_sync_actors.lua')
+using('actions/sh_player_spawn_sync_actors.lua')
 
 using('states/sv_impingement.lua')
 using('states/sv_protection.lua')
