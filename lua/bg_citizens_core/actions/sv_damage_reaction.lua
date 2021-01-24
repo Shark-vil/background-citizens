@@ -46,11 +46,19 @@ function(actor, attacker, target, reaction)
 			end
 		end
 
+		local ActorAttacker = bgNPC:GetActor(attacker)
+		if ActorAttacker ~= nil then
+			if actor:HasTeam(ActorAttacker) then
+				actor:AddTarget(target)
+				return
+			end
+		end
+
 		if actor:HasTeam('police') then
 			if target:Disposition(attacker) ~= D_HT or bgNPC:IsEnemyTeam(attacker, 'residents') then
 				actor:AddTarget(attacker)
-			elseif not actor:HasTarget(attacker) then
-				actor:AddTarget(target)
+			-- elseif not actor:HasTarget(attacker) then
+			-- 	actor:AddTarget(target)
 			end
 		end
 	elseif target:IsPlayer() then
