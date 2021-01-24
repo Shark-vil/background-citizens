@@ -36,7 +36,7 @@ if SERVER then
 	hook.Add("PlayerSpawn", "BGN_SyncPlayerGlobalConvars", function(ply)
 		if ply.bgNPCGlobalConvarSync then return end
 		
-		timer.Simple(3, function()
+		timer.Simple(2.5, function()
 			if not IsValid(ply) then
 				bgNPC:Log('Failed to sync global cvars', 'Global Cvars')
 				return
