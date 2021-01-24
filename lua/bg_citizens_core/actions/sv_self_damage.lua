@@ -47,8 +47,14 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
 		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
 	elseif target:IsPlayer() then
-		if ActorAttacker ~= nil and ActorAttacker:HasTeam('player') then
-			return true
+		if ActorAttacker ~= nil then
+			if ActorAttacker:HasTeam('player') then
+				return true
+			end
+
+			if not ActorAttacker:HasTarget(target) then
+				return
+			end
 		end
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)

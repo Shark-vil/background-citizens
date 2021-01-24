@@ -38,27 +38,26 @@ end)
 hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
 	if target:IsNPC() then
+		if attacker:IsPlayer() and actor:HasTeam('player') then
+			actor:AddTarget(target)
+			return
+		end
+
 		local ActorTarget = bgNPC:GetActor(target)
-		if ActorTarget ~= nil then
-			if actor:HasTeam(ActorTarget) then
-				actor:AddTarget(attacker)
-				return
-			end
+		if ActorTarget ~= nil and actor:HasTeam(ActorTarget) then
+			actor:AddTarget(attacker)
+			return
 		end
 
 		local ActorAttacker = bgNPC:GetActor(attacker)
-		if ActorAttacker ~= nil then
-			if actor:HasTeam(ActorAttacker) then
-				actor:AddTarget(target)
-				return
-			end
+		if ActorAttacker ~= nil and actor:HasTeam(ActorAttacker) then
+			actor:AddTarget(target)
+			return
 		end
 
 		if actor:HasTeam('police') then
 			if target:Disposition(attacker) ~= D_HT or bgNPC:IsEnemyTeam(attacker, 'residents') then
 				actor:AddTarget(attacker)
-			-- elseif not actor:HasTarget(attacker) then
-			-- 	actor:AddTarget(target)
 			end
 		end
 	elseif target:IsPlayer() then

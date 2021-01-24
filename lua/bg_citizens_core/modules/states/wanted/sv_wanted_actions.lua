@@ -8,9 +8,8 @@ hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttac
 end)
 
 hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)
-	local c_Wanted = asset:GetWanted(attacker)
-
 	if asset:HasWanted(attacker) then
+		local c_Wanted = asset:GetWanted(attacker)
 		c_Wanted:UpdateWanted()
 
 		local kills = bgNPC:GetKillingStatisticSumm(attacker)
@@ -18,7 +17,7 @@ hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", func
 			c_Wanted:LevelUp()
 		end
 	elseif actor:HasTeam('police') then
-		c_Wanted:AddWanted(attacker)
+		asset:AddWanted(attacker)
 	end
 end)
 
