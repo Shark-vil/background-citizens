@@ -20,7 +20,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 		for _, npc in ipairs(npcs) do
 			if IsValid(npc) and npc:Health() > 0 then
-				if not bgn_enable or #player.GetAll() == 0 then
+				if not bgn_enable or player.GetCount() == 0 then
 					npc:Remove()
 				else
 					local isRemove = true

@@ -35,7 +35,7 @@ end)
 timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 	
-	if not bgn_enable then
+	if not bgn_enable or player.GetCount() == 0 then
 		return
 	end
 

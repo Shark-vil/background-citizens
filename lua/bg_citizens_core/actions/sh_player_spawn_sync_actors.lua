@@ -22,7 +22,7 @@ if SERVER then
 							if not IsValid(npc) or not IsValid(ply) then return end
 
 							actor:SyncData()
-							bgNPC.Log('Actor [' .. type .. '] - ' .. tostring(npc), ' | Player - ' .. tostring(ply), 'Sync Actors')
+							bgNPC.Log('Actor [' .. type .. '] - ' .. tostring(npc) .. ' | Player - ' .. tostring(ply), 'Sync Actors')
 						end)
 					end)
 					
