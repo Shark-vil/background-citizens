@@ -74,8 +74,8 @@ bgNPC.cfg.npcs_template = {
 			['defense'] = 100,
 		},
 		at_protect = {
-			['ignore'] = 95,
-			['defense'] = 5,
+			['ignore'] = 50,
+			['defense'] = 50,
 		}
 	},
 	['police'] = {
