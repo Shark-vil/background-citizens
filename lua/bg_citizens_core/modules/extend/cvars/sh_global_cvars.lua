@@ -42,9 +42,9 @@ if SERVER then
 				return
 			end
 
-			net.Start('bgn_gcvars_register_all_from_client')
-			net.WriteTable(bgNPC.GlobalCvars)
-			net.Send(ply)
+			-- net.Start('bgn_gcvars_register_all_from_client')
+			-- net.WriteTable(bgNPC.GlobalCvars)
+			-- net.Send(ply)
 		end)
 
 		ply.bgNPCGlobalConvarSync = true
