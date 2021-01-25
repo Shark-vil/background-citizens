@@ -179,10 +179,11 @@ else
 	end
 end
 
-function bgNPC:AddNPC(actor)    
-	table.insert(self.actors, actor)
-
+function bgNPC:AddNPC(actor)
 	local npc = actor:GetNPC()
+	if table.HasValue(self.npcs, npc) then return end
+
+	table.insert(self.actors, actor)
 	table.insert(self.npcs, npc)
 
 	local type = actor:GetType()

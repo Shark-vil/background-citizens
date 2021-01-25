@@ -5,7 +5,7 @@ if SERVER then
 		timer.Simple(3, function()
 			if not IsValid(ply) then return end
 
-			local sync_time = 1
+			local sync_time = 2
 
 			for _, actor in ipairs(bgNPC:GetAll()) do
 				if actor:IsAlive() then
