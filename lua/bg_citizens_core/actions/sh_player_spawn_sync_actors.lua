@@ -11,7 +11,7 @@ if SERVER then
 				if actor:IsAlive() then
 					local type = actor:GetType()
 					local npc = actor:GetNPC()
-					bgNPC:TemporaryVectorVisibility(npc, 3)
+					bgNPC:TemporaryVectorVisibility(npc, 3 + (sync_time - 2))
 
 					timer.Simple(sync_time, function()
 						if not IsValid(npc) or not IsValid(ply) then return end
