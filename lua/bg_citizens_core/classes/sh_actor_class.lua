@@ -34,13 +34,14 @@ function BGN_ACTOR:Instance(npc, type, data)
 	obj.npc_schedule = -1
 	obj.npc_state = -1
 
-	function obj:SyncData()
+	function obj:SyncData(ply)
+		ply = ply or NULL
 		if CLIENT then return end
 
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_client', npc, {
+		local sync_data = {
 			anim_name = self.anim_name,
 			reaction = self.reaction,
 			anim_time = self.anim_time,
@@ -55,7 +56,13 @@ function BGN_ACTOR:Instance(npc, type, data)
 			npc_state = self.npc_state,
 			anim_time_normal = self.anim_time_normal,
 			loop_time_normal = self.loop_time_normal,
-		})
+		}
+
+		if not IsValid(ply) then
+			net.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
+		else
+			net.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
+		end
 	end
 
 	function obj:SyncReaction()

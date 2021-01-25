@@ -164,15 +164,19 @@ else
 					
 					timer.Simple(1.5, function()
 						if not IsValid(npc) then return end
+
 						net.InvokeAll('bgn_add_actor_from_client', type, npc)
+						actor:RandomState()
 
-						timer.Simple(0.5, function()
+						timer.Simple(1, function()
 							if not IsValid(npc) then return end
-							actor:RandomState()
-
-							hook.Run('BGN_PostSpawnNPC', actor)
+							actor:SyncData()
+							
+							hook.Run('BGN_InitActor', actor)
 						end)
 					end)
+
+					hook.Run('BGN_PostSpawnNPC', npc, type, data)
 				end
 			end)
 		end

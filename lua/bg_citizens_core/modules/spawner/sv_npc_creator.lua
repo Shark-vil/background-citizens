@@ -1,4 +1,4 @@
-hook.Add("BGN_PostSpawnNPC", "BGN_AddAnotherNPCToIgnore", function(actor)
+hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
 	local actor_npc = actor:GetNPC()
@@ -80,7 +80,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 	end
 end)
 
-hook.Add("BGN_PostSpawnNPC", "BGN_CheckActorSpawnWantedLevel", function(actor)
+hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
 	if not actor:HasTeam('police') then return end
 
 	local data = actor:GetData()

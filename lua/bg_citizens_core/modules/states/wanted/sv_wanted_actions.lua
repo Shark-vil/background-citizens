@@ -43,7 +43,7 @@ hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", functi
 	bgNPC:ResetKillingStatistic(target)
 end)
 
-hook.Add("BGN_PostSpawnNPC", "BGN_AddWantedTargetsForNewNPCs", function(actor)
+hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
 	local wanted_list = asset:GetAllWanted()
 
 	if table.Count(wanted_list) == 0 then return end

@@ -20,7 +20,7 @@ if SERVER then
 					timer.Simple(0.5, function()
 						if not IsValid(npc) or not IsValid(ply) then return end
 
-						actor:SyncData()
+						actor:SyncData(ply)
 						bgNPC.Log('Actor [' .. type .. '] - ' .. tostring(npc) .. ' | Player - ' .. tostring(ply), 'Sync Actors')
 					end)
 				end)
