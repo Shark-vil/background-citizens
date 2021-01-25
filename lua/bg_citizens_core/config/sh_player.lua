@@ -21,6 +21,8 @@ local function IS_LOAD_TEAM_CONFIG_VARS()
    bgNPC.cfg.player.team_parents = {
       ['residents'] = {
          TEAM_POLICE,
+         TEAM_CHIEF,
+         TEAM_MAYOR,
       }
    }
 
