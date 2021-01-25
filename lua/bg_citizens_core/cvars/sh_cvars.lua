@@ -17,6 +17,7 @@ bgNPC.cvar.bgn_arrest_mode = 0
 bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
+bgNPC.cvar.bgn_shot_sound_mode = 0
 
 function bgNPC:IsActiveNPCType(type)
 	return GetConVar('bgn_npc_type_' .. type):GetBool()

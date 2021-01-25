@@ -1,4 +1,6 @@
 hook.Add("EntityEmitSound", "BGN_WeaponShotSoundReaction", function(t)
+   if not GetConVar('bgn_shot_sound_mode'):GetBool() then return end
+
    local sound_name = t.SoundName
    local attacker = t.Entity
 

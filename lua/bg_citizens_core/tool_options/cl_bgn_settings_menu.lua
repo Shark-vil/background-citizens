@@ -149,6 +149,8 @@ en_lang['bgn.settings.states.bgn_arrest_time'] = 'Arrest time'
 en_lang['bgn.settings.states.bgn_arrest_time.description'] = 'Description: sets the time allotted for your detention.'
 en_lang['bgn.settings.states.bgn_arrest_time_limit'] = 'Arrest time limit'
 en_lang['bgn.settings.states.bgn_arrest_time_limit.description'] = 'Description: sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.'
+en_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Enable reaction to shot sounds'
+en_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Description: NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)'
 
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode'] = 'Включить режим розыска'
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode.description'] = 'Описание: включает или отключает режим розыска.'
@@ -166,6 +168,8 @@ ru_lang['bgn.settings.states.bgn_arrest_time'] = 'Время ареста'
 ru_lang['bgn.settings.states.bgn_arrest_time.description'] = 'Описание: устанавливает время, отведенное на ваше задержание.'
 ru_lang['bgn.settings.states.bgn_arrest_time_limit'] = 'Лимит времени на задержание'
 ru_lang['bgn.settings.states.bgn_arrest_time_limit.description'] = 'Описание: устанавливает, как долго полиция будет игнорировать вас во время ареста. Если вы откажетесь повиноваться по истеччению времени, они начнут вас атаковать.'
+ru_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Включить реакцию на звуки выстрела'
+ru_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Описание: NPC будут реагировать на звуки выстрела, как если бы кто-то стрелял по союзнику. (Предупреждение: функция эксперементальная и не рекомендуется к использованию)'
 
 local function StatesSettingsMenu(Panel)
 	Panel:AddControl('CheckBox', {
@@ -231,6 +235,16 @@ local function StatesSettingsMenu(Panel)
 		["Max"] = "100"
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_arrest_time_limit.description'
+	})
+
+	Panel:AddControl("Slider", {
+		["Label"] = "#bgn.settings.states.bgn_shot_sound_mode",
+		["Command"] = "bgn_shot_sound_mode",
+		["Type"] = "Float",
+		["Min"] = "0",
+		["Max"] = "100"
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.states.bgn_shot_sound_mode.description'
 	})
 end
 

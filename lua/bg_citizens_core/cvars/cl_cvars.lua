@@ -19,6 +19,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	RunConsoleCommand('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time)
 	RunConsoleCommand('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit)
 	RunConsoleCommand('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc)
+	RunConsoleCommand('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode)
 
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		RunConsoleCommand('bgn_npc_type_' .. npcType, 1)
