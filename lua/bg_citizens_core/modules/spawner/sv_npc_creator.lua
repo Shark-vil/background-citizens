@@ -34,49 +34,38 @@ end)
 
 timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
-	
-	if not bgn_enable or player.GetCount() == 0 then
-		return
-	end
+	if not bgn_enable or player.GetCount() == 0 then return end
+
+	bgNPC:ClearRemovedNPCs()
 
 	local bgn_max_npc = GetConVar('bgn_max_npc'):GetInt()
-	
-	bgNPC:ClearRemovedNPCs()
-	
-	if #bgNPC:GetAll() < bgn_max_npc then
-		for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
-			if not bgNPC:IsActiveNPCType(npcType) then
-				goto skip
+	if #bgNPC:GetAll() >= bgn_max_npc then return end
+
+	for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
+		if not bgNPC:IsActiveNPCType(npcType) then goto skip end
+		if npc_data.fullness == nil then goto skip end
+
+		local count = table.Count(bgNPC:GetAllNPCsByType(npcType))
+		local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
+
+		if max <= 0 or count > max then goto skip end
+
+		if npc_data.wanted_level ~= nil then
+			local asset = bgNPC:GetModule('wanted')
+			local success = false
+			for target, c_Wanted in pairs(asset:GetAllWanted()) do
+				if c_Wanted.level >= npc_data.wanted_level then
+					success = true
+					break
+				end
 			end
 
-			if npc_data.fullness ~= nil then
-				local count = table.Count(bgNPC:GetAllNPCsByType(npcType))
-				local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
-
-				if max <= 0 or count > max then
-					goto skip
-				end
-
-				if npc_data.wanted_level ~= nil then
-					local asset = bgNPC:GetModule('wanted')
-					local success = false
-					for target, c_Wanted in pairs(asset:GetAllWanted()) do
-						if c_Wanted.level >= npc_data.wanted_level then
-							success = true
-							break
-						end
-					end
-
-					if not success then
-						goto skip
-					end
-				end
-
-				bgNPC:SpawnActor(npcType)
-			end
-
-			::skip::
+			if not success then goto skip end
 		end
+
+		bgNPC:SpawnActor(npcType)
+
+		::skip::
 	end
 end)
 
