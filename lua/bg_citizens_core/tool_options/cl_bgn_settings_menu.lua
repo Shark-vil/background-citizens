@@ -237,12 +237,9 @@ local function StatesSettingsMenu(Panel)
 		Text = '#bgn.settings.states.bgn_arrest_time_limit.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.states.bgn_shot_sound_mode",
-		["Command"] = "bgn_shot_sound_mode",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "100"
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.states.bgn_shot_sound_mode',
+		Command = 'bgn_shot_sound_mode' 
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_shot_sound_mode.description'
 	})
