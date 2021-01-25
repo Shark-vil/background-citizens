@@ -1,3 +1,5 @@
+local TeamParentModule = bgNPC:GetModule('team_parent')
+
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
 	if not target:IsPlayer() and not target:IsNPC() then return end
 
@@ -12,7 +14,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	if target:IsNPC() then
 		if ActorTarget ~= nil then
 			if attacker:IsPlayer() then
-				if ActorTarget:HasTeam('player') then
+				if TeamParentModule:HasParent(attacker, ActorTarget) or ActorTarget:HasTeam('player') then
 					return true
 				end
 			elseif attacker:IsNPC() and ActorAttacker ~= nil then
@@ -48,7 +50,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
 	elseif target:IsPlayer() then
 		if ActorAttacker ~= nil then
-			if ActorAttacker:HasTeam('player') then
+			if TeamParentModule:HasParent(target, ActorAttacker) or ActorAttacker:HasTeam('player') then
 				return true
 			end
 

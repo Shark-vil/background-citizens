@@ -35,13 +35,15 @@ function(attacker, target, dmginfo)
 	end
 end)
 
+local TeamParentModule = bgNPC:GetModule('team_parent')
+
 hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
 	if reaction == 'ignore' then return end
 	local asset = bgNPC:GetModule('first_attacker')
 	
 	if target:IsNPC() then
-		if attacker:IsPlayer() and actor:HasTeam('player') then
+		if attacker:IsPlayer() and (TeamParentModule:HasParent(attacker, actor) or actor:HasTeam('player')) then
 			actor:AddTarget(target)
 			return
 		end
@@ -68,7 +70,7 @@ function(actor, attacker, target, reaction)
 			end
 		end
 	elseif target:IsPlayer() then
-		if actor:HasTeam('player') then
+		if TeamParentModule:HasParent(target, actor) or actor:HasTeam('player') then
 			actor:AddTarget(attacker)
 			return
 		end
