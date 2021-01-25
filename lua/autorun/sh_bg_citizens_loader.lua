@@ -57,6 +57,7 @@ using('modules/extend/cvars/sh_global_cvars.lua')
 
 using('config/sh_main.lua')
 using('config/sh_npcs.lua')
+using('config/sh_shot_sound.lua')
 using('config/states/sh_wanted.lua')
 using('config/states/sh_arrest.lua')
 
