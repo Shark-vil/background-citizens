@@ -34,10 +34,17 @@ bgNPC.cfg.npcs_template = {
 			'models/smalls_civilians/pack1/zipper_female_06_f_npc.mdl',
 			'models/smalls_civilians/pack1/zipper_female_07_f_npc.mdl',
 		},
+		at_random_range = 100,
+		at_random = {
+			['walk'] = 90,
+			['idle'] = 10,
+		},
+		at_damage_range = 100,
 		at_damage = {
 			['fear'] = 90,
 			['defense'] = 10,
 		},
+		at_protect_range = 100,
 		at_protect = {
 			['fear'] = 70,
 			['defense'] = 10,
@@ -70,9 +77,17 @@ bgNPC.cfg.npcs_template = {
 			'models/survivors/npc/tyler.mdl',
 			'models/survivors/npc/wolfgang.mdl'
 		},
+		at_random_range = 100,
+		at_random = {
+			['walk'] = 85,
+			['idle'] = 10,
+			['impingement'] = 5,
+		},
+		at_damage_range = 100,
 		at_damage = {
 			['defense'] = 100,
 		},
+		at_protect_range = 100,
 		at_protect = {
 			['ignore'] = 95,
 			['defense'] = 5,
@@ -84,9 +99,16 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_pistol' },
 		money = { 0, 170 },
+		at_random_range = 100,
+		at_random = {
+			['walk'] = 90,
+			['idle'] = 10,
+		},
+		at_damage_range = 100,
 		at_damage = {
 			['defense'] = 100,
 		},
+		at_protect_range = 100,
 		at_protect = {
 			['defense'] = 20,
 			['arrest'] = 80
@@ -99,7 +121,9 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_smg1', 'weapon_pistol' },
 		money = { 0, 200 },
+		at_damage_range = 100,
 		at_damage = { ['defense'] = 100 },
+		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
 	['special_forces'] = {
@@ -109,7 +133,9 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_ar2', 'weapon_shotgun' },
 		money = { 0, 250 },
+		at_damage_range = 100,
 		at_damage = { ['defense'] = 100 },
+		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
 	['special_hunters'] = {
@@ -118,16 +144,20 @@ bgNPC.cfg.npcs_template = {
 		wanted_level = 4,
 		team = { 'residents', 'police' },
 		money = { 0, 300 },
+		at_damage_range = 100,
 		at_damage = { ['defense'] = 100 },
+		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
-	['npc_helicopter'] = {
+	['police_helicopter'] = {
 		class = 'npc_helicopter',
 		fullness = 2,
 		wanted_level = 5,
 		team = { 'residents', 'police' },
 		money = { 0, 500 },
+		at_damage_range = 100,
 		at_damage = { ['defense'] = 100 },
+		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
 }

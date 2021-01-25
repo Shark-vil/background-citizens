@@ -29,10 +29,11 @@ if SERVER then
 					sync_time = sync_time + 0.05
 				end
 			end
+
+			net.Invoke('bgn_is_loaded_setup', ply)
 		end)
 
 		ply.BGN_IsLoaded = true
-		net.Invoke('bgn_is_loaded_setup', ply)
 	end)
 else
 	net.RegisterCallback('bgn_is_loaded_setup', function()

@@ -9,3 +9,5 @@ bgNPC.cfg.loadPresets = true
 -- Requires a lot of network bandwidth.
 -- Use this only when necessary.
 bgNPC.cfg.syncUpdateAnimationForClient = false
+
+bgNPC.cfg.RandomStateAssignmentPeriod = 3

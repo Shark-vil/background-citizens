@@ -122,6 +122,38 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	function obj:RandomState()
+		local state = self:GetRandomState()
+		if state ~= 'none' and self:GetState() ~= state then
+			self:SetState(state)
+		end
+	end
+
+	function obj:GetRandomState()
+		if self.data.at_random == nil then
+			return 'none'
+		end
+
+		local probability = math.random(1, (self.data.at_random_range or 100))
+		local percent, state = table.Random(self.data.at_random)
+
+		if probability > percent then
+			local last_percent = 0
+			
+			for _state, _percent in pairs(self.data.at_random) do
+				if _percent > last_percent then
+					percent = _percent
+					state = _state
+					last_percent = _percent
+				end
+			end
+		end
+
+		state = state or 'none'
+
+		return state
+	end
+
 	function obj:IsAlive()
 		if IsValid(self.npc) and self.npc:Health() > 0 then
 			return true
@@ -274,6 +306,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 	function obj:SetState(state, data)
 		if self:GetData().disableStates then return end
 		if self.state_lock then return end
+		if state == 'ignore' then return end
 
 		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
 		if hook_result ~= nil then
@@ -284,44 +317,6 @@ function BGN_ACTOR:Instance(npc, type, data)
 			if istable(hook_result) and hook_result.state ~= nil then
 				state = hook_result.state
 				data = hook_result.data
-			end
-		end
-
-		if SERVER and self.state_data.state ~= state and math.random(0, 10) <= 1 then
-			local target = self:GetNearTarget()
-			if IsValid(target) and target:GetPos():DistToSqr(self.npc:GetPos()) < 250000 then
-				if state == 'fear' then
-					local male_scream = {
-						'ambient/voices/m_scream1.wav',
-						'vo/coast/bugbait/sandy_help.wav',
-						'vo/npc/male01/help01.wav',
-						'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-						'vo/Streetwar/sniper/male01/c17_09_help02.wav'
-					}
-
-					local female_scream = {
-						'ambient/voices/f_scream1.wav',
-						'vo/canals/arrest_helpme.wav',
-						'vo/npc/female01/help01.wav',
-						'vo/npc/male01/help01.wav',
-					}
-
-					local npc_model = self.npc:GetModel()
-					local scream_sound = nil
-					if tobool(string.find(npc_model, 'male_*')) then
-						scream_sound = table.Random(male_scream)
-					elseif tobool(string.find(npc_model, 'female_*')) then
-						scream_sound = table.Random(female_scream)
-					else
-						scream_sound = table.Random(table.Merge(male_scream, female_scream))
-					end
-
-					self.npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
-				elseif state == 'defense' and self.type == 'police' then
-					self.npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
-				elseif state == 'arrest' and self.type == 'police' then
-					self.npc:EmitSound('npc/metropolice/vo/movetoarrestpositions.wav', 300, 100, 1, CHAN_AUTO)
-				end
 			end
 		end
 
@@ -469,7 +464,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 	end
 
 	function obj:GetReactionForDamage()
-		local probability = math.random(1, 100)
+		local probability = math.random(1, (self.data.at_damage_range or 100))
 		local percent, reaction = table.Random(self.data.at_damage)
 
 		if probability > percent then
@@ -479,7 +474,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
-					last_percent = percent
+					last_percent = _percent
 				end
 			end
 		end
@@ -490,7 +485,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 	end
 
 	function obj:GetReactionForProtect()
-		local probability = math.random(1, 100)
+		local probability = math.random(1, (self.data.at_protect_range or 100))
 		local percent, reaction = table.Random(self.data.at_protect)
 
 		if probability > percent then
@@ -500,7 +495,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
-					last_percent = percent
+					last_percent = _percent
 				end
 			end
 		end

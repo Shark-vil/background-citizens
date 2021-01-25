@@ -169,7 +169,7 @@ else
 
 						timer.Simple(0.5, function()
 							if not IsValid(npc) then return end
-							actor:Walk()
+							actor:RandomState()
 
 							hook.Run('BGN_PostSpawnNPC', actor)
 						end)

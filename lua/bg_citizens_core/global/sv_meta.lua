@@ -70,6 +70,10 @@ function bgNPC:IsEnemyTeams(target, team_table)
 	for _, actor in ipairs(self:GetAll()) do
 		local npc = actor:GetNPC()
 		if IsValid(target) and IsValid(npc) then
+			if isstring(team_table) then
+				team_table = { team_table }
+			end
+
 			for _, team_name in ipairs(team_table) do
 				if actor:HasTeam(team_name) then
 					if target:IsNPC() and (target:Disposition(npc) == D_HT 

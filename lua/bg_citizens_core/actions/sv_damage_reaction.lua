@@ -55,8 +55,10 @@ function(actor, attacker, target, reaction)
 			return
 		end
 
-		if actor:HasTeam('police') then
-			if target:Disposition(attacker) ~= D_HT or bgNPC:IsEnemyTeam(attacker, 'residents') then
+		if actor:HasTeam('residents') and attacker:IsPlayer() and ActorTarget ~= nil then
+			if ActorTarget:GetState() == 'impingement' or bgNPC:IsEnemyTeam(target, 'residents') then
+				actor:AddTarget(target)
+			else
 				actor:AddTarget(attacker)
 			end
 		end
@@ -68,15 +70,19 @@ function(actor, attacker, target, reaction)
 
 		local ActorAttacker = bgNPC:GetActor(attacker)
 		if ActorAttacker ~= nil then
-			local team = ActorAttacker:GetData().team
-			if actor:HasTeam(ActorAttacker) and bgNPC:IsEnemyTeams(target, team) then
+			if actor:HasTeam('residents') then
+				if ActorAttacker:GetState() == 'impingement' or bgNPC:IsEnemyTeams(attacker, 'residents') then
+					actor:AddTarget(attacker)
+					return
+				end
+			end
+
+			if actor:HasTeam(ActorAttacker) then
 				actor:AddTarget(target)
 				return
 			end
-		else
-			if actor:HasTeam('residents') then
-				actor:AddTarget(attacker)
-			end
+		elseif actor:HasTeam('residents') then
+			actor:AddTarget(attacker)
 		end
 	end
 end)

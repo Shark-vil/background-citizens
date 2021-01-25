@@ -7,19 +7,15 @@ hook.Add("PlayerDeath", "BGN_ClearingTargetsForNPCsInThePlayerDeath", function(v
 end)
 
 hook.Add("BGN_ResetTargetsForActor", "BGN_SetDefaultStateIfTargetDeath", function(actor)
-	local npc = actor:GetNPC()
-	if IsValid(npc) then
-		local wep = npc:GetActiveWeapon()
-		if IsValid(wep) then
-			wep:Remove()
-		end
+	if not actor:IsAlive() then return end
 
-		if math.random(0, 10) > 5 then
-			actor:Walk()
-		else
-			actor:Idle()
-		end
+	local npc = actor:GetNPC()
+	local wep = npc:GetActiveWeapon()
+	if IsValid(wep) then
+		wep:Remove()
 	end
+
+	 actor:RandomState()
 end)
 
 timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()

@@ -108,82 +108,78 @@ local function nextMovement(npc)
 end
 
 hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
-	if actor:GetState() == 'walk' then
-		local npc = actor:GetNPC()
-		local map = movement_map[npc]
-		if map ~= nil then
-			map.resetTime = 0
-		end
+	if actor:GetState() ~= 'walk' then return end
+
+	local npc = actor:GetNPC()
+	local map = movement_map[npc]
+	if map ~= nil then
+		map.resetTime = 0
 	end
 end)
 
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
-	if #bgNPC.points ~= 0 then
-		for _, actor in ipairs(bgNPC:GetAll()) do
-			local npc = actor:GetNPC()
-			if IsValid(npc) and actor:GetState() == 'walk' and not actor:IsAnimationPlayed() then
-				local map = movement_map[npc]
-				local data = actor:GetStateData()
-				data.schedule = data.schedule or SCHED_FORCED_GO
+	if #bgNPC.points == 0 then return end
+	
+	for _, actor in ipairs(bgNPC:GetAll()) do
+		if not actor:IsAlive() then goto skip end
+		if actor:GetState() ~= 'walk' then goto skip end
+		if actor:IsAnimationPlayed() then goto skip end
 
-				if hook.Run('BGN_PreStollNPC', npc, map) ~= nil then
-					goto skip
+		local npc = actor:GetNPC()
+		local map = movement_map[npc]
+		local data = actor:GetStateData()
+		data.schedule = data.schedule or SCHED_FORCED_GO
+
+		if map == nil then
+			map = updateMovement(npc)
+
+			if map == nil then
+				goto skip
+			end
+			
+			npc:SetSaveValue("m_vecLastPosition", map.pos)
+			npc:SetSchedule(data.schedule)
+
+			movement_ignore[npc] = movement_ignore[npc] or {}
+			table.insert(movement_ignore[npc], {
+				pos = map.pos,
+				resetTime = CurTime() + 60
+			})
+		else
+			local getNewPos = false
+
+			if table.HasValue(ents.FindInSphere(map.pos, 5), npc) then
+				getNewPos = true
+			elseif map.resetTime < CurTime() then
+				getNewPos = true
+			end
+
+			if getNewPos then
+				if math.random(0, 100) <= 10 then
+					actor:Idle(10)
+					return
 				end
 
+				map = nextMovement(npc)
 				if map == nil then
 					map = updateMovement(npc)
-
 					if map == nil then
 						goto skip
 					end
-					
-					npc:SetSaveValue("m_vecLastPosition", map.pos)
-					npc:SetSchedule(data.schedule)
-
-					movement_ignore[npc] = movement_ignore[npc] or {}
-					table.insert(movement_ignore[npc], {
-						pos = map.pos,
-						resetTime = CurTime() + 60
-					})
-				else
-					local getNewPos = false
-
-					if table.HasValue(ents.FindInSphere(map.pos, 5), npc) then
-						getNewPos = true
-					elseif map.resetTime < CurTime() then
-						getNewPos = true
-					end
-
-					if getNewPos then
-						if math.random(0, 100) <= 10 then
-							actor:Idle(10)
-							return
-						end
-
-						map = nextMovement(npc)
-						if map == nil then
-							map = updateMovement(npc)
-							if map == nil then
-								goto skip
-							end
-						end
-
-						npc:SetSaveValue("m_vecLastPosition", map.pos)
-						npc:SetSchedule(data.schedule)
-
-						movement_ignore[npc] = movement_ignore[npc] or {}
-						table.insert(movement_ignore[npc], {
-							pos = map.pos,
-							resetTime = CurTime() + 60
-						})
-					end
 				end
 
-				hook.Run('BGN_PostStollNPC', npc, map)
+				npc:SetSaveValue("m_vecLastPosition", map.pos)
+				npc:SetSchedule(data.schedule)
 
-				::skip::
+				movement_ignore[npc] = movement_ignore[npc] or {}
+				table.insert(movement_ignore[npc], {
+					pos = map.pos,
+					resetTime = CurTime() + 60
+				})
 			end
 		end
+
+		::skip::
 	end
 end)
 
