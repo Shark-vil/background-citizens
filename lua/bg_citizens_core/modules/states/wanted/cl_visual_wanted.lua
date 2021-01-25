@@ -5,10 +5,15 @@ hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
 
 	if table.Count(wanted_list) == 0 then return end
 	
-	for ent, _ in ipairs(wanted_list) do
+	local targets = {}
+	for ent, _ in pairs(wanted_list) do
 		if IsValid(ent) then
-			halo.Add(ent, bgNPC.cfg.wanted.color['wanted_halo'], 3, 3, 2)
+			table.insert(targets, ent)
 		end
+	end
+
+	if #targets ~= 0 then
+		halo.Add(targets, bgNPC.cfg.wanted.color['wanted_halo'], 3, 3, 2)
 	end
 end)
 
