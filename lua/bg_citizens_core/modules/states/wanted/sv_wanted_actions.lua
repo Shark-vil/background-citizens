@@ -1,4 +1,5 @@
 local asset = bgNPC:GetModule('wanted')
+local TeamParentModule = bgNPC:GetModule('team_parent')
 
 hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker)
 	if asset:HasWanted(attacker) then
@@ -16,7 +17,7 @@ hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", func
 		if c_Wanted.next_kill_update <= kills then
 			c_Wanted:LevelUp()
 		end
-	elseif actor:HasTeam('police') then
+	elseif not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
 		asset:AddWanted(attacker)
 	end
 end)
