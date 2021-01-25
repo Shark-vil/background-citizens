@@ -15,6 +15,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 		if ActorTarget ~= nil then
 			if attacker:IsPlayer() then
 				if TeamParentModule:HasParent(attacker, ActorTarget) or ActorTarget:HasTeam('player') then
+					if bgNPC.cfg.EnablePlayerKilledTeamActors then return end
 					return true
 				end
 			elseif attacker:IsNPC() and ActorAttacker ~= nil then

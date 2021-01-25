@@ -10,4 +10,10 @@ bgNPC.cfg.loadPresets = true
 -- Use this only when necessary.
 bgNPC.cfg.syncUpdateAnimationForClient = false
 
+-- The update rate of the random state change.
+-- The default is 3 seconds
 bgNPC.cfg.RandomStateAssignmentPeriod = 3
+
+-- Allow killing friendly NPCs
+-- If enabled, the player can kill allies
+bgNPC.cfg.EnablePlayerKilledTeamActors = true
