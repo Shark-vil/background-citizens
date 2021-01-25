@@ -26,9 +26,8 @@ else
 			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 		local data = bgNPC.cfg.npcs_template[type]
-		local players = player.GetAll()
-
-		local ply = table.Random(players)
+		local ply = table.Random(player.GetAll())
+		
 		if IsValid(ply) then
 			local hook_name = 'BGN_SpawnerThread_' .. type
 			hooks_active[hook_name] = true
@@ -81,7 +80,7 @@ else
 						end
 					end
 			
-					for _, ply in ipairs(players) do
+					for _, ply in ipairs(player.GetAll()) do
 						local distance = pos:DistToSqr(ply:GetPos())
 						if distance < bgn_spawn_radius_visibility 
 							and bgNPC:PlayerIsViewVector(ply, pos)
