@@ -1,6 +1,6 @@
 bgNPC.cfg.player = bgNPC.cfg.player or {
    usergroup_parents = {},
-   team_names = {},
+   team_names_parents = {},
    team_parents = {}
 }
 
@@ -12,7 +12,7 @@ local function IS_LOAD_TEAM_CONFIG_VARS()
       },
    }
 
-   bgNPC.cfg.player.team_names = {
+   bgNPC.cfg.player.team_names_parents = {
       ['_actor_team_'] = {
          'Civil Protection',
       }

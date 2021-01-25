@@ -9,7 +9,7 @@ function ASSET:HasTeam(ply, actor)
    end
 
    local ply_team_name = team.GetName(team_id)
-   for team_name, data in pairs(bgNPC.cfg.player.team_names) do
+   for team_name, data in pairs(bgNPC.cfg.player.team_names_parents) do
       if actor:HasTeam(team_name) and table.HasValue(data, ply_team_name) then return true end
    end
 
