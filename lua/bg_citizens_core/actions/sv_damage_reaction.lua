@@ -37,6 +37,8 @@ end)
 
 hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
+	local asset = bgNPC:GetModule('first_attacker')
+	
 	if target:IsNPC() then
 		if attacker:IsPlayer() and actor:HasTeam('player') then
 			actor:AddTarget(target)
@@ -55,8 +57,10 @@ function(actor, attacker, target, reaction)
 			return
 		end
 
-		if actor:HasTeam('residents') and attacker:IsPlayer() and ActorTarget ~= nil then
-			if ActorTarget:GetState() == 'impingement' or bgNPC:IsEnemyTeam(target, 'residents') then
+		if ActorTarget ~= nil and attacker:IsPlayer() and actor:HasTeam('residents') then
+			if ActorTarget:GetState() == 'impingement' or bgNPC:IsEnemyTeam(target, 'residents')
+				or asset:IsFirstAttacker(target, attacker)
+			then
 				actor:AddTarget(target)
 			else
 				actor:AddTarget(attacker)
@@ -70,16 +74,17 @@ function(actor, attacker, target, reaction)
 
 		local ActorAttacker = bgNPC:GetActor(attacker)
 		if ActorAttacker ~= nil then
-			if actor:HasTeam('residents') then
-				if ActorAttacker:GetState() == 'impingement' or bgNPC:IsEnemyTeams(attacker, 'residents') then
-					actor:AddTarget(attacker)
-					return
-				end
-			end
-
 			if actor:HasTeam(ActorAttacker) then
 				actor:AddTarget(target)
 				return
+			end
+
+			if actor:HasTeam('residents') then
+				if ActorAttacker:GetState() == 'impingement' or bgNPC:IsEnemyTeam(attacker, 'residents')
+					or asset:IsFirstAttacker(attacker, target)
+				then
+					actor:AddTarget(attacker)
+				end
 			end
 		elseif actor:HasTeam('residents') then
 			actor:AddTarget(attacker)

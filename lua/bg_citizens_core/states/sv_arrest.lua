@@ -177,6 +177,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 						c_Arrest:RemovePlayer(target)
 
 						hook.Run('BGN_PlayerArrest', target, actor)
+						
 						for _, actor in ipairs(bgNPC:GetAll()) do
 							actor:RemoveTarget(target)
 						end
