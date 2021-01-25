@@ -29,6 +29,14 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 			npc:AddEntityRelationship(target, D_HT, 99)
 		end
 
+		if target:InVehicle() then
+			target = target:GetVehicle()
+			
+			if npc:GetTarget() ~= target then
+				npc:SetTarget(target)
+			end
+		end
+
 		data.delay = data.delay or 0
 
 		if data.delay < CurTime() then
