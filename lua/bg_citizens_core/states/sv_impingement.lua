@@ -46,11 +46,6 @@ timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
 
 		if target:IsPlayer() and target:InVehicle() then
 			target = target:GetVehicle()
-
-			local parent = target:GetParent()
-			if IsValid(parent) then
-				target = parent
-			end
 			
 			if npc:GetTarget() ~= target then
 				npc:SetTarget(target)
