@@ -37,6 +37,7 @@ end)
 
 hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
+	if reaction == 'ignore' then return end
 	local asset = bgNPC:GetModule('first_attacker')
 	
 	if target:IsNPC() then
