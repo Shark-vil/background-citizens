@@ -46,5 +46,7 @@ else
 
 	net.RegisterCallback('bgn_is_loaded_setup', function()
 		LocalPlayer().BGN_IsLoaded = true
+
+		hook.Run('BGN_PlayerIsLoaded', LocalPlayer())
 	end)
 end
