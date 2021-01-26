@@ -5,7 +5,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
 	local attacker = dmginfo:GetAttacker()
 	if not attacker:IsPlayer() and not attacker:IsNPC() then return end
-	if attacker.bgNPCIgnore then return end
+	if attacker.bgNPCIgnore or attacker == target then return end
 
 	local ActorTarget = bgNPC:GetActor(target)
 	local ActorAttacker = bgNPC:GetActor(attacker)
