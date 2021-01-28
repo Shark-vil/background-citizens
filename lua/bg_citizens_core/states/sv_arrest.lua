@@ -174,7 +174,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 
 					local time = data.arrest_time - CurTime()
 					if time <= 0 then
-						c_Arrest:RemovePlayer(target)
+						asset:RemovePlayer(target)
 
 						hook.Run('BGN_PlayerArrest', target, actor)
 						
