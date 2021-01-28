@@ -13,4 +13,6 @@ bgNPC.cfg.shotsound.sound_name_found = {
    'shot',
    'shoot',
    'bullet',
+   'arccw',
+   'tfa',
 }
