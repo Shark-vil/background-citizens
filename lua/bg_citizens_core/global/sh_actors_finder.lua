@@ -28,6 +28,18 @@ function bgNPC:GetAllByType(type)
 	return self.factors[type] or {}
 end
 
+function bgNPC:GetAllByTeam(team_data)
+	local actor_teams = {}
+
+	for _, actor in ipairs(self.actors) do
+		if actor:HasTeam(team_data) then
+			table.insert(actor_teams, actor)
+		end
+	end
+
+	return actor_teams
+end
+
 function bgNPC:GetAllNPCs()
 	return self.npcs
 end
