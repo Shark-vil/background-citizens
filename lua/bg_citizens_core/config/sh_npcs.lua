@@ -191,15 +191,18 @@ bgNPC.cfg.npcs_template = {
 		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
-	['police_helicopter'] = {
-		class = 'npc_helicopter',
-		fullness = 2,
-		wanted_level = 5,
-		team = { 'residents', 'police' },
-		money = { 0, 500 },
-		at_damage_range = 100,
-		at_damage = { ['defense'] = 100 },
-		at_protect_range = 100,
-		at_protect = { ['defense'] = 100 },
-	},
+	--[[
+		The police helicopter is temporarily unavailable.
+		['police_helicopter'] = {
+			class = 'npc_helicopter',
+			fullness = 2,
+			wanted_level = 5,
+			team = { 'residents', 'police' },
+			money = { 0, 500 },
+			at_damage_range = 100,
+			at_damage = { ['defense'] = 100 },
+			at_protect_range = 100,
+			at_protect = { ['defense'] = 100 },
+		},
+	]]
 }
