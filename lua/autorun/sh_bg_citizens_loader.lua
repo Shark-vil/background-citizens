@@ -59,6 +59,12 @@ using('config/sh_main.lua')
 using('config/sh_npcs.lua')
 using('config/sh_shot_sound.lua')
 using('config/sh_player.lua')
+
+hook.Add("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule", function()
+	include(root_directory .. '/config/sh_player.lua')
+	hook.Remove("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule")
+end)
+
 using('config/states/sh_wanted.lua')
 using('config/states/sh_arrest.lua')
 

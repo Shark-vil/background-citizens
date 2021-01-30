@@ -1,3 +1,5 @@
+-- Developer mode.
+-- In developer mode, a lot of technical information is output to the console.
 bgNPC.cfg.debugMode = true
 
 -- Creates files with preset points for maps:

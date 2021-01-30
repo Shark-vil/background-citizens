@@ -1,30 +1,24 @@
-bgNPC.cfg.player = bgNPC.cfg.player or {
-   usergroup_parents = {},
-   team_names_parents = {},
-   team_parents = {}
+bgNPC.cfg.player = {}
+
+-- Link a player's group to a actor team
+bgNPC.cfg.player.usergroup_parents = {
+   ['_actor_team_'] = {
+      'superadmin',
+   },
 }
 
-local function IS_LOAD_TEAM_CONFIG_VARS()
-
-   bgNPC.cfg.player.usergroup_parents = {
-      ['_actor_team_'] = {
-         'superadmin',
-      },
+-- Link a player's team by name to a actor team
+bgNPC.cfg.player.team_names_parents = {
+   ['_actor_team_'] = {
+      'Civil Protection',
    }
+}
 
-   bgNPC.cfg.player.team_names_parents = {
-      ['_actor_team_'] = {
-         'Civil Protection',
-      }
+-- Link a player's team to a actor team
+bgNPC.cfg.player.team_parents = {
+   ['residents'] = {
+      TEAM_POLICE,
+      TEAM_CHIEF,
+      TEAM_MAYOR,
    }
-
-   bgNPC.cfg.player.team_parents = {
-      ['residents'] = {
-         TEAM_POLICE,
-         TEAM_CHIEF,
-         TEAM_MAYOR,
-      }
-   }
-
-end
-hook.Add("PreGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule", IS_LOAD_TEAM_CONFIG_VARS)
+}
