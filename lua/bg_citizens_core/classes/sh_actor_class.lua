@@ -371,22 +371,38 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
-	function obj:HasTeam(team_value)
-		if self.data.team ~= nil and team_value ~= nil then
-			if istable(team_value) then
-				if team_value.isBgnActor then
-					team_value = team_value:GetData().team
+	function obj:HasTeam(value)
+		if self.data.team ~= nil and value ~= nil then
+			if isentity(value) then
+				if value:IsPlayer() then
+					if table.HasValue(self.data.team, 'player') then
+						return true
+					else
+						local TeamParentModule = bgNPC:GetModule('team_parent')
+						return TeamParentModule:HasParent(value, self)
+					end
+				elseif value:IsNPC() and value.isActor then
+					local actor = bgNPC:GetActor(value)
+					if actor ~= nil then
+						value = actor
+					end
+				end
+			end
+			
+			if istable(value) then
+				if value.isBgnActor then
+					value = value:GetData().team
 				end
 
 				for _, team_1 in ipairs(self.data.team) do
-					for _, team_2 in ipairs(team_value) do
+					for _, team_2 in ipairs(value) do
 						if team_1 == team_2 then
 							return true
 						end
 					end
 				end
-			elseif isstring(team_value) then
-				return table.HasValue(self.data.team, team_value)
+			elseif isstring(value) then
+				return table.HasValue(self.data.team, value)
 			end
 		end
 		return false

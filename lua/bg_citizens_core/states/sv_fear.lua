@@ -3,7 +3,9 @@ local male_scream = {
 	'vo/coast/bugbait/sandy_help.wav',
 	'vo/npc/male01/help01.wav',
 	'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-	'vo/Streetwar/sniper/male01/c17_09_help02.wav'
+	'vo/Streetwar/sniper/male01/c17_09_help02.wav',
+	'vo/npc/male01/no01.wav',
+	'vo/npc/male01/no02.wav',
 }
 
 local female_scream = {
@@ -11,11 +13,13 @@ local female_scream = {
 	'vo/canals/arrest_helpme.wav',
 	'vo/npc/female01/help01.wav',
 	'vo/npc/male01/help01.wav',
+	'vo/npc/female01/no01.wav',
+	'vo/npc/female01/no02.wav',
 }
 
-hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
+hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	if state ~= 'fear' or not actor:IsAlive() then return end
-	if math.random(0, 10) > 1 then return end
+	if math.random(0, 10) > 4 then return end
 	
 	local target = actor:GetNearTarget()
 	if not IsValid(target) then return end
@@ -25,10 +29,10 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForFearState", function(actor, stat
 	
 	local npc_model = npc:GetModel()
 	local scream_sound = nil
-	if tobool(string.find(npc_model, 'male_*')) then
-		scream_sound = table.Random(male_scream)
-	elseif tobool(string.find(npc_model, 'female_*')) then
+	if tobool(string.find(npc_model, 'female_*')) then
 		scream_sound = table.Random(female_scream)
+	elseif tobool(string.find(npc_model, 'male_*')) then
+		scream_sound = table.Random(male_scream)
 	else
 		scream_sound = table.Random(table.Inherit(male_scream, female_scream))
 	end
