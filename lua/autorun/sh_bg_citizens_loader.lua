@@ -67,6 +67,7 @@ end)
 
 using('config/states/sh_wanted.lua')
 using('config/states/sh_arrest.lua')
+using('config/states/sh_dialogue.lua')
 
 if bgNPC.cfg.loadPresets then
 	using('map_presets/rp_southside.lua', 'sv')

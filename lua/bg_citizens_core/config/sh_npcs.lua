@@ -76,9 +76,9 @@ bgNPC.cfg.npcs_template = {
 		},
 		at_random_range = 100,
 		at_random = {
-			['walk'] = 60,
+			['walk'] = 80,
 			['idle'] = 10,
-			['dialogue'] = 30,
+			['dialogue'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {

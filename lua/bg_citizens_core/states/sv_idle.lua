@@ -1,5 +1,6 @@
 hook.Add("BGN_PreSetNPCState", "BGN_IdleStateDayaValidate", function(actor, state, data)
-	if state ~= 'idle' or data ~= nil then return end
+	if state ~= 'idle' then return end
+	
 	return {
 		state = state,
 		data = {

@@ -1,36 +1,27 @@
 local ASSET = {}
 local dialogue_actors = {}
-local dialogues = {
-   {
-      interlocutors = { 'female', 'female', },
-      list = {
-         { 'vo/npc/female01/hi01.wav' },
-         {
-            'vo/npc/female01/answer30.wav',
-            'vo/npc/female01/gordead_ans01.wav'
-         },
-         { 'vo/npc/female01/answer40.wav' },
-         { 'vo/npc/female01/answer01.wav' },
-      }
-   },
-   {
-      interlocutors = { 'male', 'male', },
-      list = {
-         { 'vo/npc/male01/hi01.wav' },
-         { 'vo/npc/male01/hi02.wav' },
-         { 'vo/npc/male01/question01.wav' },
-         { 'vo/npc/male01/answer04.wav' },
-         { 
-            'vo/npc/male01/question02.wav',
-            'vo/npc/male01/question03.wav'
-         },
-      }
-   },
-}
 
 local function _EmitSound(actor, sound)
    -- actor:GetNPC():EmitSound(sound, 250, 100, 1, CHAN_AUTO)
    actor:GetNPC():EmitSound(sound)
+end
+
+local function _PlayAnimation(dialogue)
+   if #dialogue.animations ~= 0 then
+      for _, value in ipairs(dialogue.animations) do
+         if value.id == dialogue.replicId then
+            local actor = dialogue.interlocutors[dialogue.speaking]
+            if actor:IsAlive() then
+               if value.time ~= nil then
+                  actor:PlayStaticSequence(value.sequence, true, value.time)
+               else
+                  actor:PlayStaticSequence(value.sequence)
+               end
+            end
+            break
+         end
+      end
+   end
 end
 
 function ASSET:SetDialogue(actor1, actor2)
@@ -45,7 +36,7 @@ function ASSET:SetDialogue(actor1, actor2)
    local npc1_model = actor1:GetNPC():GetModel()
    local npc2_model = actor2:GetNPC():GetModel()
 
-   local dialogue = table.Random(dialogues)
+   local dialogue = table.Random(bgNPC.cfg.dialogues)
    local replic = dialogue.list[1]
 
    if dialogue.interlocutors[1] == 'female' and not tobool(string.find(npc1_model, 'female_*')) then
@@ -59,16 +50,15 @@ function ASSET:SetDialogue(actor1, actor2)
    elseif dialogue.interlocutors[2] == 'male' and tobool(string.find(npc2_model, 'female_*')) then
       return false
    end
-   
-   _EmitSound(actor1, replic[1])
 
-   table.insert(dialogue_actors, {
+   local index = table.insert(dialogue_actors, {
       id = tostring(CurTime()) .. tostring(RealTime()) .. actor1:GetType() .. actor2:GetType(),
       interlocutors = {
          [1] = actor1,
          [2] = actor2,
       },
       data = dialogue.list,
+      animations = dialogue.animations or {},
       replic = replic,
       speaking = 1,
       replicId = 1,
@@ -78,6 +68,9 @@ function ASSET:SetDialogue(actor1, actor2)
       switchTime = CurTime() + SoundDuration(replic[1]) + 1,
       isIdle = false,
    })
+
+   _EmitSound(actor1, replic[1])
+   _PlayAnimation(dialogue_actors[index])
    
    return true
 end
@@ -141,6 +134,7 @@ function ASSET:SwitchDialogue(actor)
 
             local actor = dialogue.interlocutors[dialogue.speaking]
             _EmitSound(actor, dialogue.replic[1])
+            _PlayAnimation(dialogue)
          end
       else
          dialogue.soundId = dialogue.soundId + 1
@@ -149,6 +143,7 @@ function ASSET:SwitchDialogue(actor)
 
          local actor = dialogue.interlocutors[dialogue.speaking]
          _EmitSound(actor, sound)
+         _PlayAnimation(dialogue)
       end
    end
 end
@@ -157,11 +152,26 @@ function ASSET:ClearAll()
 	table.Empty(dialogue_actors)
 end
 
+function ASSET:RemoveBadValues()
+   for i = #dialogue_actors, 1, -1 do
+      local value = dialogue_actors[i]
+      local actor1 = value.interlocutors[1]
+      local actor2 = value.interlocutors[2]
+
+      if not actor1:HasState('dialogue') or not actor2:HasState('dialogue') then
+         table.remove(dialogue_actors, i)
+      end
+   end
+end
+
 hook.Add("BGN_NPCLookAtObject", "BGN_Module_DialogueState", function(actor, ent)
    local dialogue = ASSET:GetDialogue(actor)
    if dialogue ~= nil and not dialogue.isIdle then
-      local npc1 = dialogue.interlocutors[1]:GetNPC()
-      local npc2 = dialogue.interlocutors[2]:GetNPC()
+      local actor1 = dialogue.interlocutors[1]
+      local actor2 = dialogue.interlocutors[2]
+
+      local npc1 = actor1:GetNPC()
+      local npc2 = actor2:GetNPC()
 
       if not IsValid(npc1) or not IsValid(npc2) then return end
 
@@ -170,8 +180,13 @@ hook.Add("BGN_NPCLookAtObject", "BGN_Module_DialogueState", function(actor, ent)
             dialogue.isIdle = true
          end
 
-         npc1:ResetSequenceInfo()
-         npc2:ResetSequenceInfo()
+         if actor1:IsSequenceFinished() then
+            npc1:ResetSequenceInfo()
+         end
+
+         if actor2:IsSequenceFinished() then
+            npc2:ResetSequenceInfo()
+         end
       end
    end
 end)

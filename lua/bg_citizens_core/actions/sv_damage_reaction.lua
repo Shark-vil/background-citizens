@@ -24,8 +24,9 @@ function(attacker, target, dmginfo)
 			end
 		end
 
-		local state = actor:GetState()
-		if state == 'idle' or state == 'walk' or state == 'arrest' then
+		if actor:HasState('idle') or actor:HasState('walk') 
+			or actor:HasState('arrest') or actor:HasState('dialogue')
+		then
 			actor:SetState(actor:GetLastReaction())
 		end
 
