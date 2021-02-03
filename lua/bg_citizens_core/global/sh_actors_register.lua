@@ -162,13 +162,13 @@ else
 					local actor = BGN_ACTOR:Instance(npc, type, data)
 					bgNPC:AddNPC(actor)
 					
-					timer.Simple(1.5, function()
+					timer.Simple(0.5, function()
 						if not IsValid(npc) then return end
 
 						net.InvokeAll('bgn_add_actor_from_client', type, npc)
 						actor:RandomState()
 
-						timer.Simple(1, function()
+						timer.Simple(0.5, function()
 							if not IsValid(npc) then return end
 							actor:SyncData()
 							
