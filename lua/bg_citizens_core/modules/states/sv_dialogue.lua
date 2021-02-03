@@ -176,7 +176,7 @@ hook.Add("BGN_NPCLookAtObject", "BGN_Module_DialogueState", function(actor, ent)
       if not IsValid(npc1) or not IsValid(npc2) then return end
 
       if ent == npc1 or ent == npc2 then
-         if actor:GetNPC():GetPos():Distance(ent:GetPos()) <= 150 then
+         if actor:GetNPC():GetPos():Distance(ent:GetPos()) <= 180 then
             dialogue.isIdle = true
          end
 
