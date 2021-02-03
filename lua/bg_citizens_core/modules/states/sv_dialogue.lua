@@ -65,7 +65,7 @@ function ASSET:SetDialogue(actor1, actor2)
       replicMax = table.Count(dialogue.list),
       soundId = 1,
       soundMax = table.Count(replic),
-      switchTime = CurTime() + SoundDuration(replic[1]) + 1,
+      switchTime = CurTime() + NewSoundDuration(replic[1]) + 1,
       isIdle = false,
    })
 
@@ -124,7 +124,7 @@ function ASSET:SwitchDialogue(actor)
             dialogue.replic = dialogue.data[newReplicId]
             dialogue.soundId = 1
             dialogue.soundMax = table.Count(dialogue.replic)
-            dialogue.switchTime = CurTime() + SoundDuration(dialogue.replic[1]) + 0.5
+            dialogue.switchTime = CurTime() + NewSoundDuration(dialogue.replic[1]) + 0.5
 
             if dialogue.speaking == 1 then
                dialogue.speaking = 2
@@ -139,7 +139,7 @@ function ASSET:SwitchDialogue(actor)
       else
          dialogue.soundId = dialogue.soundId + 1
          local sound = dialogue.replic[dialogue.soundId]
-         dialogue.switchTime = CurTime() + SoundDuration(sound) + 0.5
+         dialogue.switchTime = CurTime() + NewSoundDuration(sound) + 0.5
 
          local actor = dialogue.interlocutors[dialogue.speaking]
          _EmitSound(actor, sound)
