@@ -101,13 +101,13 @@ else
 		local cvar_name = net.ReadString()
 		local value = net.ReadFloat()
 
-		cvar_locker[cvar_name] = cvar_locker[cvar_name] or true
+		cvar_locker[cvar_name] = true
 
 		RunConsoleCommand(cvar_name, value)
 
-		timer.Simple(0.2, function()
-			if cvar_locker[cvar_name] then return end
-			cvar_locker[cvar_name] = true
+		timer.Create('bgn_timer_reset_cvar_locker_' .. cvar_name, 0.2, 1, function()
+			if not cvar_locker[cvar_name] then return end
+			cvar_locker[cvar_name] = false
 		end)
 	end)
 end
