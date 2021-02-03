@@ -29,15 +29,27 @@ function bgNPC:GetAllByType(type)
 end
 
 function bgNPC:GetAllByTeam(team_data)
-	local actor_teams = {}
+	local actors = {}
 
 	for _, actor in ipairs(self.actors) do
 		if actor:HasTeam(team_data) then
-			table.insert(actor_teams, actor)
+			table.insert(actors, actor)
 		end
 	end
 
-	return actor_teams
+	return actors
+end
+
+function bgNPC:GetAllByState(state_name)
+	local actors = {}
+
+	for _, actor in ipairs(self.actors) do
+		if actor:HasState(state_name) then
+			table.insert(actors, actor)
+		end
+	end
+
+	return actors
 end
 
 function bgNPC:GetAllNPCs()

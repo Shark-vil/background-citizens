@@ -315,6 +315,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 		if self.state_lock then return end
 		if state == 'ignore' then return end
 
+		data = data or {}
+
 		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
 		if hook_result ~= nil then
 			if isbool(hook_result) and not hook_result then
@@ -328,7 +330,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 
 		self.old_state = self.state_data
-		self.state_data = { state = state, data = (data or {}) }
+		self.state_data = { state = state, data = data }
 
 		if SERVER then
 			net.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
