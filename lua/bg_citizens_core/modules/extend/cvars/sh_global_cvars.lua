@@ -4,16 +4,23 @@ if SERVER then
 	util.AddNetworkString('bgn_gcvars_register_from_client')
 	util.AddNetworkString('bgn_gcvars_register_all_from_client')
 	util.AddNetworkString('bgn_gcvars_change_from_server')
+	util.AddNetworkString('bgn_gcvars_change_from_client')
 
 	net.Receive('bgn_gcvars_change_from_server', function(len, ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 		local cvar_name = net.ReadString()
 		local value = net.ReadFloat()
+		local cvar = GetConVar(cvar_name)
 
-		if bgNPC.GlobalCvars[cvar_name] ~= nil and tobool(GetConVar(cvar_name)) then
+		if bgNPC.GlobalCvars[cvar_name] ~= nil and tobool(cvar) and cvar:GetFloat() ~= value then
 			RunConsoleCommand(cvar_name, value)
 			bgNPC.GlobalCvars[cvar_name].value = value
+
+			net.Start('bgn_gcvars_change_from_client')
+			net.WriteString(cvar_name)
+			net.WriteFloat(value)
+			net.SendOmit(ply)
 		end
 	end)
 
@@ -51,6 +58,7 @@ if SERVER then
 	end)
 else
 	local cvar_locker = {}
+
 	net.Receive('bgn_gcvars_register_all_from_client', function()
 		bgNPC.GlobalCvars = net.ReadTable()
 		for cvar_name, cvar_data in pairs(bgNPC.GlobalCvars) do
@@ -77,7 +85,9 @@ else
 					end
 
 					bgNPC.GlobalCvars[cvar_name].value = value_new
-	
+					
+					if cvar_locker[cvar_name] then return end
+
 					net.Start('bgn_gcvars_change_from_server')
 					net.WriteString(cvar_name)
 					net.WriteFloat(value_new)
@@ -85,5 +95,19 @@ else
 				end)
 			end
 		end
+	end)
+
+	net.Receive('bgn_gcvars_change_from_client', function()
+		local cvar_name = net.ReadString()
+		local value = net.ReadFloat()
+
+		cvar_locker[cvar_name] = cvar_locker[cvar_name] or true
+
+		RunConsoleCommand(cvar_name, value)
+
+		timer.Simple(0.2, function()
+			if cvar_locker[cvar_name] then return end
+			cvar_locker[cvar_name] = true
+		end)
 	end)
 end
