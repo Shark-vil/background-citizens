@@ -8,6 +8,7 @@ file.CreateDir('citizens_points_compile')
 
 if SERVER then
 	resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
+	resource.AddFile('sound/background_npcs/handcuffs_sound1.mp3')
 end
 
 bgNPC = {}
@@ -105,6 +106,7 @@ using('modules/player/sv_team_parent.lua')
 using('modules/darkrp/sv_darkrp_drop_money.lua')
 using('modules/darkrp/sv_player_arrest.lua')
 using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
+using('modules/sandbox/sv_arrest.lua')
 using('modules/routes/sh_route_saver.lua')
 using('modules/routes/sh_route_loader.lua')
 using('modules/routes/cl_compile.lua')
