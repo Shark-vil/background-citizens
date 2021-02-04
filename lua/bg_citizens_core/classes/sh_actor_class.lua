@@ -583,6 +583,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 			self.npc_schedule = self.npc:GetCurrentSchedule()
 			self.npc_state = self.npc:GetNPCState()
 
+			self.npc:PhysWake()
+
 			hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
 			self:SyncAnimation()
