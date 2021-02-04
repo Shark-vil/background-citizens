@@ -13,11 +13,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 end)
 
 timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('defense')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'defense' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end

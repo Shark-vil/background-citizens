@@ -1,9 +1,6 @@
 timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('calling_police')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'calling_police' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end

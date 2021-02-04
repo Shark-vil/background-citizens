@@ -120,10 +120,8 @@ end)
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 	if #bgNPC.points == 0 then return end
 	
-	for _, actor in ipairs(bgNPC:GetAll()) do
-		if not actor:IsAlive() then goto skip end
-		if actor:GetState() ~= 'walk' then goto skip end
-		if actor:IsAnimationPlayed() then goto skip end
+	for _, actor in ipairs(bgNPC:GetAllByState('walk')) do
+		if not actor:IsAlive() or actor:IsAnimationPlayed() then goto skip end
 
 		local npc = actor:GetNPC()
 		local map = movement_map[npc]
@@ -148,35 +146,37 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 		else
 			local getNewPos = false
 
-			if table.HasValue(ents.FindInSphere(map.pos, 5), npc) then
+			if npc:GetPos():DistToSqr(map.pos) <= 900 then -- 30 ^
 				getNewPos = true
 			elseif map.resetTime < CurTime() then
 				getNewPos = true
 			end
 
-			if getNewPos then
-				if math.random(0, 100) <= 10 then
-					actor:Idle(10)
-					return
-				end
-
-				map = nextMovement(npc)
-				if map == nil then
-					map = updateMovement(npc)
-					if map == nil then
-						goto skip
-					end
-				end
-
-				npc:SetSaveValue("m_vecLastPosition", map.pos)
-				npc:SetSchedule(data.schedule)
-
-				movement_ignore[npc] = movement_ignore[npc] or {}
-				table.insert(movement_ignore[npc], {
-					pos = map.pos,
-					resetTime = CurTime() + 60
-				})
+			if not getNewPos then
+				goto skip
 			end
+
+			if math.random(0, 100) <= 10 then
+				actor:Idle(10)
+				return
+			end
+
+			map = nextMovement(npc)
+			if map == nil then
+				map = updateMovement(npc)
+				if map == nil then
+					goto skip
+				end
+			end
+
+			npc:SetSaveValue("m_vecLastPosition", map.pos)
+			npc:SetSchedule(data.schedule)
+
+			movement_ignore[npc] = movement_ignore[npc] or {}
+			table.insert(movement_ignore[npc], {
+				pos = map.pos,
+				resetTime = CurTime() + 60
+			})
 		end
 
 		::skip::
@@ -184,9 +184,8 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 end)
 
 timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
-		local npc = actor:GetNPC()
-		if IsValid(npc) and actor:GetState() == 'walk' then
+	for _, actor in ipairs(bgNPC:GetAllByState('walk')) do
+		if actor:IsAlive() then
 			local data = actor:GetStateData()
 			if data.schedule == SCHED_FORCED_GO_RUN then
 				if data.runReset < CurTime() then

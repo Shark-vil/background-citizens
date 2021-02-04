@@ -28,11 +28,8 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 end)
 
 timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('impingement')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'impingement' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end

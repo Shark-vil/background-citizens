@@ -41,11 +41,8 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 end)
 
 timer.Create('BGN_Timer_FearStateController', 1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('fear')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'fear' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end
