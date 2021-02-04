@@ -3,6 +3,13 @@ local min_range = GetConVar('bgn_cl_field_view_optimization_range'):GetFloat() ^
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, value_old, value_new)
    is_active = tobool(value_new)
+   if is_active then return end
+
+   for _, npc in ipairs(bgNPC:GetAllNPCs()) do
+      if IsValid(npc) and npc:Health() > 0 then
+         npc:SetNoDraw(false)
+      end
+   end
 end)
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_name, value_old, value_new)
