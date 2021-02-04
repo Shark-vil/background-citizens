@@ -69,6 +69,8 @@ else
 				cvar_locker[cvar_name] = cvar_locker[cvar_name] or false
 	
 				cvars.AddChangeCallback(cvar_name, function(convar_name, value_old, value_new)
+					if value_old == value_new then return end
+					
 					if not LocalPlayer():IsAdmin() and not LocalPlayer():IsSuperAdmin() then
 						if not cvar_locker[cvar_name] then
 							cvar_locker[cvar_name] = true

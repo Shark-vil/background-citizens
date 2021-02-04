@@ -2,7 +2,10 @@ local is_active = GetConVar('bgn_cl_field_view_optimization'):GetBool()
 local min_range = GetConVar('bgn_cl_field_view_optimization_range'):GetFloat() ^ 2
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, value_old, value_new)
-   is_active = tobool(value_new)
+   local new_value = tobool(value_new)
+   if is_active == new_value then return end
+
+   is_active = new_value
    if is_active then return end
 
    for _, npc in ipairs(bgNPC:GetAllNPCs()) do
@@ -13,13 +16,15 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 end)
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_name, value_old, value_new)
-   min_range = value_new ^ 2
+   local new_value = value_new ^ 2
+   if min_range == new_value then return end
+   min_range = new_value
 end)
 
 local function func()
    local ply = LocalPlayer()
    local pass = 0
-   local max_pass = 3
+   local max_pass = 5
    
    for _, npc in ipairs(bgNPC:GetAllNPCs()) do
       if IsValid(npc) and npc:Health() > 0 then
@@ -45,7 +50,10 @@ end
 
 local thread
 hook.Add("Think", "BGN_RenderOptimization", function()
-   if not is_active then return end
+   if not is_active then
+      if thread then thread = nil end
+      return
+   end
 
    if not thread or not coroutine.resume(thread) then
 		thread = coroutine.create(func)
