@@ -19,6 +19,11 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 
+if CLIENT then
+	bgNPC.cvar.bgn_cl_field_view_optimization = 0
+	bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
+end
+
 function bgNPC:IsActiveNPCType(type)
 	return GetConVar('bgn_npc_type_' .. type):GetBool()
 end

@@ -90,6 +90,7 @@ using('global/sh_killing_statistic.lua')
 using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')
 
+using('modules/cl_render_optimization.lua')
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
 using('modules/sv_static_animation_controller.lua')

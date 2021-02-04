@@ -59,6 +59,36 @@ local function GeneralSettingsMenu(Panel)
 	})
 end
 
+en_lang['bgn.settings.client.bgn_cl_field_view_optimization'] = 'Enable field of view optimization'
+en_lang['bgn.settings.client.bgn_cl_field_view_optimization.description'] = 'Description: this can increase your FPS with a lot of NPCs. Not recommended for use with other optimization mods.'
+en_lang['bgn.settings.client.bgn_cl_field_view_optimization_range'] = 'Activation distance'
+en_lang['bgn.settings.client.bgn_cl_field_view_optimization_range.description'] = 'Description: the distance after which the field of view check begins.'
+
+
+ru_lang['bgn.settings.client.bgn_cl_field_view_optimization'] = 'Включить оптимизацию поля зрения'
+ru_lang['bgn.settings.client.bgn_cl_field_view_optimization.description'] = 'Описание: это может повысить ваш FPS при большом количестве НПС. Не рекомендуется использовать с другими модами на оптимизацию.'
+ru_lang['bgn.settings.client.bgn_cl_field_view_optimization_range'] = 'Дистанция активации'
+ru_lang['bgn.settings.client.bgn_cl_field_view_optimization_range.description'] = 'Описание: дистанция после которой начинает действовать проверка поля зрения.'
+
+local function ClientSettingsMenu(Panel)
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.client.bgn_cl_field_view_optimization',
+		Command = 'bgn_cl_field_view_optimization' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.client.bgn_cl_field_view_optimization.description'
+	})
+
+	Panel:AddControl("Slider", {
+		["Label"] = "#bgn.settings.client.bgn_cl_field_view_optimization_range",
+		["Command"] = "bgn_cl_field_view_optimization_range",
+		["Type"] = "Integer",
+		["Min"] = "0",
+		["Max"] = "2000"
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.client.bgn_cl_field_view_optimization_range.description'
+	})
+end
+
 en_lang['bgn.settings.spawn.bgn_spawn_radius'] = 'NPC spawn radius'
 en_lang['bgn.settings.spawn.bgn_spawn_radius.description'] = 'Description: NPC spawn radius relative to the player.'
 en_lang['bgn.settings.spawn.bgn_spawn_radius_visibility'] = 'Radius of activation of the point visibility check'
@@ -282,12 +312,14 @@ hook.Add("AddToolMenuCategories", "BGN_TOOL_CreateOptionsCategory", function()
 end)
 
 en_lang['bgn.settings.general_title'] = 'General Settings'
+en_lang['bgn.settings.client_title'] = 'Client Settings'
 en_lang['bgn.settings.spawn_title'] = 'Spawn Settings'
 en_lang['bgn.settings.states_title'] = 'States Settings'
 en_lang['bgn.settings.active_title'] = 'Active NPC Groups'
 en_lang['bgn.settings.workshop_title'] = 'Workshop Services'
 
 ru_lang['bgn.settings.general_title'] = 'Главные Настройки'
+ru_lang['bgn.settings.client_title'] = 'Настройки клиента'
 ru_lang['bgn.settings.spawn_title'] = 'Настройки Спавна'
 ru_lang['bgn.settings.states_title'] = 'Настройки Состояний'
 ru_lang['bgn.settings.active_title'] = 'Активные Группы NPC'
@@ -301,6 +333,9 @@ end
 hook.Add("PopulateToolMenu", "BGN_TOOL_CreateSettingsMenu", function()
 	spawnmenu.AddToolMenuOption("Options", "Background NPCs", "BGN_General_Settings", 
 		"#bgn.settings.general_title", "", "", GeneralSettingsMenu)
+
+	spawnmenu.AddToolMenuOption("Options", "Background NPCs", "BGN_Client_Settings", 
+		"#bgn.settings.client_title", "", "", ClientSettingsMenu)
 
 	spawnmenu.AddToolMenuOption("Options", "Background NPCs", "BGN_Spawn_Settings", 
 		"#bgn.settings.spawn_title", "", "", SpawnSettingsMenu)
