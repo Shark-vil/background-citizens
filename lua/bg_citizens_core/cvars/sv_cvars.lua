@@ -62,6 +62,9 @@ bgNPC:RegisterGlobalCvar('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another
 bgNPC:RegisterGlobalCvar('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode, 
 { FCVAR_ARCHIVE, FCVAR_NOTIFY }, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 
+bgNPC:RegisterGlobalCvar('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons, 
+{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 'Prohibits citizens from having weapons.')
+
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	bgNPC:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, { FCVAR_ARCHIVE, FCVAR_NOTIFY })
 end

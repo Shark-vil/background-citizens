@@ -27,6 +27,12 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 			end
 
 			reaction = ActorTarget:GetReactionForDamage()
+
+			local disable_citizen_weapon = GetConVar('bgn_disable_citizens_weapons'):GetBool()
+			if reaction == 'defense' and actor:GetType() == 'citizen' and disable_citizen_weapon then
+				reaction = 'fear'
+			end
+			
 			ActorTarget:SetReaction(reaction)
 
 			local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)

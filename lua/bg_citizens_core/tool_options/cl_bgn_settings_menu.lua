@@ -276,8 +276,12 @@ local function StatesSettingsMenu(Panel)
 end
 
 en_lang['bgn.settings.active_npcs.description'] = 'Description: you can disable some NPCs if you don\'t want to spawn them anymore. ATTENTION! If you disable an NPC, it will not automatically change the fullness relative to other NPCs! If you want to customize the configuration in detail, download the addon sources and change the configuration file!'
+en_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '-- Disable weapon'
+en_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'] = 'Prohibits citizens from having weapons'
 
 ru_lang['bgn.settings.active_npcs.description'] = 'Описание: вы можете отключить некоторых NPC, если не хотите чтобы они спавнились. ВНИМАНИЕ! Если вы отключите NPC, то соотношение плотности относительно других NPC не поменяется! Если вы хотите детально настроить конфигурацию, скачайте исходники аддона и измените файл конфигурации!'
+ru_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '-- Отключить оружие'
+ru_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'] = 'Запрещает гражданам иметь оружие'
 
 local function ActiveNPCsMenu(Panel)
 	local exists_types = {}
@@ -288,6 +292,15 @@ local function ActiveNPCsMenu(Panel)
 				Command = 'bgn_npc_type_' .. npcType
 			})
 			table.insert(exists_types, npcType)
+
+			if npcType == 'citizen' then
+				Panel:AddControl('CheckBox', {
+					Label = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons',
+					Command = 'bgn_disable_citizens_weapons' 
+				}); Panel:AddControl('Label', {
+					Text = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
+				})
+			end
 		end
 	end
 

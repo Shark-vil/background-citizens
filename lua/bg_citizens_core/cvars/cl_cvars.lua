@@ -30,6 +30,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	RunConsoleCommand('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode)
 	RunConsoleCommand('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization)
 	RunConsoleCommand('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range)
+	RunConsoleCommand('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons)
 
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		RunConsoleCommand('bgn_npc_type_' .. npcType, 1)

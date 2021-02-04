@@ -1,7 +1,14 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
+	local disable_citizen_weapon = GetConVar('bgn_disable_citizens_weapons'):GetBool()
+
 	for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
 		local reaction = actor:GetReactionForProtect()
+		
+		if reaction == 'defense' and actor:GetType() == 'citizen' and disable_citizen_weapon then
+			reaction = 'fear'
+		end
+
 		actor:SetReaction(reaction)
 
 		local npc = actor:GetNPC()

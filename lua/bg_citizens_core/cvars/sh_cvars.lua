@@ -18,6 +18,7 @@ bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
+bgNPC.cvar.bgn_disable_citizens_weapons = 0
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
