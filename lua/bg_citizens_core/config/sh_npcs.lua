@@ -147,7 +147,8 @@ bgNPC.cfg.npcs_template = {
 		},
 		at_damage_range = 100,
 		at_damage = {
-			['defense'] = 100,
+			['defense'] = 20,
+			['arrest'] = 80
 		},
 		at_protect_range = 100,
 		at_protect = {
