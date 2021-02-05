@@ -25,6 +25,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 	obj.anim_is_loop = false
 	obj.anim_name = ''
 	obj.is_animated = false
+	obj.anim_action = nil
 	obj.old_state = nil
 	obj.state_lock = false
 
@@ -324,8 +325,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 			end
 			
 			if istable(hook_result) and hook_result.state ~= nil then
-				state = hook_result.state
-				data = hook_result.data
+				state = hook_result.state or state
+				data = hook_result.data or {}
 			end
 		end
 
@@ -336,6 +337,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 			net.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
 				self.state_data.state, self.state_data.data)
 
+			self.anim_action = nil
 			self:ResetSequence()
 		end
 
@@ -546,10 +548,14 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return true
 	end
 
-	function obj:PlayStaticSequence(sequence_name, loop, loop_time)
+	function obj:PlayStaticSequence(sequence_name, loop, loop_time, action)
 		if self:IsValidSequence(sequence_name) then
-			if self:HasSequence(sequence_name) and not self:IsSequenceFinished() then
-				return true
+			if self:HasSequence(sequence_name) then
+				if self.anim_is_loop and not self:IsSequenceLoopFinished() then
+					return true
+				elseif not self.anim_is_loop and not self:IsSequenceFinished() then
+					return true
+				end
 			end
 
 			local hook_result = hook.Run('BGN_PreNPCStartAnimation', 
@@ -571,6 +577,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 			self.anim_time = RealTime() + self.npc:SequenceDuration(sequence)
 			self.anim_time_normal = self.anim_time - RealTime()
 			self.is_animated = true
+			self.anim_action = action
 
 			self.npc_schedule = SCHED_SLEEP
 			self.npc_state = NPC_STATE_SCRIPT
@@ -602,6 +609,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 			loop_time = loop_time,
 			action = action,
 		}
+
+		self:SyncAnimation()
 	end
 
 	function obj:HasSequence(sequence_name)
@@ -667,8 +676,15 @@ function BGN_ACTOR:Instance(npc, type, data)
 		-- self.anim_time = 0
 		-- self.anim_is_loop = false
 
+		if self.anim_action ~= nil then
+			if not self.anim_action(self) then
+				return
+			end
+		end
+		
 		self.is_animated = false
 		self.next_anim = nil
+		self.anim_action = nil
 		
 		self:SyncAnimation()
 		self:ClearSchedule()
