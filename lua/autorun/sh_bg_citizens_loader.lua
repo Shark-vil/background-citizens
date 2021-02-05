@@ -22,6 +22,7 @@ bgNPC.fnpcs = {}
 bgNPC.points = {}
 bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
+bgNPC.respawn_actors_delay = {}
 -- ---------------------------
 
 local root_directory = 'bg_citizens_core'

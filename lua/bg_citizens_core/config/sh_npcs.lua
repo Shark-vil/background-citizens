@@ -158,6 +158,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['civil_defense'] = {
 		class = 'npc_metropolice',
+		respawn_delay = 5,
 		fullness = 5,
 		wanted_level = 2,
 		team = { 'residents', 'police' },
@@ -171,6 +172,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['special_forces'] = {
 		class = 'npc_combine_s',
+		respawn_delay = 15,
 		fullness = 5,
 		wanted_level = 3,
 		team = { 'residents', 'police' },
@@ -184,6 +186,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['special_hunters'] = {
 		class = 'npc_hunter',
+		respawn_delay = 15,
 		fullness = 2,
 		wanted_level = 4,
 		team = { 'residents', 'police' },
@@ -193,18 +196,22 @@ bgNPC.cfg.npcs_template = {
 		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
 	},
-	--[[
-		The police helicopter is temporarily unavailable.
-		['police_helicopter'] = {
-			class = 'npc_helicopter',
-			fullness = 2,
-			wanted_level = 5,
-			team = { 'residents', 'police' },
-			money = { 0, 500 },
-			at_damage_range = 100,
-			at_damage = { ['defense'] = 100 },
-			at_protect_range = 100,
-			at_protect = { ['defense'] = 100 },
-		},
-	]]
+	['police_helicopter'] = {
+		class = 'npc_apache_scp_sb',
+		disableStates = true,
+		respawn_delay = 15,
+		limit = 2,
+		wanted_level = 5,
+		team = { 'residents', 'police' },
+		money = { 0, 500 },
+		at_damage_range = 100,
+		at_damage = { ['defense'] = 100 },
+		at_protect_range = 100,
+		at_protect = { ['defense'] = 100 },
+		validator = function(self, type)
+			if list.Get('NPC')[self.class] == nil then
+				return false
+			end
+		end,
+	},
 }

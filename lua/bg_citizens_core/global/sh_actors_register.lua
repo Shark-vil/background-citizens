@@ -26,6 +26,23 @@ else
 			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 		local data = bgNPC.cfg.npcs_template[type]
+		if data.validator ~= nil then
+			local result = data.validator(data, type)
+			if result ~= nil and not result then
+				return
+			end
+		end
+
+		local spawn_delayer = bgNPC.respawn_actors_delay[type]
+		if data.respawn_delay ~= nil and spawn_delayer ~= nil and spawn_delayer.count ~= 0 then
+			if spawn_delayer.time < CurTime() then
+				bgNPC.respawn_actors_delay[type].time = CurTime() + data.respawn_delay
+				bgNPC.respawn_actors_delay[type].count = spawn_delayer.count - 1
+			else
+				return
+			end
+		end
+
 		local ply = table.Random(player.GetAll())
 		
 		if IsValid(ply) then
