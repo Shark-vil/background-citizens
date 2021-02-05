@@ -1,4 +1,4 @@
-timer.Create('BGN_Timer_BanditsAutoRegen', 3, 0, function()
+timer.Create('BGN_Timer_BanditsAutoRegen', 5, 0, function()
    for _, actor in ipairs(bgNPC:GetAllByTeam('bandits')) do
       if actor:IsAlive() then
          local npc = actor:GetNPC()
