@@ -1,6 +1,7 @@
 bgNPC.cfg.dialogues = {
    {
-      interlocutors = { 'female', 'female', },
+      interlocutors = { 'citizen', 'citizen', },
+      gender = { 'female', 'female', },
       list = {
          { 'vo/npc/female01/hi01.wav' },
          {
@@ -12,7 +13,8 @@ bgNPC.cfg.dialogues = {
       },
    },
    {
-      interlocutors = { 'male', 'male', },
+      interlocutors = { 'citizen', 'citizen', },
+      gender = { 'male', 'male', },
       list = {
          { 'vo/npc/male01/hi01.wav' },
          { 'vo/npc/male01/hi02.wav' },
@@ -30,7 +32,8 @@ bgNPC.cfg.dialogues = {
       }
    },
    {
-      interlocutors = { 'female', 'male', },
+      interlocutors = { 'citizen', 'citizen', },
+      gender = { 'female', 'male', },
       list = {
          { 'vo/npc/female01/pardonme01.wav' },
          { 'vo/npc/male01/answer10.wav' },
@@ -52,5 +55,53 @@ bgNPC.cfg.dialogues = {
          { id = 4, sequence = 'Wave_Close' },
          { id = 7, sequence = 'LineIdle02', time = 3 },
       }
+   },
+   {
+      interlocutors = { 'citizen', 'citizen', },
+      gender = { 'male', 'female', },
+      list = {
+         { 'vo/npc/male01/sorry02.wav' },
+         { 'vo/npc/female01/hi01.wav' },
+         { 'vo/npc/male01/question23.wav' },
+         { 'vo/npc/female01/answer19.wav' },
+         { 'vo/npc/male01/answer32.wav' },
+         { 'vo/npc/female01/answer16.wav' },
+      },
+      animations = {
+         { id = 3, sequence = 'LineIdle01', time = 3 },
+         { id = 5, sequence = 'LineIdle02', time = 3 },
+         { id = 6, sequence = 'Wave_Close' },
+      }
+   },
+   {
+      interlocutors = { 'police', 'gangster', },
+      gender = { 'none', 'any', },
+      list = {
+         { 'npc/metropolice/vo/citizen.wav' },
+         { 'vo/npc/%gender%01/hi01.wav' },
+         { 'npc/metropolice/vo/holdit.wav' },
+         { 'vo/npc/%gender%01/answer25.wav' },
+         { 'npc/metropolice/vo/xray.wav' },
+         { 'vo/npc/%gender%01/answer20.wav' },
+         { 
+            'npc/overwatch/radiovoice/illegalcarrying95.wav',
+            'npc/metropolice/vo/gotsuspect1here.wav',
+            'npc/metropolice/vo/code7.wav',
+         },
+         { 'vo/npc/%gender%01/question25.wav' },
+         { 'npc/metropolice/vo/getdown.wav' },
+         { 'vo/npc/%gender%01/answer11.wav' },
+      },
+      animations = {
+         { id = 3, sequence = 'Harassfront2' },
+         { id = 5, sequence = 'Canal5bidle1', time = 4 },
+         { id = 6, sequence = 'LineIdle02' },
+         { id = 9, sequence = 'Harassfront1' },
+      },
+      finalAction = function(actor1, actor2)
+         if not actor1:IsAlive() or not actor2:IsAlive() then return end
+         actor2:AddTarget(actor1:GetNPC())
+         actor2:Defense()
+      end
    },
 }

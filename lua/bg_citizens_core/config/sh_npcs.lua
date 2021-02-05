@@ -128,10 +128,10 @@ bgNPC.cfg.npcs_template = {
 		at_damage = {
 			['defense'] = 100,
 		},
-		at_protect_range = 100,
+		at_protect_range = 200,
 		at_protect = {
-			['ignore'] = 98,
-			['defense'] = 2,
+			['ignore'] = 195,
+			['defense'] = 5,
 		}
 	},
 	['police'] = {
@@ -142,8 +142,9 @@ bgNPC.cfg.npcs_template = {
 		money = { 0, 170 },
 		at_random_range = 100,
 		at_random = {
-			['walk'] = 90,
+			['walk'] = 10,
 			['idle'] = 10,
+			['dialogue'] = 90,
 		},
 		at_damage_range = 100,
 		at_damage = {

@@ -50,6 +50,8 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 			if max <= 0 or count > max then goto skip end
 		elseif npc_data.limit ~= nil then
 			if #bgNPC:GetAllByType(npcType) > npc_data.limit then goto skip end
+		else
+			goto skip
 		end
 
 		if npc_data.wanted_level ~= nil then

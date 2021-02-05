@@ -17,7 +17,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
    local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
    local ActorTarget = table.Random(actors)
    
-   if ActorTarget ~= actor and ActorTarget:IsAlive() and actor:HasTeam(ActorTarget) then
+   if ActorTarget ~= actor and ActorTarget:IsAlive() then
       if not asset:SetDialogue(actor, ActorTarget) then return false end
       ActorTarget:SetState('dialogue', { isIgnore = true })
    else
