@@ -77,7 +77,7 @@ function(actor, attacker, target, reaction)
 	end
 
 	local police = bgNPC:GetNearByType(attacker:GetPos(), 'police')
-	if not IsValid(police) then
+	if police == nil or not police:IsAlive() then
 		ReactionOverride(actor, reaction)
 		c_Arrest.not_arrest = true
 		return
