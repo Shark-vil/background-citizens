@@ -63,8 +63,16 @@ else
 		local compressed_lenght = net.ReadUInt(24)
 		local compressed_table = net.ReadData(compressed_lenght)
 		local data_table = util.JSONToTable(util.Decompress(compressed_table))
+		local count = table.Count(data_table)
 
-		bgNPC:Log('Client routes is loading! (' .. table.Count(data_table) .. ')', 'Route')
+		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
+		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then
+			if count == 0 then
+				notification.AddLegacy("[For admin] Mesh file not found. Background NPCs will not spawn.", NOTIFY_ERROR, 4)
+			else
+				notification.AddLegacy("[For admin] Loaded " .. count .. " mesh points to move and spawn Background NPCs.", NOTIFY_GENERIC, 4)
+			end
+		end
 
 		bgNPC.points = data_table
 
