@@ -1,6 +1,6 @@
 -- Developer mode.
 -- In developer mode, a lot of technical information is output to the console.
-bgNPC.cfg.debugMode = true
+bgNPC.cfg.debugMode = false
 
 -- Creates files with preset points for maps:
 -- gm_bigcity_improved
