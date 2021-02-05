@@ -31,8 +31,8 @@ hook.Add("BGN_NPCLookAtObject", "BGN_PolicePushPlayerWhileProtectedIfHeIsClose",
 		if ent:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 50 ^ 2 then return end
 		
 		local data = actor:GetStateData()
-		data.LuggagePush = data.LuggagePush or false
 
+		data.LuggagePush = data.LuggagePush or false
 		if data.LuggagePush then return end
 
 		actor:PlayStaticSequence('LuggagePush')
@@ -51,7 +51,14 @@ hook.Add("BGN_NPCLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", functi
 		if ent:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 50 ^ 2 then return end
 
 		local data = actor:GetStateData()
+		local npc = actor:GetNPC()
 		data.LuggageWarn = data.LuggageWarn or 0
+
+		if data.LuggageWarn == 0 then
+			npc:EmitSound('npc/metropolice/vo/firstwarningmove.wav')
+		elseif data.LuggageWarn == 1 then
+			npc:EmitSound('npc/metropolice/vo/secondwarning.wav')
+		end
 
 		if data.LuggageWarn < 2 then
 			actor:PlayStaticSequence('LuggageWarn')
