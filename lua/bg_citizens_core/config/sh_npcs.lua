@@ -142,9 +142,9 @@ bgNPC.cfg.npcs_template = {
 		money = { 0, 170 },
 		at_random_range = 100,
 		at_random = {
-			['walk'] = 10,
+			['walk'] = 90,
 			['idle'] = 10,
-			['dialogue'] = 90,
+			['dialogue'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {
