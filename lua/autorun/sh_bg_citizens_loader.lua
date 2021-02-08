@@ -22,6 +22,7 @@ bgNPC.fnpcs = {}
 bgNPC.points = {}
 bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
+bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
 -- ---------------------------
 
@@ -87,6 +88,7 @@ using('global/sh_net_variables.lua')
 using('global/sh_actors_finder.lua')
 using('global/sh_actors_register.lua')
 using('global/sh_killing_statistic.lua')
+using('global/sh_wanted_killing_statistic.lua')
 
 using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')
