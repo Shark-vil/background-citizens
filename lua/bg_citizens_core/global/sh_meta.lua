@@ -1,12 +1,5 @@
 function bgNPC:Log(message, tag)
-	local debug_mode = true
-	local cvar = GetConVar('bgn_debug')
-	if tobool(cvar) then
-		debug_mode = cvar:GetBool()
-	end
-
-	if not debug_mode then return end
-	
+	if not GetConVar('bgn_debug'):GetBool() then return end
 	if tag ~= nil then
 		MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
 	else
