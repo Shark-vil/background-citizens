@@ -47,6 +47,7 @@
 bgNPC.cfg.npcs_template = {
 	['citizen'] = {
 		class = 'npc_citizen',
+		name = 'Civilian',
 		fullness = 72,
 		team = { 'residents' },
 		weapons = { 'weapon_pistol', 'weapon_357' },
@@ -96,6 +97,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['gangster'] = {
 		class = 'npc_citizen',
+		name = 'Gangster',
 		fullness = 10,
 		team = { 'bandits' },
 		weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2' },
@@ -139,6 +141,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['police'] = {
 		class = 'npc_metropolice',
+		name = 'Police',
 		fullness = 6,
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_pistol' },
@@ -163,6 +166,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['civil_defense'] = {
 		class = 'npc_metropolice',
+		name = 'Сivil Defense',
 		respawn_delay = 5,
 		fullness = 5,
 		wanted_level = 2,
@@ -177,6 +181,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['special_forces'] = {
 		class = 'npc_combine_s',
+		name = 'Special Forces',
 		respawn_delay = 15,
 		fullness = 5,
 		wanted_level = 3,
@@ -191,6 +196,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['special_forces_2'] = {
 		class = 'npc_combine_s',
+		name = 'Reinforced Special Forces',
 		respawn_delay = 15,
 		fullness = 2,
 		wanted_level = 4,
@@ -205,6 +211,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['police_helicopter'] = {
 		class = 'npc_apache_scp_sb',
+		name = 'Assault Helicopter',
 		disableStates = true,
 		respawn_delay = 15,
 		limit = 1,

@@ -20,7 +20,7 @@ timer.Create('BGN_ActorsResidentsRandomVoice', 10, 0, function()
    end
 
    for _, actor in ipairs(bgNPC:GetAllByTeam('residents')) do
-      if not actor:HasState('walk') and not actor:HasState('walk') then
+      if not actor:IsAlive() or not actor:HasState('walk') and not actor:HasState('walk') then
          goto skip
       end
 

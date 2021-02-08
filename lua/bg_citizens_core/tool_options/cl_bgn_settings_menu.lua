@@ -5,8 +5,6 @@ en_lang['bgn.settings.general.bgn_enable'] = 'Enable background NPCs'
 en_lang['bgn.settings.general.bgn_enable.description'] = 'Description: toggles the modification activity.'
 en_lang['bgn.settings.general.bgn_debug'] = 'Enable debug mode'
 en_lang['bgn.settings.general.bgn_debug.description'] = 'Turns on debug mode and prints additional information to the console.'
-en_lang['bgn.settings.general.bgn_max_npc'] = 'Maximum number of NPCs on the map'
-en_lang['bgn.settings.general.bgn_max_npc.description'] = 'Description: the maximum number of background NPCs on the map.'
 en_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Ignore another NPCs'
 en_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Description: if this parameter is active, then NPCs will ignore any other spawned NPCs.'
 en_lang['bgn.settings.general.cl_citizens_load_route'] = 'Load points'
@@ -17,8 +15,6 @@ ru_lang['bgn.settings.general.bgn_enable'] = 'Включить фоновых NP
 ru_lang['bgn.settings.general.bgn_enable.description'] = 'Описание: переключает активность модификации.'
 ru_lang['bgn.settings.general.bgn_debug'] = 'Включить режим отладки'
 ru_lang['bgn.settings.general.bgn_debug.description'] = 'Включает режим отладки и выводит дополнительную информацию в консоль.'
-ru_lang['bgn.settings.general.bgn_max_npc'] = 'Максимальное количество NPC на карте'
-ru_lang['bgn.settings.general.bgn_max_npc.description'] = 'Описание: максимальное количество фоновых NPC на карте.'
 ru_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Игнорировать других NPC'
 ru_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Описание: если этот параметр активен, то NPC будут игнорировать любых других созданных NPC.'
 ru_lang['bgn.settings.general.cl_citizens_load_route'] = 'Загрузить точки'
@@ -31,16 +27,6 @@ local function GeneralSettingsMenu(Panel)
 		Command = 'bgn_enable' 
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.general.bgn_enable.description'
-	})
-
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.general.bgn_max_npc",
-		["Command"] = "bgn_max_npc",
-		["Type"] = "Integer",
-		["Min"] = "0",
-		["Max"] = "200"
-	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.general.bgn_max_npc.description'
 	})
 
 	Panel:AddControl('CheckBox', {
@@ -287,15 +273,32 @@ local function StatesSettingsMenu(Panel)
 end
 
 en_lang['bgn.settings.active_npcs.description'] = 'Description: you can disable some NPCs if you don\'t want to spawn them anymore. ATTENTION! If you disable an NPC, it will not automatically change the fullness relative to other NPCs! If you want to customize the configuration in detail, download the addon sources and change the configuration file!'
-en_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '-- Disable weapon'
+en_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '> Disable weapon'
 en_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'] = 'Prohibits citizens from having weapons'
+en_lang['bgn.settings.general.bgn_max_npc'] = 'Maximum number of NPCs on the map'
+en_lang['bgn.settings.general.bgn_max_npc.description'] = 'Description: the maximum number of background NPCs on the map.'
 
 ru_lang['bgn.settings.active_npcs.description'] = 'Описание: вы можете отключить некоторых NPC, если не хотите чтобы они спавнились. ВНИМАНИЕ! Если вы отключите NPC, то соотношение плотности относительно других NPC не поменяется! Если вы хотите детально настроить конфигурацию, скачайте исходники аддона и измените файл конфигурации!'
-ru_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '-- Отключить оружие'
+ru_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '> Отключить оружие'
 ru_lang['bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'] = 'Запрещает гражданам иметь оружие'
+ru_lang['bgn.settings.general.bgn_max_npc'] = 'Максимальное количество NPC на карте'
+ru_lang['bgn.settings.general.bgn_max_npc.description'] = 'Описание: максимальное количество фоновых NPC на карте.'
 
 local function ActiveNPCsMenu(Panel)
 	local exists_types = {}
+	
+	Panel:AddControl("Slider", {
+		["Label"] = "#bgn.settings.general.bgn_max_npc",
+		["Command"] = "bgn_max_npc",
+		["Type"] = "Integer",
+		["Min"] = "0",
+		["Max"] = "200"
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.general.bgn_max_npc.description'
+	})
+
+	Panel:AddControl('Label', { Text = '===========' });
+
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		if not table.HasValue(exists_types, npcType) then
 			Panel:AddControl('CheckBox', {
@@ -312,6 +315,18 @@ local function ActiveNPCsMenu(Panel)
 					Text = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
 				})
 			end
+
+			Panel:AddControl('Label', {
+				Text = 'Max "' .. (v.name or npcType) .. '" npc on the map'
+			}); Panel:AddControl("Slider", {
+				["Label"] = "Max " .. npcType,
+				["Command"] = 'bgn_npc_type_max_' .. npcType,
+				["Type"] = "Integer",
+				["Min"] = "0",
+				["Max"] = "200"
+			});
+
+			Panel:AddControl('Label', { Text = '===========' });
 		end
 	end
 

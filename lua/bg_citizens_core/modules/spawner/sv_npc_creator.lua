@@ -44,15 +44,8 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 	for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
 		if not bgNPC:IsActiveNPCType(npcType) then goto skip end
 
-		if npc_data.fullness ~= nil then
-			local count = table.Count(bgNPC:GetAllNPCsByType(npcType))
-			local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
-			if max <= 0 or count > max then goto skip end
-		elseif npc_data.limit ~= nil then
-			if #bgNPC:GetAllByType(npcType) >= npc_data.limit then goto skip end
-		else
-			goto skip
-		end
+		local max_limit = bgNPC:GetLimitActors(npcType)
+		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then goto skip end
 
 		if npc_data.wanted_level ~= nil then
 			local asset = bgNPC:GetModule('wanted')

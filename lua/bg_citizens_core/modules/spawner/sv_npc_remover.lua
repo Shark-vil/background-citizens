@@ -12,36 +12,39 @@ hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfR
 hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
 
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
-	local npcs = bgNPC:GetAllNPCs()
+	local actors = bgNPC:GetAll()
 
-	if #npcs ~= 0 then
-		local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
-		local bgn_enable = GetConVar('bgn_enable'):GetBool()
+	if #actors == 0 then return end
 
-		for _, npc in ipairs(npcs) do
-			if IsValid(npc) and npc:Health() > 0 then
-				if not bgn_enable or player.GetCount() == 0 then
+	local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
+	local bgn_enable = GetConVar('bgn_enable'):GetBool()
+
+	for _, actor in ipairs(actors) do
+		if actor:IsAlive() then
+			local npc = actor:GetNPC()
+
+			if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
+				if not hook.Run('BGN_PreRemoveNPC', npc) then
 					npc:Remove()
-				else
-					local isRemove = true
+				end
+			else
+				local isRemove = true
 
-					for _, ply in ipairs(player.GetAll()) do
-						if IsValid(ply) then
-							local npcPos = npc:GetPos()
-							local plyPos = ply:GetPos()
-							if npcPos:DistToSqr(plyPos) < bgn_spawn_radius 
-								or bgNPC:PlayerIsViewVector(ply, npcPos)
-							then
-								isRemove = false
-								break
-							end
+				for _, ply in ipairs(player.GetAll()) do
+					if IsValid(ply) then
+						local npcPos = npc:GetPos()
+						local plyPos = ply:GetPos()
+						if npcPos:DistToSqr(plyPos) < bgn_spawn_radius 
+							or bgNPC:PlayerIsViewVector(ply, npcPos)
+						then
+							isRemove = false
+							break
 						end
 					end
+				end
 
-					if isRemove then
-						if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
-							return
-						end
+				if isRemove then
+					if not hook.Run('BGN_PreRemoveNPC', npc) then
 						npc:Remove()
 					end
 				end

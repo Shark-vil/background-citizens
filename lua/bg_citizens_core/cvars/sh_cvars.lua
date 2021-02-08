@@ -29,3 +29,23 @@ end
 function bgNPC:IsActiveNPCType(type)
 	return GetConVar('bgn_npc_type_' .. type):GetBool()
 end
+
+function bgNPC:GetFullness(type)
+	local data = bgNPC.cfg.npcs_template[type]
+	if data == nil or not bgNPC:IsActiveNPCType(type) then
+		return 0
+	end
+
+	if data.fullness ~= nil then
+		local max = math.Round(((data.fullness / 100) * GetConVar('bgn_max_npc'):GetInt()))
+		if max >= 0 then return max end
+	elseif data.limit ~= nil then
+		return math.Round(data.limit)
+	end
+
+	return 0
+end
+
+function bgNPC:GetLimitActors(type)
+	return GetConVar('bgn_npc_type_max_' .. type):GetInt()
+end
