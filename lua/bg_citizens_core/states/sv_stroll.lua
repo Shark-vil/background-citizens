@@ -117,6 +117,16 @@ hook.Add('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 	end
 end)
 
+hook.Add("BGN_SetNPCState", "BGN_ResetIgnorePointsAfterStateChange", function(actor, state)
+	if state == 'walk' then return end
+
+	local npc = actor:GetNPC()
+	local map = movement_map[npc]
+	if map ~= nil then
+		map.resetTime = 0
+	end
+end)
+
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 	if #bgNPC.points == 0 then return end
 	
