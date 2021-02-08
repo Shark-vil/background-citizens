@@ -12,7 +12,7 @@ function ASSET:AddWanted(ent)
 			wait_time = wanted_time,
 			level = 1,
 			level_max = 5,
-			next_kill_update = 5,
+			next_kill_update = bgNPC.cfg.wanted.levels[1],
 
 			UpdateWanted = function(self)
 				self.time_reset = CurTime() + self.time
@@ -51,7 +51,10 @@ function ASSET:AddWanted(ent)
 						net.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
 					end)
 
-					self.next_kill_update = self.next_kill_update + 10
+					local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
+					self.next_kill_update = self.next_kill_update + cfg_kills
+
+					hook.Run('BGN_WantedLevelUp', ent, self.next_kill_update)
 				end
 			end,
 
@@ -68,7 +71,14 @@ function ASSET:AddWanted(ent)
 						end)
 					end
 
-					self.next_kill_update = self.next_kill_update - 10
+					local cfg_kills = bgNPC.cfg.wanted.levels[self.level + 1]
+					self.next_kill_update = self.next_kill_update - cfg_kills
+
+					if self.next_kill_update < 0 then
+						self.next_kill_update = 0
+					end
+
+					hook.Run('BGN_WantedLevelDown', ent, self.next_kill_update)
 				end
 			end,
 		}

@@ -8,12 +8,12 @@ hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttac
 	end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)
+hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)	
 	if asset:HasWanted(attacker) then
 		local c_Wanted = asset:GetWanted(attacker)
 		c_Wanted:UpdateWanted()
 
-		local kills = bgNPC:GetKillingStatisticSumm(attacker)
+		local kills = bgNPC:GetWantedKillingStatisticSumm(attacker)
 		if c_Wanted.next_kill_update <= kills then
 			c_Wanted:LevelUp()
 		end
@@ -42,6 +42,7 @@ hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", functi
 	end
 
 	bgNPC:ResetKillingStatistic(target)
+	bgNPC:ResetWantedKillingStatistic(target)
 end)
 
 hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
@@ -100,18 +101,8 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 						goto skip
 					end
 
-					if dist <= 640000 then -- 800 ^ 2
-						local tr = util.TraceLine({
-							start = npc:EyePos(),
-							endpos = enemy:EyePos(),
-							filter = function(ent) 
-								if ent ~= npc then
-									return true
-								end
-							end
-						})
-
-						if tr.Hit and IsValid(tr.Entity) and tr.Entity == enemy then
+					if dist <= 2250000 then -- 1500 ^ 2
+						if bgNPC:IsTargetRay(npc, enemy) then
 							c_Wanted:UpdateWanted()
 							
 							actor:AddTarget(enemy)

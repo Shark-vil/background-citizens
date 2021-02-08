@@ -49,3 +49,30 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 		end
 	end
 end)
+
+hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
+	if not actor:HasTeam('police') then return end
+
+	local data = actor:GetData()
+	if data.wanted_level ~= nil then
+		local npc = actor:GetNPC()
+
+		if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
+			return
+		end
+
+		npc:Remove()
+	end
+end)
+
+hook.Add("BGN_WantedLevelDown", "BGN_ClearCurrentlyLevelOnlyNPCs", function(ent, level)
+	for _, actor in ipairs(bgNPC:GetAllByTeam('police')) do
+		local wanted_level = actor:GetData().wanted_level
+
+		if wanted_level ~= nil then
+			if level < wanted_level then
+				actor:RemoveTarget(ent)
+			end
+		end
+	end
+end)

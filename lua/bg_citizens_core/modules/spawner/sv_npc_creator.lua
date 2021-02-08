@@ -49,7 +49,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 			local max = math.Round(((npc_data.fullness / 100) * bgn_max_npc))
 			if max <= 0 or count > max then goto skip end
 		elseif npc_data.limit ~= nil then
-			if #bgNPC:GetAllByType(npcType) > npc_data.limit then goto skip end
+			if #bgNPC:GetAllByType(npcType) >= npc_data.limit then goto skip end
 		else
 			goto skip
 		end
@@ -89,20 +89,5 @@ hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
 				end
 			end
 		end
-	end
-end)
-
-hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
-	if not actor:HasTeam('police') then return end
-
-	local data = actor:GetData()
-	if data.wanted_level ~= nil then
-		local npc = actor:GetNPC()
-
-		if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
-			return
-		end
-
-		npc:Remove()
 	end
 end)
