@@ -29,11 +29,13 @@ if SERVER then
 			end
 		end
 
-		net.Invoke('bgn_is_loaded_setup', ply)
-
-		ply.BGN_IsLoaded = true
-
 		hook.Run('BGN_PlayerIsLoaded', ply)
+
+		timer.Simple(1, function()
+			if not IsValid(ply) then return end
+			ply.BGN_IsLoaded = true
+			net.Invoke('bgn_is_loaded_setup', ply)
+		end)
 	end)
 else
 	hook.Add("InitPostEntity", "BGN_ClientFirstInitializate", function()
