@@ -29,10 +29,10 @@ if SERVER then
 			end
 
 			hook.Run('BGN_PlayerIsLoaded', ply)
-
+			ply.BGN_IsLoaded = true
+			
 			timer.Simple(1, function()
 				if not IsValid(ply) then return end
-				ply.BGN_IsLoaded = true
 				net.Invoke('bgn_is_loaded_setup', ply)
 			end)
 		end)
