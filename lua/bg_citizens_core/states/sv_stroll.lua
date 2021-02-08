@@ -1,5 +1,5 @@
 local movement_map = {}
-local movement_ignore = {}
+-- local movement_ignore = {}
 local dist_limit
 
 local function UpdateDistLimit()
@@ -13,20 +13,20 @@ UpdateDistLimit()
 
 hook.Add('PostCleanupMap', 'BGN_CleanupNPCsMovementMaps', function()
 	movement_map = {}
-	movement_ignore = {}
+	-- movement_ignore = {}
 	UpdateDistLimit()
 end)
 
-local function IsIgnorePosition(npc, pos)
-	if movement_ignore[npc] ~= nil then
-		for _, data in ipairs(movement_ignore[npc]) do
-			if data.resetTime > CurTime() and data.pos == pos then
-				return true
-			end
-		end
-	end
-	return false
-end
+-- local function IsIgnorePosition(npc, pos)
+-- 	if movement_ignore[npc] ~= nil then
+-- 		for _, data in ipairs(movement_ignore[npc]) do
+-- 			if data.resetTime > CurTime() and data.pos == pos then
+-- 				return true
+-- 			end
+-- 		end
+-- 	end
+-- 	return false
+-- end
 
 local function getPositionsInRadius(npc)
 	local npc_pos = npc:GetPos()
@@ -34,9 +34,9 @@ local function getPositionsInRadius(npc)
 
 	for _, v in ipairs(bgNPC.points) do
 		if v.pos:DistToSqr(npc_pos) <= dist_limit then
-			if IsIgnorePosition(npc, v.pos) then
-				goto skip
-			end
+			-- if IsIgnorePosition(npc, v.pos) then
+			-- 	goto skip
+			-- end
 
 			table.insert(radius_positions, v)
 		end
@@ -73,9 +73,9 @@ local function nextMovement(npc)
 			for _, index in ipairs(parents) do
 				local pos = bgNPC.points[index].pos
 
-				if IsIgnorePosition(npc, pos) then
-					goto skip
-				end
+				-- if IsIgnorePosition(npc, pos) then
+				-- 	goto skip
+				-- end
 
 				if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
 					local other_entities = ents.FindInSphere(pos, 100)
@@ -148,11 +148,11 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			npc:SetSaveValue("m_vecLastPosition", map.pos)
 			npc:SetSchedule(data.schedule)
 
-			movement_ignore[npc] = movement_ignore[npc] or {}
-			table.insert(movement_ignore[npc], {
-				pos = map.pos,
-				resetTime = CurTime() + 60
-			})
+			-- movement_ignore[npc] = movement_ignore[npc] or {}
+			-- table.insert(movement_ignore[npc], {
+			-- 	pos = map.pos,
+			-- 	resetTime = CurTime() + 60
+			-- })
 		else
 			local getNewPos = false
 
@@ -182,11 +182,11 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			npc:SetSaveValue("m_vecLastPosition", map.pos)
 			npc:SetSchedule(data.schedule)
 
-			movement_ignore[npc] = movement_ignore[npc] or {}
-			table.insert(movement_ignore[npc], {
-				pos = map.pos,
-				resetTime = CurTime() + 60
-			})
+			-- movement_ignore[npc] = movement_ignore[npc] or {}
+			-- table.insert(movement_ignore[npc], {
+			-- 	pos = map.pos,
+			-- 	resetTime = CurTime() + 60
+			-- })
 		end
 
 		::skip::
@@ -213,11 +213,11 @@ timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
 		end
 	end
 
-	for npc, tbl in pairs(movement_ignore) do
-		for i = #tbl, 1, -1 do
-			if tbl[i].resetTime < CurTime() then
-				table.remove(tbl, i)
-			end
-		end
-	end
+	-- for npc, tbl in pairs(movement_ignore) do
+	-- 	for i = #tbl, 1, -1 do
+	-- 		if tbl[i].resetTime < CurTime() then
+	-- 			table.remove(tbl, i)
+	-- 		end
+	-- 	end
+	-- end
 end)
