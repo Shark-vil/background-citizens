@@ -36,4 +36,8 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		RunConsoleCommand('bgn_npc_type_' .. npcType, 1)
 	end
+
+	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
+	end
 end)

@@ -56,7 +56,9 @@ local function using(local_file_path, network_type, not_root_directory)
 end
 
 using('modules/extend/net/sh_callback.lua')
-using('modules/extend/cvars/sh_global_cvars.lua')
+using('modules/extend/cvars/sh_gcvars.lua')
+using('modules/extend/cvars/sv_gcvars.lua')
+using('modules/extend/cvars/cl_gcvars.lua')
 
 using('config/sh_main.lua')
 using('config/sh_npcs.lua')

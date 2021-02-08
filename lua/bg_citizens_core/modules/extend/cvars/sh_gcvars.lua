@@ -1,0 +1,1 @@
+bgNPC.GlobalCvars = bgNPC.GlobalCvars or {}
