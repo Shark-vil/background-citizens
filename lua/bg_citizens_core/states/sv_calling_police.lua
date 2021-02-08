@@ -29,17 +29,22 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 
 				for _, enemy in pairs(actor.targets) do
 					if IsValid(enemy) then
-						if asset:HasWanted(enemy) then
-							local c_Wanted = asset:GetWanted(enemy)
-							c_Wanted:UpdateWanted(enemy)
-						else
-							asset:AddWanted(enemy)
+						if not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+							if asset:HasWanted(enemy) then
+								local c_Wanted = asset:GetWanted(enemy)
+								c_Wanted:UpdateWanted(enemy)
+							else
+								asset:AddWanted(enemy)
+							end
 						end
 					end
 				end
 
 				npc:EmitSound('buttons/combine_button1.wav', 500, 100, 1, CHAN_AUTO)
-				actor:Fear()
+				
+				if not hook.Run('BGN_PostCallingPolice', actor) then
+					actor:Fear()
+				end
 			else
 				if not actor:HasSequence('Crouch_IdleD') then
 					actor:SetNextSequence('Crouch_To_Stand')
