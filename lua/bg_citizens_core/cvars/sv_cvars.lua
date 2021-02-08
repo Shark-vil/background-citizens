@@ -17,7 +17,7 @@ cvars.AddChangeCallback('bgn_max_npc', function(cvar_name, old_value, new_value)
 		
 				net.Start('bgn_gcvars_change_from_client')
 				net.WriteString(type_cvar_name)
-				net.WriteFloat(new_value)
+				net.WriteFloat(fullness)
 				net.Broadcast()
 			end)
 		end
