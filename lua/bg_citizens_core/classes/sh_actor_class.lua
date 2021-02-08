@@ -29,7 +29,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 	obj.old_state = nil
 	obj.state_lock = false
 
-	obj.isBgnActor = true
+	obj.isBgnClass = true
 	obj.targets = {}
 
 	obj.npc_schedule = -1
@@ -131,9 +131,11 @@ function BGN_ACTOR:Instance(npc, type, data)
 	end
 
 	function obj:RandomState()
-		local state = self:GetRandomState()
-		if state ~= 'none' and self:GetState() ~= state then
-			self:SetState(state)
+		if not hook.Run('PreRandomState', self) then
+			local state = self:GetRandomState()
+			if state ~= 'none' and self:GetState() ~= state then
+				self:SetState(state)
+			end
 		end
 	end
 
@@ -319,12 +321,10 @@ function BGN_ACTOR:Instance(npc, type, data)
 		data = data or {}
 
 		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
-		if hook_result ~= nil then
-			if isbool(hook_result) and not hook_result then
+		if hook_result then
+			if isbool(hook_result) then
 				return
-			end
-			
-			if istable(hook_result) and hook_result.state ~= nil then
+			elseif istable(hook_result) then
 				state = hook_result.state or state
 				data = hook_result.data or {}
 			end
@@ -394,7 +394,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 			end
 			
 			if istable(value) then
-				if value.isBgnActor then
+				if value.isBgnClass then
 					value = value:GetData().team
 				end
 
@@ -490,6 +490,71 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return point 
 	end
 
+	function obj:GetFarPointToPosition(pos, radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) > dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
+	function obj:GetClosestPointInRadius(radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local pos = npc:GetPos()
+		local points = bgNPC:GetAllPointsInRadius(pos, radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) < dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
+	function obj:GetFarPointInRadius(radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local pos = npc:GetPos()
+		local points = bgNPC:GetAllPointsInRadius(pos, radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) > dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
 	function obj:GetReactionForDamage()
 		local probability = math.random(1, (self.data.at_damage_range or 100))
 		local percent, reaction = table.Random(self.data.at_damage)
@@ -507,6 +572,12 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 
 		reaction = reaction or 'ignore'
+		
+		if reaction == 'defense' and self.type == 'citizen' 
+			and GetConVar('bgn_disable_citizens_weapons'):GetBool()
+		then
+			reaction = 'fear'
+		end
 
 		return reaction
 	end
@@ -528,6 +599,12 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 
 		reaction = reaction or 'ignore'
+
+		if reaction == 'defense' and self.type == 'citizen' 
+			and GetConVar('bgn_disable_citizens_weapons'):GetBool()
+		then
+			reaction = 'fear'
+		end
 
 		return reaction
 	end
@@ -694,7 +771,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return obj
 	end
 
-	npc.isActor = true
+	npc.isBgnActor = true
 
 	return obj
 end

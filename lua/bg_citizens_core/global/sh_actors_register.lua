@@ -129,7 +129,7 @@ else
 						end
 					end
 			
-					if hook.Run('BGN_OnValidSpawnNPC', data) ~= nil then
+					if hook.Run('BGN_OnValidSpawnNPC', data) then
 						return
 					end
 					
@@ -142,7 +142,7 @@ else
 						ATTENTION! Be careful, this hook is called before the NPC spawns. 
 						If you give out a weapon or something similar, it will crash the game!
 					--]]
-					if hook.Run('BGN_PreSpawnNPC', npc, type, data) ~= nil then
+					if hook.Run('BGN_PreSpawnNPC', npc, type, data) then
 						if IsValid(npc) then npc:Remove() end
 						return
 					end

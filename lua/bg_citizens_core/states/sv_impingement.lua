@@ -27,6 +27,14 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 	end
 end)
 
+local asset = bgNPC:GetModule('wanted')
+hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
+	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:TargetsCount() == 0 then
+		actor:SetState('retreat')
+		return true
+	end
+end)
+
 timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('impingement')) do
 		if not actor:IsAlive() then goto skip end

@@ -90,7 +90,7 @@ function(actor, attacker, target, reaction)
 		ReactionOverride(actor, reaction)
 	end
 
-	return false
+	return true
 end)
 
 --[[

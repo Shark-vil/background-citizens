@@ -143,5 +143,6 @@ using('states/sv_idle.lua')
 using('states/sv_arrest.lua')
 using('states/sv_dialogue.lua')
 using('states/sv_sit_to_chair.lua')
+using('states/sv_retreat.lua')
 
 using('tool_options/cl_bgn_settings_menu.lua')

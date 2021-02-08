@@ -107,7 +107,7 @@ local function nextMovement(npc)
 	return nil
 end
 
-hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
+hook.Add('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 	if actor:GetState() ~= 'walk' then return end
 
 	local npc = actor:GetNPC()

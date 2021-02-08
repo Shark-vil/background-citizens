@@ -1,7 +1,7 @@
 local ASSET = {}
 
 function ASSET:HasTeam(ply, actor)
-   if not actor.isBgnActor or not ply:IsPlayer() then return false end
+   if not actor.isBgnClass or not ply:IsPlayer() then return false end
    
    local team_id = ply:Team()
    for team_name, data in pairs(bgNPC.cfg.player.team_parents) do
@@ -17,7 +17,7 @@ function ASSET:HasTeam(ply, actor)
 end
 
 function ASSET:HasUserGroup(ply, actor)
-   if not actor.isBgnActor or not ply:IsPlayer() then return false end
+   if not actor.isBgnClass or not ply:IsPlayer() then return false end
    
    local group_id = ply:GetUserGroup()
    for team_name, data in pairs(bgNPC.cfg.player.usergroup_parents) do

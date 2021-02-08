@@ -25,7 +25,7 @@ local cahirs = {
 hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, data)
    if actor:HasState('sit_to_chair') and state ~= 'defense' and state ~= 'fear' then
       if actor:GetStateData().isStand then return end
-      return false
+      return true
    end
 
    if state ~= 'sit_to_chair' then return end
@@ -69,7 +69,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
          }
       }
    else
-      return false
+      return true
    end
 end)
 

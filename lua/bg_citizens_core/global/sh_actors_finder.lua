@@ -1,8 +1,6 @@
 function bgNPC:GetActor(npc)
-	for _, actor in ipairs(bgNPC:GetAll()) do
-		if actor:GetNPC() == npc then
-			return actor
-		end
+	if npc.isBgnActor then
+		return npc:GetActor()
 	end
 	return nil
 end

@@ -60,11 +60,9 @@ hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
 	if data.wanted_level ~= nil then
 		local npc = actor:GetNPC()
 
-		if hook.Run('BGN_PreRemoveNPC', npc) ~= nil then
-			return
+		if not hook.Run('BGN_PreRemoveNPC', npc) then
+			npc:Remove()
 		end
-
-		npc:Remove()
 	end
 end)
 
