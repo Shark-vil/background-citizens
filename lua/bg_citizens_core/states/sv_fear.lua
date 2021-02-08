@@ -55,24 +55,10 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		local data = actor:GetStateData()
 
 		data.delay = data.delay or 0
-		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 60)
-		if data.call_for_help < CurTime() then
-			FearScream(npc)
-			
-			local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
-			for _, NearActor in ipairs(near_actors) do
-				if NearActor:HasTeam(actor) then
-					NearActor:AddTarget(target)
-					NearActor:SetState(NearActor:GetReactionForProtect())
-				end
-			end
-
-			data.call_for_help = CurTime() + math.random(30, 60)
-		end
+		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 120)
 
 		local dist = npc:GetPos():DistToSqr(target:GetPos())
-
-		if dist >= 1000000 then -- 1000 ^ 2
+		if dist >= 640000 and not bgNPC:NPCIsViewVector(npc, target) then -- 800 ^ 2
 			actor:RemoveTarget(target)
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
@@ -132,6 +118,20 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		if dist < 22500 then -- 150 ^ 2
 			data.schedule = 'fear'
+		elseif dist > 250000 then -- 500 ^ 2
+			if data.call_for_help < CurTime() then
+				FearScream(npc)
+				
+				local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
+				for _, NearActor in ipairs(near_actors) do
+					if NearActor:HasTeam(actor) then
+						NearActor:AddTarget(target)
+						NearActor:SetState(NearActor:GetReactionForProtect())
+					end
+				end
+	
+				data.call_for_help = CurTime() + math.random(30, 120)
+			end
 		end
 
 		::skip::
