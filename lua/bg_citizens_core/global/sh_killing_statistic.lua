@@ -60,7 +60,5 @@ function bgNPC:GetKillingStatisticSumm(attacker)
 end
 
 hook.Add('PostCleanupMap', 'BGN_ResetKillingStatistic', function()
-	for _, ply in ipairs(player.GetAll()) do
-		bgNPC.killing_statistic[ply] = {}
-	end
+	bgNPC:ResetKillingStatisticAll()
 end)
