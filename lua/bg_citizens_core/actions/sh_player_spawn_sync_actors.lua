@@ -3,6 +3,8 @@ if SERVER then
 		timer.Simple(3, function()
 			if not IsValid(ply) or ply.BGN_IsLoaded then return end
 
+			bgNPC:Log('Pre first spawn', 'PlayerSpawner')
+
 			local sync_time = 2
 
 			for _, actor in ipairs(bgNPC:GetAll()) do
@@ -30,17 +32,22 @@ if SERVER then
 
 			hook.Run('BGN_PlayerIsLoaded', ply)
 			ply.BGN_IsLoaded = true
-			
+
 			timer.Simple(1, function()
 				if not IsValid(ply) then return end
 				net.Invoke('bgn_is_loaded_setup', ply)
 			end)
+
+			bgNPC:Log('Post first spawn', 'PlayerSpawner')
 		end)
 	end)
 else
 	net.RegisterCallback('bgn_is_loaded_setup', function()
-		LocalPlayer().BGN_IsLoaded = true
+		bgNPC:Log('Pre first spawn', 'PlayerSpawner')
 
+		LocalPlayer().BGN_IsLoaded = true
 		hook.Run('BGN_PlayerIsLoaded', LocalPlayer())
+
+		bgNPC:Log('Post first spawn', 'PlayerSpawner')
 	end)
 end
