@@ -39,7 +39,7 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	if not IsValid(target) then return end
 
 	local npc = actor:GetNPC()
-	if target:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
+	if target:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
 	
 	FearScream(npc)
 end)
@@ -55,10 +55,10 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		local data = actor:GetStateData()
 
 		data.delay = data.delay or 0
-		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 120)
+		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 60)
 
 		local dist = npc:GetPos():DistToSqr(target:GetPos())
-		if dist >= 640000 and not bgNPC:IsTargetRay(npc, target) then -- 800 ^ 2
+		if dist >= 1000000 then -- 1000 ^ 2
 			actor:RemoveTarget(target)
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
@@ -130,7 +130,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 					end
 				end
 	
-				data.call_for_help = CurTime() + math.random(30, 120)
+				data.call_for_help = CurTime() + math.random(30, 60)
 			end
 		end
 
