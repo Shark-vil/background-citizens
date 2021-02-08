@@ -8,6 +8,9 @@ CreateConVar("bgn_installed", 1, {
 bgNPC:RegisterGlobalCvar('bgn_enable', bgNPC.cvar.bgn_enable, 
 { FCVAR_ARCHIVE, FCVAR_NOTIFY }, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
 
+bgNPC:RegisterGlobalCvar('bgn_debug', bgNPC.cvar.bgn_debug, 
+{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 'Turns on debug mode and prints additional information to the console.')
+
 bgNPC:RegisterGlobalCvar('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode,
 { FCVAR_ARCHIVE, FCVAR_NOTIFY }, 'Enables or disables wanted mode.')
 

@@ -10,6 +10,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 	RunConsoleCommand('bgn_enable', bgNPC.cvar.bgn_enable)
+	RunConsoleCommand('bgn_debug', bgNPC.cvar.bgn_debug)
 	RunConsoleCommand('bgn_max_npc', bgNPC.cvar.bgn_max_npc)
 	RunConsoleCommand('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius)
 	RunConsoleCommand('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility)

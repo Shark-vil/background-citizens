@@ -3,6 +3,8 @@ local ru_lang = {}
 
 en_lang['bgn.settings.general.bgn_enable'] = 'Enable background NPCs'
 en_lang['bgn.settings.general.bgn_enable.description'] = 'Description: toggles the modification activity.'
+en_lang['bgn.settings.general.bgn_debug'] = 'Enable debug mode'
+en_lang['bgn.settings.general.bgn_debug.description'] = 'Turns on debug mode and prints additional information to the console.'
 en_lang['bgn.settings.general.bgn_max_npc'] = 'Maximum number of NPCs on the map'
 en_lang['bgn.settings.general.bgn_max_npc.description'] = 'Description: the maximum number of background NPCs on the map.'
 en_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Ignore another NPCs'
@@ -13,6 +15,8 @@ en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Reset to 
 
 ru_lang['bgn.settings.general.bgn_enable'] = 'Включить фоновых NPC'
 ru_lang['bgn.settings.general.bgn_enable.description'] = 'Описание: переключает активность модификации.'
+ru_lang['bgn.settings.general.bgn_debug'] = 'Включить режим отладки'
+ru_lang['bgn.settings.general.bgn_debug.description'] = 'Включает режим отладки и выводит дополнительную информацию в консоль.'
 ru_lang['bgn.settings.general.bgn_max_npc'] = 'Максимальное количество NPC на карте'
 ru_lang['bgn.settings.general.bgn_max_npc.description'] = 'Описание: максимальное количество фоновых NPC на карте.'
 ru_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Игнорировать других NPC'
@@ -51,6 +55,13 @@ local function GeneralSettingsMenu(Panel)
 		["Command"] = "cl_citizens_load_route ",
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.general.cl_citizens_load_route.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.general.bgn_debug',
+		Command = 'bgn_debug' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.general.bgn_debug.description'
 	})
 
 	Panel:AddControl("Button", {
