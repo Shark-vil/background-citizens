@@ -1,6 +1,7 @@
 local movement_map = {}
 local movement_ignore = {}
 local dist_limit
+local reset_ignore_time = 15
 
 local function UpdateDistLimit()
 	dist_limit = 250000
@@ -56,7 +57,9 @@ local function updateMovement(npc)
 	movement_map[npc] = {
 		pos = v.pos,
 		index = key,
-		resetTime = CurTime() + 10
+		resetTime = CurTime() + reset_ignore_time,
+		start_pos = npc:GetPos(),
+		start_time = CurTime()
 	}
 
 	return movement_map[npc]
@@ -93,7 +96,9 @@ local function nextMovement(npc)
 					movement_map[npc] = {
 						pos = pos,
 						index = index,
-						resetTime = CurTime() + 10
+						resetTime = CurTime() + reset_ignore_time,
+						start_pos = npc:GetPos(),
+						start_time = CurTime()
 					}
 
 					return movement_map[npc]
@@ -121,10 +126,7 @@ hook.Add("BGN_SetNPCState", "BGN_ResetIgnorePointsAfterStateChange", function(ac
 	if state == 'walk' then return end
 
 	local npc = actor:GetNPC()
-	local map = movement_map[npc]
-	if map ~= nil then
-		map.resetTime = 0
-	end
+	movement_map[npc] = nil
 end)
 
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
@@ -151,16 +153,19 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
-				resetTime = CurTime() + 60
+				resetTime = CurTime() + reset_ignore_time
 			})
 		else
 			local getNewPos = false
 
-			if npc:GetPos():DistToSqr(map.pos) <= 900 then -- 30 ^
+			if map.start_time + 5 < CurTime() and npc:GetPos():DistToSqr(map.start_pos) <= 900 then
 				getNewPos = true
-			elseif map.resetTime < CurTime() then
+			elseif npc:GetPos():DistToSqr(map.pos) <= 900 then -- 30 ^
 				getNewPos = true
 			end
+			-- elseif map.resetTime < CurTime() then
+			-- 	getNewPos = true
+			-- end
 
 			if not getNewPos then
 				goto skip
@@ -185,7 +190,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
-				resetTime = CurTime() + 60
+				resetTime = CurTime() + reset_ignore_time
 			})
 		end
 
