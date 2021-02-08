@@ -158,7 +158,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
          data = {
             chair = chair,
             chairDataId = cahirId,
-            delay = CurTime() + 10,
+            delay = CurTime() + math.random(10, 30),
             isSit = false,
             isMove = false,
             isStand = false,
