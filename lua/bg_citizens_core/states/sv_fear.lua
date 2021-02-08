@@ -52,7 +52,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		data.delay = data.delay or 0
 
-		if npc:GetPos():DistToSqr(target:GetPos()) == 1000000 then -- 1000 ^ 2
+		if npc:GetPos():DistToSqr(target:GetPos()) >= 1000000 then -- 1000 ^ 2
 			actor:RemoveTarget(target)
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
@@ -120,11 +120,8 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 end)
 
 timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('fear')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'fear' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end
