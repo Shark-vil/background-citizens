@@ -118,15 +118,16 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		if dist < 22500 then -- 150 ^ 2
 			data.schedule = 'fear'
-		elseif dist > 250000 then -- 500 ^ 2
+			data.call_for_help = CurTime() + math.random(30, 60)
+		elseif dist > 360000 then -- 600 ^ 2
 			if data.call_for_help < CurTime() then
 				FearScream(npc)
 				
-				local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
+				local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 600)
 				for _, NearActor in ipairs(near_actors) do
 					if NearActor:HasTeam(actor) then
-						NearActor:AddTarget(target)
 						NearActor:SetState(NearActor:GetReactionForProtect())
+						NearActor:AddTarget(target)
 					end
 				end
 	
