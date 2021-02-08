@@ -1,5 +1,5 @@
 function bgNPC:Log(message, tag)
-	if not bgNPC.cfg.debugMode then return end
+	if not GetConVar('bgn_debug'):GetBool() then return end
 	if tag ~= nil then
 		MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
 	else
