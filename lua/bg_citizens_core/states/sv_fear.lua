@@ -52,14 +52,16 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		data.delay = data.delay or 0
 
-		if npc:GetPos():DistToSqr(target:GetPos()) >= 1000000 then -- 1000 ^ 2
+		local dist = npc:GetPos():DistToSqr(target:GetPos())
+
+		if dist >= 490000 and not bgNPC:IsTargetRay(npc, target) then -- 700 ^ 2
 			actor:RemoveTarget(target)
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
 		end
 
 		if data.delay < CurTime() then
-			if math.random(0, 100) == 0 and npc:GetPos():DistToSqr(target:GetPos()) > 90000 
+			if math.random(0, 100) == 0 and dist > 90000 
 				and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
 			then
 				actor:SetState('calling_police', {
@@ -68,7 +70,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 				goto skip
 			end
 
-			if data.schedule == 'run' and npc:GetPos():DistToSqr(target:GetPos()) > 360000 -- 600 ^ 2 
+			if data.schedule == 'run' and dist > 360000 -- 600 ^ 2 
 				and math.random(0, 10) == 0
 			then
 				data.schedule = 'dyspnea'
@@ -110,7 +112,6 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 			actor:ClearSchedule()
 		end
 
-		local dist = npc:GetPos():DistToSqr(target:GetPos())
 		if dist < 22500 then -- 150 ^ 2
 			data.schedule = 'fear'
 		end
