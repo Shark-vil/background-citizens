@@ -58,7 +58,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 120)
 
 		local dist = npc:GetPos():DistToSqr(target:GetPos())
-		if dist >= 640000 and not bgNPC:NPCIsViewVector(npc, target) then -- 800 ^ 2
+		if dist >= 640000 and not bgNPC:IsTargetRay(npc, target) then -- 800 ^ 2
 			actor:RemoveTarget(target)
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
