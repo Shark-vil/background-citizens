@@ -232,7 +232,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            npc:SetAngles(Angle(0, 0, 0))
                         end
 
-                        npc:SetPos(npc:GetPos() + npc:GetForward() * 5)
+                        npc:SetPos(npc:GetPos() + npc:GetForward() * 10)
                         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
    
