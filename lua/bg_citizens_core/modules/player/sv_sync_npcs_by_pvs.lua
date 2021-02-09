@@ -10,8 +10,6 @@ local function thread_method()
             table.remove(sync_data[ply], i)
          end
       end
-
-      coroutine.yield()
       
       for _, ent in ipairs(ents.FindInPVS(ply)) do
          local actor = bgNPC:GetActor(ent)
@@ -32,7 +30,6 @@ local function thread_method()
 
             table.insert(sync_data[ply], ent)
          end
-         coroutine.yield()
       end
 
       coroutine.yield()
