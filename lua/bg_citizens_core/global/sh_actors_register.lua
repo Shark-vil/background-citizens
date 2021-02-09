@@ -1,5 +1,5 @@
 if CLIENT then
-	net.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
+	snet.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
 		if IsValid(npc) then
 			local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType])
 			bgNPC:AddNPC(actor)
@@ -129,7 +129,7 @@ else
 						end
 					end
 			
-					if hook.Run('BGN_OnValidSpawnNPC', data) then
+					if hook.Run('BGN_OnValidSpawnActor', data) then
 						return
 					end
 					
@@ -142,7 +142,7 @@ else
 						ATTENTION! Be careful, this hook is called before the NPC spawns. 
 						If you give out a weapon or something similar, it will crash the game!
 					--]]
-					if hook.Run('BGN_PreSpawnNPC', npc, type, data) then
+					if hook.Run('BGN_PreSpawnActor', npc, type, data) then
 						if IsValid(npc) then npc:Remove() end
 						return
 					end
@@ -178,22 +178,10 @@ else
 			
 					local actor = BGN_ACTOR:Instance(npc, type, data)
 					bgNPC:AddNPC(actor)
+
+					actor:RandomState()
 					
-					timer.Simple(0.5, function()
-						if not IsValid(npc) then return end
-
-						net.InvokeAll('bgn_add_actor_from_client', type, npc)
-						actor:RandomState()
-
-						timer.Simple(0.5, function()
-							if not IsValid(npc) then return end
-							actor:SyncData()
-							
-							hook.Run('BGN_InitActor', actor)
-						end)
-					end)
-
-					hook.Run('BGN_PostSpawnNPC', npc, type, data)
+					hook.Run('BGN_InitActor', actor)
 				end
 			end)
 		end

@@ -1,5 +1,5 @@
 if CLIENT then
-	net.RegisterCallback('bgn_sync_wanted_killing_statistic', function(ply, data)
+	snet.RegisterCallback('bgn_sync_wanted_killing_statistic', function(ply, data)
 		bgNPC.wanted_killing_statistic = data
 	end)
 end
@@ -14,7 +14,7 @@ function bgNPC:AddWantedKillingStatistic(attacker, actor)
 	self.wanted_killing_statistic[attacker][type] = self.wanted_killing_statistic[attacker][type] + 1
 
 	if SERVER then
-		net.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
+		snet.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
 	end
 
 	return self.wanted_killing_statistic[attacker][type]
@@ -24,7 +24,7 @@ function bgNPC:ResetWantedKillingStatistic(attacker)
 	self.wanted_killing_statistic[attacker] = {}
 
 	if SERVER then
-		net.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
+		snet.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
 	end
 end
 
@@ -34,7 +34,7 @@ function bgNPC:ResetWantedKillingStatisticAll()
 	end
 
 	if SERVER then
-		net.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
+		snet.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
 	end
 end
 

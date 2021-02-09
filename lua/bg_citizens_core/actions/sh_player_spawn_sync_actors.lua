@@ -16,7 +16,7 @@ if SERVER then
 					timer.Simple(sync_time, function()
 						if not IsValid(npc) or not IsValid(ply) then return end
 
-						net.InvokeAll('bgn_add_actor_from_client', type, npc)
+						snet.InvokeAll('bgn_add_actor_from_client', type, npc)
 
 						timer.Simple(0.5, function()
 							if not IsValid(npc) or not IsValid(ply) then return end
@@ -35,14 +35,14 @@ if SERVER then
 
 			timer.Simple(1, function()
 				if not IsValid(ply) then return end
-				net.Invoke('bgn_is_loaded_setup', ply)
+				snet.Invoke('bgn_is_loaded_setup', ply)
 			end)
 
 			bgNPC:Log('Post first spawn', 'PlayerSpawner')
 		end)
 	end)
 else
-	net.RegisterCallback('bgn_is_loaded_setup', function()
+	snet.RegisterCallback('bgn_is_loaded_setup', function()
 		bgNPC:Log('Pre first spawn', 'PlayerSpawner')
 
 		LocalPlayer().BGN_IsLoaded = true

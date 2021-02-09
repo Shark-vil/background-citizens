@@ -1,4 +1,4 @@
-hook.Add('BGN_PreSpawnNPC', 'BGN_SetPoliceHelicopterUpperPosition', function(npc, type, data)
+hook.Add('BGN_PreSpawnActor', 'BGN_SetPoliceHelicopterUpperPosition', function(npc, type, data)
 	if type ~= 'police_helicopter' then return end
 	
 	local pos = npc:GetPos()

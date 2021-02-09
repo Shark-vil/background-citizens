@@ -7,14 +7,16 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 	local targets = {}
 
 	for _, ent in pairs(target_from_zone) do
-		if ent:IsPlayer() then
-			table.insert(targets, ent)
-		end
-
-		if ent:IsNPC() and ent ~= npc then
-			local ActorTarget = bgNPC:GetActor(ent)
-			if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
+		if bgNPC:IsTargetRay(npc, ent) then
+			if ent:IsPlayer() then
 				table.insert(targets, ent)
+			end
+
+			if ent:IsNPC() and ent ~= npc then
+				local ActorTarget = bgNPC:GetActor(ent)
+				if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
+					table.insert(targets, ent)
+				end
 			end
 		end
 	end
@@ -44,20 +46,24 @@ timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
 		
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
-		
-		if npc:Disposition(target) ~= D_HT then
+
+		data.delay = data.delay or 0
+		data.state_timeout = data.state_timeout or CurTime() + 20
+
+		if data.state_timeout < CurTime() then
+			actor:RemoveTarget(target)
+			data.state_timeout = CurTime() + 20
+		elseif npc:Disposition(target) ~= D_HT then
 			npc:AddEntityRelationship(target, D_HT, 99)
 		end
 
 		if target:IsPlayer() and target:InVehicle() then
 			target = target:GetVehicle()
-			
-			if npc:GetTarget() ~= target then
-				npc:SetTarget(target)
-			end
 		end
 
-		data.delay = data.delay or 0
+		if npc:GetTarget() ~= target then
+			npc:SetTarget(target)
+		end
 
 		if data.delay < CurTime() then
 			bgNPC:SetActorWeapon(actor)
@@ -85,4 +91,12 @@ timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
 		
 		::skip::
 	end
+end)
+
+
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetImpingementTimer', function(attacker, target, dmginfo)
+	local actor = bgNPC:GetActor(attacker)
+	if actor == nil or not actor:HasState('impingement') then return end
+
+	actor:GetStateData().state_timeout = CurTime() + 20
 end)

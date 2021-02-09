@@ -13,22 +13,22 @@ if SERVER then
 			bgNPC:TemporaryVectorVisibility(ent, 3)
 			timer.Simple(1.5, function()
 				if not IsValid(ent) then return end
-				net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
+				snet.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
 			end)
 		else
 			bgNPC:TemporaryVectorVisibility(ent)
-			net.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
+			snet.InvokeAll('bgn_citizens_add_entity_variable', ent, key, data)
 		end
 	end
 
 	-- Global
 	function bgNPC:SetGlobalVariable(key, data)
 		variables[key] = data
-		net.InvokeAll('bgn_citizens_add_global_variable', key, data)
+		snet.InvokeAll('bgn_citizens_add_global_variable', key, data)
 	end
 else
 	-- Entity
-	net.RegisterCallback('bgn_citizens_add_entity_variable', function(ply, ent, key, data)
+	snet.RegisterCallback('bgn_citizens_add_entity_variable', function(ply, ent, key, data)
 		if not IsValid(ent) then
 			bgNPC:Log('Error synchronizing entity variables. The data was sent too sooner or later.', 'Network')
 			return
@@ -38,7 +38,7 @@ else
 		entity_variables[ent][key] = data
 	end)
 
-	net.RegisterCallback('bgn_citizens_remove_entity_variable', function(ply, ent, key)
+	snet.RegisterCallback('bgn_citizens_remove_entity_variable', function(ply, ent, key)
 		if not IsValid(ent) then
 			bgNPC:Log('Error synchronizing entity variables. The data was sent too sooner or later.', 'Network')
 			return
@@ -49,11 +49,11 @@ else
 	end)
 
 	-- Global
-	net.RegisterCallback('bgn_citizens_add_global_variable', function(ply, key, data)
+	snet.RegisterCallback('bgn_citizens_add_global_variable', function(ply, key, data)
 		variables[key] = data
 	end)
 
-	net.RegisterCallback('bgn_citizens_remove_global_variable', function(ply, key)
+	snet.RegisterCallback('bgn_citizens_remove_global_variable', function(ply, key)
 		variables[key] = nil
 	end)
 end
@@ -70,11 +70,11 @@ function bgNPC:RemoveEntityVariable(ent, key, not_delay)
 			bgNPC:TemporaryVectorVisibility(ent, 3)
 			timer.Simple(1.5, function()
 				if not IsValid(ent) then return end
-				net.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
+				snet.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
 			end)
 		else
 			bgNPC:TemporaryVectorVisibility(ent)
-			net.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
+			snet.InvokeAll('bgn_citizens_remove_entity_variable', ent, key)
 		end
 	end
 end
@@ -91,7 +91,7 @@ end
 function bgNPC:RemoveGlobalVariable(key)
 	variables[key] = nil
 	if SERVER then
-		net.InvokeAll('bgn_citizens_remove_global_variable', key)
+		snet.InvokeAll('bgn_citizens_remove_global_variable', key)
 	end
 end
 

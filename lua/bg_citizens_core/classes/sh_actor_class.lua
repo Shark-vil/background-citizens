@@ -1,7 +1,12 @@
 BGN_ACTOR = {}
 
+local uid = 0
 function BGN_ACTOR:Instance(npc, type, data)
 	local obj = {}
+	
+	uid = uid + 1
+
+	obj.uid = uid
 	obj.npc = npc
 	obj.class = npc:GetClass()
 	obj.data = data
@@ -43,6 +48,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		if not IsValid(npc) then return end
 
 		local sync_data = {
+			uid = self.uid,
 			anim_name = self.anim_name,
 			reaction = self.reaction,
 			anim_time = self.anim_time,
@@ -60,9 +66,9 @@ function BGN_ACTOR:Instance(npc, type, data)
 		}
 
 		if not IsValid(ply) then
-			net.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
+			snet.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
 		else
-			net.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
+			snet.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
 		end
 	end
 
@@ -72,7 +78,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
 			reaction = self.reaction,
 		})
 	end
@@ -83,7 +89,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 		})
@@ -95,7 +101,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
 			targets = self.targets,
 		})
 	end
@@ -106,7 +112,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_state_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
 			old_state = self.old_state,
 			state_lock = self.state_lock,
 			state_data = self.state_data,
@@ -119,7 +125,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		net.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
 			anim_name = self.anim_name,
 			anim_time = self.anim_time,
 			loop_time = self.loop_time,
@@ -334,7 +340,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self.state_data = { state = state, data = data }
 
 		if SERVER then
-			net.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
+			snet.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
 				self.state_data.state, self.state_data.data)
 
 			self.anim_action = nil

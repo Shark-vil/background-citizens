@@ -22,19 +22,23 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 		
-		if npc:Disposition(target) ~= D_HT then
+		data.delay = data.delay or 0
+		data.state_timeout = data.state_timeout or CurTime() + 20
+
+		if data.state_timeout < CurTime() then
+			actor:RemoveTarget(target)
+			data.state_timeout = CurTime() + 20
+		elseif npc:Disposition(target) ~= D_HT then
 			npc:AddEntityRelationship(target, D_HT, 99)
 		end
 
 		if target:IsPlayer() and target:InVehicle() then
 			target = target:GetVehicle()
-			
-			if npc:GetTarget() ~= target then
-				npc:SetTarget(target)
-			end
 		end
 
-		data.delay = data.delay or 0
+		if npc:GetTarget() ~= target then
+			npc:SetTarget(target)
+		end
 
 		if data.delay < CurTime() then
 			bgNPC:SetActorWeapon(actor)
@@ -62,4 +66,11 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		
 		::skip::
 	end
+end)
+
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetProtectionTimer', function(attacker, target, dmginfo)
+	local actor = bgNPC:GetActor(attacker)
+	if actor == nil or not actor:HasState('police') then return end
+
+	actor:GetStateData().state_timeout = CurTime() + 20
 end)

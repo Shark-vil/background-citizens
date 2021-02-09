@@ -22,7 +22,7 @@ function ASSET:AddWanted(ent)
 					bgNPC:TemporaryVectorVisibility(ent, 3)
 					timer.Simple(1, function() 
 						if not IsValid(ent) then return end
-						net.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
+						snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
 					end)
 				end
 			end,
@@ -34,7 +34,7 @@ function ASSET:AddWanted(ent)
 					bgNPC:TemporaryVectorVisibility(ent, 3)
 					timer.Simple(1, function() 
 						if not IsValid(ent) then return end
-						net.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
+						snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
 					end)
 				end
 			end,
@@ -48,7 +48,7 @@ function ASSET:AddWanted(ent)
 					bgNPC:TemporaryVectorVisibility(ent, 3)
 					timer.Simple(1, function() 
 						if not IsValid(ent) then return end
-						net.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+						snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
 					end)
 
 					local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
@@ -67,7 +67,7 @@ function ASSET:AddWanted(ent)
 						bgNPC:TemporaryVectorVisibility(ent, 3)
 						timer.Simple(1, function() 
 							if not IsValid(ent) then return end
-							net.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+							snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
 						end)
 					end
 
@@ -89,7 +89,7 @@ function ASSET:AddWanted(ent)
 			bgNPC:TemporaryVectorVisibility(ent, 3)
 			timer.Simple(1, function() 
 				if not IsValid(ent) then return end
-				net.InvokeAll('bgn_module_wanted_AddWanted', ent)
+				snet.InvokeAll('bgn_module_wanted_AddWanted', ent)
 			end)
 		end
 
@@ -109,7 +109,7 @@ function ASSET:RemoveWanted(ent)
 			bgNPC:TemporaryVectorVisibility(ent, 3)
 			timer.Simple(1, function() 
 				if not IsValid(ent) then return end
-				net.InvokeAll('bgn_module_wanted_RemoveWanted', ent)
+				snet.InvokeAll('bgn_module_wanted_RemoveWanted', ent)
 			end)
 		end
 

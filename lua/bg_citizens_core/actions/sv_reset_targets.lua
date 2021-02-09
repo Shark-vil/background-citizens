@@ -18,7 +18,7 @@ hook.Add("BGN_ResetTargetsForActor", "BGN_SetDefaultStateIfTargetDeath", functio
 	 actor:RandomState()
 end)
 
-timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 0.5, 0, function()
+timer.Create('BGN_Timer_ResetFearAndDefenseStateIfNoEnemies', 1, 0, function()
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		actor:RecalculationTargets()
 	end

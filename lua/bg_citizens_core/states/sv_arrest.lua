@@ -63,7 +63,6 @@ function(actor, attacker, target, reaction)
 	if asset == nil then return end
 
 	local c_Arrest = asset:GetPlayer(attacker)
-
 	if c_Arrest == nil or c_Arrest.not_arrest then
 		ReactionOverride(actor, reaction)
 		return

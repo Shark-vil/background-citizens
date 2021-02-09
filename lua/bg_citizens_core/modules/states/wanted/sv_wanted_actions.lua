@@ -99,9 +99,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 							actor:SetState(actor:GetReactionForProtect())
 						end
 						goto skip
-					end
-
-					if dist <= 2250000 then -- 1500 ^ 2
+					elseif dist <= 2250000 then -- 1500 ^ 2
 						if bgNPC:IsTargetRay(npc, enemy) then
 							c_Wanted:UpdateWanted()
 							

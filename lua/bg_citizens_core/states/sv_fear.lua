@@ -12,7 +12,7 @@ local female_scream = {
 	'ambient/voices/f_scream1.wav',
 	'vo/canals/arrest_helpme.wav',
 	'vo/npc/female01/help01.wav',
-	'vo/npc/male01/help01.wav',
+	'vo/npc/female01/help01.wav',
 	'vo/npc/female01/no01.wav',
 	'vo/npc/female01/no02.wav',
 }
@@ -29,6 +29,19 @@ local function FearScream(npc)
 	end
 
 	npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
+end
+
+local function CallForHelp(actor, npc, target)
+	FearScream(npc)
+				
+	local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
+	for _, NearActor in ipairs(near_actors) do
+		local npc = NearActor:GetNPC()
+		if NearActor:IsAlive() and NearActor:HasTeam(actor) and bgNPC:IsTargetRay(npc, target) then
+			NearActor:SetState(NearActor:GetReactionForProtect())
+			NearActor:AddTarget(target)
+		end
+	end
 end
 
 hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
@@ -55,13 +68,21 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		local data = actor:GetStateData()
 
 		data.delay = data.delay or 0
-		data.call_for_help = data.call_for_help or CurTime() + math.random(30, 60)
+		data.reset_fear = data.reset_fear or CurTime() + 30
+		data.call_for_help = data.call_for_help or CurTime() + math.random(25, 40)
 
 		local dist = npc:GetPos():DistToSqr(target:GetPos())
-		if dist >= 1000000 then -- 1000 ^ 2
+		if dist >= 1000000 or (data.reset_fear < CurTime() 
+			and not bgNPC:IsTargetRay(npc, target))
+		then -- 1000 ^ 2
 			actor:RemoveTarget(target)
+			data.reset_fear = CurTime() + 30
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
+		end
+
+		if npc:GetTarget() ~= target then
+			npc:SetTarget(target)
 		end
 
 		if data.delay < CurTime() then
@@ -118,20 +139,15 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		if dist < 22500 then -- 150 ^ 2
 			data.schedule = 'fear'
-			data.call_for_help = CurTime() + math.random(30, 60)
+			data.call_for_help = CurTime() + math.random(25, 40)
+			data.reset_fear = CurTime() + 30
+			if math.random(0, 100) <= 2 then
+				CallForHelp(actor, npc, target)
+			end
 		elseif dist > 360000 then -- 600 ^ 2
 			if data.call_for_help < CurTime() then
-				FearScream(npc)
-				
-				local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 600)
-				for _, NearActor in ipairs(near_actors) do
-					if NearActor:HasTeam(actor) then
-						NearActor:SetState(NearActor:GetReactionForProtect())
-						NearActor:AddTarget(target)
-					end
-				end
-	
-				data.call_for_help = CurTime() + math.random(30, 60)
+				CallForHelp(actor, npc, target)
+				data.call_for_help = CurTime() + math.random(25, 40)
 			end
 		end
 
@@ -190,6 +206,14 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 				end
 			end
 		elseif data.schedule == 'run' and data.update_run < CurTime() then
+			if data.old_pos ~= nil and data.old_pos:DistToSqr(npc:GetPos()) <= 900 then
+				data.old_pos = nil
+				data.schedule = 'fear'
+				goto skip
+			end
+
+			data.old_pos = npc:GetPos()
+
 			if math.random(0, 10) > 5 then
 				npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
 			else               
@@ -203,9 +227,18 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 					npc:SetSchedule(SCHED_FORCED_GO_RUN)
 				end
 			end
+			
 			data.update_run = CurTime() + 3
 		end
 
 		::skip::
+	end
+end)
+
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetFearTimer', function(attacker, target, dmginfo)
+	for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 1000)) do
+		if actor:IsAlive() and actor:HasState('fear') and bgNPC:IsTargetRay(actor:GetNPC(), attacker) then
+			actor:GetStateData().reset_fear = CurTime() + 30
+		end
 	end
 end)

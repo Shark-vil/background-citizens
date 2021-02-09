@@ -55,10 +55,9 @@ local function using(local_file_path, network_type, not_root_directory)
 	end
 end
 
-using('modules/extend/net/sh_callback.lua')
-using('modules/extend/cvars/sh_gcvars.lua')
-using('modules/extend/cvars/sv_gcvars.lua')
-using('modules/extend/cvars/cl_gcvars.lua')
+-- using('modules/extend/cvars/sh_gcvars.lua')
+-- using('modules/extend/cvars/sv_gcvars.lua')
+-- using('modules/extend/cvars/cl_gcvars.lua')
 
 using('config/sh_main.lua')
 using('config/sh_npcs.lua')
@@ -96,6 +95,7 @@ using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')
 
 using('modules/cl_render_optimization.lua')
+using('modules/debug/cl_render_target_path.lua')
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
 using('modules/sv_static_animation_controller.lua')
@@ -108,6 +108,7 @@ using('modules/npcs/sv_set_gangster_model.lua')
 using('modules/npcs/sv_set_custom_health.lua')
 using('modules/npcs/sv_police_voice.lua')
 using('modules/npcs/sv_random_voice.lua')
+using('modules/player/sv_sync_npcs_by_pvs.lua')
 using('modules/player/sv_team_parent.lua')
 using('modules/darkrp/sv_darkrp_drop_money.lua')
 using('modules/darkrp/sv_player_arrest.lua')
@@ -148,3 +149,9 @@ using('states/sv_sit_to_chair.lua')
 using('states/sv_retreat.lua')
 
 using('tool_options/cl_bgn_settings_menu.lua')
+
+if CLIENT then
+	snet.RegisterValidator('actor', function(ply, uid, ent)
+		return bgNPC:GetActor(ent) ~= nil
+	end)
+end
