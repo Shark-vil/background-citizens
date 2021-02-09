@@ -25,7 +25,7 @@ local function thread_method()
                   else
                      actor:SyncData()
                   end
-               end, 'actor', nil, ent)
+               end, 'actor', nil, nil, ent)
             end)
 
             table.insert(sync_data[ply], ent)

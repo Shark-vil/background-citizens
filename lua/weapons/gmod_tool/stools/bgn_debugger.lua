@@ -46,7 +46,7 @@ function TOOL:LeftClick()
 			net.WriteEntity(ent)
 			net.Send(ply)
 		end
-	end, 'actor', nil, ent)
+	end, 'actor', 'bgn_debugger_tool', nil, ent)
 end
 
 function TOOL:RightClick()
