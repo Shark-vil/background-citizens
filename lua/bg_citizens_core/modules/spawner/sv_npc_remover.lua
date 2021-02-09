@@ -25,6 +25,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 			if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
 				if not hook.Run('BGN_PreRemoveNPC', npc) then
+					bgNPC:RemoveNPC(npc)
 					npc:Remove()
 				end
 			else
@@ -45,6 +46,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 				if isRemove then
 					if not hook.Run('BGN_PreRemoveNPC', npc) then
+						bgNPC:RemoveNPC(npc)
 						npc:Remove()
 					end
 				end
