@@ -316,6 +316,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 				hook.Run('BGN_SetNPCState', self, 
 					self.state_data.state, self.state_data.data)
 			end
+
+			self:SyncState()
 		end
 	end
 
@@ -351,6 +353,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 			hook.Run('BGN_SetNPCState', self, 
 				self.state_data.state, self.state_data.data)
 		end
+
+		self:SyncState()
 		
 		return self.state_data
 	end
