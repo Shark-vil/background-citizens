@@ -1,4 +1,4 @@
-snet.RegisterCallback('bgn_actor_set_state_client', function(ply, npc, state, data)
+snet.RegisterEntityCallback('bgn_actor_set_state_client', function(ply, npc, state, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -6,7 +6,7 @@ snet.RegisterCallback('bgn_actor_set_state_client', function(ply, npc, state, da
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -28,7 +28,7 @@ snet.RegisterCallback('bgn_actor_sync_data_client', function (_, npc, data)
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_reaction_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_reaction_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -36,7 +36,7 @@ snet.RegisterCallback('bgn_actor_sync_data_reaction_client', function (_, npc, d
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_schedule_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_schedule_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -45,7 +45,7 @@ snet.RegisterCallback('bgn_actor_sync_data_schedule_client', function (_, npc, d
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_targets_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -53,7 +53,7 @@ snet.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, npc, da
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_state_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then
@@ -63,7 +63,7 @@ snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, npc, data)
+snet.RegisterEntityCallback('bgn_actor_sync_data_animation_client', function (_, npc, data)
 	if not IsValid(npc) then return end
 	local actor = bgNPC:GetActor(npc)
 	if actor ~= nil then

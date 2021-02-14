@@ -66,9 +66,9 @@ function BGN_ACTOR:Instance(npc, type, data)
 		}
 
 		if not IsValid(ply) then
-			snet.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
+			snet.EntityInvokeAll('bgn_actor_sync_data_client', npc, sync_data)
 		else
-			snet.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
+			snet.EntityInvoke('bgn_actor_sync_data_client', ply, npc, sync_data)
 		end
 	end
 
@@ -78,7 +78,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		snet.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
+		snet.EntityInvokeAll('bgn_actor_sync_data_reaction_client', npc, {
 			reaction = self.reaction,
 		})
 	end
@@ -89,7 +89,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		snet.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
+		snet.EntityInvokeAll('bgn_actor_sync_data_schedule_client', npc, {
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 		})
@@ -101,7 +101,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		snet.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
+		snet.EntityInvokeAll('bgn_actor_sync_data_targets_client', npc, {
 			targets = self.targets,
 		})
 	end
@@ -112,7 +112,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
+		snet.EntityInvokeAll('bgn_actor_sync_data_state_client', npc, {
 			old_state = self.old_state,
 			state_lock = self.state_lock,
 			state_data = self.state_data,
@@ -125,7 +125,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		local npc = self:GetNPC()
 		if not IsValid(npc) then return end
 
-		snet.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
+		snet.EntityInvokeAll('bgn_actor_sync_data_animation_client', npc, {
 			anim_name = self.anim_name,
 			anim_time = self.anim_time,
 			loop_time = self.loop_time,
