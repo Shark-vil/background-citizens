@@ -1,9 +1,7 @@
 if CLIENT then
-	snet.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
-		if IsValid(npc) then
-			local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType])
-			bgNPC:AddNPC(actor)
-		end
+	snet.RegisterEntityCallback('bgn_add_actor_from_client', function(ply, npc, npcType)
+		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType])
+		bgNPC:AddNPC(actor)
 	end)
 else
 	local hooks_active = {}
@@ -148,7 +146,7 @@ else
 					end
 			
 					npc:Spawn()
-					bgNPC:TemporaryVectorVisibility(npc, 3)
+					npc:PhysWake()
 			
 					if data.models then
 						local model = table.Random(data.models)
@@ -182,6 +180,8 @@ else
 					actor:RandomState()
 					
 					hook.Run('BGN_InitActor', actor)
+
+					snet.EntityInvokeAll('bgn_add_actor_from_client', npc, type)
 				end
 			end)
 		end

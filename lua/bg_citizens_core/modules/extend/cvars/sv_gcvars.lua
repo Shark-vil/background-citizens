@@ -23,7 +23,7 @@ net.Receive('bgn_gcvars_change_from_server', function(len, ply)
    end
 end)
 
-hook.Add("BGN_PlayerIsLoaded", "BGN_SyncPlayerGlobalConvars", function(ply)
+hook.Add("SlibPlayerFirstSpawn", "BGN_SyncPlayerGlobalConvars", function(ply)
    bgNPC:Log('First cvars sync', 'Cvars')
 
    net.Start('bgn_gcvars_register_all_from_client')
