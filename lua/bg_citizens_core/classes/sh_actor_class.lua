@@ -40,6 +40,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 	obj.npc_schedule = -1
 	obj.npc_state = -1
 
+	-- Synchronizes all required variables with clients.
+	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
 	function obj:SyncData(ply)
 		ply = ply or NULL
 		if CLIENT then return end
@@ -72,6 +74,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 	end
 
+	-- Synchronizes the "reaction" setting for all clients.
 	function obj:SyncReaction()
 		if CLIENT then return end
 
@@ -83,6 +86,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Synchronizes the "schedule" setting for all clients.
 	function obj:SyncSchedule()
 		if CLIENT then return end
 
@@ -95,6 +99,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Synchronizes the "targets" setting for all clients.
 	function obj:SyncTargets()
 		if CLIENT then return end
 
@@ -106,6 +111,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Synchronizes the "state" setting for all clients.
 	function obj:SyncState()
 		if CLIENT then return end
 
@@ -119,6 +125,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Synchronizes the "animation" setting for all clients.
 	function obj:SyncAnimation()
 		if CLIENT then return end
 
@@ -136,6 +143,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Sets the random state of the NPC from the "at_random" table.
 	function obj:RandomState()
 		if not hook.Run('PreRandomState', self) then
 			local state = self:GetRandomState()
@@ -145,6 +153,9 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 	end
 
+	-- Gets a random identifier from the "at_random" table.
+	-- ? The result depends on the set weights. The higher the value, the greater the chance of falling out.
+	-- @return string identifier state identifier
 	function obj:GetRandomState()
 		if self.data.at_random == nil then
 			return 'none'
@@ -170,6 +181,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return state
 	end
 
+	-- Checks if the actor is alive or not.
+	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function obj:IsAlive()
 		if IsValid(self.npc) and self.npc:Health() > 0 then
 			return true
@@ -177,35 +190,54 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return false
 	end
 
+	-- Sets the reaction to the event.
+	-- ? Used in system computing, and does nothing by itself.
+	-- @param reaction string reaction to event
 	function obj:SetReaction(reaction)
 		self.reaction = reaction
 		self:SyncReaction()
 	end
 
+	-- Will return the last result specified in the reaction variable.
+	-- @return string reaction last set reaction
 	function obj:GetLastReaction()
 		return self.reaction
 	end
 
+	-- Returns the entity of the actor's NPC.
+	-- ! Under certain circumstances, it can return NULL, it is recommended to use the IsAlive method before receiving the NPC.
+	-- @return entity npc npc entity
 	function obj:GetNPC()
 		return self.npc
 	end
 
+	-- Will return the actor's data specified in the config.
+	-- ! The data is bound to the actor. If you update the config, then the data will not be updated for the already created actors.
+	-- @return table actor_data actor data from config
 	function obj:GetData()
 		return self.data
 	end
 
+	-- Returns the real NPC class that is associated with the actor.
+	-- @return string npc_class npc class
 	function obj:GetClass()
 		return self.class
 	end
 
+	-- Returns the npc type specified in the config.
+	-- ? For example - citizen
+	-- @return string actor_type type of actor from config
 	function obj:GetType()
 		return self.type
 	end
 
+	-- Checks the existence of an NPC entity.
+	-- @return boolean is_valid_npc will return true if the NPC exists, otherwise false
 	function obj:IsValid()
 		return IsValid(self.npc)
 	end
 
+	-- Clears NPC schedule data and synchronizes changes for clients.
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
 		
@@ -218,6 +250,9 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self:SyncSchedule()
 	end
 
+	-- Adds a target for the actor and syncs new targets for clients.
+	-- ? The target doesn't have to be the enemy. This is used in state calculations.
+	-- @param ent entity any entity other than the actor himself
 	function obj:AddTarget(ent)
 		if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
 			table.insert(self.targets, ent)
@@ -226,6 +261,11 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 	end
 
+	-- Removes an entity from the target list and syncs new list for clients.
+	-- ! If you simply remove an entity from the list, it will not automatically cancel the relationship with the NPC.
+	-- @param ent entity|NULL any entity
+	-- @param index number|nil target id in table
+	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
 		local count = #self.targets
 
@@ -246,20 +286,29 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self:SyncTargets()
 	end
 
+	-- Removes all targets from the list.
+	-- ? Actually calls method "RemoveTarget" for all targets in the list.
 	function obj:RemoveAllTargets()
 		for _, t in ipairs(self.targets) do
 			self:RemoveTarget(t)
 		end
 	end
 
+	-- Checks for the existence of an entity in the target list.
+	-- @param ent entity any entity
+	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
 		return table.HasValue(self.targets, ent)
 	end
 
+	-- Returns the number of existing targets for the actor.
+	-- @return number targets_number number of targets
 	function obj:TargetsCount()
 		return table.Count(self.targets)
 	end
 
+	-- Returns the closest target to the actor.
+	-- @return entity|NULL target_entity nearest target which is entity
 	function obj:GetNearTarget()
 		local target = NULL
 		local dist = 0
@@ -280,6 +329,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return target
 	end
 
+	-- Recalculates targets, and removes them if they are dead or no longer exist on the map.
+	-- @return table new_targets new target list
 	function obj:RecalculationTargets()
 		for i = #self.targets, 1, -1 do
 			local target = self.targets[i]
