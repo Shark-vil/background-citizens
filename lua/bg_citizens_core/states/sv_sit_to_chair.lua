@@ -244,8 +244,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
 
                         timer.Simple(3, function()
                            if actor == nil or not actor:IsAlive() then return end
-                           if actor:HasState('walk') then return end
-
+                           
                            data.isStand = true
                            actor:Walk()
                            chair.sitDelay = CurTime() + 5
