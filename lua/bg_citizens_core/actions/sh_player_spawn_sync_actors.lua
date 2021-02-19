@@ -6,7 +6,6 @@ if SERVER then
 		if actor == nil or not actor:IsAlive() then return end
 		
 		actor:SyncData(ply)
-		MsgN('SlibEntitySuccessInvoked - ' .. tostring(ent))
 	end)
 	
 	hook.Add("SlibPlayerFirstSpawn", "BGN_PlayerFirstInitSpawnerHook", function(ply)

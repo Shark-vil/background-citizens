@@ -18,6 +18,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
    local ActorTarget = table.Random(actors)
    
    if ActorTarget ~= actor and ActorTarget:IsAlive() then
+      if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return true end
       if not asset:SetDialogue(actor, ActorTarget) then return true end
       ActorTarget:SetState('dialogue', { isIgnore = true })
    else

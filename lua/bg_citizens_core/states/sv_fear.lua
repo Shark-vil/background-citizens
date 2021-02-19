@@ -36,11 +36,19 @@ local function CallForHelp(actor, npc, target)
 				
 	local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
 	for _, NearActor in ipairs(near_actors) do
-		local npc = NearActor:GetNPC()
-		if NearActor:IsAlive() and NearActor:HasTeam(actor) and bgNPC:IsTargetRay(npc, target) then
+		local NearNPC = NearActor:GetNPC()
+		if NearActor:IsAlive() and NearActor:HasTeam(actor) and bgNPC:IsTargetRay(NearNPC, target) then
 			NearActor:SetState(NearActor:GetReactionForProtect())
 			NearActor:AddTarget(target)
 		end
+	end
+
+	local TargetActor = bgNPC:GetActor(target)
+	if TargetActor ~= nil and TargetActor:HasTeam('bandits') then
+		if not TargetActor:HasState('impingement') and not TargetActor:HasState('defense') then
+			TargetActor:SetState('defense')
+		end
+		TargetActor:AddTarget(npc)
 	end
 end
 
