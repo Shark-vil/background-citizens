@@ -9,12 +9,13 @@ function(attacker, target, dmginfo, reaction)
 	if #bgNPC:GetAllByType('police') == 0 then return end
 
 	local asset = bgNPC:GetModule('player_arrest')
-	if asset == nil then return end
-	
 	local ActorTarget = bgNPC:GetActor(target)
+
 	if attacker:IsPlayer() and ActorTarget ~= nil and ActorTarget:HasTeam('residents') then
 		if not asset:HasPlayer(attacker) then
-			asset:AddPlayer(attacker)
+			if not bgNPC:GetModule('wanted'):HasWanted(attacker) then
+				asset:AddPlayer(attacker)
+			end
 		else
 			local c_Arrest = asset:GetPlayer(attacker)
 			c_Arrest.damege_count = c_Arrest.damege_count + 1
@@ -137,7 +138,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 				local point = nil
 				local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 
-				if current_distance > 1000 ^ 2 then
+				if current_distance > 500 ^ 2 then
 					point = actor:GetClosestPointToPosition(target:GetPos())
 				else
 					point = target:GetPos()
