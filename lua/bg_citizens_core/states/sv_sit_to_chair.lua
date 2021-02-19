@@ -242,7 +242,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                         npc:SetSaveValue("m_vecLastPosition", forward_pos)
                         npc:SetSchedule(SCHED_FORCED_GO)
 
-                        timer.Simple(2, function()
+                        timer.Simple(3, function()
                            if actor == nil or not actor:IsAlive() then return end
                            if actor:HasState('walk') then return end
 
