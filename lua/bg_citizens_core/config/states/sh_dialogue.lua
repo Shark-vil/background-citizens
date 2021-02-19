@@ -33,21 +33,21 @@ bgNPC.cfg.dialogues = {
    },
    {
       interlocutors = { 'citizen', 'citizen', },
-      gender = { 'female', 'male', },
+      gender = { 'female', 'any', },
       list = {
          { 'vo/npc/female01/pardonme01.wav' },
-         { 'vo/npc/male01/answer10.wav' },
+         { 'vo/npc/%gender%01/answer10.wav' },
          { 'vo/npc/female01/question12.wav' },
-         { 'vo/npc/male01/answer15.wav' },
+         { 'vo/npc/%gender%01/answer15.wav' },
          {
             'vo/npc/female01/question27.wav',
             'vo/npc/female01/question25.wav',
          },
-         { 'vo/npc/male01/answer24.wav' },
+         { 'vo/npc/%gender%01/answer24.wav' },
          { 'vo/npc/female01/sorry01.wav' },
          { 
-            'vo/npc/male01/answer36.wav',
-            'vo/npc/male01/answer39.wav'
+            'vo/npc/%gender%01/answer36.wav',
+            'vo/npc/%gender%01/answer39.wav'
          }
       },
       animations = {
