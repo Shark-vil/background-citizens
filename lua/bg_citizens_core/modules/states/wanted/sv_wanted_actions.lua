@@ -73,7 +73,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	if table.Count(wanted_list) == 0 then return end
 
-	local polices = bgNPC:GetAllByType('police')
+	local polices = bgNPC:GetAllByTeam('police')
 	local citizens = bgNPC:GetAllByType('citizen')
 
 	local witnesses = {}
