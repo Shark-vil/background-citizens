@@ -87,30 +87,20 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 			c_Wanted:UpdateWaitTime(math.Round(wait_time))
 			
 			for _, actor in ipairs(witnesses) do
-				local npc = actor:GetNPC()
-				if IsValid(npc) and table.HasValue(actor.targets, enemy) then
+				if actor:IsAlive() and not actor:HasTarget(enemy) then
+					local npc = actor:GetNPC()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
 					if dist <= 360000 then -- 600 ^ 2
 						c_Wanted:UpdateWanted()
 						
-						if actor:HasState('idle') or actor:HasState('walk') then
-							actor:SetState(actor:GetReactionForProtect())
-						end
+						actor:SetState(actor:GetReactionForProtect())
 						actor:AddTarget(enemy)
-
-						goto skip
-					elseif dist <= 2250000 then -- 1500 ^ 2
-						if bgNPC:IsTargetRay(npc, enemy) then
-							c_Wanted:UpdateWanted()
-							
-							if actor:HasState('idle') or actor:HasState('walk') then
-								actor:SetState(actor:GetReactionForProtect())
-							end
-							actor:AddTarget(enemy)
-
-							goto skip
-						end
+					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
+						c_Wanted:UpdateWanted()
+						
+						actor:SetState(actor:GetReactionForProtect())
+						actor:AddTarget(enemy)
 					end
 				end
 			end
@@ -119,8 +109,6 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 				asset:RemoveWanted(enemy)
 			end
 		end
-
-		::skip::
 	end
 
 	asset:ClearDeath()
