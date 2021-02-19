@@ -94,19 +94,21 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 					if dist <= 360000 then -- 600 ^ 2
 						c_Wanted:UpdateWanted()
 						
-						actor:AddTarget(enemy)
 						if actor:HasState('idle') or actor:HasState('walk') then
 							actor:SetState(actor:GetReactionForProtect())
 						end
+						actor:AddTarget(enemy)
+
 						goto skip
 					elseif dist <= 2250000 then -- 1500 ^ 2
 						if bgNPC:IsTargetRay(npc, enemy) then
 							c_Wanted:UpdateWanted()
 							
-							actor:AddTarget(enemy)
 							if actor:HasState('idle') or actor:HasState('walk') then
 								actor:SetState(actor:GetReactionForProtect())
 							end
+							actor:AddTarget(enemy)
+
 							goto skip
 						end
 					end
