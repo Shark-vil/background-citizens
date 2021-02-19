@@ -6,7 +6,7 @@ function ASSET:AddWanted(ent)
 		local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
 		local wanted_time_reset = CurTime() + wanted_time
 
-		if ent:IsPlayer() then
+		if SERVER and ent:IsPlayer() then
 			bgNPC:GetModule('player_arrest'):RemovePlayer(ent)
 		end
 
