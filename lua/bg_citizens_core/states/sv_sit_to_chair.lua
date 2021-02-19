@@ -239,7 +239,18 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                         npc:PhysWake()
    
                         data.isStand = true
-                        actor:Walk()
+                        
+                        local forward_pos = npc:GetPos() + npc:GetForward() * 30
+                        npc:SetSaveValue("m_vecLastPosition", forward_pos)
+                        npc:SetSchedule(SCHED_FORCED_GO)
+
+                        timer.Simple(2, function()
+                           if actor == nil or not actor:IsAlive() then return end
+                           if actor:HasState('walk') then return end
+
+                           actor:Walk()
+                        end)
+
                         chair.sitDelay = CurTime() + 5
                         chair.occupied = false
                      end)
