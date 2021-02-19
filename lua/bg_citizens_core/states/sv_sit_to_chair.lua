@@ -237,8 +237,6 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                         npc:SetPos(npc:GetPos() + npc:GetForward() * 10)
                         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
-   
-                        data.isStand = true
                         
                         local forward_pos = npc:GetPos() + npc:GetForward() * 30
                         npc:SetSaveValue("m_vecLastPosition", forward_pos)
@@ -248,11 +246,11 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            if actor == nil or not actor:IsAlive() then return end
                            if actor:HasState('walk') then return end
 
+                           data.isStand = true
                            actor:Walk()
+                           chair.sitDelay = CurTime() + 5
+                           chair.occupied = false
                         end)
-
-                        chair.sitDelay = CurTime() + 5
-                        chair.occupied = false
                      end)
                   end)
                end)
