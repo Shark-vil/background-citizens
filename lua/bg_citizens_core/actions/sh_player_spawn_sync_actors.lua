@@ -16,6 +16,8 @@ if SERVER then
 				local type = actor:GetType()
 				local npc = actor:GetNPC()
 
+				npc:AddEntityRelationship(ply, D_NU, 99)
+
 				timer.Simple(delay, function()
 					if not IsValid(ply) or not IsValid(npc) then return end
 					snet.EntityInvoke('bgn_add_actor_from_client', ply, npc, type, actor.uid)
