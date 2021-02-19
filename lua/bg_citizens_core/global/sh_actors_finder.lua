@@ -1,5 +1,5 @@
 function bgNPC:GetActor(npc)
-	if npc.isBgnActor then
+	if IsValid(npc) and npc.isBgnActor then
 		return npc:GetActor()
 	end
 	return nil

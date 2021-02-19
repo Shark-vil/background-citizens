@@ -6,15 +6,23 @@ if SERVER then
 		if actor == nil or not actor:IsAlive() then return end
 		
 		actor:SyncData(ply)
+		MsgN('SlibEntitySuccessInvoked - ' .. tostring(ent))
 	end)
 	
 	hook.Add("SlibPlayerFirstSpawn", "BGN_PlayerFirstInitSpawnerHook", function(ply)
+		local delay = 0
+
 		for _, actor in ipairs(bgNPC:GetAll()) do
 			if actor:IsAlive() then
 				local type = actor:GetType()
 				local npc = actor:GetNPC()
 
-				snet.EntityInvoke('bgn_add_actor_from_client', ply, npc, type)
+				timer.Simple(delay, function()
+					if not IsValid(ply) or not IsValid(npc) then return end
+					snet.EntityInvoke('bgn_add_actor_from_client', ply, npc, type, actor.uid)
+				end)
+
+				delay = delay + 0.1
 			end
 		end
 	end)
