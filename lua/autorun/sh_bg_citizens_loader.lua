@@ -129,6 +129,7 @@ using('modules/states/wanted/sh_wanted_class.lua')
 using('modules/states/wanted/sv_wanted_actions.lua')
 using('modules/states/wanted/cl_wanted_sync.lua')
 using('modules/states/wanted/cl_visual_wanted.lua')
+using('modules/ambient/cl_ambient_sound.lua')
 
 using('actions/sv_open_door.lua')
 using('actions/sv_police_luggage.lua')

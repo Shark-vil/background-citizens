@@ -24,6 +24,7 @@ bgNPC.cvar.bgn_disable_citizens_weapons = 0
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
 	bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
+	bgNPC.cvar.bgn_cl_ambient_sound = 0
 end
 
 function bgNPC:IsActiveNPCType(type)
