@@ -48,7 +48,6 @@ local min_ambient_2 = 3
 
 timer.Create('BGN_SetAmbientSound', 2, 0, function()
    if not GetConVar('bgn_cl_ambient_sound'):GetBool() then return end
-   if not LocalPlayer():IsSpawn() then return end
 
    local ply = LocalPlayer()
    local entities = ents.FindInSphere(ply:GetPos(), 1000)
