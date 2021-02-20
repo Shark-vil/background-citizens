@@ -7,7 +7,7 @@ local function NormalizeSoundPath(sound_path, gender)
 end
 
 local function _EmitSound(actor, sound)
-   actor:GetNPC():EmitSound(sound, SNDLVL_IDLE, 100, 1)
+   actor:GetNPC():EmitSound(sound, 70, 100, 1, CHAN_AUTO)
 end
 
 local function _PlayAnimation(dialogue)

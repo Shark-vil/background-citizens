@@ -28,7 +28,7 @@ local function FearScream(npc)
 		scream_sound = table.Random(table.Inherit(male_scream, female_scream))
 	end
 
-	npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
+	npc:EmitSound(scream_sound, 100, 100, 1, CHAN_AUTO)
 end
 
 local function CallForHelp(actor, npc, target)
