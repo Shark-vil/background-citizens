@@ -18,7 +18,7 @@ local function SetAmbient(level)
    end
 
    local sound_name = 'background_npcs/ambient/bgn_ambient_'.. level .. '.wav'
-   local fade_time = 1
+   local fade_time = 2
    if currentSound ~= nil and currentSound:IsPlaying() then
       currentSound:FadeOut(fade_time)
    else
@@ -42,6 +42,10 @@ local function SetAmbient(level)
    end)
 end
 
+local min_ambient_1 = 6
+local min_ambient_2 = 3
+-- 3 automatically
+
 timer.Create('BGN_SetAmbientSound', 2, 0, function()
    if not GetConVar('bgn_cl_ambient_sound'):GetBool() then return end
 
@@ -60,9 +64,9 @@ timer.Create('BGN_SetAmbientSound', 2, 0, function()
       return
    end
 
-   if count >= 5 then
+   if count >= min_ambient_1 then
       SetAmbient(1)
-   elseif count < 5 and count > 2 then
+   elseif count >= min_ambient_2 then
       SetAmbient(2)
    else
       SetAmbient(3)
