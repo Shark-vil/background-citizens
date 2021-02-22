@@ -16,6 +16,7 @@ if SERVER then
 end
 
 bgNPC = {}
+bgNPC.VERSION = "1.4.2"
 
 -- Do not change -------------
 bgNPC.cfg = {}

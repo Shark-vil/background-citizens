@@ -15,13 +15,16 @@ if SERVER then
 	end)
 else
 	net.Receive('bgn_player_initial_info_block', function()
-		local filename = "bgn_info.txt"
+		local filename = "bgn_version.txt"
 		
 		if file.Exists(filename, "DATA") then
-			return
+			local old_version = file.Read(filename, "DATA")
+			if bgNPC.VERSION == old_version then
+				return
+			end
 		end
 
-		file.Write(filename, 'https://github.com/Shark-vil/background-citizens')
+		file.Write(filename, bgNPC.VERSION)
 
 		surface.PlaySound('buttons/lever2.wav')
 
@@ -31,14 +34,14 @@ else
 			['title'] = "Фоновые NPCs - ИНФОРМАЦИОННОЕ УВЕДОМЛЕНИЕ",
 			['html_button'] = "Перейти по ссылке",
 			['html_button_back'] = "Вернуться на главную",
-			['link'] = "https://itpony.ru/background-citizen/ru.html"
+			['link'] = "https://itpony.ru/background-citizen/" .. bgNPC.VERSION .. "/ru.html"
 		}
 
 		local en_lang = {
 			['title'] = "Background NPCs - INFORMATION NOTICE",
 			['html_button'] = "Go to the link",
 			['html_button_back'] = "Go back to the main",
-			['link'] = "https://itpony.ru/background-citizen/en.html"
+			['link'] = "https://itpony.ru/background-citizen/" .. bgNPC.VERSION .. "/en.html"
 		}
 
 		local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
