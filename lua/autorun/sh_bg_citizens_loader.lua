@@ -55,6 +55,11 @@ local function using(local_file_path, network_type, not_root_directory)
 	end
 end
 
+if slib == nil then
+	using('errors/sh_slib_error.lua')
+	return
+end
+
 -- using('modules/extend/cvars/sh_gcvars.lua')
 -- using('modules/extend/cvars/sv_gcvars.lua')
 -- using('modules/extend/cvars/cl_gcvars.lua')
