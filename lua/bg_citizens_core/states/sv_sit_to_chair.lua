@@ -229,6 +229,8 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                   actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
                      actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
                         if not IsValid(npc) then return end
+                        if data.isStandAnimation then return end
+                        data.isStandAnimation = true
                         
                         if IsValid(chair) then
                            npc:SetAngles(Angle(0, chair:GetAngles().y, 0))
@@ -236,22 +238,14 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            npc:SetAngles(Angle(0, 0, 0))
                         end
 
-                        npc:SetPos(npc:GetPos() + npc:GetForward() * 10)
+                        npc:SetPos(npc:GetPos() + npc:GetForward() * 5)
                         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
-                        
-                        local forward_pos = npc:GetPos() + npc:GetForward() * 30
-                        npc:SetSaveValue("m_vecLastPosition", forward_pos)
-                        npc:SetSchedule(SCHED_FORCED_GO)
 
-                        timer.Simple(3, function()
-                           if actor == nil or not actor:IsAlive() then return end
-                           
-                           data.isStand = true
-                           actor:Walk()
-                           chair.sitDelay = CurTime() + 5
-                           chair.occupied = false
-                        end)
+                        data.isStand = true
+                        actor:Walk()
+                        chair.sitDelay = CurTime() + 5
+                        chair.occupied = false
                      end)
                   end)
                end)
