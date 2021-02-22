@@ -33,7 +33,19 @@ else
         local MainMenu_Label = vgui.Create("DLabel", MainMenu)
         MainMenu_Label:SetPos(170, 20)
         MainMenu_Label:SetSize(350, 150)
-        MainMenu_Label:SetText([[You are missing the required dependency!
+        if GetConVar('cl_language'):GetString() == 'russian' then
+        MainMenu_Label:SetText([[Вам не хватает необходимого дополнения!
+Без него мод работать не будет!
+Подпишитесь на аддон в мастерской.
+
+Я прекрасно понимаю, что вам было лучше, когда этот
+мод не требовал зависимостей. Но из-за того что
+я использую один и тот же код в нескольких аддонах, у них ломается
+совместимость. Это нельзя исправить без создания отдельной библиотеки.
+Я надеюсь на ваше понимание.
+:3]])
+        else
+            MainMenu_Label:SetText([[You are missing the required addon!
 The mod won't work without it!
 Subscribe for the addon at the workshop.
 
@@ -43,13 +55,14 @@ I use the same code in several addons, they break compatibility.
 This cannot be fixed without creating a separate library. 
 I hope for your understanding.
 :3]])
+        end
 
         local ButtonYes = vgui.Create("DButton", MainMenu)
         ButtonYes:SetText("Open workshop page")
         ButtonYes:SetPos(170, 200)
         ButtonYes:SetSize(155, 30)
         ButtonYes.DoClick = function()
-            gui.OpenURL("https://google.ru")
+            gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=2404080563")
             MainMenu:Close()
         end
 
