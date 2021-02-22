@@ -7,7 +7,7 @@ if CLIENT then
 	end)
 else
 	local hooks_active = {}
-	function bgNPC:SpawnActor(type)
+	function bgNPC:SpawnActor(type, desiredPosition)
 		if player.GetCount() == 0 then return end
 
 		local hook_name = 'BGN_SpawnerThread_' .. type
@@ -49,7 +49,7 @@ else
 			local hook_name = 'BGN_SpawnerThread_' .. type
 			hooks_active[hook_name] = true
 
-			local _center = ply:GetPos()
+			local _center = desiredPosition or ply:GetPos()
 			local _radius = bgn_spawn_radius ^ 2
 			local _max_pass = 3
 			local _pass = 0
@@ -160,6 +160,17 @@ else
 							else
 								npc:SetModel(model)
 							end
+						end
+					end
+
+					if data.randomSkin then
+						npc:SetSkin(math.random(0, npc:SkinCount()))
+					end
+
+					if data.randomBodygroups then
+						for _, bodygroup in ipairs(npc:GetBodyGroups()) do
+							local id = bodygroup.id
+							npc:SetBodygroup(id, math.random(0, npc:GetBodygroupCount(id)))
 						end
 					end
 			

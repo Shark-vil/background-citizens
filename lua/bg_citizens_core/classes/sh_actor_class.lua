@@ -1,5 +1,24 @@
 BGN_ACTOR = {}
 
+local male_scream = {
+	'ambient/voices/m_scream1.wav',
+	'vo/coast/bugbait/sandy_help.wav',
+	'vo/npc/male01/help01.wav',
+	'vo/Streetwar/sniper/male01/c17_09_help01.wav',
+	'vo/Streetwar/sniper/male01/c17_09_help02.wav',
+	'vo/npc/male01/no01.wav',
+	'vo/npc/male01/no02.wav',
+}
+
+local female_scream = {
+	'ambient/voices/f_scream1.wav',
+	'vo/canals/arrest_helpme.wav',
+	'vo/npc/female01/help01.wav',
+	'vo/npc/female01/help01.wav',
+	'vo/npc/female01/no01.wav',
+	'vo/npc/female01/no02.wav',
+}
+
 local uid = 0
 function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	local obj = {}
@@ -814,6 +833,50 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		
 		self:SyncAnimation()
 		self:ClearSchedule()
+	end
+
+	function obj:FearScream()
+		if not self:IsAlive() then return end
+
+		local npc_model = self.npc:GetModel()
+		local scream_sound = nil
+		if tobool(string.find(npc_model, 'female_*')) then
+			scream_sound = table.Random(female_scream)
+		elseif tobool(string.find(npc_model, 'male_*')) then
+			scream_sound = table.Random(male_scream)
+		else
+			scream_sound = table.Random(table.Inherit(male_scream, female_scream))
+		end
+
+		if scream_sound ~= nil and isstring(scream_sound) then
+			self.npc:EmitSound(scream_sound, 100, 100, 1, CHAN_AUTO)
+		end
+	end
+
+	function obj:CallForHelp(target)
+		self:FearScream()
+
+		if not IsValid(target) then
+			target = self:GetNearTarget()
+			if not IsValid(target) then return end
+		end
+				
+		local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
+		for _, NearActor in ipairs(near_actors) do
+			local NearNPC = NearActor:GetNPC()
+			if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, target) then
+				NearActor:SetState(NearActor:GetReactionForProtect())
+				NearActor:AddTarget(target)
+			end
+		end
+
+		local TargetActor = bgNPC:GetActor(target)
+		if TargetActor ~= nil and not TargetActor:HasTeam(self) then
+			if not TargetActor:HasState('impingement') and not TargetActor:HasState('defense') then
+				TargetActor:SetState('defense')
+			end
+			TargetActor:AddTarget(npc)
+		end
 	end
 
 	function npc:GetActor()

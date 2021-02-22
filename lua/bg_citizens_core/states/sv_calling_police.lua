@@ -14,6 +14,13 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 
 		-- 90000 = 300 ^ 2
 		if not bgNPC:IsTargetRay(npc, target) or npc:GetPos():DistToSqr(target:GetPos()) < 90000 then
+			local rnd = math.random(0, 100)
+			if rnd > 80 then
+				actor:CallForHelp(target)
+			elseif rnd > 70 then
+				actor:FearScream()
+			end
+
 			actor:Fear()
 			goto skip
 		end
@@ -22,7 +29,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 		
 		if data.calling_time == nil then
 			data.calling_time = CurTime() + 15
-			npc:EmitSound('buttons/button19.wav', 500, 100, 1, CHAN_AUTO)
+			npc:EmitSound('buttons/button19.wav', 200, 100, 1, CHAN_AUTO)
 		else
 			if data.calling_time < CurTime() then
 				local asset = bgNPC:GetModule('wanted')
@@ -40,7 +47,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 					end
 				end
 
-				npc:EmitSound('buttons/combine_button1.wav', 500, 100, 1, CHAN_AUTO)
+				npc:EmitSound('buttons/combine_button1.wav', 200, 100, 1, CHAN_AUTO)
 				
 				if not hook.Run('BGN_PostCallingPolice', actor) then
 					actor:Fear()
@@ -53,7 +60,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 
 				data.btn_click_delay = data.btn_click_delay or 0
 				if data.btn_click_delay < CurTime() then
-					npc:EmitSound('buttons/button18.wav', 450, 100, 1, CHAN_AUTO)
+					npc:EmitSound('buttons/button18.wav', 150, 100, 1, CHAN_AUTO)
 					data.btn_click_delay = CurTime() + 1
 				end
 			end

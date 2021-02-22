@@ -1,60 +1,6 @@
-local male_scream = {
-	'ambient/voices/m_scream1.wav',
-	'vo/coast/bugbait/sandy_help.wav',
-	'vo/npc/male01/help01.wav',
-	'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-	'vo/Streetwar/sniper/male01/c17_09_help02.wav',
-	'vo/npc/male01/no01.wav',
-	'vo/npc/male01/no02.wav',
-}
-
-local female_scream = {
-	'ambient/voices/f_scream1.wav',
-	'vo/canals/arrest_helpme.wav',
-	'vo/npc/female01/help01.wav',
-	'vo/npc/female01/help01.wav',
-	'vo/npc/female01/no01.wav',
-	'vo/npc/female01/no02.wav',
-}
-
-local function FearScream(npc)
-	local npc_model = npc:GetModel()
-	local scream_sound = nil
-	if tobool(string.find(npc_model, 'female_*')) then
-		scream_sound = table.Random(female_scream)
-	elseif tobool(string.find(npc_model, 'male_*')) then
-		scream_sound = table.Random(male_scream)
-	else
-		scream_sound = table.Random(table.Inherit(male_scream, female_scream))
-	end
-
-	npc:EmitSound(scream_sound, 100, 100, 1, CHAN_AUTO)
-end
-
-local function CallForHelp(actor, npc, target)
-	FearScream(npc)
-				
-	local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
-	for _, NearActor in ipairs(near_actors) do
-		local NearNPC = NearActor:GetNPC()
-		if NearActor:IsAlive() and NearActor:HasTeam(actor) and bgNPC:IsTargetRay(NearNPC, target) then
-			NearActor:SetState(NearActor:GetReactionForProtect())
-			NearActor:AddTarget(target)
-		end
-	end
-
-	local TargetActor = bgNPC:GetActor(target)
-	if TargetActor ~= nil and TargetActor:HasTeam('bandits') then
-		if not TargetActor:HasState('impingement') and not TargetActor:HasState('defense') then
-			TargetActor:SetState('defense')
-		end
-		TargetActor:AddTarget(npc)
-	end
-end
-
 hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	if state ~= 'fear' or not actor:IsAlive() then return end
-	if math.random(0, 10) > 4 then return end
+	if math.random(0, 10) > 5 then return end
 	
 	local target = actor:GetNearTarget()
 	if not IsValid(target) then return end
@@ -62,7 +8,7 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	local npc = actor:GetNPC()
 	if target:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
 	
-	FearScream(npc)
+	actor:FearScream()
 end)
 
 timer.Create('BGN_Timer_FearStateController', 1, 0, function()
@@ -150,11 +96,11 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 			data.call_for_help = CurTime() + math.random(25, 40)
 			data.reset_fear = CurTime() + 30
 			if math.random(0, 100) <= 2 then
-				CallForHelp(actor, npc, target)
+				actor:CallForHelp(target)
 			end
 		elseif dist > 360000 then -- 600 ^ 2
 			if data.call_for_help < CurTime() then
-				CallForHelp(actor, npc, target)
+				actor:CallForHelp(target)
 				data.call_for_help = CurTime() + math.random(25, 40)
 			end
 		end

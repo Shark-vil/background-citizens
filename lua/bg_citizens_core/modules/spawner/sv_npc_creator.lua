@@ -44,11 +44,14 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 		local max_limit = bgNPC:GetLimitActors(npcType)
 		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then goto skip end
 
+		local pos
+
 		if npc_data.wanted_level ~= nil then
 			local asset = bgNPC:GetModule('wanted')
 			local success = false
 			for target, c_Wanted in pairs(asset:GetAllWanted()) do
-				if c_Wanted.level >= npc_data.wanted_level then
+				if IsValid(target) and c_Wanted.level >= npc_data.wanted_level then
+					pos = target:GetPos()
 					success = true
 					break
 				end
@@ -57,7 +60,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 			if not success then goto skip end
 		end
 
-		bgNPC:SpawnActor(npcType)
+		bgNPC:SpawnActor(npcType, pos)
 
 		::skip::
 	end

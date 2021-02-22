@@ -127,6 +127,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
    if state ~= 'sit_to_chair' then return end
    
    local npc = actor:GetNPC()
+   if not IsValid(npc) then return end
+
    local entities = ents.FindInSphere(npc:GetPos(), 500)
    local chair = NULL
    local cahirId = -1
