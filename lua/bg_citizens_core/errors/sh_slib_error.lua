@@ -13,6 +13,14 @@ if SERVER then
 			net.Send(ply)
 		end)
 	end)
+
+    print([[
+___ _    ___ ___   _  _  ___ _____   ___ ___  _   _ _  _ ___  
+/ __| |  |_ _| _ ) | \| |/ _ \_   _| | __/ _ \| | | | \| |   \ 
+\__ \ |__ | || _ \ | .` | (_) || |   | _| (_) | |_| | .` | |) |
+|___/____|___|___/ |_|\_|\___/ |_|   |_| \___/ \___/|_|\_|___/ 
+
+]])
 else
     net.Receive('bgn_error_slib_library', function()
         local MainMenu = vgui.Create("DFrame")
@@ -40,9 +48,10 @@ else
 
 Я прекрасно понимаю, что вам было лучше, когда этот
 мод не требовал зависимостей. Но из-за того что
-я использую один и тот же код в нескольких аддонах, у них ломается
-совместимость. Это нельзя исправить без создания отдельной библиотеки.
-Я надеюсь на ваше понимание.
+я использую один и тот же код в нескольких аддонах,
+у них ломается совместимость. Это нельзя исправить 
+без создания отдельной библиотеки. Я надеюсь на 
+ваше понимание.
 :3]])
         else
             MainMenu_Label:SetText([[You are missing the required addon!
@@ -62,8 +71,7 @@ I hope for your understanding.
         ButtonYes:SetPos(170, 200)
         ButtonYes:SetSize(155, 30)
         ButtonYes.DoClick = function()
-            gui.OpenURL("http://steamcommunity.com/sharedfiles/filedetails/?id=2404080563")
-            MainMenu:Close()
+            gui.OpenURL("https://steamcommunity.com/sharedfiles/filedetails/?id=2404080563")
         end
 
         local ButtonNo = vgui.Create("DButton", MainMenu)

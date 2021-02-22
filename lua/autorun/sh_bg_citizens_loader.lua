@@ -7,8 +7,12 @@ file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
 if SERVER then
-	resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
-	resource.AddFile('sound/background_npcs/handcuffs_sound1.mp3')
+	resource.AddSingleFile('materials/background_npcs/vgui/wanted_star.png')
+	resource.AddSingleFile('materials/background_npcs/vgui/missing_slib.png')
+	resource.AddSingleFile('sound/background_npcs/handcuffs_sound1.mp3')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_1.wav')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_2.wav')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_3.wav')
 end
 
 bgNPC = {}
