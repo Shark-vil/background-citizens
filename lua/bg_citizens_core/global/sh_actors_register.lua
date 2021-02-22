@@ -1,13 +1,13 @@
 if CLIENT then
-	net.RegisterCallback('bgn_add_actor_from_client', function(ply, npcType, npc)
-		if IsValid(npc) then
-			local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType])
-			bgNPC:AddNPC(actor)
-		end
+	snet.RegisterEntityCallback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
+		if bgNPC:GetActor(npc) ~= nil then return end
+
+		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType], uid)
+		bgNPC:AddNPC(actor)
 	end)
 else
 	local hooks_active = {}
-	function bgNPC:SpawnActor(type)
+	function bgNPC:SpawnActor(type, desiredPosition)
 		if player.GetCount() == 0 then return end
 
 		local hook_name = 'BGN_SpawnerThread_' .. type
@@ -49,7 +49,7 @@ else
 			local hook_name = 'BGN_SpawnerThread_' .. type
 			hooks_active[hook_name] = true
 
-			local _center = ply:GetPos()
+			local _center = desiredPosition or ply:GetPos()
 			local _radius = bgn_spawn_radius ^ 2
 			local _max_pass = 3
 			local _pass = 0
@@ -129,7 +129,7 @@ else
 						end
 					end
 			
-					if hook.Run('BGN_OnValidSpawnNPC', data) ~= nil then
+					if hook.Run('BGN_OnValidSpawnActor', data) then
 						return
 					end
 					
@@ -142,13 +142,13 @@ else
 						ATTENTION! Be careful, this hook is called before the NPC spawns. 
 						If you give out a weapon or something similar, it will crash the game!
 					--]]
-					if hook.Run('BGN_PreSpawnNPC', npc, type, data) ~= nil then
+					if hook.Run('BGN_PreSpawnActor', npc, type, data) then
 						if IsValid(npc) then npc:Remove() end
 						return
 					end
 			
 					npc:Spawn()
-					bgNPC:TemporaryVectorVisibility(npc, 3)
+					npc:PhysWake()
 			
 					if data.models then
 						local model = table.Random(data.models)
@@ -160,6 +160,17 @@ else
 							else
 								npc:SetModel(model)
 							end
+						end
+					end
+
+					if data.randomSkin then
+						npc:SetSkin(math.random(0, npc:SkinCount()))
+					end
+
+					if data.randomBodygroups then
+						for _, bodygroup in ipairs(npc:GetBodyGroups()) do
+							local id = bodygroup.id
+							npc:SetBodygroup(id, math.random(0, npc:GetBodygroupCount(id)))
 						end
 					end
 			
@@ -178,22 +189,12 @@ else
 			
 					local actor = BGN_ACTOR:Instance(npc, type, data)
 					bgNPC:AddNPC(actor)
+
+					actor:RandomState()
 					
-					timer.Simple(0.5, function()
-						if not IsValid(npc) then return end
+					hook.Run('BGN_InitActor', actor)
 
-						net.InvokeAll('bgn_add_actor_from_client', type, npc)
-						actor:RandomState()
-
-						timer.Simple(0.5, function()
-							if not IsValid(npc) then return end
-							actor:SyncData()
-							
-							hook.Run('BGN_InitActor', actor)
-						end)
-					end)
-
-					hook.Run('BGN_PostSpawnNPC', npc, type, data)
+					snet.EntityInvokeAll('bgn_add_actor_from_client', npc, type, actor.uid)
 				end
 			end)
 		end
@@ -213,6 +214,41 @@ function bgNPC:AddNPC(actor)
 
 	self.fnpcs[type] = self.fnpcs[type] or {}
 	table.insert(self.fnpcs[type], npc)
+end
+
+
+function bgNPC:RemoveNPC(npc)
+	for i = #self.actors, 1, -1 do
+		if self.actors[i]:GetNPC() == npc then
+			table.remove(self.actors, i)
+			break
+		end
+	end
+
+	for i = #self.npcs, 1, -1 do
+		if self.npcs[i] == npc then
+			table.remove(self.npcs, i)
+			break
+		end
+	end
+
+	for key, data in pairs(self.factors) do
+		for i = #data, 1, -1 do
+			if data[i]:GetNPC() == npc then
+				table.remove(self.factors[key], i)
+				break
+			end
+		end
+	end
+
+	for key, data in pairs(self.fnpcs) do
+		for i = #data, 1, -1 do
+			if data[i] == npc then
+				table.remove(self.fnpcs[key], i)
+				break
+			end
+		end
+	end
 end
 
 function bgNPC:ClearRemovedNPCs()

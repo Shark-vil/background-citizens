@@ -1,52 +1,30 @@
 if SERVER then
-	util.AddNetworkString('network_bgn_client_first_initializate')
+	hook.Add("SlibEntitySuccessInvoked", 'ActorSyncData', function(success, name, ply, ent)
+		if not success or name ~= 'bgn_add_actor_from_client' then return end
 
-	net.Receive('network_bgn_client_first_initializate', function(len, ply)
-		if ply.BGN_IsLoaded then return end
-
-		local sync_time = 2
+		local actor = bgNPC:GetActor(ent)
+		if actor == nil or not actor:IsAlive() then return end
+		
+		actor:SyncData(ply)
+	end)
+	
+	hook.Add("SlibPlayerFirstSpawn", "BGN_PlayerFirstInitSpawnerHook", function(ply)
+		local delay = 0
 
 		for _, actor in ipairs(bgNPC:GetAll()) do
 			if actor:IsAlive() then
 				local type = actor:GetType()
 				local npc = actor:GetNPC()
-				bgNPC:TemporaryVectorVisibility(npc, 3 + (sync_time - 2))
 
-				timer.Simple(sync_time, function()
-					if not IsValid(npc) or not IsValid(ply) then return end
+				npc:AddEntityRelationship(ply, D_NU, 99)
 
-					net.InvokeAll('bgn_add_actor_from_client', type, npc)
-
-					timer.Simple(0.5, function()
-						if not IsValid(npc) or not IsValid(ply) then return end
-
-						actor:SyncData(ply)
-						bgNPC.Log('Actor [' .. type .. '] - ' .. tostring(npc) .. ' | Player - ' .. tostring(ply), 'Sync Actors')
-					end)
+				timer.Simple(delay, function()
+					if not IsValid(ply) or not IsValid(npc) then return end
+					snet.EntityInvoke('bgn_add_actor_from_client', ply, npc, type, actor.uid)
 				end)
-				
-				sync_time = sync_time + 0.05
+
+				delay = delay + 0.1
 			end
 		end
-
-		net.Invoke('bgn_is_loaded_setup', ply)
-
-		ply.BGN_IsLoaded = true
-
-		hook.Run('BGN_PlayerIsLoaded', ply)
-	end)
-else
-	hook.Add("InitPostEntity", "BGN_ClientFirstInitializate", function()
-		timer.Simple(1, function()
-			net.Start('network_bgn_client_first_initializate')
-			net.SendToServer()
-		end)
-		hook.Remove("InitPostEntity", "BGN_ClientFirstInitializate")
-	end)
-
-	net.RegisterCallback('bgn_is_loaded_setup', function()
-		LocalPlayer().BGN_IsLoaded = true
-
-		hook.Run('BGN_PlayerIsLoaded', LocalPlayer())
 	end)
 end

@@ -20,7 +20,7 @@ timer.Create('BGN_ActorsResidentsRandomVoice', 10, 0, function()
    end
 
    for _, actor in ipairs(bgNPC:GetAllByTeam('residents')) do
-      if not actor:HasState('walk') and not actor:HasState('walk') then
+      if not actor:IsAlive() or not actor:HasState('walk') and not actor:HasState('walk') then
          goto skip
       end
 
@@ -40,7 +40,7 @@ timer.Create('BGN_ActorsResidentsRandomVoice', 10, 0, function()
       local rnd = math.random(0, 100)
 		if rnd < 20 then
 			local sound = table.Random(replics)
-         actor:GetNPC():EmitSound(sound)
+         actor:GetNPC():EmitSound(sound, math.random(50, 70), 100, 1, CHAN_AUTO)
          table.insert(delay_actors, {
             actor = actor,
             delay = CurTime() + math.random(10, 60)

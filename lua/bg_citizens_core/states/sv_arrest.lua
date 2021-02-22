@@ -9,18 +9,19 @@ function(attacker, target, dmginfo, reaction)
 	if #bgNPC:GetAllByType('police') == 0 then return end
 
 	local asset = bgNPC:GetModule('player_arrest')
-	if asset == nil then return end
-	
 	local ActorTarget = bgNPC:GetActor(target)
+
 	if attacker:IsPlayer() and ActorTarget ~= nil and ActorTarget:HasTeam('residents') then
 		if not asset:HasPlayer(attacker) then
-			asset:AddPlayer(attacker)
+			if not bgNPC:GetModule('wanted'):HasWanted(attacker) then
+				asset:AddPlayer(attacker)
+			end
 		else
 			local c_Arrest = asset:GetPlayer(attacker)
-			c_Arrest.count = c_Arrest.count + 1
+			c_Arrest.damege_count = c_Arrest.damege_count + 1
 
-			if c_Arrest.count >= 3 then
-				c_Arrest.delayIgnore = 0
+			if c_Arrest.damege_count >= 3 then
+				c_Arrest.not_arrest = true
 			end
 		end
 	end
@@ -35,21 +36,10 @@ hook.Add("BGN_OnKilledActor", "BGN_ResettingNPCFromTheArrestTableAfterDeath", fu
 
 	if asset:HasPlayer(attacker) then
 		local c_Arrest = asset:GetPlayer(attacker)
-		c_Arrest.delayIgnore = 0
+		if c_Arrest.is_look_police then
+			c_Arrest.not_arrest = true
+		end
 	end
-end)
-
-hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForArrestState", function(actor, state)
-	if state ~= 'arrest' or not actor:IsAlive() then return end
-	if math.random(0, 10) > 1 then return end
-	
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
-
-	local npc = actor:GetNPC()
-	if target:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
-	
-	npc:EmitSound('npc/metropolice/vo/movetoarrestpositions.wav', 300, 100, 1, CHAN_AUTO)
 end)
 
 --[[
@@ -64,33 +54,43 @@ end
 --]]
 hook.Add("BGN_PreDamageToAnotherActor", "BGN_EnableArrestStateForPolice", 
 function(actor, attacker, target, reaction)
+	if not IsValid(attacker) then return end
+	if not GetConVar('bgn_arrest_mode'):GetBool() then
+		ReactionOverride(actor, reaction)
+		return
+	end
+
 	local asset = bgNPC:GetModule('player_arrest')
 	if asset == nil then return end
 
 	local c_Arrest = asset:GetPlayer(attacker)
-
-	if not IsValid(attacker) or not GetConVar('bgn_arrest_mode'):GetBool() 
-		or c_Arrest == nil or c_Arrest.not_arrest
-	then
+	if c_Arrest == nil or c_Arrest.not_arrest then
 		ReactionOverride(actor, reaction)
 		return
 	end
 
-	local police = bgNPC:GetNearByType(attacker:GetPos(), 'police')
-	if police == nil or not police:IsAlive() then
+	local success = false
+	for _, police in ipairs(bgNPC:GetAllByType('police')) do
+		if police:IsAlive() then
+			local npc = police:GetNPC()
+			local dist = target:GetPos():DistToSqr(npc:GetPos())
+
+			if dist < 1000000 and bgNPC:IsTargetRay(npc, attacker) then
+				police:AddTarget(attacker)
+				police:SetState('arrest')
+
+				npc:EmitSound('npc/metropolice/vo/movetoarrestpositions.wav', 300, 100, 1, CHAN_AUTO)
+				success = true
+				c_Arrest.is_look_police = success
+			end
+		end
+	end
+
+	if not success then
 		ReactionOverride(actor, reaction)
-		c_Arrest.not_arrest = true
-		return
 	end
 
-	if not actor:HasTeam('police') then
-		return false
-	end
-
-	police:AddTarget(attacker)
-	police:SetState('arrest')
-
-	return false
+	return true
 end)
 
 --[[
@@ -123,7 +123,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 
 			local c_Arrest = asset:GetPlayer(target)
 
-			if c_Arrest.delayIgnore < CurTime() then
+			if c_Arrest.not_arrest or c_Arrest.delayIgnore < CurTime() then
 				actor:Defense()
 				goto skip
 			end
@@ -138,7 +138,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 				local point = nil
 				local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 
-				if current_distance > 1000 ^ 2 then
+				if current_distance > 500 ^ 2 then
 					point = actor:GetClosestPointToPosition(target:GetPos())
 				else
 					point = target:GetPos()

@@ -27,23 +27,12 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 			end
 
 			reaction = ActorTarget:GetReactionForDamage()
-
-			local disable_citizen_weapon = GetConVar('bgn_disable_citizens_weapons'):GetBool()
-			if reaction == 'defense' and ActorTarget:GetType() == 'citizen' and disable_citizen_weapon then
-				reaction = 'fear'
-			end
 			
 			ActorTarget:SetReaction(reaction)
 
 			local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo, reaction)
-			if hook_result ~= nil then
-				if isbool(hook_result) and not hook_result then
-					return hook_result
-				end
-
-				if isstring(hook_result) then
-					reaction = hook_result
-				end
+			if isbool(hook_result) then
+				return hook_result
 			end
 			
 			ActorTarget:AddTarget(attacker)
@@ -68,10 +57,8 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 		end
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
-		if hook_result ~= nil then
-			if isbool(hook_result) then
-				return hook_result
-			end
+		if isbool(hook_result) then
+			return hook_result
 		end
 
 		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)

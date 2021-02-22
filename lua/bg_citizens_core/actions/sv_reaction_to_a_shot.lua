@@ -34,15 +34,9 @@ hook.Add("EntityEmitSound", "BGN_WeaponShotSoundReaction", function(t)
       end
 
       local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) 
-      if hook_result ~= nil then
-         if isbool(hook_result) and not hook_result then
-            goto skip
-         end
-
-         if isstring(hook_result) then
-            reaction = hook_result
-         end
-      end
+		if hook_result then
+			goto skip
+		end
 
       local state = actor:GetState()
       if state == 'idle' or state == 'walk' or state == 'arrest' then

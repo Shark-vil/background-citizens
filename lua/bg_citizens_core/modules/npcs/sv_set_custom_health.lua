@@ -1,6 +1,10 @@
-hook.Add("BGN_PostSpawnNPC", "BGN_NPCSetCustomHealthByConfigSettings", function(npc, type, data)
+hook.Add("BGN_InitActor", "BGN_NPCSetCustomHealthByConfigSettings", function(actor)
+   local data = actor:GetData()
+
    if data.health == nil then return end
    local new_health = nil
+
+   local npc = actor:GetNPC()
    
    if isnumber(data.health) then
       new_health = data.health

@@ -22,8 +22,7 @@ timer.Create('BGN_Timer_PlayerLookAtObject', 0.3, 0, function()
 
 				local LookTime = RealTime() - ply.bgNPCLookObjectTime
 
-				local result = hook.Run('BGN_PlayerLookAtObject', ply, ent, LookTime)
-				if result ~= nil and isbool(result) and result then
+				if hook.Run('BGN_PlayerLookAtObject', ply, ent, LookTime) then
 					ply.bgNPCLookObjectTime = RealTime()
 				end
 			end

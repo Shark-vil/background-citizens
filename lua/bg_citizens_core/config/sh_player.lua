@@ -20,5 +20,8 @@ bgNPC.cfg.player.team_parents = {
       TEAM_POLICE,
       TEAM_CHIEF,
       TEAM_MAYOR,
+   },
+   ['bandits'] = {
+      TEAM_GANG,
    }
 }

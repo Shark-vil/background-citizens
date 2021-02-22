@@ -1,13 +1,11 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
 function(attacker, target, dmginfo)
-	local disable_citizen_weapon = GetConVar('bgn_disable_citizens_weapons'):GetBool()
-
 	for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 2500)) do
-		local reaction = actor:GetReactionForProtect()
-		
-		if reaction == 'defense' and actor:GetType() == 'citizen' and disable_citizen_weapon then
-			reaction = 'fear'
+		if actor:HasTeam(target) and actor:HasTeam(attacker) then
+			goto skip
 		end
+
+		local reaction = actor:GetReactionForProtect()
 
 		actor:SetReaction(reaction)
 
@@ -21,14 +19,8 @@ function(attacker, target, dmginfo)
 		end
 
 		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction) 
-		if hook_result ~= nil then
-			if isbool(hook_result) and not hook_result then
-				goto skip
-			end
-
-			if isstring(hook_result) then
-				reaction = hook_result
-			end
+		if hook_result then
+			goto skip
 		end
 
 		if actor:HasState('idle') or actor:HasState('walk') 
@@ -76,7 +68,10 @@ function(actor, attacker, target, reaction)
 			end
 		end
 	elseif target:IsPlayer() then
-		if actor:HasTeam(target) then
+		if attacker:IsPlayer() and actor:HasTeam(attacker) then
+			actor:AddTarget(target)
+			return
+		elseif actor:HasTeam(target) then
 			actor:AddTarget(attacker)
 			return
 		end

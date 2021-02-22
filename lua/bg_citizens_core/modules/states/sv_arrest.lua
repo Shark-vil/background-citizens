@@ -7,7 +7,8 @@ function ASSET:AddPlayer(ply)
 			delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
 			notify_delay = 0,
 			not_arrest = false,
-			count = 1
+			damege_count = 1,
+			is_look_police = false,
 		}
 		
 		arrest_players[ply] = c_Arrest
@@ -17,6 +18,7 @@ function ASSET:AddPlayer(ply)
 end
 
 function ASSET:RemovePlayer(ply)
+	if arrest_players[ply] == nil then return end
 	arrest_players[ply] = nil
 end
 
@@ -41,6 +43,10 @@ end
 
 hook.Add("PlayerDeath", "BGN_ArrestModule_ClearDataOnPlayerDeath", function(victim, inflictor, attacker)
 	ASSET:RemovePlayer(victim)
+end)
+
+hook.Add("BGN_RemoveWantedTarget", "BGN_ArrestModule_ClearByWanted", function(target)
+	ASSET:RemovePlayer(target)
 end)
 
 hook.Add('PostCleanupMap', 'BGN_ArrestModule_ClearPlayerOnCleanupMap', function()

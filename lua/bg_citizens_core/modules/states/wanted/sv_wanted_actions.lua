@@ -8,12 +8,12 @@ hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttac
 	end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)
+hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)	
 	if asset:HasWanted(attacker) then
 		local c_Wanted = asset:GetWanted(attacker)
 		c_Wanted:UpdateWanted()
 
-		local kills = bgNPC:GetKillingStatisticSumm(attacker)
+		local kills = bgNPC:GetWantedKillingStatisticSumm(attacker)
 		if c_Wanted.next_kill_update <= kills then
 			c_Wanted:LevelUp()
 		end
@@ -42,6 +42,7 @@ hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", functi
 	end
 
 	bgNPC:ResetKillingStatistic(target)
+	bgNPC:ResetWantedKillingStatistic(target)
 end)
 
 hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
@@ -72,7 +73,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	if table.Count(wanted_list) == 0 then return end
 
-	local polices = bgNPC:GetAllByType('police')
+	local polices = bgNPC:GetAllByTeam('police')
 	local citizens = bgNPC:GetAllByType('citizen')
 
 	local witnesses = {}
@@ -86,40 +87,20 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 			c_Wanted:UpdateWaitTime(math.Round(wait_time))
 			
 			for _, actor in ipairs(witnesses) do
-				local npc = actor:GetNPC()
-				if IsValid(npc) and table.HasValue(actor.targets, enemy) then
+				if actor:IsAlive() and not actor:HasTarget(enemy) then
+					local npc = actor:GetNPC()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
 					if dist <= 360000 then -- 600 ^ 2
 						c_Wanted:UpdateWanted()
 						
+						actor:SetState(actor:GetReactionForProtect())
 						actor:AddTarget(enemy)
-						if actor:HasState('idle') or actor:HasState('walk') then
-							actor:SetState(actor:GetReactionForProtect())
-						end
-						goto skip
-					end
-
-					if dist <= 640000 then -- 800 ^ 2
-						local tr = util.TraceLine({
-							start = npc:EyePos(),
-							endpos = enemy:EyePos(),
-							filter = function(ent) 
-								if ent ~= npc then
-									return true
-								end
-							end
-						})
-
-						if tr.Hit and IsValid(tr.Entity) and tr.Entity == enemy then
-							c_Wanted:UpdateWanted()
-							
-							actor:AddTarget(enemy)
-							if actor:HasState('idle') or actor:HasState('walk') then
-								actor:SetState(actor:GetReactionForProtect())
-							end
-							goto skip
-						end
+					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
+						c_Wanted:UpdateWanted()
+						
+						actor:SetState(actor:GetReactionForProtect())
+						actor:AddTarget(enemy)
 					end
 				end
 			end
@@ -128,8 +109,6 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 				asset:RemoveWanted(enemy)
 			end
 		end
-
-		::skip::
 	end
 
 	asset:ClearDeath()

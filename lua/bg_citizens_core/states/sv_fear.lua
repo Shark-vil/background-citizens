@@ -1,43 +1,14 @@
-local male_scream = {
-	'ambient/voices/m_scream1.wav',
-	'vo/coast/bugbait/sandy_help.wav',
-	'vo/npc/male01/help01.wav',
-	'vo/Streetwar/sniper/male01/c17_09_help01.wav',
-	'vo/Streetwar/sniper/male01/c17_09_help02.wav',
-	'vo/npc/male01/no01.wav',
-	'vo/npc/male01/no02.wav',
-}
-
-local female_scream = {
-	'ambient/voices/f_scream1.wav',
-	'vo/canals/arrest_helpme.wav',
-	'vo/npc/female01/help01.wav',
-	'vo/npc/male01/help01.wav',
-	'vo/npc/female01/no01.wav',
-	'vo/npc/female01/no02.wav',
-}
-
 hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	if state ~= 'fear' or not actor:IsAlive() then return end
-	if math.random(0, 10) > 4 then return end
+	if math.random(0, 10) > 5 then return end
 	
 	local target = actor:GetNearTarget()
 	if not IsValid(target) then return end
 
 	local npc = actor:GetNPC()
-	if target:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
+	if target:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
 	
-	local npc_model = npc:GetModel()
-	local scream_sound = nil
-	if tobool(string.find(npc_model, 'female_*')) then
-		scream_sound = table.Random(female_scream)
-	elseif tobool(string.find(npc_model, 'male_*')) then
-		scream_sound = table.Random(male_scream)
-	else
-		scream_sound = table.Random(table.Inherit(male_scream, female_scream))
-	end
-
-	npc:EmitSound(scream_sound, 450, 100, 1, CHAN_AUTO)
+	actor:FearScream()
 end)
 
 timer.Create('BGN_Timer_FearStateController', 1, 0, function()
@@ -51,15 +22,25 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		local data = actor:GetStateData()
 
 		data.delay = data.delay or 0
+		data.reset_fear = data.reset_fear or CurTime() + 30
+		data.call_for_help = data.call_for_help or CurTime() + math.random(25, 40)
 
-		if npc:GetPos():DistToSqr(target:GetPos()) == 1000000 then -- 1000 ^ 2
+		local dist = npc:GetPos():DistToSqr(target:GetPos())
+		if dist >= 1000000 or (data.reset_fear < CurTime() 
+			and not bgNPC:IsTargetRay(npc, target))
+		then -- 1000 ^ 2
 			actor:RemoveTarget(target)
+			data.reset_fear = CurTime() + 30
 		elseif npc:Disposition(target) ~= D_FR then
 			npc:AddEntityRelationship(target, D_FR, 99)
 		end
 
+		if npc:GetTarget() ~= target then
+			npc:SetTarget(target)
+		end
+
 		if data.delay < CurTime() then
-			if math.random(0, 100) == 0 and npc:GetPos():DistToSqr(target:GetPos()) > 90000 
+			if math.random(0, 100) == 0 and dist > 90000 
 				and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
 			then
 				actor:SetState('calling_police', {
@@ -68,7 +49,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 				goto skip
 			end
 
-			if data.schedule == 'run' and npc:GetPos():DistToSqr(target:GetPos()) > 360000 -- 600 ^ 2 
+			if data.schedule == 'run' and dist > 360000 -- 600 ^ 2 
 				and math.random(0, 10) == 0
 			then
 				data.schedule = 'dyspnea'
@@ -110,9 +91,18 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 			actor:ClearSchedule()
 		end
 
-		local dist = npc:GetPos():DistToSqr(target:GetPos())
 		if dist < 22500 then -- 150 ^ 2
 			data.schedule = 'fear'
+			data.call_for_help = CurTime() + math.random(25, 40)
+			data.reset_fear = CurTime() + 30
+			if math.random(0, 100) <= 2 then
+				actor:CallForHelp(target)
+			end
+		elseif dist > 360000 then -- 600 ^ 2
+			if data.call_for_help < CurTime() then
+				actor:CallForHelp(target)
+				data.call_for_help = CurTime() + math.random(25, 40)
+			end
 		end
 
 		::skip::
@@ -120,11 +110,8 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 end)
 
 timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC:GetAllByState('fear')) do
 		if not actor:IsAlive() then goto skip end
-
-		local state = actor:GetState()
-		if state ~= 'fear' then goto skip end
 
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end
@@ -173,6 +160,14 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 				end
 			end
 		elseif data.schedule == 'run' and data.update_run < CurTime() then
+			if data.old_pos ~= nil and data.old_pos:DistToSqr(npc:GetPos()) <= 900 then
+				data.old_pos = nil
+				data.schedule = 'fear'
+				goto skip
+			end
+
+			data.old_pos = npc:GetPos()
+
 			if math.random(0, 10) > 5 then
 				npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
 			else               
@@ -186,9 +181,18 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 					npc:SetSchedule(SCHED_FORCED_GO_RUN)
 				end
 			end
+			
 			data.update_run = CurTime() + 3
 		end
 
 		::skip::
+	end
+end)
+
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetFearTimer', function(attacker, target, dmginfo)
+	for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 1000)) do
+		if actor:IsAlive() and actor:HasState('fear') and bgNPC:IsTargetRay(actor:GetNPC(), attacker) then
+			actor:GetStateData().reset_fear = CurTime() + 30
+		end
 	end
 end)

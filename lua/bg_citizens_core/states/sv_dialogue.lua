@@ -3,7 +3,7 @@ local asset = bgNPC:GetModule('actors_dialogue')
 hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, data)
    if actor:HasState('dialogue') then
       if state ~= 'fear' and state ~= 'defense' then
-         if asset:GetDialogue(actor) ~= nil then return false end
+         if asset:GetDialogue(actor) ~= nil then return true end
       else
          asset:RemoveBadValues()
          return
@@ -18,10 +18,11 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
    local ActorTarget = table.Random(actors)
    
    if ActorTarget ~= actor and ActorTarget:IsAlive() then
-      if not asset:SetDialogue(actor, ActorTarget) then return false end
+      if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return true end
+      if not asset:SetDialogue(actor, ActorTarget) then return true end
       ActorTarget:SetState('dialogue', { isIgnore = true })
    else
-      return false
+      return true
    end
 end)
 

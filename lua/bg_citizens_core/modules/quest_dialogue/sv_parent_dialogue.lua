@@ -1,10 +1,10 @@
-hook.Add("BGN_PostSpawnNPC", "BGN_QuestSystem_DialogueParent", function(npc, type, data)
+hook.Add("BGN_InitActor", "BGN_QuestSystem_DialogueParent", function(actor)
 	if QuestDialogue == nil then 
-		hook.Remove("BGN_PostSpawnNPC", "BGN_QuestSystem_DialogueParent")
+		hook.Remove("BGN_InitActor", "BGN_QuestSystem_DialogueParent")
 		return
 	end
 
-	QuestDialogue:AutoParentToNPC(npc)
+	QuestDialogue:AutoParentToNPC(actor:GetNPC())
 end)
 
 hook.Add("QSystem.StartDialogue", "BGN_QuestSystem_StartDialogue", function(eDialogue)

@@ -6,10 +6,15 @@ CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_vie
 { FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
 'The minimum distance in which the check is not performed.')
 
+CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound, 
+{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
+
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 	RunConsoleCommand('bgn_enable', bgNPC.cvar.bgn_enable)
+	RunConsoleCommand('bgn_debug', bgNPC.cvar.bgn_debug)
 	RunConsoleCommand('bgn_max_npc', bgNPC.cvar.bgn_max_npc)
 	RunConsoleCommand('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius)
 	RunConsoleCommand('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility)
@@ -30,9 +35,14 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	RunConsoleCommand('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode)
 	RunConsoleCommand('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization)
 	RunConsoleCommand('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range)
+	RunConsoleCommand('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound)
 	RunConsoleCommand('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons)
 
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		RunConsoleCommand('bgn_npc_type_' .. npcType, 1)
+	end
+
+	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
 	end
 end)

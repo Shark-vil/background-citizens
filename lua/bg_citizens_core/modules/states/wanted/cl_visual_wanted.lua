@@ -18,7 +18,7 @@ hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
 end)
 
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
-	if not LocalPlayer().BGN_IsLoaded then return end
+	if not LocalPlayer().slibIsSpawn then return end
 	
 	local is_draw_text = GetConVar('bgn_wanted_hud_text'):GetBool()
 	local is_draw_stars = GetConVar('bgn_wanted_hud_stars'):GetBool()

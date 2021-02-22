@@ -7,11 +7,16 @@ file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
 if SERVER then
-	resource.AddFile('materials/background_npcs/vgui/wanted_star.png')
-	resource.AddFile('sound/background_npcs/handcuffs_sound1.mp3')
+	resource.AddSingleFile('materials/background_npcs/vgui/wanted_star.png')
+	resource.AddSingleFile('materials/background_npcs/vgui/missing_slib.png')
+	resource.AddSingleFile('sound/background_npcs/handcuffs_sound1.mp3')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_1.wav')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_2.wav')
+	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_3.wav')
 end
 
 bgNPC = {}
+bgNPC.VERSION = "1.4.2"
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -22,6 +27,7 @@ bgNPC.fnpcs = {}
 bgNPC.points = {}
 bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
+bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
 -- ---------------------------
 
@@ -54,13 +60,20 @@ local function using(local_file_path, network_type, not_root_directory)
 	end
 end
 
-using('modules/extend/net/sh_callback.lua')
-using('modules/extend/cvars/sh_global_cvars.lua')
+if slib == nil then
+	using('errors/sh_slib_error.lua')
+	return
+end
+
+-- using('modules/extend/cvars/sh_gcvars.lua')
+-- using('modules/extend/cvars/sv_gcvars.lua')
+-- using('modules/extend/cvars/cl_gcvars.lua')
 
 using('config/sh_main.lua')
 using('config/sh_npcs.lua')
 using('config/sh_shot_sound.lua')
 using('config/sh_player.lua')
+using('config/sh_darkrp.lua')
 
 hook.Add("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule", function()
 	include(root_directory .. '/config/sh_player.lua')
@@ -87,11 +100,13 @@ using('global/sh_net_variables.lua')
 using('global/sh_actors_finder.lua')
 using('global/sh_actors_register.lua')
 using('global/sh_killing_statistic.lua')
+using('global/sh_wanted_killing_statistic.lua')
 
 using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')
 
 using('modules/cl_render_optimization.lua')
+using('modules/debug/cl_render_target_path.lua')
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
 using('modules/sv_static_animation_controller.lua')
@@ -104,10 +119,12 @@ using('modules/npcs/sv_set_gangster_model.lua')
 using('modules/npcs/sv_set_custom_health.lua')
 using('modules/npcs/sv_police_voice.lua')
 using('modules/npcs/sv_random_voice.lua')
+-- using('modules/player/sv_sync_npcs_by_pvs.lua')
 using('modules/player/sv_team_parent.lua')
 using('modules/darkrp/sv_darkrp_drop_money.lua')
 using('modules/darkrp/sv_player_arrest.lua')
 using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
+using('modules/darkrp/sv_change_team_wanted.lua')
 using('modules/sandbox/sv_arrest.lua')
 using('modules/routes/sh_route_saver.lua')
 using('modules/routes/sh_route_loader.lua')
@@ -122,6 +139,7 @@ using('modules/states/wanted/sh_wanted_class.lua')
 using('modules/states/wanted/sv_wanted_actions.lua')
 using('modules/states/wanted/cl_wanted_sync.lua')
 using('modules/states/wanted/cl_visual_wanted.lua')
+using('modules/ambient/cl_ambient_sound.lua')
 
 using('actions/sv_open_door.lua')
 using('actions/sv_police_luggage.lua')
@@ -141,5 +159,12 @@ using('states/sv_idle.lua')
 using('states/sv_arrest.lua')
 using('states/sv_dialogue.lua')
 using('states/sv_sit_to_chair.lua')
+using('states/sv_retreat.lua')
 
 using('tool_options/cl_bgn_settings_menu.lua')
+
+if CLIENT then
+	snet.RegisterValidator('actor', function(ply, uid, ent)
+		return bgNPC:GetActor(ent) ~= nil
+	end)
+end

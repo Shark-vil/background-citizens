@@ -1,6 +1,7 @@
 local movement_map = {}
 local movement_ignore = {}
 local dist_limit
+local reset_ignore_time = 15
 
 local function UpdateDistLimit()
 	dist_limit = 250000
@@ -20,7 +21,7 @@ end)
 local function IsIgnorePosition(npc, pos)
 	if movement_ignore[npc] ~= nil then
 		for _, data in ipairs(movement_ignore[npc]) do
-			if data.resetTime > CurTime() and data.pos == pos then
+			if data.pos == pos and data.resetTime > CurTime() then
 				return true
 			end
 		end
@@ -56,7 +57,9 @@ local function updateMovement(npc)
 	movement_map[npc] = {
 		pos = v.pos,
 		index = key,
-		resetTime = CurTime() + 10
+		resetTime = CurTime() + reset_ignore_time,
+		start_pos = npc:GetPos(),
+		start_time = CurTime()
 	}
 
 	return movement_map[npc]
@@ -67,47 +70,48 @@ local function nextMovement(npc)
 		local map = movement_map[npc]
 		local parents = bgNPC.points[map.index].parents
 
-		if #parents ~= 0 then
-			local npc_pos = npc:GetPos()
+		if #parents == 0 then return nil end
 
-			for _, index in ipairs(parents) do
-				local pos = bgNPC.points[index].pos
+		local npc_pos = npc:GetPos()
+		for _, index in ipairs(parents) do
+			local pos = bgNPC.points[index].pos
 
-				if IsIgnorePosition(npc, pos) then
-					goto skip
-				end
+			if IsIgnorePosition(npc, pos) then
+				goto skip
+			end
 
-				if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
-					local other_entities = ents.FindInSphere(pos, 100)
-					local other_npc_count = 0
-					for _, ent in ipairs(other_entities) do
-						if ent:IsNPC() and ent ~= npc then
-							other_npc_count = other_npc_count + 1
-						end
-
-						if other_npc_count > 3 then
-							goto skip
-						end
+			if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
+				local other_entities = ents.FindInSphere(pos, 100)
+				local other_npc_count = 0
+				for _, ent in ipairs(other_entities) do
+					if ent:IsNPC() and ent ~= npc then
+						other_npc_count = other_npc_count + 1
 					end
 
-					movement_map[npc] = {
-						pos = pos,
-						index = index,
-						resetTime = CurTime() + 10
-					}
-
-					return movement_map[npc]
+					if other_npc_count > 3 then
+						goto skip
+					end
 				end
 
-				::skip::
+				movement_map[npc] = {
+					pos = pos,
+					index = index,
+					resetTime = CurTime() + reset_ignore_time,
+					start_pos = npc:GetPos(),
+					start_time = CurTime()
+				}
+
+				return movement_map[npc]
 			end
+
+			::skip::
 		end
 	end
 
 	return nil
 end
 
-hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
+hook.Add('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 	if actor:GetState() ~= 'walk' then return end
 
 	local npc = actor:GetNPC()
@@ -115,6 +119,14 @@ hook.Run('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 	if map ~= nil then
 		map.resetTime = 0
 	end
+end)
+
+hook.Add("BGN_SetNPCState", "BGN_ResetIgnorePointsAfterStateChange", function(actor, state)
+	if state == 'walk' then return end
+
+	local npc = actor:GetNPC()
+	movement_map[npc] = nil
+	movement_ignore[npc] = nil
 end)
 
 timer.Create('BGN_Timer_StollController', 0.5, 0, function()
@@ -141,14 +153,14 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
-				resetTime = CurTime() + 60
+				resetTime = CurTime() + reset_ignore_time
 			})
 		else
 			local getNewPos = false
 
-			if npc:GetPos():DistToSqr(map.pos) <= 900 then -- 30 ^
+			if map.start_time + 5 < CurTime() and npc:GetPos():DistToSqr(map.start_pos) <= 2500 then
 				getNewPos = true
-			elseif map.resetTime < CurTime() then
+			elseif map.resetTime < CurTime() or npc:GetPos():DistToSqr(map.pos) <= 2500 then -- 50 ^ 2
 				getNewPos = true
 			end
 
@@ -165,6 +177,9 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			if map == nil then
 				map = updateMovement(npc)
 				if map == nil then
+					bgNPC:Log('Can\'t find the next move point! Reset tables...', 'Walking')
+					movement_map[npc] = nil
+					movement_ignore[npc] = nil
 					goto skip
 				end
 			end
@@ -175,7 +190,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
-				resetTime = CurTime() + 60
+				resetTime = CurTime() + reset_ignore_time
 			})
 		end
 

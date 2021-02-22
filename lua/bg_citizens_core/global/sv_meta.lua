@@ -12,8 +12,10 @@ function bgNPC:IsFearNPC(npc)
 end
 
 function bgNPC:SetActorWeapon(actor, weapon_class)
+	local npc = actor:GetNPC()
+	local data = actor:GetData()
+
 	if weapon_class ~= nil then
-		local npc = actor:GetNPC()
 		local active_weapon = npc:GetActiveWeapon()
 
 		if IsValid(active_weapon) and active_weapon:GetClass() ~= weapon_class then
@@ -27,9 +29,8 @@ function bgNPC:SetActorWeapon(actor, weapon_class)
 
 		npc:SelectWeapon(weapon_class)
 	else
-		local weapons = actor:GetData().weapons
+		local weapons = data.weapons
 		if weapons ~= nil and #weapons ~= 0 then
-			local npc = actor:GetNPC()
 			local active_weapon = npc:GetActiveWeapon()
 
 			if IsValid(active_weapon) and table.HasValue(weapons, active_weapon:GetClass()) then
@@ -45,6 +46,10 @@ function bgNPC:SetActorWeapon(actor, weapon_class)
 
 			npc:SelectWeapon(select_weapon)
 		end
+	end
+
+	if data.weaponSkill ~= nil and isnumber(data.weaponSkill) then
+		npc:SetCurrentWeaponProficiency(data.weaponSkill)
 	end
 end
 

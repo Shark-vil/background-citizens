@@ -1,7 +1,31 @@
 BGN_ACTOR = {}
 
-function BGN_ACTOR:Instance(npc, type, data)
+local male_scream = {
+	'ambient/voices/m_scream1.wav',
+	'vo/coast/bugbait/sandy_help.wav',
+	'vo/npc/male01/help01.wav',
+	'vo/Streetwar/sniper/male01/c17_09_help01.wav',
+	'vo/Streetwar/sniper/male01/c17_09_help02.wav',
+	'vo/npc/male01/no01.wav',
+	'vo/npc/male01/no02.wav',
+}
+
+local female_scream = {
+	'ambient/voices/f_scream1.wav',
+	'vo/canals/arrest_helpme.wav',
+	'vo/npc/female01/help01.wav',
+	'vo/npc/female01/help01.wav',
+	'vo/npc/female01/no01.wav',
+	'vo/npc/female01/no02.wav',
+}
+
+local uid = 0
+function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	local obj = {}
+	
+	uid = custom_uid or (uid + 1)
+
+	obj.uid = uid
 	obj.npc = npc
 	obj.class = npc:GetClass()
 	obj.data = data
@@ -29,20 +53,21 @@ function BGN_ACTOR:Instance(npc, type, data)
 	obj.old_state = nil
 	obj.state_lock = false
 
-	obj.isBgnActor = true
+	obj.isBgnClass = true
 	obj.targets = {}
 
 	obj.npc_schedule = -1
 	obj.npc_state = -1
 
+	-- Synchronizes all required variables with clients.
+	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
 	function obj:SyncData(ply)
 		ply = ply or NULL
 		if CLIENT then return end
-
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
+		if not self:IsAlive() then return end
 
 		local sync_data = {
+			uid = self.uid,
 			anim_name = self.anim_name,
 			reaction = self.reaction,
 			anim_time = self.anim_time,
@@ -60,66 +85,61 @@ function BGN_ACTOR:Instance(npc, type, data)
 		}
 
 		if not IsValid(ply) then
-			net.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
+			snet.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
 		else
-			net.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
+			snet.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
 		end
 	end
 
+	-- Synchronizes the "reaction" setting for all clients.
 	function obj:SyncReaction()
 		if CLIENT then return end
+		if not self:IsAlive() then return end
 
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
-
-		net.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
 			reaction = self.reaction,
 		})
 	end
 
+	-- Synchronizes the "schedule" setting for all clients.
 	function obj:SyncSchedule()
 		if CLIENT then return end
+		if not self:IsAlive() then return end
 
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
-
-		net.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 		})
 	end
 
+	-- Synchronizes the "targets" setting for all clients.
 	function obj:SyncTargets()
 		if CLIENT then return end
+		if not self:IsAlive() then return end
 
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
-
-		net.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
 			targets = self.targets,
 		})
 	end
 
+	-- Synchronizes the "state" setting for all clients.
 	function obj:SyncState()
 		if CLIENT then return end
+		if not self:IsAlive() then return end
 
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
-
-		net.InvokeAll('bgn_actor_sync_data_state_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
 			old_state = self.old_state,
 			state_lock = self.state_lock,
 			state_data = self.state_data,
 		})
 	end
 
+	-- Synchronizes the "animation" setting for all clients.
 	function obj:SyncAnimation()
 		if CLIENT then return end
+		if not self:IsAlive() then return end
 
-		local npc = self:GetNPC()
-		if not IsValid(npc) then return end
-
-		net.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
+		snet.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
 			anim_name = self.anim_name,
 			anim_time = self.anim_time,
 			loop_time = self.loop_time,
@@ -130,13 +150,19 @@ function BGN_ACTOR:Instance(npc, type, data)
 		})
 	end
 
+	-- Sets the random state of the NPC from the "at_random" table.
 	function obj:RandomState()
-		local state = self:GetRandomState()
-		if state ~= 'none' and self:GetState() ~= state then
-			self:SetState(state)
+		if not hook.Run('PreRandomState', self) then
+			local state = self:GetRandomState()
+			if state ~= 'none' and self:GetState() ~= state then
+				self:SetState(state)
+			end
 		end
 	end
 
+	-- Gets a random identifier from the "at_random" table.
+	-- ? The result depends on the set weights. The higher the value, the greater the chance of falling out.
+	-- @return string identifier state identifier
 	function obj:GetRandomState()
 		if self.data.at_random == nil then
 			return 'none'
@@ -162,6 +188,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return state
 	end
 
+	-- Checks if the actor is alive or not.
+	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function obj:IsAlive()
 		if IsValid(self.npc) and self.npc:Health() > 0 then
 			return true
@@ -169,35 +197,54 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return false
 	end
 
+	-- Sets the reaction to the event.
+	-- ? Used in system computing, and does nothing by itself.
+	-- @param reaction string reaction to event
 	function obj:SetReaction(reaction)
 		self.reaction = reaction
 		self:SyncReaction()
 	end
 
+	-- Will return the last result specified in the reaction variable.
+	-- @return string reaction last set reaction
 	function obj:GetLastReaction()
 		return self.reaction
 	end
 
+	-- Returns the entity of the actor's NPC.
+	-- ! Under certain circumstances, it can return NULL, it is recommended to use the IsAlive method before receiving the NPC.
+	-- @return entity npc npc entity
 	function obj:GetNPC()
 		return self.npc
 	end
 
+	-- Will return the actor's data specified in the config.
+	-- ! The data is bound to the actor. If you update the config, then the data will not be updated for the already created actors.
+	-- @return table actor_data actor data from config
 	function obj:GetData()
 		return self.data
 	end
 
+	-- Returns the real NPC class that is associated with the actor.
+	-- @return string npc_class npc class
 	function obj:GetClass()
 		return self.class
 	end
 
+	-- Returns the npc type specified in the config.
+	-- ? For example - citizen
+	-- @return string actor_type type of actor from config
 	function obj:GetType()
 		return self.type
 	end
 
+	-- Checks the existence of an NPC entity.
+	-- @return boolean is_valid_npc will return true if the NPC exists, otherwise false
 	function obj:IsValid()
 		return IsValid(self.npc)
 	end
 
+	-- Clears NPC schedule data and synchronizes changes for clients.
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
 		
@@ -210,6 +257,9 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self:SyncSchedule()
 	end
 
+	-- Adds a target for the actor and syncs new targets for clients.
+	-- ? The target doesn't have to be the enemy. This is used in state calculations.
+	-- @param ent entity any entity other than the actor himself
 	function obj:AddTarget(ent)
 		if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
 			table.insert(self.targets, ent)
@@ -218,6 +268,11 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 	end
 
+	-- Removes an entity from the target list and syncs new list for clients.
+	-- ! If you simply remove an entity from the list, it will not automatically cancel the relationship with the NPC.
+	-- @param ent entity|NULL any entity
+	-- @param index number|nil target id in table
+	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
 		local count = #self.targets
 
@@ -238,20 +293,29 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self:SyncTargets()
 	end
 
+	-- Removes all targets from the list.
+	-- ? Actually calls method "RemoveTarget" for all targets in the list.
 	function obj:RemoveAllTargets()
 		for _, t in ipairs(self.targets) do
 			self:RemoveTarget(t)
 		end
 	end
 
+	-- Checks for the existence of an entity in the target list.
+	-- @param ent entity any entity
+	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
 		return table.HasValue(self.targets, ent)
 	end
 
+	-- Returns the number of existing targets for the actor.
+	-- @return number targets_number number of targets
 	function obj:TargetsCount()
 		return table.Count(self.targets)
 	end
 
+	-- Returns the closest target to the actor.
+	-- @return entity|NULL target_entity nearest target which is entity
 	function obj:GetNearTarget()
 		local target = NULL
 		local dist = 0
@@ -272,6 +336,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return target
 	end
 
+	-- Recalculates targets, and removes them if they are dead or no longer exist on the map.
+	-- @return table new_targets new target list
 	function obj:RecalculationTargets()
 		for i = #self.targets, 1, -1 do
 			local target = self.targets[i]
@@ -308,6 +374,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 				hook.Run('BGN_SetNPCState', self, 
 					self.state_data.state, self.state_data.data)
 			end
+
+			self:SyncState()
 		end
 	end
 
@@ -319,12 +387,10 @@ function BGN_ACTOR:Instance(npc, type, data)
 		data = data or {}
 
 		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
-		if hook_result ~= nil then
-			if isbool(hook_result) and not hook_result then
+		if hook_result then
+			if isbool(hook_result) then
 				return
-			end
-			
-			if istable(hook_result) and hook_result.state ~= nil then
+			elseif istable(hook_result) then
 				state = hook_result.state or state
 				data = hook_result.data or {}
 			end
@@ -334,7 +400,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self.state_data = { state = state, data = data }
 
 		if SERVER then
-			net.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
+			snet.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
 				self.state_data.state, self.state_data.data)
 
 			self.anim_action = nil
@@ -345,6 +411,8 @@ function BGN_ACTOR:Instance(npc, type, data)
 			hook.Run('BGN_SetNPCState', self, 
 				self.state_data.state, self.state_data.data)
 		end
+
+		self:SyncState()
 		
 		return self.state_data
 	end
@@ -394,7 +462,7 @@ function BGN_ACTOR:Instance(npc, type, data)
 			end
 			
 			if istable(value) then
-				if value.isBgnActor then
+				if value.isBgnClass then
 					value = value:GetData().team
 				end
 
@@ -490,6 +558,71 @@ function BGN_ACTOR:Instance(npc, type, data)
 		return point 
 	end
 
+	function obj:GetFarPointToPosition(pos, radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) > dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
+	function obj:GetClosestPointInRadius(radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local pos = npc:GetPos()
+		local points = bgNPC:GetAllPointsInRadius(pos, radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) < dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
+	function obj:GetFarPointInRadius(radius)
+		radius = radius or 500
+		
+		local point = nil
+		local dist = 0
+		local npc = self:GetNPC()
+		local pos = npc:GetPos()
+		local points = bgNPC:GetAllPointsInRadius(pos, radius)
+
+		for _, value in ipairs(points) do
+			if point == nil then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			elseif value.pos:DistToSqr(pos) > dist then
+				point = value.pos
+				dist = point:DistToSqr(pos)
+			end
+		end
+
+		return point 
+	end
+
 	function obj:GetReactionForDamage()
 		local probability = math.random(1, (self.data.at_damage_range or 100))
 		local percent, reaction = table.Random(self.data.at_damage)
@@ -507,6 +640,12 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 
 		reaction = reaction or 'ignore'
+		
+		if reaction == 'defense' and self.type == 'citizen' 
+			and GetConVar('bgn_disable_citizens_weapons'):GetBool()
+		then
+			reaction = 'fear'
+		end
 
 		return reaction
 	end
@@ -528,6 +667,12 @@ function BGN_ACTOR:Instance(npc, type, data)
 		end
 
 		reaction = reaction or 'ignore'
+
+		if reaction == 'defense' and self.type == 'citizen' 
+			and GetConVar('bgn_disable_citizens_weapons'):GetBool()
+		then
+			reaction = 'fear'
+		end
 
 		return reaction
 	end
@@ -690,11 +835,55 @@ function BGN_ACTOR:Instance(npc, type, data)
 		self:ClearSchedule()
 	end
 
+	function obj:FearScream()
+		if not self:IsAlive() then return end
+
+		local npc_model = self.npc:GetModel()
+		local scream_sound = nil
+		if tobool(string.find(npc_model, 'female_*')) then
+			scream_sound = table.Random(female_scream)
+		elseif tobool(string.find(npc_model, 'male_*')) then
+			scream_sound = table.Random(male_scream)
+		else
+			scream_sound = table.Random(table.Inherit(male_scream, female_scream))
+		end
+
+		if scream_sound ~= nil and isstring(scream_sound) then
+			self.npc:EmitSound(scream_sound, 100, 100, 1, CHAN_AUTO)
+		end
+	end
+
+	function obj:CallForHelp(target)
+		self:FearScream()
+
+		if not IsValid(target) then
+			target = self:GetNearTarget()
+			if not IsValid(target) then return end
+		end
+				
+		local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
+		for _, NearActor in ipairs(near_actors) do
+			local NearNPC = NearActor:GetNPC()
+			if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, target) then
+				NearActor:SetState(NearActor:GetReactionForProtect())
+				NearActor:AddTarget(target)
+			end
+		end
+
+		local TargetActor = bgNPC:GetActor(target)
+		if TargetActor ~= nil and not TargetActor:HasTeam(self) then
+			if not TargetActor:HasState('impingement') and not TargetActor:HasState('defense') then
+				TargetActor:SetState('defense')
+			end
+			TargetActor:AddTarget(npc)
+		end
+	end
+
 	function npc:GetActor()
 		return obj
 	end
 
-	npc.isActor = true
+	npc.isBgnActor = true
 
 	return obj
 end
