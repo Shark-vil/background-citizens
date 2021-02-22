@@ -47,7 +47,10 @@ local min_ambient_2 = 3
 -- 3 automatically
 
 timer.Create('BGN_SetAmbientSound', 2, 0, function()
-   if not GetConVar('bgn_cl_ambient_sound'):GetBool() then return end
+   if not GetConVar('bgn_cl_ambient_sound'):GetBool() then
+      SetAmbient(0)
+      return
+   end
    if not LocalPlayer().slibIsSpawn then return end
 
    local ply = LocalPlayer()

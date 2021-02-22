@@ -10,8 +10,6 @@ en_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Descriptio
 en_lang['bgn.settings.general.cl_citizens_load_route'] = 'Load points'
 en_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Description: loads the movement mesh for NPCs. You can use this if for some reason the mesh didn\'t load or you reset it.'
 en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Reset to factory settings'
-en_lang['bgn.settings.general.bgn_cl_ambient_sound'] = 'Enable ambient sound'
-en_lang['bgn.settings.general.bgn_cl_ambient_sound.description'] = 'Description: plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)'
 
 ru_lang['bgn.settings.general.bgn_enable'] = 'Включить фоновых NPC'
 ru_lang['bgn.settings.general.bgn_enable.description'] = 'Описание: переключает активность модификации.'
@@ -22,8 +20,6 @@ ru_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Описа
 ru_lang['bgn.settings.general.cl_citizens_load_route'] = 'Загрузить точки'
 ru_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Описание: загружает сетку передвижения для NPC. Вы можете использовать это, если по какой-то причине сетка не загрузилась или вы её сбросили.'
 ru_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Сбросить до заводских настроек'
-ru_lang['bgn.settings.general.bgn_cl_ambient_sound'] = 'Включить звук толпы'
-ru_lang['bgn.settings.general.bgn_cl_ambient_sound.description'] = 'Описание: проигрывает звук толпы в зависимости от количества актёров вокруг вас. (ВНИМАНИЕ! Не рекомендуется использовать на слабых ПК!)'
 
 local function GeneralSettingsMenu(Panel)
 	Panel:AddControl('CheckBox', {
@@ -48,13 +44,6 @@ local function GeneralSettingsMenu(Panel)
 	})
 
 	Panel:AddControl('CheckBox', {
-		Label = '#bgn.settings.general.bgn_cl_ambient_sound',
-		Command = 'bgn_cl_ambient_sound' 
-	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.general.bgn_cl_ambient_sound.description'
-	})
-
-	Panel:AddControl('CheckBox', {
 		Label = '#bgn.settings.general.bgn_debug',
 		Command = 'bgn_debug' 
 	}); Panel:AddControl('Label', {
@@ -71,12 +60,15 @@ en_lang['bgn.settings.client.bgn_cl_field_view_optimization'] = 'Enable field of
 en_lang['bgn.settings.client.bgn_cl_field_view_optimization.description'] = 'Description: this can increase your FPS with a lot of NPCs. Not recommended for use with other optimization mods.'
 en_lang['bgn.settings.client.bgn_cl_field_view_optimization_range'] = 'Activation distance'
 en_lang['bgn.settings.client.bgn_cl_field_view_optimization_range.description'] = 'Description: the distance after which the field of view check begins.'
-
+en_lang['bgn.settings.general.bgn_cl_ambient_sound'] = 'Enable ambient sound'
+en_lang['bgn.settings.general.bgn_cl_ambient_sound.description'] = 'Description: plays a crowd sound based on the number of actors around you.'
 
 ru_lang['bgn.settings.client.bgn_cl_field_view_optimization'] = 'Включить оптимизацию поля зрения'
 ru_lang['bgn.settings.client.bgn_cl_field_view_optimization.description'] = 'Описание: это может повысить ваш FPS при большом количестве НПС. Не рекомендуется использовать с другими модами на оптимизацию.'
 ru_lang['bgn.settings.client.bgn_cl_field_view_optimization_range'] = 'Дистанция активации'
 ru_lang['bgn.settings.client.bgn_cl_field_view_optimization_range.description'] = 'Описание: дистанция после которой начинает действовать проверка поля зрения.'
+ru_lang['bgn.settings.general.bgn_cl_ambient_sound'] = 'Включить звук толпы'
+ru_lang['bgn.settings.general.bgn_cl_ambient_sound.description'] = 'Описание: проигрывает звук толпы в зависимости от количества актёров вокруг вас.'
 
 local function ClientSettingsMenu(Panel)
 	Panel:AddControl('CheckBox', {
@@ -94,6 +86,13 @@ local function ClientSettingsMenu(Panel)
 		["Max"] = "2000"
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.client.bgn_cl_field_view_optimization_range.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.general.bgn_cl_ambient_sound',
+		Command = 'bgn_cl_ambient_sound' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.general.bgn_cl_ambient_sound.description'
 	})
 end
 
