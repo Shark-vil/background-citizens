@@ -132,9 +132,18 @@ else
 					if hook.Run('BGN_OnValidSpawnActor', data) then
 						return
 					end
+
+					local is_many_classes = false
+					local npc_class
 					
+					if istable(data.class) then
+						npc_class = table.Random(data.class)
+						is_many_classes = true
+					else
+						npc_class = data.class
+					end
 					
-					local npc = ents.Create(data.class)
+					local npc = ents.Create(npc_class)
 					npc:SetPos(pos)
 					-- npc:SetSpawnEffect(true)
 					
@@ -149,28 +158,45 @@ else
 			
 					npc:Spawn()
 					npc:PhysWake()
+
+					hook.Run('BGN_PostSpawnActor', npc, type, data)
 			
 					if data.models then
-						local model = table.Random(data.models)
-						if util.IsValidModel(model) then
-							if data.defaultModels then
-								if math.random(0, 10) <= 5 then
+						local model
+
+						if is_many_classes then
+							if data.models[npc_class] then
+								model = table.Random(data.models[npc_class])
+							end
+						else
+							model = table.Random(data.models)
+						end
+
+						if model ~= nil and util.IsValidModel(model) then							
+							if not data.defaultModels or (data.defaultModels and math.random(0, 10) <= 5) then
+								if not hook.Run('BGN_PreSetActorModel', model, npc, type, data) then
 									npc:SetModel(model)
 								end
-							else
-								npc:SetModel(model)
 							end
 						end
 					end
 
 					if data.randomSkin then
-						npc:SetSkin(math.random(0, npc:SkinCount()))
+						local skin = math.random(0, npc:SkinCount())
+						
+						if not hook.Run('BGN_PreSetActorSkin', skin, npc, type, data) then
+							npc:SetSkin(math.random(0, npc:SkinCount()))
+						end
 					end
 
 					if data.randomBodygroups then
 						for _, bodygroup in ipairs(npc:GetBodyGroups()) do
 							local id = bodygroup.id
-							npc:SetBodygroup(id, math.random(0, npc:GetBodygroupCount(id)))
+							local value = math.random(0, npc:GetBodygroupCount(id))
+
+							if not hook.Run('BGN_PreSetActorBodygroup', id, value, npc, type, data) then
+								npc:SetBodygroup(id, value)
+							end
 						end
 					end
 			
