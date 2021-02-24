@@ -169,6 +169,8 @@ if CLIENT then
 	end)
 
 	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
+		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+		
 		http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 			function(github_version, length, headers, code)
 				if github_version ~= bgNPC.VERSION then
