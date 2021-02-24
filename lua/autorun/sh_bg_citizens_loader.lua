@@ -167,4 +167,17 @@ if CLIENT then
 	snet.RegisterValidator('actor', function(ply, uid, ent)
 		return bgNPC:GetActor(ent) ~= nil
 	end)
+
+	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
+		http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
+			function(github_version, length, headers, code)
+				if github_version ~= bgNPC.VERSION then
+					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using an outdated version of "Background NPCs"!')
+				end
+			end,
+			function(message)
+				bgNPC:Log('Failed to check the actual version:\n' .. message, 'Version Checker')
+			end
+		)
+	end)
 end
