@@ -261,6 +261,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- ? The target doesn't have to be the enemy. This is used in state calculations.
 	-- @param ent entity any entity other than the actor himself
 	function obj:AddTarget(ent)
+		if not IsValid(ent) or not isentity(ent) then return end
+		
 		if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
 			table.insert(self.targets, ent)
 
@@ -274,9 +276,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param index number|nil target id in table
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
+		if not IsValid(ent) or not isentity(ent) then return end
+
 		local count = #self.targets
 
-		if IsValid(ent) and IsValid(self.npc) and ent:IsPlayer() then
+		if IsValid(self.npc) and ent:IsPlayer() then
 			self.npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
