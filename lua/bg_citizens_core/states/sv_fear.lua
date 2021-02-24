@@ -16,7 +16,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		if not actor:IsAlive() then goto skip end
 
 		local target = actor:GetNearTarget()
-		if not IsValid(target) or target:Health() <= 0 then goto skip end
+		if not IsValid(target) then goto skip end
 
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -41,7 +41,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		if data.delay < CurTime() then
 			if math.random(0, 100) == 0 and dist > 90000 
-				and not bgNPC:EntityIsViewVector(target, npc:GetPos(), 70) 
+				and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
 			then
 				actor:SetState('calling_police', {
 					delay = 0

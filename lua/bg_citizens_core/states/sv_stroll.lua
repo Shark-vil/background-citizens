@@ -80,7 +80,7 @@ local function nextMovement(npc)
 				goto skip
 			end
 
-			if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:EntityIsViewVector(npc, pos) then
+			if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
 				local other_entities = ents.FindInSphere(pos, 100)
 				local other_npc_count = 0
 				for _, ent in ipairs(other_entities) do

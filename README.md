@@ -6,11 +6,6 @@
 ![Open source](https://img.shields.io/badge/Open_source-yes-brightgreen.svg)
 [![Documentation](https://img.shields.io/badge/Documentation-In_developing-yellow.svg)](https://background-npcs.itpony.ru/wiki)
 
-## WARNING
-**BE SURE TO SUBSCRIBE TO THE LIBRARY SLibrary:**
-* **[SLibrary in workshop](https://steamcommunity.com/workshop/filedetails/?id=2404080563)**
-* **[SLibrary in GitHub](https://github.com/Shark-vil/slib-garrysmod)**
-
 ## General
 ***
 ### **Short information**

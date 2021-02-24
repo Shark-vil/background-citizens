@@ -1,34 +1,10 @@
--- Еб*ный костыль.
-hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
-	local npc = actor:GetNPC()
-	if not IsValid(npc) then return end
-
-	for _, AnotherActor in ipairs(bgNPC:GetAll()) do
-		local another_npc = AnotherActor:GetNPC()
-		if IsValid(another_npc) then
-			AnotherActor:RemoveTarget(npc)
-			actor:RemoveTarget(AnotherActor)
-
-			npc:AddEntityRelationship(another_npc, D_NU, 99)
-			another_npc:AddEntityRelationship(npc, D_NU, 99)
-		end
-	end
-
-	for _, ent in ipairs(player.GetAll()) do
-		if IsValid(ent) then
-			actor:RemoveTarget(ent)
-			npc:AddEntityRelationship(ent, D_NU, 99)
-		end
-	end
-end)
-
 hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
 	local actor_npc = actor:GetNPC()
 	if not IsValid(actor_npc) then return end
 
-	for _, npc in ipairs(ents.GetAll()) do
+	for _, npc in ipairs(ents.FindByClass('npc_*')) do
 		if npc:IsNPC() and not npc.isBgnActor then
 			actor:RemoveTarget(npc)
 			actor_npc:AddEntityRelationship(npc, D_NU, 99)

@@ -30,9 +30,7 @@
 
 	Explanation of other parameters:
 		class - NPC class. The class directly affects the playback of animations and the operation of models, use it carefully.
-		name - Any NPC name. Displayed in the options menu.
 		fullness - the parameter of the world occupancy for each actor (1 to 100)
-		limit - alternative for the "fullness" parameter, sets a fixed number of NPCs
 		team - the actor's team is used for interaction logic. Explanation above ↑
 		weapons - a weapon that an actor can have. If you don't want the actor to have a weapon, leave the list empty or delete the parameter.
 		money - the amount of money dropped from the actor after death. The first parameter is the minimum, the second parameter is the maximum (Default used in DarkRP)
@@ -43,12 +41,6 @@
 			Can be a number: health = 100
 			Can be a table with the possibility of randomness: health = { 100, 200 }
 		wanted_level - actors who will spawn only if any entity has the required wanted level. After all the actors have lost their targets, they are removed (1 to 5)
-		weaponSkill - The level of circulation of NPCs with weapons. (https://wiki.facepunch.com/gmod/Enums/WEAPON_PROFICIENCY)
-		randomSkin - enable the creation of random skins for NPCs
-		randomBodygroups - enable the creation of random bodygroups for NPCs
-		disableStates - disable NPC states switching. Suitable if you need to keep the default logic of the NPC.
-		respawn_delay - sets a delay for the appearance of new NPCs after the death of any of the existing
-		validator - a function that checks the spawn before the entity is created. Suitable for system checks. For broader checks, use the "BGN_OnValidSpawnActor" or "BGN_PreSpawnActor" hook
 --]]
 
 -- NPC classes that fill the streets

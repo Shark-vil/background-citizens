@@ -134,29 +134,25 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
    local cahirId = -1
 
    for _, ent in ipairs(entities) do
-      if not IsValid(ent) then goto skip end
-      if not ent:GetClass():StartWith('prop_') then goto skip end
-      
-      local ent_model = ent:GetModel()
-      if ent_model == nil then goto skip end
-      ent_model = ent_model:lower()
-
-      for id, chair_data in ipairs(cahirs) do
-         for _, model in ipairs(chair_data.models) do
-            if model:lower() == ent_model and not ent.occupied then
-               if ent.sitDelay == nil or ent.sitDelay < CurTime() then
-                  local ang = ent:GetAngles()
-                  if math.abs(ang.x) < 10 and math.abs(ang.z) < 10 then
-                     chair = ent
-                     cahirId = id
-                     break
+      if IsValid(ent) then
+         if ent:GetClass():StartWith('prop_') then
+            local ent_model = ent:GetModel()
+            for id, chair_data in ipairs(cahirs) do
+               for _, model in ipairs(chair_data.models) do
+                  if model:lower() == ent_model:lower() and not ent.occupied then
+                     if ent.sitDelay == nil or ent.sitDelay < CurTime() then
+                        local ang = ent:GetAngles()
+                        if math.abs(ang.x) < 10 and math.abs(ang.z) < 10 then
+                           chair = ent
+                           cahirId = id
+                           break
+                        end
+                     end
                   end
                end
             end
          end
       end
-
-      ::skip::
    end
    
    if IsValid(chair) then
