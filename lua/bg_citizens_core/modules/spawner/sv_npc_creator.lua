@@ -7,7 +7,7 @@ hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 		local another_npc = AnotherActor:GetNPC()
 		if IsValid(another_npc) then
 			AnotherActor:RemoveTarget(npc)
-			actor:RemoveTarget(AnotherActor)
+			actor:RemoveTarget(another_npc)
 
 			npc:AddEntityRelationship(another_npc, D_NU, 99)
 			another_npc:AddEntityRelationship(npc, D_NU, 99)
