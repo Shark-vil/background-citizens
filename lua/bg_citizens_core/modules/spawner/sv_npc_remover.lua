@@ -63,6 +63,8 @@ hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
 		local npc = actor:GetNPC()
 
 		if not hook.Run('BGN_PreRemoveNPC', npc) then
+			bgNPC:Log('Remove wanted npc (reset targets)', 'Wanted NPC')
+			bgNPC:RemoveNPC(npc)
 			npc:Remove()
 		end
 	end

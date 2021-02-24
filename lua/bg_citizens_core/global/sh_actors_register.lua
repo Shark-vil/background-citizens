@@ -174,22 +174,8 @@ else
 						end
 					end
 			
-					for _, ent in ipairs(bgNPC:GetAllNPCs()) do
-						if IsValid(ent) then
-							npc:AddEntityRelationship(ent, D_NU, 99)
-							ent:AddEntityRelationship(npc, D_NU, 99)
-						end
-					end
-
-					for _, ent in ipairs(player.GetAll()) do
-						if IsValid(ent) then
-							npc:AddEntityRelationship(ent, D_NU, 99)
-						end
-					end
-			
 					local actor = BGN_ACTOR:Instance(npc, type, data)
 					bgNPC:AddNPC(actor)
-
 					actor:RandomState()
 					
 					hook.Run('BGN_InitActor', actor)
