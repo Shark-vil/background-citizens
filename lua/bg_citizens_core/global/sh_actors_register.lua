@@ -129,10 +129,6 @@ else
 						end
 					end
 			
-					if hook.Run('BGN_OnValidSpawnActor', data) then
-						return
-					end
-
 					local is_many_classes = false
 					local npc_class
 					
@@ -143,6 +139,10 @@ else
 						npc_class = data.class
 					end
 					
+					if hook.Run('BGN_OnValidSpawnActor', data, npc_class, pos) then
+						return
+					end
+
 					local npc = ents.Create(npc_class)
 					npc:SetPos(pos)
 					-- npc:SetSpawnEffect(true)
