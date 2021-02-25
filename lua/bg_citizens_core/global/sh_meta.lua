@@ -8,6 +8,8 @@ function bgNPC:Log(message, tag)
 end
 
 function bgNPC:PlayerIsViewVector(ply, pos, radius)
+	if not IsValid(ply) then return false end
+
 	radius = radius or 90
 	local DirectionAngle = math.pi / radius -- 90
 	local EntityDifference = pos - ply:EyePos()
@@ -19,7 +21,7 @@ function bgNPC:PlayerIsViewVector(ply, pos, radius)
 	return false
 end
 
-function bgNPC:EntityIsViewVector(ent, pos, radius)
+function bgNPC:NPCIsViewVector(ent, pos, radius)
 	if not IsValid(ent) then return false end
 
 	radius = radius or 90

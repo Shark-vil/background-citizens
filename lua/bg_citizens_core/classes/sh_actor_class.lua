@@ -522,6 +522,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetDistantPointInRadius(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -543,6 +544,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetClosestPointToPosition(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -564,6 +566,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFarPointToPosition(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -585,6 +588,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetClosestPointInRadius(radius)
+		if not self:IsAlive() then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -607,6 +611,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFarPointInRadius(radius)
+		if not self:IsAlive() then return nil end
 		radius = radius or 500
 		
 		local point = nil

@@ -1,34 +1,35 @@
 hook.Add('BGN_PreSetNPCState', 'BGN_DvVehicle_FindCarOnRadius', function(actor, state)
    if state ~= 'dv_vehicle_drive' or not actor:IsAlive() then return end
 
-   local npc = actor:GetNPC()
-
-   if actor:GetState() == 'dv_vehicle_drive' then
-      local curr_veh = actor:GetStateData().vehicle
-      if IsValid(curr_veh) and curr_veh:slibGetVar('bgn_vehicle_owner', NULL) == npc then
-         return true
-      end
-   end
-   
+   local npc = actor:GetNPC() 
    local vehicle = NULL
    local entities = ents.FindInSphere(npc:GetPos(), 500)
 
    for _, ent in ipairs(entities) do
       if not IsValid(ent) then goto skip end
+      if not ent:IsVehicle() then goto skip end
 
-      if ent:IsVehicle() or (simfphys and simfphys.IsCar(ent)) then
-         local owner = ent:slibGetVar('bgn_vehicle_owner', NULL)
-         if not IsValid(owner) then
-            vehicle = ent
-            ent:slibSetVar('bgn_vehicle_owner', npc)
-            break
-         end
+      local veh = ent
+      local veh_owner = ent:GetOwner()
+      if IsValid(veh_owner) and veh_owner:IsVehicle() then
+         veh = veh_owner
+      end
+
+      if simfphys and not simfphys.IsCar(ent) then goto skip end
+
+      local owner = veh:slibGetVar('bgn_vehicle_owner', NULL)
+      if not IsValid(owner) then
+         vehicle = veh
+         veh:slibSetVar('bgn_vehicle_owner', npc)
+         break
       end
 
       ::skip::
    end
 
    if not IsValid(vehicle) then return { state = 'walk' } end
+
+   actor:StateLock(true)
 
    return {
       state = state,
@@ -56,21 +57,25 @@ local function ExitActor(actor, vehicle, decentvehicle)
    if actor ~= nil and actor:IsAlive() then
       local npc = actor:GetNPC()
       local data = actor:GetStateData()
-      local pos = data.vehicle_last_pos or npc:GetPos()
-      local right = data.vehicle_last_right or npc:GetRight()
-      
-      if IsValid(vehicle) then
-         pos = vehicle:GetPos()
-         right = vehicle:GetRight()
+
+      if data.isSit then
+         local pos = data.vehicle_last_pos or npc:GetPos()
+         local right = data.vehicle_last_right or npc:GetRight()
+         
+         if IsValid(vehicle) then
+            pos = vehicle:GetPos()
+            right = vehicle:GetRight()
+         end
+
+         npc:SetNoDraw(false)
+         npc:SetPos(pos + (right * 100))
+         npc:SetParent(nil)
+         npc:PhysWake()
       end
 
-      npc:SetPos(pos + (right * 100))
-      npc:SetParent(nil)
-      npc:PhysWake()
-
-      actor:Walk()
-
+      actor:StateLock(false)
       actor.eternal = false
+      actor:Walk()
    end
 end
 
@@ -88,23 +93,60 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
          else
             data.vehicle_last_pos = vehicle:GetPos()
             data.vehicle_last_right = vehicle:GetRight()
+
+            if IsValid(data.decentvehicle) and data.beep and data.beepDelay < CurTime() then
+               data.decentvehicle:SetELS(false)
+               data.beep = false
+            end
+            
+            local forward_pos = data.vehicle_last_pos + vehicle:GetForward() * 40
+            for _, AnotherActor in ipairs(bgNPC:GetAllByRadius(forward_pos, 200)) do
+               if AnotherActor:HasState('dv_vehicle_drive') or not AnotherActor:IsAlive() then
+                  goto another_skip
+               end
+
+               local pos = AnotherActor:GetDistantPointInRadius(data.vehicle_last_pos)
+               local move_pos = AnotherActor:GetClosestPointToPosition(pos)
+
+               data.beepDelay = data.beepDelay or 0
+               data.beep = data.beep or false
+
+               if IsValid(data.decentvehicle) and not data.beep and data.beepDelay < CurTime() then
+                  data.decentvehicle:SetELS(true)
+                  data.beepDelay = CurTime() + math.random(0.5, 2)
+                  data.beep = true
+               end
+
+               if move_pos ~= nil then
+                  local data = AnotherActor:GetStateData()
+                  data.delayVehicleRetreat = data.delayVehicleRetreat or 0
+                  
+                  if data.delayVehicleRetreat < CurTime() then
+                     local AnotherNPC = AnotherActor:GetNPC()
+                     AnotherNPC:SetSaveValue("m_vecLastPosition", move_pos)
+                     AnotherNPC:SetSchedule(SCHED_FORCED_GO_RUN)
+                     data.delayVehicleRetreat = CurTime() + 3
+                  end
+               end
+
+               ::another_skip::
+            end
          end
       else
          local is_valid_vehicle = IsValid(vehicle)
 
          if not is_valid_vehicle or data.sitDelay < CurTime() then
-            actor:RandomState()
-            if is_valid_vehicle then
-               vehicle:slibSetVar('bgn_vehicle_owner', NULL)
-            end
+            ExitActor(actor, vehicle, data.decentvehicle)
             goto skip
          end
 
          if data.delay < CurTime() then
             local veh_pos = vehicle:GetPos()
+            data.sitpos = veh_pos + (vehicle:GetRight() * 100)
+
             local distance = npc:GetPos():Distance(veh_pos)
             
-            if distance <= 200 then
+            if distance <= 150 then
                local decentvehicle = ents.Create('npc_decentvehicle')
                decentvehicle:SetPos(veh_pos)
                decentvehicle:Spawn()
@@ -115,18 +157,22 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
 
                npc:SetParent(vehicle)
                npc:SetPos(vehicle:GetPos())
+               npc:SetNoDraw(true)
 
-               timer.Create('BGN_Actor' .. actor.uid .. 'ExitCar', 10, 1, function()
+               timer.Create('BGN_Actor' .. actor.uid .. 'ExitCar', math.random(30, 120), 1, function()
                   ExitActor(actor, vehicle, decentvehicle)
                end)
 
                goto skip
             end
 
-            local move_pos = veh_pos
+            local move_pos
+            
             if distance > 500 then
-               actor:GetClosestPointToPosition(veh_pos)
+               move_pos = actor:GetClosestPointToPosition(veh_pos)
             end
+
+            move_pos = move_pos or data.sitpos
 
             npc:SetSaveValue("m_vecLastPosition", move_pos)
             npc:SetSchedule(SCHED_FORCED_GO)
