@@ -31,6 +31,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.data = data
 	obj.type = type
 	obj.reaction = ''
+	obj.eternal = false
 
 	obj.state_data = {
 		state = 'none',

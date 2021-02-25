@@ -100,10 +100,12 @@ bgNPC.cfg.npcs_template = {
 		},
 		at_random_range = 100,
 		at_random = {
-			['walk'] = 70,
-			['idle'] = 10,
-			['dialogue'] = 10,
-			['sit_to_chair'] = 10,
+			-- ['walk'] = 70,
+			-- ['idle'] = 10,
+			-- ['dialogue'] = 10,
+			-- ['sit_to_chair'] = 10,
+			['walk'] = 20,
+			['dv_vehicle_drive'] = 80,
 		},
 		at_damage_range = 100,
 		at_damage = {

@@ -20,7 +20,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 
 	for _, actor in ipairs(actors) do
-		if actor:IsAlive() then
+		if not actor.eternal and actor:IsAlive() then
 			local npc = actor:GetNPC()
 
 			if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
@@ -57,6 +57,7 @@ end)
 
 hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
 	if not actor:HasTeam('police') then return end
+	if actor.eternal then return end
 
 	local data = actor:GetData()
 	if data.wanted_level ~= nil then
