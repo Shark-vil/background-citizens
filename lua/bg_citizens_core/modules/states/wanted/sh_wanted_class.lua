@@ -43,6 +43,26 @@ function ASSET:AddWanted(ent)
 				end
 			end,
 
+			SetLevel = function(self, level)
+				if level <= 0 then
+					ASSET:RemoveWanted(ent)
+					return
+				elseif level > self.level_max then
+					level = self.level_max
+				end
+
+				self.level = level
+
+				bgNPC:TemporaryVectorVisibility(ent, 3)
+				timer.Simple(1, function() 
+					if not IsValid(ent) then return end
+					snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+				end)
+
+				local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
+				self.next_kill_update = bgNPC:GetWantedKillingStatisticSumm(ent) + cfg_kills
+			end,
+
 			LevelUp = function(self)
 				if not GetConVar('bgn_wanted_level'):GetBool() then return end
 				
