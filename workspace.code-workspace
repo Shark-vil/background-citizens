@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\DV-Decent-Vehicle-Basic-AI"
 		}
 	],
 	"settings": {}

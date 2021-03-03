@@ -41,7 +41,7 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 
 		if data.delay < CurTime() then
 			if math.random(0, 100) == 0 and dist > 90000 
-				and not bgNPC:EntityIsViewVector(target, npc:GetPos(), 70) 
+				and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
 			then
 				actor:SetState('calling_police', {
 					delay = 0
