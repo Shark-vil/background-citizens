@@ -24,6 +24,7 @@ function(attacker, target, dmginfo)
 		end
 
 		if actor:HasState(bgNPC.cfg.npcs_states['calmly']) then
+			actor:RemoveAllTargets()
 			actor:SetState(actor:GetLastReaction())
 		end
 

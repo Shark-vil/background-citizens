@@ -5,6 +5,12 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end
 
+		local TargetActor = bgNPC:GetActor(target)
+		if TargetActor ~= nil and TargetActor:HasTeam('police') then
+			actor:SetState('fear')
+			goto skip
+		end
+
 		local npc = actor:GetNPC()
 
 		if not GetConVar('bgn_enable_wanted_mode'):GetBool() or #bgNPC:GetAllByType('police') == 0 then

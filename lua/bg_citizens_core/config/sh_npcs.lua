@@ -148,9 +148,9 @@ bgNPC.cfg.npcs_template = {
 		randomBodygroups = true,
 		at_random_range = 110,
 		at_random = {
-			['walk'] = 70,
+			['walk'] = 60,
 			['idle'] = 10,
-			['steal'] = 10,
+			['steal'] = 20,
 			['sit_to_chair'] = 10,
 			['dv_vehicle_drive'] = 10,
 		},
@@ -160,7 +160,7 @@ bgNPC.cfg.npcs_template = {
 		},
 		at_protect_range = 100,
 		at_protect = {
-			['fear'] = 100,
+			['ignore'] = 100,
 		}
 	},
 	['gangster'] = {

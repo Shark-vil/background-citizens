@@ -38,6 +38,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 			ActorTarget:AddTarget(attacker)
 
 			if ActorTarget:HasState(bgNPC.cfg.npcs_states['calmly']) then
+				ActorTarget:RemoveAllTargets()
 				ActorTarget:SetState(ActorTarget:GetLastReaction())
 			end
 		end

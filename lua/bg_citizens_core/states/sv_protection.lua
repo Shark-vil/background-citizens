@@ -49,7 +49,11 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 			local killingSumm = bgNPC:GetKillingStatisticSumm(target)
 			if killingSumm == 0 and not WantedModule:HasWanted(target) then
 				if actor:HasTeam('police') then
-					bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+					if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
+						bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+					else
+						bgNPC:SetActorWeapon(actor)
+					end
 				else
 					bgNPC:SetActorWeapon(actor, 'weapon_crowbar', true)
 				end
