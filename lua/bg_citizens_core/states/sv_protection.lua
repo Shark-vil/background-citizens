@@ -47,7 +47,15 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 
 		if data.delay < CurTime() then
 			local killingSumm = bgNPC:GetKillingStatisticSumm(target)
-			if killingSumm == 0 and not WantedModule:HasWanted(target) then
+
+			local notGun = true
+			if target:IsNPC() and IsValid(target:GetActiveWeapon()) then
+				notGun = false
+			elseif killingSumm > 0 then
+				notGun = false
+			end
+
+			if actor:HasTeam('residents') and notGun and not WantedModule:HasWanted(target) then
 				if actor:HasTeam('police') then
 					if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
 						bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
@@ -55,7 +63,11 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 						bgNPC:SetActorWeapon(actor)
 					end
 				else
-					bgNPC:SetActorWeapon(actor, 'weapon_crowbar', true)
+					if target:Health() < 50 then
+						bgNPC:SetActorWeapon(actor, 'weapon_crowbar', true)
+					else
+						bgNPC:SetActorWeapon(actor)
+					end
 				end
 			else
 				bgNPC:SetActorWeapon(actor)
@@ -63,7 +75,15 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 
 			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 			if current_distance <= 500 ^ 2 then
-				if killingSumm == 0 then
+
+				local notback = true
+				if target:IsNPC() and IsValid(target:GetActiveWeapon()) then
+					notback = false
+				elseif killingSumm > 0 then
+					notback = false
+				end
+
+				if notback then
 					actor:WalkToPos(target:GetPos(), 'run')
 				else
 					actor:WalkToPos(nil)

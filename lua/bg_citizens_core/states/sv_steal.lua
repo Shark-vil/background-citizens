@@ -104,6 +104,12 @@ timer.Create('BGN_ActorStealPlayerItems', 0.5, 0, function()
                end
             end
          end
+         
+         data.SoundDelay = data.SoundDelay or 0
+         if data.SoundDelay < CurTime() then
+            npc:EmitSound('background_npcs/bed_sheet_movement.mp3', 70, 100, 1, CHAN_AUTO)
+            data.SoundDelay = CurTime() + 3
+         end
       end
 
       if bgNPC:PlayerIsViewVector(target, npc_pos, 80) then
