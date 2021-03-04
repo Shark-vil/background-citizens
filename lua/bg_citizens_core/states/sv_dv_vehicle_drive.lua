@@ -15,6 +15,18 @@ hook.Add('BGN_PreSetNPCState', 'BGN_DvVehicle_FindCarOnRadius', function(actor, 
          veh = veh_owner
       end
 
+      if engine.ActiveGamemode() == 'darkrp' then
+         if not veh:isKeysOwnable() then 
+            goto skip
+         elseif IsValid(veh:getDoorOwner()) then
+            if actor:HasTeam('bandits') then
+               if veh:isLocked() then goto skip end
+            else
+               goto skip
+            end
+         end
+      end
+
       -- if simfphys and not simfphys.IsCar(ent) then goto skip end
 
       local owner = veh:slibGetVar('bgn_vehicle_owner', NULL)

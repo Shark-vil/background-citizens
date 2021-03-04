@@ -11,15 +11,23 @@ function bgNPC:IsFearNPC(npc)
 	return false
 end
 
-function bgNPC:SetActorWeapon(actor, weapon_class)
+function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()
 
 	if weapon_class ~= nil then
 		local active_weapon = npc:GetActiveWeapon()
 
-		if IsValid(active_weapon) and active_weapon:GetClass() ~= weapon_class then
-			return
+		switching = switching or false
+
+		if switching then
+			if IsValid(active_weapon) and active_weapon:GetClass() == weapon_class then
+				return
+			end
+		else
+			if IsValid(active_weapon) and active_weapon:GetClass() ~= weapon_class then
+				return
+			end
 		end
 		
 		local weapon = npc:GetWeapon(weapon_class)

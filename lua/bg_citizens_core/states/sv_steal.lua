@@ -1,3 +1,9 @@
+hook.Add('BGN_Module_FirstAttackerValidator', 'BGN_StealTargetSet', function(attacker, target)
+   if target:slibGetVar('is_stealer') then
+      return target, attacker
+   end
+end)
+
 hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, state)
    if state ~= 'steal' or not actor:IsAlive() then return end
 
@@ -78,6 +84,7 @@ timer.Create('BGN_ActorStealPlayerItems', 0.5, 0, function()
          if data.isSteal then
             if not data.isPlayAnim and not data.isWanted then
                data.isPlayAnim = true
+               npc:slibSetVar('is_stealer', true)
 
                actor:ClearSchedule()
                actor:PlayStaticSequence('Crouch_IdleD', true, 5, function()

@@ -12,6 +12,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 	npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
 end)
 
+local WantedModule = bgNPC:GetModule('wanted')
 timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('defense')) do
 		if not actor:IsAlive() then goto skip end
@@ -24,6 +25,10 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		
 		data.delay = data.delay or 0
 		data.state_timeout = data.state_timeout or CurTime() + 20
+
+		if bgNPC:IsTargetRay(npc, target) then
+			data.state_timeout = CurTime() + 20
+		end
 
 		if data.state_timeout < CurTime() then
 			actor:RemoveTarget(target)
@@ -41,13 +46,25 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		end
 
 		if data.delay < CurTime() then
-			bgNPC:SetActorWeapon(actor)
+			local killingSumm = bgNPC:GetKillingStatisticSumm(target)
+			if killingSumm == 0 and not WantedModule:HasWanted(target) then
+				if actor:HasTeam('police') then
+					bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+				else
+					bgNPC:SetActorWeapon(actor, 'weapon_crowbar', true)
+				end
+			else
+				bgNPC:SetActorWeapon(actor)
+			end
 
 			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
-
 			if current_distance <= 500 ^ 2 then
-				actor:WalkToPos(nil)
-				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				if killingSumm == 0 then
+					actor:WalkToPos(target:GetPos(), 'run')
+				else
+					actor:WalkToPos(nil)
+					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				end
 			else
 				actor:WalkToPos(target:GetPos(), 'run')
 			end

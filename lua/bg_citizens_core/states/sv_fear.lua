@@ -25,10 +25,13 @@ timer.Create('BGN_Timer_FearStateController', 1, 0, function()
 		data.reset_fear = data.reset_fear or CurTime() + 30
 		data.call_for_help = data.call_for_help or CurTime() + math.random(25, 40)
 
+		local isViewTarget = bgNPC:IsTargetRay(npc, target)
+		if isViewTarget then
+			data.reset_fear = CurTime() + 30
+		end
+
 		local dist = npc:GetPos():DistToSqr(target:GetPos())
-		if dist >= 1000000 or (data.reset_fear < CurTime() 
-			and not bgNPC:IsTargetRay(npc, target))
-		then -- 1000 ^ 2
+		if (not isViewTarget and dist >= 1000000) or data.reset_fear < CurTime() then -- 1000 ^ 2
 			actor:RemoveTarget(target)
 			data.reset_fear = CurTime() + 30
 		elseif npc:Disposition(target) ~= D_FR then

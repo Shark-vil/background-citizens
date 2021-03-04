@@ -1,3 +1,13 @@
+local WantedModule = bgNPC:GetModule('wanted')
+
+hook.Add('BGN_PreSetNPCState', 'BGN_DisableArrestIfWanted', function(actor, state)
+   if state ~= 'arrest' or not actor:IsAlive() then return end
+	
+	if WantedModule:HasWanted(actor:GetFirstTarget()) then
+		return { state = 'defense' }
+	end
+end)
+
 --[[
 	We add the player to the arrest module, and increase the level of violation
 	if he continues to inflict damage.
@@ -13,7 +23,7 @@ function(attacker, target, dmginfo, reaction)
 
 	if attacker:IsPlayer() and ActorTarget ~= nil and ActorTarget:HasTeam('residents') then
 		if not asset:HasPlayer(attacker) then
-			if not bgNPC:GetModule('wanted'):HasWanted(attacker) then
+			if not WantedModule:HasWanted(attacker) then
 				asset:AddPlayer(attacker)
 			end
 		else
