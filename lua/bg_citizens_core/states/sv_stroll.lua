@@ -84,6 +84,10 @@ local function nextMovement(npc)
 				local other_entities = ents.FindInSphere(pos, 100)
 				local other_npc_count = 0
 				for _, ent in ipairs(other_entities) do
+					if ent:IsVehicle() or ent:GetClass():StartWith('prop_') then
+						goto skip
+					end
+
 					if ent:IsNPC() and ent ~= npc then
 						other_npc_count = other_npc_count + 1
 					end
@@ -138,7 +142,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 		local npc = actor:GetNPC()
 		local map = movement_map[npc]
 		local data = actor:GetStateData()
-		data.schedule = data.schedule or SCHED_FORCED_GO
+		data.schedule = data.schedule or 'walk'
 
 		if map == nil then
 			map = updateMovement(npc)
@@ -200,16 +204,16 @@ timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('walk')) do
 		if actor:IsAlive() then
 			local data = actor:GetStateData()
-			if data.schedule == SCHED_FORCED_GO_RUN then
+			if data.schedule == 'run' then
 				if data.runReset < CurTime() then
 					actor:UpdateStateData({ 
-						schedule = SCHED_FORCED_GO,
+						schedule = 'walk',
 						runReset = 0
 					})
 				end
 			elseif math.random(0, 100) == 0 then
 				actor:UpdateStateData({ 
-					schedule = SCHED_FORCED_GO_RUN,
+					schedule = 'run',
 					runReset = CurTime() + 20
 				})
 			end

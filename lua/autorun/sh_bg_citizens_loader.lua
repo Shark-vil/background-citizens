@@ -100,6 +100,7 @@ using('global/sh_wanted_killing_statistic.lua')
 using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')
 
+using('modules/cl_updatepage.lua')
 using('modules/cl_render_optimization.lua')
 using('modules/debug/cl_render_target_path.lua')
 using('modules/sv_npc_look_at_object.lua')
@@ -145,6 +146,7 @@ using('actions/sv_reset_targets.lua')
 using('actions/sv_self_damage.lua')
 using('actions/sh_player_spawn_sync_actors.lua')
 using('actions/sv_reaction_to_a_shot.lua')
+using('actions/sv_movement_service.lua')
 
 using('states/sv_impingement.lua')
 using('states/sv_protection.lua')
@@ -172,7 +174,9 @@ if CLIENT then
 		http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 			function(github_version, length, headers, code)
 				if github_version ~= bgNPC.VERSION then
-					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using an outdated version of "Background NPCs"!')
+					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using an outdated version of "Background NPCs" :(')
+				else
+					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using the latest version of "Background NPCs" :)')
 				end
 			end,
 			function(message)

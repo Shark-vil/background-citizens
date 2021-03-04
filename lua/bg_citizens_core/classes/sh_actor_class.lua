@@ -251,6 +251,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- Clears NPC schedule data and synchronizes changes for clients.
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
+
+		self.walkPos = nil
 		
 		self.npc:SetNPCState(NPC_STATE_IDLE)
 		self.npc:ClearSchedule()
@@ -395,7 +397,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.state_lock then return end
 		
 		if self.old_state ~= nil then
-
+			if self.old_state.state ~= self.state_data.state then
+				self.walkPos = nil
+			end
 			self.state_data = self.old_state
 			self.old_state = nil
 
@@ -425,6 +429,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
+		if state ~= self.state_data.state then
+			self.walkPos = nil
+		end
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
 
@@ -452,13 +459,12 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			return
 		end
 
-		local schedule
+		type = type or 'walk'
 
+		local schedule
 		if isnumber(type) then
 			schedule = type
 		elseif isstring(type) then
-			type = type or 'walk'
-
 			schedule = SCHED_FORCED_GO
 			if type == 'run' then
 				schedule = SCHED_FORCED_GO_RUN
@@ -484,7 +490,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 				move_pos = new_pos
 			end
 		elseif dist <= 100 then
-			self.walkPos = nil
+			self:WalkToPos(nil)
 			return
 		end
 		
@@ -950,12 +956,4 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	npc.isBgnActor = true
 
 	return obj
-end
-
-if SERVER then
-	timer.Create('BGN_WalkService', 0.1, 0, function()
-		for _, actor in ipairs(bgNPC:GetAll()) do
-			actor:UpdateMovement()
-		end
-	end)
 end

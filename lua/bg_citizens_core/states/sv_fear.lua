@@ -172,13 +172,12 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 				npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
 			else               
 				local pos = actor:GetDistantPointInRadius(target:GetPos(), 1500)
-				local move_pos = actor:GetClosestPointToPosition(pos)
 
-				if move_pos == nil then
+				if pos == nil then
+					actor:WalkToPos(nil)
 					npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
 				else
-					npc:SetSaveValue("m_vecLastPosition", move_pos)
-					npc:SetSchedule(SCHED_FORCED_GO_RUN)
+					actor:WalkToPos(pos, 'run')
 				end
 			end
 			

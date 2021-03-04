@@ -68,22 +68,13 @@ timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
 		if data.delay < CurTime() then
 			bgNPC:SetActorWeapon(actor)
 
-			local point = nil
 			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
 
-			if current_distance > 500 ^ 2 then
-				if math.random(0, 10) > 4 then
-					point = actor:GetClosestPointToPosition(target:GetPos())
-				else
-					point = target:GetPos()
-				end
-			end
-
-			if point ~= nil then
-				npc:SetSaveValue("m_vecLastPosition", point)
-				npc:SetSchedule(SCHED_FORCED_GO_RUN)
-			elseif current_distance <= 500 ^ 2 then
+			if current_distance <= 500 ^ 2 then
+				actor:WalkToPos(nil)
 				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+			else
+				actor:WalkToPos(target:GetPos(), 'run')
 			end
 
 			data.delay = CurTime() + 3

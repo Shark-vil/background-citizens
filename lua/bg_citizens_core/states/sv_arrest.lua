@@ -135,19 +135,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 			if data.delay < CurTime() then
 				bgNPC:SetActorWeapon(actor)
 
-				local point = nil
-				local current_distance = npc:GetPos():DistToSqr(target:GetPos())
-
-				if current_distance > 500 ^ 2 then
-					point = actor:GetClosestPointToPosition(target:GetPos())
-				else
-					point = target:GetPos()
-				end
-				
-				if point ~= nil then
-					npc:SetSaveValue("m_vecLastPosition", point)
-					npc:SetSchedule(SCHED_FORCED_GO_RUN)
-				end
+				actor:WalkToPos(target:GetPos(), 'run')
 
 				local eyeAngles = target:EyeAngles()
 				data.arrest_time = data.arrest_time or 0

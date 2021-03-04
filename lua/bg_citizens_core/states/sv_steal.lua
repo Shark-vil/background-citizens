@@ -96,8 +96,7 @@ timer.Create('BGN_ActorStealPlayerItems', 0.5, 0, function()
             end
 
             if data.walkUpdate < CurTime() then
-               npc:SetSaveValue("m_vecLastPosition", target:GetPos())
-               npc:SetSchedule(SCHED_FORCED_GO)
+               actor:WalkToPos(target:GetPos())
                data.walkUpdate = CurTime() + 2
             end
 

@@ -106,7 +106,6 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
                end
 
                local pos = AnotherActor:GetDistantPointInRadius(data.vehicle_last_pos)
-               local move_pos = AnotherActor:GetClosestPointToPosition(pos)
 
                data.beepDelay = data.beepDelay or 0
                data.beep = data.beep or false
@@ -117,14 +116,13 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
                   data.beep = true
                end
 
-               if move_pos ~= nil then
+               if pos ~= nil then
                   local data = AnotherActor:GetStateData()
                   data.delayVehicleRetreat = data.delayVehicleRetreat or 0
                   
                   if data.delayVehicleRetreat < CurTime() then
                      local AnotherNPC = AnotherActor:GetNPC()
-                     AnotherNPC:SetSaveValue("m_vecLastPosition", move_pos)
-                     AnotherNPC:SetSchedule(SCHED_FORCED_GO_RUN)
+                     AnotherNPC:WalkToPos(pos, 'run')
                      data.delayVehicleRetreat = CurTime() + 3
                   end
                end
@@ -166,16 +164,7 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
                goto skip
             end
 
-            local move_pos
-            
-            if distance > 500 then
-               move_pos = actor:GetClosestPointToPosition(veh_pos)
-            end
-
-            move_pos = move_pos or data.sitpos
-
-            npc:SetSaveValue("m_vecLastPosition", move_pos)
-            npc:SetSchedule(SCHED_FORCED_GO)
+            actor:WalkToPos(data.sitpos)
             
             data.delay = CurTime() + 2
          end

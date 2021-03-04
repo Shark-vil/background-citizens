@@ -173,7 +173,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
          }
       }
    else
-      return true
+      return { state = 'walk' }
    end
 end)
 
@@ -202,8 +202,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
             local phys = chair:GetPhysicsObject()
             
             if not data.isMove then
-               npc:SetSaveValue("m_vecLastPosition", chair:GetPos() + (chair:GetForward() * 35))
-               npc:SetSchedule(SCHED_FORCED_GO)
+               actor:WalkToPos(chair:GetPos() + (chair:GetForward() * 35))
                data.isMove = true
             end
             
@@ -224,7 +223,8 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
 
                npc:SetPos(new_pos)
                npc:SetAngles(new_angle)
-               npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+               npc:SetParent(chair)
+               -- npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
                if IsValid(phys) then
                   phys:EnableMotion(false)
                end
@@ -242,8 +242,9 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            npc:SetAngles(Angle(0, 0, 0))
                         end
 
+                        npc:SetParent(nil)
                         npc:SetPos(npc:GetPos() + npc:GetForward() * 5)
-                        npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+                        -- npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
 
                         data.isStand = true
