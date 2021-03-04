@@ -54,7 +54,7 @@ hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
 		for enemy, c_Wanted in pairs(wanted_list) do
 			actor:AddTarget(enemy)
 			if actor:HasTeam('police') then
-				actor:Defense()
+				actor:SetState('defense')
 			elseif actor:HasTeam('residents') then
 				actor:SetState(actor:GetReactionForProtect())
 			end

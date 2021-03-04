@@ -8,7 +8,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 		local npc = actor:GetNPC()
 
 		if not GetConVar('bgn_enable_wanted_mode'):GetBool() or #bgNPC:GetAllByType('police') == 0 then
-			actor:Fear()
+			actor:SetState('fear')
 			goto skip
 		end
 
@@ -21,7 +21,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 				actor:FearScream()
 			end
 
-			actor:Fear()
+			actor:SetState('fear')
 			goto skip
 		end
 
@@ -50,7 +50,7 @@ timer.Create('BGN_Timer_CallingPoliceController', 1, 0, function()
 				npc:EmitSound('buttons/combine_button1.wav', 200, 100, 1, CHAN_AUTO)
 				
 				if not hook.Run('BGN_PostCallingPolice', actor) then
-					actor:Fear()
+					actor:SetState('fear')
 				end
 			else
 				if not actor:HasSequence('Crouch_IdleD') then

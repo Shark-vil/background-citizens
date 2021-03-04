@@ -7,12 +7,7 @@ file.CreateDir('citizens_points')
 file.CreateDir('citizens_points_compile')
 
 if SERVER then
-	resource.AddSingleFile('materials/background_npcs/vgui/wanted_star.png')
-	resource.AddSingleFile('materials/background_npcs/vgui/missing_slib.png')
-	resource.AddSingleFile('sound/background_npcs/handcuffs_sound1.mp3')
-	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_1.wav')
-	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_2.wav')
-	resource.AddSingleFile('sound/background_npcs/ambient/bgn_ambient_3.wav')
+	resource.AddWorkshop(2341497926)
 end
 
 bgNPC = {}
@@ -140,6 +135,7 @@ using('modules/states/wanted/sv_wanted_actions.lua')
 using('modules/states/wanted/cl_wanted_sync.lua')
 using('modules/states/wanted/cl_visual_wanted.lua')
 using('modules/ambient/cl_ambient_sound.lua')
+using('modules/dv/sv_fix_autoload_routes.lua')
 
 using('actions/sv_open_door.lua')
 using('actions/sv_police_luggage.lua')
@@ -161,6 +157,7 @@ using('states/sv_dialogue.lua')
 using('states/sv_sit_to_chair.lua')
 using('states/sv_retreat.lua')
 using('states/sv_dv_vehicle_drive.lua')
+using('states/sv_steal.lua')
 
 using('tool_options/cl_bgn_settings_menu.lua')
 

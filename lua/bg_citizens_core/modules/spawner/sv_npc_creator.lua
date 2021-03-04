@@ -101,7 +101,7 @@ hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
 			if c_Wanted.level >= data.wanted_level then
 				actor:AddTarget(target)
 				if actor:GetState() ~= 'defense' then
-					actor:Defense()
+					actor:SetState('defense')
 					bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
 				end
 			end

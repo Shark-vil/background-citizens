@@ -1,6 +1,9 @@
 local asset = bgNPC:GetModule('wanted')
 
 hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
+	if not LocalPlayer().slibIsSpawn then return end
+	if GetConVar('bgn_disable_halo'):GetBool() then return end
+
 	local wanted_list = asset:GetAllWanted()
 
 	if table.Count(wanted_list) == 0 then return end
@@ -68,6 +71,9 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 end)
 
 hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
+	if not LocalPlayer().slibIsSpawn then return end
+	if GetConVar('bgn_disable_halo'):GetBool() then return end
+	
 	local npcs = {}
 
 	for _, actor in ipairs(bgNPC:GetAll()) do

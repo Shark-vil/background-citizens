@@ -193,10 +193,10 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
             npc:PhysWake()
 
             data.isStand = true
-            actor:Walk()
+            actor:SetState('walk')
          elseif not data.isSit and data.delay < CurTime() then
             data.isStand = true
-            actor:Walk()
+            actor:SetState('walk')
             chair.occupied = false
          else
             local phys = chair:GetPhysicsObject()
@@ -247,7 +247,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                         npc:PhysWake()
 
                         data.isStand = true
-                        actor:Walk()
+                        actor:SetState('walk')
                         chair.sitDelay = CurTime() + 5
                         chair.occupied = false
                      end)

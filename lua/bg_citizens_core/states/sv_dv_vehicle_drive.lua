@@ -15,7 +15,7 @@ hook.Add('BGN_PreSetNPCState', 'BGN_DvVehicle_FindCarOnRadius', function(actor, 
          veh = veh_owner
       end
 
-      if simfphys and not simfphys.IsCar(ent) then goto skip end
+      -- if simfphys and not simfphys.IsCar(ent) then goto skip end
 
       local owner = veh:slibGetVar('bgn_vehicle_owner', NULL)
       if not IsValid(owner) then
@@ -75,7 +75,7 @@ local function ExitActor(actor, vehicle, decentvehicle)
 
       actor:StateLock(false)
       actor.eternal = false
-      actor:Walk()
+      actor:SetState('walk')
    end
 end
 

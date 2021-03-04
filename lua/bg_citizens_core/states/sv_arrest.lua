@@ -124,7 +124,7 @@ timer.Create('BGN_Timer_CheckingTheStateOfArrest', 1, 0, function()
 			local c_Arrest = asset:GetPlayer(target)
 
 			if c_Arrest.not_arrest or c_Arrest.delayIgnore < CurTime() then
-				actor:Defense()
+				actor:SetState('defense')
 				goto skip
 			end
 

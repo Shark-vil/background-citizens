@@ -147,9 +147,8 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 				goto skip
 			end
 			
-			npc:SetSaveValue("m_vecLastPosition", map.pos)
-			npc:SetSchedule(data.schedule)
-
+			actor:WalkToPos(map.pos, data.schedule)
+			
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
@@ -169,7 +168,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			end
 
 			if math.random(0, 100) <= 10 then
-				actor:Idle(10)
+				actor:SetState('idle')
 				return
 			end
 
@@ -184,8 +183,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 				end
 			end
 
-			npc:SetSaveValue("m_vecLastPosition", map.pos)
-			npc:SetSchedule(data.schedule)
+			actor:WalkToPos(map.pos, data.schedule)
 
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {

@@ -20,6 +20,7 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_disable_citizens_weapons = 0
+bgNPC.cvar.bgn_disable_halo = 0
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -120,6 +121,9 @@ FCVAR_ARCHIVE, 'If enabled, then NPCs will react to the sound of a shot as if so
 
 slib:RegisterGlobalCvar('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons, 
 FCVAR_ARCHIVE, 'Prohibits citizens from having weapons.')
+
+slib:RegisterGlobalCvar('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo, 
+FCVAR_ARCHIVE, 'Disable NPC highlighting stroke.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)

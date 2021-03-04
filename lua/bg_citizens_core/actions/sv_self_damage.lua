@@ -37,9 +37,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 			
 			ActorTarget:AddTarget(attacker)
 
-			if ActorTarget:HasState('idle') or ActorTarget:HasState('walk') 
-				or ActorTarget:HasState('arrest') or ActorTarget:HasState('dialogue')
-			then
+			if ActorTarget:HasState(bgNPC.cfg.npcs_states['calmly']) then
 				ActorTarget:SetState(ActorTarget:GetLastReaction())
 			end
 		end

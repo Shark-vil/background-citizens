@@ -188,7 +188,10 @@ en_lang['bgn.settings.states.bgn_arrest_time_limit'] = 'Arrest time limit'
 en_lang['bgn.settings.states.bgn_arrest_time_limit.description'] = 'Description: sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.'
 en_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Enable reaction to shot sounds'
 en_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Description: NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)'
+en_lang['bgn.settings.states.bgn_disable_halo'] = 'Disable NPC highlighting stroke.'
+en_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Description: disables the effect of the outline of the NPC during the call and during the wanted.'
 
+	
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode'] = 'Включить режим розыска'
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode.description'] = 'Описание: включает или отключает режим розыска.'
 ru_lang['bgn.settings.states.bgn_wanted_time'] = 'Время розыска'
@@ -207,6 +210,8 @@ ru_lang['bgn.settings.states.bgn_arrest_time_limit'] = 'Лимит времен�
 ru_lang['bgn.settings.states.bgn_arrest_time_limit.description'] = 'Описание: устанавливает, как долго полиция будет игнорировать вас во время ареста. Если вы откажетесь повиноваться по истеччению времени, они начнут вас атаковать.'
 ru_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Включить реакцию на звуки выстрела'
 ru_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Описание: NPC будут реагировать на звуки выстрела, как если бы кто-то стрелял по союзнику. (Предупреждение: функция эксперементальная и не рекомендуется к использованию)'
+ru_lang['bgn.settings.states.bgn_disable_halo'] = 'Отключить выделение контура NPC'
+ru_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Описание: отключает эффект обводки NPC во время звонка и при розыске.'
 
 local function StatesSettingsMenu(Panel)
 	Panel:AddControl('CheckBox', {
@@ -279,6 +284,13 @@ local function StatesSettingsMenu(Panel)
 		Command = 'bgn_shot_sound_mode' 
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_shot_sound_mode.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.states.bgn_disable_halo',
+		Command = 'bgn_disable_halo' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.states.bgn_disable_halo.description'
 	})
 end
 
