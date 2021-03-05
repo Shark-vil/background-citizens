@@ -11,7 +11,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = "1.4.3"
+bgNPC.VERSION = "1.4.4"
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -59,10 +59,6 @@ if slib == nil then
 	using('errors/sh_slib_error.lua')
 	return
 end
-
--- using('modules/extend/cvars/sh_gcvars.lua')
--- using('modules/extend/cvars/sv_gcvars.lua')
--- using('modules/extend/cvars/cl_gcvars.lua')
 
 using('config/sh_main.lua')
 using('config/sh_npcs.lua')
@@ -172,17 +168,33 @@ if CLIENT then
 	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 		
-		http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
-			function(github_version, length, headers, code)
-				if github_version ~= bgNPC.VERSION then
-					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using an outdated version of "Background NPCs" :(')
-				else
-					chat.AddText(Color(255, 0, 0), '[ADMIN] ', Color(100, 100, 255), 'You are using the latest version of "Background NPCs" :)')
+		timer.Simple(3, function()
+			http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
+				function(github_version, length, headers, code)
+					if code ~= 200 then
+						bgNPC:Log('Failed to check the actual version: error code\n' .. tostring(code), 'Version Checker')
+						return
+					end
+
+					local v_github = tonumber(string.Replace(github_version, '.', ''))
+					local v_addon = tonumber(string.Replace(bgNPC.VERSION, '.', ''))
+					local actual_version_text = 'Actual version - ' .. github_version .. ' : Your version - ' .. bgNPC.VERSION
+
+					if v_addon < v_github then
+						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
+							Color(255, 196, 0), 'You are using an outdated version of "Background NPCs" :( \n---\n' .. actual_version_text)
+					elseif v_addon == v_github then
+						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
+							Color(30, 255, 0), 'You are using the latest version of "Background NPCs" :) \n---\n' .. actual_version_text)
+					elseif v_addon > v_github then
+						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
+							Color(30, 255, 0), 'You are using the dev version of "Background NPCs" :o \n---\n' .. actual_version_text)
+					end
+				end,
+				function(message)
+					bgNPC:Log('Failed to check the actual version:\n' .. message, 'Version Checker')
 				end
-			end,
-			function(message)
-				bgNPC:Log('Failed to check the actual version:\n' .. message, 'Version Checker')
-			end
-		)
+			)
+		end)
 	end)
 end

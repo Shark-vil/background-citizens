@@ -19,6 +19,11 @@ concommand.Add('bgn_open_updateinfo', function()
 
 	http.Fetch(lang['link'],
 		function(github_version, length, headers, code)
+			if code ~= 200 then 
+				chat.AddText(Color(255, 0, 0), '[WARNING] ', Color(255, 196, 0), 'There is no page for this version.')
+				return
+			end
+
 			local Width = ScrW() - 25
 			local Height = ScrH() - 25
 
