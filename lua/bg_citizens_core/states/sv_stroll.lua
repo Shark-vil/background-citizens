@@ -121,8 +121,7 @@ hook.Add('BGN_PostOpenDoor', 'BGN_ReloadNPCStateAfterDoorOpen', function(actor)
 	local npc = actor:GetNPC()
 	local map = movement_map[npc]
 	if map ~= nil then
-		-- map.resetTime = 0
-		actor:WalkToPos(map.pos)
+		map.resetTime = 0
 	end
 end)
 

@@ -45,9 +45,16 @@ function TOOL:LeftClick()
 		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 
 		if success then
+			if self.Actor ~= nil then
+				self.Actor.debugger = false
+				self.Actor.eternal = false
+				self.Actor:RandomState()
+			end
+
          actor:SetState('none')
          actor.debugger = true
-
+			actor.eternal = true
+			
          self.Actor = actor
 		   self.Target = actor:GetNPC()
 
@@ -75,8 +82,14 @@ function TOOL:RightClick()
       })
 		
       if not tr.Hit then return end
-      
-      self.Actor:WalkToPos(tr.HitPos)
+		self.Actor:ClearSchedule()
+
+		local pos = tr.HitPos
+		if self.Target:GetPos():Distance(pos) <= 500 then
+      	self.Actor:WalkToPos(tr.HitPos)
+		else
+			self.Actor:WalkToPos(tr.HitPos, 'run')
+		end
 	end
 end
 
@@ -85,6 +98,7 @@ function TOOL:Reload()
 
    if self.Actor ~= nil then
       self.Actor.debugger = false
+		self.Actor.eternal = false
       self.Actor:RandomState()
    end
 
