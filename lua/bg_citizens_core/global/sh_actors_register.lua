@@ -157,6 +157,7 @@ else
 					end
 			
 					npc:Spawn()
+					npc:Activate()
 					npc:PhysWake()
 
 					hook.Run('BGN_PostSpawnActor', npc, type, data)
