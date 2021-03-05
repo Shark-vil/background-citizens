@@ -1,5 +1,8 @@
 hook.Add('BGN_PreSetNPCState', 'BGN_DvVehicle_FindCarOnRadius', function(actor, state)
    if state ~= 'dv_vehicle_drive' or not actor:IsAlive() then return end
+   if DecentVehicleDestination == nil or not GetConVar('bgn_enable_dv_support'):GetBool() then
+      return true
+   end
 
    local npc = actor:GetNPC() 
    local vehicle = NULL

@@ -21,6 +21,7 @@ bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_disable_citizens_weapons = 0
 bgNPC.cvar.bgn_disable_halo = 0
+bgNPC.cvar.bgn_enable_dv_support = 1
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -124,6 +125,9 @@ FCVAR_ARCHIVE, 'Prohibits citizens from having weapons.')
 
 slib:RegisterGlobalCvar('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo, 
 FCVAR_ARCHIVE, 'Disable NPC highlighting stroke.')
+
+slib:RegisterGlobalCvar('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support, 
+FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)

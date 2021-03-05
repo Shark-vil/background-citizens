@@ -197,7 +197,8 @@ en_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Enable reaction to shot so
 en_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Description: NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)'
 en_lang['bgn.settings.states.bgn_disable_halo'] = 'Disable NPC highlighting stroke.'
 en_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Description: disables the effect of the outline of the NPC during the call and during the wanted.'
-
+en_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Enable "DV" addon support'
+en_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Description: includes compatibility with the "DV" addon and forces NPCs to use vehicles.'
 	
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode'] = 'Включить режим розыска'
 ru_lang['bgn.settings.states.bgn_enable_wanted_mode.description'] = 'Описание: включает или отключает режим розыска.'
@@ -219,6 +220,8 @@ ru_lang['bgn.settings.states.bgn_shot_sound_mode'] = 'Включить реак�
 ru_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Описание: NPC будут реагировать на звуки выстрела, как если бы кто-то стрелял по союзнику. (Предупреждение: функция эксперементальная и не рекомендуется к использованию)'
 ru_lang['bgn.settings.states.bgn_disable_halo'] = 'Отключить выделение контура NPC'
 ru_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Описание: отключает эффект обводки NPC во время звонка и при розыске.'
+ru_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Включить поддержку аддона "DV"'
+ru_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Описание: включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт.'
 
 local function StatesSettingsMenu(Panel)
 	Panel:AddControl('CheckBox', {
@@ -298,6 +301,13 @@ local function StatesSettingsMenu(Panel)
 		Command = 'bgn_disable_halo' 
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_disable_halo.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.states.bgn_enable_dv_support',
+		Command = 'bgn_enable_dv_support' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.states.bgn_enable_dv_support.description'
 	})
 end
 
