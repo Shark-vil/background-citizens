@@ -140,13 +140,13 @@ if CLIENT then
 	local en_lang = {
 		['tool.bgn_actor_mover.name'] = 'Actor mover',
 		['tool.bgn_actor_mover.desc'] = 'Forces the selected actor to go to the specified point.',
-		['tool.bgn_actor_mover.0'] = '',
+		['tool.bgn_actor_mover.0'] = 'Left click - select actor. Right click - set movement point. Reload - reset selected actor.',
 	}
 
 	local ru_lang = {
 		['tool.bgn_actor_mover.name'] = 'Двигатель актёров',
 		['tool.bgn_actor_mover.desc'] = 'Заставляет выделенного актёра идти к указанной точке.',
-		['tool.bgn_actor_mover.0'] = '',
+		['tool.bgn_actor_mover.0'] = 'Левый клик - выделить актёра. Правый клик - задать точку движения. Перезарядка - отменить выделение актёра.',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
