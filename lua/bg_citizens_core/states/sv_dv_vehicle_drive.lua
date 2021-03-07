@@ -136,8 +136,7 @@ timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
                   data.delayVehicleRetreat = data.delayVehicleRetreat or 0
                   
                   if data.delayVehicleRetreat < CurTime() then
-                     local AnotherNPC = AnotherActor:GetNPC()
-                     AnotherNPC:WalkToPos(pos, 'run')
+                     AnotherActor:WalkToPos(pos, 'run')
                      data.delayVehicleRetreat = CurTime() + 3
                   end
                end
