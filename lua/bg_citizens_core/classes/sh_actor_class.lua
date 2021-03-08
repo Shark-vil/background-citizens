@@ -282,11 +282,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param index number|nil target id in table
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
-		if not IsValid(ent) or not isentity(ent) then return end
+		if not isentity(ent) then return end
 
 		local count = #self.targets
 
-		if IsValid(self.npc) and ent:IsPlayer() then
+		if self:IsAlive() and IsValid(ent) and ent:IsPlayer() then
 			self.npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
