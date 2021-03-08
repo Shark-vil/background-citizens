@@ -479,7 +479,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.walkPos == nil or not self:IsAlive() then return end
 		
 		local npc = self.npc
-		if npc:IsMoving() then return end
+		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
 
 		local move_pos = self.walkPos
 		local dist = npc:GetPos():DistToSqr(move_pos)
@@ -489,13 +489,19 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			if new_pos ~= nil then
 				move_pos = new_pos
 			end
-		elseif dist <= 100 then
-			self:WalkToPos(nil)
+		elseif dist <= 900 then
+			if not hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType) then
+				self:WalkToPos(nil)
+			end
 			return
 		end
-		
+
 		npc:SetLastPosition(move_pos)
 		npc:SetSchedule(self.walkType)
+	end
+
+	function obj:Walking()
+		return npc:IsMoving()
 	end
 
 	function obj:HasTeam(value)
