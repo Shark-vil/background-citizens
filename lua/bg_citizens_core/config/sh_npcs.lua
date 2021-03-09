@@ -51,6 +51,10 @@
 		validator - a function that checks the spawn before the entity is created. Suitable for system checks. For broader checks, use the "BGN_OnValidSpawnActor" or "BGN_PreSpawnActor" hook
 --]]
 
+--[[
+	Explanation:
+	The states that are in the "danger" category are used to determine the state of danger of the NPC when taking damage.
+--]]
 bgNPC.cfg.npcs_states = {
 	['calmly'] = {
 		'idle',
