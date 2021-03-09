@@ -13,6 +13,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 end)
 
 local WantedModule = bgNPC:GetModule('wanted')
+local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
+
 timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('defense')) do
 		if not actor:IsAlive() then goto skip end
@@ -48,26 +50,22 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		if data.delay < CurTime() then
 			local killingSumm = bgNPC:GetKillingStatisticSumm(target)
 
-			local notGun = true
-			if target:IsNPC() and IsValid(target:GetActiveWeapon()) then
-				notGun = false
-			elseif killingSumm > 0 then
-				notGun = false
+			data.notGun = data.notGun or true
+			data.notGunDelay = data.notGunDelay or CurTime() + 15
+
+			if data.notGun then
+				if data.notGunDelay < CurTime() or killingSumm > 0 
+					or (target:IsNPC() and IsValid(target:GetActiveWeapon()))
+				then
+					data.notGun = false
+				end
 			end
 
-			if actor:HasTeam('residents') and notGun and not WantedModule:HasWanted(target) then
-				if actor:HasTeam('police') then
-					if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
-						bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
-					else
-						bgNPC:SetActorWeapon(actor)
-					end
+			if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(target) then
+				if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
+					bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
 				else
-					if target:Health() < 50 then
-						bgNPC:SetActorWeapon(actor, 'weapon_crowbar', true)
-					else
-						bgNPC:SetActorWeapon(actor)
-					end
+					bgNPC:SetActorWeapon(actor)
 				end
 			else
 				bgNPC:SetActorWeapon(actor)
@@ -77,10 +75,14 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 			if current_distance <= 500 ^ 2 then
 
 				local notback = true
-				if target:IsNPC() and IsValid(target:GetActiveWeapon()) then
+				if killingSumm > 0 or (target:IsNPC() and IsValid(target:GetActiveWeapon())) then
 					notback = false
-				elseif killingSumm > 0 then
-					notback = false
+				end
+
+				local npc_weapon = npc:GetActiveWeapon()
+				if IsValid(npc_weapon) then
+					local weapon_class = npc_weapon:GetClass()
+					if table.HasValue(MeleeWeapon, weapon_class) then notback = true end
 				end
 
 				if notback then
