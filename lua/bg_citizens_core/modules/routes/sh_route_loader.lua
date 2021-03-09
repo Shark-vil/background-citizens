@@ -78,5 +78,5 @@ else
 		bgNPC.points = data_table
 
 		hook.Run('BGN_LoadingClientRoutes', bgNPC.points)
-	end)
+	end, false, true)
 end

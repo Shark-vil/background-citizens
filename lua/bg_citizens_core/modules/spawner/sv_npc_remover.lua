@@ -20,7 +20,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 
 	for _, actor in ipairs(actors) do
-		if not actor.eternal and actor:IsAlive() then
+		if not actor.eternal and not actor.debugger and actor:IsAlive() then
 			local npc = actor:GetNPC()
 
 			if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then

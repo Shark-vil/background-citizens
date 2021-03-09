@@ -9,7 +9,7 @@ timer.Create('BGN_Timer_NPCOptimizeFlagController', 0.5, 0, function()
    if bgn_disable_logic_radius <= 0 then return end
 
 	for _, actor in ipairs(actors) do
-      if not actor.eternal or not actor:IsAlive() then
+      if not actor.debugger or not actor:IsAlive() then
          goto skip
       end
 

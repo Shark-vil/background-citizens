@@ -25,69 +25,10 @@ if SERVER then
 	end)
 
 	snet.RegisterCallback('bgn_save_routes', function(ply, bigdata)
-		local json_string = util.TableToJSON(bigdata.data)
-
-		if bigdata.from_json then
-			file.Write('citizens_points/' .. game.GetMap() .. '.json', json_string)
-		else
-			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(json_string))
-		end
-
-		bgNPC.LoadRoutes()
-	end, false, true)
-
-	hook.Add("PlayerSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
-		if ply.bgNPCNavmeshInfoSync then return end
-		
-		timer.Simple(3, function()
-			if not IsValid(ply) then
-				bgNPC:Log('Failed to sync navmesh info', 'Route')
-				return
-			end
-
-			net.Start('bgNPCSyncNavmeshInfoFromPlayer')
-			net.WriteBool(navmesh.IsLoaded())
-			net.Send(ply)
-		end)
-
-		ply.bgNPCNavmeshInfoSync = true
-	end)
-else
-	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
-		if args[1] ~= nil and args[1] == 'yes' then
-			local map_name = args[2] or game.GetMap()
-
-			net.Start('bgNPCRemoveRoute')
-			net.WriteBool(true)
-			net.WriteString(map_name)
-			net.SendToServer()
-		else
-			bgNPC:Log('If you want to delete the mesh file, add as the first command argument - yes', 'Route')
-			bgNPC:Log('Example: cl_citizens_remove_route yes', 'Route')
-		end
-	end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
-
-	local navmesh_is_loaded = false
-	net.Receive('bgNPCSyncNavmeshInfoFromPlayer', function()
-		navmesh_is_loaded = net.ReadBool()
-	end)
-
-	concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
-		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNPointEditor then return end
-
-		local from_json = false
-
-		if args[1] == 'json' then
-			from_json = true
-		end
-
 		local save_table = {}
-
-		if table.Count(tool.Points) ~= 0 then
-			for _, pos in ipairs(tool.Points) do
+		
+		if table.Count(bigdata.data) ~= 0 then
+			for _, pos in ipairs(bigdata.data) do
 				table.insert(save_table, {
 					pos = pos,
 					parents = {}
@@ -96,7 +37,7 @@ else
 
 			local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
 			local dist_limit = 250000
-			if navmesh_is_loaded then
+			if bgNPC.NavmeshIsLoaded then
 				dist_limit = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
 			end
 
@@ -124,13 +65,59 @@ else
 					end
 				end
 			end
+		end
 
+		local json_string = util.TableToJSON(save_table)
+
+		if bigdata.from_json then
+			file.Write('citizens_points/' .. game.GetMap() .. '.json', json_string)
+		else
+			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(json_string))
+		end
+
+		bgNPC.LoadRoutes()
+	end, false, true)
+
+	hook.Add("SlibPlayerFirstSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
+		bgNPC.NavmeshIsLoaded = navmesh.IsLoaded()
+		snet.Invoke('bgn_sync_navmesh_info', ply, bgNPC.NavmeshIsLoaded)
+	end)
+else
+	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
+		if args[1] ~= nil and args[1] == 'yes' then
+			local map_name = args[2] or game.GetMap()
+
+			net.Start('bgNPCRemoveRoute')
+			net.WriteBool(true)
+			net.WriteString(map_name)
+			net.SendToServer()
+		else
+			bgNPC:Log('If you want to delete the mesh file, add as the first command argument - yes', 'Route')
+			bgNPC:Log('Example: cl_citizens_remove_route yes', 'Route')
+		end
+	end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
+
+	snet.RegisterCallback('bgn_sync_navmesh_info', function(ply, is_load)
+		bgNPC.NavmeshIsLoaded = is_load
+	end)
+
+	concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
+		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+
+		local tool = LocalPlayer():GetTool()
+		if tool == nil or not tool.IsBGNPointEditor then return end
+
+		local from_json = false
+
+		if args[1] == 'json' then
+			from_json = true
+		end
+
+		if table.Count(tool.Points) ~= 0 then
 			snet.InvokeBigData('bgn_save_routes', nil, { 
 				from_json = from_json, 
-				data = save_table
+				data = tool.Points
 			}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
-	
-			notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 		else
 			local MainMenu = vgui.Create("DFrame")
 			MainMenu:SetPos(ScrW()/2 - 500/2, ScrH()/2 - 230/2)
@@ -173,10 +160,9 @@ else
 			ButtonYes.DoClick = function()
 				snet.InvokeBigData('bgn_save_routes', nil, { 
 					from_json = from_json, 
-					data = save_table
+					data = tool.Points
 				}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
 		
-				notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 				MainMenu:Close()
 			end
 
