@@ -2,7 +2,7 @@
 
 local asset = bgNPC:GetModule('movement_service')
 
-timer.Create('BGN_Timer_WalkController', 0.5, 0, function()
+timer.Create('BGN_Timer_WalkController', 1, 0, function()
    if not bgNPC.PointsExist then return end
    
    for _, actor in ipairs(bgNPC:GetAllByState('walk')) do
