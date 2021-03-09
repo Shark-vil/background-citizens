@@ -84,6 +84,13 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_enable_dv_support.description'
 	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.states.bgn_disable_dialogues',
+		Command = 'bgn_disable_dialogues' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.states.bgn_disable_dialogues.description'
+	})
 end
 
 hook.Add("PopulateToolMenu", "BGN_TOOL_CreateMenu_StateSettings", function()

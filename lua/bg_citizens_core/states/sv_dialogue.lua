@@ -12,6 +12,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
 
    if data ~= nil and data.isIgnore then return end
    if state ~= 'dialogue' then return end
+
+   if GetConVar('bgn_disable_dialogues'):GetBool() then return { state = 'walk' } end
    
    local npc = actor:GetNPC()
    local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
