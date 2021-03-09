@@ -10,6 +10,10 @@ CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound,
 { FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
 
+CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance, 
+{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+'Distance to draw points in edit mode.')
+
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
