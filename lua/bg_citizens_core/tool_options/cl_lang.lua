@@ -23,7 +23,7 @@ en_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Ignore another NPCs'
 en_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Description: if this parameter is active, then NPCs will ignore any other spawned NPCs.'
 en_lang['bgn.settings.general.cl_citizens_load_route'] = 'Load points'
 en_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Description: loads the movement mesh for NPCs. You can use this if for some reason the mesh didn\'t load or you reset it.'
-en_lang['bgn.settings.general.bgn_open_updateinfo'] = 'View release notes'
+en_lang['bgn.settings.general.bgn_updateinfo'] = 'View release notes'
 en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Reset to factory settings'
 
 --[[-----------------------------------------
@@ -132,7 +132,7 @@ ru_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Игнорироват
 ru_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Описание: если этот параметр активен, то NPC будут игнорировать любых других созданных NPC.'
 ru_lang['bgn.settings.general.cl_citizens_load_route'] = 'Загрузить точки'
 ru_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Описание: загружает сетку передвижения для NPC. Вы можете использовать это, если по какой-то причине сетка не загрузилась или вы её сбросили.'
-ru_lang['bgn.settings.general.bgn_open_updateinfo'] = 'Посмотреть информацию о версии'
+ru_lang['bgn.settings.general.bgn_updateinfo'] = 'Посмотреть информацию о версии'
 ru_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Сбросить до заводских настроек'
 
 --[[-----------------------------------------

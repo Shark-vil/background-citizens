@@ -1,18 +1,20 @@
-concommand.Add('bgn_open_updateinfo', function()
+concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 	surface.PlaySound('buttons/lever2.wav')
+
+	local version = args[1] or bgNPC.VERSION
 
 	local ru_lang = {
 		['title'] = "Фоновые NPCs - Страница обновления",
 		['html_button'] = "Перейти по ссылке",
 		['html_button_back'] = "Вернуться на главную",
-		['link'] = "https://itpony.ru/background-citizen/" .. bgNPC.VERSION .. "/ru.html"
+		['link'] = "https://itpony.ru/background-citizen/" .. version.. "/ru.html"
 	}
 
 	local en_lang = {
 		['title'] = "Background NPCs - Update page",
 		['html_button'] = "Go to the link",
 		['html_button_back'] = "Go back to the main",
-		['link'] = "https://itpony.ru/background-citizen/" .. bgNPC.VERSION .. "/en.html"
+		['link'] = "https://itpony.ru/background-citizen/" .. version .. "/en.html"
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang

@@ -28,8 +28,8 @@ local function TOOL_MENU(Panel)
 	})
 
 	Panel:AddControl("Button", {
-		["Label"] = "#bgn.settings.general.bgn_open_updateinfo",
-		["Command"] = "bgn_open_updateinfo",
+		["Label"] = "#bgn.settings.general.bgn_updateinfo",
+		["Command"] = "bgn_updateinfo",
 	})
 
 	Panel:AddControl("Button", {
