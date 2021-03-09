@@ -3,7 +3,11 @@ if SERVER then
 	util.AddNetworkString('bgNPCLoadExistsRoutesFromClient')
 	util.AddNetworkString('bgNPCLoadRouteFromClient')
 
+	bgNPC.PointsExist = false
+
 	bgNPC.LoadRoutes = function()
+		bgNPC.PointsExist = false
+
 		if file.Exists('citizens_points/' .. game.GetMap() .. '.dat', 'DATA') then
 			local file_data = file.Read('citizens_points/' .. game.GetMap() .. '.dat', 'DATA')
 			local load_table = util.JSONToTable(util.Decompress(file_data))
@@ -15,19 +19,18 @@ if SERVER then
 			bgNPC.points = {}
 		end
 
-		bgNPC:Log('Load citizens walk points - ' .. tostring(#bgNPC.points), 'Route')
+		local count = #bgNPC.points
+		if count > 0 then
+			bgNPC.PointsExist = true
+		end
+
+		bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
 
 		return bgNPC.points
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		local compressed_table = util.Compress(util.TableToJSON(bgNPC.points))
-		local compressed_lenght = string.len(compressed_table)
-
-		net.Start('bgNPCLoadRouteFromClient')
-		net.WriteUInt(compressed_lenght, 24)
-		net.WriteData(compressed_table, compressed_lenght)
-		net.Send(ply)
+		snet.InvokeBigData('bgn_load_routes', ply, bgNPC.points)
 	end
 
 	net.Receive('bgNPCLoadRoute', function(len, ply)
@@ -52,18 +55,24 @@ else
 		net.SendToServer()
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
+	local client_point_load_progress = false
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+
+		notification.AddProgress('BgnLoadClientRoutes',  'Loading points for client...')
+		client_point_load_progress = true
 
 		net.Start('bgNPCLoadExistsRoutesFromClient')
 		net.SendToServer()
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
-	net.Receive('bgNPCLoadRouteFromClient', function()
-		local compressed_lenght = net.ReadUInt(24)
-		local compressed_table = net.ReadData(compressed_lenght)
-		local data_table = util.JSONToTable(util.Decompress(compressed_table))
+	net.RegisterCallback('bgn_load_routes', function(ply, data_table)
 		local count = table.Count(data_table)
+
+		if client_point_load_progress then
+			notification.Kill('BgnLoadClientRoutes')
+			notification.AddLegacy('Success! Loading points for client...', NOTIFY_GENERIC, 3)
+		end
 
 		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
 		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then

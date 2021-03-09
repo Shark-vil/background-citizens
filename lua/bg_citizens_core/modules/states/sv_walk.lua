@@ -11,6 +11,10 @@ function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
 
    local is_created = false
 	local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
+   
+   if #points == 0 then
+      return false
+   end
 
    if not ignore_checkers then
       for _, v in ipairs(points) do

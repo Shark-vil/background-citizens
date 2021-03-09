@@ -24,6 +24,7 @@ bgNPC.cvar.bgn_disable_citizens_weapons = 0
 bgNPC.cvar.bgn_disable_halo = 0
 bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
+bgNPC.cvar.bgn_tool_draw_distance = 1000
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -136,6 +137,9 @@ FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to us
 
 slib:RegisterGlobalCvar('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues, 
 FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
+
+slib:RegisterGlobalCvar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance, 
+FCVAR_ARCHIVE, 'Distance to draw points in edit mode.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)

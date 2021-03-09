@@ -24,22 +24,17 @@ if SERVER then
 		ply:ConCommand('cl_citizens_load_route')
 	end)
 
-	net.Receive('bgNPCSaveRoute', function(len, ply)
-		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.RegisterCallback('bgn_save_routes', function(ply, bigdata)
+		local json_string = util.TableToJSON(bigdata.data)
 
-		local from_json = net.ReadBool()
-		local compressed_lenght = net.ReadUInt(24)
-		local compressed_data = net.ReadData(compressed_lenght)
-		local json_string = util.Decompress(compressed_data)
-
-		if from_json then
+		if bigdata.from_json then
 			file.Write('citizens_points/' .. game.GetMap() .. '.json', json_string)
 		else
-			file.Write('citizens_points/' .. game.GetMap() .. '.dat', compressed_data)
+			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(json_string))
 		end
 
-		bgNPC.points = util.JSONToTable(json_string)
-	end)
+		bgNPC.LoadRoutes()
+	end, false, true)
 
 	hook.Add("PlayerSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
 		if ply.bgNPCNavmeshInfoSync then return end
@@ -131,14 +126,10 @@ else
 			end
 		end
 
-		local compressed_data = util.Compress(util.TableToJSON(save_table))
-		local compressed_lenght = string.len(compressed_data)
-
-		net.Start('bgNPCSaveRoute')
-		net.WriteBool(from_json)
-		net.WriteUInt(compressed_lenght, 24)
-		net.WriteData(compressed_data, compressed_lenght)
-		net.SendToServer()
+		snet.InvokeBigData('bgn_save_routes', nil, { 
+			from_json = from_json, 
+			data = save_table
+		}, nil, 'BgnLoadPoints', 'Loading points...')
 
 		notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 	end, nil, 'Saves movement points (Only if the player has a tool weapon!)')
