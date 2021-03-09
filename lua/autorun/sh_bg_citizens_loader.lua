@@ -193,17 +193,17 @@ if CLIENT then
 
 					if v_addon < v_github then
 						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-							Color(255, 196, 0), 'You are using an outdated version of "Background NPCs" :( \n---\n' .. actual_version_text)
+							Color(255, 196, 0), 'You are using an outdated version of "Background NPCs" :( \n' .. actual_version_text)
 					elseif v_addon == v_github then
 						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-							Color(30, 255, 0), 'You are using the latest version of "Background NPCs" :) \n---\n' .. actual_version_text)
+							Color(30, 255, 0), 'You are using the latest version of "Background NPCs" :) \n' .. actual_version_text)
 					elseif v_addon > v_github then
 						chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-							Color(30, 255, 0), 'You are using the dev version of "Background NPCs" :o \n---\n' .. actual_version_text)
+							Color(30, 255, 0), 'You are using the dev version of "Background NPCs" :o \n' .. actual_version_text)
 					end
 				end,
 				function(message)
-					bgNPC:Log('Failed to check the actual version:\n' .. message, 'Version Checker')
+					MsgN('[Background NPCs] Failed to check the actual version:\n' .. message)
 				end
 			)
 		end)

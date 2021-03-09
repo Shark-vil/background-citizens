@@ -139,5 +139,7 @@ else
 		net.WriteUInt(compressed_lenght, 24)
 		net.WriteData(compressed_data, compressed_lenght)
 		net.SendToServer()
+
+		notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 	end, nil, 'Saves movement points (Only if the player has a tool weapon!)')
 end
