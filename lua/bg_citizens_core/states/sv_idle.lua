@@ -1,10 +1,13 @@
 hook.Add("BGN_PreSetNPCState", "BGN_IdleStateDayaValidate", function(actor, state, data)
 	if state ~= 'idle' then return end
-	
+
+	local delay = math.random(10, 30)
+
 	return {
 		state = state,
 		data = {
-			delay = CurTime() + 10
+			time = delay,
+			delay = CurTime() + delay
 		}
 	}
 end)
@@ -12,7 +15,7 @@ end)
 hook.Add("BGN_SetNPCState", "BGN_SetIdleNPCAnimationIfStateEqualIdle", function(actor, state, data)
 	if state ~= 'idle' then return end
 	local id = tostring(math.random(1, 4))
-	actor:PlayStaticSequence('LineIdle0' .. id, true, 10)
+	actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
 end)
 
 timer.Create('BGN_ChangeIdleStateToWalk', 1, 0, function()
