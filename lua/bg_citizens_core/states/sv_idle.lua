@@ -1,4 +1,10 @@
 hook.Add("BGN_PreSetNPCState", "BGN_IdleStateDayaValidate", function(actor, state, data)
+	if actor:HasState('idle') then
+		if table.HasValue(bgNPC.cfg.npcs_states['calmly'], state) then
+			return true
+		end
+	end
+
 	if state ~= 'idle' then return end
 
 	local delay = math.random(10, 30)
