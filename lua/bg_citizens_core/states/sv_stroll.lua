@@ -80,10 +80,14 @@ local function nextMovement(npc)
 				goto skip
 			end
 
-			if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:EntityIsViewVector(npc, pos) then
+			if pos:DistToSqr(npc_pos) <= dist_limit and bgNPC:NPCIsViewVector(npc, pos) then
 				local other_entities = ents.FindInSphere(pos, 100)
 				local other_npc_count = 0
 				for _, ent in ipairs(other_entities) do
+					if ent:IsVehicle() or ent:GetClass():StartWith('prop_') then
+						goto skip
+					end
+
 					if ent:IsNPC() and ent ~= npc then
 						other_npc_count = other_npc_count + 1
 					end
@@ -138,7 +142,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 		local npc = actor:GetNPC()
 		local map = movement_map[npc]
 		local data = actor:GetStateData()
-		data.schedule = data.schedule or SCHED_FORCED_GO
+		data.schedule = data.schedule or 'walk'
 
 		if map == nil then
 			map = updateMovement(npc)
@@ -147,9 +151,8 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 				goto skip
 			end
 			
-			npc:SetSaveValue("m_vecLastPosition", map.pos)
-			npc:SetSchedule(data.schedule)
-
+			actor:WalkToPos(map.pos, data.schedule)
+			
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
 				pos = map.pos,
@@ -169,7 +172,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 			end
 
 			if math.random(0, 100) <= 10 then
-				actor:Idle(10)
+				actor:SetState('idle')
 				return
 			end
 
@@ -184,8 +187,7 @@ timer.Create('BGN_Timer_StollController', 0.5, 0, function()
 				end
 			end
 
-			npc:SetSaveValue("m_vecLastPosition", map.pos)
-			npc:SetSchedule(data.schedule)
+			actor:WalkToPos(map.pos, data.schedule)
 
 			movement_ignore[npc] = movement_ignore[npc] or {}
 			table.insert(movement_ignore[npc], {
@@ -202,16 +204,16 @@ timer.Create('BGN_StollRandomSwitchMovementType', 1, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('walk')) do
 		if actor:IsAlive() then
 			local data = actor:GetStateData()
-			if data.schedule == SCHED_FORCED_GO_RUN then
+			if data.schedule == 'run' then
 				if data.runReset < CurTime() then
 					actor:UpdateStateData({ 
-						schedule = SCHED_FORCED_GO,
+						schedule = 'walk',
 						runReset = 0
 					})
 				end
 			elseif math.random(0, 100) == 0 then
 				actor:UpdateStateData({ 
-					schedule = SCHED_FORCED_GO_RUN,
+					schedule = 'run',
 					runReset = CurTime() + 20
 				})
 			end

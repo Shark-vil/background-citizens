@@ -3,6 +3,7 @@ bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_spawn_radius = 3000
+bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_radius_raytracing = 2000
 bgNPC.cvar.bgn_spawn_block_radius = 600
@@ -20,6 +21,10 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_disable_citizens_weapons = 0
+bgNPC.cvar.bgn_disable_halo = 0
+bgNPC.cvar.bgn_enable_dv_support = 1
+bgNPC.cvar.bgn_disable_dialogues = 0
+bgNPC.cvar.bgn_tool_draw_distance = 1000
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -85,6 +90,9 @@ FCVAR_ARCHIVE, 'The maximum number of background NPCs on the map.')
 slib:RegisterGlobalCvar('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 
 FCVAR_ARCHIVE, 'NPC spawn radius relative to the player.')
 
+slib:RegisterGlobalCvar('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 
+FCVAR_ARCHIVE, 'Determines at what distance the NPC will disable logic for optimization purposes')
+
 slib:RegisterGlobalCvar('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 
 FCVAR_ARCHIVE, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
 
@@ -120,6 +128,15 @@ FCVAR_ARCHIVE, 'If enabled, then NPCs will react to the sound of a shot as if so
 
 slib:RegisterGlobalCvar('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons, 
 FCVAR_ARCHIVE, 'Prohibits citizens from having weapons.')
+
+slib:RegisterGlobalCvar('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo, 
+FCVAR_ARCHIVE, 'Disable NPC highlighting stroke.')
+
+slib:RegisterGlobalCvar('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support, 
+FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
+
+slib:RegisterGlobalCvar('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues, 
+FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)

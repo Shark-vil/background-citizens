@@ -1,123 +1,3 @@
-local cahirs = {
-   {
-      models = {
-         'models/props_c17/chair02a.mdl',
-         'models/nseven/chair02a.mdl',
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetRight() * -5) + (chair:GetForward() * 2) - (chair:GetUp() * 8)
-      end,
-      offsetAngle = function(npc, chair, default_offset)
-         return default_offset
-      end,
-   },
-   {
-      models = { 'models/props_c17/FurnitureChair001a.mdl' },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -15) - (chair:GetUp() * 20)
-      end,
-      offsetAngle = function(npc, chair, default_offset)
-         return default_offset
-      end,
-   },
-   {
-      models = {
-         'models/props_trainstation/bench_indoor001a.mdl',
-         'models/nseven/bench_indoor001a.mdl'
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -17) - (chair:GetUp() * 20)
-      end,
-   },
-   {
-      models = {
-         'models/props_trainstation/BenchOutdoor01a.mdl',
-         'models/nseven/benchoutdoor01a.mdl'
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -17) - (chair:GetUp() * 13)
-      end,
-   },
-   {
-      models = { 'models/props_wasteland/cafeteria_bench001a.mdl' },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -17) - (chair:GetUp() * 5)
-      end,
-   },
-   {
-      models = {
-         'models/props_wasteland/controlroom_chair001a.mdl',
-         'models/nseven/controlroom_chair001a.mdl'
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -10) - (chair:GetUp() * 18)
-      end,
-   },
-   {
-      models = {
-         'models/props_interiors/Furniture_chair03a.mdl',
-         'models/nseven/furniture_chair03a.mdl',
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -13) - (chair:GetUp() * 15)
-      end,
-   },
-   {
-      models = { 'models/props_interiors/Furniture_chair01a.mdl' },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -16) - (chair:GetUp() * 15)
-      end,
-   },
-   {
-      models = { 
-         'models/props_interiors/Furniture_Couch01a.mdl',
-         'models/props_interiors/Furniture_Couch02a.mdl',
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -10) - (chair:GetUp() * 21)
-      end,
-   },
-   {
-      models = { 
-         'models/props_c17/FurnitureCouch001a.mdl',
-         'models/nseven/furniturecouch001a.mdl'
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -10) - (chair:GetUp() * 15)
-      end,
-   },
-   {
-      models = { 
-         'models/props_c17/FurnitureCouch002a.mdl',
-         'models/nseven/furniturecouch002a.mdl'
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -10) - (chair:GetUp() * 20)
-      end,
-   },
-   {
-      models = { 'models/props_c17/bench01a.mdl' },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -12) - (chair:GetUp() * 17)
-      end,
-   },
-   {
-      models = { 'models/props_trainstation/traincar_seats001.mdl' },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -12) + (chair:GetUp() * 2)
-      end,
-   },
-   {
-      models = { 
-         'models/props_combine/breenchair.mdl',
-         'models/nseven/breenchair.mdl' 
-      },
-      offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -12)
-      end,
-   },
-}
-
 hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, data)
    if actor:HasState('sit_to_chair') and state ~= 'defense' and state ~= 'fear' then
       if actor:GetStateData().isStand then return end
@@ -141,7 +21,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
       if ent_model == nil then goto skip end
       ent_model = ent_model:lower()
 
-      for id, chair_data in ipairs(cahirs) do
+      for id, chair_data in ipairs(bgNPC.cfg.sit_chairs) do
          for _, model in ipairs(chair_data.models) do
             if model:lower() == ent_model and not ent.occupied then
                if ent.sitDelay == nil or ent.sitDelay < CurTime() then
@@ -173,7 +53,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
          }
       }
    else
-      return true
+      return { state = 'walk' }
    end
 end)
 
@@ -183,7 +63,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
          local npc = actor:GetNPC()
          local data = actor:GetStateData()
          local chair = data.chair
-         local chairData = cahirs[data.chairDataId]
+         local chairData = bgNPC.cfg.sit_chairs[data.chairDataId]
 
          if not IsValid(chair) then
             actor:ResetSequence()
@@ -193,24 +73,23 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
             npc:PhysWake()
 
             data.isStand = true
-            actor:Walk()
+            actor:SetState('walk')
          elseif not data.isSit and data.delay < CurTime() then
             data.isStand = true
-            actor:Walk()
+            actor:SetState('walk')
             chair.occupied = false
          else
             local phys = chair:GetPhysicsObject()
             
             if not data.isMove then
-               npc:SetSaveValue("m_vecLastPosition", chair:GetPos() + (chair:GetForward() * 35))
-               npc:SetSchedule(SCHED_FORCED_GO)
+               actor:WalkToPos(chair:GetPos() + (chair:GetForward() * 35))
                data.isMove = true
             end
             
             if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then  -- 60 ^ 2 
                data.isSit = true
 
-               local sitTime = 5
+               local sitTime = math.random(5, 120)
                local new_pos = chair:GetPos() + (chair:GetForward() * 35)
                local new_angle = chair:GetAngles()
 
@@ -224,6 +103,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
 
                npc:SetPos(new_pos)
                npc:SetAngles(new_angle)
+               -- npc:SetParent(chair)
                npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
                if IsValid(phys) then
                   phys:EnableMotion(false)
@@ -242,13 +122,14 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            npc:SetAngles(Angle(0, 0, 0))
                         end
 
-                        npc:SetPos(npc:GetPos() + npc:GetForward() * 5)
+                        -- npc:SetParent(nil)
+                        npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
                         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
 
                         data.isStand = true
-                        actor:Walk()
-                        chair.sitDelay = CurTime() + 5
+                        chair.sitDelay = CurTime() + 15
+                        actor:SetState('walk')
                         chair.occupied = false
                      end)
                   end)

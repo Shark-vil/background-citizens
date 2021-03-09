@@ -12,6 +12,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
 
    if data ~= nil and data.isIgnore then return end
    if state ~= 'dialogue' then return end
+
+   if GetConVar('bgn_disable_dialogues'):GetBool() then return { state = 'walk' } end
    
    local npc = actor:GetNPC()
    local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
@@ -40,11 +42,8 @@ timer.Create('BGN_Timer_DialogueState', 0.5, 0, function()
 
          if IsValid(npc1) and IsValid(npc2) then
             if not dialogue.isIdle then
-               npc1:SetSaveValue("m_vecLastPosition", npc2:GetPos())
-               npc1:SetSchedule(SCHED_FORCED_GO)
-
-               npc2:SetSaveValue("m_vecLastPosition", npc1:GetPos())
-               npc2:SetSchedule(SCHED_FORCED_GO)
+               actor1:WalkToPos(npc2:GetPos())
+               actor2:WalkToPos(npc1:GetPos())
             else
                local npc1Angle = npc1:GetAngles()
                local npc2Angle = npc2:GetAngles()

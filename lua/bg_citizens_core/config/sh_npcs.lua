@@ -51,14 +51,37 @@
 		validator - a function that checks the spawn before the entity is created. Suitable for system checks. For broader checks, use the "BGN_OnValidSpawnActor" or "BGN_PreSpawnActor" hook
 --]]
 
+--[[
+	Explanation:
+	The states that are in the "danger" category are used to determine the state of danger of the NPC when taking damage.
+--]]
+bgNPC.cfg.npcs_states = {
+	['calmly'] = {
+		'idle',
+		'walk',
+		'dialogue',
+		'sit_to_chair',
+		'dv_vehicle_drive',
+		'steal',
+		'arrest',
+		'retreat'
+	},
+	['danger'] = {
+		'fear',
+		'defense',
+		'calling_police',
+		'impingement',
+	}
+}
+
 -- NPC classes that fill the streets
 bgNPC.cfg.npcs_template = {
 	['citizen'] = {
 		class = 'npc_citizen',
 		name = 'Civilian',
-		fullness = 72,
+		fullness = 64,
 		team = { 'residents' },
-		weapons = { 'weapon_pistol', 'weapon_357' },
+		weapons = { 'weapon_pistol', 'weapon_357', 'weapon_crowbar' },
 		money = { 0, 100 },
 		health = 50,
 		weaponSkill = WEAPON_PROFICIENCY_POOR,
@@ -98,12 +121,13 @@ bgNPC.cfg.npcs_template = {
 			'models/humans/group02/temale_02.mdl',
 			'models/humans/group02/temale_07.mdl',
 		},
-		at_random_range = 100,
+		at_random_range = 110,
 		at_random = {
 			['walk'] = 70,
 			['idle'] = 10,
 			['dialogue'] = 10,
 			['sit_to_chair'] = 10,
+			['dv_vehicle_drive'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {
@@ -117,12 +141,38 @@ bgNPC.cfg.npcs_template = {
 			['calling_police'] = 20,
 		}
 	},
+	['pilferer'] = {
+		class = 'npc_citizen',
+		name = 'Pilferer',
+		fullness = 8,
+		team = { 'bandits' },
+		money = { 0, 100 },
+		health = 50,
+		weaponSkill = WEAPON_PROFICIENCY_POOR,
+		randomBodygroups = true,
+		at_random_range = 110,
+		at_random = {
+			['walk'] = 60,
+			['idle'] = 10,
+			['steal'] = 20,
+			['sit_to_chair'] = 10,
+			['dv_vehicle_drive'] = 10,
+		},
+		at_damage_range = 100,
+		at_damage = {
+			['fear'] = 100,
+		},
+		at_protect_range = 100,
+		at_protect = {
+			['ignore'] = 100,
+		}
+	},
 	['gangster'] = {
 		class = 'npc_citizen',
 		name = 'Gangster',
 		fullness = 10,
 		team = { 'bandits' },
-		weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2' },
+		weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },
 		money = { 0, 150 },
 		health = 50,
 		weaponSkill = WEAPON_PROFICIENCY_AVERAGE,
@@ -147,12 +197,13 @@ bgNPC.cfg.npcs_template = {
 			'models/survivors/npc/tyler.mdl',
 			'models/survivors/npc/wolfgang.mdl',
 		},
-		at_random_range = 100,
+		at_random_range = 115,
 		at_random = {
-			['walk'] = 75,
+			['walk'] = 70,
 			['idle'] = 10,
 			['impingement'] = 5,
 			['sit_to_chair'] = 10,
+			['dv_vehicle_drive'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {
@@ -177,9 +228,10 @@ bgNPC.cfg.npcs_template = {
 		randomBodygroups = true,
 		at_random_range = 100,
 		at_random = {
-			['walk'] = 90,
+			['walk'] = 80,
 			['idle'] = 10,
 			['dialogue'] = 10,
+			['dv_vehicle_drive'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {

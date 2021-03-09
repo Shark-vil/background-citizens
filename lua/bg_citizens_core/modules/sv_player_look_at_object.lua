@@ -37,7 +37,7 @@ hook.Add("bgNPC_PlayerLookAtObject", "PoliceAgressionIfPlayerLongLook", function
 
 	local npc = actor:GetNPC()
 	if actor:GetType() == 'police' and actor:GetState() == 'walk' 
-		and bgNPC:EntityIsViewVector(npc, ply:GetPos(), 60)
+		and bgNPC:NPCIsViewVector(npc, ply:GetPos(), 60)
 		and actor:IsSequenceFinished()
 	then
 		if ply:GetPos():DistToSqr(npc:GetPos()) > 200 ^ 2 then return true end

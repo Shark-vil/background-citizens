@@ -105,15 +105,14 @@ if CLIENT then
 		local owner = self.Owner
 	
 		if IsValid(owner) and owner:Alive() then
+			local dist = GetConVar('bgn_tool_draw_distance'):GetFloat() ^ 2
 			self.PointToPointLimit = GetConVar('bgn_ptp_distance_limit'):GetFloat()
 	
 			local isSelectedPoint = false
 			local NewRangePoints = {}
-			
+
 			for index, pos in ipairs(self.Points) do
-				if bgNPC:PlayerIsViewVector(owner, pos) 
-					and owner:GetPos():DistToSqr(pos) < 2250000 -- 1500 ^ 2
-				then
+				if bgNPC:PlayerIsViewVector(owner, pos) and owner:GetPos():DistToSqr(pos) <= dist then
 					table.insert(NewRangePoints, {
 						index = index,
 						pos = pos
@@ -255,6 +254,16 @@ if CLIENT then
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.pnl.z_limit.desc'
 		})
+
+		Panel:AddControl("Slider", {
+			["Label"] = "#tool.bgn_point_editor.pnl.bgn_tool_draw_distance",
+			["Command"] = "bgn_tool_draw_distance",
+			["Type"] = "Float",
+			["Min"] = "0",
+			["Max"] = "2000"
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'
+		})
 	end
 	
 	local en_lang = {
@@ -273,6 +282,8 @@ if CLIENT then
 		['tool.bgn_point_editor.vis.remover'] = 'Deleting a selected point',
 		['tool.bgn_point_editor.vis.last_remover'] = 'Delete last point',
 		['tool.bgn_point_editor.vis.selected'] = 'Selected',
+		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance'] = 'Distance to draw points',
+		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Description: sets the maximum distance to draw points in edit mode.',
 	}
 
 	local ru_lang = {
@@ -291,6 +302,8 @@ if CLIENT then
 		['tool.bgn_point_editor.vis.remover'] = 'Удаление выбранной точки',
 		['tool.bgn_point_editor.vis.last_remover'] = 'Удалить последнюю точку',
 		['tool.bgn_point_editor.vis.selected'] = 'Выбрано',
+		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance'] = 'Дистанция прорисовки точек',
+		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Описание: устанавливает максимальное расстояние отрисовки точек в режиме редактирования.',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
@@ -354,6 +367,8 @@ if CLIENT then
 
 		if #tool.RangePoints ~= 0 then
 			local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
+			local PointToPointLimit = tool.PointToPointLimit ^ 2
+
 			for _, value in ipairs(tool.RangePoints) do
 				local index = value.index
 				local pos = value.pos
@@ -368,7 +383,7 @@ if CLIENT then
 				
 				for _, otherValue in ipairs(tool.RangePoints) do
 					local otherPos = otherValue.pos
-					if otherPos:DistToSqr(pos) <= tool.PointToPointLimit ^ 2 then
+					if otherPos:DistToSqr(pos) <= PointToPointLimit then
 						local otherZ = otherPos.z
 
 						if mainZ >= otherZ - z_limit and mainZ <= otherZ + z_limit then

@@ -9,15 +9,24 @@ hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 			AnotherActor:RemoveTarget(npc)
 			actor:RemoveTarget(another_npc)
 
-			npc:AddEntityRelationship(another_npc, D_NU, 99)
-			another_npc:AddEntityRelationship(npc, D_NU, 99)
+			if actor:HasTeam(AnotherActor) then
+				npc:AddEntityRelationship(another_npc, D_LI, 99)
+				another_npc:AddEntityRelationship(npc, D_LI, 99)
+			else
+				npc:AddEntityRelationship(another_npc, D_NU, 99)
+				another_npc:AddEntityRelationship(npc, D_NU, 99)
+			end
 		end
 	end
 
 	for _, ent in ipairs(player.GetAll()) do
 		if IsValid(ent) then
 			actor:RemoveTarget(ent)
-			npc:AddEntityRelationship(ent, D_NU, 99)
+			if actor:HasTeam(ent) then
+				npc:AddEntityRelationship(ent, D_LI, 99)
+			else
+				npc:AddEntityRelationship(ent, D_NU, 99)
+			end
 		end
 	end
 end)
@@ -31,6 +40,7 @@ hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	for _, npc in ipairs(ents.GetAll()) do
 		if npc:IsNPC() and not npc.isBgnActor then
 			actor:RemoveTarget(npc)
+
 			actor_npc:AddEntityRelationship(npc, D_NU, 99)
 			npc:AddEntityRelationship(actor_npc, D_NU, 99)
 		end
@@ -49,6 +59,7 @@ hook.Add("OnEntityCreated", "BGN_AddAnotherNPCToIgnore", function(ent)
 			local npc = actor:GetNPC()
 			if IsValid(npc) then
 				actor:RemoveTarget(ent)
+				
 				ent:AddEntityRelationship(npc, D_NU, 99)
 				npc:AddEntityRelationship(ent, D_NU, 99)
 			end
@@ -101,7 +112,7 @@ hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
 			if c_Wanted.level >= data.wanted_level then
 				actor:AddTarget(target)
 				if actor:GetState() ~= 'defense' then
-					actor:Defense()
+					actor:SetState('defense')
 					bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
 				end
 			end

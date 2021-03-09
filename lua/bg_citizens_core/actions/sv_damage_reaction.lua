@@ -23,9 +23,8 @@ function(attacker, target, dmginfo)
 			goto skip
 		end
 
-		if actor:HasState('idle') or actor:HasState('walk') 
-			or actor:HasState('arrest') or actor:HasState('dialogue')
-		then
+		if actor:HasState(bgNPC.cfg.npcs_states['calmly']) then
+			actor:RemoveAllTargets()
 			actor:SetState(actor:GetLastReaction())
 		end
 

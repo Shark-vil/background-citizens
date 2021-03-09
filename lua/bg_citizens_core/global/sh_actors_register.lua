@@ -1,5 +1,5 @@
 if CLIENT then
-	snet.RegisterEntityCallback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
+	snet.RegisterCallback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
 		if bgNPC:GetActor(npc) ~= nil then return end
 
 		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType], uid)
@@ -157,6 +157,7 @@ else
 					end
 			
 					npc:Spawn()
+					npc:Activate()
 					npc:PhysWake()
 
 					hook.Run('BGN_PostSpawnActor', npc, type, data)

@@ -12,6 +12,9 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 	npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
 end)
 
+local WantedModule = bgNPC:GetModule('wanted')
+local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
+
 timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('defense')) do
 		if not actor:IsAlive() then goto skip end
@@ -24,6 +27,10 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		
 		data.delay = data.delay or 0
 		data.state_timeout = data.state_timeout or CurTime() + 20
+
+		if bgNPC:IsTargetRay(npc, target) then
+			data.state_timeout = CurTime() + 20
+		end
 
 		if data.state_timeout < CurTime() then
 			actor:RemoveTarget(target)
@@ -41,24 +48,51 @@ timer.Create('BGN_Timer_DefenseController', 0.5, 0, function()
 		end
 
 		if data.delay < CurTime() then
-			bgNPC:SetActorWeapon(actor)
+			local killingSumm = bgNPC:GetKillingStatisticSumm(target)
 
-			local point = nil
-			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
+			data.notGun = data.notGun or true
+			data.notGunDelay = data.notGunDelay or CurTime() + 15
 
-			if current_distance > 500 ^ 2 then
-				if math.random(0, 10) > 4 then
-					point = actor:GetClosestPointToPosition(target:GetPos())
-				else
-					point = target:GetPos()
+			if data.notGun then
+				if data.notGunDelay < CurTime() or killingSumm > 0 
+					or (target:IsNPC() and IsValid(target:GetActiveWeapon()))
+				then
+					data.notGun = false
 				end
 			end
 
-			if point ~= nil then
-				npc:SetSaveValue("m_vecLastPosition", point)
-				npc:SetSchedule(SCHED_FORCED_GO_RUN)
-			elseif current_distance <= 500 ^ 2 then
-				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+			if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(target) then
+				if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
+					bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+				else
+					bgNPC:SetActorWeapon(actor)
+				end
+			else
+				bgNPC:SetActorWeapon(actor)
+			end
+
+			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
+			if current_distance <= 500 ^ 2 then
+
+				local notback = true
+				if killingSumm > 0 or (target:IsNPC() and IsValid(target:GetActiveWeapon())) then
+					notback = false
+				end
+
+				local npc_weapon = npc:GetActiveWeapon()
+				if IsValid(npc_weapon) then
+					local weapon_class = npc_weapon:GetClass()
+					if table.HasValue(MeleeWeapon, weapon_class) then notback = true end
+				end
+
+				if notback then
+					actor:WalkToPos(target:GetPos(), 'run')
+				else
+					actor:WalkToPos(nil)
+					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				end
+			else
+				actor:WalkToPos(target:GetPos(), 'run')
 			end
 
 			data.delay = CurTime() + 3

@@ -31,6 +31,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.data = data
 	obj.type = type
 	obj.reaction = ''
+	obj.eternal = false
 
 	obj.state_data = {
 		state = 'none',
@@ -52,6 +53,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.anim_action = nil
 	obj.old_state = nil
 	obj.state_lock = false
+
+	obj.walkPos = nil
+	obj.walkType = SCHED_FORCED_GO
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -247,6 +251,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- Clears NPC schedule data and synchronizes changes for clients.
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
+
+		self.walkPos = nil
 		
 		self.npc:SetNPCState(NPC_STATE_IDLE)
 		self.npc:ClearSchedule()
@@ -276,21 +282,28 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param index number|nil target id in table
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
-		if not IsValid(ent) or not isentity(ent) then return end
+		local ent = ent
 
-		local count = #self.targets
+		if index ~= nil then
+			if not isnumber(index) then return end
+			ent = self.targets[index]
+		end
 
-		if IsValid(self.npc) and ent:IsPlayer() then
+		if not isentity(ent) then return end
+
+		local old_count = #self.targets
+
+		if self:IsAlive() and IsValid(ent) and ent:IsPlayer() then
 			self.npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
-		if index ~= nil and isnumber(index) then
+		if index ~= nil then
 			table.remove(self.targets, index)
 		else
 			table.RemoveByValue(self.targets, ent)
 		end
 
-		if count > 0 and #self.targets <= 0 then
+		if old_count > 0 and #self.targets <= 0 then
 			hook.Run('BGN_ResetTargetsForActor', self)
 		end
 
@@ -340,6 +353,26 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return target
 	end
 
+	function obj:GetTarget(id)
+		if id == nil then return self:GetFirstTarget() end
+		return self.targets[id] or NULL
+	end
+
+	function obj:GetFirstTarget()
+		for _, npc in ipairs(self.targets) do
+			if IsValid(npc) then return npc end
+		end
+		return NULL
+	end
+
+	function obj:GetLastTarget()
+		for i = #self.targets, 1, -1 do
+			local npc = self.targets[i]
+			if IsValid(npc) then return npc end
+		end
+		return NULL
+	end
+
 	-- Recalculates targets, and removes them if they are dead or no longer exist on the map.
 	-- @return table new_targets new target list
 	function obj:RecalculationTargets()
@@ -371,6 +404,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.state_lock then return end
 		
 		if self.old_state ~= nil then
+			if self.old_state.state ~= self.state_data.state then
+				self.walkPos = nil
+			end
 			self.state_data = self.old_state
 			self.old_state = nil
 
@@ -400,6 +436,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
+		if state ~= self.state_data.state then
+			self.walkPos = nil
+		end
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
 
@@ -421,30 +460,55 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return self.state_data
 	end
 
-	function obj:Walk()
-		self:SetState('walk', {
-			schedule = SCHED_FORCED_GO,
-			runReset = 0
-		})
+	function obj:WalkToPos(pos, type)
+		if pos == nil then 
+			self.walkPos = nil
+			return
+		end
+
+		type = type or 'walk'
+
+		local schedule
+		if isnumber(type) then
+			schedule = type
+		elseif isstring(type) then
+			schedule = SCHED_FORCED_GO
+			if type == 'run' then
+				schedule = SCHED_FORCED_GO_RUN
+			end
+		end
+
+		self.walkType = schedule
+		self.walkPos = pos
 	end
 
-	function obj:Idle(idle_time)
-		idle_time = idle_time or 10
-		self:SetState('idle', {
-			delay = CurTime() + idle_time
-		})
+	function obj:UpdateMovement()
+		if self.walkPos == nil or not self:IsAlive() then return end
+		
+		local npc = self.npc
+		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
+
+		local move_pos = self.walkPos
+		local dist = npc:GetPos():DistToSqr(move_pos)
+		
+		if dist > 250000 then
+			local new_pos = self:GetClosestPointToPosition(move_pos)
+			if new_pos ~= nil then
+				move_pos = new_pos
+			end
+		elseif dist <= 900 then
+			if not hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType) then
+				self:WalkToPos(nil)
+			end
+			return
+		end
+
+		npc:SetLastPosition(move_pos)
+		npc:SetSchedule(self.walkType)
 	end
 
-	function obj:Fear()
-		self:SetState('fear', {
-			delay = 0
-		})
-	end
-
-	function obj:Defense()
-		self:SetState('defense', {
-			delay = 0
-		})
+	function obj:Walking()
+		return npc:IsMoving()
 	end
 
 	function obj:HasTeam(value)
@@ -489,7 +553,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasState(state)
-		return (self:GetState() == state)
+		local current_state = self:GetState()
+		if istable(state) then
+			for _, value in ipairs(state) do
+				if current_state == value then
+					return true
+				end
+			end
+			return false
+		else
+			return (current_state == state)
+		end
 	end
 
 	function obj:GetOldState()
@@ -521,6 +595,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetDistantPointInRadius(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -542,6 +617,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetClosestPointToPosition(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -563,6 +639,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFarPointToPosition(pos, radius)
+		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -584,6 +661,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetClosestPointInRadius(radius)
+		if not self:IsAlive() then return nil end
 		radius = radius or 500
 		
 		local point = nil
@@ -606,6 +684,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFarPointInRadius(radius)
+		if not self:IsAlive() then return nil end
 		radius = radius or 500
 		
 		local point = nil

@@ -157,13 +157,13 @@ if CLIENT then
 	local en_lang = {
 		['tool.bgn_debugger.name'] = 'Actor debugger',
 		['tool.bgn_debugger.desc'] = 'A tool for debugging the work of actors.',
-		['tool.bgn_debugger.0'] = '',
+		['tool.bgn_debugger.0'] = 'Left click - select actor. Right click - reset selected actor',
 	}
 
 	local ru_lang = {
 		['tool.bgn_debugger.name'] = 'Дебаггер актёров',
 		['tool.bgn_debugger.desc'] = 'Инструмент для отладки работы актёров.',
-		['tool.bgn_debugger.0'] = '',
+		['tool.bgn_debugger.0'] = 'Левый клик - выделить актёра. Правый клик - отменить выделение актёра.',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
