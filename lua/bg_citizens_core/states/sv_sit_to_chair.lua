@@ -26,7 +26,7 @@ local cahirs = {
          'models/nseven/bench_indoor001a.mdl'
       },
       offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetForward() * -17) - (chair:GetUp() * 20)
+         return default_offset + (chair:GetForward() * -14) - (chair:GetUp() * 20)
       end,
    },
    {
@@ -209,7 +209,7 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
             if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then  -- 60 ^ 2 
                data.isSit = true
 
-               local sitTime = 5
+               local sitTime = math.random(5, 120)
                local new_pos = chair:GetPos() + (chair:GetForward() * 35)
                local new_angle = chair:GetAngles()
 
@@ -223,8 +223,8 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
 
                npc:SetPos(new_pos)
                npc:SetAngles(new_angle)
-               npc:SetParent(chair)
-               -- npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+               -- npc:SetParent(chair)
+               npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
                if IsValid(phys) then
                   phys:EnableMotion(false)
                end
@@ -242,14 +242,14 @@ timer.Create('BGN_Timer_SitToChairState', 0.5, 0, function()
                            npc:SetAngles(Angle(0, 0, 0))
                         end
 
-                        npc:SetParent(nil)
-                        npc:SetPos(npc:GetPos() + npc:GetForward() * 10)
-                        -- npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+                        -- npc:SetParent(nil)
+                        npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
+                        npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                         npc:PhysWake()
 
                         data.isStand = true
-                        actor:SetState('walk')
                         chair.sitDelay = CurTime() + 15
+                        actor:SetState('walk')
                         chair.occupied = false
                      end)
                   end)

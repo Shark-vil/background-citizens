@@ -3,6 +3,7 @@ bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_spawn_radius = 3000
+bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_radius_raytracing = 2000
 bgNPC.cvar.bgn_spawn_block_radius = 600
@@ -86,6 +87,9 @@ FCVAR_ARCHIVE, 'The maximum number of background NPCs on the map.')
 
 slib:RegisterGlobalCvar('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 
 FCVAR_ARCHIVE, 'NPC spawn radius relative to the player.')
+
+slib:RegisterGlobalCvar('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 
+FCVAR_ARCHIVE, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
 slib:RegisterGlobalCvar('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 
 FCVAR_ARCHIVE, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')

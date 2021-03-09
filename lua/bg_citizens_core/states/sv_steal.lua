@@ -120,6 +120,7 @@ timer.Create('BGN_ActorStealPlayerItems', 0.5, 0, function()
                actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
                   hook.Run('BGN_StealFinish', actor, target, false)
                   actor:SetState('retreat')
+                  actor:AddTarget(target)
                end)
             end
          else

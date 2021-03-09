@@ -98,6 +98,7 @@ using('classes/sh_actor_class.lua')
 
 using('modules/cl_updatepage.lua')
 using('modules/cl_render_optimization.lua')
+using('modules/sv_run_logic_optimization.lua')
 using('modules/debug/cl_render_target_path.lua')
 using('modules/sv_npc_look_at_object.lua')
 using('modules/sv_player_look_at_object.lua')
@@ -161,6 +162,14 @@ using('states/sv_dv_vehicle_drive.lua')
 using('states/sv_steal.lua')
 
 using('tool_options/cl_bgn_settings_menu.lua')
+using('tool_options/cl_lang.lua')
+using('tool_options/cl_general_settings.lua')
+using('tool_options/cl_spawn_settings.lua')
+using('tool_options/cl_state_settings.lua')
+using('tool_options/cl_active_npc_group_settings.lua')
+using('tool_options/cl_optimization_settings.lua')
+using('tool_options/cl_client_settings.lua')
+using('tool_options/cl_workshop_settings.lua')
 
 if CLIENT then
 	snet.RegisterValidator('actor', function(ply, uid, ent)

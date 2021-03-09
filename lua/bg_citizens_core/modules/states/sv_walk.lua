@@ -6,22 +6,25 @@ local movement_ignore = {}
 local ignore_delay = 15
 local movement_delay = 8
 
-function ASSET:CreateMovementMap(npc, radius)
+function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
    radius = radius or 500
 
    local is_created = false
 	local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
-   for _, v in ipairs(points) do
-      if not self:HasIgnorePos(npc, v.pos) and bgNPC:NPCIsViewVector(npc, v.pos) then
-         movement_map[npc] = {
-            point = v,
-            delay = CurTime() + movement_delay
-         }
 
-         self:AddIgnorePos(npc, v.pos)
+   if not ignore_checkers then
+      for _, v in ipairs(points) do
+         if not self:HasIgnorePos(npc, v.pos) and bgNPC:NPCIsViewVector(npc, v.pos) then
+            movement_map[npc] = {
+               point = v,
+               delay = CurTime() + movement_delay
+            }
 
-         is_created = true
-         return true
+            self:AddIgnorePos(npc, v.pos)
+
+            is_created = true
+            return true
+         end
       end
    end
 
@@ -66,6 +69,17 @@ function ASSET:NextMovementPoint(npc)
             local new_point = bgNPC.points[index]
 
             if bgNPC:NPCIsViewVector(npc, new_point.pos, 130) then
+               local ents_count = 0
+
+               for _, ent in ipairs(ents.FindInSphere(new_point.pos, 100)) do
+                  local class = ent:GetClass()
+                  if not ent:IsWorld() and (ent:IsNPC() or ent:IsPlayer() or class:StartWith('prop_')) then
+                     ents_count = ents_count + 1
+                  end
+
+                  if ents_count >= 3 then return end
+               end
+
                if point and npc_pos:DistToSqr(new_point.pos) > dist then
                   goto skip
                end
@@ -73,7 +87,7 @@ function ASSET:NextMovementPoint(npc)
                point = new_point
                dist = npc_pos:DistToSqr(new_point.pos)
 
-               if math.random(0, 10) == 0 then
+               if math.random(0, 10) <= 3 then
                   break
                end
             end

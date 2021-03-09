@@ -282,21 +282,28 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param index number|nil target id in table
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
+		local ent = ent
+
+		if index ~= nil then
+			if not isnumber(index) then return end
+			ent = self.targets[index]
+		end
+
 		if not isentity(ent) then return end
 
-		local count = #self.targets
+		local old_count = #self.targets
 
 		if self:IsAlive() and IsValid(ent) and ent:IsPlayer() then
 			self.npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
-		if index ~= nil and isnumber(index) then
+		if index ~= nil then
 			table.remove(self.targets, index)
 		else
 			table.RemoveByValue(self.targets, ent)
 		end
 
-		if count > 0 and #self.targets <= 0 then
+		if old_count > 0 and #self.targets <= 0 then
 			hook.Run('BGN_ResetTargetsForActor', self)
 		end
 

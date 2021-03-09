@@ -18,7 +18,7 @@ timer.Create('BGN_Timer_WalkController', 0.5, 0, function()
          local map = asset:GetMovementMap(npc)
 
          if map.delay < CurTime() then
-            asset:RemoveMovementMap(npc)
+            asset:CreateMovementMap(npc, 500, true)
             bgNPC:Log('NPC was unable to move in the right direction! Reset tables...', 'Walking')
          else
             actor:WalkToPos(map.point.pos)
@@ -38,7 +38,7 @@ hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
 
    if asset:MapIsExist(npc) then
       if not asset:UpdateMovementMap(npc) then
-         asset:CreateMovementMap(npc, 500)
+         asset:CreateMovementMap(npc, 500, true)
          
          bgNPC:Log('Creating a new movement map', 'Walking')
          bgNPC:Log('Can\'t find the next move point! Reset tables...', 'Walking')

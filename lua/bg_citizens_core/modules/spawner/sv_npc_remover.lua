@@ -30,14 +30,13 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 				end
 			else
 				local isRemove = true
+				local npc_pos = npc:GetPos()
 
 				for _, ply in ipairs(player.GetAll()) do
 					if IsValid(ply) then
-						local npcPos = npc:GetPos()
-						local plyPos = ply:GetPos()
-						if npcPos:DistToSqr(plyPos) < bgn_spawn_radius 
-							or bgNPC:PlayerIsViewVector(ply, npcPos)
-						then
+						local ply_pos = ply:GetPos()
+						local dist = npc_pos:DistToSqr(ply_pos)
+						if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, npc_pos) then
 							isRemove = false
 							break
 						end
