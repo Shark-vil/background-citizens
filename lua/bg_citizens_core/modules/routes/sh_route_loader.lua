@@ -30,7 +30,8 @@ if SERVER then
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.InvokeBigData('bgn_load_routes', ply, bgNPC.points)
+		snet.InvokeBigData('bgn_load_routes', ply, bgNPC.points, nil, 
+			'BgnLoadClientRoutes', 'Loading mesh from server')
 	end
 
 	net.Receive('bgNPCLoadRoute', function(len, ply)
@@ -55,12 +56,8 @@ else
 		net.SendToServer()
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
-	local client_point_load_progress = false
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-		notification.AddProgress('BgnLoadClientRoutes',  'Loading points for client...')
-		client_point_load_progress = true
 
 		net.Start('bgNPCLoadExistsRoutesFromClient')
 		net.SendToServer()
@@ -68,11 +65,6 @@ else
 
 	net.RegisterCallback('bgn_load_routes', function(ply, data_table)
 		local count = table.Count(data_table)
-
-		if client_point_load_progress then
-			notification.Kill('BgnLoadClientRoutes')
-			notification.AddLegacy('Success! Loading points for client...', NOTIFY_GENERIC, 3)
-		end
 
 		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
 		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then

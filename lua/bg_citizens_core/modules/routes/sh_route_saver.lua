@@ -128,7 +128,7 @@ else
 			snet.InvokeBigData('bgn_save_routes', nil, { 
 				from_json = from_json, 
 				data = save_table
-			}, nil, 'BgnLoadPoints', 'Loading points...')
+			}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
 	
 			notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 		else
@@ -174,7 +174,7 @@ else
 				snet.InvokeBigData('bgn_save_routes', nil, { 
 					from_json = from_json, 
 					data = save_table
-				}, nil, 'BgnLoadPoints', 'Loading points...')
+				}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
 		
 				notification.AddLegacy("[For admin] The new mesh has been sent to the server.", NOTIFY_GENERIC, 4)
 				MainMenu:Close()
