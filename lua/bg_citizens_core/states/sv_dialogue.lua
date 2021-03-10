@@ -28,46 +28,47 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
    end
 end)
 
-timer.Create('BGN_Timer_DialogueState', 0.5, 0, function()
-   for _, actor in ipairs(bgNPC:GetAllByState('dialogue')) do
-      local dialogue = asset:GetDialogue(actor)
-      if dialogue ~= nil then
-         asset:SwitchDialogue(actor)
-         
-         local actor1 = dialogue.interlocutors[1]
-         local actor2 = dialogue.interlocutors[2]
+bgNPC:SetStateAction('dialogue', function(actor)
+   local dialogue = asset:GetDialogue(actor)
+   if dialogue == nil then 
+      actor:SetState('walk')   
+      return
+   end
 
-         local npc1 = actor1:GetNPC()
-         local npc2 = actor2:GetNPC()
+   asset:SwitchDialogue(actor)
+   
+   local actor1 = dialogue.interlocutors[1]
+   local actor2 = dialogue.interlocutors[2]
 
-         if IsValid(npc1) and IsValid(npc2) then
-            if not dialogue.isIdle then
-               actor1:WalkToPos(npc2:GetPos())
-               actor2:WalkToPos(npc1:GetPos())
-            else
-               local npc1Angle = npc1:GetAngles()
-               local npc2Angle = npc2:GetAngles()
+   local npc1 = actor1:GetNPC()
+   local npc2 = actor2:GetNPC()
 
-               local npc1NewAngle = (npc2:GetPos() - npc1:GetPos()):Angle()
-               local npc2NewAngle = (npc1:GetPos() - npc2:GetPos()):Angle()
+   if IsValid(npc1) and IsValid(npc2) then
+      if not dialogue.isIdle then
+         actor1:WalkToPos(npc2:GetPos())
+         actor2:WalkToPos(npc1:GetPos())
+      else
+         local npc1Angle = npc1:GetAngles()
+         local npc2Angle = npc2:GetAngles()
 
-               npc1:SetAngles(Angle(npc1Angle.x, npc1NewAngle.y, npc1Angle.z))
-               npc2:SetAngles(Angle(npc2Angle.x, npc2NewAngle.y, npc2Angle.z))
+         local npc1NewAngle = (npc2:GetPos() - npc1:GetPos()):Angle()
+         local npc2NewAngle = (npc1:GetPos() - npc2:GetPos()):Angle()
 
-               if actor1:IsSequenceFinished() then
-                  npc1:SetNPCState(NPC_STATE_SCRIPT)
-                  npc1:SetSchedule(SCHED_SLEEP)
-               end
+         npc1:SetAngles(Angle(npc1Angle.x, npc1NewAngle.y, npc1Angle.z))
+         npc2:SetAngles(Angle(npc2Angle.x, npc2NewAngle.y, npc2Angle.z))
 
-               if actor2:IsSequenceFinished() then
-                  npc2:SetNPCState(NPC_STATE_SCRIPT)
-                  npc2:SetSchedule(SCHED_SLEEP)
-               end
-
-               npc1:PhysWake()
-               npc2:PhysWake()
-            end
+         if actor1:IsSequenceFinished() then
+            npc1:SetNPCState(NPC_STATE_SCRIPT)
+            npc1:SetSchedule(SCHED_SLEEP)
          end
+
+         if actor2:IsSequenceFinished() then
+            npc2:SetNPCState(NPC_STATE_SCRIPT)
+            npc2:SetSchedule(SCHED_SLEEP)
+         end
+
+         npc1:PhysWake()
+         npc2:PhysWake()
       end
    end
 end)

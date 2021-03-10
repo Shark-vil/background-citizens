@@ -37,50 +37,44 @@ hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
 	end
 end)
 
-timer.Create('BGN_Timer_ImpingementController', 0.5, 0, function()
-	for _, actor in ipairs(bgNPC:GetAllByState('impingement')) do
-		if not actor:IsAlive() then goto skip end
+bgNPC:SetStateAction('impingement', function(actor)
+	local target = actor:GetNearTarget()
+	if not IsValid(target) then return end
+	
+	local npc = actor:GetNPC()
+	local data = actor:GetStateData()
 
-		local target = actor:GetNearTarget()
-		if not IsValid(target) then goto skip end
-		
-		local npc = actor:GetNPC()
-		local data = actor:GetStateData()
+	data.delay = data.delay or 0
+	data.state_timeout = data.state_timeout or CurTime() + 20
 
-		data.delay = data.delay or 0
-		data.state_timeout = data.state_timeout or CurTime() + 20
+	if data.state_timeout < CurTime() then
+		actor:RemoveTarget(target)
+		data.state_timeout = CurTime() + 20
+	elseif npc:Disposition(target) ~= D_HT then
+		npc:AddEntityRelationship(target, D_HT, 99)
+	end
 
-		if data.state_timeout < CurTime() then
-			actor:RemoveTarget(target)
-			data.state_timeout = CurTime() + 20
-		elseif npc:Disposition(target) ~= D_HT then
-			npc:AddEntityRelationship(target, D_HT, 99)
+	if target:IsPlayer() and target:InVehicle() then
+		target = target:GetVehicle()
+	end
+
+	if npc:GetTarget() ~= target then
+		npc:SetTarget(target)
+	end
+
+	if data.delay < CurTime() then
+		bgNPC:SetActorWeapon(actor)
+
+		local current_distance = npc:GetPos():DistToSqr(target:GetPos())
+
+		if current_distance <= 500 ^ 2 then
+			actor:WalkToPos(nil)
+			npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+		else
+			actor:WalkToPos(target:GetPos(), 'run')
 		end
 
-		if target:IsPlayer() and target:InVehicle() then
-			target = target:GetVehicle()
-		end
-
-		if npc:GetTarget() ~= target then
-			npc:SetTarget(target)
-		end
-
-		if data.delay < CurTime() then
-			bgNPC:SetActorWeapon(actor)
-
-			local current_distance = npc:GetPos():DistToSqr(target:GetPos())
-
-			if current_distance <= 500 ^ 2 then
-				actor:WalkToPos(nil)
-				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
-			else
-				actor:WalkToPos(target:GetPos(), 'run')
-			end
-
-			data.delay = CurTime() + 3
-		end
-		
-		::skip::
+		data.delay = CurTime() + 3
 	end
 end)
 

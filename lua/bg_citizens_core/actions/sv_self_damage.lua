@@ -1,4 +1,5 @@
 local TeamParentModule = bgNPC:GetModule('team_parent')
+local hook_post_reaction_demage_delay = {}
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
 	if not target:IsPlayer() and not target:IsNPC() then return end
@@ -18,7 +19,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 					if bgNPC.cfg.EnablePlayerKilledTeamActors then return end
 					return true
 				end
-			elseif attacker:IsNPC() and ActorAttacker ~= nil then
+			elseif ActorAttacker ~= nil and attacker:IsNPC() then
 				if ActorTarget:HasTeam(ActorAttacker) then
 					ActorTarget:RemoveTarget(attacker)
 					ActorAttacker:RemoveTarget(target)

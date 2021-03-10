@@ -74,96 +74,90 @@ hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, stat
    }
 end)
 
-timer.Create('BGN_ActorStealPlayerItems', 0.5, 0, function()
+bgNPC:SetStateAction('steal', function(actor)
    local polices = bgNPC:GetAllByTeam('police')
 
-   for _, actor in ipairs(bgNPC:GetAllByState('steal')) do
-		if not actor:IsAlive() then goto skip end
+   local npc = actor:GetNPC()
+   local data = actor:GetStateData()
+   local target = actor:GetFirstTarget()
+   
+   if not IsValid(target) then
+      actor:SetState('walk')
+      return
+   end
+   
+   local npc_pos = npc:GetPos()
+   local target_pos = target:GetPos()
 
-      local npc = actor:GetNPC()
-      local data = actor:GetStateData()
-      local target = actor:GetFirstTarget()
-      
-      if not IsValid(target) then
-         actor:SetState('walk')
-         goto skip
+   if data.isSteal then
+      for _, ActorPolice in ipairs(polices) do
+         if ActorPolice:IsAlive() then
+            local PoliceNPC = ActorPolice:GetNPC()
+            if PoliceNPC:GetPos():DistToSqr(npc_pos) <= 490000 and bgNPC:NPCIsViewVector(PoliceNPC, npc_pos) 
+               and bgNPC:IsTargetRay(PoliceNPC, npc) 
+            then
+               ActorPolice:AddTarget(npc)
+               ActorPolice:SetState('defense')
+            end
+         end
       end
       
-      local npc_pos = npc:GetPos()
-      local target_pos = target:GetPos()
+      data.SoundDelay = data.SoundDelay or 0
+      if data.SoundDelay < CurTime() then
+         npc:EmitSound('background_npcs/bed_sheet_movement.mp3', 70, 100, 1, CHAN_AUTO)
+         data.SoundDelay = CurTime() + 3
+      end
+   end
 
+   if bgNPC:PlayerIsViewVector(target, npc_pos, 80) then
       if data.isSteal then
-         for _, ActorPolice in ipairs(polices) do
-            if ActorPolice:IsAlive() then
-               local PoliceNPC = ActorPolice:GetNPC()
-               if PoliceNPC:GetPos():DistToSqr(npc_pos) <= 490000 and bgNPC:NPCIsViewVector(PoliceNPC, npc_pos) 
-                  and bgNPC:IsTargetRay(PoliceNPC, npc) 
-               then
-                  ActorPolice:AddTarget(npc)
-                  ActorPolice:SetState('defense')
-               end
-            end
-         end
-         
-         data.SoundDelay = data.SoundDelay or 0
-         if data.SoundDelay < CurTime() then
-            npc:EmitSound('background_npcs/bed_sheet_movement.mp3', 70, 100, 1, CHAN_AUTO)
-            data.SoundDelay = CurTime() + 3
-         end
-      end
+         if not data.isWanted then
+            data.isWanted = true
 
-      if bgNPC:PlayerIsViewVector(target, npc_pos, 80) then
-         if data.isSteal then
-            if not data.isWanted then
-               data.isWanted = true
-
-               actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
-                  hook.Run('BGN_StealFinish', actor, target, false)
-                  actor:SetState('retreat')
-                  actor:AddTarget(target)
-               end)
-            end
-         else
-            if not data.isPlayAnim then
-               data.isPlayAnim = true
-               actor:ClearSchedule()
-
-               local id = tostring(math.random(1, 4))
-               actor:PlayStaticSequence('LineIdle0'..id, true)
-            end
+            actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
+               hook.Run('BGN_StealFinish', actor, target, false)
+               actor:SetState('retreat')
+               actor:AddTarget(target)
+            end)
          end
       else
-         if data.isSteal then
-            if not data.isPlayAnim and not data.isWanted then
-               data.isPlayAnim = true
-               npc:slibSetVar('is_stealer', true)
+         if not data.isPlayAnim then
+            data.isPlayAnim = true
+            actor:ClearSchedule()
 
-               actor:ClearSchedule()
-               actor:PlayStaticSequence('Crouch_IdleD', true, 5, function()
-                  actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
-                     data.isPlayAnim = false
-                     hook.Run('BGN_StealFinish', actor, target, true)
-                     actor:SetState('retreat')
-                  end)
-               end)
-            end
-         else
-            if data.isPlayAnim then
-               data.isPlayAnim = false
-               actor:ResetSequence()
-            end
-
-            if data.walkUpdate < CurTime() then
-               actor:WalkToPos(target:GetPos())
-               data.walkUpdate = CurTime() + 2
-            end
-
-            if npc_pos:Distance(target_pos) <= 100 then
-               data.isSteal = true
-            end
+            local id = tostring(math.random(1, 4))
+            actor:PlayStaticSequence('LineIdle0'..id, true)
          end
       end
+   else
+      if data.isSteal then
+         if not data.isPlayAnim and not data.isWanted then
+            data.isPlayAnim = true
+            npc:slibSetVar('is_stealer', true)
 
-      ::skip::
+            actor:ClearSchedule()
+            actor:PlayStaticSequence('Crouch_IdleD', true, 5, function()
+               actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
+                  data.isPlayAnim = false
+                  hook.Run('BGN_StealFinish', actor, target, true)
+                  actor:SetState('retreat')
+               end)
+            end)
+         end
+      else
+         if data.isPlayAnim then
+            data.isPlayAnim = false
+            actor:ResetSequence()
+         end
+
+         if data.walkUpdate < CurTime() then
+            actor:WalkToPos(target:GetPos())
+            data.walkUpdate = CurTime() + 2
+         end
+
+         if npc_pos:Distance(target_pos) <= 100 then
+            data.isSteal = true
+         end
+      end
    end
 end)

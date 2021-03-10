@@ -94,6 +94,7 @@ using('global/sh_actors_finder.lua')
 using('global/sh_actors_register.lua')
 using('global/sh_killing_statistic.lua')
 using('global/sh_wanted_killing_statistic.lua')
+using('global/sh_states.lua')
 
 using('classes/cl_actor_sync.lua')
 using('classes/sh_actor_class.lua')

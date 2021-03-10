@@ -22,7 +22,7 @@ function bgNPC:PlayerIsViewVector(ply, pos, radius)
 end
 
 function bgNPC:NPCIsViewVector(ent, pos, radius)
-	if not IsValid(ent) then return false end
+	if not IsValid(ent) or ent:Health() <= 0 then return false end
 
 	radius = radius or 90
 	local directionAngCos = math.pi / radius
@@ -37,7 +37,9 @@ function bgNPC:GetModule(module_name)
 end
 
 function bgNPC:IsTargetRay(watcher, ent)
-	if not IsValid(ent) then return false end
+	if not IsValid(watcher) or watcher:Health() <= 0 then return false end
+	if not IsValid(ent) or ent:Health() <= 0 then return false end
+
 	local center_pos = LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
 
 	local tr = util.TraceLine({

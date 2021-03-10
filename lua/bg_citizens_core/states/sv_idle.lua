@@ -24,10 +24,8 @@ hook.Add("BGN_SetNPCState", "BGN_SetIdleNPCAnimationIfStateEqualIdle", function(
 	actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
 end)
 
-timer.Create('BGN_ChangeIdleStateToWalk', 1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAllByState('idle')) do
-		if actor:GetStateData().delay < CurTime() then
-			actor:RandomState()
-		end
+bgNPC:SetStateAction('idle', function(actor)
+	if actor:GetStateData().delay < CurTime() then
+		actor:RandomState()
 	end
 end)

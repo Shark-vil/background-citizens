@@ -3,8 +3,8 @@ local ASSET = {}
 local movement_map = {}
 local movement_ignore = {}
 
-local ignore_delay = 15
-local movement_delay = 8
+local ignore_delay = 10
+local movement_delay = 10
 
 function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
    radius = radius or 500
@@ -18,7 +18,7 @@ function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
 
    if not ignore_checkers then
       for _, v in ipairs(points) do
-         if not self:HasIgnorePos(npc, v.pos) and bgNPC:NPCIsViewVector(npc, v.pos) then
+         if not self:HasIgnorePos(npc, v.pos) and bgNPC:NPCIsViewVector(npc, v.pos, 130) then
             movement_map[npc] = {
                point = v,
                delay = CurTime() + movement_delay
@@ -77,11 +77,13 @@ function ASSET:NextMovementPoint(npc)
 
                for _, ent in ipairs(ents.FindInSphere(new_point.pos, 100)) do
                   local class = ent:GetClass()
-                  if not ent:IsWorld() and (ent:IsNPC() or ent:IsPlayer() or class:StartWith('prop_')) then
+                  if ent ~= npc and (ent:IsNPC() or ent:IsPlayer() or class:StartWith('prop_')) then
                      ents_count = ents_count + 1
                   end
 
-                  if ents_count >= 3 then return end
+                  if ents_count >= 3 then
+                     return
+                  end
                end
 
                if point and npc_pos:DistToSqr(new_point.pos) > dist then
@@ -148,6 +150,31 @@ function ASSET:HasIgnorePos(npc, pos)
       if v.npc == npc and v.pos == pos then return true end
    end
    return false
+end
+
+function ASSET:ClearIgnorePoints(npc)
+   for i = #movement_ignore, 1, -1 do
+      local v = movement_ignore[i]
+      if v.npc == npc then
+         table.remove(movement_ignore, i)
+      end
+   end
+end
+
+function ASSET:RemoveLastIgnorePoints(npc, max)
+   max = max or 1
+
+   local current = 0
+   for i = #movement_ignore, 1, -1 do
+      local v = movement_ignore[i]
+      if v.npc == npc then
+         table.remove(movement_ignore, i)
+         current = current + 1
+         if current == max then
+            return
+         end
+      end
+   end
 end
 
 function ASSET:ResetDelayedIgnorePoints()

@@ -82,9 +82,9 @@ local function ExitActor(actor, vehicle, decentvehicle)
             right = vehicle:GetRight()
          end
 
-         npc:SetNoDraw(false)
-         npc:SetPos(pos + (right * 100))
          npc:SetParent(nil)
+         npc:SetPos(pos + (right * 100))
+         npc:SetNoDraw(false)
          npc:PhysWake()
       end
 
@@ -94,96 +94,90 @@ local function ExitActor(actor, vehicle, decentvehicle)
    end
 end
 
-timer.Create('BGN_DvVehicle_WalkToCar', 1, 0, function()
-   for _, actor in ipairs(bgNPC:GetAllByState('dv_vehicle_drive')) do
-		if not actor:IsAlive() then goto skip end
-
-      local npc = actor:GetNPC()
-      local data = actor:GetStateData()
-      local vehicle = data.vehicle
-      
-      if data.isSit then
-         if not IsValid(vehicle) then
-            ExitActor(actor, vehicle, data.decentvehicle)
-         else
-            data.vehicle_last_pos = vehicle:GetPos()
-            data.vehicle_last_right = vehicle:GetRight()
-
-            if IsValid(data.decentvehicle) and data.beep and data.beepDelay < CurTime() then
-               data.decentvehicle:SetELS(false)
-               data.beep = false
-            end
-            
-            local forward_pos = data.vehicle_last_pos + vehicle:GetForward() * 40
-            for _, AnotherActor in ipairs(bgNPC:GetAllByRadius(forward_pos, 200)) do
-               if AnotherActor:HasState('dv_vehicle_drive') or not AnotherActor:IsAlive() then
-                  goto another_skip
-               end
-
-               local pos = AnotherActor:GetDistantPointInRadius(data.vehicle_last_pos)
-
-               data.beepDelay = data.beepDelay or 0
-               data.beep = data.beep or false
-
-               if IsValid(data.decentvehicle) and not data.beep and data.beepDelay < CurTime() then
-                  data.decentvehicle:SetELS(true)
-                  data.beepDelay = CurTime() + math.random(0.5, 2)
-                  data.beep = true
-               end
-
-               if pos ~= nil then
-                  local data = AnotherActor:GetStateData()
-                  data.delayVehicleRetreat = data.delayVehicleRetreat or 0
-                  
-                  if data.delayVehicleRetreat < CurTime() then
-                     AnotherActor:WalkToPos(pos, 'run')
-                     data.delayVehicleRetreat = CurTime() + 3
-                  end
-               end
-
-               ::another_skip::
-            end
-         end
+bgNPC:SetStateAction('dv_vehicle_drive', function(actor)
+   local npc = actor:GetNPC()
+   local data = actor:GetStateData()
+   local vehicle = data.vehicle
+   
+   if data.isSit then
+      if not IsValid(vehicle) then
+         ExitActor(actor, vehicle, data.decentvehicle)
       else
-         local is_valid_vehicle = IsValid(vehicle)
+         data.vehicle_last_pos = vehicle:GetPos()
+         data.vehicle_last_right = vehicle:GetRight()
 
-         if not is_valid_vehicle or data.sitDelay < CurTime() then
-            ExitActor(actor, vehicle, data.decentvehicle)
-            goto skip
+         if IsValid(data.decentvehicle) and data.beep and data.beepDelay < CurTime() then
+            data.decentvehicle:SetELS(false)
+            data.beep = false
          end
-
-         if data.delay < CurTime() then
-            local veh_pos = vehicle:GetPos()
-            data.sitpos = veh_pos + (vehicle:GetRight() * 100)
-
-            local distance = npc:GetPos():Distance(veh_pos)
-            
-            if distance <= 150 then
-               local decentvehicle = ents.Create('npc_decentvehicle')
-               decentvehicle:SetPos(veh_pos)
-               decentvehicle:Spawn()
-               
-               data.decentvehicle = decentvehicle
-               data.isSit = true
-               actor.eternal = true
-
-               npc:SetParent(vehicle)
-               npc:SetPos(vehicle:GetPos())
-               npc:SetNoDraw(true)
-
-               timer.Create('BGN_Actor' .. actor.uid .. 'ExitCar', math.random(30, 120), 1, function()
-                  ExitActor(actor, vehicle, decentvehicle)
-               end)
-
+         
+         local forward_pos = data.vehicle_last_pos + vehicle:GetForward() * 40
+         for _, AnotherActor in ipairs(bgNPC:GetAllByRadius(forward_pos, 200)) do
+            if AnotherActor:HasState('dv_vehicle_drive') or not AnotherActor:IsAlive() then
                goto skip
             end
 
-            actor:WalkToPos(data.sitpos)
-            
-            data.delay = CurTime() + 2
+            local pos = AnotherActor:GetDistantPointInRadius(data.vehicle_last_pos)
+
+            data.beepDelay = data.beepDelay or 0
+            data.beep = data.beep or false
+
+            if IsValid(data.decentvehicle) and not data.beep and data.beepDelay < CurTime() then
+               data.decentvehicle:SetELS(true)
+               data.beepDelay = CurTime() + math.random(0.5, 2)
+               data.beep = true
+            end
+
+            if pos ~= nil then
+               local data = AnotherActor:GetStateData()
+               data.delayVehicleRetreat = data.delayVehicleRetreat or 0
+               
+               if data.delayVehicleRetreat < CurTime() then
+                  AnotherActor:WalkToPos(pos, 'run')
+                  data.delayVehicleRetreat = CurTime() + 3
+               end
+            end
+
+            ::skip::
          end
       end
+   else
+      local is_valid_vehicle = IsValid(vehicle)
 
-      ::skip::
+      if not is_valid_vehicle or data.sitDelay < CurTime() then
+         ExitActor(actor, vehicle, data.decentvehicle)
+         return
+      end
+
+      if data.delay < CurTime() then
+         local veh_pos = vehicle:GetPos()
+         data.sitpos = veh_pos + (vehicle:GetRight() * 100)
+
+         local distance = npc:GetPos():Distance(veh_pos)
+         
+         if distance <= 150 then
+            local decentvehicle = ents.Create('npc_decentvehicle')
+            decentvehicle:SetPos(veh_pos)
+            decentvehicle:Spawn()
+            
+            data.decentvehicle = decentvehicle
+            data.isSit = true
+            actor.eternal = true
+
+            npc:SetPos(vehicle:GetPos())
+            npc:SetParent(vehicle)
+            npc:SetNoDraw(true)
+
+            timer.Create('BGN_Actor' .. actor.uid .. 'ExitCar', math.random(30, 120), 1, function()
+               ExitActor(actor, vehicle, decentvehicle)
+            end)
+
+            return
+         end
+
+         actor:WalkToPos(data.sitpos)
+         
+         data.delay = CurTime() + 2
+      end
    end
 end)
