@@ -8,7 +8,9 @@ function bgNPC:CallStateAction(actor)
    local state_name = actor:GetState()
    local func = state_actions[state_name]
    if func == nil then return end
-   func(actor, state_name)
+   pcall(function()
+      func(actor, state_name)
+   end)
 end
 
 timer.Create('BGN_StateMachine', 1, 0, function()
