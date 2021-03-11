@@ -217,9 +217,10 @@ if CLIENT then
 	end
 	
 	function TOOL:UpdateControlPanel()
+		if self.PanelIsInit then return end
+
 		local Panel = controlpanel.Get( "bgn_point_editor" )
 		if not Panel then bgNPC:Log("Couldn't find bgn_point_editor panel!", 'Tool') return end
-		if self.PanelIsInit then return end
 	
 		self.PanelIsInit = true
 	

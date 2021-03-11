@@ -18,6 +18,39 @@ function bgNPC:GetAllPointsInRadius(center, radius)
 	return radius_positions
 end
 
+function bgNPC:GetAllIndexPointsInRadius(center, radius)
+	local radius_positions = {}
+	radius = radius ^ 2
+
+	for index, v in ipairs(bgNPC.points) do
+		if v.pos:DistToSqr(center) <= radius then
+			table.insert(radius_positions, index)
+		end
+	end
+
+	return radius_positions
+end
+
+function bgNPC:GetNearPointInRadius(center, radius)
+	local point = nil
+	local dist = nil
+
+	for _, v in ipairs(self:GetAllPointsInRadius(center, radius)) do
+		if point == nil then
+			point = v
+			dist = center:DistToSqr(v.pos)
+      else
+         local checkDist = center:DistToSqr(v.pos)
+         if checkDist < dist then
+            point = v
+            dist = checkDist
+         end
+      end
+	end
+
+	return point
+end
+
 function bgNPC:GetAll()
 	return self.actors
 end
