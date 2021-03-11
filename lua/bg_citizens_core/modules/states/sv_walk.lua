@@ -10,21 +10,22 @@ function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
    radius = radius or 500
 
    local is_created = false
-	local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
+	local nodes = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
    
-   if #points == 0 then
+   if #nodes == 0 then
       return false
    end
 
    if not ignore_checkers then
-      for _, v in ipairs(points) do
-         if not self:HasIgnorePos(npc, v.pos) and bgNPC:NPCIsViewVector(npc, v.pos, 130) then
+      for _, node in ipairs(nodes) do
+         local pos = node.position
+         if not self:HasIgnorePos(npc, pos) and bgNPC:NPCIsViewVector(npc, pos, 130) then
             movement_map[npc] = {
-               point = v,
+               node = node,
                delay = CurTime() + movement_delay
             }
 
-            self:AddIgnorePos(npc, v.pos)
+            self:AddIgnorePos(npc, pos)
 
             is_created = true
             return true
@@ -33,14 +34,14 @@ function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
    end
 
    if not is_created then
-      local v = table.Random(points)
+      local node = table.Random(nodes)
 
       movement_map[npc] = {
-         point = v,
+         point = node,
          delay = CurTime() + movement_delay
       }
 
-      self:AddIgnorePos(npc, v.pos)
+      self:AddIgnorePos(npc, node.position)
       
       return true
    end
@@ -52,7 +53,7 @@ function ASSET:UpdateMovementMap(npc)
    local map = self:NextMovementPoint(npc)
    if map == nil then return false end
 
-   self:AddIgnorePos(npc, map.point.pos)
+   self:AddIgnorePos(npc, map.node.position)
 
    movement_map[npc] = map
    return true
@@ -62,58 +63,51 @@ function ASSET:NextMovementPoint(npc)
    local map = movement_map[npc]
 
    if map ~= nil then
-      local parents = map.point.parents
-      local count = #parents
+      local npc_pos = npc:GetPos()
+      local node, dist
 
-      if count ~= 0 then
-         local npc_pos = npc:GetPos()
-         local point, dist
+      for _, parentNode in ipairs(map.node.parents) do
+         if bgNPC:NPCIsViewVector(npc, parentNode.position, 130) then
+            local ents_count = 0
 
-         for _, index in ipairs(parents) do
-            local new_point = bgNPC.points[index]
-
-            if bgNPC:NPCIsViewVector(npc, new_point.pos, 130) then
-               local ents_count = 0
-
-               for _, ent in ipairs(ents.FindInSphere(new_point.pos, 100)) do
-                  local class = ent:GetClass()
-                  if ent ~= npc and (ent:IsNPC() or ent:IsPlayer() or class:StartWith('prop_')) then
-                     ents_count = ents_count + 1
-                  end
-
-                  if ents_count >= 3 then
-                     return
-                  end
+            for _, ent in ipairs(ents.FindInSphere(parentNode.position, 100)) do
+               local class = ent:GetClass()
+               if ent ~= npc and (ent:IsNPC() or ent:IsPlayer() or class:StartWith('prop_')) then
+                  ents_count = ents_count + 1
                end
 
-               if point and npc_pos:DistToSqr(new_point.pos) > dist then
-                  goto skip
-               end
-
-               point = new_point
-               dist = npc_pos:DistToSqr(new_point.pos)
-
-               if math.random(0, 10) <= 3 then
-                  break
+               if ents_count >= 3 then
+                  return
                end
             end
 
-            ::skip::
+            if node and npc_pos:DistToSqr(parentNode.position) > dist then
+               goto skip
+            end
+
+            node = parentNode
+            dist = npc_pos:DistToSqr(parentNode.position)
+
+            if math.random(0, 10) <= 3 then
+               break
+            end
          end
 
-         if point then
-            return {
-               point = point,
-               delay = CurTime() + movement_delay
-            }
-         end
+         ::skip::
+      end
+
+      if node then
+         return {
+            node = node,
+            delay = CurTime() + movement_delay
+         }
       end
    end
 
-   local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), 500)
-   if #points ~= 0 then
+   local nodes = bgNPC:GetAllPointsInRadius(npc:GetPos(), 500)
+   if #nodes ~= 0 then
       return {
-         point = table.Random(points),
+         node = table.Random(nodes),
          delay = CurTime() + movement_delay
       }
    end

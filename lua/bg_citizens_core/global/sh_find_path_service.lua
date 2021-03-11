@@ -42,7 +42,7 @@ local function NodeIsChecked(checkedNodes, node)
    return false
 end
 
-function bgNPC:FindPath(startPos, endPos, limitIteration)
+function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
    local G = startPos:DistToSqr(endPos)
 
    startPos = startPos + Vector(0, 0, 20)
@@ -52,7 +52,7 @@ function bgNPC:FindPath(startPos, endPos, limitIteration)
       return { startPos, endPos }
    end
 
-   if #bgNPC.points == 0 then return {} end
+   if BGN_NODE:CountNodesOnMap() == 0 then return {} end
 
    limitIteration = limitIteration or 500
 
@@ -61,13 +61,14 @@ function bgNPC:FindPath(startPos, endPos, limitIteration)
    local waitingNodes = {}
 
    local parents = {}
-   for _, index in ipairs(self:GetAllIndexPointsInRadius(startPos, 500)) do
-      table.insert(parents, index)
+   for _, node in ipairs(self:GetAllPointsInRadius(startPos, 500)) do
+      table.insert(parents, node)
    end
 
    if #parents == 0 then return {} end
 
-   local startNode = BGN_NODE:Instance(startPos, parents)
+   local startNode = BGN_NODE:Instance(startPos)
+   for _, node in ipairs(parents) do startNode:AddParentNode(node) end
    startNode.H = math.abs(startNode.position:DistToSqr(endPos))
    startNode.F = G + startNode.H
    table.insert(waitingNodes, startNode)
@@ -93,9 +94,9 @@ function bgNPC:FindPath(startPos, endPos, limitIteration)
          if not NodeIsChecked(checkedNodes, nextNode) then
             table.insert(checkedNodes, nextNode)
 
-            for _, index in ipairs(nextNode.parents) do
-               local parentPoint = bgNPC.points[index]
-               local parentNode = BGN_NODE:Instance(parentPoint.pos, parentPoint.parents)
+            for _, node in ipairs(nextNode.parents) do
+               local parentNode = BGN_NODE:Instance(node.position)
+               parentNode.parents = node.parents
                parentNode.pastNode = nextNode
                parentNode.H = math.abs(parentNode.position:DistToSqr(endPos))
                parentNode.F = G + parentNode.H

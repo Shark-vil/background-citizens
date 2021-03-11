@@ -8,7 +8,6 @@ TOOL.Distance = 10000
 TOOL.SelectedPointId = -1
 TOOL.CurrentTypeId = 1
 TOOL.PointToPointLimit = 500
-TOOL.Points = {}
 TOOL.Path = {}
 TOOL.StartPos = nil
 TOOL.EndPos = nil
@@ -49,7 +48,6 @@ else
    function TOOL:ClearPoints()
       self.StartPos = nil
       self.EndPos = nil
-
       table.Empty(self.Path)
    end
 
@@ -95,7 +93,7 @@ else
 
       tool.EndPos = tr.HitPos
 
-      local foundPath = bgNPC:FindPath(tool.StartPos, tool.EndPos)
+      local foundPath = bgNPC:FindWalkPath(tool.StartPos, tool.EndPos)
       if foundPath and istable(foundPath) then
          tool.Path = foundPath
       end
@@ -108,19 +106,11 @@ else
       if tool == nil then return end
 
       tool:ClearPoints()
-      
       surface.PlaySound('common/wpn_denyselect.wav')
    end)
-
-   hook.Add("BGN_LoadingClientRoutes", "BGN_TOOL_PathFinder", function(points)
-      local tool = GetTool()
-      if tool == nil then return end
-
-      tool.Points = points
-   end)
-
+   
    local clr_green = Color(72, 232, 9, 200)
-   local clr_58 = Color(58, 23, 255, 200)
+   local clr_232_59 = Color(232, 59, 255, 255)
    local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
    local vec_20 = Vector(0, 0, 20)
@@ -139,7 +129,7 @@ else
          local pos = tool.Path[i]
 
          if i ~= 1 then
-            render.DrawLine(pos, tool.Path[i - 1], clr_58)
+            render.DrawLine(pos, tool.Path[i - 1], clr_232_59)
          end
 
          render.DrawSphere(pos, 10, 30, 30, clr_green)

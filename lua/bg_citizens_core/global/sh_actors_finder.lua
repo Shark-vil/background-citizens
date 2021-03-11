@@ -7,10 +7,11 @@ end
 
 function bgNPC:GetAllPointsInRadius(center, radius)
 	local radius_positions = {}
+	local radius = radius or 500
 	radius = radius ^ 2
 
-	for _, v in ipairs(bgNPC.points) do
-		if v.pos:DistToSqr(center) <= radius then
+	for _, v in ipairs(BGN_NODE.Map) do
+		if v.position:DistToSqr(center) <= radius then
 			table.insert(radius_positions, v)
 		end
 	end
@@ -20,10 +21,11 @@ end
 
 function bgNPC:GetAllIndexPointsInRadius(center, radius)
 	local radius_positions = {}
+	local radius = radius or 500
 	radius = radius ^ 2
 
-	for index, v in ipairs(bgNPC.points) do
-		if v.pos:DistToSqr(center) <= radius then
+	for index, v in ipairs(BGN_NODE.Map) do
+		if v.position:DistToSqr(center) <= radius then
 			table.insert(radius_positions, index)
 		end
 	end
@@ -31,17 +33,40 @@ function bgNPC:GetAllIndexPointsInRadius(center, radius)
 	return radius_positions
 end
 
-function bgNPC:GetNearPointInRadius(center, radius)
+function bgNPC:GetClosestPointInRadius(center, radius)
 	local point = nil
 	local dist = nil
+	local radius = radius or 500
 
 	for _, v in ipairs(self:GetAllPointsInRadius(center, radius)) do
 		if point == nil then
 			point = v
-			dist = center:DistToSqr(v.pos)
+			dist = center:DistToSqr(v.position)
       else
-         local checkDist = center:DistToSqr(v.pos)
+         local checkDist = center:DistToSqr(v.position)
          if checkDist < dist then
+            point = v
+            dist = checkDist
+         end
+      end
+	end
+
+	return point
+end
+
+
+function bgNPC:GetDistantPointInRadius(center, radius)
+	local point = nil
+	local dist = nil
+	local radius = radius or 500
+
+	for _, v in ipairs(self:GetAllPointsInRadius(center, radius)) do
+		if point == nil then
+			point = v
+			dist = center:DistToSqr(v.position)
+      else
+         local checkDist = center:DistToSqr(v.position)
+         if checkDist > dist then
             point = v
             dist = checkDist
          end

@@ -25,54 +25,10 @@ if SERVER then
 	end)
 
 	snet.RegisterCallback('bgn_save_routes', function(ply, bigdata)
-		local save_table = {}
-		
-		if table.Count(bigdata.data) ~= 0 then
-			for _, pos in ipairs(bigdata.data) do
-				table.insert(save_table, {
-					pos = pos,
-					parents = {}
-				})
-			end
-
-			local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
-			local dist_limit = 250000
-			if bgNPC.NavmeshIsLoaded then
-				dist_limit = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
-			end
-
-			for index, v in ipairs(save_table) do
-				local pos = v.pos
-				for id, v2 in ipairs(save_table) do
-					local otherPos = v2.pos
-
-					if pos ~= otherPos and otherPos:DistToSqr(pos) <= dist_limit then
-						if pos.z >= otherPos.z - z_limit and pos.z <= otherPos.z + z_limit then
-							local tr = util.TraceLine( {
-								start = pos + Vector(0, 0, 30),
-								endpos = otherPos,
-								filter = function(ent)
-									if ent:IsWorld() then
-										return true
-									end
-								end
-							})
-
-							if not tr.Hit then
-								table.insert(save_table[index].parents, id)
-							end
-						end
-					end
-				end
-			end
-		end
-
-		local json_string = util.TableToJSON(save_table)
-
 		if bigdata.from_json then
-			file.Write('citizens_points/' .. game.GetMap() .. '.json', json_string)
+			file.Write('citizens_points/' .. game.GetMap() .. '.json', bigdata.data)
 		else
-			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(json_string))
+			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(bigdata.data))
 		end
 
 		bgNPC.LoadRoutes()
@@ -104,19 +60,17 @@ else
 	concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNPointEditor then return end
+		local jsonNodes = BGN_NODE:MapToJson()
 
 		local from_json = false
-
 		if args[1] == 'json' then
 			from_json = true
 		end
 
-		if table.Count(tool.Points) ~= 0 then
+		if BGN_NODE:CountNodesOnMap() ~= 0 then
 			snet.InvokeBigData('bgn_save_routes', nil, { 
 				from_json = from_json, 
-				data = tool.Points
+				data = jsonNodes
 			}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
 		else
 			local MainMenu = vgui.Create("DFrame")
@@ -160,7 +114,7 @@ else
 			ButtonYes.DoClick = function()
 				snet.InvokeBigData('bgn_save_routes', nil, { 
 					from_json = from_json, 
-					data = tool.Points
+					data = jsonNodes
 				}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
 		
 				MainMenu:Close()

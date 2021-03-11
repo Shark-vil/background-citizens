@@ -51,11 +51,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.anim_name = ''
 	obj.is_animated = false
 	obj.anim_action = nil
-	obj.old_state = nil
+	obj.old_state = {
+		state = 'none',
+		data = {}
+	}
 	obj.state_lock = false
 
+	obj.walkPath = {}
 	obj.walkPos = nil
 	obj.walkType = SCHED_FORCED_GO
+	obj.walkTargetPos = nil
+	obj.walkRePath = 0
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -78,10 +84,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			loop_time = self.loop_time,
 			anim_is_loop = self.anim_is_loop,
 			is_animated = self.is_animated,
-			old_state = self.old_state,
+			old_state = self.old_state.state,
 			state_lock = self.state_lock,
 			targets = self.targets,
-			state_data = self.state_data,
+			state = self.state_data.state,
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 			anim_time_normal = self.anim_time_normal,
@@ -132,9 +138,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not self:IsAlive() then return end
 
 		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
-			old_state = self.old_state,
+			old_state = self.old_state.state,
 			state_lock = self.state_lock,
-			state_data = self.state_data,
+			state = self.state_data.state,
 		})
 	end
 
@@ -252,7 +258,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
 
-		self.walkPos = nil
+		-- self.walkPos = nil
+		-- self.walkPath = {}
 		
 		self.npc:SetNPCState(NPC_STATE_IDLE)
 		self.npc:ClearSchedule()
@@ -404,15 +411,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.state_lock then return end
 		
 		if self.old_state ~= nil then
-			if self.old_state.state ~= self.state_data.state then
-				self.walkPos = nil
-			end
 			self.state_data = self.old_state
 			self.old_state = nil
 
 			if IsValid(self.npc) then
-				hook.Run('BGN_SetNPCState', self, 
-					self.state_data.state, self.state_data.data)
+				hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 			end
 
 			self:SyncState()
@@ -436,23 +439,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
-		if state ~= self.state_data.state then
-			self.walkPos = nil
-		end
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
 
 		if SERVER then
-			snet.InvokeAll('bgn_actor_set_state_client', self:GetNPC(), 
-				self.state_data.state, self.state_data.data)
-
+			self:SyncState()
 			self.anim_action = nil
 			self:ResetSequence()
 		end
 
 		if IsValid(self.npc) then
-			hook.Run('BGN_SetNPCState', self, 
-				self.state_data.state, self.state_data.data)
+			hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 		end
 
 		self:SyncState()
@@ -462,9 +459,16 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:WalkToPos(pos, type)
 		if pos == nil then 
+			self.walkPath = {}
 			self.walkPos = nil
+			self.walkTargetPos = nil
 			return
 		end
+
+		self.walkTargetPos = pos
+
+		local walkPath = bgNPC:FindWalkPath(self.npc:GetPos(), self.walkTargetPos)
+		if #walkPath == 0 then return end
 
 		type = type or 'walk'
 
@@ -478,32 +482,38 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
+		self.walkRePath = CurTime() + 5
 		self.walkType = schedule
-		self.walkPos = pos
+		self.walkPath = walkPath
+		self.walkPos = self.walkPath[1]
 	end
 
 	function obj:UpdateMovement()
-		if self.walkPos == nil or not self:IsAlive() then return end
+		if self.is_animated then return end
+		if self.walkPos == nil or #self.walkPath == 0 or not self:IsAlive() then return end
 		
 		local npc = self.npc
 		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
 
-		local move_pos = self.walkPos
-		local dist = npc:GetPos():DistToSqr(move_pos)
-		
-		if dist > 250000 then
-			local new_pos = self:GetClosestPointToPosition(move_pos)
-			if new_pos ~= nil then
-				move_pos = new_pos
-			end
-		elseif dist <= 900 then
-			if not hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType) then
-				self:WalkToPos(nil)
-			end
-			return
+		if self.walkRePath < CurTime() then
+			self:WalkToPos(self.walkTargetPos, self.walkType)
+			self.walkRePath = CurTime() + 5
 		end
 
-		npc:SetLastPosition(move_pos)
+		if npc:GetPos():DistToSqr(self.walkPos) <= 900 then
+			table.remove(self.walkPath, 1)
+			
+			if #self.walkPath == 0 then
+				if not hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType) then
+					self:WalkToPos(nil)
+				end
+				return
+			else
+				self.walkPos = self.walkPath[1]
+			end
+		end
+
+		npc:SetLastPosition(self.walkPos)
 		npc:SetSchedule(self.walkType)
 	end
 
@@ -594,7 +604,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return self.state_data.data
 	end
 
-	function obj:GetDistantPointInRadius(pos, radius)
+	function obj:GetDistantPointToPoint(pos, radius)
 		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
@@ -605,10 +615,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		for _, value in ipairs(points) do
 			if point == nil then
-				point = value.pos
+				point = value.position
 				dist = point:DistToSqr(pos)
-			elseif value.pos:DistToSqr(pos) > dist then
-				point = value.pos
+			elseif value.position:DistToSqr(pos) > dist then
+				point = value.position
 				dist = point:DistToSqr(pos)
 			end
 		end
@@ -616,7 +626,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return point 
 	end
 
-	function obj:GetClosestPointToPosition(pos, radius)
+	function obj:GetClosestPointToPoint(pos, radius)
 		if not self:IsAlive() or not isvector(pos) then return nil end
 		radius = radius or 500
 		
@@ -627,10 +637,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		for _, value in ipairs(points) do
 			if point == nil then
-				point = value.pos
+				point = value.position
 				dist = point:DistToSqr(pos)
-			elseif value.pos:DistToSqr(pos) < dist then
-				point = value.pos
+			elseif value.position:DistToSqr(pos) < dist then
+				point = value.position
 				dist = point:DistToSqr(pos)
 			end
 		end
@@ -638,72 +648,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return point 
 	end
 
-	function obj:GetFarPointToPosition(pos, radius)
-		if not self:IsAlive() or not isvector(pos) then return nil end
-		radius = radius or 500
-		
-		local point = nil
-		local dist = 0
-		local npc = self:GetNPC()
-		local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
-
-		for _, value in ipairs(points) do
-			if point == nil then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			elseif value.pos:DistToSqr(pos) > dist then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			end
-		end
-
-		return point 
+	function obj:GetDistantPointInRadius(radius)
+		if not self:IsAlive() then return nil end
+		return bgNPC:GetDistantPointInRadius(npc:GetPos(), radius)
 	end
 
 	function obj:GetClosestPointInRadius(radius)
 		if not self:IsAlive() then return nil end
-		radius = radius or 500
-		
-		local point = nil
-		local dist = 0
-		local npc = self:GetNPC()
-		local pos = npc:GetPos()
-		local points = bgNPC:GetAllPointsInRadius(pos, radius)
-
-		for _, value in ipairs(points) do
-			if point == nil then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			elseif value.pos:DistToSqr(pos) < dist then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			end
-		end
-
-		return point 
-	end
-
-	function obj:GetFarPointInRadius(radius)
-		if not self:IsAlive() then return nil end
-		radius = radius or 500
-		
-		local point = nil
-		local dist = 0
-		local npc = self:GetNPC()
-		local pos = npc:GetPos()
-		local points = bgNPC:GetAllPointsInRadius(pos, radius)
-
-		for _, value in ipairs(points) do
-			if point == nil then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			elseif value.pos:DistToSqr(pos) > dist then
-				point = value.pos
-				dist = point:DistToSqr(pos)
-			end
-		end
-
-		return point 
+		return bgNPC:GetClosestPointInRadius(npc:GetPos(), radius)
 	end
 
 	function obj:GetReactionForDamage()

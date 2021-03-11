@@ -56,9 +56,9 @@ else
 			local function CoroutineGetAllPointsInRadius()
 				local radius_positions = {}
 			
-				for _, v in ipairs(bgNPC.points) do
-					if v.pos:DistToSqr(_center) <= _radius then
-						table.insert(radius_positions, v)
+				for _, node in ipairs(BGN_NODE.Map) do
+					if node.position:DistToSqr(_center) <= _radius then
+						table.insert(radius_positions, node)
 						_pass = _pass + 1
 						if _pass == _max_pass then
 							coroutine.yield()
@@ -75,8 +75,8 @@ else
 					return coroutine.yield()
 				end
 			
-				local point = table.Random(radius_positions)
-				return coroutine.yield(point.pos)
+				local node = table.Random(radius_positions)
+				return coroutine.yield(node.position)
 			end
 			
 			local thread = coroutine.create(CoroutineGetAllPointsInRadius)

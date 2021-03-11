@@ -40,44 +40,23 @@ bgNPC:SetStateAction('fear', function(actor)
 	end
 
 	if data.delay < CurTime() then
-		if math.random(0, 100) == 0 and dist > 90000 
-			and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) 
-		then
+		if math.random(0, 100) == 0 and dist > 90000 and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) then
 			actor:SetState('calling_police', {
 				delay = 0
 			})
 			return
 		end
 
-		if data.schedule == 'run' and dist > 360000 -- 600 ^ 2 
-			and math.random(0, 10) == 0
-		then
+		if data.schedule == 'run' and dist > 360000 and math.random(0, 10) == 0 then
 			data.schedule = 'dyspnea'
-
 			actor:ResetSequence()
-
-			data.sequence = 'd2_coast03_PostBattle_Idle02_Entry'
-			if not actor:IsValidSequence(data.sequence) then
-				data.sequence = 'corpse_idle_to_inspect'
-			end
-
+			actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02_Entry', false, nil, function()
+				actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02', true, math.random(5, 15), function()
+					data.schedule = 'run'
+				end)
+			end)
 			data.delay = CurTime() + 7
-		else
-			if data.schedule == 'dyspnea' then
-				if actor:HasSequence('corpse_inspect_idle') then
-					actor:PlayStaticSequence('corpse_inspect_to_idle')
-				end
-				data.schedule = 'dyspnea_to_idle'
-			end
-
-			if data.schedule == 'dyspnea_to_idle' then
-				if not actor:IsSequenceFinished() then
-					return
-				end
-			end
-
-			actor:ResetSequence()
-
+		elseif data.schedule ~= 'dyspnea' then
 			if math.random(0, 10) <= 1 then
 				data.schedule = 'fear'
 			else
@@ -87,8 +66,6 @@ bgNPC:SetStateAction('fear', function(actor)
 
 			data.delay = CurTime() + 10
 		end
-
-		actor:ClearSchedule()
 	end
 
 	if dist < 22500 then -- 150 ^ 2
@@ -102,6 +79,14 @@ bgNPC:SetStateAction('fear', function(actor)
 		if data.call_for_help < CurTime() then
 			actor:CallForHelp(target)
 			data.call_for_help = CurTime() + math.random(25, 40)
+		else
+			if data.schedule == 'run' and data.update_run < CurTime() then
+				local pos = actor:GetDistantPointToPoint(target:GetPos(), 2000)
+				if pos ~= nil then
+					actor:WalkToPos(pos, 'run')
+				end
+				data.update_run = CurTime() + math.random(10, 20)
+			end
 		end
 	end
 end)
@@ -113,28 +98,10 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 		local target = actor:GetNearTarget()
 		if not IsValid(target) then goto skip end
 
-		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
-
 		data.anim = data.anim or 0
 
-		if data.schedule == 'dyspnea' then
-			if data.sequence == 'corpse_idle_to_inspect' then
-				if not actor:HasSequence(data.sequence) then
-					actor:SetNextSequence('corpse_inspect_idle', true, 0, function(a)
-						data.sequence = 'corpse_inspect_idle'
-					end)
-					actor:PlayStaticSequence(data.sequence)
-				end
-			elseif data.sequence == 'd2_coast03_PostBattle_Idle02_Entry' then
-				if not actor:HasSequence(data.sequence) then
-					actor:SetNextSequence('d2_coast03_PostBattle_Idle02', true, 0, function(a)
-						data.sequence = 'd2_coast03_PostBattle_Idle02'
-					end)
-					actor:PlayStaticSequence(data.sequence)
-				end
-			end
-		elseif data.schedule == 'fear' then                        
+		if data.schedule == 'fear' then                        
 			local is_idle = math.random(0, 100)
 			
 			data.update_anim = data.update_anim or 0
@@ -156,29 +123,8 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 					actor:PlayStaticSequence('cower', true)
 				end
 			end
-		elseif data.schedule == 'run' and data.update_run < CurTime() then
-			if data.old_pos ~= nil and data.old_pos:DistToSqr(npc:GetPos()) <= 900 then
-				data.old_pos = nil
-				data.schedule = 'fear'
-				goto skip
-			end
 
-			data.old_pos = npc:GetPos()
-
-			if math.random(0, 10) > 5 then
-				npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
-			else               
-				local pos = actor:GetDistantPointInRadius(target:GetPos(), 1500)
-
-				if pos == nil then
-					actor:WalkToPos(nil)
-					npc:SetSchedule(SCHED_RUN_FROM_ENEMY)
-				else
-					actor:WalkToPos(pos, 'run')
-				end
-			end
-			
-			data.update_run = CurTime() + 3
+			actor:WalkToPos(nil)
 		end
 
 		::skip::
