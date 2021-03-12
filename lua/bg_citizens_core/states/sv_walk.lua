@@ -2,6 +2,11 @@
 
 local asset = bgNPC:GetModule('movement_service')
 
+local function GetNextNode(actor)
+   return table.Random(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500))
+   -- return table.Random(BGN_NODE:GetMap())
+end
+
 bgNPC:SetStateAction('walk', function(actor)
    if not bgNPC.PointsExist then return end
 
@@ -25,7 +30,7 @@ bgNPC:SetStateAction('walk', function(actor)
    end
 
    if data.updatePoint < CurTime() then
-      local node = table.Random(BGN_NODE.Map)
+      local node = GetNextNode(actor)
       actor:WalkToPos(node.position, data.schedule)
       data.updatePoint = CurTime() + math.random(10, 20)
    end
@@ -38,7 +43,7 @@ hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
    bgNPC:Log('NPC has reached the desired point', 'Walking')
 
    local data = actor:GetStateData()
-   local node = table.Random(BGN_NODE.Map)
+   local node = GetNextNode(actor)
    actor:WalkToPos(node.position, data.schedule)
    data.updatePoint = CurTime() + math.random(10, 20)
 end)

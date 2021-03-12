@@ -8,6 +8,7 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	local npc = actor:GetNPC()
 	if target:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
 	
+	actor:WalkToPos(nil)
 	actor:FearScream()
 end)
 

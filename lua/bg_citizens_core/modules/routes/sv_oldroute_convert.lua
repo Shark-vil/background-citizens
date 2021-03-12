@@ -18,11 +18,16 @@ hook.Add('BGN_PreLoadRoutes', 'BGN_UpdateOldRoutes', function()
          newNodeMap[index] = Node
       end
 
-      for index, node in ipairs(newNodeMap) do
-         local oldNode = oldNodeMap[index]
-         if oldNode.parents ~= 0 then
-            for _, parentNodeIndex in ipairs(oldNode.parents) do
-               node:AddParentNode(newNodeMap[parentNodeIndex])
+      for index, v in ipairs(oldNodeMap) do
+         if v.parents ~= 0 then
+            local node = newNodeMap[index]
+            for _, parentNodeIndex in ipairs(v.parents) do
+               if parentNodeIndex ~= index then
+                  local parentNode = newNodeMap[parentNodeIndex]
+                  if parentNode then
+                     node:AddParentNode(parentNode)
+                  end
+               end
             end
          end
       end

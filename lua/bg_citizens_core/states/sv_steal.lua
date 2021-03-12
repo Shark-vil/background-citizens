@@ -152,7 +152,7 @@ bgNPC:SetStateAction('steal', function(actor)
 
          if data.walkUpdate < CurTime() then
             actor:WalkToPos(target:GetPos())
-            data.walkUpdate = CurTime() + 2
+            data.walkUpdate = CurTime() + 3
          end
 
          if npc_pos:Distance(target_pos) <= 100 then

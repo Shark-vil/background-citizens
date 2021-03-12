@@ -56,7 +56,7 @@ else
 			local function CoroutineGetAllPointsInRadius()
 				local radius_positions = {}
 			
-				for _, node in ipairs(BGN_NODE.Map) do
+				for _, node in ipairs(BGN_NODE:GetMap()) do
 					if node.position:DistToSqr(_center) <= _radius then
 						table.insert(radius_positions, node)
 						_pass = _pass + 1

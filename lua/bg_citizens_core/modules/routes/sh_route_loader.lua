@@ -18,7 +18,7 @@ if SERVER then
 		end
 
 		if jsonString ~= '' then
-			BGN_NODE.Map = BGN_NODE:JsonToMap(jsonString)
+			BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 		end
 
 		local count = BGN_NODE:CountNodesOnMap()
@@ -28,7 +28,7 @@ if SERVER then
 
 		bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
 
-		return BGN_NODE.Map
+		return BGN_NODE:GetMap()
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
@@ -79,7 +79,7 @@ else
 			end
 		end
 
-		BGN_NODE.Map = newMap
-		hook.Run('BGN_LoadingClientRoutes', newMap)
+		BGN_NODE:SetMap(newMap)
+		hook.Run('BGN_LoadingClientRoutes', BGN_NODE:GetMap())
 	end, false, true)
 end

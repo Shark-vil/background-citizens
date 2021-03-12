@@ -173,7 +173,7 @@ bgNPC:SetStateAction('dv_vehicle_drive', function(actor)
 
          actor:WalkToPos(data.sitpos)
          
-         data.delay = CurTime() + 2
+         data.delay = CurTime() + 3
       end
    end
 end)

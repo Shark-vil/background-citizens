@@ -117,6 +117,19 @@ if CLIENT then
 		tool:ClearPoints()
 	end)
 
+	concommand.Add('cl_tool_point_editor_reconstruct_parents', function()
+		local tool = LocalPlayer():GetTool()
+		if tool == nil or not tool.IsBGNPointEditor then return end
+
+		for _, node in ipairs(BGN_NODE:GetMap()) do
+			table.Empty(node.parents)
+		end
+
+		for _, node in ipairs(BGN_NODE:GetMap()) do
+			tool:ConstructParent(node)
+		end
+	end)
+
 	function TOOL:SwitchType()
 		local id = self.CurrentTypeId
 		if id + 1 > #self.Types then
@@ -193,9 +206,7 @@ if CLIENT then
 	end
 
 	function TOOL:RemoveNode(node)
-		self:DestructParent(node)
 		node:RemoveFromMap()
-		
 		surface.PlaySound('common/wpn_denyselect.wav')
 	end
 	
@@ -225,12 +236,6 @@ if CLIENT then
 			then
 				anotherNode:AddParentNode(node)
 			end
-		end
-	end
-
-	function TOOL:DestructParent(node)
-		for _, anotherNode in ipairs(BGN_NODE:GetNodeMap()) do
-			anotherNode:RemoveParentNode(node)
 		end
 	end
 
@@ -271,6 +276,11 @@ if CLIENT then
 		Panel:AddControl("Button", {
 			["Label"] = "#tool.bgn_point_editor.pnl.save_points",
 			["Command"] = "cl_citizens_save_route",
+		})
+
+		Panel:AddControl("Button", {
+			["Label"] = "#tool.bgn_point_editor.pnl.reconstruct_parents",
+			["Command"] = "cl_tool_point_editor_reconstruct_parents",
 		})
 	
 		Panel:AddControl("Slider", {
@@ -319,6 +329,8 @@ if CLIENT then
 		['tool.bgn_point_editor.vis.creator'] = 'Creating points',
 		['tool.bgn_point_editor.vis.remover'] = 'Deleting a selected point',
 		['tool.bgn_point_editor.vis.last_remover'] = 'Delete last point',
+		['tool.bgn_point_editor.vis.linker'] = 'Linker node',
+		['tool.bgn_point_editor.vis.parents_cleaner'] = 'Cleaner node links',
 		['tool.bgn_point_editor.vis.selected'] = 'Selected',
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance'] = 'Distance to draw points',
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Description: sets the maximum distance to draw points in edit mode.',
@@ -339,6 +351,8 @@ if CLIENT then
 		['tool.bgn_point_editor.vis.creator'] = 'Создание точек',
 		['tool.bgn_point_editor.vis.remover'] = 'Удаление выбранной точки',
 		['tool.bgn_point_editor.vis.last_remover'] = 'Удалить последнюю точку',
+		['tool.bgn_point_editor.vis.linker'] = 'Соединитель',
+		['tool.bgn_point_editor.vis.parents_cleaner'] = 'Очиститель связей',
 		['tool.bgn_point_editor.vis.selected'] = 'Выбрано',
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance'] = 'Дистанция прорисовки точек',
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Описание: устанавливает максимальное расстояние отрисовки точек в режиме редактирования.',
@@ -434,6 +448,11 @@ if CLIENT then
 				draw.SimpleTextOutlined(tostring(index), 
 					"TargetID", 0, 0, color_white, 
 					TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
+
+				-- local x, y = node:GetChunkID()
+				-- draw.SimpleTextOutlined(tostring(x .. y), 
+				-- 	"TargetID", 0, -35, color_white, 
+				-- 	TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 
 				if value.index == tool.SelectedPointId then
 					draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected', 

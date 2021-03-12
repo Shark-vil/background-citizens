@@ -97,6 +97,8 @@ function TOOL:RightClick()
 		self.Actor:ClearSchedule()
 
 		local pos = tr.HitPos
+		self.Actor:WalkToPos(nil)
+		
 		if self.Target:GetPos():Distance(pos) <= 500 then
       	self.Actor:WalkToPos(tr.HitPos)
 		else

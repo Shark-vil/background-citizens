@@ -8,6 +8,8 @@ local function CalculatePath(node, endPos)
       currentNode = currentNode.pastNode
    end
 
+   table.insert(foundPath, currentNode.position)
+   
    foundPath = table.Reverse(foundPath)
 
    return foundPath
@@ -42,51 +44,62 @@ local function NodeIsChecked(checkedNodes, node)
    return false
 end
 
+local function IsNotWorld(startPos, endPos)
+   local tr = util.TraceLine({
+      start = startPos,
+      endpos = endPos,
+      filter = function(ent)
+         if not ent:IsNPC() and ent:IsWorld() then
+            return true
+         end
+      end
+   })
+
+   return not tr.Hit
+end
+
 function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
    local G = startPos:DistToSqr(endPos)
 
-   startPos = startPos + Vector(0, 0, 20)
-   endPos = endPos + Vector(0, 0, 20)
+   -- startPos = startPos + Vector(0, 0, 5)
+   -- endPos = endPos + Vector(0, 0, 5)
 
-   if G <= 250000 then
-      return { startPos, endPos }
+   if G <= 250000 then 
+      if IsNotWorld(startPos, endPos) then
+         return { startPos, endPos }
+      end
    end
-
    if BGN_NODE:CountNodesOnMap() == 0 then return {} end
-
-   limitIteration = limitIteration or 500
-
+   
+   limitIteration = limitIteration or 100
+   
    local currentIteration = 0
    local checkedNodes = {}
    local waitingNodes = {}
 
    local parents = {}
-   for _, node in ipairs(self:GetAllPointsInRadius(startPos, 500)) do
-      table.insert(parents, node)
+   for _, node in ipairs(BGN_NODE:GetChunkNodes(startPos)) do
+      if IsNotWorld(startPos, node.position) then
+         table.insert(parents, node)
+      end
    end
 
    if #parents == 0 then return {} end
 
    local startNode = BGN_NODE:Instance(startPos)
-   for _, node in ipairs(parents) do startNode:AddParentNode(node) end
-   startNode.H = math.abs(startNode.position:DistToSqr(endPos))
+   startNode.H = startNode.position:DistToSqr(endPos)
    startNode.F = G + startNode.H
+   for _, node in ipairs(parents) do
+      startNode:AddParentNode(node)
+      node.pastNode = startNode
+   end
+
    table.insert(waitingNodes, startNode)
 
    while (#waitingNodes > 0) do
       local nextNode, nodeIndex = GetNearNodeFromPos(waitingNodes)
 
-      local tr = util.TraceLine({
-         start = nextNode.position,
-         endpos = endPos,
-         filter = function(ent)
-            if ent:IsWorld() then
-               return true
-            end
-         end
-      })
-
-      if not tr.Hit and nextNode.position:DistToSqr(endPos) <= 250000 then
+      if IsNotWorld(nextNode.position, endPos) and nextNode.position:DistToSqr(endPos) <= 250000 then
          return CalculatePath(nextNode, endPos)
       else
          table.remove(waitingNodes, nodeIndex)
@@ -98,23 +111,17 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
                local parentNode = BGN_NODE:Instance(node.position)
                parentNode.parents = node.parents
                parentNode.pastNode = nextNode
-               parentNode.H = math.abs(parentNode.position:DistToSqr(endPos))
+               parentNode.H = parentNode.position:DistToSqr(endPos)
                parentNode.F = G + parentNode.H
                table.insert(waitingNodes, parentNode)
-            end
-         else
-            for i = 1, #checkedNodes do
-               local node = checkedNodes[i]
-               if node.position == nextNode.position and node.F > nextNode.F then
-                  checkedNodes[i] = node
-                  break
-               end
             end
          end
       end
 
       currentIteration = currentIteration + 1
-      if currentIteration > limitIteration then return {} end
+      if currentIteration > limitIteration then
+         return {}
+      end
    end
 
    return {}

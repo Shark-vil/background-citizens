@@ -61,7 +61,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.walkPos = nil
 	obj.walkType = SCHED_FORCED_GO
 	obj.walkTargetPos = nil
-	obj.walkRePath = 0
+	obj.walkUpdatePathDelay = 0
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -462,12 +462,18 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			self.walkPath = {}
 			self.walkPos = nil
 			self.walkTargetPos = nil
+			self.walkUpdatePathDelay = 0
 			return
 		end
 
-		self.walkTargetPos = pos
+		if self.walkPos == pos then return end
 
-		local walkPath = bgNPC:FindWalkPath(self.npc:GetPos(), self.walkTargetPos)
+		local npc = self.npc
+		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+		
+		self.walkTargetPos = pos
+		
+		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), self.walkTargetPos)
 		if #walkPath == 0 then return end
 
 		type = type or 'walk'
@@ -482,7 +488,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
-		self.walkRePath = CurTime() + 5
+		-- self.walkUpdatePathDelay = CurTime() + 10
 		self.walkType = schedule
 		self.walkPath = walkPath
 		self.walkPos = self.walkPath[1]
@@ -493,12 +499,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.walkPos == nil or #self.walkPath == 0 or not self:IsAlive() then return end
 		
 		local npc = self.npc
+		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
-
-		if self.walkRePath < CurTime() then
-			self:WalkToPos(self.walkTargetPos, self.walkType)
-			self.walkRePath = CurTime() + 5
-		end
 
 		if npc:GetPos():DistToSqr(self.walkPos) <= 900 then
 			table.remove(self.walkPath, 1)

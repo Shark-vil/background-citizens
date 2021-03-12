@@ -43,10 +43,15 @@ bgNPC:SetStateAction('dialogue', function(actor)
    local npc1 = actor1:GetNPC()
    local npc2 = actor2:GetNPC()
 
+   local data = actor1:GetStateData()
+   data.updateWalk = data.updateWalk or 0
+
    if IsValid(npc1) and IsValid(npc2) then
-      if not dialogue.isIdle then
+      if not dialogue.isIdle and data.updateWalk < CurTime() then
          actor1:WalkToPos(npc2:GetPos())
          actor2:WalkToPos(npc1:GetPos())
+
+         data.updateWalk = CurTime() + 3
       else
          local npc1Angle = npc1:GetAngles()
          local npc2Angle = npc2:GetAngles()
