@@ -85,15 +85,20 @@ if CLIENT then
 			if not tool.LinkerNode then
 				tool.LinkerNode = node
 				surface.PlaySound('common/wpn_select.wav')
-			elseif tool.LinkerNode ~= node then
-				if tool.LinkerNode:HasParent(node) then
-					tool.LinkerNode:RemoveParentNode(node)
+			else
+				if tool.LinkerNode == node then
+					tool.LinkerNode = nil
+					surface.PlaySound('common/wpn_denyselect.wav')
 				else
-					tool.LinkerNode:AddParentNode(node)
-				end
+					if tool.LinkerNode:HasParent(node) then
+						tool.LinkerNode:RemoveParentNode(node)
+					else
+						tool.LinkerNode:AddParentNode(node)
+					end
 
-				tool.LinkerNode = nil
-				surface.PlaySound('common/wpn_denyselect.wav')
+					tool.LinkerNode = nil
+					surface.PlaySound('common/wpn_denyselect.wav')
+				end
 			end
 		elseif type == 'parents_cleaner' and tool.SelectedPointId ~= -1 then
 			local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
@@ -320,6 +325,7 @@ if CLIENT then
 		['tool.bgn_point_editor.0'] = 'Left click - Interaction. Right click - Change tool type. Reload - Clear all points.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Load points',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Save points',
+		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Re-create points links',
 		['tool.bgn_point_editor.pnl.ptp_dist'] = 'Distance between points limit (Works only on maps with a navigation mesh)',
 		['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Description: You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.',
 		['tool.bgn_point_editor.pnl.z_limit'] = 'Height limit between points',
@@ -342,6 +348,7 @@ if CLIENT then
 		['tool.bgn_point_editor.0'] = 'Левый клик - Взаимодействие. Правый клик - Сменить тип инструмента. Перезарядка - Очистить все точки.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Загрузить точки',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Сохранить точки',
+		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Пересоздать связи точек',
 		['tool.bgn_point_editor.pnl.ptp_dist'] = 'Ограничение расстояния между точками (работает только на картах с навигационной сеткой)',
 		['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Описание: вы можете изменить ограничение «от точки до точки» для инструмента, если на вашей карте есть навигационная сетка.',
 		['tool.bgn_point_editor.pnl.z_limit'] = 'Ограничение высоты между точками',
@@ -371,6 +378,8 @@ if CLIENT then
 	local vec_20 = Vector(0, 0, 20)
 	local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
+	local clr_good = Color(0, 255, 0, 200)
+	local clr_bad = Color(255, 0, 0, 200)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
 		local ply = LocalPlayer()
@@ -438,6 +447,23 @@ if CLIENT then
 						render.DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
 					else
 						render.DrawLine(pos, parentNode:GetPos(), clr_link)
+					end
+				end
+			end
+
+			if tool.LinkerNode then
+				render.DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_green)
+
+				if tr.Hit then
+					if tool.SelectedPointId ~= -1 then
+						do
+							local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
+							render.DrawSphere(node.position, 10, 30, 30, clr_good)
+							render.DrawLine(tool.LinkerNode.position, node.position, clr_good)
+						end
+					else
+						render.DrawLine(tool.LinkerNode.position, tr.HitPos, clr_bad)
+						render.DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_bad)
 					end
 				end
 			end
