@@ -1,18 +1,22 @@
 CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization, 
-{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+{ FCVAR_ARCHIVE }, 
 'Enable field of view optimization.')
 
 CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range, 
-{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+{ FCVAR_ARCHIVE }, 
 'The minimum distance in which the check is not performed.')
 
 CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound, 
-{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+{ FCVAR_ARCHIVE }, 
 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
 
 CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance, 
-{ FCVAR_ARCHIVE, FCVAR_NOTIFY }, 
+{ FCVAR_ARCHIVE }, 
 'Distance to draw points in edit mode.')
+
+CreateConVar('bgn_tool_point_editor_autoparent', bgNPC.cvar.bgn_tool_point_editor_autoparent, 
+{ FCVAR_ARCHIVE }, 
+'Enable automatic creation of nodes links.')
 
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
@@ -26,7 +30,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	RunConsoleCommand('bgn_spawn_radius_raytracing', bgNPC.cvar.bgn_spawn_radius_raytracing)
 	RunConsoleCommand('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius)
 	RunConsoleCommand('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period)
-	RunConsoleCommand('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit)
+	-- RunConsoleCommand('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit)
 	RunConsoleCommand('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit)
 	RunConsoleCommand('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode)
 	RunConsoleCommand('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time)

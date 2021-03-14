@@ -5,11 +5,20 @@ hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
 	bgNPC.fnpcs = {}
 end)
 
-local function CleanupNPCsIfRemovedOrKilled()
-	bgNPC:ClearRemovedNPCs()
-end
-hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
-hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
+-- local function CleanupNPCsIfRemovedOrKilled()
+-- 	bgNPC:ClearRemovedNPCs()
+-- end
+-- hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
+-- hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
+
+hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
+	bgNPC:RemoveNPC(actor:GetNPC())
+end)
+
+hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
+	if not ent.isBgnActor then return end
+	bgNPC:RemoveNPC(ent)
+end)
 
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local actors = bgNPC:GetAll()

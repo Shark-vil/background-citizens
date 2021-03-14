@@ -8,7 +8,8 @@ bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_radius_raytracing = 2000
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
-bgNPC.cvar.bgn_ptp_distance_limit = 500
+-- bgNPC.cvar.bgn_ptp_distance_limit = 500
+bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_point_z_limit = 100
 bgNPC.cvar.bgn_enable_wanted_mode = 1
 bgNPC.cvar.bgn_wanted_time = 30
@@ -105,8 +106,8 @@ FCVAR_ARCHIVE, 'Prohibits spawning NPCs within a given radius. Must not be more 
 slib:RegisterGlobalCvar('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 
 FCVAR_ARCHIVE, 'The period between the spawn of the NPC. Changes require a server restart.')
 
-slib:RegisterGlobalCvar('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, 
-FCVAR_ARCHIVE, 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
+-- slib:RegisterGlobalCvar('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, 
+-- FCVAR_ARCHIVE, 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
 
 slib:RegisterGlobalCvar('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 
 FCVAR_ARCHIVE, 'Height limit between points. Used to correctly define child points.')

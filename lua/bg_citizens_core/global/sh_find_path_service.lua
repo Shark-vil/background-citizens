@@ -61,45 +61,38 @@ end
 function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
    local G = startPos:DistToSqr(endPos)
 
-   -- startPos = startPos + Vector(0, 0, 5)
-   -- endPos = endPos + Vector(0, 0, 5)
-
    if G <= 250000 then 
       if IsNotWorld(startPos, endPos) then
          return { startPos, endPos }
       end
    end
+   
    if BGN_NODE:CountNodesOnMap() == 0 then return {} end
    
-   limitIteration = limitIteration or 100
+   limitIteration = limitIteration or 300
    
    local currentIteration = 0
    local checkedNodes = {}
    local waitingNodes = {}
 
-   local parents = {}
-   for _, node in ipairs(BGN_NODE:GetChunkNodes(startPos)) do
-      if IsNotWorld(startPos, node.position) then
-         table.insert(parents, node)
-      end
+   local closetNode = bgNPC:GetClosestPointToPointInChunk(startPos, endPos)
+   if not closetNode or not IsNotWorld(startPos, closetNode.position) then
+      closetNode = bgNPC:GetClosestPointInRadius(startPos, 500)
+      if not closetNode then return {} end
    end
-
-   if #parents == 0 then return {} end
 
    local startNode = BGN_NODE:Instance(startPos)
    startNode.H = startNode.position:DistToSqr(endPos)
    startNode.F = G + startNode.H
-   for _, node in ipairs(parents) do
-      startNode:AddParentNode(node)
-      node.pastNode = startNode
-   end
+   startNode:AddParentNode(closetNode)
+   closetNode.pastNode = startNode
 
    table.insert(waitingNodes, startNode)
 
    while (#waitingNodes > 0) do
       local nextNode, nodeIndex = GetNearNodeFromPos(waitingNodes)
 
-      if IsNotWorld(nextNode.position, endPos) and nextNode.position:DistToSqr(endPos) <= 250000 then
+      if nextNode.position:DistToSqr(endPos) <= 250000 and IsNotWorld(nextNode.position, endPos) then
          return CalculatePath(nextNode, endPos)
       else
          table.remove(waitingNodes, nodeIndex)

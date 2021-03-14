@@ -96,7 +96,7 @@ bgNPC:SetStateAction('steal', function(actor)
             if PoliceNPC:GetPos():DistToSqr(npc_pos) <= 490000 and bgNPC:NPCIsViewVector(PoliceNPC, npc_pos) 
                and bgNPC:IsTargetRay(PoliceNPC, npc) 
             then
-               ActorPolice:AddTarget(npc)
+               ActorPolice:AddEnemy(npc)
                ActorPolice:SetState('defense')
             end
          end
@@ -117,7 +117,7 @@ bgNPC:SetStateAction('steal', function(actor)
             actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
                hook.Run('BGN_StealFinish', actor, target, false)
                actor:SetState('retreat')
-               actor:AddTarget(target)
+               actor:AddEnemy(target)
             end)
          end
       else

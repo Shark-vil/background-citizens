@@ -41,19 +41,19 @@ function(actor, attacker, target, reaction)
 	
 	if target:IsNPC() then
 		if attacker:IsPlayer() and actor:HasTeam(attacker) then
-			actor:AddTarget(target)
+			actor:AddEnemy(target, reaction)
 			return
 		end
 
 		local ActorTarget = bgNPC:GetActor(target)
 		if ActorTarget ~= nil and actor:HasTeam(ActorTarget) then
-			actor:AddTarget(attacker)
+			actor:AddEnemy(attacker, reaction)
 			return
 		end
 
 		local ActorAttacker = bgNPC:GetActor(attacker)
 		if ActorAttacker ~= nil and actor:HasTeam(ActorAttacker) then
-			actor:AddTarget(target)
+			actor:AddEnemy(target, reaction)
 			return
 		end
 
@@ -61,24 +61,24 @@ function(actor, attacker, target, reaction)
 			if ActorTarget:GetState() == 'impingement' or bgNPC:IsEnemyTeam(target, 'residents')
 				or asset:IsFirstAttacker(target, attacker)
 			then
-				actor:AddTarget(target)
+				actor:AddEnemy(target, reaction)
 			else
-				actor:AddTarget(attacker)
+				actor:AddEnemy(attacker, reaction)
 			end
 		end
 	elseif target:IsPlayer() then
 		if attacker:IsPlayer() and actor:HasTeam(attacker) then
-			actor:AddTarget(target)
+			actor:AddEnemy(target, reaction)
 			return
 		elseif actor:HasTeam(target) then
-			actor:AddTarget(attacker)
+			actor:AddEnemy(attacker, reaction)
 			return
 		end
 
 		local ActorAttacker = bgNPC:GetActor(attacker)
 		if ActorAttacker ~= nil then
 			if actor:HasTeam(ActorAttacker) then
-				actor:AddTarget(target)
+				actor:AddEnemy(target, reaction)
 				return
 			end
 
@@ -86,11 +86,11 @@ function(actor, attacker, target, reaction)
 				if ActorAttacker:GetState() == 'impingement' or bgNPC:IsEnemyTeam(attacker, 'residents')
 					or asset:IsFirstAttacker(attacker, target)
 				then
-					actor:AddTarget(attacker)
+					actor:AddEnemy(attacker, reaction)
 				end
 			end
 		elseif actor:HasTeam('residents') then
-			actor:AddTarget(attacker)
+			actor:AddEnemy(attacker, reaction)
 		end
 	end
 end)

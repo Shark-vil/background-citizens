@@ -1,8 +1,6 @@
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_path_finder.name"
-
 TOOL.PanelIsInit = false
-TOOL.IsBGNPathFinder = true
 TOOL.Trace = nil
 TOOL.Distance = 10000
 TOOL.SelectedPointId = -1
@@ -25,12 +23,6 @@ if SERVER then
       snet.Invoke('bgn_tool_path_finder_reload_click', self:GetOwner())
    end
 else
-   local function GetTool()
-      local tool = LocalPlayer():GetTool()
-      if tool == nil or not tool.IsBGNPathFinder then return nil end
-      return tool
-   end
-
    function TOOL:GetTrace()
       local ply = self:GetOwner()
       local tr = util.TraceLine({
@@ -72,8 +64,8 @@ else
    end
 
    snet.RegisterCallback('bgn_tool_path_finder_left_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
 
       local tr = tool:GetTrace()
       if not tr.Hit then return end
@@ -84,8 +76,8 @@ else
    end)
 
    snet.RegisterCallback('bgn_tool_path_finder_right_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
       if tool.StartPos == nil then return end
 
       local tr = tool:GetTrace()
@@ -102,8 +94,8 @@ else
    end)
 
    snet.RegisterCallback('bgn_tool_path_finder_reload_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
 
       tool:ClearPoints()
       surface.PlaySound('common/wpn_denyselect.wav')
@@ -119,8 +111,8 @@ else
       local wep = LocalPlayer():GetActiveWeapon()
       if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
       if #tool.Path == 0 then return end
 
       render.SetColorMaterial()

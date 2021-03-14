@@ -1,17 +1,4 @@
-hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
-	if door:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
-
-	local door_class = {
-		"func_door",
-		"func_door_rotating",
-		"prop_door_rotating",
-		-- "func_movelinear",
-		-- "prop_dynamic",
-	}
-
-	if not table.HasValue(door_class, door:GetClass()) then return end
-	-- if not tobool(string.find(door:GetModel(), '*door*')) then return end
-
+local function OpenDoor(actor, door)
 	if not door.bgNPCOpenDoor and not hook.Run('BGN_PreOpenDoor', actor, door) then
 		actor:PlayStaticSequence('Open_door_away')
 
@@ -30,5 +17,24 @@ hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, door)
 				hook.Run('BGN_PostCloseDoor', door)
 			end
 		end)
+	end
+end
+
+hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent)
+	local pos = ent:GetPos()
+	if pos:DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
+
+	local door_class = {
+		"func_door",
+		"func_door_rotating",
+		"prop_door_rotating",
+		-- "func_movelinear",
+		-- "prop_dynamic",
+	}
+
+	for _, door in ipairs(ents.FindInSphere(pos, 150)) do
+		if table.HasValue(door_class, door:GetClass()) then
+			OpenDoor(actor, door)
+		end
 	end
 end)

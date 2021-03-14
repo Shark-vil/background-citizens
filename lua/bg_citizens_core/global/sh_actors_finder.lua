@@ -117,6 +117,48 @@ function bgNPC:GetDistantPointInChunk(center)
 	return point
 end
 
+function bgNPC:GetClosestPointToPointInChunk(center, pos)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if point == nil then
+			point = v
+			dist = pos:DistToSqr(v.position)
+      else
+         local checkDist = pos:DistToSqr(v.position)
+         if checkDist < dist then
+            point = v
+            dist = checkDist
+         end
+      end
+	end
+
+	return point
+end
+
+function bgNPC:GetDistantPointToPointInChunk(center, pos)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if point == nil then
+			point = v
+			dist = pos:DistToSqr(v.position)
+      else
+         local checkDist = pos:DistToSqr(v.position)
+         if checkDist > dist then
+            point = v
+            dist = checkDist
+         end
+      end
+	end
+
+	return point
+end
+
 function bgNPC:GetAll()
 	return self.actors
 end

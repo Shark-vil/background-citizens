@@ -59,12 +59,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	obj.walkPath = {}
 	obj.walkPos = nil
+	obj.walkTarget = NULL
 	obj.walkType = SCHED_FORCED_GO
-	obj.walkTargetPos = nil
 	obj.walkUpdatePathDelay = 0
 
 	obj.isBgnClass = true
 	obj.targets = {}
+	obj.enemies = {}
 
 	obj.npc_schedule = -1
 	obj.npc_state = -1
@@ -92,6 +93,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			npc_state = self.npc_state,
 			anim_time_normal = self.anim_time_normal,
 			loop_time_normal = self.loop_time_normal,
+			enemies = self.enemies,
 		}
 
 		if not IsValid(ply) then
@@ -157,6 +159,15 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			is_animated = self.is_animated,
 			anim_time_normal = self.anim_time_normal,
 			loop_time_normal = self.loop_time_normal,
+		})
+	end
+
+	function obj:SyncEnemies()
+		if CLIENT then return end
+		if not self:IsAlive() then return end
+
+		snet.InvokeAll('bgn_actor_sync_data_enemies', npc, {
+			enemies = self.enemies,
 		})
 	end
 
@@ -300,8 +311,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		local old_count = #self.targets
 
-		if self:IsAlive() and IsValid(ent) and ent:IsPlayer() then
-			self.npc:AddEntityRelationship(ent, D_NU, 99)
+		if ent == self.walkTarget then
+			self.walkTarget = NULL
 		end
 
 		if index ~= nil then
@@ -345,14 +356,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local dist = 0
 		local self_npc = self:GetNPC()
 
-		for _, npc in ipairs(self.targets) do
-			if IsValid(npc) then
+		for _, ent in ipairs(self.targets) do
+			if IsValid(ent) then
 				if not IsValid(target) then
-					target = npc
-					dist = npc:GetPos():DistToSqr(self_npc:GetPos())
-				elseif npc:GetPos():DistToSqr(self_npc:GetPos()) < dist then
-					target = npc
-					dist = npc:GetPos():DistToSqr(self_npc:GetPos())
+					target = ent
+					dist = ent:GetPos():DistToSqr(self_npc:GetPos())
+				elseif ent:GetPos():DistToSqr(self_npc:GetPos()) < dist then
+					target = ent
+					dist = ent:GetPos():DistToSqr(self_npc:GetPos())
 				end
 			end
 		end
@@ -366,16 +377,177 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFirstTarget()
-		for _, npc in ipairs(self.targets) do
-			if IsValid(npc) then return npc end
+		for _, ent in ipairs(self.targets) do
+			if IsValid(ent) then return ent end
 		end
 		return NULL
 	end
 
 	function obj:GetLastTarget()
 		for i = #self.targets, 1, -1 do
-			local npc = self.targets[i]
-			if IsValid(npc) then return npc end
+			local ent = self.targets[i]
+			if IsValid(ent) then return ent end
+		end
+		return NULL
+	end
+
+	function obj:AddEnemy(ent, reaction)
+		if not IsValid(ent) or not isentity(ent) then return end
+		if not ent:IsNPC() and not ent:IsPlayer() then return end
+		
+		local npc = self:GetNPC()
+
+		if npc ~= ent and not table.HasValue(self.enemies, ent) then
+			local relationship = D_HT
+			if reaction == 'fear' then
+				relationship = D_FR
+			end
+
+			if not hook.Run('BGN_AddActorEnemy', self, ent) then
+				npc:AddEntityRelationship(ent, relationship, 99)
+				table.insert(self.enemies, ent)
+				self:EnemiesRecalculate()
+				self:SyncEnemies()
+			end
+		end
+	end
+
+	function obj:RemoveEnemy(ent, index)
+		local ent = ent
+
+		if index ~= nil then
+			if not isnumber(index) then return end
+			ent = self.enemies[index]
+		end
+
+		if not isentity(ent) then return end
+
+		local old_count = #self.enemies
+
+		if ent == self.walkTarget then
+			self.walkTarget = NULL
+		end
+
+		if not hook.Run('BGN_RemoveActorEnemy', self, ent) then
+			local npc = self:GetNPC()
+			
+			if npc:GetEnemy() == ent then
+				npc:SetEnemy(NULL)
+			end
+
+			if IsValid(ent) then
+				npc:AddEntityRelationship(ent, D_NU, 99)
+			end
+
+			if index ~= nil then
+				table.remove(self.enemies, index)
+			else
+				table.RemoveByValue(self.enemies, ent)
+			end
+
+			if old_count > 0 and #self.enemies <= 0 then
+				hook.Run('BGN_ResetEnemiesForActor', self)
+			end
+
+			self:SyncEnemies()
+		end
+	end
+
+	function obj:RemoveAllEnemies()
+		for _, e in ipairs(self.enemies) do
+			self:RemoveEnemy(e)
+		end
+	end
+
+	function obj:HasEnemy(ent)
+		return table.HasValue(self.enemies, ent)
+	end
+
+	function obj:EnemiesCount()
+		return table.Count(self.enemies)
+	end
+
+	function obj:EnemiesRecalculate()
+		local npc = self:GetNPC()
+
+      if #self.enemies ~= 0 then
+         for _, enemy in ipairs(self.enemies) do
+            if not IsValid(enemy) or enemy:Health() <= 0 then
+               self:RemoveEnemy(enemy)
+            end
+         end
+
+         local enemy = self:GetNearEnemy()
+         if IsValid(enemy) then
+				local WantedModule = bgNPC:GetModule('wanted')
+				if bgNPC:IsTargetRay(npc, enemy) then
+					npc:SetEnemy(enemy)
+					npc:SetTarget(enemy)
+					npc:UpdateEnemyMemory(enemy, enemy:GetPos())
+				elseif not WantedModule:HasWanted(enemy) then
+					local time = npc:GetEnemyLastTimeSeen(enemy)
+					if time + 20 < CurTime() then
+						self:RemoveEnemy(enemy)
+					end
+				end
+         end
+      end
+	end
+
+	function obj:GetNearEnemy()
+		local enemy = NULL
+		local dist = 0
+		local self_npc = self:GetNPC()
+
+		for _, ent in ipairs(self.enemies) do
+			if IsValid(ent) then
+				if not IsValid(enemy) then
+					enemy = ent
+					dist = ent:GetPos():DistToSqr(self_npc:GetPos())
+				elseif ent:GetPos():DistToSqr(self_npc:GetPos()) < dist then
+					enemy = ent
+					dist = ent:GetPos():DistToSqr(self_npc:GetPos())
+				end
+			end
+		end
+
+		return enemy
+	end
+
+	function obj:GetEnemy()
+		return self:GetNearEnemy()
+	end
+
+	function obj:GetFirstEnemy()
+		for _, enemy in ipairs(self.enemies) do
+			if IsValid(enemy) then return enemy end
+		end
+		return NULL
+	end
+
+	function obj:GetNearEnemy()
+		local enemy = NULL
+		local dist = nil
+		local npcPos = self:GetNPC():GetPos()
+
+		for _, ent in ipairs(self.enemies) do
+			local new_dist = npcPos:DistToSqr(ent:GetPos())
+			if not IsValid(enemy) then
+				enemy = ent
+				dist = new_dist
+			elseif new_dist < dist then
+				enemy = ent
+				dist = new_dist
+			end
+		end
+
+		return enemy
+	end
+
+	function obj:GetLastEnemy()
+		for i = #self.enemies, 1, -1 do
+			local enemy = self.enemies[i]
+			if IsValid(enemy) then return enemy end
 		end
 		return NULL
 	end
@@ -457,12 +629,38 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return self.state_data
 	end
 
+	function obj:SetWalkType(type)
+		local type = type or 'walk'
+		local schedule = SCHED_FORCED_GO
+
+		if isnumber(type) then
+			schedule = type
+		elseif isstring(type) then
+			if type == 'run' then
+				schedule = SCHED_FORCED_GO_RUN
+			end
+		end
+
+		self.walkType = schedule
+	end
+
+	function obj:WalkToTarget(target, type)
+		if target == nil or not IsValid(target) then
+			self.walkTarget = NULL
+		else
+			self.walkPos = nil
+			self.walkUpdatePathDelay = 0
+			self:SetWalkType(type)
+			self.walkTarget = target
+		end
+	end
+
 	function obj:WalkToPos(pos, type)
 		if pos == nil then 
 			self.walkPath = {}
 			self.walkPos = nil
-			self.walkTargetPos = nil
 			self.walkUpdatePathDelay = 0
+			self:SetWalkType()
 			return
 		end
 
@@ -471,51 +669,36 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self.npc
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 		
-		self.walkTargetPos = pos
-		
-		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), self.walkTargetPos)
+		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos)
 		if #walkPath == 0 then return end
 
-		type = type or 'walk'
-
-		local schedule
-		if isnumber(type) then
-			schedule = type
-		elseif isstring(type) then
-			schedule = SCHED_FORCED_GO
-			if type == 'run' then
-				schedule = SCHED_FORCED_GO_RUN
-			end
-		end
-
-		-- self.walkUpdatePathDelay = CurTime() + 10
-		self.walkType = schedule
+		self:SetWalkType(type)
+		self.walkTarget = NULL
+		self.walkPos = pos
 		self.walkPath = walkPath
-		self.walkPos = self.walkPath[1]
 	end
 
 	function obj:UpdateMovement()
-		if self.is_animated then return end
-		if self.walkPos == nil or #self.walkPath == 0 or not self:IsAlive() then return end
+		if self.is_animated or #self.walkPath == 0 or not self:IsAlive() then return end
 		
 		local npc = self.npc
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
 
-		if npc:GetPos():DistToSqr(self.walkPos) <= 900 then
+		local targetPosition = self.walkPath[1]
+
+		if npc:GetPos():DistToSqr(targetPosition) <= 900 then
 			table.remove(self.walkPath, 1)
 			
 			if #self.walkPath == 0 then
-				if not hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType) then
+				if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
 					self:WalkToPos(nil)
 				end
 				return
-			else
-				self.walkPos = self.walkPath[1]
 			end
 		end
 
-		npc:SetLastPosition(self.walkPos)
+		npc:SetLastPosition(targetPosition)
 		npc:SetSchedule(self.walkType)
 	end
 
@@ -890,20 +1073,16 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 	end
 
-	function obj:CallForHelp(target)
+	function obj:CallForHelp(enemy)
+		if not IsValid(enemy) then return end
 		self:FearScream()
 
-		if not IsValid(target) then
-			target = self:GetNearTarget()
-			if not IsValid(target) then return end
-		end
-				
 		local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
 		for _, NearActor in ipairs(near_actors) do
 			local NearNPC = NearActor:GetNPC()
-			if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, target) then
+			if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, enemy) then
 				NearActor:SetState(NearActor:GetReactionForProtect())
-				NearActor:AddTarget(target)
+				NearActor:AddEnemy(enemy)
 			end
 		end
 
@@ -912,7 +1091,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			if not TargetActor:HasState('impingement') and not TargetActor:HasState('defense') then
 				TargetActor:SetState('defense')
 			end
-			TargetActor:AddTarget(npc)
+			TargetActor:AddEnemy(enemy)
 		end
 	end
 

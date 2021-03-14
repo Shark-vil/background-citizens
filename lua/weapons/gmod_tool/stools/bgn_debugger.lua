@@ -4,9 +4,7 @@ end
 
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_debugger.name"
-
 TOOL.PanelIsInit = false
-TOOL.IsBGNDebuggerEditor = true
 TOOL.Trace = nil
 TOOL.Lock = false
 TOOL.Distance = 10000
@@ -58,8 +56,8 @@ end
 
 if CLIENT then
 	net.Receive('bgn_network_tool_debugger_left_click', function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 		
 		local ent = net.ReadEntity()
 		if not IsValid(ent) or not ent:IsNPC() then
@@ -81,8 +79,8 @@ if CLIENT then
 	end)
 
 	concommand.Add('cl_bgn_debuger_tool_right_click', function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 
 		tool.Actor = nil
 		tool.Target = NULL
@@ -90,9 +88,8 @@ if CLIENT then
 	end)
 
 	hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
-
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 		if tool.Actor == nil or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3

@@ -5,8 +5,6 @@ end
 
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_actor_mover.name"
-
-TOOL.IsBGNActorMoverEditor = true
 TOOL.Trace = nil
 TOOL.Distance = 10000
 TOOL.Actor = nil
@@ -97,12 +95,11 @@ function TOOL:RightClick()
 		self.Actor:ClearSchedule()
 
 		local pos = tr.HitPos
-		self.Actor:WalkToPos(nil)
 		
 		if self.Target:GetPos():Distance(pos) <= 500 then
-      	self.Actor:WalkToPos(tr.HitPos)
+      	self.Actor:WalkToPos(pos)
 		else
-			self.Actor:WalkToPos(tr.HitPos, 'run')
+			self.Actor:WalkToPos(pos, 'run')
 		end
 
 		snet.Invoke('bgn_tool_actor_mover_update_path', self:GetOwner(), self.Actor.walkPath)
@@ -127,8 +124,8 @@ end
 
 if CLIENT then
    net.Receive('bgn_network_tool_actor_mover_reset', function()
-      local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNActorMoverEditor then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
+		if not tool then return end
 
       tool.Actor = nil
       tool.Target = NULL
@@ -136,8 +133,8 @@ if CLIENT then
    end)
 
 	net.Receive('bgn_network_tool_actor_mover_left_click', function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNActorMoverEditor then return end
+		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
+		if not tool then return end
 		
 		local ent = net.ReadEntity()
 		if not IsValid(ent) or not ent:IsNPC() then
@@ -159,16 +156,15 @@ if CLIENT then
 	end)
 
 	snet.RegisterCallback('bgn_tool_actor_mover_update_path', function(ply, path)
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNActorMoverEditor then return end
+		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
+		if not tool then return end
 		tool.Path = path
 	end)
 
    local halo_color = Color(196, 0, 255)
 	hook.Add("PreDrawHalos", "BGN_TOOL_ActorMover", function()
-		local tool = LocalPlayer():GetTool()
-
-		if tool == nil or not tool.IsBGNActorMoverEditor then return end
+		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
+		if not tool then return end
 		if tool.Actor == nil or not IsValid(tool.Target) then return end
 
       halo.Add({ tool.Target }, halo_color, 3, 3, 2)
@@ -184,8 +180,8 @@ if CLIENT then
       local wep = LocalPlayer():GetActiveWeapon()
       if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 
-      local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNActorMoverEditor then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
+		if not tool then return end
       if #tool.Path == 0 then return end
 
       render.SetColorMaterial()

@@ -1,11 +1,22 @@
+--[[
+	Арест не работает, нужно переделать
+]]
+
 local WantedModule = bgNPC:GetModule('wanted')
 
 hook.Add('BGN_PreSetNPCState', 'BGN_DisableArrestIfWanted', function(actor, state)
    if state ~= 'arrest' or not actor:IsAlive() then return end
 	
-	if WantedModule:HasWanted(actor:GetFirstTarget()) then
+	local target = actor:GetFirstTarget()
+	if WantedModule:HasWanted(target) then
+		actor:AddEnemy(target)
 		return { state = 'defense' }
 	end
+end)
+
+hook.Add('BGN_AddActorEnemy', 'BGN_NotSetEnemyIfArrest', function(acotr, enemy)
+	local asset = bgNPC:GetModule('player_arrest')
+	if asset:HasPlayer(enemy) and not asset.not_arrest then return true end
 end)
 
 --[[
@@ -129,6 +140,7 @@ bgNPC:SetStateAction('arrest', function(actor)
 
 		if c_Arrest.not_arrest or c_Arrest.delayIgnore < CurTime() then
 			actor:SetState('defense')
+			actor:AddEnemy(target)
 			return
 		end
 

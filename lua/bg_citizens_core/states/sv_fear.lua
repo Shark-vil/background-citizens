@@ -2,46 +2,30 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 	if state ~= 'fear' or not actor:IsAlive() then return end
 	if math.random(0, 10) > 5 then return end
 	
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) then return end
 
 	local npc = actor:GetNPC()
-	if target:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
+	if enemy:GetPos():DistToSqr(npc:GetPos()) > 490000 then return end
 	
 	actor:WalkToPos(nil)
 	actor:FearScream()
 end)
 
 bgNPC:SetStateAction('fear', function(actor)
-	local target = actor:GetNearTarget()
-	if not IsValid(target) or target:Health() <= 0 then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) or enemy:Health() <= 0 then return end
 
 	local npc = actor:GetNPC()
 	local data = actor:GetStateData()
 
 	data.delay = data.delay or 0
-	data.reset_fear = data.reset_fear or CurTime() + 30
 	data.call_for_help = data.call_for_help or CurTime() + math.random(25, 40)
+	data.update_run = data.update_run or 0
 
-	local isViewTarget = bgNPC:IsTargetRay(npc, target)
-	if isViewTarget then
-		data.reset_fear = CurTime() + 30
-	end
-
-	local dist = npc:GetPos():DistToSqr(target:GetPos())
-	if (not isViewTarget and dist >= 1000000) or data.reset_fear < CurTime() then -- 1000 ^ 2
-		actor:RemoveTarget(target)
-		data.reset_fear = CurTime() + 30
-	elseif npc:Disposition(target) ~= D_FR then
-		npc:AddEntityRelationship(target, D_FR, 99)
-	end
-
-	if npc:GetTarget() ~= target then
-		npc:SetTarget(target)
-	end
-
+	local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 	if data.delay < CurTime() then
-		if math.random(0, 100) == 0 and dist > 90000 and not bgNPC:NPCIsViewVector(target, npc:GetPos(), 70) then
+		if math.random(0, 100) == 0 and dist > 90000 and not bgNPC:NPCIsViewVector(enemy, npc:GetPos(), 70) then
 			actor:SetState('calling_police', {
 				delay = 0
 			})
@@ -58,13 +42,6 @@ bgNPC:SetStateAction('fear', function(actor)
 			end)
 			data.delay = CurTime() + 7
 		elseif data.schedule ~= 'dyspnea' then
-			if math.random(0, 10) <= 1 then
-				data.schedule = 'fear'
-			else
-				data.schedule = 'run'
-				data.update_run = 0
-			end
-
 			data.delay = CurTime() + 10
 		end
 	end
@@ -73,20 +50,33 @@ bgNPC:SetStateAction('fear', function(actor)
 		data.schedule = 'fear'
 		data.call_for_help = CurTime() + math.random(25, 40)
 		data.reset_fear = CurTime() + 30
+		
 		if math.random(0, 100) <= 2 then
-			actor:CallForHelp(target)
+			actor:CallForHelp(enemy)
 		end
-	elseif dist > 360000 then -- 600 ^ 2
-		if data.call_for_help < CurTime() then
-			actor:CallForHelp(target)
-			data.call_for_help = CurTime() + math.random(25, 40)
-		else
-			if data.schedule == 'run' and data.update_run < CurTime() then
-				local pos = actor:GetDistantPointToPoint(target:GetPos(), 2000)
-				if pos ~= nil then
-					actor:WalkToPos(pos, 'run')
-				end
-				data.update_run = CurTime() + math.random(10, 20)
+
+		if actor:HasSequence('d2_coast03_PostBattle_Idle02') then
+			actor:ResetSequence()
+		end
+	else
+		data.schedule = 'run'
+
+		if actor:IsAnimationPlayed() then
+			actor:ResetSequence()
+		end
+
+		if data.update_run < CurTime() then
+			local pos = actor:GetDistantPointToPoint(enemy:GetPos(), 800)
+			if pos then
+				actor:WalkToPos(pos, 'run')
+			end
+			data.update_run = CurTime() + 6
+		end
+
+		if dist > 360000 then -- 600 ^ 2
+			if data.call_for_help < CurTime() then
+				actor:CallForHelp(enemy)
+				data.call_for_help = CurTime() + math.random(20, 30)
 			end
 		end
 	end
@@ -95,9 +85,6 @@ end)
 timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 	for _, actor in ipairs(bgNPC:GetAllByState('fear')) do
 		if not actor:IsAlive() then goto skip end
-
-		local target = actor:GetNearTarget()
-		if not IsValid(target) then goto skip end
 
 		local data = actor:GetStateData()
 		data.anim = data.anim or 0
@@ -129,14 +116,5 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 		end
 
 		::skip::
-	end
-end)
-
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetFearTimer', function(attacker, target, dmginfo)
-	for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 1000)) do
-		if actor:HasState('fear') and bgNPC:IsTargetRay(actor:GetNPC(), attacker) then
-			local data = actor:GetStateData()
-			data.reset_fear = CurTime() + 30
-		end
 	end
 end)

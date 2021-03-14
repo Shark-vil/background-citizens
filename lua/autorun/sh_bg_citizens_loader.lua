@@ -152,6 +152,7 @@ using('actions/sv_self_damage.lua')
 using('actions/sh_player_spawn_sync_actors.lua')
 using('actions/sv_reaction_to_a_shot.lua')
 using('actions/sv_movement_service.lua')
+using('actions/sv_enemy_controller.lua')
 
 using('states/sv_impingement.lua')
 using('states/sv_protection.lua')

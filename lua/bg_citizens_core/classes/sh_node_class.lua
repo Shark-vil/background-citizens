@@ -3,7 +3,7 @@ BGN_NODE.Map = {}
 BGN_NODE.Chunks = {}
 
 local ChunkSizeMax = 32768
-local OneChunkSize = 1000
+local OneChunkSize = 500
 
 function BGN_NODE:Instance(position)
    local obj = {}
@@ -49,8 +49,9 @@ function BGN_NODE:Instance(position)
    end
 
    function obj:CheckDistanceLimitToNode(position)
-      local dist = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
-      return self.position:DistToSqr(position) <= dist
+      -- local dist = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
+      -- return self.position:DistToSqr(position) <= dist
+      return self.position:DistToSqr(position) <= 250000
    end
 
    function obj:CheckHeightLimitToNode(position)
