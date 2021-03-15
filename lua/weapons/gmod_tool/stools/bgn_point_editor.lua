@@ -541,7 +541,7 @@ if CLIENT then
 				end
 			end
 
-			if tooFar then
+			if tooFar and not tool.CreateSelectedNode then
 				render.DrawSphere(tracePos, 10, 20, 20, clr)
 				cam.Start3D2D(tracePos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos', 
