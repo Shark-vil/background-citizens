@@ -18,6 +18,10 @@ CreateConVar('bgn_tool_point_editor_autoparent', bgNPC.cvar.bgn_tool_point_edito
 { FCVAR_ARCHIVE }, 
 'Enable automatic creation of nodes links.')
 
+CreateConVar('bgn_tool_point_editor_autoalignment', bgNPC.cvar.bgn_tool_point_editor_autoalignment, 
+{ FCVAR_ARCHIVE }, 
+'Enable automatic height alignment.')
+
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 

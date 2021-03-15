@@ -10,6 +10,7 @@ bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
 -- bgNPC.cvar.bgn_ptp_distance_limit = 500
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
+bgNPC.cvar.bgn_tool_point_editor_autoalignment= 1
 bgNPC.cvar.bgn_point_z_limit = 100
 bgNPC.cvar.bgn_enable_wanted_mode = 1
 bgNPC.cvar.bgn_wanted_time = 30

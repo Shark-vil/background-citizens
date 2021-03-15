@@ -73,15 +73,15 @@ if CLIENT then
 		if type == 'creator' then
 			if tool.SelectedPointId == -1 then
 				tool:AddNode()
-				if tool.CreateSelectedNode then tool.CreateSelectedNode = nil end
 			else
 				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
 				if node then
-					if not tool.CreateSelectedNode then
+					if node == tool.CreateSelectedNode then
+						tool.CreateSelectedNode = nil
+					elseif not tool.CreateSelectedNode then
 						tool.CreateSelectedNode = node
 					else
 						tool:AddNode()
-						tool.CreateSelectedNode = nil
 					end
 				end
 			end
@@ -216,10 +216,12 @@ if CLIENT then
 		if not tr.Hit then return end
 
 		local isAutoCreated = false
+		local countPoints = 0
+		local endNode, previewNode, newNode
+
 		if self.CreateSelectedNode then
 			local startPos = self.CreateSelectedNode.position
 			local endPos = tr.HitPos + Vector(0, 0, 10)
-			local endNode
 
 			if self.SelectedPointId ~= -1 then
 				endNode = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
@@ -235,11 +237,11 @@ if CLIENT then
 					isAutoCreated = true
 				end
 			else
-				local previewNode = self.CreateSelectedNode
-				local count = #points
-				for i = 1, count do
+				previewNode = self.CreateSelectedNode
+				countPoints = #points
+				for i = 1, countPoints do
 
-					if i == count and endNode and previewNode then
+					if i == countPoints and endNode and previewNode then
 						endNode:AddParentNode(previewNode)
 					else
 						local pos = points[i]
@@ -260,9 +262,20 @@ if CLIENT then
 		end
 
 		if not isAutoCreated then
-			local node = BGN_NODE:Instance(tr.HitPos + Vector(0, 0, 10))
-			BGN_NODE:AddNodeToMap(node)
-			self:ConstructParent(node)
+			newNode = BGN_NODE:Instance(tr.HitPos + Vector(0, 0, 10))
+			BGN_NODE:AddNodeToMap(newNode)
+
+			if self.CreateSelectedNode then
+				newNode:AddParentNode(self.CreateSelectedNode)
+			end
+
+			self:ConstructParent(newNode)
+		end
+
+		if self.CreateSelectedNode and countPoints == 0 then
+			self.CreateSelectedNode = endNode or previewNode or newNode
+		else
+			self.CreateSelectedNode = endNode or previewNode
 		end
 
 		surface.PlaySound('common/wpn_select.wav')
@@ -286,15 +299,34 @@ if CLIENT then
 	end
 
 	function TOOL:AutoCreatePoints(startPos, endPos)
+		local autoalignment = GetConVar('bgn_tool_point_editor_autoalignment'):GetBool()
 		local points = {}
 		local dist = startPos:Distance(endPos)
 		local max = math.floor(dist / 250)
 		local limit = 1 / max
 		if max >= 1 then
+			local oldZ = startPos.z
 			for i = 1, max do
 				local fraction = limit * i
 				local output = LerpVector(fraction, startPos, endPos)
-				table.insert(points, output)
+
+				if autoalignment then
+					local tr = util.TraceLine({
+						start = Vector(output.x, output.y, oldZ) + Vector(0, 0, 100),
+						endpos = output - Vector(0, 0, 500),
+						filter = function(ent)
+							if ent:IsWorld() then
+								return true
+							end
+						end
+					})
+
+					if not tr.Hit then return {} end
+					oldZ = output.z
+					table.insert(points, tr.HitPos + Vector(0, 0, 10))
+				else
+					table.insert(points, output)
+				end
 			end
 		end
 		return points
@@ -366,6 +398,13 @@ if CLIENT then
 			Text = '#tool.bgn_point_editor.autoparent.desc'
 		})
 
+		Panel:AddControl('CheckBox', {
+			Label = '#tool.bgn_point_editor.autoalignment',
+			Command = 'bgn_tool_point_editor_autoalignment' 
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.autoalignment.desc'
+		})
+
 		Panel:AddControl("Button", {
 			["Label"] = "#tool.bgn_point_editor.pnl.reconstruct_parents",
 			["Command"] = "cl_tool_point_editor_reconstruct_parents",
@@ -413,6 +452,8 @@ if CLIENT then
 		-- ['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Description: You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.',
 		['tool.bgn_point_editor.autoparent'] = 'Auto parent',
 		['tool.bgn_point_editor.autoparent.desc'] = 'Description: enable automatic creation of links.',
+		['tool.bgn_point_editor.autoalignment'] = 'Auto-height',
+		['tool.bgn_point_editor.autoalignment.desc'] = 'Description: enable automatic height alignment.',
 		['tool.bgn_point_editor.pnl.z_limit'] = 'Height limit between points',
 		['tool.bgn_point_editor.pnl.z_limit.desc'] = 'Description: Height limit between points. Used to correctly define child points.',
 		['tool.bgn_point_editor.vis.good_place'] = 'Good place',
@@ -436,8 +477,10 @@ if CLIENT then
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Пересоздать связи точек',
 		-- ['tool.bgn_point_editor.pnl.ptp_dist'] = 'Ограничение расстояния между точками (работает только на картах с навигационной сеткой)',
 		-- ['tool.bgn_point_editor.pnl.ptp_dist.desc'] = 'Описание: вы можете изменить ограничение «от точки до точки» для инструмента, если на вашей карте есть навигационная сетка.',
-		['tool.bgn_point_editor.autoparent'] = 'Авто связка',
+		['tool.bgn_point_editor.autoparent'] = 'Авто-связка',
 		['tool.bgn_point_editor.autoparent.desc'] = 'Описание: включить автоматическое создание связей.',
+		['tool.bgn_point_editor.autoalignment'] = 'Авто-высота',
+		['tool.bgn_point_editor.autoalignment.desc'] = 'Описание: включить автоматическое выравнивание по высоте.',
 		['tool.bgn_point_editor.pnl.z_limit'] = 'Ограничение высоты между точками',
 		['tool.bgn_point_editor.pnl.z_limit.desc'] = 'Описание: Ограничение высоты между точками. Используется для правильного определения дочерних точек.',
 		['tool.bgn_point_editor.vis.good_place'] = 'Хорошая позиция',
@@ -584,14 +627,23 @@ if CLIENT then
 				end
 			end
 
-			render.DrawLine(startPos, endPos, clr_good)
-
-			local nodes = tool:AutoCreatePoints(startPos, endPos)
-			if #nodes == 0 and endNode then
+			local points = tool:AutoCreatePoints(startPos, endPos)
+			if #points == 0 and endNode then
+				render.DrawLine(startPos, endPos, clr_good)
 				render.DrawSphere(endNode.position, 10, 30, 30, clr_good)
 			else
-				for _, pos in ipairs(nodes) do
-					render.DrawSphere(pos, 10, 30, 30, clr_good)
+				do
+					local startPos = startPos
+					local endPos = endPos
+
+					for _, pos in ipairs(points) do
+						render.DrawLine(startPos, pos, clr_good)
+						render.DrawSphere(pos, 10, 30, 30, clr_good)
+
+						startPos = pos
+					end
+
+					render.DrawLine(startPos, endPos, clr_good)
 				end
 			end
 		end
