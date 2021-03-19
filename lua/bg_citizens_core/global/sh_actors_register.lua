@@ -51,18 +51,22 @@ else
 
 			local _center = desiredPosition or ply:GetPos()
 			local _radius = bgn_spawn_radius ^ 2
-			local _max_pass = 3
+			local _max_pass = 10
 			local _pass = 0
 			local function CoroutineGetAllPointsInRadius()
 				local radius_positions = {}
 			
 				for _, node in ipairs(BGN_NODE:GetMap()) do
-					if node.position:DistToSqr(_center) <= _radius then
-						table.insert(radius_positions, node)
-						_pass = _pass + 1
-						if _pass == _max_pass then
-							coroutine.yield()
-							_pass = 0
+					local walkNodes = node:GetLinks('walk')
+
+					for _, walkNode in ipairs(walkNodes) do
+						if walkNode.position:DistToSqr(_center) <= _radius then
+							table.insert(radius_positions, walkNode)
+							_pass = _pass + 1
+							if _pass == _max_pass then
+								coroutine.yield()
+								_pass = 0
+							end
 						end
 					end
 				end

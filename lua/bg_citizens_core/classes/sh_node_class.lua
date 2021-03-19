@@ -11,6 +11,7 @@ function BGN_NODE:Instance(position)
    obj.isNode = true
    obj.position = position
    obj.parents = {}
+   obj.links = {}
 
    function obj:AddParentNode(node)
       if self == node or table.HasValue(self.parents, node) then return end
@@ -20,13 +21,18 @@ function BGN_NODE:Instance(position)
 
    function obj:RemoveParentNode(node)
       if self == node then return end
+
       for i = 1, #self.parents do
          local parentNode = self.parents[i]
          if parentNode == node then
+            self:RemoveLink(parentNode)
             table.remove(self.parents, i)
-            parentNode:RemoveParentNode(self)
             break
          end
+      end
+
+      if node:HasParent(self) then
+         node:RemoveParentNode(self)
       end
    end
 
@@ -44,6 +50,63 @@ function BGN_NODE:Instance(position)
       return table.HasValue(self.parents, node)
    end
 
+   function obj:AddLink(node, linkType)
+      if self == node then return end
+      if not linkType then return end
+      
+      self.links[linkType] = self.links[linkType] or {}
+      if table.HasValue(self.links[linkType], node) then return end
+      -- print('Add link - ', node.index, ' to ', self.index)
+      table.insert(self.links[linkType], node)
+      if not node:HasLink(self) then node:AddLink(self, linkType) end
+   end
+
+   function obj:RemoveLink(node, linkType)
+      if self == node then return end
+
+      if not linkType then
+         do
+            for linkType, _ in pairs(self.links) do
+               self:RemoveLink(node, linkType)
+            end
+         end
+      else
+         for i = 1, #self.links[linkType] do
+            local parentNode = self.links[linkType][i]
+            if parentNode == node then
+               -- print('Remove link - ', node.index, ' from ', self.index)
+               table.remove(self.links[linkType], i)
+               break
+            end
+         end
+
+         if node:HasLink(self, linkType) then
+            node:RemoveLink(self, linkType)
+         end
+      end
+   end
+
+   function obj:ClearLinks(linkType)
+      if not self.links[linkType] then return end
+
+      for _, node in ipairs(BGN_NODE.Map) do
+         if node:HasLink(self, linkType) then
+            node:RemoveLink(self, linkType)
+         end
+      end
+
+      table.Empty(self.links[linkType])
+   end
+
+   function obj:HasLink(node, linkType)
+      if not self.links[linkType] then return false end
+      return table.HasValue(self.links[linkType], node)
+   end
+
+   function obj:GetLinks(linkType)
+      return self.links[linkType] or {}
+   end
+
    function obj:GetPos()
       return self.position
    end
@@ -58,21 +121,22 @@ function BGN_NODE:Instance(position)
       local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
       local nodePos = self.position
       local anotherPosition = position
+      return nodePos.z >= anotherPosition.z - z_limit and nodePos.z <= anotherPosition.z + z_limit
+   end
 
-      if nodePos.z >= anotherPosition.z - z_limit and nodePos.z <= anotherPosition.z + z_limit then
-         local tr = util.TraceLine({
-            start = nodePos + Vector(0, 0, 30),
-            endpos = anotherPosition,
-            filter = function(ent)
-               if ent:IsWorld() then
-                  return true
-               end
+   function obj:CheckTraceSuccessToNode(position)
+      local nodePos = self.position
+      local anotherPosition = position
+      local tr = util.TraceLine({
+         start = nodePos + Vector(0, 0, 10),
+         endpos = anotherPosition + Vector(0, 0, 10),
+         filter = function(ent)
+            if ent:IsWorld() then
+               return true
             end
-         })
-         return not tr.Hit
-      end
-
-      return false
+         end
+      })
+      return not tr.Hit
    end
 
    function obj:RemoveFromMap()
@@ -176,7 +240,7 @@ function BGN_NODE:GetMap()
    return self.Map
 end
 
-function BGN_NODE:MapToJson(map, prettyPrint)
+function BGN_NODE:MapToJson(map, prettyPrint, version)
    local JsonData = {}
    prettyPrint = prettyPrint or false
    map = map or self.Map
@@ -185,6 +249,7 @@ function BGN_NODE:MapToJson(map, prettyPrint)
       local JsonNode = {}
       JsonNode.position = node.position
       JsonNode.parents = {}
+      JsonNode.links = {}
 
       if #node.parents ~= 0 then
          for _, parentNode in ipairs(node.parents) do
@@ -194,11 +259,24 @@ function BGN_NODE:MapToJson(map, prettyPrint)
          end
       end
 
+      if table.Count(node.links) ~= 0 then
+         for linkType, links in pairs(node.links) do
+            if #links ~= 0 then
+               JsonNode.links[linkType] = JsonNode.links[linkType] or {}
+               for _, node in ipairs(links) do
+                  table.insert(JsonNode.links[linkType], node.index)
+               end
+            end
+         end
+      end
+
       JsonData[index] = JsonNode
    end
 
+   version = version or '1.1'
+
    return util.TableToJSON({
-      version = '1.0',
+      version = version,
       nodes = JsonData
    }, prettyPrint)
 end
@@ -217,11 +295,23 @@ function BGN_NODE:JsonToMap(json_string)
    end
 
    for index, nodeData in ipairs(mapData.nodes) do
-      if #nodeData.parents ~= 0 then
+      local node = map[index]
+
+      if node then
          for _, parentIndex in ipairs(nodeData.parents) do
-            local node = map[index]
             local parentNode = map[parentIndex]
-            node:AddParentNode(parentNode)
+            if parentNode then
+               node:AddParentNode(parentNode)
+            end
+         end
+
+         for linkType, links in pairs(nodeData.links) do
+            for _, parentIndex in ipairs(links) do
+               local parentNode = map[parentIndex]
+               if parentNode then
+                  node:AddLink(parentNode, linkType)
+               end
+            end
          end
       end
    end

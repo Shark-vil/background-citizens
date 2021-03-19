@@ -58,7 +58,7 @@ local function IsNotWorld(startPos, endPos)
    return not tr.Hit
 end
 
-function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
+function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
    local G = startPos:DistToSqr(endPos)
 
    if G <= 250000 then 
@@ -85,6 +85,9 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
    startNode.H = startNode.position:DistToSqr(endPos)
    startNode.F = G + startNode.H
    startNode:AddParentNode(closetNode)
+   if pathType and isstring(pathType) then
+      startNode:AddLink(closetNode, pathType)
+   end
    closetNode.pastNode = startNode
 
    table.insert(waitingNodes, startNode)
@@ -100,9 +103,17 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration)
          if not NodeIsChecked(checkedNodes, nextNode) then
             table.insert(checkedNodes, nextNode)
 
-            for _, node in ipairs(nextNode.parents) do
+            local nodes = {}
+            if pathType and isstring(pathType) then
+               nodes = nextNode:GetLinks(pathType)
+            else
+               nodes = nextNode.parents
+            end
+
+            for _, node in ipairs(nodes) do
                local parentNode = BGN_NODE:Instance(node.position)
                parentNode.parents = node.parents
+               parentNode.links = node.links
                parentNode.pastNode = nextNode
                parentNode.H = parentNode.position:DistToSqr(endPos)
                parentNode.F = G + parentNode.H

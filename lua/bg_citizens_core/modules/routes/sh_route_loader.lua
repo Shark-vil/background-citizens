@@ -47,7 +47,7 @@ if SERVER then
 		bgNPC.SendRoutesFromClient(ply)
 	end)
 
-	hook.Add("Initialize", "BGN_FirstInitializeRoutesOnMap", function()
+	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
 		hook.Run('BGN_PreLoadRoutes', game.GetMap())
 		bgNPC.LoadRoutes()
 	end)

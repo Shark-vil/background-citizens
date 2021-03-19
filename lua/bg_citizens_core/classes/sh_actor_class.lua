@@ -655,7 +655,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 	end
 
-	function obj:WalkToPos(pos, type)
+	function obj:WalkToPos(pos, type, pathType)
 		if pos == nil then 
 			self.walkPath = {}
 			self.walkPos = nil
@@ -669,7 +669,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self.npc
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 		
-		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos)
+		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
 		if #walkPath == 0 then return end
 
 		self:SetWalkType(type)

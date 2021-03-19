@@ -100,10 +100,10 @@ if CLIENT then
 					tool.LinkerNode = nil
 					surface.PlaySound('common/wpn_denyselect.wav')
 				else
-					if tool.LinkerNode:HasParent(node) then
-						tool.LinkerNode:RemoveParentNode(node)
+					if tool.LinkerNode:HasLink(node, 'walk') then
+						tool.LinkerNode:RemoveLink(node, 'walk')
 					elseif tool.LinkerNode.position:DistToSqr(node.position) <= 250000 then
-						tool.LinkerNode:AddParentNode(node)
+						tool.LinkerNode:AddLink(node, 'walk')
 					end
 
 					tool.LinkerNode = nil
@@ -112,7 +112,7 @@ if CLIENT then
 			end
 		elseif type == 'parents_cleaner' and tool.SelectedPointId ~= -1 then
 			local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-			node:ClearParents()
+			node:ClearLinks('walk')
 			surface.PlaySound('common/wpn_denyselect.wav')
 		end
 	end)
@@ -155,6 +155,8 @@ if CLIENT then
 		else
 			self.CurrentTypeId = id + 1
 		end
+
+		self.CreateSelectedNode = nil
 	end
 	
 	function TOOL:GetCurrentType()
@@ -233,7 +235,7 @@ if CLIENT then
 			local points = self:AutoCreatePoints(startPos, endPos)
 			if #points == 0 then
 				if endNode then
-					endNode:AddParentNode(self.CreateSelectedNode)
+					endNode:AddLink(self.CreateSelectedNode, 'walk')
 					isAutoCreated = true
 				end
 			else
@@ -242,14 +244,14 @@ if CLIENT then
 				for i = 1, countPoints do
 
 					if i == countPoints and endNode and previewNode then
-						endNode:AddParentNode(previewNode)
+						endNode:AddLink(previewNode, 'walk')
 					else
 						local pos = points[i]
 						local node = BGN_NODE:Instance(pos)
 						BGN_NODE:AddNodeToMap(node)
 
 						if previewNode then
-							node:AddParentNode(previewNode)
+							node:AddLink(previewNode, 'walk')
 						end
 
 						self:ConstructParent(node)
@@ -266,7 +268,7 @@ if CLIENT then
 			BGN_NODE:AddNodeToMap(newNode)
 
 			if self.CreateSelectedNode then
-				newNode:AddParentNode(self.CreateSelectedNode)
+				newNode:AddLink(self.CreateSelectedNode, 'walk')
 			end
 
 			self:ConstructParent(newNode)
@@ -339,15 +341,21 @@ if CLIENT then
 	end
 
 	function TOOL:ConstructParent(node)
-		if not GetConVar('bgn_tool_point_editor_autoparent'):GetBool() then return end
-
+		-- if not GetConVar('bgn_tool_point_editor_autoparent'):GetBool() then return end
+		
 		for _, anotherNode in ipairs(BGN_NODE:GetNodeMap()) do
-			local pos = anotherNode:GetPos()
-			
-			if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos) 
-				and node:CheckHeightLimitToNode(pos)
-			then
-				anotherNode:AddParentNode(node)
+			if anotherNode ~= node then
+				local pos = anotherNode:GetPos()
+				
+				if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos) 
+					and node:CheckHeightLimitToNode(pos) and node:CheckTraceSuccessToNode(pos)
+				then
+					anotherNode:AddParentNode(node)
+
+					if GetConVar('bgn_tool_point_editor_autoparent'):GetBool() then
+						anotherNode:AddLink(node, 'walk')
+					end
+				end
 			end
 		end
 	end
@@ -502,14 +510,16 @@ if CLIENT then
 
 	local clr = Color(255, 225, 0, 200)
 	local clr_green = Color(72, 232, 9, 200)
-	local clr_link = Color(0, 238, 255, 200)
-	local clr_link_alpha = Color(68, 123, 135, 50)
+	local clr_link = Color(255, 0, 0)
+	local clr_link_alpha = Color(255, 0, 0, 50)
 	local clr_point = Color(255, 23, 23, 200)
 	local vec_20 = Vector(0, 0, 20)
 	local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
 	local clr_good = Color(0, 255, 0, 200)
 	local clr_bad = Color(255, 0, 0, 200)
+	local clr_parent = Color(255, 255, 255, 200)
+	local clr_parent_alpha = Color(255, 255, 255, 50)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
 		local ply = LocalPlayer()
@@ -534,7 +544,9 @@ if CLIENT then
 				tooFar = false
 			else
 				for _, node in ipairs(BGN_NODE:GetNodeMap()) do
-					if node:CheckDistanceLimitToNode(tracePos) and node:CheckHeightLimitToNode(tracePos) then
+					if node:CheckDistanceLimitToNode(tracePos) and node:CheckHeightLimitToNode(tracePos) 
+						and node:CheckTraceSuccessToNode(tracePos)
+					then
 						tooFar = false
 						break
 					end
@@ -572,26 +584,37 @@ if CLIENT then
 
 				for _, parentNode in ipairs(node.parents) do
 					if not table.HasValue(IsDrawingParentsNode, parentNode) then
-						if value.behindTheWall then
-							render.DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
+						if node:HasLink(parentNode, 'walk') then
+							if value.behindTheWall then
+								render.DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
+							else
+								render.DrawLine(pos, parentNode:GetPos(), clr_link)
+							end
 						else
-							render.DrawLine(pos, parentNode:GetPos(), clr_link)
+							if value.behindTheWall then
+								render.DrawLine(pos, parentNode:GetPos(), clr_parent_alpha)
+							else
+								render.DrawLine(pos, parentNode:GetPos(), clr_parent)
+							end
 						end
 					end
 				end
 
-				render.DrawSphere(pos, 10, 30, 30, clr_point)
+				if value.index == tool.SelectedPointId and tool.CreateSelectedNode then
+					render.DrawSphere(node.position, 10, 20, 20, clr_green)
+				else
+					render.DrawSphere(pos, 10, 30, 30, clr_point)
+				end
 
 				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-					draw.SimpleTextOutlined(tostring(index), 
-						"TargetID", 0, 0, color_white, 
-						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-
-					-- draw.SimpleTextOutlined(node:GetChunkID(), 
-					-- 	"TargetID", 0, -35, color_white, 
-					-- 	TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-
 					if value.index == tool.SelectedPointId then
+						local linksCount = table.Count(node:GetLinks('walk'))
+						if linksCount ~= 0 then
+							draw.SimpleTextOutlined('Walk links - ' .. linksCount, 
+								"TargetID", 0, 0, color_white, 
+								TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
+						end
+
 						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected', 
 							"TargetID", 0, 25, color_white, 
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
@@ -627,18 +650,25 @@ if CLIENT then
 				end
 			end
 
+			render.DrawSphere(startPos, 10, 30, 30, clr_good)
+
 			local points = tool:AutoCreatePoints(startPos, endPos)
 			if #points == 0 and endNode then
 				render.DrawLine(startPos, endPos, clr_good)
-				render.DrawSphere(endNode.position, 10, 30, 30, clr_good)
+				-- render.DrawSphere(endNode.position, 10, 30, 30, clr_good)
 			else
 				do
 					local startPos = startPos
 					local endPos = endPos
+					local countPoints = #points
 
-					for _, pos in ipairs(points) do
+					for i = 1, countPoints do
+						local pos = points[i]
 						render.DrawLine(startPos, pos, clr_good)
-						render.DrawSphere(pos, 10, 30, 30, clr_good)
+
+						if i ~= countPoints then
+							render.DrawSphere(pos, 10, 30, 30, clr_good)
+						end
 
 						startPos = pos
 					end
