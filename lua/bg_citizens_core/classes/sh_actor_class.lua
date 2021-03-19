@@ -648,10 +648,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if target == nil or not IsValid(target) then
 			self.walkTarget = NULL
 		else
-			self.walkPos = nil
-			self.walkUpdatePathDelay = 0
 			self:SetWalkType(type)
-			self.walkTarget = target
+
+			if self.walkTarget ~= target then
+				self.walkUpdatePathDelay = 0
+				self.walkPos = nil
+				self.walkTarget = target
+			end
 		end
 	end
 
@@ -672,8 +675,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
 		if #walkPath == 0 then return end
 
-		self:SetWalkType(type)
 		self.walkTarget = NULL
+		self:SetWalkType(type)
 		self.walkPos = pos
 		self.walkPath = walkPath
 	end
@@ -1075,6 +1078,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:CallForHelp(enemy)
 		if not IsValid(enemy) then return end
+		if hook.Run('BGN_PreCallForHelp', self, enemy) then return end
+
 		self:FearScream()
 
 		local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
