@@ -520,6 +520,7 @@ if CLIENT then
 	local clr_bad = Color(255, 0, 0, 200)
 	local clr_parent = Color(255, 255, 255, 200)
 	local clr_parent_alpha = Color(255, 255, 255, 50)
+	local clr_future = Color(79, 224, 183, 200)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
 		local ply = LocalPlayer()
@@ -539,6 +540,7 @@ if CLIENT then
 		if tr.Hit and tool:GetCurrentType() == 'creator' then
 			local tracePos = tr.HitPos
 			local tooFar = true
+			local futurePoints = {}
 
 			if BGN_NODE:CountNodesOnMap() == 0 then
 				tooFar = false
@@ -548,7 +550,7 @@ if CLIENT then
 						and node:CheckTraceSuccessToNode(tracePos)
 					then
 						tooFar = false
-						break
+						table.insert(futurePoints, node)
 					end
 				end
 			end
@@ -568,6 +570,10 @@ if CLIENT then
 							"TargetID", 0, 0, color_white, 
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 					cam.End3D2D()
+
+					for _, futureNode in ipairs(futurePoints) do
+						render.DrawLine(tracePos, futureNode:GetPos(), clr_future)
+					end
 				end
 			end
 		end
@@ -664,10 +670,22 @@ if CLIENT then
 
 					for i = 1, countPoints do
 						local pos = points[i]
+						local futurePoints = {}
 						render.DrawLine(startPos, pos, clr_good)
 
 						if i ~= countPoints then
 							render.DrawSphere(pos, 10, 30, 30, clr_good)
+
+							if GetConVar('bgn_tool_point_editor_autoparent'):GetBool() then
+								for _, value in ipairs(tool.RangePoints) do
+									local node = value.node
+									if node:CheckDistanceLimitToNode(pos) and node:CheckHeightLimitToNode(pos) 
+										and node:CheckTraceSuccessToNode(pos)
+									then
+										render.DrawLine(pos, node:GetPos(), clr_future)
+									end
+								end
+							end
 						end
 
 						startPos = pos
