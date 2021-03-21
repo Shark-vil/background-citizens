@@ -209,13 +209,25 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return state
 	end
 
-	-- Checks if the actor is alive or not.
-	-- @return boolean is_alive return true if the actor is alive, otherwise false
-	function obj:IsAlive()
-		if IsValid(self.npc) and self.npc:Health() > 0 then
+	if SERVER then
+		-- Checks if the actor is alive or not.
+		-- @return boolean is_alive return true if the actor is alive, otherwise false
+		function obj:IsAlive()
+			local npc = self.npc
+			if not IsValid(npc) or npc:Health() <= 0 or npc:IsCurrentSchedule(SCHED_DIE) then
+				bgNPC:RemoveNPC(npc)
+				return false
+			end
 			return true
 		end
-		return false
+	else
+		-- Checks if the actor is alive or not.
+		--! The client has a simpler and less reliable check.
+		-- @return boolean is_alive return true if the actor is alive, otherwise false
+		function obj:IsAlive()
+			local npc = self.npc
+			return IsValid(npc) and npc:Health() > 0
+		end
 	end
 
 	-- Sets the reaction to the event.
@@ -685,12 +697,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.is_animated or #self.walkPath == 0 or not self:IsAlive() then return end
 		
 		local npc = self.npc
-		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-		if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
-
+		local hasNext = false
 		local targetPosition = self.walkPath[1]
 
-		if npc:GetPos():DistToSqr(targetPosition) <= 900 then
+		if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
 			table.remove(self.walkPath, 1)
 			
 			if #self.walkPath == 0 then
@@ -699,6 +709,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 				end
 				return
 			end
+
+			hasNext = true
+		end
+
+		if not hasNext then
+			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+			if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
 		end
 
 		npc:SetLastPosition(targetPosition)

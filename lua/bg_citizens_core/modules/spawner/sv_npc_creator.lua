@@ -94,6 +94,23 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 
 			if not success then goto skip end
 		end
+		
+		if npc_data.validator then
+			local result = npc_data.validator(npcType, npc_data)
+			if isbool(result) and not result then
+				goto skip
+			end
+		end
+
+		local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
+		if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
+			if spawn_delayer.time < CurTime() then
+				bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
+				bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
+			else
+				goto skip
+			end
+		end
 
 		bgNPC:SpawnActor(npcType, pos)
 

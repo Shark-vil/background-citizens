@@ -106,6 +106,9 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
             local nodes = {}
             if pathType and isstring(pathType) then
                nodes = nextNode:GetLinks(pathType)
+               -- if #nodes == 0 then
+               --    nodes = nextNode.parents
+               -- end
             else
                nodes = nextNode.parents
             end

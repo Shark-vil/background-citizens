@@ -53,6 +53,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	RunConsoleCommand('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo)
 	RunConsoleCommand('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support)
 	RunConsoleCommand('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues)
+	RunConsoleCommand('bgn_movement_checking_parts', bgNPC.cvar.bgn_movement_checking_parts)
 
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		RunConsoleCommand('bgn_npc_type_' .. npcType, 1)

@@ -5,6 +5,27 @@ function bgNPC:GetActor(npc)
 	return nil
 end
 
+function bgNPC:GetAllPoints(linkType)
+	if not linkType then
+		return BGN_NODE:GetMap()
+	else
+		local points = {}
+
+		for _, v in ipairs(BGN_NODE:GetMap()) do
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+			
+			table.insert(points, v)
+
+			::skip::
+		end
+
+		return points
+	end
+end
+
+
 function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
 	local radius = radius or 500

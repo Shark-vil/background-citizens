@@ -1,28 +1,6 @@
--- new walk state
-
-local asset = bgNPC:GetModule('movement_service')
-
 local function GetNextNode(actor)
    return table.Random(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
-   -- return table.Random(BGN_NODE:GetMap())
 end
-
-hook.Add('BGN_PreOpenDoor', 'BGN_ChangePathIfDoorMaxActors', function(actor)
-	if actor:GetState() ~= 'walk' then return end
-
-	local entities = ents.FindInSphere(actor:GetNPC():GetPos(), 200)
-   local max_entities = 2
-   local current_index = 0
-   for _, v in ipairs(entities) do
-      if v:IsNPC() or v:IsPlayer() then
-         current_index = current_index + 1
-         if current_index > max_entities then
-            actor:GetStateData().updatePoint = 0
-            return
-         end
-      end
-   end
-end)
 
 bgNPC:SetStateAction('walk', function(actor)
    if not bgNPC.PointsExist then return end
@@ -49,7 +27,7 @@ bgNPC:SetStateAction('walk', function(actor)
    if data.updatePoint < CurTime() then
       local node = GetNextNode(actor)
       actor:WalkToPos(node.position, data.schedule, 'walk')
-      data.updatePoint = CurTime() + math.random(10, 20)
+      data.updatePoint = CurTime() + math.random(15, 30)
    end
 end)
 
@@ -62,5 +40,5 @@ hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
    local data = actor:GetStateData()
    local node = GetNextNode(actor)
    actor:WalkToPos(node.position, data.schedule, 'walk')
-   data.updatePoint = CurTime() + math.random(10, 20)
+   data.updatePoint = CurTime() + math.random(15, 30)
 end)

@@ -27,6 +27,7 @@ bgNPC.cvar.bgn_disable_halo = 0
 bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
+bgNPC.cvar.bgn_movement_checking_parts = 5
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -139,6 +140,9 @@ FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to us
 
 slib:RegisterGlobalCvar('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues, 
 FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
+
+slib:RegisterGlobalCvar('bgn_movement_checking_parts', bgNPC.cvar.bgn_movement_checking_parts, 
+FCVAR_ARCHIVE, 'The number of NPCs whose movement can be checked at one time. The higher the number, the less frames you get, but NPCs will stop less often, waiting for the command to move to the next point. Recommended for weak PCs - 1, for medium - 5, for powerful - 10.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)
