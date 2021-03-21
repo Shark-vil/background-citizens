@@ -23,7 +23,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 
 	local target = table.Random(targets)
 	if IsValid(target) then
-		actor:AddTarget(target)
+		actor:AddEnemy(target)
 	else
 		actor:RandomState()
 	end
@@ -38,50 +38,30 @@ hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
 end)
 
 bgNPC:SetStateAction('impingement', function(actor)
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) then return end
 	
 	local npc = actor:GetNPC()
 	local data = actor:GetStateData()
 
 	data.delay = data.delay or 0
-	data.state_timeout = data.state_timeout or CurTime() + 20
 
-	if data.state_timeout < CurTime() then
-		actor:RemoveTarget(target)
-		data.state_timeout = CurTime() + 20
-	elseif npc:Disposition(target) ~= D_HT then
-		npc:AddEntityRelationship(target, D_HT, 99)
-	end
-
-	if target:IsPlayer() and target:InVehicle() then
-		target = target:GetVehicle()
-	end
-
-	if npc:GetTarget() ~= target then
-		npc:SetTarget(target)
+	if enemy:IsPlayer() and enemy:InVehicle() then
+		enemy = enemy:GetVehicle()
 	end
 
 	if data.delay < CurTime() then
 		bgNPC:SetActorWeapon(actor)
 
-		local current_distance = npc:GetPos():DistToSqr(target:GetPos())
+		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 
-		if current_distance <= 500 ^ 2 then
-			actor:WalkToPos(nil)
+		if current_distance <= 62500 then
+			actor:WalkToTarget()
 			npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
 		else
-			actor:WalkToPos(target:GetPos(), 'run')
+			actor:WalkToTarget(enemy, 'run')
 		end
 
 		data.delay = CurTime() + 3
 	end
-end)
-
-
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetImpingementTimer', function(attacker, target, dmginfo)
-	local actor = bgNPC:GetActor(attacker)
-	if actor == nil or not actor:HasState('impingement') then return end
-
-	actor:GetStateData().state_timeout = CurTime() + 20
 end)

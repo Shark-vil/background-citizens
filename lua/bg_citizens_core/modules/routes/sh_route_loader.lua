@@ -8,29 +8,31 @@ if SERVER then
 	bgNPC.LoadRoutes = function()
 		bgNPC.PointsExist = false
 
+		local jsonString = ''
+
 		if file.Exists('citizens_points/' .. game.GetMap() .. '.dat', 'DATA') then
 			local file_data = file.Read('citizens_points/' .. game.GetMap() .. '.dat', 'DATA')
-			local load_table = util.JSONToTable(util.Decompress(file_data))
-
-			bgNPC.points = load_table
+			jsonString = util.Decompress(file_data)
 		elseif file.Exists('citizens_points/' .. game.GetMap() .. '.json', 'DATA') then
-			bgNPC.points = util.JSONToTable(file.Read('citizens_points/' .. game.GetMap() .. '.json', 'DATA'))
-		else
-			bgNPC.points = {}
+			jsonString = file.Read('citizens_points/' .. game.GetMap() .. '.json', 'DATA')
 		end
 
-		local count = #bgNPC.points
+		if jsonString ~= '' then
+			BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
+		end
+
+		local count = BGN_NODE:CountNodesOnMap()
 		if count > 0 then
 			bgNPC.PointsExist = true
 		end
 
 		bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
 
-		return bgNPC.points
+		return BGN_NODE:GetMap()
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.InvokeBigData('bgn_load_routes', ply, bgNPC.points, nil, 
+		snet.InvokeBigData('bgn_load_routes', ply, BGN_NODE:MapToJson(), nil, 
 			'BgnLoadClientRoutes', 'Loading mesh from server')
 	end
 
@@ -45,7 +47,8 @@ if SERVER then
 		bgNPC.SendRoutesFromClient(ply)
 	end)
 
-	hook.Add("Initialize", "BGN_FirstInitializeRoutesOnMap", function()
+	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
+		hook.Run('BGN_PreLoadRoutes', game.GetMap())
 		bgNPC.LoadRoutes()
 	end)
 else
@@ -64,7 +67,8 @@ else
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
 	net.RegisterCallback('bgn_load_routes', function(ply, data_table)
-		local count = table.Count(data_table)
+		local newMap = BGN_NODE:JsonToMap(data_table)
+		local count = table.Count(newMap)
 
 		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
 		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then
@@ -75,8 +79,7 @@ else
 			end
 		end
 
-		bgNPC.points = data_table
-
-		hook.Run('BGN_LoadingClientRoutes', bgNPC.points)
+		BGN_NODE:SetMap(newMap)
+		hook.Run('BGN_LoadingClientRoutes', BGN_NODE:GetMap())
 	end, false, true)
 end

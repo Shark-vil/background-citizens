@@ -21,8 +21,8 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 				end
 			elseif ActorAttacker ~= nil and attacker:IsNPC() then
 				if ActorTarget:HasTeam(ActorAttacker) then
-					ActorTarget:RemoveTarget(attacker)
-					ActorAttacker:RemoveTarget(target)
+					ActorTarget:RemoveEnemy(attacker)
+					ActorAttacker:RemoveEnemy(target)
 					return true
 				end
 			end
@@ -41,7 +41,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 				ActorTarget:SetState(ActorTarget:GetLastReaction())
 			end
 
-			ActorTarget:AddTarget(attacker)
+			ActorTarget:AddEnemy(attacker, reaction)
 		end
 
 		hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo, reaction)
@@ -51,7 +51,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 				return true
 			end
 
-			if not ActorAttacker:HasTarget(target) then
+			if not ActorAttacker:HasEnemy(target) then
 				return
 			end
 		end

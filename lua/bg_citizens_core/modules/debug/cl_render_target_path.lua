@@ -3,6 +3,7 @@ local police_color_target = Color(0, 0, 255)
 local residents_color_target = Color(0, 255, 0)
 local state_text_color = Color(255, 255, 255)
 local text_border_color = Color(0, 0, 0)
+local target_color = Color(100, 255, 255)
 
 surface.CreateFont("BGN_Debug_UpperStateText", {
 	font = "Arial",
@@ -58,10 +59,17 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
             cam.End3D2D()
          end
 
-         local target = actor:GetNearTarget()
-         if IsValid(target) then
-            local color = GetColorByTeam(actor)
-            render.DrawLine(npc:EyePos(), GetCenterEntityPos(target), color)
+         for _, enemy in ipairs(actor.enemies) do
+            if IsValid(enemy) then
+               local color = GetColorByTeam(actor)
+               render.DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
+            end
+         end
+
+         for _, target in ipairs(actor.targets) do
+            if IsValid(target) then
+               render.DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
+            end
          end
       end
    end

@@ -94,6 +94,23 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 
 			if not success then goto skip end
 		end
+		
+		if npc_data.validator then
+			local result = npc_data.validator(npcType, npc_data)
+			if isbool(result) and not result then
+				goto skip
+			end
+		end
+
+		local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
+		if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
+			if spawn_delayer.time < CurTime() then
+				bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
+				bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
+			else
+				goto skip
+			end
+		end
 
 		bgNPC:SpawnActor(npcType, pos)
 
@@ -110,7 +127,7 @@ hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
 
 		for target, c_Wanted in pairs(asset:GetAllWanted()) do
 			if c_Wanted.level >= data.wanted_level then
-				actor:AddTarget(target)
+				actor:AddEnemy(target)
 				if actor:GetState() ~= 'defense' then
 					actor:SetState('defense')
 					bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')

@@ -117,8 +117,6 @@ bgNPC:SetStateAction('dv_vehicle_drive', function(actor)
                goto skip
             end
 
-            local pos = AnotherActor:GetDistantPointInRadius(data.vehicle_last_pos)
-
             data.beepDelay = data.beepDelay or 0
             data.beep = data.beep or false
 
@@ -128,14 +126,12 @@ bgNPC:SetStateAction('dv_vehicle_drive', function(actor)
                data.beep = true
             end
 
-            if pos ~= nil then
-               local data = AnotherActor:GetStateData()
-               data.delayVehicleRetreat = data.delayVehicleRetreat or 0
-               
-               if data.delayVehicleRetreat < CurTime() then
-                  AnotherActor:WalkToPos(pos, 'run')
-                  data.delayVehicleRetreat = CurTime() + 3
-               end
+            local data = AnotherActor:GetStateData()
+            data.delayVehicleRetreat = data.delayVehicleRetreat or 0
+            
+            if data.delayVehicleRetreat < CurTime() then
+               AnotherActor:WalkToPos(data.vehicle_last_pos, 'run')
+               data.delayVehicleRetreat = CurTime() + 3
             end
 
             ::skip::
@@ -177,7 +173,7 @@ bgNPC:SetStateAction('dv_vehicle_drive', function(actor)
 
          actor:WalkToPos(data.sitpos)
          
-         data.delay = CurTime() + 2
+         data.delay = CurTime() + 3
       end
    end
 end)

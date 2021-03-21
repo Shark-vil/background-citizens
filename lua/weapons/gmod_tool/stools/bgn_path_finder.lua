@@ -1,14 +1,11 @@
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_path_finder.name"
-
 TOOL.PanelIsInit = false
-TOOL.IsBGNPathFinder = true
 TOOL.Trace = nil
 TOOL.Distance = 10000
 TOOL.SelectedPointId = -1
 TOOL.CurrentTypeId = 1
 TOOL.PointToPointLimit = 500
-TOOL.Points = {}
 TOOL.Path = {}
 TOOL.StartPos = nil
 TOOL.EndPos = nil
@@ -26,12 +23,6 @@ if SERVER then
       snet.Invoke('bgn_tool_path_finder_reload_click', self:GetOwner())
    end
 else
-   local function GetTool()
-      local tool = LocalPlayer():GetTool()
-      if tool == nil or not tool.IsBGNPathFinder then return nil end
-      return tool
-   end
-
    function TOOL:GetTrace()
       local ply = self:GetOwner()
       local tr = util.TraceLine({
@@ -49,7 +40,6 @@ else
    function TOOL:ClearPoints()
       self.StartPos = nil
       self.EndPos = nil
-
       table.Empty(self.Path)
    end
 
@@ -74,8 +64,8 @@ else
    end
 
    snet.RegisterCallback('bgn_tool_path_finder_left_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
 
       local tr = tool:GetTrace()
       if not tr.Hit then return end
@@ -86,8 +76,8 @@ else
    end)
 
    snet.RegisterCallback('bgn_tool_path_finder_right_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
       if tool.StartPos == nil then return end
 
       local tr = tool:GetTrace()
@@ -95,7 +85,7 @@ else
 
       tool.EndPos = tr.HitPos
 
-      local foundPath = bgNPC:FindPath(tool.StartPos, tool.EndPos)
+      local foundPath = bgNPC:FindWalkPath(tool.StartPos, tool.EndPos)
       if foundPath and istable(foundPath) then
          tool.Path = foundPath
       end
@@ -104,23 +94,15 @@ else
    end)
 
    snet.RegisterCallback('bgn_tool_path_finder_reload_click', function()
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
 
       tool:ClearPoints()
-      
       surface.PlaySound('common/wpn_denyselect.wav')
    end)
-
-   hook.Add("BGN_LoadingClientRoutes", "BGN_TOOL_PathFinder", function(points)
-      local tool = GetTool()
-      if tool == nil then return end
-
-      tool.Points = points
-   end)
-
+   
    local clr_green = Color(72, 232, 9, 200)
-   local clr_58 = Color(58, 23, 255, 200)
+   local clr_232_59 = Color(232, 59, 255, 255)
    local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
    local vec_20 = Vector(0, 0, 20)
@@ -129,8 +111,8 @@ else
       local wep = LocalPlayer():GetActiveWeapon()
       if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 
-      local tool = GetTool()
-      if tool == nil then return end
+      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      if not tool then return end
       if #tool.Path == 0 then return end
 
       render.SetColorMaterial()
@@ -139,7 +121,7 @@ else
          local pos = tool.Path[i]
 
          if i ~= 1 then
-            render.DrawLine(pos, tool.Path[i - 1], clr_58)
+            render.DrawLine(pos, tool.Path[i - 1], clr_232_59)
          end
 
          render.DrawSphere(pos, 10, 30, 30, clr_green)

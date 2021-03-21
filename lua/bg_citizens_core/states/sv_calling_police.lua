@@ -1,8 +1,8 @@
 bgNPC:SetStateAction('calling_police', function(actor)
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) then return end
 
-	local TargetActor = bgNPC:GetActor(target)
+	local TargetActor = bgNPC:GetActor(enemy)
 	if TargetActor ~= nil and TargetActor:HasTeam('police') then
 		actor:SetState('fear')
 		return
@@ -16,12 +16,12 @@ bgNPC:SetStateAction('calling_police', function(actor)
 	end
 
 	-- 90000 = 300 ^ 2
-	if not bgNPC:IsTargetRay(npc, target) or npc:GetPos():DistToSqr(target:GetPos()) < 90000 then
+	if not bgNPC:IsTargetRay(npc, enemy) or npc:GetPos():DistToSqr(enemy:GetPos()) < 90000 then
 		local rnd = math.random(0, 100)
 		if rnd > 80 then
-			actor:CallForHelp(target)
-		elseif rnd > 70 then
-			actor:FearScream()
+			actor:CallForHelp(enemy)
+		-- elseif rnd > 70 then
+		-- 	actor:FearScream()
 		end
 
 		actor:SetState('fear')
@@ -37,14 +37,16 @@ bgNPC:SetStateAction('calling_police', function(actor)
 		if data.calling_time < CurTime() then
 			local asset = bgNPC:GetModule('wanted')
 
-			for _, enemy in pairs(actor.targets) do
-				if IsValid(enemy) then
-					if not hook.Run('BGN_PreCallingPolice', actor, enemy) then
-						if asset:HasWanted(enemy) then
-							local c_Wanted = asset:GetWanted(enemy)
-							c_Wanted:UpdateWanted(enemy)
-						else
-							asset:AddWanted(enemy)
+			do
+				for _, enemy in pairs(actor.enemies) do
+					if IsValid(enemy) then
+						if not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+							if asset:HasWanted(enemy) then
+								local c_Wanted = asset:GetWanted(enemy)
+								c_Wanted:UpdateWanted(enemy)
+							else
+								asset:AddWanted(enemy)
+							end
 						end
 					end
 				end

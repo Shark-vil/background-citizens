@@ -3,11 +3,11 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 	if state ~= 'defense' or not actor:IsAlive() then return end
 	if math.random(0, 10) > 1 then return end
 	
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) then return end
 
 	local npc = actor:GetNPC()
-	if target:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
+	if enemy:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
 	
 	npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
 end)
@@ -16,50 +16,34 @@ local WantedModule = bgNPC:GetModule('wanted')
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
 bgNPC:SetStateAction('defense', function(actor)
-	local target = actor:GetNearTarget()
-	if not IsValid(target) then return end
+	local enemy = actor:GetEnemy()
+	if not IsValid(enemy) then return end
 	
 	local npc = actor:GetNPC()
 	local data = actor:GetStateData()
 	
 	data.delay = data.delay or 0
-	data.state_timeout = data.state_timeout or CurTime() + 20
 
-	if bgNPC:IsTargetRay(npc, target) then
-		data.state_timeout = CurTime() + 20
-	end
-
-	if data.state_timeout < CurTime() then
-		actor:RemoveTarget(target)
-		data.state_timeout = CurTime() + 20
-	elseif npc:Disposition(target) ~= D_HT then
-		npc:AddEntityRelationship(target, D_HT, 99)
-	end
-
-	if target:IsPlayer() and target:InVehicle() then
-		target = target:GetVehicle()
-	end
-
-	if npc:GetTarget() ~= target then
-		npc:SetTarget(target)
+	if enemy:IsPlayer() and enemy:InVehicle() then
+		enemy = enemy:GetVehicle()
 	end
 
 	if data.delay < CurTime() then
-		local killingSumm = bgNPC:GetKillingStatisticSumm(target)
+		local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
 
 		data.notGun = data.notGun or true
 		data.notGunDelay = data.notGunDelay or CurTime() + 15
 
 		if data.notGun then
 			if data.notGunDelay < CurTime() or killingSumm > 0 
-				or (target:IsNPC() and IsValid(target:GetActiveWeapon()))
+				or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
 			then
 				data.notGun = false
 			end
 		end
 
-		if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(target) then
-			if target:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
+		if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
+			if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
 				bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
 			else
 				bgNPC:SetActorWeapon(actor)
@@ -68,11 +52,11 @@ bgNPC:SetStateAction('defense', function(actor)
 			bgNPC:SetActorWeapon(actor)
 		end
 
-		local current_distance = npc:GetPos():DistToSqr(target:GetPos())
-		if current_distance <= 500 ^ 2 then
+		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
+		if current_distance <= 62500 then
 
 			local notback = true
-			if killingSumm > 0 or (target:IsNPC() and IsValid(target:GetActiveWeapon())) then
+			if killingSumm > 0 or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon())) then
 				notback = false
 			end
 
@@ -83,22 +67,15 @@ bgNPC:SetStateAction('defense', function(actor)
 			end
 
 			if notback then
-				actor:WalkToPos(target:GetPos(), 'run')
+				actor:WalkToTarget(enemy, 'run')
 			else
-				actor:WalkToPos(nil)
+				actor:WalkToTarget()
 				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
 			end
 		else
-			actor:WalkToPos(target:GetPos(), 'run')
+			actor:WalkToTarget(enemy, 'run')
 		end
 
 		data.delay = CurTime() + 3
 	end
-end)
-
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_UpdateResetProtectionTimer', function(attacker, target, dmginfo)
-	local actor = bgNPC:GetActor(attacker)
-	if actor == nil or not actor:HasState('police') then return end
-
-	actor:GetStateData().state_timeout = CurTime() + 20
 end)

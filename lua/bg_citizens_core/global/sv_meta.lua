@@ -70,7 +70,7 @@ function bgNPC:IsEnemyTeam(target, team_name)
 					or npc:Disposition(target) == D_HT)
 				then
 					return true
-				elseif target:IsPlayer() and actor:HasTarget(target) then
+				elseif target:IsPlayer() and actor:HasEnemy(target) then
 					return true
 				end
 			end
@@ -93,7 +93,7 @@ function bgNPC:IsEnemyTeams(target, team_table)
 						or npc:Disposition(target) == D_HT)
 					then
 						return true
-					elseif target:IsPlayer() and actor:HasTarget(target) then
+					elseif target:IsPlayer() and actor:HasEnemy(target) then
 						return true
 					end
 				end

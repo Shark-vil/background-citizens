@@ -8,6 +8,16 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.optimization.bgn_disable_logic_radius.description'
 	})
+
+	Panel:AddControl("Slider", {
+		["Label"] = "#bgn.settings.optimization.bgn_movement_checking_parts",
+		["Command"] = "bgn_movement_checking_parts",
+		["Type"] = "Integer",
+		["Min"] = "1",
+		["Max"] = "30"
+	}); Panel:AddControl('Label', {
+		Text = '##bgn.settings.optimization.bgn_movement_checking_parts.description'
+	})
 end
 
 hook.Add("PopulateToolMenu", "BGN_TOOL_CreateMenu_OptimizationSettings", function()

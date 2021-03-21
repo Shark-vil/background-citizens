@@ -8,7 +8,9 @@ bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_radius_raytracing = 2000
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
-bgNPC.cvar.bgn_ptp_distance_limit = 500
+-- bgNPC.cvar.bgn_ptp_distance_limit = 500
+bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
+bgNPC.cvar.bgn_tool_point_editor_autoalignment= 1
 bgNPC.cvar.bgn_point_z_limit = 100
 bgNPC.cvar.bgn_enable_wanted_mode = 1
 bgNPC.cvar.bgn_wanted_time = 30
@@ -25,6 +27,7 @@ bgNPC.cvar.bgn_disable_halo = 0
 bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
+bgNPC.cvar.bgn_movement_checking_parts = 5
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
@@ -105,8 +108,8 @@ FCVAR_ARCHIVE, 'Prohibits spawning NPCs within a given radius. Must not be more 
 slib:RegisterGlobalCvar('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 
 FCVAR_ARCHIVE, 'The period between the spawn of the NPC. Changes require a server restart.')
 
-slib:RegisterGlobalCvar('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, 
-FCVAR_ARCHIVE, 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
+-- slib:RegisterGlobalCvar('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, 
+-- FCVAR_ARCHIVE, 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
 
 slib:RegisterGlobalCvar('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 
 FCVAR_ARCHIVE, 'Height limit between points. Used to correctly define child points.')
@@ -137,6 +140,9 @@ FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to us
 
 slib:RegisterGlobalCvar('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues, 
 FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
+
+slib:RegisterGlobalCvar('bgn_movement_checking_parts', bgNPC.cvar.bgn_movement_checking_parts, 
+FCVAR_ARCHIVE, 'The number of NPCs whose movement can be checked at one time. The higher the number, the less frames you get, but NPCs will stop less often, waiting for the command to move to the next point. Recommended for weak PCs - 1, for medium - 5, for powerful - 10.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, 1, FCVAR_ARCHIVE)

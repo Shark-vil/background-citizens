@@ -1,10 +1,11 @@
 local asset = bgNPC:GetModule('wanted')
 local TeamParentModule = bgNPC:GetModule('team_parent')
 
-hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker)
+hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker, target)
 	if asset:HasWanted(attacker) then
-		local c_Wanted = asset:GetWanted(attacker)
-		c_Wanted:UpdateWanted()
+		asset:GetWanted(attacker):UpdateWanted()
+	elseif asset:HasWanted(target) then
+		asset:GetWanted(target):UpdateWanted()
 	end
 end)
 
@@ -25,7 +26,7 @@ end)
 hook.Add("BGN_AddWantedTarget", "BGN_AddWantedTargetFromResidents", function(target)
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
-			actor:AddTarget(target)
+			actor:AddEnemy(target)
 
 			if actor:HasState('idle') or actor:HasState('walk') then
 				actor:SetState(actor:GetReactionForProtect())
@@ -37,7 +38,7 @@ end)
 hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", function(target)
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
-			actor:RemoveTarget(target)
+			actor:RemoveEnemy(target)
 		end
 	end
 
@@ -52,7 +53,7 @@ hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
 
 	if actor:HasTeam('residents') then
 		for enemy, c_Wanted in pairs(wanted_list) do
-			actor:AddTarget(enemy)
+			actor:AddEnemy(enemy)
 			if actor:HasTeam('police') then
 				actor:SetState('defense')
 			elseif actor:HasTeam('residents') then
@@ -87,7 +88,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 			c_Wanted:UpdateWaitTime(math.Round(wait_time))
 			
 			for _, actor in ipairs(witnesses) do
-				if actor:IsAlive() and not actor:HasTarget(enemy) then
+				if actor:IsAlive() and not actor:HasEnemy(enemy) then
 					local npc = actor:GetNPC()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
@@ -95,12 +96,12 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 						c_Wanted:UpdateWanted()
 						
 						actor:SetState(actor:GetReactionForProtect())
-						actor:AddTarget(enemy)
+						actor:AddEnemy(enemy)
 					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
 						c_Wanted:UpdateWanted()
 						
 						actor:SetState(actor:GetReactionForProtect())
-						actor:AddTarget(enemy)
+						actor:AddEnemy(enemy)
 					end
 				end
 			end

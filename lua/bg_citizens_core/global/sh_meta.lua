@@ -58,3 +58,15 @@ function bgNPC:IsTargetRay(watcher, ent)
 
 	return true
 end
+
+function bgNPC:GetActivePlayerTool(tool_name, ply)
+	local ply = ply
+	if not ply then
+		if SERVER then return end
+		ply = LocalPlayer()
+	end
+
+	local tool = ply:GetTool()
+	if not tool or not tool.GetMode or tool:GetMode() ~= tool_name then return end
+	return tool
+end

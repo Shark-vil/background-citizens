@@ -1,17 +1,21 @@
 local ASSET = {}
 local arrest_players = {}
 
-function ASSET:AddPlayer(ply)
-	if IsValid(ply) and ply:IsPlayer() and arrest_players[ply] == nil then
-		local c_Arrest = {
-			delayIgnore = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
-			notify_delay = 0,
-			not_arrest = false,
+function ASSET:AddPlayer(ply, policeActor)
+	if IsValid(ply) and ply:IsPlayer() and policeActor and arrest_players[ply] == nil then
+		local ArrestComponent = {
+			warningTime = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
+			notify_order_time = 0,
+			notify_arrest_time = 0,
+			arrest_time = 0,
+			detention = false,
+			arrested = true,
 			damege_count = 1,
 			is_look_police = false,
+			policeActor = policeActor
 		}
 		
-		arrest_players[ply] = c_Arrest
+		arrest_players[ply] = ArrestComponent
 		return true
 	end
 	return false
@@ -19,6 +23,12 @@ end
 
 function ASSET:RemovePlayer(ply)
 	if arrest_players[ply] == nil then return end
+	
+	local ArrestComponent = self:GetPlayer(ply)
+	if ArrestComponent.policeActor then
+		ArrestComponent.policeActor:RemoveTarget(ply)
+	end
+	
 	arrest_players[ply] = nil
 end
 
@@ -39,6 +49,20 @@ end
 
 function ASSET:GetAllPlayers()
 	return arrest_players
+end
+
+function ASSET:NotSubjectToArrest(ply)
+	local ArrestComponent = self:GetPlayer(ply)
+	if ArrestComponent then
+		ArrestComponent.arrested = false
+		
+		local actor = ArrestComponent.policeActor
+		if actor then
+			actor:RemoveAllTargets()
+			actor:AddEnemy(ply)
+			actor:SetState('defense')
+		end
+	end
 end
 
 hook.Add("PlayerDeath", "BGN_ArrestModule_ClearDataOnPlayerDeath", function(victim, inflictor, attacker)

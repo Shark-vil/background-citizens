@@ -8,6 +8,8 @@ local function CalculatePath(node, endPos)
       currentNode = currentNode.pastNode
    end
 
+   table.insert(foundPath, currentNode.position)
+   
    foundPath = table.Reverse(foundPath)
 
    return foundPath
@@ -42,50 +44,58 @@ local function NodeIsChecked(checkedNodes, node)
    return false
 end
 
-function bgNPC:FindPath(startPos, endPos, limitIteration)
+local function IsNotWorld(startPos, endPos)
+   local tr = util.TraceLine({
+      start = startPos,
+      endpos = endPos,
+      filter = function(ent)
+         if not ent:IsNPC() and ent:IsWorld() then
+            return true
+         end
+      end
+   })
+
+   return not tr.Hit
+end
+
+function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
    local G = startPos:DistToSqr(endPos)
 
-   startPos = startPos + Vector(0, 0, 20)
-   endPos = endPos + Vector(0, 0, 20)
-
-   if G <= 250000 then
-      return { startPos, endPos }
+   if G <= 250000 then 
+      if IsNotWorld(startPos, endPos) then
+         return { startPos, endPos }
+      end
    end
-
-   if #bgNPC.points == 0 then return {} end
-
-   limitIteration = limitIteration or 500
-
+   
+   if BGN_NODE:CountNodesOnMap() == 0 then return {} end
+   
+   limitIteration = limitIteration or 300
+   
    local currentIteration = 0
    local checkedNodes = {}
    local waitingNodes = {}
 
-   local parents = {}
-   for _, index in ipairs(self:GetAllIndexPointsInRadius(startPos, 500)) do
-      table.insert(parents, index)
+   local closetNode = bgNPC:GetClosestPointToPointInChunk(startPos, endPos)
+   if not closetNode or not IsNotWorld(startPos, closetNode.position) then
+      closetNode = bgNPC:GetClosestPointInRadius(startPos, 500)
+      if not closetNode then return {} end
    end
 
-   if #parents == 0 then return {} end
-
-   local startNode = BGN_NODE:Instance(startPos, parents)
-   startNode.H = math.abs(startNode.position:DistToSqr(endPos))
+   local startNode = BGN_NODE:Instance(startPos)
+   startNode.H = startNode.position:DistToSqr(endPos)
    startNode.F = G + startNode.H
+   startNode:AddParentNode(closetNode)
+   if pathType and isstring(pathType) then
+      startNode:AddLink(closetNode, pathType)
+   end
+   closetNode.pastNode = startNode
+
    table.insert(waitingNodes, startNode)
 
    while (#waitingNodes > 0) do
       local nextNode, nodeIndex = GetNearNodeFromPos(waitingNodes)
 
-      local tr = util.TraceLine({
-         start = nextNode.position,
-         endpos = endPos,
-         filter = function(ent)
-            if ent:IsWorld() then
-               return true
-            end
-         end
-      })
-
-      if not tr.Hit and nextNode.position:DistToSqr(endPos) <= 250000 then
+      if nextNode.position:DistToSqr(endPos) <= 250000 and IsNotWorld(nextNode.position, endPos) then
          return CalculatePath(nextNode, endPos)
       else
          table.remove(waitingNodes, nodeIndex)
@@ -93,27 +103,32 @@ function bgNPC:FindPath(startPos, endPos, limitIteration)
          if not NodeIsChecked(checkedNodes, nextNode) then
             table.insert(checkedNodes, nextNode)
 
-            for _, index in ipairs(nextNode.parents) do
-               local parentPoint = bgNPC.points[index]
-               local parentNode = BGN_NODE:Instance(parentPoint.pos, parentPoint.parents)
+            local nodes = {}
+            if pathType and isstring(pathType) then
+               nodes = nextNode:GetLinks(pathType)
+               -- if #nodes == 0 then
+               --    nodes = nextNode.parents
+               -- end
+            else
+               nodes = nextNode.parents
+            end
+
+            for _, node in ipairs(nodes) do
+               local parentNode = BGN_NODE:Instance(node.position)
+               parentNode.parents = node.parents
+               parentNode.links = node.links
                parentNode.pastNode = nextNode
-               parentNode.H = math.abs(parentNode.position:DistToSqr(endPos))
+               parentNode.H = parentNode.position:DistToSqr(endPos)
                parentNode.F = G + parentNode.H
                table.insert(waitingNodes, parentNode)
-            end
-         else
-            for i = 1, #checkedNodes do
-               local node = checkedNodes[i]
-               if node.position == nextNode.position and node.F > nextNode.F then
-                  checkedNodes[i] = node
-                  break
-               end
             end
          end
       end
 
       currentIteration = currentIteration + 1
-      if currentIteration > limitIteration then return {} end
+      if currentIteration > limitIteration then
+         return {}
+      end
    end
 
    return {}

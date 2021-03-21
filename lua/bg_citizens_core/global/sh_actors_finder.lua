@@ -5,47 +5,240 @@ function bgNPC:GetActor(npc)
 	return nil
 end
 
-function bgNPC:GetAllPointsInRadius(center, radius)
+function bgNPC:GetAllPoints(linkType)
+	if not linkType then
+		return BGN_NODE:GetMap()
+	else
+		local points = {}
+
+		for _, v in ipairs(BGN_NODE:GetMap()) do
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+			
+			table.insert(points, v)
+
+			::skip::
+		end
+
+		return points
+	end
+end
+
+
+function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
+	local radius = radius or 500
 	radius = radius ^ 2
 
-	for _, v in ipairs(bgNPC.points) do
-		if v.pos:DistToSqr(center) <= radius then
+	for _, v in ipairs(BGN_NODE:GetMap()) do
+		if v.position:DistToSqr(center) <= radius then
+			if linkType then
+				if not v.links[linkType] or #v.links[linkType] == 0 then
+					goto skip
+				end
+			end
+			
 			table.insert(radius_positions, v)
 		end
+
+		::skip::
 	end
 
 	return radius_positions
 end
 
-function bgNPC:GetAllIndexPointsInRadius(center, radius)
+function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
+	local radius = radius or 500
 	radius = radius ^ 2
 
-	for index, v in ipairs(bgNPC.points) do
-		if v.pos:DistToSqr(center) <= radius then
+	for index, v in ipairs(BGN_NODE:GetMap()) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+		
+		if v.position:DistToSqr(center) <= radius then
 			table.insert(radius_positions, index)
 		end
+
+		::skip::
 	end
 
 	return radius_positions
 end
 
-function bgNPC:GetNearPointInRadius(center, radius)
+function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 	local point = nil
 	local dist = nil
+	local radius = radius or 500
 
 	for _, v in ipairs(self:GetAllPointsInRadius(center, radius)) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
 		if point == nil then
 			point = v
-			dist = center:DistToSqr(v.pos)
+			dist = center:DistToSqr(v.position)
       else
-         local checkDist = center:DistToSqr(v.pos)
+         local checkDist = center:DistToSqr(v.position)
          if checkDist < dist then
             point = v
             dist = checkDist
          end
       end
+
+		::skip::
+	end
+
+	return point
+end
+
+function bgNPC:GetDistantPointInRadius(center, radius, linkType)
+	local point = nil
+	local dist = nil
+	local radius = radius or 500
+
+	for _, v in ipairs(self:GetAllPointsInRadius(center, radius)) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
+		if point == nil then
+			point = v
+			dist = center:DistToSqr(v.position)
+      else
+         local checkDist = center:DistToSqr(v.position)
+         if checkDist > dist then
+            point = v
+            dist = checkDist
+         end
+      end
+
+		::skip::
+	end
+
+	return point
+end
+
+function bgNPC:GetClosestPointInChunk(center, linkType)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
+		if point == nil then
+			point = v
+			dist = center:DistToSqr(v.position)
+      else
+         local checkDist = center:DistToSqr(v.position)
+         if checkDist < dist then
+            point = v
+            dist = checkDist
+         end
+      end
+
+		::skip::
+	end
+
+	return point
+end
+
+function bgNPC:GetDistantPointInChunk(center, linkType)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
+		if point == nil then
+			point = v
+			dist = center:DistToSqr(v.position)
+      else
+         local checkDist = center:DistToSqr(v.position)
+         if checkDist > dist then
+            point = v
+            dist = checkDist
+         end
+      end
+
+		::skip::
+	end
+
+	return point
+end
+
+function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
+		if point == nil then
+			point = v
+			dist = pos:DistToSqr(v.position)
+      else
+         local checkDist = pos:DistToSqr(v.position)
+         if checkDist < dist then
+            point = v
+            dist = checkDist
+         end
+      end
+
+		::skip::
+	end
+
+	return point
+end
+
+function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
+	local point = nil
+	local dist = nil
+	local nodes = BGN_NODE:GetChunkNodes(center)
+
+	for _, v in ipairs(nodes) do
+		if linkType then
+			if not v.links[linkType] or #v.links[linkType] == 0 then
+				goto skip
+			end
+		end
+
+		if point == nil then
+			point = v
+			dist = pos:DistToSqr(v.position)
+      else
+         local checkDist = pos:DistToSqr(v.position)
+         if checkDist > dist then
+            point = v
+            dist = checkDist
+         end
+      end
+
+		::skip::
 	end
 
 	return point
