@@ -52,8 +52,15 @@ if SERVER then
 		bgNPC.LoadRoutes()
 	end)
 else
+	hook.Add('Slib_StartBigdataSending', 'BGN_LoadingNodesFromServer', function(ply, name)
+		if name ~= 'bgn_load_routes' then return end
+		notification.Kill('BGN_LoadingNodesFromServer')
+	end)
+
 	concommand.Add('cl_citizens_load_route', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+
+		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
 
 		net.Start('bgNPCLoadRoute')
 		net.SendToServer()
@@ -61,6 +68,8 @@ else
 
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+
+		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
 
 		net.Start('bgNPCLoadExistsRoutesFromClient')
 		net.SendToServer()

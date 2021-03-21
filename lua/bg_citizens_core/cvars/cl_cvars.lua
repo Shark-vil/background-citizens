@@ -22,6 +22,10 @@ CreateConVar('bgn_tool_point_editor_autoalignment', bgNPC.cvar.bgn_tool_point_ed
 { FCVAR_ARCHIVE }, 
 'Enable automatic height alignment.')
 
+CreateConVar('bgn_tool_point_editor_show_parents', bgNPC.cvar.bgn_tool_point_editor_show_parents, 
+{ FCVAR_ARCHIVE }, 
+'Show global connections.')
+
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 

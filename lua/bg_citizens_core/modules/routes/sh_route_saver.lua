@@ -111,7 +111,7 @@ else
 			ButtonYes:SetText("Save")
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
-			ButtonYes.DoClick = function()
+			ButtonYes.DoClick = function()				
 				snet.InvokeBigData('bgn_save_routes', nil, { 
 					from_json = from_json, 
 					data = jsonNodes

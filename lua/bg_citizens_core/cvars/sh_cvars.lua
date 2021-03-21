@@ -28,6 +28,7 @@ bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_movement_checking_parts = 5
+bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
