@@ -84,6 +84,8 @@ local function VersionMigration()
       file.Write('citizens_points/' .. game.GetMap() .. '.dat', compressed_data)
 
       MsgN('[Background NPCs] Migrated movement map to version - 1.1')
+
+      VersionMigration()
    elseif oldNodeMap.version == '1.1' then
       if jsonString then
          local nodesMap = BGN_NODE:JsonToMap(jsonString)
