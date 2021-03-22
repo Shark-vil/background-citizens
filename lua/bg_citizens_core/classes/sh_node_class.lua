@@ -273,7 +273,7 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
       JsonData[index] = JsonNode
    end
 
-   version = version or '1.1'
+   version = version or '1.2'
 
    return util.TableToJSON({
       version = version,

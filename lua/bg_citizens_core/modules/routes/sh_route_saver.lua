@@ -8,8 +8,8 @@ if SERVER then
 		if not net.ReadBool() then return end
 
 		local map_name = net.ReadString()
-		local json_file = 'citizens_points/' .. map_name .. '.json'
-		local dat_file = 'citizens_points/' .. map_name .. '.dat'
+		local json_file = 'background_npcs/nodes/' .. map_name .. '.json'
+		local dat_file = 'background_npcs/nodes/' .. map_name .. '.dat'
 
 		if file.Exists(json_file, 'DATA') then
 			file.Delete(json_file)
@@ -26,9 +26,9 @@ if SERVER then
 
 	snet.RegisterCallback('bgn_save_routes', function(ply, bigdata)
 		if bigdata.from_json then
-			file.Write('citizens_points/' .. game.GetMap() .. '.json', bigdata.data)
+			file.Write('background_npcs/nodes/' .. game.GetMap() .. '.json', bigdata.data)
 		else
-			file.Write('citizens_points/' .. game.GetMap() .. '.dat', util.Compress(bigdata.data))
+			file.Write('background_npcs/nodes/' .. game.GetMap() .. '.dat', util.Compress(bigdata.data))
 		end
 
 		bgNPC.LoadRoutes()

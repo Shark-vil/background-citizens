@@ -3,8 +3,9 @@
 	https://background-npcs.itpony.ru/wik
 --]]
 
-file.CreateDir('citizens_points')
-file.CreateDir('citizens_points_compile')
+file.CreateDir('background_npcs')
+file.CreateDir('background_npcs/nodes')
+file.CreateDir('background_npcs/compile')
 
 if SERVER then
 	resource.AddWorkshop(2341497926)

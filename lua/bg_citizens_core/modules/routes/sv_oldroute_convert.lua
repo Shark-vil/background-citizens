@@ -16,7 +16,7 @@ local function VersionMigration()
    if not jsonString then return end
 
    local oldNodeMap = util.JSONToTable(jsonString)
-   if not oldNodeMap.version then
+   if oldNodeMap and not oldNodeMap.version then
       local newNodeMap = {}
 
       for index, v in ipairs(oldNodeMap) do
@@ -84,6 +84,15 @@ local function VersionMigration()
       file.Write('citizens_points/' .. game.GetMap() .. '.dat', compressed_data)
 
       MsgN('[Background NPCs] Migrated movement map to version - 1.1')
+   elseif oldNodeMap.version == '1.1' then
+      if jsonString then
+         local nodesMap = BGN_NODE:JsonToMap(jsonString)
+         nodesMap.version = '1.2'
+         file.Write('background_npcs/nodes/' .. game.GetMap() .. '.dat', 
+            util.Compress(BGN_NODE:MapToJson(nodesMap)))
+      end
+
+      MsgN('[Background NPCs] Migrated movement map to version - 1.2')
    end
 end
 
