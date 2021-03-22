@@ -87,7 +87,7 @@ local function VersionMigration()
 
       VersionMigration()
    elseif oldNodeMap.version == '1.1' then
-      if jsonString then
+      if jsonString and not file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA') then
          local nodesMap = BGN_NODE:JsonToMap(jsonString)
          nodesMap.version = '1.2'
          file.Write('background_npcs/nodes/' .. game.GetMap() .. '.dat', 
