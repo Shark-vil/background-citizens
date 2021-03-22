@@ -335,11 +335,7 @@ bgNPC.cfg.npcs_template = {
 			'npc_zombie',
 			'npc_zombie_torso',
 			'npc_fastzombie',
-			'npc_headcrab_fast',
-			'npc_headcrab',
-			'npc_headcrab_black',
 			'npc_poisonzombie',
-			'npc_antlion'
 		},
 		name = 'Zombie',
 		zombieMode = true,
@@ -358,3 +354,14 @@ bgNPC.cfg.npcs_template = {
 		at_protect = { ['defense'] = 100 },
 	},
 }
+
+hook.Add('BGN_OverrideSpawnData', 'BGM_ReplaceZombieClassToBioAnnihilationTwo', function(npcType, npcData)
+	if npcType ~= 'zombie' then return end
+	if not BA2_CustomInfs then return end
+	return npcData, table.Random({
+		'nb_ba2_infected_custom',
+		'nb_ba2_infected_citizen',
+		'nb_ba2_infected_combine',
+		'nb_ba2_infected_rebel',
+	})
+end)

@@ -5,8 +5,8 @@ timer.Create('BGN_Timer_NPCLookAtObject', 0.5, 0, function()
 			local npc = actor:GetNPC()
 		
 			local tr = util.TraceLine({
-				start = npc:GetShootPos(),
-				endpos = npc:GetShootPos() + npc:EyeAngles():Forward() * 1000,
+				start = npc:EyePos(),
+				endpos = npc:EyePos() + npc:EyeAngles():Forward() * 1000,
 				filter = function(ent) 
 					if ent ~= npc then return true end
 				end

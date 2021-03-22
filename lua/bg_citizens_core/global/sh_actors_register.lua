@@ -139,6 +139,12 @@ if SERVER then
 				return
 			end
 
+			local newNpcData, newNpcClass = hook.Run('BGN_OverrideSpawnData', 
+				npcType, npcData, npc_class)
+
+			if newNpcData then npcData = newNpcData end
+			if newNpcClass then npc_class = newNpcClass end
+
 			local npc = ents.Create(npc_class)
 			npc:SetPos(nodePosition)
 			
@@ -257,7 +263,7 @@ function bgNPC:RemoveNPC(npc)
 end
 
 local function NpcIsValid(npc)
-	if not IsValid(npc) or npc:Health() <= 0 or npc:IsCurrentSchedule(SCHED_DIE) then
+	if not IsValid(npc) or npc:Health() <= 0 or (npc:IsNPC() and npc:IsCurrentSchedule(SCHED_DIE)) then
 		return false
 	end
 	return true

@@ -3,12 +3,10 @@ hook.Add("BGN_InitActor", "BGN_ZombieModeSetEnemyFromActor", function(actor)
       if not actor or not actor:IsAlive() then return end
       if not actor:GetData().zombieMode then return end
 
-      for _, zombie in ipairs(bgNPC:GetAll()) do
-         if zombie ~= actor and not actor:HasTeam(zombie) then
-            actor:AddEnemy(zombie:GetNPC())
-            if zombie:GetData().zombieMode then
-               zombie:AddEnemy(actor:GetNPC())
-            end
+      for _, anotherActor in ipairs(bgNPC:GetAll()) do
+         if anotherActor ~= actor and not actor:HasTeam(anotherActor) then
+            actor:AddEnemy(anotherActor:GetNPC())
+            anotherActor:AddEnemy(actor:GetNPC())
          end
       end
    

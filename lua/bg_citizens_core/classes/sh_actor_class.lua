@@ -214,7 +214,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		-- @return boolean is_alive return true if the actor is alive, otherwise false
 		function obj:IsAlive()
 			local npc = self.npc
-			if not IsValid(npc) or npc:Health() <= 0 or npc:IsCurrentSchedule(SCHED_DIE) then
+			if not IsValid(npc) or npc:Health() <= 0 or (npc:IsNPC() and npc:IsCurrentSchedule(SCHED_DIE)) then
 				bgNPC:RemoveNPC(npc)
 				return false
 			end
@@ -280,6 +280,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- Clears NPC schedule data and synchronizes changes for clients.
 	function obj:ClearSchedule()
 		if not IsValid(self.npc) then return end
+		if not self.npc:IsNPC() then return end
 
 		-- self.walkPos = nil
 		-- self.walkPath = {}
@@ -404,8 +405,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:AddEnemy(ent, reaction)
+		if not self:GetNPC():IsNPC() then return end
 		if not IsValid(ent) or not isentity(ent) then return end
-		if not ent:IsNPC() and not ent:IsPlayer() then return end
+		if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 		
 		local npc = self:GetNPC()
 

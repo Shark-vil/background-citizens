@@ -2,10 +2,11 @@
 hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
+	if not npc:IsNPC() then return end
 
 	for _, AnotherActor in ipairs(bgNPC:GetAll()) do
 		local another_npc = AnotherActor:GetNPC()
-		if IsValid(another_npc) then
+		if IsValid(another_npc) and another_npc:IsNPC() then
 			AnotherActor:RemoveTarget(npc)
 			actor:RemoveTarget(another_npc)
 
