@@ -623,6 +623,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
+		if self.old_state.state ~= state then
+			self:StopWalk()
+		end
+
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
 
@@ -656,9 +660,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		self.walkType = schedule
 	end
 
+	function obj:StopWalk()
+		self.walkTarget = NULL
+		self.walkPath = {}
+		self.walkPos = nil
+		self.walkUpdatePathDelay = 0
+		self:SetWalkType()
+	end
+
 	function obj:WalkToTarget(target, type)
 		if target == nil or not IsValid(target) then
-			self.walkTarget = NULL
+			self:StopWalk()
 		else
 			self:SetWalkType(type)
 
@@ -672,10 +684,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:WalkToPos(pos, type, pathType)
 		if pos == nil then 
-			self.walkPath = {}
-			self.walkPos = nil
-			self.walkUpdatePathDelay = 0
-			self:SetWalkType()
+			self:StopWalk()
 			return
 		end
 

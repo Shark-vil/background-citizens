@@ -6,61 +6,87 @@ hook.Add('BGN_PreCallForHelp', 'BGN_PlayerArrest', function(actor, enemy)
    return ArrestModule:GetPlayer(enemy).arrested
 end)
 
-hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, dmginfo, reaction)
+hook.Add('BGN_OnKilledActor', 'BGN_PlayerArrest', function(_, attacker)
+   if not ArrestModule:HasPlayer(attacker) then return end
+   local ArrestComponent = ArrestModule:GetPlayer(attacker)
+   if not ArrestComponent.arrested then return end
+   ArrestModule:NotSubjectToArrest(attacker)
+
+   local actors = bgNPC:GetAllByRadius(attacker:GetPos(), 700)
+   for _, actor in ipairs(actors) do
+      if actor:IsAlive() then
+         local npc = actor:GetNPC()
+         if bgNPC:IsTargetRay(npc, attacker) then
+            actor:SetEnemy(attacker)
+            actor:SetState('fear')
+         end
+      end
+   end
+end)
+
+hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, attacker, target, reaction)
+   if reaction ~= 'arrest' then return end
+   if not GetConVar('bgn_arrest_mode'):GetBool() or target:IsPlayer() then
+      actor:SetReaction('defense')
+   end
+end)
+
+hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, dmginfo)
 	if not GetConVar('bgn_arrest_mode'):GetBool() then return end
+   if not attacker:IsPlayer() then return end
    
 	local TargetActor = bgNPC:GetActor(target)
-	if attacker:IsPlayer() and TargetActor ~= nil and TargetActor:HasTeam('residents') then
-		if not ArrestModule:HasPlayer(attacker) then
-			if not WantedModule:HasWanted(attacker) then
-            
-            local PoliceActor
+   if TargetActor == nil or not TargetActor:HasTeam('residents') then return end
 
-            if TargetActor:HasTeam('police') then
-               PoliceActor = TargetActor
-            else
-               for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 700)) do
-                  if actor:IsAlive() and actor:HasTeam('police') then
-                     if not PoliceActor then
+   if not ArrestModule:HasPlayer(attacker) then
+      if not WantedModule:HasWanted(attacker) then
+         
+         local PoliceActor
+
+         if TargetActor:HasTeam('police') then
+            PoliceActor = TargetActor
+         else
+            for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 700)) do
+               if actor:IsAlive() and actor:HasTeam('police') then
+                  if not PoliceActor then
+                     PoliceActor = actor
+                  else
+                     local AttackerPos = attacker:GetPos()
+                     local NewActorPos = actor:GetNPC():GetPos()
+                     local OldActorPos = PoliceActor:GetNPC():GetPos()
+         
+                     if NewActorPos:DistToSqr(AttackerPos) < OldActorPos:DistToSqr(AttackerPos) then
                         PoliceActor = actor
-                     else
-                        local AttackerPos = attacker:GetPos()
-                        local NewActorPos = actor:GetNPC():GetPos()
-                        local OldActorPos = PoliceActor:GetNPC():GetPos()
-            
-                        if NewActorPos:DistToSqr(AttackerPos) < OldActorPos:DistToSqr(AttackerPos) then
-                           PoliceActor = actor
-                        end
                      end
                   end
                end
-            
-               if not PoliceActor then return end
             end
-
-				ArrestModule:AddPlayer(attacker, PoliceActor)
-            PoliceActor:RemoveAllTargets()
-            PoliceActor:SetState('arrest')
-            PoliceActor:AddTarget(attacker)
-
-            if PoliceActor ~= TargetActor and not TargetActor:HasState('fear') then
-               TargetActor:RemoveAllTargets()
-               TargetActor:AddEnemy(attacker)
-               TargetActor:SetState('fear')
-            end
-			end
-		else
-			local ArrestComponent = ArrestModule:GetPlayer(attacker)
-         if ArrestComponent.arrested then
-            ArrestComponent.damege_count = ArrestComponent.damege_count + 1
-            if ArrestComponent.damege_count >= 3 then
-               ArrestModule:NotSubjectToArrest(attacker)
-            end
+         
+            if not PoliceActor then return end
          end
-		end
 
-      return false
-	end
+         ArrestModule:AddPlayer(attacker, PoliceActor)
+         PoliceActor:RemoveAllTargets()
+         PoliceActor:SetState('arrest')
+         PoliceActor:AddTarget(attacker)
+
+         if PoliceActor ~= TargetActor and not TargetActor:HasState('fear') then
+            TargetActor:RemoveAllTargets()
+            TargetActor:AddEnemy(attacker)
+            TargetActor:SetState('fear')
+         end
+      end
+   else
+      local ArrestComponent = ArrestModule:GetPlayer(attacker)
+      if ArrestComponent.arrested then
+         ArrestComponent.damege_count = ArrestComponent.damege_count + 1
+         if ArrestComponent.damege_count >= 3 then
+            ArrestModule:NotSubjectToArrest(attacker)
+         end
+      end
+   end
+
+   return false
 end)
 
 bgNPC:SetStateAction('arrest', function(actor)
