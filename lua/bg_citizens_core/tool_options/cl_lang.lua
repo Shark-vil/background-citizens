@@ -49,6 +49,8 @@ en_lang['bgn.settings.spawn.bgn_spawn_block_radius'] = 'NPC spawn blocking radiu
 en_lang['bgn.settings.spawn.bgn_spawn_block_radius.description'] = 'Description: prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker'
 en_lang['bgn.settings.spawn.bgn_spawn_period'] = 'The period between spawning NPCs (Change requires restart)'
 en_lang['bgn.settings.spawn.bgn_spawn_period.description'] = 'Description: sets the delay between spawning of each NPC.'
+en_lang['bgn.settings.spawn.bgn_actors_teleporter'] = 'NPC teleportation (Experimental)'
+en_lang['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Description: instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.'
 
 --[[-----------------------------------------
    State settings menu
@@ -158,7 +160,10 @@ ru_lang['bgn.settings.spawn.bgn_spawn_radius_raytracing.description'] = 'Опи�
 ru_lang['bgn.settings.spawn.bgn_spawn_block_radius'] = 'Радиус блокировки появления NPC относительно каждого игрока'
 ru_lang['bgn.settings.spawn.bgn_spawn_block_radius.description'] = 'Описание: запрещает спавн NPC в заданном радиусе. Не может быть больше параметра - bgn_spawn_radius_ray_tracing. 0 - отключить проверку'
 ru_lang['bgn.settings.spawn.bgn_spawn_period'] = 'Период между появлением NPC (изменение требует перезапуска)'
-ru_lang['bgn.settings.spawn.bgn_spawn_period.description'] = 'Описание: устанавливает задержку между спавном каждого НПС.'
+ru_lang['bgn.settings.spawn.bgn_spawn_period.description'] = 'Описание: устанавливает задержку между спавном каждого NPC.'
+ru_lang['bgn.settings.spawn.bgn_actors_teleporter'] = 'Телепортация NPC (Эксперементально)'
+ru_lang['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Описание: вместо удаления NPC после потери его из поля зрения игроков, он будет телепортироваться в ближайшую точку. Это создаст эффект более населённого города. Отключите эту опцию, если замечайте потерю кадров.'
+
 
 --[[-----------------------------------------
    State settings menu

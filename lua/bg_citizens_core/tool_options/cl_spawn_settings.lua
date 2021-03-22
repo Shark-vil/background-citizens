@@ -48,6 +48,13 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.spawn.bgn_spawn_period.description'
 	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.spawn.bgn_actors_teleporter',
+		Command = 'bgn_actors_teleporter' 
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.spawn.bgn_actors_teleporter.description'
+	})
 end
 
 hook.Add("PopulateToolMenu", "BGN_TOOL_CreateMenu_SpawnSettings", function()

@@ -149,10 +149,7 @@ if CLIENT then
 
 		local type = tool:GetCurrentType()
 
-		if type == 'creator' then
-			tool:ClearPoints()
-			return
-		elseif type == 'remover' or type == 'last_remover' then
+		if type == 'remover' or type == 'last_remover' then
 			tool.LastNodeRemover = not tool.LastNodeRemover
 		elseif type == 'linker' or type == 'parents_cleaner' then
 			tool.LinkFullParents = not tool.LinkFullParents
@@ -450,6 +447,11 @@ if CLIENT then
 			["Command"] = "cl_citizens_save_route",
 		})
 
+		Panel:AddControl("Button", {
+			["Label"] = "#tool.bgn_point_editor.pnl.clear_points",
+			["Command"] = "cl_bgn_clear_tool_points",
+		})
+
 		Panel:AddControl('CheckBox', {
 			Label = '#tool.bgn_point_editor.autoparent',
 			Command = 'bgn_tool_point_editor_autoparent' 
@@ -524,6 +526,7 @@ if CLIENT then
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Description: sets the maximum distance to draw points in edit mode.',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents'] = 'Show global connections',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'] = 'Description: shows global (white) connections that are used by NPCs in special cases. For example - escape from the attacker.',
+		['tool.bgn_point_editor.pnl.clear_points'] = 'Clear all points (Local)',
 	}
 
 	local ru_lang = {
@@ -553,6 +556,7 @@ if CLIENT then
 		['tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'] = 'Описание: устанавливает максимальное расстояние отрисовки точек в режиме редактирования.',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents'] = 'Показать глобальные связи',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'] = 'Описание: показывает глобальные (белые) соединения, которые используются НПС в особых случаях. Например - побег от нападавшего.',
+		['tool.bgn_point_editor.pnl.clear_points'] = 'Очистить все точки (Локально)',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang

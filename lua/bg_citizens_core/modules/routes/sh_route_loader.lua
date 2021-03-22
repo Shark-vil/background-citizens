@@ -52,6 +52,16 @@ if SERVER then
 		bgNPC.LoadRoutes()
 	end)
 else
+	concommand.Add('cl_bgn_clear_tool_points', function()
+		local wep = LocalPlayer():GetActiveWeapon()
+		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+
+		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+      if not tool then return end
+
+		tool:ClearPoints()
+	end)
+
 	hook.Add('Slib_StartBigdataSending', 'BGN_LoadingNodesFromServer', function(ply, name)
 		if name ~= 'bgn_load_routes' then return end
 		notification.Kill('BGN_LoadingNodesFromServer')

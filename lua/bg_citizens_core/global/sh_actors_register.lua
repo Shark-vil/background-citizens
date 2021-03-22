@@ -5,26 +5,16 @@ if CLIENT then
 		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType], uid)
 		bgNPC:AddNPC(actor)
 	end)
-else
+end
+
+if SERVER then
 	local hooks_active = {}
-	function bgNPC:SpawnActor(npcType, desiredPosition)
-		if player.GetCount() == 0 then return end
+	function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
+		if not action and not isfunction(action) then return end
 
-		local hook_name = 'BGN_SpawnerThread_' .. npcType
+		local hook_name = 'BGN_SpawnerThread_' .. spawner_id
 		if hooks_active[hook_name] then return end
-
-		local bgn_spawn_radius 
-			= GetConVar('bgn_spawn_radius'):GetFloat()
-	
-		local bgn_spawn_radius_visibility 
-			= GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
-	
-		local bgn_spawn_radius_raytracing 
-			= GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
-	
-		local bgn_spawn_block_radius
-			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
-
+		hooks_active[hook_name] = true
 
 		if not desiredPosition then
 			local ply = table.Random(player.GetAll())
@@ -32,12 +22,21 @@ else
 		end
 
 		if not desiredPosition then return end
+		
+		local bgn_spawn_radius 
+			= GetConVar('bgn_spawn_radius'):GetFloat()
 
-		local hook_name = 'BGN_SpawnerThread_' .. npcType
-		hooks_active[hook_name] = true
+		local bgn_spawn_radius_visibility 
+			= GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
+
+		local bgn_spawn_radius_raytracing 
+			= GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
+
+		local bgn_spawn_block_radius
+			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 		local spawn_radius = bgn_spawn_radius
-		local limit_pass = 10
+		local limit_pass = limit_pass or 10
 		local current_pass = 0
 		
 		local thread = coroutine.create(function()
@@ -106,8 +105,6 @@ else
 			return coroutine.yield(table.Random(radius_positions))
 		end)
 
-		local npcData = bgNPC.cfg.npcs_template[npcType]
-
 		hook.Add("Think", hook_name, function()
 			if coroutine.status(thread) == 'dead' then
 				hook.Remove("Think", hook_name)
@@ -116,86 +113,96 @@ else
 			end
 
 			local worked, nodePosition = coroutine.resume(thread)
-			if nodePosition then                   	
-				local is_many_classes = false
-				local npc_class
-				
-				if istable(npcData.class) then
-					npc_class = table.Random(npcData.class)
-					is_many_classes = true
-				else
-					npc_class = npcData.class
-				end
-				
-				if hook.Run('BGN_OnValidSpawnActor', npcData, npc_class, nodePosition) then
-					return
-				end
-
-				local npc = ents.Create(npc_class)
-				npc:SetPos(nodePosition)
-				
-				--[[
-					ATTENTION! Be careful, this hook is called before the NPC spawns. 
-					If you give out a weapon or something similar, it will crash the game!
-				--]]
-				if hook.Run('BGN_PreSpawnActor', npc, npcType, npcData) then
-					if IsValid(npc) then npc:Remove() end
-					return
-				end
-		
-				npc:Spawn()
-				npc:Activate()
-				npc:PhysWake()
-
-				hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
-		
-				if npcData.models then
-					local model
-
-					if is_many_classes then
-						if npcData.models[npc_class] then
-							model = table.Random(npcData.models[npc_class])
-						end
-					else
-						model = table.Random(npcData.models)
-					end
-
-					if model ~= nil and util.IsValidModel(model) then							
-						if not npcData.defaultModels or (npcData.defaultModels and math.random(0, 10) <= 5) then
-							if not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData) then
-								npc:SetModel(model)
-							end
-						end
-					end
-				end
-
-				if npcData.randomSkin then
-					local skin = math.random(0, npc:SkinCount())
-					
-					if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
-						npc:SetSkin(math.random(0, npc:SkinCount()))
-					end
-				end
-
-				if npcData.randomBodygroups then
-					for _, bodygroup in ipairs(npc:GetBodyGroups()) do
-						local id = bodygroup.id
-						local value = math.random(0, npc:GetBodygroupCount(id))
-
-						if not hook.Run('BGN_PreSetActorBodygroup', id, value, npc, npcType, npcData) then
-							npc:SetBodygroup(id, value)
-						end
-					end
-				end
-		
-				local actor = BGN_ACTOR:Instance(npc, npcType, npcData)
-				bgNPC:AddNPC(actor)
-				actor:RandomState()
-				
-				hook.Run('BGN_InitActor', actor)
-
-				snet.EntityInvokeAll('bgn_add_actor_from_client', npc, npcType, actor.uid)
+			if nodePosition then
+				action(nodePosition)
 			end
+		end)
+	end
+
+	function bgNPC:SpawnActor(npcType, desiredPosition)
+		if player.GetCount() == 0 then return end
+
+		local npcData = bgNPC.cfg.npcs_template[npcType]
+
+		bgNPC:FindSpawnLocation(npcType, desiredPosition, nil, function(nodePosition)
+			local is_many_classes = false
+			local npc_class
+			
+			if istable(npcData.class) then
+				npc_class = table.Random(npcData.class)
+				is_many_classes = true
+			else
+				npc_class = npcData.class
+			end
+			
+			if hook.Run('BGN_OnValidSpawnActor', npcData, npc_class, nodePosition) then
+				return
+			end
+
+			local npc = ents.Create(npc_class)
+			npc:SetPos(nodePosition)
+			
+			--[[
+				ATTENTION! Be careful, this hook is called before the NPC spawns. 
+				If you give out a weapon or something similar, it will crash the game!
+			--]]
+			if hook.Run('BGN_PreSpawnActor', npc, npcType, npcData) then
+				if IsValid(npc) then npc:Remove() end
+				return
+			end
+
+			npc:Spawn()
+			npc:Activate()
+			npc:PhysWake()
+
+			hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
+
+			if npcData.models then
+				local model
+
+				if is_many_classes then
+					if npcData.models[npc_class] then
+						model = table.Random(npcData.models[npc_class])
+					end
+				else
+					model = table.Random(npcData.models)
+				end
+
+				if model ~= nil and util.IsValidModel(model) then							
+					if not npcData.defaultModels or (npcData.defaultModels and math.random(0, 10) <= 5) then
+						if not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData) then
+							npc:SetModel(model)
+						end
+					end
+				end
+			end
+
+			if npcData.randomSkin then
+				local skin = math.random(0, npc:SkinCount())
+				
+				if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
+					npc:SetSkin(math.random(0, npc:SkinCount()))
+				end
+			end
+
+			if npcData.randomBodygroups then
+				for _, bodygroup in ipairs(npc:GetBodyGroups()) do
+					local id = bodygroup.id
+					local value = math.random(0, npc:GetBodygroupCount(id))
+
+					if not hook.Run('BGN_PreSetActorBodygroup', id, value, npc, npcType, npcData) then
+						npc:SetBodygroup(id, value)
+					end
+				end
+			end
+
+			local actor = BGN_ACTOR:Instance(npc, npcType, npcData)
+			bgNPC:AddNPC(actor)
+			actor:RandomState()
+			
+			hook.Run('BGN_InitActor', actor)
+
+			snet.EntityInvokeAll('bgn_add_actor_from_client', npc, npcType, actor.uid)
 		end)
 	end
 end

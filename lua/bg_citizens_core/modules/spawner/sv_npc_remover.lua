@@ -20,6 +20,7 @@ hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 	bgNPC:RemoveNPC(ent)
 end)
 
+local WantedModule = bgNPC:GetModule('wanted')
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local actors = bgNPC:GetAll()
 
@@ -27,6 +28,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 	local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
+	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 
 	for _, actor in ipairs(actors) do
 		if not actor.eternal and not actor.debugger and actor:IsAlive() then
@@ -53,9 +55,41 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 				end
 
 				if isRemove then
-					if not hook.Run('BGN_PreRemoveNPC', npc) then
-						bgNPC:RemoveNPC(npc)
-						npc:Remove()
+					if not bgn_actors_teleporter then
+						if not hook.Run('BGN_PreRemoveNPC', npc) then
+							bgNPC:RemoveNPC(npc)
+							npc:Remove()
+						end
+					else
+						local npc = actor:GetNPC()
+						local data = actor:GetData()
+
+						if data.wanted_level == nil then
+							bgNPC:FindSpawnLocation(actor.uid, nil, 5, function(nodePosition)
+								if not IsValid(npc) then return end
+								npc:SetPos(nodePosition)
+							end)
+						else
+							local desiredPosition
+							for Target, WantedComponent in pairs(WantedModule:GetAllWanted()) do
+								if IsValid(Target) and WantedComponent.level >= data.wanted_level then
+									desiredPosition = Target:GetPos()
+									break
+								end
+							end
+
+							if not desiredPosition then
+								if not hook.Run('BGN_PreRemoveNPC', npc) then
+									bgNPC:RemoveNPC(npc)
+									npc:Remove()
+								end
+							else
+								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, 5, function(nodePosition)
+									if not IsValid(npc) then return end
+									npc:SetPos(nodePosition)
+								end)
+							end
+						end
 					end
 				end
 			end
