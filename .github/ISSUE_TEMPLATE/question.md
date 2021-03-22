@@ -8,6 +8,6 @@ assignees: ''
 ---
 
 **Only questions related to:**
-- By setting up the addon
+- Configuring the addon
 - Integration of the addon into any system
 - Question about API addon
