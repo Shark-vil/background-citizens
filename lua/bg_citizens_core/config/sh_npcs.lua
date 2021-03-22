@@ -329,4 +329,32 @@ bgNPC.cfg.npcs_template = {
 			end
 		end,
 	},
+	['zombie'] = {
+		enabled = false,
+		class = {
+			'npc_zombie',
+			'npc_zombie_torso',
+			'npc_fastzombie',
+			'npc_headcrab_fast',
+			'npc_headcrab',
+			'npc_headcrab_black',
+			'npc_poisonzombie',
+			'npc_antlion'
+		},
+		name = 'Zombie',
+		zombieMode = true,
+		limit = 30,
+		team = { 'zombies' },
+		money = { 0, 100 },
+		health = { 50, 150 },
+		weaponSkill = WEAPON_PROFICIENCY_AVERAGE,
+		randomSkin = true,
+		randomBodygroups = true,
+		at_random = { 
+			['walk'] = 70,
+			['idle'] = 30,
+		},
+		at_damage = { ['defense'] = 100 },
+		at_protect = { ['defense'] = 100 },
+	},
 }

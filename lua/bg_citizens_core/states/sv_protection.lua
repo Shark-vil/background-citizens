@@ -31,33 +31,38 @@ bgNPC:SetStateAction('defense', function(actor)
 	if data.delay < CurTime() then
 		local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
 
-		data.notGun = data.notGun or true
-		data.notGunDelay = data.notGunDelay or CurTime() + 15
+		if not data.disableWeapon then
+			data.notGun = data.notGun or true
+			data.notGunDelay = data.notGunDelay or CurTime() + 15
 
-		if data.notGun then
-			if data.notGunDelay < CurTime() or killingSumm > 0 
-				or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
-			then
-				data.notGun = false
+			if data.notGun then
+				if data.notGunDelay < CurTime() or killingSumm > 0 
+					or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
+				then
+					data.notGun = false
+				end
 			end
-		end
 
-		if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
-			if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
-				bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+			if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
+				if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
+					bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+				else
+					bgNPC:SetActorWeapon(actor)
+				end
 			else
 				bgNPC:SetActorWeapon(actor)
 			end
-		else
-			bgNPC:SetActorWeapon(actor)
 		end
 
 		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 		if current_distance <= 62500 then
 
 			local notback = true
-			if killingSumm > 0 or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon())) then
-				notback = false
+
+			if not data.disableMoveAway then
+				if killingSumm > 0 or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon())) then
+					notback = false
+				end
 			end
 
 			local npc_weapon = npc:GetActiveWeapon()

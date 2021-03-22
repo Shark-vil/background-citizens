@@ -672,6 +672,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if target == nil or not IsValid(target) then
 			self:StopWalk()
 		else
+			local npc = self.npc
+			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then return end
+
 			self:SetWalkType(type)
 
 			if self.walkTarget ~= target then
@@ -691,6 +694,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.walkPos == pos then return end
 
 		local npc = self.npc
+		if npc:GetPos():DistToSqr(pos) <= 2500 then return end
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 		
 		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
