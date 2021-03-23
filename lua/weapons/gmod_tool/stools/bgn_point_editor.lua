@@ -569,6 +569,7 @@ if CLIENT then
 	local clr_link = Color(255, 0, 0)
 	local clr_link_alpha = Color(255, 0, 0, 50)
 	local clr_point = Color(255, 23, 23, 200)
+	local clr_point_notlinks = Color(53, 53, 240, 200)
 	local vec_20 = Vector(0, 0, 20)
 	local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
@@ -628,7 +629,11 @@ if CLIENT then
 				if index == tool.SelectedPointId and tool.CreateSelectedNode then
 					render.DrawSphere(node.position, 10, 20, 20, clr_green)
 				else
-					render.DrawSphere(pos, 10, 30, 30, clr_point)
+					if #node:GetLinks('walk') == 0 then
+						render.DrawSphere(pos, 10, 30, 30, clr_point_notlinks)
+					else
+						render.DrawSphere(pos, 10, 30, 30, clr_point)
+					end
 				end
 
 				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
