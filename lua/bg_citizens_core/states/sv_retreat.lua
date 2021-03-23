@@ -10,15 +10,10 @@ bgNPC:SetStateAction('retreat', function(actor)
 
 	local enemy = actor:GetEnemy()
 	if IsValid(enemy) then
-		data.node = data.node or actor:GetDistantPointInRadius(1000)
-	else
 		data.node = data.node or actor:GetDistantPointToPoint(1000, enemy:GetPos())
+	else
+		data.node = data.node or actor:GetDistantPointInRadius(1000)
 	end
-
-	-- if actor:TargetsCount() ~= 0 then
-	-- 	actor:SetState(actor:GetReactionForDamage())
-	-- 	goto skip
-	-- end
 
 	if IsValid(enemy) and bgNPC:IsTargetRay(npc, enemy) then
 		data.cooldown = CurTime() + 20
@@ -31,9 +26,9 @@ bgNPC:SetStateAction('retreat', function(actor)
 
 	if data.updatePoint < CurTime() then
 		if IsValid(enemy) then
-			data.node = actor:GetDistantPointInRadius(1000)
-		else
 			data.node = actor:GetDistantPointToPoint(1000, enemy:GetPos())
+		else
+			data.node = actor:GetDistantPointInRadius(1000)
 		end
 		actor:WalkToPos(data.node:GetPos(), 'run')
 		data.updatePoint = CurTime() + 5
