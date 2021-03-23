@@ -1,11 +1,30 @@
 --[[
-	WIKI:
-	https://background-npcs.itpony.ru/wiki/Config%20Structure
+	Explanation:
+	The states that are in the "danger" category are used to determine the state of danger of the NPC when taking damage.
 --]]
+bgNPC.cfg.npcs_states = {
+	['calmly'] = {
+		'idle',
+		'walk',
+		'dialogue',
+		'sit_to_chair',
+		'dv_vehicle_drive',
+		'steal',
+		'arrest',
+		'retreat'
+	},
+	['danger'] = {
+		'fear',
+		'defense',
+		'calling_police',
+		'impingement',
+	}
+}
 
 --[[
+	------------------------------------------------------------
 	Actor - the so-called NPCs that are part of this system.
-
+	------------------------------------------------------------
 	The name of the table key does not matter. The main thing is the team in which the actor is.
 	Teams:
 		1. residents - main team for citizens and police. The police will always protect residents.
@@ -36,43 +55,20 @@
 		team - the actor's team is used for interaction logic. Explanation above ↑
 		weapons - a weapon that an actor can have. If you don't want the actor to have a weapon, leave the list empty or delete the parameter.
 		money - the amount of money dropped from the actor after death. The first parameter is the minimum, the second parameter is the maximum (Default used in DarkRP)
-		defaultModels - if true, then the actors will spawn with the standard model mixed with the custom ones. If you want to use only custom models, set the parameter to false
+		default_models - if true, then the actors will spawn with the standard model mixed with the custom ones. If you want to use only custom models, set the parameter to false
 		models - custom actor model. Please note that the model is directly dependent on the class used. If the model is incompatible with the selected class, it can - show an error, not be displayed, the actor can be idle.
 		at_ - explanation above ↑
 		health - the health that the actor spawns with.
 			Can be a number: health = 100
 			Can be a table with the possibility of randomness: health = { 100, 200 }
 		wanted_level - actors who will spawn only if any entity has the required wanted level. After all the actors have lost their targets, they are removed (1 to 5)
-		weaponSkill - The level of circulation of NPCs with weapons. (https://wiki.facepunch.com/gmod/Enums/WEAPON_PROFICIENCY)
-		randomSkin - enable the creation of random skins for NPCs
-		randomBodygroups - enable the creation of random bodygroups for NPCs
-		disableStates - disable NPC states switching. Suitable if you need to keep the default logic of the NPC.
+		weapon_skill - The level of circulation of NPCs with weapons. (https://wiki.facepunch.com/gmod/Enums/WEAPON_PROFICIENCY)
+		random_skin - enable the creation of random skins for NPCs
+		random_bodygroups - enable the creation of random bodygroups for NPCs
+		disable_states - disable NPC states switching. Suitable if you need to keep the default logic of the NPC.
 		respawn_delay - sets a delay for the appearance of new NPCs after the death of any of the existing
 		validator - a function that checks the spawn before the entity is created. Suitable for system checks. For broader checks, use the "BGN_OnValidSpawnActor" or "BGN_PreSpawnActor" hook
 --]]
-
---[[
-	Explanation:
-	The states that are in the "danger" category are used to determine the state of danger of the NPC when taking damage.
---]]
-bgNPC.cfg.npcs_states = {
-	['calmly'] = {
-		'idle',
-		'walk',
-		'dialogue',
-		'sit_to_chair',
-		'dv_vehicle_drive',
-		'steal',
-		'arrest',
-		'retreat'
-	},
-	['danger'] = {
-		'fear',
-		'defense',
-		'calling_police',
-		'impingement',
-	}
-}
 
 -- NPC classes that fill the streets
 bgNPC.cfg.npcs_template = {
@@ -84,10 +80,10 @@ bgNPC.cfg.npcs_template = {
 		weapons = { 'weapon_pistol', 'weapon_357', 'weapon_crowbar' },
 		money = { 0, 100 },
 		health = 50,
-		weaponSkill = WEAPON_PROFICIENCY_POOR,
-		randomSkin = true,
-		randomBodygroups = true,
-		defaultModels = true,
+		weapon_skill = WEAPON_PROFICIENCY_POOR,
+		random_skin = true,
+		random_bodygroups = true,
+		default_models = true,
 		models = {
 			'models/smalls_civilians/pack1/hoodie_male_01_f_npc.mdl',
 			'models/smalls_civilians/pack1/hoodie_male_02_f_npc.mdl',
@@ -148,8 +144,8 @@ bgNPC.cfg.npcs_template = {
 		team = { 'bandits' },
 		money = { 0, 100 },
 		health = 50,
-		weaponSkill = WEAPON_PROFICIENCY_POOR,
-		randomBodygroups = true,
+		weapon_skill = WEAPON_PROFICIENCY_POOR,
+		random_bodygroups = true,
 		at_random_range = 110,
 		at_random = {
 			['walk'] = 60,
@@ -175,10 +171,10 @@ bgNPC.cfg.npcs_template = {
 		weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },
 		money = { 0, 150 },
 		health = 50,
-		weaponSkill = WEAPON_PROFICIENCY_AVERAGE,
-		randomSkin = true,
-		randomBodygroups = true,
-		defaultModels = false,
+		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
+		random_skin = true,
+		random_bodygroups = true,
+		default_models = false,
 		models = {
 			'models/survivors/npc/amy.mdl',
 			'models/survivors/npc/candace.mdl',
@@ -223,9 +219,9 @@ bgNPC.cfg.npcs_template = {
 		weapons = { 'weapon_pistol' },
 		money = { 0, 170 },
 		health = 70,
-		weaponSkill = WEAPON_PROFICIENCY_AVERAGE,
-		randomSkin = true,
-		randomBodygroups = true,
+		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
+		random_skin = true,
+		random_bodygroups = true,
 		at_random_range = 100,
 		at_random = {
 			['walk'] = 80,
@@ -253,10 +249,10 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_smg1' },
 		health = { 80, 90 },
-		weaponSkill = WEAPON_PROFICIENCY_GOOD,
-		randomSkin = true,
-		randomBodygroups = true,
-		defaultModels = false,
+		weapon_skill = WEAPON_PROFICIENCY_GOOD,
+		random_skin = true,
+		random_bodygroups = true,
+		default_models = false,
 		models = {
 			'models/armored_police/arpolice_npc.mdl',
 		},
@@ -275,10 +271,10 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_ar2' },
 		health = { 100, 110 },
-		weaponSkill = WEAPON_PROFICIENCY_VERY_GOOD,
-		randomSkin = true,
-		randomBodygroups = true,
-		defaultModels = false,
+		weapon_skill = WEAPON_PROFICIENCY_VERY_GOOD,
+		random_skin = true,
+		random_bodygroups = true,
+		default_models = false,
 		models = {
 			'models/armored_elite/armored_elite_npc.mdl',
 		},
@@ -297,10 +293,10 @@ bgNPC.cfg.npcs_template = {
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_shotgun' },
 		health = { 110, 120 },
-		weaponSkill = WEAPON_PROFICIENCY_PERFECT,
-		randomSkin = true,
-		randomBodygroups = true,
-		defaultModels = false,
+		weapon_skill = WEAPON_PROFICIENCY_PERFECT,
+		random_skin = true,
+		random_bodygroups = true,
+		default_models = false,
 		models = {
 			'models/armored_elite/armored_elite_npc.mdl',
 		},
@@ -313,7 +309,7 @@ bgNPC.cfg.npcs_template = {
 	['police_helicopter'] = {
 		class = 'npc_apache_scp_sb',
 		name = 'Assault Helicopter',
-		disableStates = true,
+		disable_states = true,
 		respawn_delay = 15,
 		limit = 1,
 		wanted_level = 5,
@@ -338,15 +334,15 @@ bgNPC.cfg.npcs_template = {
 			'npc_poisonzombie',
 		},
 		name = 'Zombie',
-		bioAnnihilationTwoReplacement = true,
-		zombieMode = true,
+		bio_annihilation_two_replacement = true,
+		zombie_mode = true,
 		respawn_delay = 10,
 		limit = 10,
 		team = { 'zombies' },
 		money = { 0, 100 },
 		health = { 50, 150 },
-		randomSkin = true,
-		randomBodygroups = true,
+		random_skin = true,
+		random_bodygroups = true,
 		at_random = { 
 			['walk'] = 70,
 			['idle'] = 30,

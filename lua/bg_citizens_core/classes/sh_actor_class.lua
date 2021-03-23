@@ -600,7 +600,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:SetOldState()
-		if self:GetData().disableStates then return end
+		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		
 		if self.old_state ~= nil then
@@ -616,7 +616,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:SetState(state, data)
-		if self:GetData().disableStates then return end
+		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if state == 'ignore' then return end
 

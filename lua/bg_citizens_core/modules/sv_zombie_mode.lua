@@ -1,6 +1,6 @@
 timer.Create('BGN_ZombieModeAutoEnableDefense', 1, 0, function()
    for _, zombie in ipairs(bgNPC:GetAll()) do
-      if zombie:IsAlive() and zombie:GetData().zombieMode then
+      if zombie:IsAlive() and zombie:GetData().zombie_mode then
          local npc = zombie:GetNPC()
          local enemies = ents.FindInSphere(npc:GetPos(), 2500)
 

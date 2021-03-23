@@ -56,8 +56,11 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 		end
 	end
 
-	if data.weaponSkill ~= nil and isnumber(data.weaponSkill) then
-		npc:SetCurrentWeaponProficiency(data.weaponSkill)
+	-- Backward compatibility with the old version of the config
+	data.weapon_skill = data.weapon_skill or data.weaponSkill
+
+	if data.weapon_skill ~= nil and isnumber(data.weapon_skill) then
+		npc:SetCurrentWeaponProficiency(data.weapon_skill)
 	end
 end
 

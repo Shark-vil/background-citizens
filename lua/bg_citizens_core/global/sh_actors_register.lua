@@ -174,8 +174,11 @@ if SERVER then
 					model = table.Random(npcData.models)
 				end
 
-				if model ~= nil and util.IsValidModel(model) then							
-					if not npcData.defaultModels or (npcData.defaultModels and math.random(0, 10) <= 5) then
+				if model ~= nil and util.IsValidModel(model) then
+					-- Backward compatibility with the old version of the config
+					npcData.default_models = npcData.default_models or npcData.defaultModels
+
+					if not npcData.default_models or (npcData.default_models and math.random(0, 10) <= 5) then
 						if not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData) then
 							npc:SetModel(model)
 						end
@@ -183,7 +186,10 @@ if SERVER then
 				end
 			end
 
-			if npcData.randomSkin then
+			-- Backward compatibility with the old version of the config
+			npcData.random_skin = npcData.random_skin or npcData.randomSkin
+
+			if npcData.random_skin then
 				local skin = math.random(0, npc:SkinCount())
 				
 				if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
@@ -191,7 +197,10 @@ if SERVER then
 				end
 			end
 
-			if npcData.randomBodygroups then
+			-- Backward compatibility with the old version of the config
+			npcData.random_bodygroups = npcData.random_bodygroups or npcData.randomBodygroups
+
+			if npcData.random_bodygroups then
 				for _, bodygroup in ipairs(npc:GetBodyGroups()) do
 					local id = bodygroup.id
 					local value = math.random(0, npc:GetBodygroupCount(id))
