@@ -339,11 +339,11 @@ bgNPC.cfg.npcs_template = {
 		},
 		name = 'Zombie',
 		zombieMode = true,
-		limit = 30,
+		respawn_delay = 10,
+		limit = 10,
 		team = { 'zombies' },
 		money = { 0, 100 },
 		health = { 50, 150 },
-		weaponSkill = WEAPON_PROFICIENCY_AVERAGE,
 		randomSkin = true,
 		randomBodygroups = true,
 		at_random = { 
@@ -361,7 +361,6 @@ hook.Add('BGN_OverrideSpawnData', 'BGM_ReplaceZombieClassToBioAnnihilationTwo', 
 	return npcData, table.Random({
 		'nb_ba2_infected_custom',
 		'nb_ba2_infected_citizen',
-		'nb_ba2_infected_combine',
 		'nb_ba2_infected_rebel',
 	})
 end)

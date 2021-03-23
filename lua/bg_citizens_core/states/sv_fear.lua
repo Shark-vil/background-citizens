@@ -66,11 +66,11 @@ bgNPC:SetStateAction('fear', function(actor)
 		end
 
 		if data.update_run < CurTime() then
-			local pos = actor:GetDistantPointToPoint(enemy:GetPos(), 800)
-			if pos then
-				actor:WalkToPos(pos, 'run')
+			local position = actor:GetDistantPointToPoint(enemy:GetPos(), math.random(700, 1500))
+			if position then
+				actor:WalkToPos(position, 'run')
+				data.update_run = CurTime() + math.random(10, 15)
 			end
-			data.update_run = CurTime() + 6
 		end
 
 		if dist > 360000 then -- 600 ^ 2

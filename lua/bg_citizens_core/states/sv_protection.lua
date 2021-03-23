@@ -28,7 +28,7 @@ bgNPC:SetStateAction('defense', function(actor)
 		enemy = enemy:GetVehicle()
 	end
 
-	if data.delay < CurTime() then
+	if data.delay < CurTime() or enemy:IsNPC() or enemy:IsPlayer() then
 		local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
 
 		if not data.disableWeapon then
@@ -36,7 +36,7 @@ bgNPC:SetStateAction('defense', function(actor)
 			data.notGunDelay = data.notGunDelay or CurTime() + 15
 
 			if data.notGun then
-				if data.notGunDelay < CurTime() or killingSumm > 0 
+				if data.notGunDelay < CurTime() or killingSumm > 0 or enemy:IsNextBot()
 					or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
 				then
 					data.notGun = false
@@ -55,27 +55,24 @@ bgNPC:SetStateAction('defense', function(actor)
 		end
 
 		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
-		if current_distance <= 62500 then
+		if current_distance <= 90000 then
 
-			local notback = true
-
-			if not data.disableMoveAway then
-				if killingSumm > 0 or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon())) then
-					notback = false
-				end
+			local isMeleeWeapon = false
+			local npcWeapon = npc:GetActiveWeapon()
+			if IsValid(npcWeapon) then
+				isMeleeWeapon = table.HasValue(MeleeWeapon, npcWeapon:GetClass())
 			end
 
-			local npc_weapon = npc:GetActiveWeapon()
-			if IsValid(npc_weapon) then
-				local weapon_class = npc_weapon:GetClass()
-				if table.HasValue(MeleeWeapon, weapon_class) then notback = true end
-			end
-
-			if notback then
+			if isMeleeWeapon or not bgNPC:IsTargetRay(npc, enemy) then
 				actor:WalkToTarget(enemy, 'run')
 			else
-				actor:WalkToTarget()
-				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				local node = actor:GetDistantPointInRadius(1000)
+				if node then
+					actor:WalkToPos(node:GetPos(), 'run')
+				else
+					actor:WalkToTarget()
+					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				end
 			end
 		else
 			actor:WalkToTarget(enemy, 'run')

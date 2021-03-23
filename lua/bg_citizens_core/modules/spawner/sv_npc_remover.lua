@@ -30,6 +30,9 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 
+	local max_teleporter = 10
+	local current_teleport = 0
+
 	for _, actor in ipairs(actors) do
 		if not actor.eternal and not actor.debugger and actor:IsAlive() then
 			local npc = actor:GetNPC()
@@ -61,13 +64,20 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 							npc:Remove()
 						end
 					else
+						if max_teleporter == current_teleport then
+							break
+						end
+
 						local npc = actor:GetNPC()
 						local data = actor:GetData()
 
 						if data.wanted_level == nil then
+							current_teleport = current_teleport + 1
+
 							bgNPC:FindSpawnLocation(actor.uid, nil, 5, function(nodePosition)
 								if not IsValid(npc) then return end
 								npc:SetPos(nodePosition)
+								npc:PhysWake()
 							end)
 						else
 							local desiredPosition
@@ -84,9 +94,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 									npc:Remove()
 								end
 							else
+								current_teleport = current_teleport + 1
+
 								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, 5, function(nodePosition)
 									if not IsValid(npc) then return end
 									npc:SetPos(nodePosition)
+									npc:PhysWake()
 								end)
 							end
 						end

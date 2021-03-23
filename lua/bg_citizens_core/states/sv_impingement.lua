@@ -37,6 +37,8 @@ hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
 	end
 end)
 
+local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
+
 bgNPC:SetStateAction('impingement', function(actor)
 	local enemy = actor:GetEnemy()
 	if not IsValid(enemy) then return end
@@ -55,9 +57,24 @@ bgNPC:SetStateAction('impingement', function(actor)
 
 		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 
-		if current_distance <= 62500 then
-			actor:WalkToTarget()
-			npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+		if current_distance <= 90000 then
+			local isMeleeWeapon = false
+			local npcWeapon = npc:GetActiveWeapon()
+			if IsValid(npcWeapon) then
+				isMeleeWeapon = table.HasValue(MeleeWeapon, npcWeapon:GetClass())
+			end
+
+			if isMeleeWeapon or not bgNPC:IsTargetRay(npc, enemy) then
+				actor:WalkToTarget(enemy, 'run')
+			else
+				local node = actor:GetDistantPointInRadius(1000)
+				if node then
+					actor:WalkToPos(node:GetPos(), 'run')
+				else
+					actor:WalkToTarget()
+					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				end
+			end
 		else
 			actor:WalkToTarget(enemy, 'run')
 		end

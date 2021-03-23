@@ -10,9 +10,9 @@ bgNPC:SetStateAction('retreat', function(actor)
 
 	local enemy = actor:GetEnemy()
 	if IsValid(enemy) then
-		data.target_point = data.target_point or actor:GetDistantPointInRadius(1000)
+		data.node = data.node or actor:GetDistantPointInRadius(1000)
 	else
-		data.target_point = data.target_point or actor:GetDistantPointToPoint(1000, enemy:GetPos())
+		data.node = data.node or actor:GetDistantPointToPoint(1000, enemy:GetPos())
 	end
 
 	-- if actor:TargetsCount() ~= 0 then
@@ -31,11 +31,11 @@ bgNPC:SetStateAction('retreat', function(actor)
 
 	if data.updatePoint < CurTime() then
 		if IsValid(enemy) then
-			data.target_point = actor:GetDistantPointInRadius(1000)
+			data.node = actor:GetDistantPointInRadius(1000)
 		else
-			data.target_point = actor:GetDistantPointToPoint(1000, enemy:GetPos())
+			data.node = actor:GetDistantPointToPoint(1000, enemy:GetPos())
 		end
-		actor:WalkToPos(data.target_point, 'run')
+		actor:WalkToPos(data.node:GetPos(), 'run')
 		data.updatePoint = CurTime() + 5
 	end
 end)

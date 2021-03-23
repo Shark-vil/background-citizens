@@ -405,7 +405,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:AddEnemy(ent, reaction)
-		if not self:GetNPC():IsNPC() then return end
 		if not IsValid(ent) or not isentity(ent) then return end
 		if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 		
@@ -418,7 +417,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 
 			if not hook.Run('BGN_AddActorEnemy', self, ent) then
-				npc:AddEntityRelationship(ent, relationship, 99)
+				if self:GetNPC():IsNPC() then
+					npc:AddEntityRelationship(ent, relationship, 99)
+				end
 				table.insert(self.enemies, ent)
 				self:EnemiesRecalculate()
 				self:SyncEnemies()
@@ -445,12 +446,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not hook.Run('BGN_RemoveActorEnemy', self, ent) then
 			local npc = self:GetNPC()
 			
-			if npc:GetEnemy() == ent then
-				npc:SetEnemy(NULL)
-			end
+			if npc:IsNPC() then
+				if npc:GetEnemy() == ent then
+					npc:SetEnemy(NULL)
+				end
 
-			if IsValid(ent) then
-				npc:AddEntityRelationship(ent, D_NU, 99)
+				if IsValid(ent) then
+					npc:AddEntityRelationship(ent, D_NU, 99)
+				end
 			end
 
 			if index ~= nil then
@@ -491,20 +494,22 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
             end
          end
 
-         local enemy = self:GetNearEnemy()
-         if IsValid(enemy) then
-				local WantedModule = bgNPC:GetModule('wanted')
-				if bgNPC:IsTargetRay(npc, enemy) then
-					npc:SetEnemy(enemy)
-					npc:SetTarget(enemy)
-					npc:UpdateEnemyMemory(enemy, enemy:GetPos())
-				elseif not WantedModule:HasWanted(enemy) then
-					local time = npc:GetEnemyLastTimeSeen(enemy)
-					if time + 20 < CurTime() then
-						self:RemoveEnemy(enemy)
+			if npc:IsNPC() then
+				local enemy = self:GetNearEnemy()
+				if IsValid(enemy) then
+					local WantedModule = bgNPC:GetModule('wanted')
+					if bgNPC:IsTargetRay(npc, enemy) then
+						npc:SetEnemy(enemy)
+						npc:SetTarget(enemy)
+						npc:UpdateEnemyMemory(enemy, enemy:GetPos())
+					elseif not WantedModule:HasWanted(enemy) then
+						local time = npc:GetEnemyLastTimeSeen(enemy)
+						if time + 20 < CurTime() then
+							self:RemoveEnemy(enemy)
+						end
 					end
 				end
-         end
+			end
       end
 	end
 
@@ -545,13 +550,15 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npcPos = self:GetNPC():GetPos()
 
 		for _, ent in ipairs(self.enemies) do
-			local new_dist = npcPos:DistToSqr(ent:GetPos())
-			if not IsValid(enemy) then
-				enemy = ent
-				dist = new_dist
-			elseif new_dist < dist then
-				enemy = ent
-				dist = new_dist
+			if IsValid(ent) then
+				local new_dist = npcPos:DistToSqr(ent:GetPos())
+				if not IsValid(enemy) then
+					enemy = ent
+					dist = new_dist
+				elseif new_dist < dist then
+					enemy = ent
+					dist = new_dist
+				end
 			end
 		end
 
@@ -671,6 +678,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:WalkToTarget(target, type)
+		if self:GetNPC():IsNextBot() then return end
+		
 		if target == nil or not IsValid(target) then
 			self:StopWalk()
 		else
@@ -688,12 +697,16 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:WalkToPos(pos, type, pathType)
+		if self:GetNPC():IsNextBot() then return end
+
 		if pos == nil then 
 			self:StopWalk()
 			return
 		end
 
-		if self.walkPos == pos then return end
+		if self.walkPos == pos then
+			return
+		end
 
 		local npc = self.npc
 		if npc:GetPos():DistToSqr(pos) <= 2500 then return end

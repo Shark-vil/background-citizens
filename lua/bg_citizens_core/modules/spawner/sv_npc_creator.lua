@@ -2,31 +2,28 @@
 hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
-	if not npc:IsNPC() then return end
 
 	for _, AnotherActor in ipairs(bgNPC:GetAll()) do
 		local another_npc = AnotherActor:GetNPC()
 		if IsValid(another_npc) and another_npc:IsNPC() then
-			AnotherActor:RemoveTarget(npc)
-			actor:RemoveTarget(another_npc)
-
 			if actor:HasTeam(AnotherActor) then
-				npc:AddEntityRelationship(another_npc, D_LI, 99)
+				if npc:IsNPC() then npc:AddEntityRelationship(another_npc, D_LI, 99) end
 				another_npc:AddEntityRelationship(npc, D_LI, 99)
 			else
-				npc:AddEntityRelationship(another_npc, D_NU, 99)
+				if npc:IsNPC() then npc:AddEntityRelationship(another_npc, D_NU, 99) end
 				another_npc:AddEntityRelationship(npc, D_NU, 99)
 			end
 		end
 	end
 
-	for _, ent in ipairs(player.GetAll()) do
-		if IsValid(ent) then
-			actor:RemoveTarget(ent)
-			if actor:HasTeam(ent) then
-				npc:AddEntityRelationship(ent, D_LI, 99)
-			else
-				npc:AddEntityRelationship(ent, D_NU, 99)
+	if npc:IsNPC() then
+		for _, ent in ipairs(player.GetAll()) do
+			if IsValid(ent) then
+				if actor:HasTeam(ent) then
+					npc:AddEntityRelationship(ent, D_LI, 99)
+				else
+					npc:AddEntityRelationship(ent, D_NU, 99)
+				end
 			end
 		end
 	end
