@@ -100,7 +100,7 @@ bgNPC.cfg.dialogues = {
       },
       finalAction = function(actor1, actor2)
          if not actor1:IsAlive() or not actor2:IsAlive() then return end
-         actor2:AddTarget(actor1:GetNPC())
+         actor2:AddEnemy(actor1:GetNPC())
          actor2:SetState('defense')
       end
    },

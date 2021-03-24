@@ -14,6 +14,7 @@ hook.Add("QSystem.StartDialogue", "BGN_QuestSystem_StartDialogue", function(eDia
 	if IsValid(npc) and npc:IsNPC() then
 		local actor = bgNPC:GetActor(npc)
 		if actor ~= nil then
+			actor:StopWalk()
 			actor:SetState('quest_dialogue')
 			actor:StateLock(true)
 		end
@@ -28,7 +29,7 @@ hook.Add("QSystem.StopDialogue", "BGN_QuestSystem_StopDialogue", function(eDialo
 		local actor = bgNPC:GetActor(npc)
 		if actor ~= nil then
 			actor:StateLock(false)
-			actor:SetOldState()
+			actor:RandomState()
 		end
 	end
 end)
