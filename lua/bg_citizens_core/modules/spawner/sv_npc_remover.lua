@@ -20,11 +20,12 @@ hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 	bgNPC:RemoveNPC(ent)
 end)
 
-local WantedModule = bgNPC:GetModule('wanted')
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local actors = bgNPC:GetAll()
 
 	if #actors == 0 then return end
+
+	local WantedModule = bgNPC:GetModule('wanted')
 
 	local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
