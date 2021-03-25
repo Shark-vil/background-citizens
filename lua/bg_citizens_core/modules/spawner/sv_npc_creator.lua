@@ -94,7 +94,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 		end
 		
 		if npc_data.validator then
-			local result = npc_data.validator(npcType, npc_data)
+			local result = npc_data.validator(npc_data, npcType)
 			if isbool(result) and not result then
 				goto skip
 			end

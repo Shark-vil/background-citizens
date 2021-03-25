@@ -79,6 +79,8 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 								if not IsValid(npc) then return end
 								npc:SetPos(nodePosition)
 								npc:PhysWake()
+
+								hook.Run('BGN_RespawnActor', actor, nodePosition)
 							end)
 						else
 							local desiredPosition
@@ -101,6 +103,8 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 									if not IsValid(npc) then return end
 									npc:SetPos(nodePosition)
 									npc:PhysWake()
+
+									hook.Run('BGN_RespawnActor', actor, nodePosition)
 								end)
 							end
 						end
