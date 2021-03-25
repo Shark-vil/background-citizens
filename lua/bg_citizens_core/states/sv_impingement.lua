@@ -31,7 +31,7 @@ end)
 
 local asset = bgNPC:GetModule('wanted')
 hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
-	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:TargetsCount() == 0 then
+	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
 		actor:SetState('retreat')
 		return true
 	end
@@ -57,23 +57,25 @@ bgNPC:SetStateAction('impingement', function(actor)
 
 		local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 
-		if current_distance <= 90000 then
+		if current_distance <= 90000 and not bgNPC:IsTargetRay(npc, enemy) then
 			local isMeleeWeapon = false
 			local npcWeapon = npc:GetActiveWeapon()
 			if IsValid(npcWeapon) then
 				isMeleeWeapon = table.HasValue(MeleeWeapon, npcWeapon:GetClass())
 			end
 
-			if isMeleeWeapon or not bgNPC:IsTargetRay(npc, enemy) then
+			if isMeleeWeapon then
 				actor:WalkToTarget(enemy, 'run')
 			else
-				local node = actor:GetDistantPointInRadius(1000)
-				if node then
-					actor:WalkToPos(node:GetPos(), 'run')
-				else
-					actor:WalkToTarget()
-					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
-				end
+            if current_distance <= 22500 then
+               local node = actor:GetDistantPointInRadius(1000)
+               if node then
+                  actor:WalkToPos(node:GetPos(), 'run')
+               else
+                  actor:WalkToTarget()
+                  npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+               end
+            end
 			end
 		else
 			actor:WalkToTarget(enemy, 'run')

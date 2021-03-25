@@ -484,30 +484,30 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:EnemiesRecalculate()
 		local npc = self:GetNPC()
 
-      if #self.enemies ~= 0 then
-         for _, enemy in ipairs(self.enemies) do
-            if not IsValid(enemy) or enemy:Health() <= 0 then
-               self:RemoveEnemy(enemy)
-            end
-         end
+      if #self.enemies == 0 then return end
 
-			if npc:IsNPC() then
-				local enemy = self:GetNearEnemy()
-				if IsValid(enemy) then
-					local WantedModule = bgNPC:GetModule('wanted')
-					if bgNPC:IsTargetRay(npc, enemy) then
-						npc:SetEnemy(enemy)
-						npc:SetTarget(enemy)
-						npc:UpdateEnemyMemory(enemy, enemy:GetPos())
-					elseif not WantedModule:HasWanted(enemy) then
-						local time = npc:GetEnemyLastTimeSeen(enemy)
-						if time + 20 < CurTime() then
-							self:RemoveEnemy(enemy)
-						end
+		for _, enemy in ipairs(self.enemies) do
+			if not IsValid(enemy) or enemy:Health() <= 0 then
+				self:RemoveEnemy(enemy)
+			end
+		end
+
+		if npc:IsNPC() then
+			local enemy = self:GetNearEnemy()
+			if IsValid(enemy) then
+				local WantedModule = bgNPC:GetModule('wanted')
+				if bgNPC:IsTargetRay(npc, enemy) or enemy.bgn_always_visible then
+					npc:SetEnemy(enemy)
+					npc:SetTarget(enemy)
+					npc:UpdateEnemyMemory(enemy, enemy:GetPos())
+				elseif not WantedModule:HasWanted(enemy) then
+					local time = npc:GetEnemyLastTimeSeen(enemy)
+					if time + 20 < CurTime() then
+						self:RemoveEnemy(enemy)
 					end
 				end
 			end
-      end
+		end
 	end
 
 	function obj:GetNearEnemy()
@@ -741,6 +741,23 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not hasNext then
 			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 			if npc:IsMoving() then return end
+		end
+
+		local current_schedule = npc:GetCurrentSchedule()
+		local white_list = {
+			SCHED_HIDE_AND_RELOAD,
+			SCHED_RELOAD,
+			SCHED_ESTABLISH_LINE_OF_FIRE,
+			SCHED_RANGE_ATTACK1,
+			SCHED_RANGE_ATTACK2,
+			SCHED_SPECIAL_ATTACK1,
+			SCHED_SPECIAL_ATTACK2,
+			SCHED_MELEE_ATTACK1,
+			SCHED_MELEE_ATTACK2
+		}
+
+		for _, v in ipairs(white_list) do
+			if v == current_schedule then return end
 		end
 
 		npc:SetLastPosition(targetPosition)
