@@ -18,6 +18,8 @@ bgNPC.cfg.npcs_states = {
 		'defense',
 		'calling_police',
 		'impingement',
+		-- 'killer',
+		-- 'zombie'
 	}
 }
 
