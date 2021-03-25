@@ -13,7 +13,7 @@ hook.Add("BGN_SetNPCState", "BGN_PlaySoundForFearState", function(actor, state)
 end)
 
 bgNPC:SetStateAction('fear', function(actor)
-	local enemy = actor:GetEnemy()
+	local enemy = actor:GetNearEnemy()
 	if not IsValid(enemy) or enemy:Health() <= 0 then return end
 
 	local npc = actor:GetNPC()
@@ -45,7 +45,7 @@ bgNPC:SetStateAction('fear', function(actor)
 		end
 	end
 
-	if dist < 22500 then -- 150 ^ 2
+	if dist < 40000 then -- 200 ^ 2
 		data.schedule = 'fear'
 		data.call_for_help = CurTime() + math.random(25, 40)
 		data.reset_fear = CurTime() + 30

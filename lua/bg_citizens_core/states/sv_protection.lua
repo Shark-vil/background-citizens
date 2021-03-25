@@ -16,7 +16,7 @@ local WantedModule = bgNPC:GetModule('wanted')
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
 bgNPC:SetStateAction('defense', function(actor)
-	local enemy = actor:GetEnemy()
+	local enemy = actor:GetNearEnemy()
 	if not IsValid(enemy) then return end
 	
 	local npc = actor:GetNPC()

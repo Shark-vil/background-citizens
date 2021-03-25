@@ -40,7 +40,7 @@ end)
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
 bgNPC:SetStateAction('impingement', function(actor)
-	local enemy = actor:GetEnemy()
+	local enemy = actor:GetNearEnemy()
 	if not IsValid(enemy) then return end
 	
 	local npc = actor:GetNPC()

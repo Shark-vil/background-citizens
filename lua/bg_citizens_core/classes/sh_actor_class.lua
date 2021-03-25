@@ -411,13 +411,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self:GetNPC()
 
 		if npc ~= ent and not table.HasValue(self.enemies, ent) then
-			local relationship = D_HT
-			if reaction == 'fear' then
-				relationship = D_FR
-			end
-
 			if not hook.Run('BGN_AddActorEnemy', self, ent) then
-				if self:GetNPC():IsNPC() then
+				if npc:IsNPC() then
+					local relationship = D_HT
+					if reaction == 'fear' then relationship = D_FR end
 					npc:AddEntityRelationship(ent, relationship, 99)
 				end
 				table.insert(self.enemies, ent)
@@ -743,7 +740,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		if not hasNext then
 			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-			if npc:IsMoving() and npc:IsCurrentSchedule(self.walkType) then return end
+			if npc:IsMoving() then return end
 		end
 
 		npc:SetLastPosition(targetPosition)
@@ -764,11 +761,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 						local TeamParentModule = bgNPC:GetModule('team_parent')
 						return TeamParentModule:HasParent(value, self)
 					end
-				elseif value:IsNPC() and value.isActor then
+				elseif (value:IsNPC() or value:IsNextBot()) and value.isBgnActor then
 					local actor = bgNPC:GetActor(value)
-					if actor ~= nil then
-						value = actor
-					end
+					if actor then value = actor end
 				end
 			end
 			
