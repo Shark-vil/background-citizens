@@ -957,62 +957,59 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:IsValidSequence(sequence_name)
-		if self.npc:LookupSequence(sequence_name) == -1 then return false end
-		return true
+		return self.npc:LookupSequence(sequence_name) ~= -1
 	end
 
 	function obj:PlayStaticSequence(sequence_name, loop, loop_time, action)
-		if self:IsValidSequence(sequence_name) then
-			if self:HasSequence(sequence_name) then
-				if self.anim_is_loop and not self:IsSequenceLoopFinished() then
-					return true
-				elseif not self.anim_is_loop and not self:IsSequenceFinished() then
-					return true
-				end
+		if not self:IsValidSequence(sequence_name) then return false end
+		
+		if self:HasSequence(sequence_name) then
+			if self.anim_is_loop and not self:IsSequenceLoopFinished() then
+				return true
+			elseif not self.anim_is_loop and not self:IsSequenceFinished() then
+				return true
 			end
-
-			local hook_result = hook.Run('BGN_PreNPCStartAnimation', 
-				self, sequence_name, loop, loop_time)
-
-			if hook_result ~= nil and isbool(hook_result) and not hook_result then
-				return
-			end
-
-			self.anim_is_loop = loop or false
-			self.anim_name = sequence_name
-			if loop_time ~= nil and loop_time ~= 0 then
-				self.loop_time = RealTime() + loop_time
-				self.loop_time_normal = self.loop_time - RealTime()
-			else
-				self.loop_time = 0
-			end
-			local sequence = self.npc:LookupSequence(sequence_name)
-			self.anim_time = RealTime() + self.npc:SequenceDuration(sequence)
-			self.anim_time_normal = self.anim_time - RealTime()
-			self.is_animated = true
-			self.anim_action = action
-
-			self.npc_schedule = SCHED_SLEEP
-			self.npc_state = NPC_STATE_SCRIPT
-			
-			self.npc:SetNPCState(NPC_STATE_SCRIPT)
-			self.npc:SetSchedule(SCHED_SLEEP)
-			self.npc:ResetSequenceInfo()
-			self.npc:ResetSequence(sequence)
-
-			self.npc_schedule = self.npc:GetCurrentSchedule()
-			self.npc_state = self.npc:GetNPCState()
-
-			self.npc:PhysWake()
-
-			hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
-
-			self:SyncAnimation()
-
-			return true
 		end
 
-		return false
+		local hook_result = hook.Run('BGN_PreNPCStartAnimation', 
+			self, sequence_name, loop, loop_time)
+
+		if hook_result ~= nil and isbool(hook_result) and not hook_result then
+			return false
+		end
+
+		self.anim_is_loop = loop or false
+		self.anim_name = string.lower(sequence_name)
+		if loop_time ~= nil and loop_time ~= 0 then
+			self.loop_time = RealTime() + loop_time
+			self.loop_time_normal = self.loop_time - RealTime()
+		else
+			self.loop_time = 0
+		end
+		local sequence = self.npc:LookupSequence(sequence_name)
+		self.anim_time = RealTime() + self.npc:SequenceDuration(sequence)
+		self.anim_time_normal = self.anim_time - RealTime()
+		self.is_animated = true
+		self.anim_action = action
+
+		self.npc_schedule = SCHED_SLEEP
+		self.npc_state = NPC_STATE_SCRIPT
+		
+		self.npc:SetNPCState(NPC_STATE_SCRIPT)
+		self.npc:SetSchedule(SCHED_SLEEP)
+		self.npc:ResetSequenceInfo()
+		self.npc:ResetSequence(sequence)
+
+		self.npc_schedule = self.npc:GetCurrentSchedule()
+		self.npc_state = self.npc:GetNPCState()
+
+		self.npc:PhysWake()
+
+		hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
+
+		self:SyncAnimation()
+
+		return true
 	end
 
 	function obj:SetNextSequence(sequence_name, loop, loop_time, action)
@@ -1027,7 +1024,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasSequence(sequence_name)
-		return self.anim_name == sequence_name
+		return self.anim_name == string.lower(sequence_name)
 	end
 
 	function obj:IsAnimationPlayed()

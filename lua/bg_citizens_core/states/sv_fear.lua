@@ -34,7 +34,6 @@ bgNPC:SetStateAction('fear', function(actor)
 
 		if data.schedule == 'run' and dist > 360000 and math.random(0, 10) == 0 then
 			data.schedule = 'dyspnea'
-			actor:ResetSequence()
 			actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02_Entry', false, nil, function()
 				actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02', true, math.random(5, 15), function()
 					data.schedule = 'run'
