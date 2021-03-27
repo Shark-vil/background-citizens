@@ -26,8 +26,11 @@ end)
 
 hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, attacker, target, reaction)
    if reaction ~= 'arrest' then return end
-   if not GetConVar('bgn_arrest_mode'):GetBool() or target:IsPlayer() then
+   if not GetConVar('bgn_arrest_mode'):GetBool() or target:IsPlayer() or not attacker:IsPlayer() then
+      actor:RemoveAllTargets()
+      actor:AddEnemy(attacker)
       actor:SetReaction('defense')
+      return true
    end
 end)
 
@@ -63,6 +66,9 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
             end
          
             if not PoliceActor then return end
+
+            local PoliceNPC = PoliceActor:GetNPC()
+            if not bgNPC:IsTargetRay(PoliceNPC, attacker) then return end
          end
 
          ArrestModule:AddPlayer(attacker, PoliceActor)
