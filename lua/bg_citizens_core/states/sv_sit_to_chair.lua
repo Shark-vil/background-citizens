@@ -57,81 +57,83 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
    end
 end)
 
-bgNPC:SetStateAction('sit_to_chair', function(actor)
-   local npc = actor:GetNPC()
-   local data = actor:GetStateData()
-   local chair = data.chair
-   local chairData = bgNPC.cfg.sit_chairs[data.chairDataId]
+bgNPC:SetStateAction('sit_to_chair', {
+   update = function(actor)
+      local npc = actor:GetNPC()
+      local data = actor:GetStateData()
+      local chair = data.chair
+      local chairData = bgNPC.cfg.sit_chairs[data.chairDataId]
 
-   if not IsValid(chair) then
-      actor:ResetSequence()
+      if not IsValid(chair) then
+         actor:ResetSequence()
 
-      npc:SetAngles(Angle(0, 0, 0))
-      npc:SetCollisionGroup(COLLISION_GROUP_NONE)
-      npc:PhysWake()
+         npc:SetAngles(Angle(0, 0, 0))
+         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+         npc:PhysWake()
 
-      data.isStand = true
-      actor:SetState('walk')
-   elseif not data.isSit and data.delay < CurTime() then
-      data.isStand = true
-      actor:SetState('walk')
-      chair.occupied = false
-   else
-      local phys = chair:GetPhysicsObject()
-      
-      if not data.isMove then
-         actor:WalkToPos(chair:GetPos() + (chair:GetForward() * 35))
-         data.isMove = true
-      end
-      
-      if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then  -- 60 ^ 2 
-         data.isSit = true
-
-         local sitTime = math.random(5, 120)
-         local new_pos = chair:GetPos() + (chair:GetForward() * 35)
-         local new_angle = chair:GetAngles()
-
-         if chairData.offsetPosition ~= nil then
-            new_pos = chairData.offsetPosition(npc, chair, new_pos)
-         end
-
-         if chairData.offsetAngle ~= nil then
-            new_angle = chairData.offsetAngle(npc, chair, new_angle)
-         end
-
-         npc:SetPos(new_pos)
-         npc:SetAngles(new_angle)
-         -- npc:SetParent(chair)
-         npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-         if IsValid(phys) then
-            phys:EnableMotion(false)
+         data.isStand = true
+         actor:SetState('walk')
+      elseif not data.isSit and data.delay < CurTime() then
+         data.isStand = true
+         actor:SetState('walk')
+         chair.occupied = false
+      else
+         local phys = chair:GetPhysicsObject()
+         
+         if not data.isMove then
+            actor:WalkToPos(chair:GetPos() + (chair:GetForward() * 35))
+            data.isMove = true
          end
          
-         actor:PlayStaticSequence('Idle_To_Sit_Chair', false, nil, function()
-            actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
-               actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
-                  if not IsValid(npc) then return end
-                  if data.isStandAnimation then return end
-                  data.isStandAnimation = true
-                  
-                  if IsValid(chair) then
-                     npc:SetAngles(Angle(0, chair:GetAngles().y, 0))
-                  else
-                     npc:SetAngles(Angle(0, 0, 0))
-                  end
+         if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then  -- 60 ^ 2 
+            data.isSit = true
 
-                  -- npc:SetParent(nil)
-                  npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
-                  npc:SetCollisionGroup(COLLISION_GROUP_NONE)
-                  npc:PhysWake()
+            local sitTime = math.random(5, 120)
+            local new_pos = chair:GetPos() + (chair:GetForward() * 35)
+            local new_angle = chair:GetAngles()
 
-                  data.isStand = true
-                  chair.sitDelay = CurTime() + 15
-                  actor:SetState('walk')
-                  chair.occupied = false
+            if chairData.offsetPosition ~= nil then
+               new_pos = chairData.offsetPosition(npc, chair, new_pos)
+            end
+
+            if chairData.offsetAngle ~= nil then
+               new_angle = chairData.offsetAngle(npc, chair, new_angle)
+            end
+
+            npc:SetPos(new_pos)
+            npc:SetAngles(new_angle)
+            -- npc:SetParent(chair)
+            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+            if IsValid(phys) then
+               phys:EnableMotion(false)
+            end
+            
+            actor:PlayStaticSequence('Idle_To_Sit_Chair', false, nil, function()
+               actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
+                  actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
+                     if not IsValid(npc) then return end
+                     if data.isStandAnimation then return end
+                     data.isStandAnimation = true
+                     
+                     if IsValid(chair) then
+                        npc:SetAngles(Angle(0, chair:GetAngles().y, 0))
+                     else
+                        npc:SetAngles(Angle(0, 0, 0))
+                     end
+
+                     -- npc:SetParent(nil)
+                     npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
+                     npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+                     npc:PhysWake()
+
+                     data.isStand = true
+                     chair.sitDelay = CurTime() + 15
+                     actor:SetState('walk')
+                     chair.occupied = false
+                  end)
                end)
             end)
-         end)
+         end
       end
    end
-end)
+})

@@ -89,68 +89,70 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
    return false
 end)
 
-bgNPC:SetStateAction('arrest', function(actor)
-   local npc = actor:GetNPC()
-   local target = actor:GetFirstTarget()
-   local ArrestComponent = ArrestModule:GetPlayer(target)
+bgNPC:SetStateAction('arrest', {
+   update = function(actor)
+      local npc = actor:GetNPC()
+      local target = actor:GetFirstTarget()
+      local ArrestComponent = ArrestModule:GetPlayer(target)
 
-   if not IsValid(target) or actor:TargetsCount() == 0 or not ArrestComponent then
-		actor:RandomState()
-      return
-	end
-
-   if not ArrestComponent.arrested or 
-      (not ArrestComponent.detention and ArrestComponent.warningTime < CurTime())
-   then
-      ArrestModule:NotSubjectToArrest(target)
-      actor:RemoveAllTargets()
-      actor:AddEnemy(target)
-      actor:SetState('defense')
-      return
-   end
-
-   if npc:GetPos():DistToSqr(target:GetPos()) > 22500 then
-      actor:WalkToTarget(target, 'run')
-      ArrestComponent.detention = false
-   else
-      local addArrestTime = GetConVar('bgn_arrest_time'):GetFloat()
-      local eyeAngles = target:EyeAngles()
-
-      if not ArrestComponent.detention then
-         ArrestComponent.arrest_time = CurTime() + addArrestTime
+      if not IsValid(target) or actor:TargetsCount() == 0 or not ArrestComponent then
+         actor:RandomState()
+         return
       end
 
-      if eyeAngles.x > 40 then
-         if not ArrestComponent.detention then
-            npc:EmitSound(bgNPC.cfg.arrest['warning_sound'], 300, 100, 1, CHAN_AUTO)
-            target:ChatPrint(bgNPC.cfg.arrest['warning_text'])
-         end
-         ArrestComponent.detention = true
-      else
+      if not ArrestComponent.arrested or 
+         (not ArrestComponent.detention and ArrestComponent.warningTime < CurTime())
+      then
+         ArrestModule:NotSubjectToArrest(target)
+         actor:RemoveAllTargets()
+         actor:AddEnemy(target)
+         actor:SetState('defense')
+         return
+      end
+
+      if npc:GetPos():DistToSqr(target:GetPos()) > 22500 then
+         actor:WalkToTarget(target, 'run')
          ArrestComponent.detention = false
-      end
+      else
+         local addArrestTime = GetConVar('bgn_arrest_time'):GetFloat()
+         local eyeAngles = target:EyeAngles()
 
-      if not ArrestComponent.detention and ArrestComponent.notify_order_time < CurTime() then
-         ArrestComponent.notify_order_time = CurTime() + 3
-         target:ChatPrint(bgNPC.cfg.arrest['order_text'])
-         npc:EmitSound(bgNPC.cfg.arrest['order_sound'], 300, 100, 1, CHAN_AUTO)
-      elseif ArrestComponent.detention then
-         local time = ArrestComponent.arrest_time - CurTime()
-         if time <= 0 then
-            ArrestModule:RemovePlayer(target)
+         if not ArrestComponent.detention then
+            ArrestComponent.arrest_time = CurTime() + addArrestTime
+         end
 
-            hook.Run('BGN_PlayerArrest', target, actor)
-            
-            for _, actor in ipairs(bgNPC:GetAll()) do
-               actor:RemoveTarget(target)
-               actor:RemoveEnemy(target)
+         if eyeAngles.x > 40 then
+            if not ArrestComponent.detention then
+               npc:EmitSound(bgNPC.cfg.arrest['warning_sound'], 300, 100, 1, CHAN_AUTO)
+               target:ChatPrint(bgNPC.cfg.arrest['warning_text'])
             end
+            ArrestComponent.detention = true
          else
-            if ArrestComponent.notify_arrest_time < CurTime() then
-               target:ChatPrint(string.Replace(bgNPC.cfg.arrest['arrest_notify'], '%time%', math.floor(time)))
-               ArrestComponent.notify_arrest_time = CurTime() + 1
+            ArrestComponent.detention = false
+         end
+
+         if not ArrestComponent.detention and ArrestComponent.notify_order_time < CurTime() then
+            ArrestComponent.notify_order_time = CurTime() + 3
+            target:ChatPrint(bgNPC.cfg.arrest['order_text'])
+            npc:EmitSound(bgNPC.cfg.arrest['order_sound'], 300, 100, 1, CHAN_AUTO)
+         elseif ArrestComponent.detention then
+            local time = ArrestComponent.arrest_time - CurTime()
+            if time <= 0 then
+               ArrestModule:RemovePlayer(target)
+
+               hook.Run('BGN_PlayerArrest', target, actor)
+               
+               for _, actor in ipairs(bgNPC:GetAll()) do
+                  actor:RemoveTarget(target)
+                  actor:RemoveEnemy(target)
+               end
+            else
+               if ArrestComponent.notify_arrest_time < CurTime() then
+                  target:ChatPrint(string.Replace(bgNPC.cfg.arrest['arrest_notify'], '%time%', math.floor(time)))
+                  ArrestComponent.notify_arrest_time = CurTime() + 1
+               end
             end
          end
       end
    end
-end)
+})
