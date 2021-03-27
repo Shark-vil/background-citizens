@@ -62,6 +62,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.walkTarget = NULL
 	obj.walkType = SCHED_FORCED_GO
 	obj.walkUpdatePathDelay = 0
+	obj.pathType = nil
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -671,10 +672,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		self.walkPath = {}
 		self.walkPos = nil
 		self.walkUpdatePathDelay = 0
+		self.pathType = nil
 		self:SetWalkType()
 	end
 
-	function obj:WalkToTarget(target, type)
+	function obj:WalkToTarget(target, type, pathType)
 		if self:GetNPC():IsNextBot() then return end
 		
 		if target == nil or not IsValid(target) then
@@ -686,6 +688,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			self:SetWalkType(type)
 
 			if self.walkTarget ~= target then
+				self.pathType = pathType
 				self.walkUpdatePathDelay = 0
 				self.walkPos = nil
 				self.walkTarget = target
@@ -708,10 +711,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self.npc
 		if npc:GetPos():DistToSqr(pos) <= 2500 then return end
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-		
+
 		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
 		if #walkPath == 0 then return end
 
+		self.pathType = pathType
 		self.walkTarget = NULL
 		self:SetWalkType(type)
 		self.walkPos = pos
