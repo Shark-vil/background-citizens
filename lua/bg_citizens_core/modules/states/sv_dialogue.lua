@@ -104,7 +104,7 @@ function ASSET:SetDialogue(actor1, actor2)
       replicMax = table.Count(dialogue.list),
       soundId = 1,
       soundMax = table.Count(replic),
-      switchTime = CurTime() + NewSoundDuration('sound/' .. NormalizeSoundPath(replic[1], gender_1)) + 1,
+      switchTime = CurTime() + slib.NewSoundDuration('sound/' .. NormalizeSoundPath(replic[1], gender_1)) + 1,
       isIdle = false,
    })
    
@@ -179,7 +179,7 @@ function ASSET:SwitchDialogue(actor)
             gender = dialogue.gender[dialogue.speaking]
 
             local sound_path = NormalizeSoundPath(dialogue.replic[1], gender)
-            dialogue.switchTime = CurTime() + NewSoundDuration('sound/' .. sound_path) + 0.5
+            dialogue.switchTime = CurTime() + slib.NewSoundDuration('sound/' .. sound_path) + 0.5
             
             local actor = dialogue.interlocutors[dialogue.speaking]
             _EmitSound(actor, sound_path)
@@ -188,7 +188,7 @@ function ASSET:SwitchDialogue(actor)
       else
          dialogue.soundId = dialogue.soundId + 1
          local sound_path = NormalizeSoundPath(dialogue.replic[dialogue.soundId], gender)
-         dialogue.switchTime = CurTime() + NewSoundDuration('sound/' .. sound_path) + 0.5
+         dialogue.switchTime = CurTime() + slib.NewSoundDuration('sound/' .. sound_path) + 0.5
 
          local actor = dialogue.interlocutors[dialogue.speaking]
          _EmitSound(actor, sound_path)
