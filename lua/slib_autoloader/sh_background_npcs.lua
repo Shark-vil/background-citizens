@@ -23,7 +23,7 @@ bgNPC.respawn_actors_delay = {}
 bgNPC.NavmeshIsLoaded = false
 -- ---------------------------
 
-local root_directory = 'bg_citizens_core'
+local root_directory = 'background_npcs_core'
 local script = slib.CreateIncluder(root_directory, '[Background NPCs] Script load - {file}')
 
 script:using('config/sh_main.lua')
