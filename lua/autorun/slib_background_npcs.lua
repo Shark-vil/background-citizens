@@ -1,6 +1,8 @@
 --[[
-	WIKI:
-	https://background-npcs.itpony.ru/wik
+	The presence of the "Slibrary" is checked here.
+
+	The addon is loaded here:
+	lua/slib_autoloader/sh_background_npcs.lua
 --]]
 
 hook.Add("PostGamemodeLoaded", "BGN_SlibraryExistsChecker", function()

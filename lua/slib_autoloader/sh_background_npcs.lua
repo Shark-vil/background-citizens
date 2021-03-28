@@ -1,3 +1,8 @@
+--[[
+	WIKI:
+	https://background-npcs.itpony.ru/wik
+--]]
+
 file.CreateDir('background_npcs')
 file.CreateDir('background_npcs/nodes')
 file.CreateDir('background_npcs/compile')
