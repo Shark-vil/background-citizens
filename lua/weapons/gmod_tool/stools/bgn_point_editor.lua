@@ -86,10 +86,10 @@ if CLIENT then
 					end
 				end
 			end
-		elseif type == 'remover' and tool.SelectedPointId ~= -1 then
+		elseif type == 'remover' then
 			if tool.LastNodeRemover then
 				tool:RemoveLastNode()
-			else
+			elseif tool.SelectedPointId ~= -1 then
 				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
 				if node then tool:RemoveNode(node) end
 			end
