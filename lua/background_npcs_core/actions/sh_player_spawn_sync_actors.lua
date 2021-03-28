@@ -1,5 +1,5 @@
 if SERVER then
-	hook.Add("SlibEntitySuccessInvoked", 'ActorSyncData', function(success, name, ply, ent)
+	hook.Add("Slib_EntitySuccessInvoked", 'ActorSyncData', function(success, name, ply, ent)
 		if not success or name ~= 'bgn_add_actor_from_client' then return end
 
 		local actor = bgNPC:GetActor(ent)
