@@ -15,10 +15,10 @@ snet.RegisterCallback('bgn_actor_sync_data_client', function (_, npc, data)
 	actor.loop_time = data.loop_time
 	actor.anim_is_loop = data.anim_is_loop
 	actor.is_animated = data.is_animated
-	actor.old_state.state = data.old_state
+	actor.old_state = data.old_state
 	actor.state_lock = data.state_lock
 	actor.targets = data.targets
-	actor.state_data.state = data.state
+	actor.state_data = data.state
 	actor.npc_schedule = data.npc_schedule
 	actor.npc_state = data.npc_state
 	actor.anim_name = data.anim_name
@@ -53,9 +53,9 @@ snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data
 	local actor = bgNPC:GetActor(npc)
 	if actor == nil then return end
 
-	actor.old_state.state = data.old_state
+	actor.old_state = data.old_state
 	actor.state_lock = data.state_lock
-	actor.state_data.state = data.state
+	actor.state_data = data.state
 end)
 
 snet.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, npc, data)

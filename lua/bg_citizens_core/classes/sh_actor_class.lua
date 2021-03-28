@@ -86,10 +86,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			loop_time = self.loop_time,
 			anim_is_loop = self.anim_is_loop,
 			is_animated = self.is_animated,
-			old_state = self.old_state.state,
+			old_state = self.old_state,
 			state_lock = self.state_lock,
 			targets = self.targets,
-			state = self.state_data.state,
+			state = self.state_data,
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 			anim_time_normal = self.anim_time_normal,
@@ -141,9 +141,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not self:IsAlive() then return end
 
 		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
-			old_state = self.old_state.state,
+			old_state = self.old_state,
 			state_lock = self.state_lock,
-			state = self.state_data.state,
+			state = self.state_data,
 		})
 	end
 
