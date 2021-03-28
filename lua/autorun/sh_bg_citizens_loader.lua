@@ -1,0 +1,3 @@
+-- Fuck you, gmod.
+-- Fix cache old files inject.
+-- Garry, WTF?
