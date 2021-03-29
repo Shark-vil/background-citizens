@@ -5,6 +5,13 @@ function bgNPC:GetActor(npc)
 	return nil
 end
 
+function bgNPC:GetActorByUid(uid)
+	for _, actor in ipairs(self:GetAll()) do
+		if actor.uid == uid then return actor end
+	end
+	return nil
+end
+
 function bgNPC:GetAllPoints(linkType)
 	if not linkType then
 		return BGN_NODE:GetMap()

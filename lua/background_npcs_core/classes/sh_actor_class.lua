@@ -71,88 +71,75 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.npc_schedule = -1
 	obj.npc_state = -1
 
-	-- Synchronizes all required variables with clients.
-	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
-	function obj:SyncData(ply)
-		ply = ply or NULL
+	function obj:SyncFunction(name, ply, data)
 		if CLIENT then return end
 		if not self:IsAlive() then return end
 
-		local sync_data = {
-			uid = self.uid,
-			anim_name = self.anim_name,
-			reaction = self.reaction,
-			anim_time = self.anim_time,
-			loop_time = self.loop_time,
-			anim_is_loop = self.anim_is_loop,
-			is_animated = self.is_animated,
-			old_state = self.old_state,
-			state_lock = self.state_lock,
-			targets = self.targets,
-			state = self.state_data,
-			npc_schedule = self.npc_schedule,
-			npc_state = self.npc_state,
-			anim_time_normal = self.anim_time_normal,
-			loop_time_normal = self.loop_time_normal,
-			enemies = self.enemies,
-		}
+		local npc = self:GetNPC()
+		if npc:IsDormant() then return end
 
-		if not IsValid(ply) then
-			snet.InvokeAll('bgn_actor_sync_data_client', npc, sync_data)
+		if ply then
+			if IsValid(ply)  then
+				snet.Invoke(name, ply, self.uid, data)
+			end
 		else
-			snet.Invoke('bgn_actor_sync_data_client', ply, npc, sync_data)
+			snet.InvokeAll(name, self.uid, data)
 		end
 	end
 
-	-- Synchronizes the "reaction" setting for all clients.
-	function obj:SyncReaction()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
+	-- Synchronizes all required variables with clients.
+	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
+	function obj:SyncData(ply)
+		self:SyncAnimation(ply)
+		self:SyncEnemies(ply)
+		self:SyncReaction(ply)
+		self:SyncSchedule(ply)
+		self:SyncState(ply)
+		self:SyncTargets(ply)
+	end
 
-		snet.InvokeAll('bgn_actor_sync_data_reaction_client', npc, {
+	-- Synchronizes the "reaction" setting for all clients.
+	function obj:SyncReaction(ply)
+		self:SyncFunction('bgn_actor_sync_data_reaction_client', ply, {
 			reaction = self.reaction,
 		})
 	end
 
 	-- Synchronizes the "schedule" setting for all clients.
-	function obj:SyncSchedule()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
-
-		snet.InvokeAll('bgn_actor_sync_data_schedule_client', npc, {
+	function obj:SyncSchedule(ply)
+		self:SyncFunction('bgn_actor_sync_data_schedule_client', ply, {
 			npc_schedule = self.npc_schedule,
 			npc_state = self.npc_state,
 		})
 	end
 
 	-- Synchronizes the "targets" setting for all clients.
-	function obj:SyncTargets()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
-
-		snet.InvokeAll('bgn_actor_sync_data_targets_client', npc, {
+	function obj:SyncTargets(ply)
+		self:SyncFunction('bgn_actor_sync_data_targets_client', ply, {
 			targets = self.targets,
 		})
 	end
 
 	-- Synchronizes the "state" setting for all clients.
-	function obj:SyncState()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
-
-		snet.InvokeAll('bgn_actor_sync_data_state_client', npc, {
-			old_state = self.old_state,
-			state_lock = self.state_lock,
-			state = self.state_data,
-		})
+	function obj:SyncState(ply)
+		if not bgNPC.cfg.EnableEasySyncStateDataForClient then
+			self:SyncFunction('bgn_actor_sync_data_state_client', ply, {
+				old_state = self.old_state,
+				state_lock = self.state_lock,
+				state = self.state_data,
+			})
+		else
+			self:SyncFunction('bgn_actor_easy_sync_data_state_client', ply, {
+				old_state = self.old_state.state,
+				state_lock = self.state_lock,
+				state = self.state_data.state,
+			})
+		end
 	end
 
 	-- Synchronizes the "animation" setting for all clients.
-	function obj:SyncAnimation()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
-
-		snet.InvokeAll('bgn_actor_sync_data_animation_client', npc, {
+	function obj:SyncAnimation(ply)
+		self:SyncFunction('bgn_actor_sync_data_animation_client', ply, {
 			anim_name = self.anim_name,
 			anim_time = self.anim_time,
 			loop_time = self.loop_time,
@@ -163,11 +150,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		})
 	end
 
-	function obj:SyncEnemies()
-		if CLIENT then return end
-		if not self:IsAlive() then return end
-
-		snet.InvokeAll('bgn_actor_sync_data_enemies', npc, {
+	function obj:SyncEnemies(ply)
+		self:SyncFunction('bgn_actor_sync_data_enemies', ply, {
 			enemies = self.enemies,
 		})
 	end
@@ -638,7 +622,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		self.state_data = { state = state, data = data }
 
 		if SERVER then
-			self:SyncState()
 			self.anim_action = nil
 			self:ResetSequence()
 		end
@@ -1053,7 +1036,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			
 			if self.loop_time_normal > 0 then
 				self.loop_time_normal = self.loop_time - RealTime()
-				if bgNPC.cfg.syncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
+				if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
 					self:SyncAnimation()
 					self.sync_animation_delay = CurTime() + 0.5
 				end
@@ -1071,7 +1054,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:IsSequenceFinished()
 		if self.anim_time_normal > 0 then
 			self.anim_time_normal = self.anim_time - RealTime()
-			if bgNPC.cfg.syncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
+			if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
 				self:SyncAnimation()
 				self.sync_animation_delay = CurTime() + 0.5
 			end

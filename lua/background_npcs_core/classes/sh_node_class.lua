@@ -13,6 +13,28 @@ function BGN_NODE:Instance(position)
    obj.parents = {}
    obj.links = {}
 
+   function obj:GetSnetData()
+      local netobj = {}
+      netobj.index = self.index
+      netobj.isNode = self.isNode
+      netobj.position = self.position
+      netobj.parents = {}
+      netobj.links = {}
+
+      for _, node in ipairs(self.parents) do
+         table.insert(netobj.parents, node.index)
+      end
+
+      for linkType, nodes in pairs(self.links) do
+         netobj.links[linkType] = netobj.links[linkType] or {}
+         for _, node in ipairs(nodes) do
+            table.insert(netobj.links[linkType], node.index)
+         end
+      end
+
+      return netobj
+   end
+
    function obj:AddParentNode(node)
       if self == node or table.HasValue(self.parents, node) then return end
       table.insert(self.parents, node)

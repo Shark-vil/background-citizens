@@ -1,13 +1,13 @@
 if SERVER then
-	hook.Add("Slib_EntitySuccessInvoked", 'ActorSyncData', function(success, name, ply, ent)
-		if not success or name ~= 'bgn_add_actor_from_client' then return end
+	hook.Add("Slib_EntitySuccessInvoked", 'BGM_StartActorSyncData', function(name, ply, ent)
+		if name ~= 'bgn_add_actor_from_client' then return end
 
 		local actor = bgNPC:GetActor(ent)
-		if actor == nil or not actor:IsAlive() then return end
-		
+		if not actor or not actor:IsAlive() then return end
+
 		actor:SyncData(ply)
 	end)
-	
+
 	hook.Add("SlibPlayerFirstSpawn", "BGN_PlayerFirstInitSpawnerHook", function(ply)
 		local delay = 0
 
