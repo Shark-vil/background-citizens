@@ -2,7 +2,10 @@ local n2MoneyExist = nil
 hook.Add("BGN_DropMoney", "BGN_n2MoneyNPCDropMoney", function(actor, pos, money)
 	if n2MoneyExist == nil then
 		n2MoneyExist = scripted_ents.GetList()['ent_money'] ~= nil
-	elseif n2MoneyExist == false then
+	end
+	
+	if not n2MoneyExist then
+		hook.Remove("BGN_DropMoney", "BGN_n2MoneyNPCDropMoney")
 		return
 	end
 
