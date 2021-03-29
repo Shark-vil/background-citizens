@@ -156,7 +156,9 @@ slib:RegisterGlobalCvar('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporte
 FCVAR_ARCHIVE, 'Instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.')
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
-	local enabled = v.enabled or 1
+	local enabled = 0
+	if v.enabled then enabled = 1 end
+
 	slib:RegisterGlobalCvar('bgn_npc_type_' .. npcType, enabled, FCVAR_ARCHIVE)
 end
 

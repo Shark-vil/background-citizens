@@ -76,6 +76,7 @@ bgNPC.cfg.npcs_states = {
 -- NPC classes that fill the streets
 bgNPC.cfg.npcs_template = {
 	['citizen'] = {
+		enabled = true,
 		class = 'npc_citizen',
 		name = 'Civilian',
 		fullness = 64,
@@ -141,6 +142,7 @@ bgNPC.cfg.npcs_template = {
 		}
 	},
 	['pilferer'] = {
+		enabled = true,
 		class = 'npc_citizen',
 		name = 'Pilferer',
 		fullness = 8,
@@ -167,6 +169,7 @@ bgNPC.cfg.npcs_template = {
 		}
 	},
 	['gangster'] = {
+		enabled = true,
 		class = 'npc_citizen',
 		name = 'Gangster',
 		fullness = 10,
@@ -215,6 +218,7 @@ bgNPC.cfg.npcs_template = {
 		}
 	},
 	['police'] = {
+		enabled = true,
 		class = 'npc_metropolice',
 		name = 'Police',
 		fullness = 6,
@@ -244,6 +248,7 @@ bgNPC.cfg.npcs_template = {
 		}
 	},
 	['civil_defense'] = {
+		enabled = true,
 		class = 'npc_metropolice',
 		name = 'Сivil Defense',
 		respawn_delay = 5,
@@ -266,6 +271,7 @@ bgNPC.cfg.npcs_template = {
 		at_protect = { ['defense'] = 100 },
 	},
 	['special_forces'] = {
+		enabled = true,
 		class = 'npc_combine_s',
 		name = 'Special Forces',
 		respawn_delay = 15,
@@ -288,6 +294,7 @@ bgNPC.cfg.npcs_template = {
 		at_protect = { ['defense'] = 100 },
 	},
 	['special_forces_2'] = {
+		enabled = true,
 		class = 'npc_combine_s',
 		name = 'Reinforced Special Forces',
 		respawn_delay = 15,
@@ -310,6 +317,7 @@ bgNPC.cfg.npcs_template = {
 		at_protect = { ['defense'] = 100 },
 	},
 	['police_helicopter'] = {
+		enabled = true,
 		class = 'npc_apache_scp_sb',
 		name = 'Assault Helicopter',
 		disable_states = true,
