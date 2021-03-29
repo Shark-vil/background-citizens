@@ -1,7 +1,9 @@
 hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, data)
-   if actor:HasState('sit_to_chair') and state ~= 'defense' and state ~= 'fear' then
-      if actor:GetStateData().isStand then return end
-      return true
+   if actor:HasState('sit_to_chair') or actor:HasState('sit_to_chair_2') then
+      if state ~= 'defense' and state ~= 'fear' then
+         if actor:GetStateData().isStand then return end
+         return true
+      end
    end
 
    if state ~= 'sit_to_chair' then return end
@@ -9,7 +11,8 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
    local npc = actor:GetNPC()
    if not IsValid(npc) then return end
 
-   local entities = ents.FindInSphere(npc:GetPos(), 500)
+   local npc_pos = npc:GetPos()
+   local entities = ents.FindInSphere(npc_pos, 500)
    local chair = NULL
    local cahirId = -1
 
@@ -53,6 +56,35 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
          }
       }
    else
+      local seats = {}
+      for _, seat in ipairs(BGN_SEAT:GetAllSeats()) do
+         if seat.sitDelay and seat.sitDelay > CurTime() then goto skip end
+
+         if not IsValid(seat:GetSitting()) and seat:GetPos():DistToSqr(npc_pos) < 250000 then
+            for _, ent in ipairs(ents.FindInSphere(seat:GetPos(), 10)) do
+               if ent:IsPlayer() then goto skip end
+            end
+            table.insert(seats, seat)
+         end
+
+         ::skip::
+      end
+      
+      if #seats ~= 0 then
+         local seat = table.Random(seats)
+         seat:SetSitting(npc)
+         return  {
+            state = 'sit_to_chair_2',
+            data = {
+               seat = seat,
+               delay = CurTime() + math.random(10, 30),
+               isSit = false,
+               isMove = false,
+               isStand = false,
+            }
+         }
+      end
+
       return { state = 'walk' }
    end
 end)
@@ -86,6 +118,7 @@ bgNPC:SetStateAction('sit_to_chair', {
          end
          
          if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then  -- 60 ^ 2 
+            actor:WalkToPos(nil)
             data.isSit = true
 
             local sitTime = math.random(5, 120)

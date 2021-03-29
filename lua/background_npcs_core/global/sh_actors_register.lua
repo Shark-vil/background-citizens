@@ -36,7 +36,7 @@ if SERVER then
 			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 		local spawn_radius = bgn_spawn_radius
-		local limit_pass = limit_pass or 10
+		local limit_pass = limit_pass or 5
 		local current_pass = 0
 		
 		local thread = coroutine.create(function()
@@ -89,7 +89,7 @@ if SERVER then
 						coroutine.yield()
 						current_pass = 0
 					end
-					
+
 					::skip_walk_nodes::
 				end
 			end
@@ -105,6 +105,7 @@ if SERVER then
 			return coroutine.yield(table.Random(radius_positions))
 		end)
 
+		-- local StartTime = SysTime()
 		hook.Add("Think", hook_name, function()
 			if coroutine.status(thread) == 'dead' then
 				hook.Remove("Think", hook_name)
@@ -114,7 +115,11 @@ if SERVER then
 
 			local worked, nodePosition = coroutine.resume(thread)
 			if nodePosition then
+				-- print(math.floor(SysTime() - StartTime))
 				action(nodePosition)
+
+				hook.Remove("Think", hook_name)
+				hooks_active[hook_name] = false
 			end
 		end)
 	end

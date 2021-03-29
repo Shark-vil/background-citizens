@@ -26,6 +26,30 @@ CreateConVar('bgn_tool_point_editor_show_parents', bgNPC.cvar.bgn_tool_point_edi
 { FCVAR_ARCHIVE }, 
 'Show global connections.')
 
+CreateConVar('bgn_tool_seat_offset_pos_x', bgNPC.cvar.bgn_tool_seat_offset_pos_x, 
+{ FCVAR_ARCHIVE }, 
+'')
+
+CreateConVar('bgn_tool_seat_offset_pos_y', bgNPC.cvar.bgn_tool_seat_offset_pos_y, 
+{ FCVAR_ARCHIVE }, 
+'')
+
+CreateConVar('bgn_tool_seat_offset_pos_z', bgNPC.cvar.bgn_tool_seat_offset_pos_z, 
+{ FCVAR_ARCHIVE }, 
+'')
+
+CreateConVar('bgn_tool_seat_offset_angle_x', bgNPC.cvar.bgn_tool_seat_offset_angle_x, 
+{ FCVAR_ARCHIVE }, 
+'')
+
+CreateConVar('bgn_tool_seat_offset_angle_y', bgNPC.cvar.bgn_tool_seat_offset_angle_y, 
+{ FCVAR_ARCHIVE }, 
+'')
+
+CreateConVar('bgn_tool_seat_offset_angle_z', bgNPC.cvar.bgn_tool_seat_offset_angle_z, 
+{ FCVAR_ARCHIVE }, 
+'')
+
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 

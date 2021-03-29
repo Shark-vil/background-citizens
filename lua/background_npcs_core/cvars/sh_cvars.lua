@@ -30,6 +30,12 @@ bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_movement_checking_parts = 5
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 bgNPC.cvar.bgn_actors_teleporter = 0
+bgNPC.cvar.bgn_tool_seat_offset_pos_x = 0
+bgNPC.cvar.bgn_tool_seat_offset_pos_y = 0
+bgNPC.cvar.bgn_tool_seat_offset_pos_z = 0
+bgNPC.cvar.bgn_tool_seat_offset_angle_x = 0
+bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
+bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
 
 if CLIENT then
 	bgNPC.cvar.bgn_cl_field_view_optimization = 0
