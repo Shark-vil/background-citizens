@@ -7,7 +7,7 @@ hook.Add('BGN_StealFinish', 'BGN_nMoney2_StealMoney', function(actor, target, su
    local moneySteal = math.random(10, 100)
    if moneyCount < moneySteal then moneySteal = moneyCount end
 
-   target:SetNWString(tostring(moneyCount - moneySteal))
+   target:SetNWString('WalletMoney', tostring(moneyCount - moneySteal))
 
    local npc = actor:GetNPC()
    npc:slibSetVar('nMoney2Steal', npc:slibGetVar('nMoney2Steal', 0) + moneySteal)
