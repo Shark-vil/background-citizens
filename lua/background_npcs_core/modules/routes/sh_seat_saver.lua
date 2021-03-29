@@ -10,12 +10,23 @@ if SERVER then
       BGN_SEAT:Initialize()
    end, false, true)
 
-   snet.RegisterCallback('sv_bgn_tool_seat_load', function(ply, points)
+   local function ReadSeatData()
       local file_path = 'background_npcs/seats/' .. game.GetMap() .. '.dat'
       if file.Exists(file_path, 'DATA') then
          local read_data = util.JSONToTable(util.Decompress(file.Read(file_path, 'DATA')))
-         snet.Invoke('cl_bgn_tool_seat_load', ply, read_data)
+         return read_data
       end
+      return {}
+   end
+
+   snet.RegisterCallback('sv_bgn_tool_seat_load', function(ply, points)
+      local data = ReadSeatData()
+      if #data ~= 0 then snet.Invoke('cl_bgn_tool_seat_load', ply, data) end
+   end, false, true)
+
+   snet.RegisterCallback('sv_bgn_tool_seat_compile', function(ply, points)
+      local data = ReadSeatData()
+      snet.Invoke('cl_bgn_tool_seat_compile', ply, data)
    end, false, true)
 else
    snet.RegisterCallback('cl_bgn_tool_seat_load', function(ply, points)
@@ -48,6 +59,16 @@ else
             m_citizen = m_citizen,
          })
       end
+   end)
+
+   snet.RegisterCallback('cl_bgn_tool_seat_compile', function(ply, points)
+      hook.Run('BGN_LoadingClienSeats', points)
+   end)
+
+   concommand.Add('bgn_tool_seat_compile', function()
+      local ply = LocalPlayer()
+      if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+      snet.Invoke('sv_bgn_tool_seat_compile')
    end)
 
    concommand.Add('bgn_tool_seat_load', function()
