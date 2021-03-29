@@ -41,7 +41,7 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 		if weapons ~= nil and #weapons ~= 0 then
 			local active_weapon = npc:GetActiveWeapon()
 
-			if IsValid(active_weapon) and table.HasValue(weapons, active_weapon:GetClass()) then
+			if IsValid(active_weapon) and table.IHasValue(weapons, active_weapon:GetClass()) then
 				return
 			end
 
@@ -65,20 +65,36 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 end
 
 function bgNPC:IsEnemyTeam(target, team_name)
-	for _, actor in ipairs(self:GetAll()) do
-		local npc = actor:GetNPC()
-		if IsValid(target) and IsValid(npc) then
-			if actor:HasTeam(team_name) then
-				if target:IsNPC() and (target:Disposition(npc) == D_HT 
-					or npc:Disposition(target) == D_HT)
-				then
-					return true
-				elseif target:IsPlayer() and actor:HasEnemy(target) then
-					return true
-				end
-			end
-		end
+	if not IsValid(target) then
+		return false
 	end
+
+	local TargetActor = bgNPC:GetActor(target)
+
+	for _, actor in ipairs(self:GetAll()) do
+		if not actor:IsAlive() then goto skip end
+
+		local npc = actor:GetNPC()
+		if target == npc or not IsValid(npc) then goto skip end
+		if not actor:HasTeam(team_name) then goto skip end
+
+		if TargetActor and TargetActor:HasEnemy(npc) then return true end
+
+		if target:IsNPC() then
+			if target:Disposition(npc) == D_HT or npc:Disposition(target) == D_HT then
+				return true
+			end
+		elseif target:IsNextBot() then
+			if npc:Disposition(target) == D_HT then
+				return true
+			end
+		elseif target:IsPlayer() and actor:HasEnemy(target) then
+			return true
+		end
+
+		::skip::
+	end
+	
 	return false
 end
 

@@ -609,7 +609,7 @@ if CLIENT then
 				local pos = node:GetPos()
 
 				for _, parentNode in ipairs(node.parents) do
-					if not table.HasValue(IsDrawingParentsNode, parentNode) then
+					if not table.IHasValue(IsDrawingParentsNode, parentNode) then
 						if node:HasLink(parentNode, 'walk') then
 							if value.behindTheWall then
 								render.DrawLine(pos, parentNode:GetPos(), clr_link_alpha)

@@ -8,7 +8,7 @@ hook.Add("EntityEmitSound", "BGN_WeaponShotSoundReaction", function(t)
    local wep = attacker:GetActiveWeapon()
 
    if not IsValid(wep) then return end
-   if table.HasValue(bgNPC.cfg.shotsound.whitelist_weapons, wep:GetClass()) then return end
+   if table.IHasValue(bgNPC.cfg.shotsound.whitelist_weapons, wep:GetClass()) then return end
 
    local IsFound = false
    for _, name in ipairs(bgNPC.cfg.shotsound.sound_name_found) do

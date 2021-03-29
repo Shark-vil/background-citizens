@@ -76,14 +76,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not self:IsAlive() then return end
 
 		local npc = self:GetNPC()
-		if npc:IsDormant() then return end
-
+		
 		if ply then
 			if IsValid(ply)  then
-				snet.Invoke(name, ply, self.uid, data)
+				snet.Invoke(name, ply, npc, data)
 			end
 		else
-			snet.InvokeAll(name, self.uid, data)
+			snet.InvokeAll(name, npc, data)
 		end
 	end
 
@@ -285,7 +284,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
 		
-		if self:GetNPC() ~= ent and not table.HasValue(self.targets, ent) then            
+		if self:GetNPC() ~= ent and not table.IHasValue(self.targets, ent) then            
 			table.insert(self.targets, ent)
 
 			self:SyncTargets()
@@ -338,7 +337,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param ent entity any entity
 	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
-		return table.HasValue(self.targets, ent)
+		return table.IHasValue(self.targets, ent)
 	end
 
 	-- Returns the number of existing targets for the actor.
@@ -392,10 +391,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:AddEnemy(ent, reaction)
 		if not IsValid(ent) or not isentity(ent) then return end
 		if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
+		if self:HasTeam(ent) then return end
 		
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not table.HasValue(self.enemies, ent) then
+		if npc ~= ent and not table.IHasValue(self.enemies, ent) then
 			if not hook.Run('BGN_AddActorEnemy', self, ent) then
 				if npc:IsNPC() then
 					local relationship = D_HT
@@ -459,7 +459,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasEnemy(ent)
-		return table.HasValue(self.enemies, ent)
+		return table.IHasValue(self.enemies, ent)
 	end
 
 	function obj:EnemiesCount()
@@ -759,7 +759,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self.data.team ~= nil and value ~= nil then
 			if isentity(value) then
 				if value:IsPlayer() then
-					if table.HasValue(self.data.team, 'player') then
+					if table.IHasValue(self.data.team, 'player') then
 						return true
 					else
 						local TeamParentModule = bgNPC:GetModule('team_parent')
@@ -784,7 +784,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 					end
 				end
 			elseif isstring(value) then
-				return table.HasValue(self.data.team, value)
+				return table.IHasValue(self.data.team, value)
 			end
 		end
 		return false
@@ -795,44 +795,30 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasState(state)
-		local current_state = self:GetState()
-		if istable(state) then
+		local current_state = self.state_data.state or 'none'
+		if isstring(state) then
+			return current_state == state
+		elseif istable(state) then
 			for _, value in ipairs(state) do
-				if current_state == value then
-					return true
-				end
+				if current_state == value then return true end
 			end
-			return false
-		else
-			return (current_state == state)
 		end
+		return false
 	end
 
 	function obj:GetOldState()
-		if self.old_state == nil then
-			return 'none'
-		end
 		return self.old_state.state
 	end
 
 	function obj:GetOldStateData()
-		if self.old_state == nil then
-			return {}
-		end
 		return self.old_state.data
 	end
 
 	function obj:GetState()
-		if self.state_data == nil then
-			return 'none'
-		end
 		return self.state_data.state
 	end
 
 	function obj:GetStateData()
-		if self.state_data == nil then
-			return {}
-		end
 		return self.state_data.data
 	end
 

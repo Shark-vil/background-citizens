@@ -48,7 +48,7 @@ if SERVER then
 				for _, walkNode in ipairs(walkNodes) do
 					local nodePosition = walkNode:GetPos()
 
-					if table.HasValue(radius_positions, nodePosition) then
+					if table.IHasValue(radius_positions, nodePosition) then
 						goto skip_walk_nodes
 					end
 
@@ -224,7 +224,7 @@ end
 
 function bgNPC:AddNPC(actor)
 	local npc = actor:GetNPC()
-	if table.HasValue(self.npcs, npc) then return end
+	if table.IHasValue(self.npcs, npc) then return end
 
 	table.insert(self.actors, actor)
 	table.insert(self.npcs, npc)

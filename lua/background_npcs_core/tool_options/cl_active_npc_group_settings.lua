@@ -14,7 +14,7 @@ local function TOOL_MENU(Panel)
 	Panel:AddControl('Label', { Text = '===========' });
 
 	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
-		if not table.HasValue(exists_types, npcType) then
+		if not table.IHasValue(exists_types, npcType) then
 			Panel:AddControl('CheckBox', {
 				Label = npcType,
 				Command = 'bgn_npc_type_' .. npcType

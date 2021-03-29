@@ -37,59 +37,25 @@ end)
 hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
 function(actor, attacker, target, reaction)
 	if reaction == 'ignore' then return end
+	if not target:IsNPC() and not target:IsNextBot() and not target:IsPlayer() then return end
+	if actor:HasTeam(attacker) and actor:HasTeam(target) then return end
+
 	local asset = bgNPC:GetModule('first_attacker')
-	
-	if target:IsNPC() then
-		if attacker:IsPlayer() and actor:HasTeam(attacker) then
-			actor:AddEnemy(target, reaction)
-			return
-		end
 
-		local ActorTarget = bgNPC:GetActor(target)
-		if ActorTarget ~= nil and actor:HasTeam(ActorTarget) then
-			actor:AddEnemy(attacker, reaction)
-			return
-		end
-
-		local ActorAttacker = bgNPC:GetActor(attacker)
-		if ActorAttacker ~= nil and actor:HasTeam(ActorAttacker) then
-			actor:AddEnemy(target, reaction)
-			return
-		end
-
-		if ActorTarget ~= nil and attacker:IsPlayer() and actor:HasTeam('residents') then
-			if ActorTarget:GetState() == 'impingement' or bgNPC:IsEnemyTeam(target, 'residents')
-				or asset:IsFirstAttacker(target, attacker)
-			then
+	if actor:HasTeam(attacker) then
+		actor:AddEnemy(target, reaction)
+	elseif actor:HasTeam(target) and bgNPC:IsEnemyTeam(attacker, actor:GetData().team) then
+		actor:AddEnemy(attacker, reaction)
+	elseif asset:IsFirstAttacker(target, attacker) then
+		actor:AddEnemy(target, reaction)
+	else
+		if attacker:IsPlayer() then
+			if target:IsNextBot() or (target:IsNPC() and target:Disposition(attacker) == D_HT) then
 				actor:AddEnemy(target, reaction)
 			else
 				actor:AddEnemy(attacker, reaction)
 			end
-		end
-	elseif target:IsPlayer() then
-		if attacker:IsPlayer() and actor:HasTeam(attacker) then
-			actor:AddEnemy(target, reaction)
-			return
-		elseif actor:HasTeam(target) then
-			actor:AddEnemy(attacker, reaction)
-			return
-		end
-
-		local ActorAttacker = bgNPC:GetActor(attacker)
-		if ActorAttacker ~= nil then
-			if actor:HasTeam(ActorAttacker) then
-				actor:AddEnemy(target, reaction)
-				return
-			end
-
-			if actor:HasTeam('residents') then
-				if ActorAttacker:GetState() == 'impingement' or bgNPC:IsEnemyTeam(attacker, 'residents')
-					or asset:IsFirstAttacker(attacker, target)
-				then
-					actor:AddEnemy(attacker, reaction)
-				end
-			end
-		elseif actor:HasTeam('residents') then
+		else
 			actor:AddEnemy(attacker, reaction)
 		end
 	end
