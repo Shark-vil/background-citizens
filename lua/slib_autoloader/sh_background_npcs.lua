@@ -107,6 +107,8 @@ script:using('modules/states/wanted/sh_wanted_class.lua')
 script:using('modules/states/wanted/sv_wanted_actions.lua')
 script:using('modules/states/wanted/cl_wanted_sync.lua')
 script:using('modules/states/wanted/cl_visual_wanted.lua')
+script:using('modules/states/steal_money/sv_darkrp.lua')
+script:using('modules/states/steal_money/sv_n2money.lua')
 script:using('modules/ambient/cl_ambient_sound.lua')
 script:using('modules/dv/sv_fix_autoload_routes.lua')
 
