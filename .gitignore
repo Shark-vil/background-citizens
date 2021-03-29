@@ -39,5 +39,5 @@ luac.out
 *.x86_64
 *.hex
 
-*.vscode
-*.code-workspace
+workspace.code-workspace
+.vscode/
