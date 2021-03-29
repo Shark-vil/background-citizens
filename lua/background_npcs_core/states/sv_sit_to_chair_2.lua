@@ -11,9 +11,10 @@ bgNPC:SetStateAction('sit_to_chair_2', {
          actor:SetState('walk')
          seat:SetSitting(NULL)
       else
-         actor:WalkToPos(seat:GetStartSittingPos())
+         local start_pos = seat:GetStartSittingPos()
+         actor:WalkToPos(start_pos)
       
-         if npc:GetPos():DistToSqr(seat:GetPos()) <= 1600 then  -- 40 ^ 2 
+         if npc:GetPos():DistToSqr(start_pos) <= 1600 then  -- 40 ^ 2 
             actor:WalkToPos(nil)
             data.isSit = true
             data.old_pos = npc:GetPos()
