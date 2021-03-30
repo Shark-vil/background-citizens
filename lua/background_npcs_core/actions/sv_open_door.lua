@@ -20,19 +20,10 @@ local function OpenDoor(actor, door)
 	end
 end
 
-hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent)
-	local pos = ent:GetPos()
-	if pos:DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
-
-	-- local whitelist_classes = {
-	-- 	"func_door",
-	-- 	"func_door_rotating",
-	-- 	"prop_door_rotating",
-	-- 	-- "func_movelinear",
-	-- 	-- "prop_dynamic",
-	-- }
-
-	for _, door in ipairs(ents.FindInSphere(pos, 150)) do
+hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent, distance)
+	if distance > 100 then return end
+	
+	for _, door in ipairs(ents.FindInSphere(ent:GetPos(), 150)) do
 		if door:IsDoor() then OpenDoor(actor, door) end
 	end
 end)
