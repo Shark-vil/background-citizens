@@ -74,33 +74,34 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	if table.Count(wanted_list) == 0 then return end
 
-	local polices = bgNPC:GetAllByTeam('police')
-	local citizens = bgNPC:GetAllByType('citizen')
-
-	local witnesses = {}
-	table.Inherit(witnesses, polices)
-	table.Inherit(witnesses, citizens)
+	local residents = bgNPC:GetAllByTeam('residents')
 
 	for enemy, c_Wanted in pairs(wanted_list) do
-		if IsValid(enemy) and enemy:IsPlayer() then
+		if IsValid(enemy) then
 			local wait_time = c_Wanted.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
 			c_Wanted:UpdateWaitTime(math.Round(wait_time))
 			
-			for _, actor in ipairs(witnesses) do
-				if actor:IsAlive() and not actor:HasEnemy(enemy) then
+			for _, actor in ipairs(residents) do
+				if actor:IsAlive() then
 					local npc = actor:GetNPC()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
 					if dist <= 360000 then -- 600 ^ 2
 						c_Wanted:UpdateWanted()
+
+						if not actor:InDangerState() then
+							actor:SetState(actor:GetReactionForProtect())
+						end
 						
-						actor:SetState(actor:GetReactionForProtect())
 						actor:AddEnemy(enemy)
 					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
 						c_Wanted:UpdateWanted()
 						
-						actor:SetState(actor:GetReactionForProtect())
+						if not actor:InDangerState() then
+							actor:SetState(actor:GetReactionForProtect())
+						end
+						
 						actor:AddEnemy(enemy)
 					end
 				end
