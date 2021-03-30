@@ -65,14 +65,11 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 							npc:Remove()
 						end
 					else
-						if max_teleporter == current_teleport then
-							break
-						end
-
 						local npc = actor:GetNPC()
 						local data = actor:GetData()
 
 						if data.wanted_level == nil then
+							if max_teleporter == current_teleport then goto skip end
 							current_teleport = current_teleport + 1
 
 							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
@@ -97,6 +94,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 									npc:Remove()
 								end
 							else
+								if max_teleporter == current_teleport then goto skip end
 								current_teleport = current_teleport + 1
 
 								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
@@ -112,6 +110,8 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 				end
 			end
 		end
+
+		::skip::
 	end
 end)
 
