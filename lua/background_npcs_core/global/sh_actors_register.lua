@@ -86,13 +86,13 @@ if SERVER then
 						table.insert(radius_positions_exists, walkNode.index)
 					end
 
-					::skip_walk_nodes::
-					
 					current_pass = current_pass + 1
 					if current_pass == limit_pass then
 						coroutine.yield()
 						current_pass = 0
 					end
+
+					::skip_walk_nodes::
 				end
 			end
 
