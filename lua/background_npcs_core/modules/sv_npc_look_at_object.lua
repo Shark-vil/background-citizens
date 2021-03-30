@@ -1,19 +1,14 @@
-timer.Create('BGN_Timer_NPCLookAtObject', 0.5, 0, function()
+timer.Create('BGN_Timer_ActorLookAtObject', 0.5, 0, function()
 	for _, actor in ipairs(bgNPC:GetAll()) do
-		local npc = actor:GetNPC()
-		if IsValid(npc) then
+		if actor:IsAlive() then
 			local npc = actor:GetNPC()
-		
-			local tr = util.TraceLine({
-				start = npc:EyePos(),
-				endpos = npc:EyePos() + npc:EyeAngles():Forward() * 1000,
-				filter = function(ent) 
-					if ent ~= npc then return true end
-				end
-			})
+			local npc_pos = npc:GetPos()
 
-			if tr.Hit and IsValid(tr.Entity) then
-				hook.Run('BGN_NPCLookAtObject', actor, tr.Entity)
+			for _, ent in ipairs(ents.FindInSphere(npc_pos, 1000)) do
+				local ent_pos = ent:GetPos()
+				if bgNPC:NPCIsViewVector(npc, ent_pos, 70) then
+					hook.Run('BGN_ActorLookAtObject', actor, ent, npc_pos:Distance(ent_pos))
+				end
 			end
 		end
 	end

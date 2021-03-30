@@ -23,33 +23,29 @@ local function TargetPlayerPush(npc, target, velocity)
 end
 
 
-hook.Add("BGN_NPCLookAtObject", "BGN_PolicePushPlayerWhileProtectedIfHeIsClose", function(actor, ent)
-	if ent:IsPlayer() and actor:GetType() == 'police' 
-		and actor:GetState() == 'defense'
-		and actor:IsSequenceFinished()
-	then
-		if ent:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 50 ^ 2 then return end
-		
+hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushDanger", function(actor, ent, distance)
+	if distance > 50 or not ent:IsPlayer() then return end
+	if not actor:HasState('police') then return end
+	if not actor:IsValidSequence('LuggagePush') then return end
+
+	if actor:GetType() == 'police' and actor:InDangerState() and actor:IsSequenceFinished() then		
 		local data = actor:GetStateData()
 
-		data.LuggagePush = data.LuggagePush or false
-		if data.LuggagePush then return end
+		data.LuggagePushDelay = data.LuggagePushDelay or 0
+		if data.LuggagePushDelay < CurTime() then return end
 
 		actor:PlayStaticSequence('LuggagePush')
-		
-		TargetPlayerPush(actor:GetNPC(), ent, 450)
-
-		data.LuggagePush = true
+		TargetPlayerPush(actor:GetNPC(), ent, 600)
+		data.LuggagePushDelay = CurTime() + 5
 	end
 end)
 
-hook.Add("BGN_NPCLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", function(actor, ent)
-	if ent:IsPlayer() and actor:GetType() == 'police' 
-		and actor:GetState() == 'walk'
-		and actor:IsSequenceFinished()
-	then
-		if ent:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 50 ^ 2 then return end
+hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushCalmly", function(actor, ent, distance)
+	if distance > 50 or not ent:IsPlayer() then return end
+	if not actor:HasState('police') then return end
+	if not actor:IsValidSequence('LuggagePush') and not actor:IsValidSequence('LuggageWarn') then return end
 
+	if actor:InCalmlyState() and actor:IsSequenceFinished() then
 		local data = actor:GetStateData()
 		local npc = actor:GetNPC()
 		data.LuggageWarn = data.LuggageWarn or 0
@@ -65,9 +61,7 @@ hook.Add("BGN_NPCLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", functi
 			data.LuggageWarn = data.LuggageWarn + 1
 		else
 			actor:PlayStaticSequence('LuggagePush')
-
 			TargetPlayerPush(actor:GetNPC(), ent, 250)
-
 			data.LuggageWarn = 0
 		end
 	end

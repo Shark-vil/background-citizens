@@ -213,7 +213,7 @@ function ASSET:RemoveBadValues()
    end
 end
 
-hook.Add("BGN_NPCLookAtObject", "BGN_Module_DialogueState", function(actor, ent)
+hook.Add("BGN_ActorLookAtObject", "BGN_Module_DialogueState", function(actor, ent)
    local dialogue = ASSET:GetDialogue(actor)
    if dialogue ~= nil and not dialogue.isIdle then
       local actor1 = dialogue.interlocutors[1]

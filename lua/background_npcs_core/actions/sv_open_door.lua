@@ -20,7 +20,7 @@ local function OpenDoor(actor, door)
 	end
 end
 
-hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent)
+hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent)
 	local pos = ent:GetPos()
 	if pos:DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
 

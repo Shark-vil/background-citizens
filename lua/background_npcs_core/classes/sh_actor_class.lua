@@ -1127,6 +1127,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 	end
 
+	function obj:InDangerState()
+		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
+	end
+
+	function obj:InCalmlyState()
+		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
+	end
+
 	function npc:GetActor()
 		return obj
 	end
