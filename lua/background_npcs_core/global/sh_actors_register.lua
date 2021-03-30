@@ -23,44 +23,41 @@ if SERVER then
 
 		if not desiredPosition then return end
 		
-		local bgn_spawn_radius 
+		local spawn_radius 
 			= GetConVar('bgn_spawn_radius'):GetFloat()
 
-		local bgn_spawn_radius_visibility 
+		local radius_visibility 
 			= GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 
-		local bgn_spawn_radius_raytracing 
+		local radius_raytracing 
 			= GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 
-		local bgn_spawn_block_radius
+		local block_radius
 			= GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
-		local spawn_radius = bgn_spawn_radius
-		local limit_pass = limit_pass or 5
+		local limit_pass = limit_pass or 10
 		local current_pass = 0
-		
+		local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius)
+
 		local thread = coroutine.create(function()
 			local radius_positions = {}
 		
-			for _, node in ipairs(bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius)) do
+			for _, node in ipairs(points) do
 				local walkNodes = node:GetLinks('walk')
 
 				for _, walkNode in ipairs(walkNodes) do
 					local nodePosition = walkNode:GetPos()
 
-					if table.IHasValue(radius_positions, nodePosition) then
-						goto skip_walk_nodes
-					end
+					-- if table.IHasValue(radius_positions, nodePosition) then
+					-- 	goto skip_walk_nodes
+					-- end
 
 					for _, ply in ipairs(player.GetAll()) do
 						local distance = nodePosition:DistToSqr(ply:GetPos())
 						
-						if distance <= bgn_spawn_block_radius then
-							goto skip_walk_nodes
-						end
-
-						if distance < bgn_spawn_radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then							
-							if bgn_spawn_radius_raytracing == 0 then
+						if distance <= block_radius then goto skip_walk_nodes end
+						if distance < radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then							
+							if radius_raytracing == 0 then
 								goto skip_walk_nodes
 							end
 
@@ -94,15 +91,29 @@ if SERVER then
 				end
 			end
 
-			if not GetConVar('bgn_enable'):GetBool() then
-				return coroutine.yield()
+			if not GetConVar('bgn_enable'):GetBool() then return coroutine.yield() end
+			if #radius_positions == 0 then return coroutine.yield() end
+
+			local result_radius_positions = {}
+			-- limit_pass = limit_pass * 2
+
+			for _, pos in ipairs(radius_positions) do
+				for _, ent in ipairs(ents.FindInSphere(pos, 100)) do
+					if ent:IsNPC() or ent:IsPlayer() then goto skip end
+				end
+
+				table.insert(result_radius_positions, pos)
+				-- current_pass = current_pass + 1
+				-- if current_pass == limit_pass then
+				-- 	coroutine.yield()
+				-- 	current_pass = 0
+				-- end
+
+				::skip::
 			end
 
-			if #radius_positions == 0 then
-				return coroutine.yield()
-			end
-		
-			return coroutine.yield(table.Random(radius_positions))
+			if #result_radius_positions == 0 then return coroutine.yield() end
+			return coroutine.yield(table.Random(result_radius_positions))
 		end)
 
 		-- local StartTime = SysTime()

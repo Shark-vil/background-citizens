@@ -31,7 +31,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 
-	local max_teleporter = 3
+	local max_teleporter = 5
 	local current_teleport = 0
 
 	for _, actor in ipairs(actors) do
