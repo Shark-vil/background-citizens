@@ -5,7 +5,7 @@ bgNPC.cfg.sit_chairs = {
          'models/nseven/chair02a.mdl',
       },
       offsetPosition = function(npc, chair, default_offset)
-         return default_offset + (chair:GetRight() * -5) + (chair:GetForward() * 2) - (chair:GetUp() * 8)
+         return default_offset + (chair:GetRight() * -5) + (chair:GetForward() * 2) - (chair:GetUp() * 13)
       end,
       offsetAngle = function(npc, chair, default_offset)
          return default_offset
