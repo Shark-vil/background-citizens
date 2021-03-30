@@ -1,13 +1,15 @@
 hook.Add("BGN_ResetEnemiesForActor", "BGN_SetDefaultStateIfEnemiesDeath", function(actor)
 	if not actor:IsAlive() then return end
 
-	local npc = actor:GetNPC()
-	local wep = npc:GetActiveWeapon()
-	if IsValid(wep) then
-		wep:Remove()
-	end
+   if not actor:GetData().wanted_level then
+      local npc = actor:GetNPC()
+      local wep = npc:GetActiveWeapon()
+      if IsValid(wep) then
+         wep:Remove()
+      end
+   end
 
-	 actor:RandomState()
+   actor:RandomState()
 end)
 
 timer.Create('BGN_ActorEnemyController', 1, 0, function()
