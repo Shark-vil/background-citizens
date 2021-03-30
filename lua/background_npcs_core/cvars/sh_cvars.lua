@@ -30,6 +30,7 @@ bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_movement_checking_parts = 5
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 bgNPC.cvar.bgn_actors_teleporter = 0
+bgNPC.cvar.bgn_actors_max_teleports = 3
 bgNPC.cvar.bgn_tool_seat_offset_pos_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_z = 0
@@ -154,6 +155,10 @@ FCVAR_ARCHIVE, 'The number of NPCs whose movement can be checked at one time. Th
 
 slib:RegisterGlobalCvar('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporter, 
 FCVAR_ARCHIVE, 'Instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.')
+
+slib:RegisterGlobalCvar('bgn_actors_max_teleports', bgNPC.cvar.bgn_actors_max_teleports, 
+FCVAR_ARCHIVE, 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.')
+
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	local enabled = 0

@@ -795,9 +795,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasState(state)
-		local current_state = self.state_data.state or 'none'
-		if isstring(state) then
-			return current_state == state
+		local current_state = self.state_data.state
+		if current_state == state then
+			return true
 		elseif istable(state) then
 			for _, value in ipairs(state) do
 				if current_state == value then return true end

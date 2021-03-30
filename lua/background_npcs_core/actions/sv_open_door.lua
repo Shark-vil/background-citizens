@@ -24,17 +24,15 @@ hook.Add("BGN_NPCLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent)
 	local pos = ent:GetPos()
 	if pos:DistToSqr(actor:GetNPC():GetPos()) > 10000 then return end -- 100 ^ 2
 
-	local whitelist_classes = {
-		"func_door",
-		"func_door_rotating",
-		"prop_door_rotating",
-		-- "func_movelinear",
-		-- "prop_dynamic",
-	}
+	-- local whitelist_classes = {
+	-- 	"func_door",
+	-- 	"func_door_rotating",
+	-- 	"prop_door_rotating",
+	-- 	-- "func_movelinear",
+	-- 	-- "prop_dynamic",
+	-- }
 
 	for _, door in ipairs(ents.FindInSphere(pos, 150)) do
-		if table.IHasValue(whitelist_classes, door:GetClass()) then
-			OpenDoor(actor, door)
-		end
+		if door:IsDoor() then OpenDoor(actor, door) end
 	end
 end)

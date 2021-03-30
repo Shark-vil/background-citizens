@@ -31,7 +31,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 
-	local max_teleporter = 5
+	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
 
 	for _, actor in ipairs(actors) do
@@ -75,10 +75,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 						if data.wanted_level == nil then
 							current_teleport = current_teleport + 1
 
-							bgNPC:FindSpawnLocation(actor.uid, nil, 5, function(nodePosition)
+							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
 								if not IsValid(npc) then return end
 								npc:SetPos(nodePosition)
 								npc:PhysWake()
+
+								player.GetAll()[1]:ChatPrint('Teleport #' .. tostring(CurTime()))
 
 								hook.Run('BGN_RespawnActor', actor, nodePosition)
 							end)
@@ -99,10 +101,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 							else
 								current_teleport = current_teleport + 1
 
-								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, 5, function(nodePosition)
+								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
 									if not IsValid(npc) then return end
 									npc:SetPos(nodePosition)
 									npc:PhysWake()
+
+									player.GetAll()[1]:ChatPrint('Teleport #' .. tostring(CurTime()))
 
 									hook.Run('BGN_RespawnActor', actor, nodePosition)
 								end)

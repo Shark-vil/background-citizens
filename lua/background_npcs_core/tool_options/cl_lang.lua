@@ -51,6 +51,8 @@ en_lang['bgn.settings.spawn.bgn_spawn_period'] = 'The period between spawning NP
 en_lang['bgn.settings.spawn.bgn_spawn_period.description'] = 'Description: sets the delay between spawning of each NPC.'
 en_lang['bgn.settings.spawn.bgn_actors_teleporter'] = 'NPC teleportation (Experimental)'
 en_lang['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Description: instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.'
+ru_lang['bgn.settings.spawn.bgn_actors_max_teleports'] = 'Maximum NPCs to teleport'
+ru_lang['bgn.settings.spawn.bgn_actors_max_teleports.description'] = 'Description: how many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.'
 
 --[[-----------------------------------------
    State settings menu
@@ -163,7 +165,8 @@ ru_lang['bgn.settings.spawn.bgn_spawn_period'] = 'Период между поя
 ru_lang['bgn.settings.spawn.bgn_spawn_period.description'] = 'Описание: устанавливает задержку между спавном каждого NPC.'
 ru_lang['bgn.settings.spawn.bgn_actors_teleporter'] = 'Телепортация NPC (Эксперементально)'
 ru_lang['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Описание: вместо удаления NPC после потери его из поля зрения игроков, он будет телепортироваться в ближайшую точку. Это создаст эффект более населённого города. Отключите эту опцию, если замечайте потерю кадров.'
-
+ru_lang['bgn.settings.spawn.bgn_actors_max_teleports'] = 'Максимум NPC для телепортации'
+ru_lang['bgn.settings.spawn.bgn_actors_max_teleports.description'] = 'Описание: сколько NPC можно телепортировать за одну секунду. Чем больше число - тем больше вычислений будет производится. Телепорт вычисляется для каждого актёра индивидуально, не дожидаясь телепорта другого актёра из своеё группы.'
 
 --[[-----------------------------------------
    State settings menu

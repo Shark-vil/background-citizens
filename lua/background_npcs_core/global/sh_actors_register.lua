@@ -10,14 +10,16 @@ end
 if SERVER then
 	local hooks_active = {}
 	function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
-		if not action and not isfunction(action) then return end
-
 		local hook_name = 'BGN_SpawnerThread_' .. spawner_id
 		if hooks_active[hook_name] then return end
+		if not action and not isfunction(action) then return end
+		
 		hooks_active[hook_name] = true
 
+		local all_players = player.GetAll()
+
 		if not desiredPosition then
-			local ply = table.Random(player.GetAll())
+			local ply = table.Random(all_players)
 			desiredPosition = ply:GetPos()
 		end
 
@@ -41,25 +43,26 @@ if SERVER then
 
 		local thread = coroutine.create(function()
 			local radius_positions = {}
+			local radius_positions_exists = {}
 		
 			for _, node in ipairs(points) do
 				local walkNodes = node:GetLinks('walk')
 
 				for _, walkNode in ipairs(walkNodes) do
-					local nodePosition = walkNode:GetPos()
+					local nodePosition
 
-					-- if table.IHasValue(radius_positions, nodePosition) then
-					-- 	goto skip_walk_nodes
-					-- end
+					if table.IHasValue(radius_positions_exists, walkNode.index) then
+						goto skip_walk_nodes
+					end
 
-					for _, ply in ipairs(player.GetAll()) do
+					nodePosition = walkNode:GetPos()
+					
+					for _, ply in ipairs(all_players) do
 						local distance = nodePosition:DistToSqr(ply:GetPos())
-						
+								
 						if distance <= block_radius then goto skip_walk_nodes end
-						if distance < radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then							
-							if radius_raytracing == 0 then
-								goto skip_walk_nodes
-							end
+						if distance < radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then
+							if radius_raytracing == 0 then goto skip_walk_nodes end
 
 							local tr = util.TraceLine({
 								start = ply:EyePos(),
@@ -74,20 +77,22 @@ if SERVER then
 								end
 							})
 		
-							if not tr.Hit then
-								goto skip_walk_nodes
-							end
+							if not tr.Hit then goto skip_walk_nodes end
 						end
 					end
 
-					table.insert(radius_positions, nodePosition)
+					if nodePosition then
+						table.insert(radius_positions, nodePosition)
+						table.insert(radius_positions_exists, walkNode.index)
+					end
+
+					::skip_walk_nodes::
+					
 					current_pass = current_pass + 1
 					if current_pass == limit_pass then
 						coroutine.yield()
 						current_pass = 0
 					end
-
-					::skip_walk_nodes::
 				end
 			end
 
@@ -95,19 +100,17 @@ if SERVER then
 			if #radius_positions == 0 then return coroutine.yield() end
 
 			local result_radius_positions = {}
-			-- limit_pass = limit_pass * 2
-
 			for _, pos in ipairs(radius_positions) do
-				for _, ent in ipairs(ents.FindInSphere(pos, 100)) do
-					if ent:IsNPC() or ent:IsPlayer() then goto skip end
+				for _, ent in ipairs(ents.FindInSphere(pos, 200)) do
+					if ent:IsDoor() or ent:IsNPC() or ent:IsPlayer() then goto skip end
 				end
 
 				table.insert(result_radius_positions, pos)
-				-- current_pass = current_pass + 1
-				-- if current_pass == limit_pass then
-				-- 	coroutine.yield()
-				-- 	current_pass = 0
-				-- end
+				current_pass = current_pass + 1
+				if current_pass == limit_pass then
+					coroutine.yield()
+					current_pass = 0
+				end
 
 				::skip::
 			end
@@ -116,7 +119,6 @@ if SERVER then
 			return coroutine.yield(table.Random(result_radius_positions))
 		end)
 
-		-- local StartTime = SysTime()
 		hook.Add("Think", hook_name, function()
 			if coroutine.status(thread) == 'dead' then
 				hook.Remove("Think", hook_name)
@@ -126,7 +128,6 @@ if SERVER then
 
 			local worked, nodePosition = coroutine.resume(thread)
 			if nodePosition then
-				-- print(math.floor(SysTime() - StartTime))
 				action(nodePosition)
 
 				hook.Remove("Think", hook_name)
