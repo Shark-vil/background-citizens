@@ -80,8 +80,6 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 								npc:SetPos(nodePosition)
 								npc:PhysWake()
 
-								player.GetAll()[1]:ChatPrint('Teleport #' .. tostring(CurTime()))
-
 								hook.Run('BGN_RespawnActor', actor, nodePosition)
 							end)
 						else
@@ -105,8 +103,6 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 									if not IsValid(npc) then return end
 									npc:SetPos(nodePosition)
 									npc:PhysWake()
-
-									player.GetAll()[1]:ChatPrint('Teleport #' .. tostring(CurTime()))
 
 									hook.Run('BGN_RespawnActor', actor, nodePosition)
 								end)
