@@ -18,7 +18,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_PlayerArrest', function(_, attacker)
          local npc = actor:GetNPC()
          if bgNPC:IsTargetRay(npc, attacker) then
             actor:AddEnemy(attacker)
-            actor:SetState('fear')
+            actor:SetState(actor:GetReactionForProtect())
          end
       end
    end
