@@ -79,6 +79,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
       end
    else
       local ArrestComponent = ArrestModule:GetPlayer(attacker)
+      if not ArrestComponent then return end
+      
       if ArrestComponent.arrested then
          ArrestComponent.damege_count = ArrestComponent.damege_count + 1
          if target:Health() <= 20 or ArrestComponent.damege_count > 5 then

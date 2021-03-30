@@ -1,4 +1,4 @@
-timer.Create('BGN_Timer_ActorLookAtObject', 0.5, 0, function()
+timer.Create('BGN_Timer_ActorLookAtObject', 1, 0, function()
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if actor:IsAlive() then
 			local npc = actor:GetNPC()

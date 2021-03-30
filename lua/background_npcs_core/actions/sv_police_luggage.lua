@@ -25,24 +25,24 @@ end
 
 hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushDanger", function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() then return end
-	if not actor:HasState('police') then return end
+	if not actor:HasTeam('police') then return end
 	if not actor:IsValidSequence('LuggagePush') then return end
 
-	if actor:GetType() == 'police' and actor:InDangerState() and actor:IsSequenceFinished() then		
+	if actor:InDangerState() and actor:IsSequenceFinished() then		
 		local data = actor:GetStateData()
 
 		data.LuggagePushDelay = data.LuggagePushDelay or 0
-		if data.LuggagePushDelay < CurTime() then return end
+		if data.LuggagePushDelay > CurTime() then return end
 
 		actor:PlayStaticSequence('LuggagePush')
 		TargetPlayerPush(actor:GetNPC(), ent, 600)
-		data.LuggagePushDelay = CurTime() + 5
+		-- data.LuggagePushDelay = CurTime() + 5
 	end
 end)
 
 hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushCalmly", function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() then return end
-	if not actor:HasState('police') then return end
+	if not actor:HasTeam('police') then return end
 	if not actor:IsValidSequence('LuggagePush') and not actor:IsValidSequence('LuggageWarn') then return end
 
 	if actor:InCalmlyState() and actor:IsSequenceFinished() then
