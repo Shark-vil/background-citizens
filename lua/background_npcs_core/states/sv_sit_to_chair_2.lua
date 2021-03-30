@@ -20,6 +20,7 @@ bgNPC:SetStateAction('sit_to_chair_2', {
             data.old_pos = npc:GetPos()
 
             local sitTime = math.random(5, 120)
+            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
             npc:SetPos(seat:GetPos())
             npc:SetAngles(seat:GetAngles())
             

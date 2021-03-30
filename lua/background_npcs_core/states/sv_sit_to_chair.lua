@@ -133,10 +133,10 @@ bgNPC:SetStateAction('sit_to_chair', {
                new_angle = chairData.offsetAngle(npc, chair, new_angle)
             end
 
+            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
             npc:SetPos(new_pos)
             npc:SetAngles(new_angle)
-            -- npc:SetParent(chair)
-            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+            npc:SetParent(chair)
             if IsValid(phys) then
                phys:EnableMotion(false)
             end
@@ -154,7 +154,7 @@ bgNPC:SetStateAction('sit_to_chair', {
                         npc:SetAngles(Angle(0, 0, 0))
                      end
 
-                     -- npc:SetParent(nil)
+                     npc:SetParent(nil)
                      npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
                      npc:SetCollisionGroup(COLLISION_GROUP_NONE)
                      npc:PhysWake()
