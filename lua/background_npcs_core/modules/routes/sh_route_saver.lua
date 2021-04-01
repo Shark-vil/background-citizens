@@ -71,7 +71,7 @@ else
 			snet.InvokeBigData('bgn_save_routes', nil, { 
 				from_json = from_json, 
 				data = jsonNodes
-			}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
+			}, nil, 'Sending the mesh to the server')
 		else
 			local MainMenu = vgui.Create("DFrame")
 			MainMenu:SetPos(ScrW()/2 - 500/2, ScrH()/2 - 230/2)
@@ -115,7 +115,7 @@ else
 				snet.InvokeBigData('bgn_save_routes', nil, { 
 					from_json = from_json, 
 					data = jsonNodes
-				}, nil, 'BgnLoadPoints', 'Sending the mesh to the server')
+				}, nil, 'Sending the mesh to the server')
 		
 				MainMenu:Close()
 			end
