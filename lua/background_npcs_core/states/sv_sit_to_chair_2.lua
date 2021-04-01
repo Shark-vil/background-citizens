@@ -2,6 +2,7 @@ bgNPC:SetStateAction('sit_to_chair_2', {
    update = function(actor)
       local npc = actor:GetNPC()
       local data = actor:GetStateData()
+      data.oldCollisionGroup = data.oldCollisionGroup or npc:GetCollisionGroup()
       local seat = data.seat
 
       if data.isSit then return end
@@ -20,7 +21,7 @@ bgNPC:SetStateAction('sit_to_chair_2', {
             data.old_pos = npc:GetPos()
 
             local sitTime = math.random(5, 120)
-            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+            npc:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
             npc:SetPos(seat:GetPos())
             npc:SetAngles(seat:GetAngles())
             
@@ -33,7 +34,7 @@ bgNPC:SetStateAction('sit_to_chair_2', {
                      
                      npc:SetAngles(Angle(0, 0, 0))
                      npc:SetPos(data.old_pos)
-                     npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+                     npc:SetCollisionGroup(data.oldCollisionGroup)
                      npc:PhysWake()
 
                      data.isStand = true

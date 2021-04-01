@@ -93,6 +93,7 @@ bgNPC:SetStateAction('sit_to_chair', {
    update = function(actor)
       local npc = actor:GetNPC()
       local data = actor:GetStateData()
+      data.oldCollisionGroup = data.oldCollisionGroup or npc:GetCollisionGroup()
       local chair = data.chair
       local chairData = bgNPC.cfg.sit_chairs[data.chairDataId]
 
@@ -100,7 +101,7 @@ bgNPC:SetStateAction('sit_to_chair', {
          actor:ResetSequence()
 
          npc:SetAngles(Angle(0, 0, 0))
-         npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+         npc:SetCollisionGroup(data.oldCollisionGroup)
          npc:PhysWake()
 
          data.isStand = true
@@ -133,7 +134,7 @@ bgNPC:SetStateAction('sit_to_chair', {
                new_angle = chairData.offsetAngle(npc, chair, new_angle)
             end
 
-            npc:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+            npc:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
             npc:SetPos(new_pos)
             npc:SetAngles(new_angle)
             npc:SetParent(chair)
@@ -156,7 +157,7 @@ bgNPC:SetStateAction('sit_to_chair', {
 
                      npc:SetParent(nil)
                      npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
-                     npc:SetCollisionGroup(COLLISION_GROUP_NONE)
+                     npc:SetCollisionGroup(data.oldCollisionGroup)
                      npc:PhysWake()
 
                      data.isStand = true
