@@ -102,7 +102,7 @@ if SERVER then
 			local result_radius_positions = {}
 			for _, pos in ipairs(radius_positions) do
 				for _, ent in ipairs(ents.FindInSphere(pos, 200)) do
-					if ent:IsDoor() or ent:IsNPC() or ent:IsPlayer() then goto skip end
+					if ent:slibIsDoor() or ent:IsNPC() or ent:IsPlayer() then goto skip end
 				end
 
 				table.insert(result_radius_positions, pos)
