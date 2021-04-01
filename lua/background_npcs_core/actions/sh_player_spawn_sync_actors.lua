@@ -20,7 +20,8 @@ if SERVER then
 
 				timer.Simple(delay, function()
 					if not IsValid(ply) or not IsValid(npc) then return end
-					snet.EntityInvoke('bgn_add_actor_from_client', ply, npc, type, actor.uid)
+					snet.Create('bgn_add_actor_from_client')
+						.SetData(npc, type, actor.uid).Invoke(ply)
 				end)
 
 				delay = delay + 0.1
