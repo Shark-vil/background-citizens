@@ -54,7 +54,6 @@ script:using('cvars/cl_cvars.lua')
 
 script:using('global/sv_meta.lua')
 script:using('global/sh_meta.lua')
-script:using('global/sh_net_variables.lua')
 script:using('global/sh_actors_finder.lua')
 script:using('global/sh_actors_register.lua')
 script:using('global/sh_killing_statistic.lua')
