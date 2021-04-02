@@ -57,7 +57,7 @@ else
 		tool:ClearPoints()
 	end)
 
-	hook.Add('Slib_StartBigdataSending', 'BGN_LoadingNodesFromServer', function(ply, name)
+	hook.Add('SnetBigDataStartSending', 'BGN_LoadingNodesFromServer', function(ply, name)
 		if name ~= 'bgn_movement_mesh_load_from_client_cl' then return end
 		notification.Kill('BGN_LoadingNodesFromServer')
 	end)
