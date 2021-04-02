@@ -1,8 +1,4 @@
 if SERVER then
-	util.AddNetworkString('bgNPCLoadRoute')
-	util.AddNetworkString('bgNPCLoadExistsRoutesFromClient')
-	util.AddNetworkString('bgNPCLoadRouteFromClient')
-
 	bgNPC.PointsExist = false
 
 	bgNPC.LoadRoutes = function()
@@ -37,16 +33,14 @@ if SERVER then
 			.Invoke(ply)
 	end
 
-	net.Receive('bgNPCLoadRoute', function(len, ply)
-		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.Callback('bgn_movement_mesh_load', function(ply)
 		bgNPC.LoadRoutes()
 		bgNPC.SendRoutesFromClient(ply)
-	end)
+	end).Protect().Register()
 
-	net.Receive('bgNPCLoadExistsRoutesFromClient', function(len, ply)
-		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.Callback('bgn_movement_mesh_load_from_client', function(ply)
 		bgNPC.SendRoutesFromClient(ply)
-	end)
+	end).Protect().Register()
 
 	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
 		hook.Run('BGN_PreLoadRoutes', game.GetMap())
@@ -72,21 +66,19 @@ else
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		snet.InvokeServer('bgn_movement_mesh_load')
 
-		net.Start('bgNPCLoadRoute')
-		net.SendToServer()
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		snet.InvokeServer('bgn_movement_mesh_load_from_client')
 
-		net.Start('bgNPCLoadExistsRoutesFromClient')
-		net.SendToServer()
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
-	net.RegisterCallback('bgn_load_routes', function(ply, data_table)
+	net.Callback('bgn_load_routes', function(ply, data_table)
 		local newMap = BGN_NODE:JsonToMap(data_table)
 		local count = table.Count(newMap)
 
@@ -101,5 +93,5 @@ else
 
 		BGN_NODE:SetMap(newMap)
 		hook.Run('BGN_LoadingClientRoutes', BGN_NODE:GetMap())
-	end, false, true)
+	end).Protect().Register()
 end
