@@ -41,6 +41,22 @@ function(actor, attacker, target, reaction)
 	if actor:HasTeam(attacker) and actor:HasTeam(target) then return end
 
 	local asset = bgNPC:GetModule('first_attacker')
+	local AttackerActor = bgNPC:GetActor(attacker)
+	local TargetActor = bgNPC:GetActor(target)
+
+	if AttackerActor and actor:HasTeam(attacker) then
+		if AttackerActor:HasEnemy(target) or asset:IsFirstAttacker(target, attacker) then
+			actor:AddEnemy(target, reaction)
+			return
+		end
+	end
+
+	if TargetActor and actor:HasTeam(target) then
+		if TargetActor:HasEnemy(attacker) or asset:IsFirstAttacker(attacker, target) then
+			actor:AddEnemy(attacker, reaction)
+			return
+		end
+	end
 
 	if actor:HasTeam(attacker) then
 		actor:AddEnemy(target, reaction)
