@@ -26,7 +26,6 @@ bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
 bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
-bgNPC.NavmeshIsLoaded = false
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'

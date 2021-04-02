@@ -30,11 +30,6 @@ if SERVER then
 
 		bgNPC.LoadRoutes()
 	end).Protect().Register()
-
-	hook.Add("SlibPlayerFirstSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
-		bgNPC.NavmeshIsLoaded = navmesh.IsLoaded()
-		snet.Invoke('bgn_sync_navmesh_info', ply, bgNPC.NavmeshIsLoaded)
-	end)
 else
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
@@ -46,10 +41,6 @@ else
 			MsgN('[Background NPCs] Example: cl_citizens_remove_route yes', 'Route')
 		end
 	end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
-
-	snet.RegisterCallback('bgn_sync_navmesh_info', function(ply, is_load)
-		bgNPC.NavmeshIsLoaded = is_load
-	end)
 
 	concommand.Add('cl_citizens_save_route', function(ply, cmd, args)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
