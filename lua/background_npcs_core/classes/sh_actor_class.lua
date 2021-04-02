@@ -1163,3 +1163,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	return obj
 end
+
+snet.RegisterValidator('actor', function(ply, uid, ent)
+	return bgNPC:GetActor(ent) ~= nil
+end)

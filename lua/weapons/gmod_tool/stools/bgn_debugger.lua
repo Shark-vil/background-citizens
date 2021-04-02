@@ -34,11 +34,9 @@ function TOOL:LeftClick()
 
 	snet.IsValidForClient(ply, function(ply, success)
 		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-
-		if success then
-			snet.Invoke('bgn_tool_debugger_left_click', ply, ent)
-		end
-	end, 'actor', 'bgn_debugger_tool', nil, ent)
+		if not success then return end
+		snet.Invoke('bgn_tool_debugger_left_click', ply, ent)
+	end, 'actor', 'bgn_debugger_tool', ent)
 end
 
 function TOOL:RightClick()

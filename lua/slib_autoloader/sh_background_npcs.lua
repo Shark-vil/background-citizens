@@ -159,10 +159,6 @@ slib.usingDirectory(root_directory .. '/custom_modules',
 	'[Background NPCs | Custom modules] Script load - {file}')
 
 if CLIENT then
-	snet.RegisterValidator('actor', function(ply, uid, ent)
-		return bgNPC:GetActor(ent) ~= nil
-	end)
-
 	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 		

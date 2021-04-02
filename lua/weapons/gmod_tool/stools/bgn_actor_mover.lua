@@ -53,25 +53,24 @@ function TOOL:LeftClick()
 
 	snet.IsValidForClient(ply, function(ply, success)
 		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
+		if not success then return end
 
-		if success then
-			if self.Actor ~= nil then
-				self.Actor.debugger = false
-				self.Actor.eternal = false
-				self.Actor:RandomState()
-			end
-
-         actor:SetState('none')
-         actor.debugger = true
-			actor.eternal = true
-			
-         self.Actor = actor
-		   self.Target = actor:GetNPC()
-
-			net.Start('bgn_network_tool_actor_mover_left_click')
-			net.WriteEntity(ent)
-			net.Send(ply)
+		if self.Actor then
+			self.Actor.debugger = false
+			self.Actor.eternal = false
+			self.Actor:RandomState()
 		end
+
+		actor:SetState('none')
+		actor.debugger = true
+		actor.eternal = true
+		
+		self.Actor = actor
+		self.Target = actor:GetNPC()
+
+		net.Start('bgn_network_tool_actor_mover_left_click')
+		net.WriteEntity(ent)
+		net.Send(ply)
 	end, 'actor', 'bgn_debugger_tool', nil, ent)
 end
 
