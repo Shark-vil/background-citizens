@@ -13,7 +13,7 @@ function BGN_NODE:Instance(position)
    obj.parents = {}
    obj.links = {}
 
-   function obj:GetSnetData()
+   function obj:_snet_getdata()
       local netobj = {}
       netobj.index = self.index
       netobj.isNode = self.isNode
