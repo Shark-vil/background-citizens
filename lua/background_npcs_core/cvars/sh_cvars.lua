@@ -39,9 +39,9 @@ bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
 
 if CLIENT then
-	bgNPC.cvar.bgn_cl_field_view_optimization = 0
+	bgNPC.cvar.bgn_cl_field_view_optimization = 1
 	bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
-	bgNPC.cvar.bgn_cl_ambient_sound = 0
+	bgNPC.cvar.bgn_cl_ambient_sound = 1
 end
 
 function bgNPC:IsActiveNPCType(type)
