@@ -38,7 +38,6 @@ hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActi
 function(actor, attacker, target, reaction)
 	if reaction == 'ignore' then return end
 	if not target:IsNPC() and not target:IsNextBot() and not target:IsPlayer() then return end
-	if actor:HasTeam(attacker) and actor:HasTeam(target) then return end
 
 	local asset = bgNPC:GetModule('first_attacker')
 	local AttackerActor = bgNPC:GetActor(attacker)

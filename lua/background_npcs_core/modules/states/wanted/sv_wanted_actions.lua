@@ -9,7 +9,10 @@ hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttac
 	end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)	
+hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)
+	local AttackerActor = bgNPC:GetActor(attacker)
+	if AttackerActor and AttackerActor:HasTeam('residents') then return end
+	
 	if asset:HasWanted(attacker) then
 		local c_Wanted = asset:GetWanted(attacker)
 		c_Wanted:UpdateWanted()
@@ -18,8 +21,16 @@ hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", func
 		if c_Wanted.next_kill_update <= kills then
 			c_Wanted:LevelUp()
 		end
-	elseif not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
-		asset:AddWanted(attacker)
+	else
+		if attacker:IsPlayer() then
+			if not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
+				asset:AddWanted(attacker)
+			end
+		else
+			if actor:HasTeam('police') then
+				asset:AddWanted(attacker)
+			end
+		end
 	end
 end)
 

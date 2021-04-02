@@ -757,6 +757,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:HasTeam(value)
 		if self.data.team ~= nil and value ~= nil then
+			if isstring(value) then
+				return table.IHasValue(self.data.team, value)
+			end
+
 			if isentity(value) then
 				if value:IsPlayer() then
 					if table.IHasValue(self.data.team, 'player') then
@@ -765,26 +769,20 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 						local TeamParentModule = bgNPC:GetModule('team_parent')
 						return TeamParentModule:HasParent(value, self)
 					end
-				elseif (value:IsNPC() or value:IsNextBot()) and value.isBgnActor then
+				elseif value.isBgnActor and (value:IsNPC() or value:IsNextBot()) then
 					local actor = bgNPC:GetActor(value)
-					if actor then value = actor end
+					if actor then value = actor:GetData().team end
 				end
 			end
 			
 			if istable(value) then
-				if value.isBgnClass then
-					value = value:GetData().team
-				end
-
-				for _, team_1 in ipairs(self.data.team) do
-					for _, team_2 in ipairs(value) do
-						if team_1 == team_2 then
-							return true
-						end
+				for i = 1, #self.data.team do
+					local team_1 = self.data.team[i]
+					for k = 1, #value do
+						local team_2 = value[k]
+						if team_1 == team_2 then return true end
 					end
 				end
-			elseif isstring(value) then
-				return table.IHasValue(self.data.team, value)
 			end
 		end
 		return false
