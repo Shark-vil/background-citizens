@@ -13,8 +13,6 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 end)
 
 local WantedModule = bgNPC:GetModule('wanted')
-local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
-
 bgNPC:SetStateAction('defense', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
@@ -58,13 +56,7 @@ bgNPC:SetStateAction('defense', {
 			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 
 			if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
-				local isMeleeWeapon = false
-				local npcWeapon = npc:GetActiveWeapon()
-				if IsValid(npcWeapon) then
-					isMeleeWeapon = table.IHasValue(MeleeWeapon, npcWeapon:GetClass())
-				end
-
-				if isMeleeWeapon then
+				if actor:IsMeleeWeapon() then
 					actor:WalkToTarget(enemy, 'run')
 				else
 					if current_distance <= 22500 then

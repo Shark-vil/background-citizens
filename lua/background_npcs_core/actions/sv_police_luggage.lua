@@ -25,6 +25,7 @@ end
 
 hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushDanger", function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() then return end
+	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
 	if not actor:HasTeam('police') then return end
 	
 	local LuggagePush = actor:IsValidSequence('LuggagePush')
@@ -52,6 +53,7 @@ end)
 
 hook.Add("BGN_ActorLookAtObject", "BGN_PolicPlayerPushCalmly", function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() then return end
+	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
 	if not actor:HasTeam('police') then return end
 
 	local LuggagePush = actor:IsValidSequence('LuggagePush')

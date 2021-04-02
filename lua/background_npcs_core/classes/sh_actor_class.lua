@@ -1135,6 +1135,26 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
 	end
 
+	function obj:IsMeleeWeapon()
+		if not self:IsAlive() then return false end
+
+		local npc = self:GetNPC()
+		local wep = npc:GetActiveWeapon()
+		if not IsValid(wep) then return false end
+
+		return table.IHasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
+	end
+
+	function obj:IsFirearmsWeapon()
+		if not self:IsAlive() then return false end
+
+		local npc = self:GetNPC()
+		local wep = npc:GetActiveWeapon()
+		if not IsValid(wep) then return false end
+
+		return not table.IHasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+	end
+
 	function npc:GetActor()
 		return obj
 	end
