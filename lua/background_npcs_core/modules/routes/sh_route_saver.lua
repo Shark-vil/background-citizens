@@ -1,8 +1,5 @@
-local n_remove_route_file = slib.GetNetworkString('BGN_Routes', 'RemoveRouteFile')
-local n_save_route_to_file = slib.GetNetworkString('BGN_Routes', 'SaveRouteToFile')
-
 if SERVER then
-	snet.Callback(n_remove_route_file, function(map_name)
+	snet.Callback('bgn_movement_mesh_remove_datafile', function(map_name)
 		map_name = map_name or ''
 
 		local json_file = 'background_npcs/nodes/' .. map_name .. '.json'
@@ -21,7 +18,7 @@ if SERVER then
 		ply:ConCommand('cl_citizens_load_route')
 	end).Protect().Register()
 
-	snet.Callback(n_save_route_to_file, function(ply, bigdata)
+	snet.Callback('bgn_movement_mesh_save_to_file', function(ply, bigdata)
 		if bigdata.from_json then
 			file.Write('background_npcs/nodes/' .. game.GetMap() .. '.json', bigdata.data)
 		else
@@ -34,7 +31,7 @@ else
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
 			local map_name = args[2] or game.GetMap()
-			snet.InvokeServer(n_remove_route_file, map_name)
+			snet.InvokeServer('bgn_movement_mesh_remove_datafile', map_name)
 		else
 			MsgN('[Background NPCs] If you want to delete the mesh file, '
 				.. 'add as the first command argument - yes', 'Route')
@@ -53,7 +50,7 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Create(n_save_route_to_file).SetBigData({ 
+			snet.Create('bgn_movement_mesh_save_to_file').SetBigData({ 
 				from_json = from_json, 
 				data = jsonNodes
 			}, nil, 'Sending the mesh to the server').InvokeServer()
@@ -97,7 +94,7 @@ else
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
 			ButtonYes.DoClick = function()				
-				snet.Create(n_save_route_to_file).SetBigData({ 
+				snet.Create('bgn_movement_mesh_save_to_file').SetBigData({ 
 					from_json = from_json, 
 					data = jsonNodes
 				}, nil, 'Sending the mesh to the server').InvokeServer()

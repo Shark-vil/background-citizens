@@ -28,7 +28,7 @@ if SERVER then
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.Create('bgn_load_routes')
+		snet.Create('bgn_movement_mesh_load_from_client_cl')
 			.SetBigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
 			.Invoke(ply)
 	end
@@ -38,7 +38,7 @@ if SERVER then
 		bgNPC.SendRoutesFromClient(ply)
 	end).Protect().Register()
 
-	snet.Callback('bgn_movement_mesh_load_from_client', function(ply)
+	snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
 		bgNPC.SendRoutesFromClient(ply)
 	end).Protect().Register()
 
@@ -74,11 +74,11 @@ else
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
 		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
-		snet.InvokeServer('bgn_movement_mesh_load_from_client')
+		snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
 
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
-	net.Callback('bgn_load_routes', function(ply, data_table)
+	net.Callback('bgn_movement_mesh_load_from_client_cl', function(ply, data_table)
 		local newMap = BGN_NODE:JsonToMap(data_table)
 		local count = table.Count(newMap)
 
