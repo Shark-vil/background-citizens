@@ -20,9 +20,8 @@ local function OpenDoor(actor, door)
 	end
 end
 
-hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent, distance)
-	if distance > 100 then return end
-	
+hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent, distance, diff)
+	if distance > 100 or diff > 50 then return end
 	for _, door in ipairs(ents.FindInSphere(ent:GetPos(), 150)) do
 		if door:slibIsDoor() then OpenDoor(actor, door) end
 	end
