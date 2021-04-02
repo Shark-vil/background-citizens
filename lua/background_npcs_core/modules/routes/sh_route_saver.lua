@@ -1,13 +1,10 @@
+local n_remove_route_file = slib.GetNetworkString('BGN_Routes', 'RemoveRouteFile')
+local n_save_route_to_file = slib.GetNetworkString('BGN_Routes', 'SaveRouteToFile')
+
 if SERVER then
-	util.AddNetworkString('bgNPCSaveRoute')
-	util.AddNetworkString('bgNPCRemoveRoute')
-	util.AddNetworkString('bgNPCSyncNavmeshInfoFromPlayer')
+	snet.Callback(n_remove_route_file, function(map_name)
+		map_name = map_name or ''
 
-	net.Receive('bgNPCRemoveRoute', function(len, ply)
-		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-		if not net.ReadBool() then return end
-
-		local map_name = net.ReadString()
 		local json_file = 'background_npcs/nodes/' .. map_name .. '.json'
 		local dat_file = 'background_npcs/nodes/' .. map_name .. '.dat'
 
@@ -22,9 +19,9 @@ if SERVER then
 		end
 
 		ply:ConCommand('cl_citizens_load_route')
-	end)
+	end).Protect().Register()
 
-	snet.RegisterCallback('bgn_save_routes', function(ply, bigdata)
+	snet.Callback(n_save_route_to_file, function(ply, bigdata)
 		if bigdata.from_json then
 			file.Write('background_npcs/nodes/' .. game.GetMap() .. '.json', bigdata.data)
 		else
@@ -32,7 +29,7 @@ if SERVER then
 		end
 
 		bgNPC.LoadRoutes()
-	end, false, true)
+	end).Protect().Register()
 
 	hook.Add("SlibPlayerFirstSpawn", "BGN_SyncPlayerNavmeshInfo", function(ply)
 		bgNPC.NavmeshIsLoaded = navmesh.IsLoaded()
@@ -42,14 +39,11 @@ else
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
 			local map_name = args[2] or game.GetMap()
-
-			net.Start('bgNPCRemoveRoute')
-			net.WriteBool(true)
-			net.WriteString(map_name)
-			net.SendToServer()
+			snet.InvokeServer(n_remove_route_file, map_name)
 		else
-			bgNPC:Log('If you want to delete the mesh file, add as the first command argument - yes', 'Route')
-			bgNPC:Log('Example: cl_citizens_remove_route yes', 'Route')
+			MsgN('[Background NPCs] If you want to delete the mesh file, '
+				.. 'add as the first command argument - yes', 'Route')
+			MsgN('[Background NPCs] Example: cl_citizens_remove_route yes', 'Route')
 		end
 	end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
 
@@ -68,7 +62,7 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Create('bgn_save_routes').SetBigData({ 
+			snet.Create(n_save_route_to_file).SetBigData({ 
 				from_json = from_json, 
 				data = jsonNodes
 			}, nil, 'Sending the mesh to the server').InvokeServer()
@@ -112,7 +106,7 @@ else
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
 			ButtonYes.DoClick = function()				
-				snet.Create('bgn_save_routes').SetBigData({ 
+				snet.Create(n_save_route_to_file).SetBigData({ 
 					from_json = from_json, 
 					data = jsonNodes
 				}, nil, 'Sending the mesh to the server').InvokeServer()
