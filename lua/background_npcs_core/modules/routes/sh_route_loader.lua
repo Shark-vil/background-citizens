@@ -58,7 +58,7 @@ else
 	end)
 
 	hook.Add('Slib_StartBigdataSending', 'BGN_LoadingNodesFromServer', function(ply, name)
-		if name ~= 'bgn_load_routes' then return end
+		if name ~= 'bgn_movement_mesh_load_from_client_cl' then return end
 		notification.Kill('BGN_LoadingNodesFromServer')
 	end)
 
