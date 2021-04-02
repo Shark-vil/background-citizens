@@ -71,7 +71,7 @@ function TOOL:LeftClick()
 		net.Start('bgn_network_tool_actor_mover_left_click')
 		net.WriteEntity(ent)
 		net.Send(ply)
-	end, 'actor', 'bgn_debugger_tool', nil, ent)
+	end, 'actor', ent)
 end
 
 function TOOL:RightClick()

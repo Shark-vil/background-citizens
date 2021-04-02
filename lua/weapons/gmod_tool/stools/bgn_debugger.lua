@@ -36,7 +36,7 @@ function TOOL:LeftClick()
 		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 		if not success then return end
 		snet.Invoke('bgn_tool_debugger_left_click', ply, ent)
-	end, 'actor', 'bgn_debugger_tool', ent)
+	end, 'actor', ent)
 end
 
 function TOOL:RightClick()

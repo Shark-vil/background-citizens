@@ -78,7 +78,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self:GetNPC()
 		
 		if ply then
-			if IsValid(ply)  then
+			if IsValid(ply) then
 				snet.Invoke(name, ply, npc, data)
 			end
 		else
