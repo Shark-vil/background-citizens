@@ -234,8 +234,7 @@ if SERVER then
 			
 			hook.Run('BGN_InitActor', actor)
 
-			snet.Create('bgn_add_actor_from_client')
-				.SetData(npc, npcType, actor.uid).InvokeAll()
+			snet.Create('bgn_add_actor_from_client', npc, npcType, actor.uid).InvokeAll()
 		end)
 	end
 end

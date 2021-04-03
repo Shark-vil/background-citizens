@@ -50,7 +50,7 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Create('bgn_movement_mesh_save_to_file').SetBigData({ 
+			snet.Create('bgn_movement_mesh_save_to_file').BigData({ 
 				from_json = from_json, 
 				data = jsonNodes
 			}, nil, 'Sending the mesh to the server').InvokeServer()
@@ -94,7 +94,7 @@ else
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
 			ButtonYes.DoClick = function()				
-				snet.Create('bgn_movement_mesh_save_to_file').SetBigData({ 
+				snet.Create('bgn_movement_mesh_save_to_file').BigData({ 
 					from_json = from_json, 
 					data = jsonNodes
 				}, nil, 'Sending the mesh to the server').InvokeServer()
