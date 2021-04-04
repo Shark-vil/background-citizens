@@ -173,10 +173,10 @@ bgNPC.cfg.npcs_template = {
 			'models/survivors/npc/tyler.mdl',
 			'models/survivors/npc/wolfgang.mdl',
 		},
-		at_random_range = 115,
+		at_random_range = 150,
 		at_random = {
-			['walk'] = 70,
-			['idle'] = 10,
+			['walk'] = 100,
+			['idle'] = 15,
 			['impingement'] = 5,
 			['sit_to_chair'] = 10,
 			['dv_vehicle_drive'] = 10,
