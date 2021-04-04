@@ -79,7 +79,9 @@ function BGN_NODE:Instance(position)
       
       self.links[linkType] = self.links[linkType] or {}
       if table.IHasValue(self.links[linkType], node) then return end
-      -- print('Add link - ', node.index, ' to ', self.index)
+
+      if not node:HasParent(self) then node:AddParentNode(self) end
+      
       table.insert(self.links[linkType], node)
       if not node:HasLink(self) then node:AddLink(self, linkType) end
    end
