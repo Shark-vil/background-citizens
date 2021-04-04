@@ -5,12 +5,10 @@ if CLIENT then
 	end).Register()
 
 	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
-		MsgN('BGN ADD NPC "', (uid or 'NaN'), '":')
-		if bgNPC:GetActor(npc) ~= nil then MsgN('ERROR') return end
+		if bgNPC:GetActor(npc) ~= nil then return end
 
 		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType], uid)
 		bgNPC:AddNPC(actor)
-		MsgN('DONE')
 	end).Validator(SNET_ENTITY_VALIDATOR).Register()
 end
 
