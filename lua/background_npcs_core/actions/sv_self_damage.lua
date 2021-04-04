@@ -1,11 +1,10 @@
 local TeamParentModule = bgNPC:GetModule('team_parent')
-local hook_post_reaction_demage_delay = {}
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
-	if not target:IsPlayer() and not target:IsNPC() then return end
+	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
 	local attacker = dmginfo:GetAttacker()
-	if not attacker:IsPlayer() and not attacker:IsNPC() then return end
+	if not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
 	if attacker.bgNPCIgnore or attacker == target then return end
 
 	local ActorTarget = bgNPC:GetActor(target)

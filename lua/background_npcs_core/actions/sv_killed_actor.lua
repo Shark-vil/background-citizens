@@ -1,6 +1,6 @@
 hook.Add("OnNPCKilled", "BGN_OnKilledActor", function(npc, attacker, inflictor)
 	local actor = bgNPC:GetActor(npc)
-	if actor ~= nil then
+	if actor then
 		bgNPC:AddKillingStatistic(attacker, actor)
 		bgNPC:AddWantedKillingStatistic(attacker, actor)
 		
