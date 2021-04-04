@@ -32,6 +32,7 @@ local root_directory = 'background_npcs_core'
 local script = slib.CreateIncluder(root_directory, '[Background NPCs] Script load - {file}')
 
 script:using('config/sh_main.lua')
+script:using('config/sh_state_relations.lua')
 script:using('config/sh_npcs.lua')
 script:using('config/sh_shot_sound.lua')
 script:using('config/sh_player.lua')
