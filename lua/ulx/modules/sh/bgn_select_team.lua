@@ -1,7 +1,7 @@
 local CATEGORY_NAME = 'Background NPCs'
 
 function ulx.bgnselectteam(calling_ply, target_ply, actor_type)
-   if not actor_type or actor_type == 'select team' then return end
+   if not actor_type or actor_type == '' or actor_type == 'select team' then return end
 
    if actor_type == 'not team' then
       ulx.fancyLogAdmin(calling_ply, "#A remove team for #T", target_ply)
@@ -9,10 +9,14 @@ function ulx.bgnselectteam(calling_ply, target_ply, actor_type)
          target.bgn_team = nil
       end, target_ply)
    else
-		ulx.fancyLogAdmin(calling_ply, "#A set team for #T (#s)", target_ply, actor_type)
-      ULib.queueFunctionCall(function(target, actor_type)
-         target.bgn_team = bgNPC.cfg.npcs_template[actor_type].team
-      end, target_ply, actor_type)
+      local npcData = bgNPC.cfg.npcs_template[actor_type]
+      if npcData and npcData.team then
+         local npcName = npcData.name or actor_type
+         ulx.fancyLogAdmin(calling_ply, "#A set team for #T (#s)", target_ply, npcName)
+         ULib.queueFunctionCall(function(target, teamList)
+            target.bgn_team = teamList
+         end, target_ply, npcData.team)
+      end
 	end
 end
 

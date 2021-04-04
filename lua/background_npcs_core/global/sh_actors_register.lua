@@ -194,19 +194,17 @@ if SERVER then
 			if npcData.models then
 				local model
 
-				if is_many_classes then
-					if npcData.models[npc_class] then
-						model = table.Random(npcData.models[npc_class])
-					end
-				else
+				if is_many_classes and npcData.models[npc_class] then
+					model = table.Random(npcData.models[npc_class])
+				elseif #npcData.models ~= 0 then
 					model = table.Random(npcData.models)
 				end
 
-				if model ~= nil and util.IsValidModel(model) then
+				if model and util.IsValidModel(model) then
 					-- Backward compatibility with the old version of the config
 					npcData.default_models = npcData.default_models or npcData.defaultModels
 
-					if not npcData.default_models or (npcData.default_models and math.random(0, 10) <= 5) then
+					if npcData.default_models and math.random(0, 10) <= 5 then
 						if not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData) then
 							npc:SetModel(model)
 						end

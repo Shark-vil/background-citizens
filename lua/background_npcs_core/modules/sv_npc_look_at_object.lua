@@ -21,7 +21,24 @@ timer.Create('BGN_Timer_ActorLookAtObject', 0.5, 0, function()
 						diff = diff - 360
 					end
 
-					hook.Run('BGN_ActorLookAtObject', actor, ent, npc_pos:Distance(ent_pos), math.abs(diff))
+					diff = math.abs(diff)
+					local dist = npc_pos:Distance(ent_pos)
+
+					hook.Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
+
+					if npc:IsNPC() then
+						local tr = util.TraceLine({
+							start = npc:GetShootPos(),
+							endpos = npc:GetShootPos() + npc:GetForward() * 1000,
+							filter = function(ent)
+								if ent ~= npc then return true end
+							end
+						})
+
+						if tr.Hit then
+							hook.Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
+						end
+					end
 				end
 			end
 		end
