@@ -1,20 +1,20 @@
-snet.RegisterCallback('bgn_actor_sync_data_reaction_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_reaction_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	actor.reaction = data.reaction
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_schedule_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_schedule_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	actor.npc_schedule = data.npc_schedule
 	actor.npc_state = data.npc_state
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	local old_count = #actor.targets
@@ -25,8 +25,8 @@ snet.RegisterCallback('bgn_actor_sync_data_targets_client', function (_, npc, da
 	end
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	actor.state_data = data.state
@@ -36,8 +36,8 @@ snet.RegisterCallback('bgn_actor_sync_data_state_client', function (_, npc, data
 	hook.Run('BGN_SetNPCState', actor, actor.state_data.state, actor.state_data.data)
 end)
 
-snet.RegisterCallback('bgn_actor_easy_sync_data_state_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_easy_sync_data_state_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	actor.state_data.state = data.state
@@ -47,8 +47,8 @@ snet.RegisterCallback('bgn_actor_easy_sync_data_state_client', function (_, npc,
 	hook.Run('BGN_SetNPCState', actor, actor.state_data.state, actor.state_data.data)
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	actor.anim_time = data.anim_time
@@ -60,8 +60,8 @@ snet.RegisterCallback('bgn_actor_sync_data_animation_client', function (_, npc, 
 	actor.loop_time_normal = data.loop_time_normal
 end)
 
-snet.RegisterCallback('bgn_actor_sync_data_enemies', function (_, npc, data)
-	local actor = bgNPC:GetActor(npc)
+snet.RegisterCallback('bgn_actor_sync_data_enemies', function (_, uid, data)
+	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
 	local old_count = #actor.enemies

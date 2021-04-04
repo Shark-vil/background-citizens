@@ -86,15 +86,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:SyncFunction(name, ply, data)
 		if CLIENT then return end
 		if not self:IsAlive() then return end
-
-		local npc = self:GetNPC()
 		
 		if ply then
 			if IsValid(ply) then
-				snet.Invoke(name, ply, npc, data)
+				snet.Invoke(name, ply, self.uid, data)
 			end
 		else
-			snet.InvokeAll(name, npc, data)
+			snet.InvokeAll(name, self.uid, data)
 		end
 	end
 

@@ -6,9 +6,11 @@ function bgNPC:GetActor(npc)
 end
 
 function bgNPC:GetActorByUid(uid)
-	local actors = self:GetAll()
-	for i = 1, #actors do
-		if actors[i].uid == uid then return actors[i] end
+	if uid then
+		local actors = self:GetAll()
+		for i = 1, #actors do
+			if actors[i].uid == uid then return actors[i] end
+		end
 	end
 	return nil
 end
