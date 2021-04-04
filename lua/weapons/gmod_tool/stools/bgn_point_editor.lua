@@ -503,7 +503,7 @@ if CLIENT then
 	local en_lang = {
 		['tool.bgn_point_editor.name'] = 'Points Editor',
 		['tool.bgn_point_editor.desc'] = 'Tool for editing the points of movement of background NPCs.',
-		['tool.bgn_point_editor.0'] = 'Left click - Interaction. Right click - Change tool type. Reload - Clear all points.',
+		['tool.bgn_point_editor.0'] = 'Left click - Interaction. Right click - Change tool type. Reload - Switching submodes.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Load points',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Save points',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Re-create points links',
@@ -533,7 +533,7 @@ if CLIENT then
 	local ru_lang = {
 		['tool.bgn_point_editor.name'] = 'Редактор точек',
 		['tool.bgn_point_editor.desc'] = 'Инструмент для редактирования точек перемещения фоновых НПС.',
-		['tool.bgn_point_editor.0'] = 'Левый клик - Взаимодействие. Правый клик - Сменить тип инструмента. Перезарядка - Очистить все точки.',
+		['tool.bgn_point_editor.0'] = 'Левый клик - Взаимодействие. Правый клик - Сменить тип инструмента. Перезарядка - Переключение подрежимов.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Загрузить точки',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Сохранить точки',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Пересоздать связи точек',
