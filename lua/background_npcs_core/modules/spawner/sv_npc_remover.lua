@@ -36,76 +36,79 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 	for i = 1, #actors do
 		local actor = actors[i]
-		if not actor.eternal and not actor.debugger and actor:IsAlive() then
-			local npc = actor:GetNPC()
 
-			if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
-				if not hook.Run('BGN_PreRemoveNPC', npc) then
-					bgNPC:RemoveNPC(npc)
-					npc:Remove()
-				end
-			else
-				local isRemove = true
-				local npc_pos = npc:GetPos()
+		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger then
+			goto skip
+		end
 
-				for _, ply in ipairs(player.GetAll()) do
-					if IsValid(ply) then
-						local ply_pos = ply:GetPos()
-						local dist = npc_pos:DistToSqr(ply_pos)
-						if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, npc_pos) then
-							isRemove = false
-							break
-						end
+		local npc = actor:GetNPC()
+		
+		if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
+			if not hook.Run('BGN_PreRemoveNPC', npc) then
+				bgNPC:RemoveNPC(npc)
+				npc:Remove()
+			end
+		else
+			local isRemove = true
+			local npc_pos = npc:GetPos()
+
+			for _, ply in ipairs(player.GetAll()) do
+				if IsValid(ply) then
+					local ply_pos = ply:GetPos()
+					local dist = npc_pos:DistToSqr(ply_pos)
+					if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, npc_pos) then
+						isRemove = false
+						break
 					end
 				end
+			end
 
-				if isRemove then
-					if not bgn_actors_teleporter then
-						if not hook.Run('BGN_PreRemoveNPC', npc) then
-							bgNPC:RemoveNPC(npc)
-							npc:Remove()
-						end
+			if isRemove then
+				if not bgn_actors_teleporter then
+					if not hook.Run('BGN_PreRemoveNPC', npc) then
+						bgNPC:RemoveNPC(npc)
+						npc:Remove()
+					end
+				else
+					local npc = actor:GetNPC()
+					local data = actor:GetData()
+
+					if data.wanted_level == nil then
+						if max_teleporter == current_teleport then goto skip end
+						current_teleport = current_teleport + 1
+
+						bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
+							if not IsValid(npc) then return end
+							npc:SetPos(nodePosition)
+							npc:PhysWake()
+
+							hook.Run('BGN_RespawnActor', actor, nodePosition)
+						end)
 					else
-						local npc = actor:GetNPC()
-						local data = actor:GetData()
+						local desiredPosition
+						for Target, WantedComponent in pairs(WantedModule:GetAllWanted()) do
+							if IsValid(Target) and WantedComponent.level >= data.wanted_level then
+								desiredPosition = Target:GetPos()
+								break
+							end
+						end
 
-						if data.wanted_level == nil then
+						if not desiredPosition then
+							if not hook.Run('BGN_PreRemoveNPC', npc) then
+								bgNPC:RemoveNPC(npc)
+								npc:Remove()
+							end
+						else
 							if max_teleporter == current_teleport then goto skip end
 							current_teleport = current_teleport + 1
 
-							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
+							bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
 								if not IsValid(npc) then return end
 								npc:SetPos(nodePosition)
 								npc:PhysWake()
 
 								hook.Run('BGN_RespawnActor', actor, nodePosition)
 							end)
-						else
-							local desiredPosition
-							for Target, WantedComponent in pairs(WantedModule:GetAllWanted()) do
-								if IsValid(Target) and WantedComponent.level >= data.wanted_level then
-									desiredPosition = Target:GetPos()
-									break
-								end
-							end
-
-							if not desiredPosition then
-								if not hook.Run('BGN_PreRemoveNPC', npc) then
-									bgNPC:RemoveNPC(npc)
-									npc:Remove()
-								end
-							else
-								if max_teleporter == current_teleport then goto skip end
-								current_teleport = current_teleport + 1
-
-								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
-									if not IsValid(npc) then return end
-									npc:SetPos(nodePosition)
-									npc:PhysWake()
-
-									hook.Run('BGN_RespawnActor', actor, nodePosition)
-								end)
-							end
 						end
 					end
 				end
