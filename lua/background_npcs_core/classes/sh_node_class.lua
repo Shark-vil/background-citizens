@@ -21,14 +21,14 @@ function BGN_NODE:Instance(position)
       netobj.parents = {}
       netobj.links = {}
 
-      for _, node in ipairs(self.parents) do
-         table.insert(netobj.parents, node.index)
+      for i = 1, #self.parents do
+         table.insert(netobj.parents, self.parents[i].index)
       end
 
       for linkType, nodes in pairs(self.links) do
          netobj.links[linkType] = netobj.links[linkType] or {}
-         for _, node in ipairs(nodes) do
-            table.insert(netobj.links[linkType], node.index)
+         for i = 1, #nodes do
+            table.insert(netobj.links[linkType], nodes[i].index)
          end
       end
 
@@ -59,7 +59,8 @@ function BGN_NODE:Instance(position)
    end
 
    function obj:ClearParents()
-      for _, node in ipairs(BGN_NODE.Map) do
+      for i = 1, #BGN_NODE.Map do
+         local node = BGN_NODE.Map[i]
          if node:HasParent(self) then
             node:RemoveParentNode(self)
          end
@@ -111,7 +112,8 @@ function BGN_NODE:Instance(position)
    function obj:ClearLinks(linkType)
       if not self.links[linkType] then return end
 
-      for _, node in ipairs(BGN_NODE.Map) do
+      for i = 1, #BGN_NODE.Map do
+         local node = BGN_NODE.Map[i]
          if node:HasLink(self, linkType) then
             node:RemoveLink(self, linkType)
          end
@@ -164,7 +166,8 @@ function BGN_NODE:Instance(position)
    function obj:RemoveFromMap()
       if self.index == -1 then return end
       
-      for index, node in ipairs(BGN_NODE.Map) do
+      for i = 1, #BGN_NODE.Map do
+         local node = BGN_NODE.Map[i]
          if node ~= self and node:HasParent(self) then
             node:RemoveParentNode(self)
          end
@@ -177,8 +180,8 @@ function BGN_NODE:Instance(position)
 
       table.remove(BGN_NODE.Map, self.index)
 
-      for index, node in ipairs(BGN_NODE.Map) do
-         node.index = index
+      for i = 1, #BGN_NODE.Map do
+         BGN_NODE.Map[i].index = i
       end
    end
 
@@ -205,8 +208,8 @@ function BGN_NODE:GetChunkNodes(pos)
    if not chunk then return {} end
 
    local nodes = {}
-   for _, nodeIndex in ipairs(chunk) do
-      local node = self.Map[nodeIndex]
+   for i = 1, #chunk do
+      local node = self.Map[chunk[i]]
       if node then
          table.insert(nodes, node)
       end
@@ -253,8 +256,8 @@ end
 function BGN_NODE:SetMap(map)
    self:ClearNodeMap()
 
-   for _, node in ipairs(map) do
-      self:AddNodeToMap(node)
+   for i = 1, #map do
+      self:AddNodeToMap(map[i])
    end
 end
 

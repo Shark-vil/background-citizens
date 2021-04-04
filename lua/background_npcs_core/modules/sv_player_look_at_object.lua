@@ -1,5 +1,7 @@
-timer.Create('BGN_Timer_PlayerLookAtObject', 0.3, 0, function()
-	for _, ply in ipairs(player.GetAll()) do
+timer.Create('BGN_Timer_PlayerLookAtObject', 0.5, 0, function()
+	local players = player.GetAll()
+	for i = 1, #players do
+		local ply = players[i]
 		if IsValid(ply) and ply:Alive() then
 			local tr = util.TraceLine({
 				start = ply:EyePos(),

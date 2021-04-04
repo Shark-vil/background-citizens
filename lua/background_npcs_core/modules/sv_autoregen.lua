@@ -1,5 +1,7 @@
 timer.Create('BGN_Timer_BanditsAutoRegen', 5, 0, function()
-   for _, actor in ipairs(bgNPC:GetAllByTeam('bandits')) do
+   local bandits = bgNPC:GetAllByTeam('bandits')
+   for i = 1, #bandits do
+      local actor = bandits[i]
       if actor:IsAlive() then
          local npc = actor:GetNPC()
          local max_health = npc:GetMaxHealth()

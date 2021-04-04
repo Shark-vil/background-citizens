@@ -10,8 +10,10 @@ if SERVER then
 
 	hook.Add("SlibPlayerFirstSpawn", "BGN_PlayerFirstInitSpawnerHook", function(ply)
 		local delay = 0
+		local actors = bgNPC:GetAll()
 
-		for _, actor in ipairs(bgNPC:GetAll()) do
+		for i = 1, #actors do
+			local actor = actors[i]
 			if actor:IsAlive() then
 				local type = actor:GetType()
 				local npc = actor:GetNPC()

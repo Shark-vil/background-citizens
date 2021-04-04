@@ -8,7 +8,9 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
    is_active = new_value
    if is_active then return end
 
-   for _, npc in ipairs(bgNPC:GetAllNPCs()) do
+   local entities = bgNPC:GetAllNPCs()
+   for i = 1, #entities do
+      local npc = entities[i]
       if IsValid(npc) and npc:Health() > 0 then
          npc:SetNoDraw(false)
       end
@@ -26,7 +28,9 @@ local function func()
    local pass = 0
    local max_pass = 5
    
-   for _, npc in ipairs(bgNPC:GetAllNPCs()) do
+   local entities = bgNPC:GetAllNPCs()
+   for i = 1, #entities do
+      local npc = entities[i]
       if IsValid(npc) and npc:Health() > 0 then
          local pos = npc:GetPos()
 

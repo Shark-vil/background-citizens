@@ -2,13 +2,16 @@ timer.Create('BGN_Timer_NPCOptimizeFlagController', 0.5, 0, function()
    if not GetConVar('bgn_enable'):GetBool() then return end
 
 	local actors = bgNPC:GetAll()
+   local players = player.GetAll()
 
 	if #actors == 0 then return end
    
 	local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat() ^ 2
    if bgn_disable_logic_radius <= 0 then return end
 
-	for _, actor in ipairs(actors) do
+	for i = 1, #actors do
+      local actor = actors[i]
+
       if not actor.debugger or not actor:IsAlive() then
          goto skip
       end
@@ -21,7 +24,8 @@ timer.Create('BGN_Timer_NPCOptimizeFlagController', 0.5, 0, function()
       local npc_pos = npc:GetPos()
       local addIgnoreFlag = true
 
-      for _, ply in ipairs(player.GetAll()) do
+      for p = 1, #players do
+         local ply = players[p]
          if IsValid(ply) then               
             local dist = npc_pos:DistToSqr(ply:GetPos())
 

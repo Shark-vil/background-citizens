@@ -19,6 +19,18 @@ local female_scream = {
 	'vo/npc/female01/no02.wav',
 }
 
+local schedule_white_list = {
+	SCHED_HIDE_AND_RELOAD,
+	SCHED_RELOAD,
+	SCHED_ESTABLISH_LINE_OF_FIRE,
+	SCHED_RANGE_ATTACK1,
+	SCHED_RANGE_ATTACK2,
+	SCHED_SPECIAL_ATTACK1,
+	SCHED_SPECIAL_ATTACK2,
+	SCHED_MELEE_ATTACK1,
+	SCHED_MELEE_ATTACK2
+}
+
 local uid = 0
 function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	local obj = {}
@@ -328,8 +340,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- Removes all targets from the list.
 	-- ? Actually calls method "RemoveTarget" for all targets in the list.
 	function obj:RemoveAllTargets()
-		for _, t in ipairs(self.targets) do
-			self:RemoveTarget(t)
+		for i = 1, #self.targets do
+			self:RemoveTarget(self.targets[i])
 		end
 	end
 
@@ -353,7 +365,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local dist = 0
 		local self_npc = self:GetNPC()
 
-		for _, ent in ipairs(self.targets) do
+		for i = 1, #self.targets do
+			local ent = self.targets[i]
 			if IsValid(ent) then
 				if not IsValid(target) then
 					target = ent
@@ -374,7 +387,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFirstTarget()
-		for _, ent in ipairs(self.targets) do
+		for i = 1, #self.targets do
+			local ent = self.targets[i]
 			if IsValid(ent) then return ent end
 		end
 		return NULL
@@ -453,8 +467,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:RemoveAllEnemies()
-		for _, e in ipairs(self.enemies) do
-			self:RemoveEnemy(e)
+		for i = 1, #self.enemies do
+			self:RemoveEnemy(self.enemies[i])
 		end
 	end
 
@@ -471,7 +485,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
       if #self.enemies == 0 then return end
 
-		for _, enemy in ipairs(self.enemies) do
+		for i = 1, #self.enemies do
+			local enemy = self.enemies[i]
 			if not IsValid(enemy) or enemy:Health() <= 0 then
 				self:RemoveEnemy(enemy)
 			end
@@ -500,7 +515,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local dist = 0
 		local self_npc = self:GetNPC()
 
-		for _, ent in ipairs(self.enemies) do
+		for i = 1, #self.enemies do
+			local ent = self.enemies[i]
 			if IsValid(ent) then
 				if not IsValid(enemy) then
 					enemy = ent
@@ -520,7 +536,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:GetFirstEnemy()
-		for _, enemy in ipairs(self.enemies) do
+		for i = 1, #self.enemies do
+			local enemy = self.enemies[i]
 			if IsValid(enemy) then return enemy end
 		end
 		return NULL
@@ -531,7 +548,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local dist = nil
 		local npcPos = self:GetNPC():GetPos()
 
-		for _, ent in ipairs(self.enemies) do
+		for i = 1, #self.enemies do
+			local ent = self.enemies[i]
 			if IsValid(ent) then
 				local new_dist = npcPos:DistToSqr(ent:GetPos())
 				if not IsValid(enemy) then
@@ -731,20 +749,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 
 		local current_schedule = npc:GetCurrentSchedule()
-		local white_list = {
-			SCHED_HIDE_AND_RELOAD,
-			SCHED_RELOAD,
-			SCHED_ESTABLISH_LINE_OF_FIRE,
-			SCHED_RANGE_ATTACK1,
-			SCHED_RANGE_ATTACK2,
-			SCHED_SPECIAL_ATTACK1,
-			SCHED_SPECIAL_ATTACK2,
-			SCHED_MELEE_ATTACK1,
-			SCHED_MELEE_ATTACK2
-		}
-
-		for _, v in ipairs(white_list) do
-			if v == current_schedule then return end
+		for i = 1, #schedule_white_list do
+			if schedule_white_list[i] == current_schedule then return end
 		end
 
 		npc:SetLastPosition(targetPosition)
@@ -797,8 +803,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if current_state == state then
 			return true
 		elseif istable(state) then
-			for _, value in ipairs(state) do
-				if current_state == value then return true end
+			for i = 1, #state do
+				if current_state == state[i] then return true end
 			end
 		end
 		return false
@@ -829,7 +835,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self:GetNPC()
 		local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
-		for _, value in ipairs(points) do
+		for i = 1, #points do
+			local point = points[i]
 			if point == nil then
 				point = value.position
 				dist = point:DistToSqr(pos)
@@ -851,7 +858,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc = self:GetNPC()
 		local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
-		for _, value in ipairs(points) do
+		for i = 1, #points do
+			local point = points[i]
 			if point == nil then
 				point = value.position
 				dist = point:DistToSqr(pos)
@@ -1108,7 +1116,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		self:FearScream()
 
 		local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
-		for _, NearActor in ipairs(near_actors) do
+		for i = 1, #near_actors do
+			local NearActor = near_actors[i]
 			local NearNPC = NearActor:GetNPC()
 			if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, enemy) then
 				NearActor:SetState(NearActor:GetReactionForProtect())

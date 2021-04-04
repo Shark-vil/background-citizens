@@ -50,10 +50,11 @@ if SERVER then
 			local radius_positions = {}
 			local radius_positions_exists = {}
 		
-			for _, node in ipairs(points) do
-				local walkNodes = node:GetLinks('walk')
+			for i = 1, #points do
+				local walkNodes = points[i]:GetLinks('walk')
 
-				for _, walkNode in ipairs(walkNodes) do
+				for k = 1, #walkNodes do
+					local walkNode = walkNodes[k]
 					local nodePosition
 
 					if table.IHasValue(radius_positions_exists, walkNode.index) then
@@ -62,7 +63,8 @@ if SERVER then
 
 					nodePosition = walkNode:GetPos()
 					
-					for _, ply in ipairs(all_players) do
+					for p = 1, #all_players do
+						local ply = all_players[p]
 						local distance = nodePosition:DistToSqr(ply:GetPos())
 								
 						if distance <= block_radius then goto skip_walk_nodes end
@@ -105,8 +107,12 @@ if SERVER then
 			if #radius_positions == 0 then return coroutine.yield() end
 
 			local result_radius_positions = {}
-			for _, pos in ipairs(radius_positions) do
-				for _, ent in ipairs(ents.FindInSphere(pos, 200)) do
+			for i = 1, #radius_positions do
+				local pos = radius_positions[i]
+				local entities = ents.FindInSphere(pos, 200)
+
+				for k = 1, #entities do
+					local ent = entities[k]
 					if ent:slibIsDoor() or ent:IsNPC() or ent:IsPlayer() then goto skip end
 				end
 

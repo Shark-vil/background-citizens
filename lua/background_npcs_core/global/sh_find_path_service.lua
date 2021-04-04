@@ -20,7 +20,8 @@ local function GetNearNodeFromPos(nodes)
 	local F = nil
    local index = nil
 
-	for id, v in ipairs(nodes) do
+	for id = 1, #nodes do
+      local v = nodes[id]
 		if node == nil then
 			node = v
 			F = v.F
@@ -38,8 +39,8 @@ local function GetNearNodeFromPos(nodes)
 end
 
 local function NodeIsChecked(checkedNodes, node)
-   for _, v in ipairs(checkedNodes) do
-      if v.position == node.position then return true end
+   for i = 1, #checkedNodes do
+      if checkedNodes[i].position == node.position then return true end
    end
    return false
 end
@@ -110,7 +111,8 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
                nodes = nextNode.parents
             end
 
-            for _, node in ipairs(nodes) do
+            for i = 1, #nodes do
+               local node = nodes[i]
                local parentNode = BGN_NODE:Instance(node.position)
                parentNode.parents = node.parents
                parentNode.links = node.links

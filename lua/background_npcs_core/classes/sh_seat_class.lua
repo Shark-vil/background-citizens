@@ -47,7 +47,8 @@ function BGN_SEAT:Initialize()
    local file_path = 'background_npcs/seats/' .. game.GetMap() .. '.dat'
    if file.Exists(file_path, 'DATA') then
       local read_data = util.JSONToTable(util.Decompress(file.Read(file_path, 'DATA')))
-      for _, t in ipairs(read_data) do
+      for i = 1, #read_data do
+         local t = read_data[i]
          local seat = self:Instance(t.position, t.angle)
          seat:SetOffset(t.offset)
          seat:SetStartSittingPos(t.start_pos)

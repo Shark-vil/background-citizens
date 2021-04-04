@@ -11,7 +11,9 @@ hook.Add("EntityEmitSound", "BGN_WeaponShotSoundReaction", function(t)
    if table.IHasValue(bgNPC.cfg.shotsound.whitelist_weapons, wep:GetClass()) then return end
 
    local IsFound = false
-   for _, name in ipairs(bgNPC.cfg.shotsound.sound_name_found) do
+   local sounds_name_found = bgNPC.cfg.shotsound.sound_name_found
+   for i = 1, #sounds_name_found do
+      local name = sounds_name_found[i]
       if tobool(string.find(sound_name, name)) then
          IsFound = true
          break
@@ -20,7 +22,9 @@ hook.Add("EntityEmitSound", "BGN_WeaponShotSoundReaction", function(t)
    
    if not IsFound then return end
 
-   for _, actor in ipairs(bgNPC:GetAllByRadius(attacker:GetPos(), 2500)) do
+   local actors = bgNPC:GetAllByRadius(attacker:GetPos(), 2500)
+   for i = 1, #actors do
+      local actor = actors[i]
       local reaction = actor:GetReactionForProtect()
       actor:SetReaction(reaction)
 

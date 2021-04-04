@@ -13,7 +13,9 @@ hook.Add("BGN_ResetEnemiesForActor", "BGN_SetDefaultStateIfEnemiesDeath", functi
 end)
 
 timer.Create('BGN_ActorEnemyController', 1, 0, function()
-   for _, actor in ipairs(bgNPC:GetAll()) do
+   local actors = bgNPC:GetAll()
+   for i = 1, #actors do
+      local actor = actors[i]
       if actor:IsAlive() then
          actor:EnemiesRecalculate()
       end
@@ -23,13 +25,17 @@ end)
 hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)
    bgNPC.killing_statistic[victim] = {}
 
-   for _, actor in ipairs(bgNPC:GetAll()) do
+   local actors = bgNPC:GetAll()
+   for i = 1, #actors do
+      local actor = actors[i]
       if actor:HasEnemy(victim) then actor:RemoveEnemy(victim) end
    end
 end)
 
 hook.Add('OnNPCKilled', 'BGN_ActorEnemyNPCDeathRemove', function(victim)
-   for _, actor in ipairs(bgNPC:GetAll()) do
+   local actors = bgNPC:GetAll()
+   for i = 1, #actors do
+      local actor = actors[i]
       if actor:HasEnemy(victim) then actor:RemoveEnemy(victim) end
    end
 end)

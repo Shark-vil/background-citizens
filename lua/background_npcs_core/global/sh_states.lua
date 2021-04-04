@@ -17,7 +17,9 @@ function bgNPC:CallStateAction(actor, state_name, state_data, func_name)
 end
 
 timer.Create('BGN_StateMachine', 1, 0, function()
-   for _, actor in ipairs(bgNPC:GetAll()) do
+   local actors = bgNPC:GetAll()
+   for i = 1, #actors do
+      local actor = actors[i]
       if actor:IsAlive() and not actor.system_state_machine_update_stop then
          bgNPC:CallStateAction(actor, actor:GetState(), actor:GetStateData(), 'update')
       end
