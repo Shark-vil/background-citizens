@@ -1,4 +1,9 @@
 if CLIENT then
+	snet.Callback('bgn_remove_actor_from_client', function(ply, npc)
+		if not npc then return end
+		bgNPC:RemoveNPC(npc)
+	end).Register()
+
 	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
 		if bgNPC:GetActor(npc) ~= nil then return end
 
@@ -255,6 +260,8 @@ function bgNPC:AddNPC(actor)
 end
 
 function bgNPC:RemoveNPC(npc)
+	snet.Create('bgn_remove_actor_from_client', npc).InvokeAll()
+
 	for i = #self.actors, 1, -1 do
 		if self.actors[i]:GetNPC() == npc then
 			table.remove(self.actors, i)
