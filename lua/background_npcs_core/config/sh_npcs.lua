@@ -115,10 +115,10 @@ bgNPC.cfg.npcs_template = {
 			['calling_police'] = 20,
 		}
 	},
-	['pilferer'] = {
+	['thief'] = {
 		enabled = true,
 		class = 'npc_citizen',
-		name = 'Pilferer',
+		name = 'Thief',
 		fullness = 8,
 		team = { 'bandits' },
 		money = { 0, 100 },
