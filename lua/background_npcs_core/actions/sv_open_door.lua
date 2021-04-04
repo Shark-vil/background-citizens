@@ -20,8 +20,8 @@ local function OpenDoor(actor, door)
 	end
 end
 
-hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent, distance, diff)
-	if distance > 100 or diff > 50 then return end
+hook.Add("BGN_ActorLookAtObject", "BGN_NPCDoorOpeningEvent", function(actor, ent, distance)
+	if distance > 80 then return end
 	local entities = ents.FindInSphere(ent:GetPos(), 150)
 	for i = 1, #entities do
 		local door = entities[i]
