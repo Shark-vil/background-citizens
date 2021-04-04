@@ -22,8 +22,8 @@ if SERVER then
 
 				timer.Simple(delay, function()
 					if not IsValid(ply) or not IsValid(npc) then return end
-					print('Add - ', actor.uid)
-					snet.Create('bgn_add_actor_from_client', npc, type, actor.uid).Invoke(ply)
+					snet.Create('bgn_add_actor_from_client', npc, type, actor.uid)
+						.SetLifeTime(10).Invoke(ply)
 				end)
 
 				delay = delay + 0.1
