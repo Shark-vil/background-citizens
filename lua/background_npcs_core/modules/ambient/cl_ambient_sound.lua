@@ -57,7 +57,8 @@ timer.Create('BGN_SetAmbientSound', 2, 0, function()
    local entities = ents.FindInSphere(ply:GetPos(), 1000)
    
    local count = 0
-   for _, npc in ipairs(entities) do
+   for i = 1, #entities do
+      local npc = entities[i]
       if bgNPC:GetActor(npc) ~= nil and bgNPC:IsTargetRay(ply, npc) then
          count = count + 1
       end

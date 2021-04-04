@@ -3,7 +3,9 @@ hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 
-	for _, AnotherActor in ipairs(bgNPC:GetAll()) do
+	local actors = bgNPC:GetAll()
+	for i = 1, #actors do
+		local AnotherActor = actors[i]
 		local another_npc = AnotherActor:GetNPC()
 		if IsValid(another_npc) and another_npc:IsNPC() then
 			if actor:HasTeam(AnotherActor) then
@@ -17,12 +19,12 @@ hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 	end
 
 	if npc:IsNPC() then
-		for _, ent in ipairs(player.GetAll()) do
-			if IsValid(ent) then
-				if actor:HasTeam(ent) then
-					npc:AddEntityRelationship(ent, D_LI, 99)
+		for _, ply in ipairs(player.GetAll()) do
+			if IsValid(ply) then
+				if actor:HasTeam(ply) then
+					npc:AddEntityRelationship(ply, D_LI, 99)
 				else
-					npc:AddEntityRelationship(ent, D_NU, 99)
+					npc:AddEntityRelationship(ply, D_NU, 99)
 				end
 			end
 		end
@@ -35,7 +37,9 @@ hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	local actor_npc = actor:GetNPC()
 	if not IsValid(actor_npc) then return end
 
-	for _, npc in ipairs(ents.GetAll()) do
+	local entities = ents.GetAll()
+	for i = 1, #entities do
+		local npc = entities[i]
 		if npc:IsNPC() and not npc.isBgnActor then
 			actor:RemoveTarget(npc)
 
@@ -53,7 +57,9 @@ hook.Add("OnEntityCreated", "BGN_AddAnotherNPCToIgnore", function(ent)
 		if not IsValid(ent) then return end
 		if ent.isBgnActor then return end
 
-		for _, actor in ipairs(bgNPC:GetAll()) do
+		local actors = bgNPC:GetAll()
+		for i = 1, #actors do
+			local actor = actors[i]
 			local npc = actor:GetNPC()
 			if IsValid(npc) then
 				actor:RemoveTarget(ent)

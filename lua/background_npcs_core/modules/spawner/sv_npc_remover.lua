@@ -34,7 +34,8 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
 
-	for _, actor in ipairs(actors) do
+	for i = 1, #actors do
+		local actor = actors[i]
 		if not actor.eternal and not actor.debugger and actor:IsAlive() then
 			local npc = actor:GetNPC()
 

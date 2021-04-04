@@ -7,7 +7,8 @@ hook.Add("EntityTakeDamage", "BGN_FoundFirstAttacker", function(target, dmginfo)
    if not attacker:IsNPC() and not attacker:IsPlayer() then return end
    if not target:IsNPC() and not target:IsPlayer() then return end
 
-   for _, data in ipairs(first_attackers) do
+   for i = 1, #first_attackers do
+      local data = first_attackers[i]
       if data.victim == attacker then
          return
       end
@@ -29,7 +30,8 @@ hook.Add("EntityTakeDamage", "BGN_FoundFirstAttacker", function(target, dmginfo)
 end)
 
 function ASSET:IsFirstAttacker(attacker, victim)
-   for _, data in ipairs(first_attackers) do
+   for i = 1, #first_attackers do
+      local data = first_attackers[i]
       if data.victim == attacker then
          return false
       end
@@ -54,7 +56,8 @@ function ASSET:ClearDeath()
 end
 
 function ASSET:RemoveAttacker(attacker)
-   for index, data in ipairs(first_attackers) do
+   for index = 1, #first_attackers do
+      local data = first_attackers[i]
       if data.attacker == attacker then
          table.remove(first_attackers, index)
          break

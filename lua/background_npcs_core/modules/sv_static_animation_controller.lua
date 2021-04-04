@@ -1,7 +1,9 @@
 -- hook.Add("Think", "BGN_ActorAnimationController", function()
 
 timer.Create('BGN_ActorAnimationController', 0.1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	local actors = bgNPC:GetAll()
+	for i = 1, #actors do
+		local actor = actors[i]
 		if actor:IsAlive() then
 			if actor:IsAnimationPlayed() then
 				local npc = actor:GetNPC()
