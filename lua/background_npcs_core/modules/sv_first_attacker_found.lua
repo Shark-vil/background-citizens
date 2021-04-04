@@ -56,10 +56,10 @@ function ASSET:ClearDeath()
 end
 
 function ASSET:RemoveAttacker(attacker)
-   for index = 1, #first_attackers do
+   for i = 1, #first_attackers do
       local data = first_attackers[i]
       if data.attacker == attacker then
-         table.remove(first_attackers, index)
+         table.remove(first_attackers, i)
          break
       end
    end
