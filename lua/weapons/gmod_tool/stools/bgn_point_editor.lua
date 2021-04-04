@@ -217,7 +217,8 @@ if CLIENT then
 				local NewRangePoints = {}
 				local nodes = BGN_NODE:GetNodeMap()
 
-				for index, node in ipairs(nodes) do
+				for index = 1, #nodes do
+					local node = nodes[index]
 					local pos = node:GetPos()
 
 					if bgNPC:PlayerIsViewVector(owner, pos) and owner:GetPos():DistToSqr(pos) <= dist then
@@ -594,14 +595,16 @@ if CLIENT then
       if not tool then return end
 
 		local is_show_global_nodes = GetConVar('bgn_tool_point_editor_show_parents'):GetBool()
+		local count = #tool.RangePoints
 
-		if #tool.RangePoints ~= 0 then
+		if count ~= 0 then
 			local cam_angle = GetCameraAngle()
 			local IsDrawingParentsNode = {}
 
 			render.SetColorMaterial()
 
-			for _, value in ipairs(tool.RangePoints) do
+			for i = 1, count do
+				local value = tool.RangePoints[i]
 				local index = value.index
 				local node = value.node
 				table.insert(IsDrawingParentsNode, node)
@@ -670,7 +673,9 @@ if CLIENT then
 			if BGN_NODE:CountNodesOnMap() == 0 then
 				tooFar = false
 			else
-				for _, node in ipairs(BGN_NODE:GetNodeMap()) do
+				local nodes = BGN_NODE:GetNodeMap()
+				for i = 1, #nodes do
+					local node = nodes[i]
 					if node:CheckDistanceLimitToNode(tracePos) and node:CheckHeightLimitToNode(tracePos) 
 						and node:CheckTraceSuccessToNode(tracePos)
 					then
