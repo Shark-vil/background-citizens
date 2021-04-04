@@ -34,6 +34,11 @@ bgNPC:SetStateAction('defense', {
 				data.notGun = data.notGun or true
 				data.notGunDelay = data.notGunDelay or CurTime() + 15
 
+				local EnemyActor = bgNPC:GetActor(enemy)
+				if EnemyActor and EnemyActor:HasTeam('zombie') then
+					data.notGun = false
+				end
+
 				if data.notGun then
 					if data.notGunDelay < CurTime() or killingSumm > 0 or enemy:IsNextBot()
 						or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))

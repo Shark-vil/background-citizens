@@ -1,10 +1,15 @@
 timer.Create('BGN_ZombieModeAutoEnableDefense', 1, 0, function()
-   for _, zombie in ipairs(bgNPC:GetAll()) do
-      if zombie:IsAlive() and zombie:GetData().zombie_mode then
-         local npc = zombie:GetNPC()
-         local enemies = ents.FindInSphere(npc:GetPos(), 2500)
+   local WantedModule = bgNPC:GetModule('wanted')
+   local zombies = bgNPC:GetAll()
+   local enemies = table.Merge(player.GetAll(), bgNPC:GetAllNPCs())
 
-         for _, enemy in ipairs(enemies) do
+   for i = 1, #zombies do
+      local zombie = zombies[i]
+      if zombie and zombie:IsAlive() and zombie:GetData().zombie_mode then
+         local npc = zombie:GetNPC()
+
+         for i = 1, #enemies do
+            local enemy = enemies[i]
             if zombie:HasEnemy(enemy) then goto skip_enemies end
             if not enemy:IsPlayer() and not enemy:IsNPC() then goto skip_enemies end
 
@@ -30,6 +35,11 @@ timer.Create('BGN_ZombieModeAutoEnableDefense', 1, 0, function()
             zombie:AddEnemy(enemy)
 
             ::skip_enemies::
+         end
+
+         if not WantedModule:HasWanted(npc) then
+            WantedModule:AddWanted(npc)
+            WantedModule:GetWanted(npc):SetLevel(3)
          end
 
          if #zombie.enemies > 0 and not zombie:HasState('zombie') then

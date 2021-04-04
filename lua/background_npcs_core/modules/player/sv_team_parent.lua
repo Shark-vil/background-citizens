@@ -28,6 +28,7 @@ function ASSET:HasUserGroup(ply, actor)
 end
 
 function ASSET:HasParent(ply, actor)
+   if ply.bgn_team and actor:HasTeam(ply.bgn_team) then return true end
    if self:HasTeam(ply, actor) or self:HasUserGroup(ply, actor) then return true end
    return false
 end
