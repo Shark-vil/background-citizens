@@ -123,10 +123,10 @@ bgNPC.cfg.npcs_template = {
 		},
 		at_random_range = 110,
 		at_random = {
-			['walk'] = 70,
+			['walk'] = 10,
 			['idle'] = 10,
 			['dialogue'] = 10,
-			['sit_to_chair'] = 10,
+			['sit_to_chair'] = 70,
 			['dv_vehicle_drive'] = 10,
 		},
 		at_damage_range = 100,

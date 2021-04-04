@@ -1133,6 +1133,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
 	end
 
+	function obj:HasDangerState(state_name)
+		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], state_name)
+	end
+
+	function obj:HasCalmlyState(state_name)
+		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
+	end
+
 	function obj:IsMeleeWeapon()
 		if not self:IsAlive() then return false end
 

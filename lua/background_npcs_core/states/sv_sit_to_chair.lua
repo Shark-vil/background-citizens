@@ -1,9 +1,14 @@
 hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, data)
    if actor:HasState('sit_to_chair') or actor:HasState('sit_to_chair_2') then
-      if state ~= 'defense' and state ~= 'fear' then
-         if actor:GetStateData().isStand then return end
-         return true
+      local data = actor:GetStateData()
+      if data.isStand then return end
+      if actor:HasDangerState(state) and actor:HasSequence('Sit_Chair') then
+         if data.next_state == 'walk' then
+            data.next_state = actor:GetReactionForDamage()
+         end
+         actor:ResetSequence()
       end
+      return true
    end
 
    if state ~= 'sit_to_chair' then return end
@@ -53,6 +58,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
             isSit = false,
             isMove = false,
             isStand = false,
+            next_state = 'walk'
          }
       }
    else
@@ -134,7 +140,7 @@ bgNPC:SetStateAction('sit_to_chair', {
                new_angle = chairData.offsetAngle(npc, chair, new_angle)
             end
 
-            npc:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+            npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
             npc:SetPos(new_pos)
             npc:SetAngles(new_angle)
             npc:SetParent(chair)
@@ -146,6 +152,8 @@ bgNPC:SetStateAction('sit_to_chair', {
                actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
                   actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
                      if not IsValid(npc) then return end
+                     local data = actor:GetStateData()
+
                      if data.isStandAnimation then return end
                      data.isStandAnimation = true
                      
@@ -162,7 +170,7 @@ bgNPC:SetStateAction('sit_to_chair', {
 
                      data.isStand = true
                      chair.sitDelay = CurTime() + 15
-                     actor:SetState('walk')
+                     actor:SetState(data.next_state or 'walk')
                      chair.occupied = false
                   end)
                end)

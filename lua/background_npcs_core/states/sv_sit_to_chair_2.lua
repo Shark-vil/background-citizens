@@ -24,22 +24,25 @@ bgNPC:SetStateAction('sit_to_chair_2', {
             npc:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
             npc:SetPos(seat:GetPos())
             npc:SetAngles(seat:GetAngles())
+            npc:SetCollisionGroup(data.oldCollisionGroup)
             
             actor:PlayStaticSequence('Idle_To_Sit_Chair', false, nil, function()
                actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
                   actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
                      if not IsValid(npc) then return end
+                     local data = actor:GetStateData()
+
                      if data.isStandAnimation then return end
                      data.isStandAnimation = true
                      
                      npc:SetAngles(Angle(0, 0, 0))
                      npc:SetPos(data.old_pos)
-                     npc:SetCollisionGroup(data.oldCollisionGroup)
+                     -- npc:SetCollisionGroup(data.oldCollisionGroup)
                      npc:PhysWake()
 
                      data.isStand = true
                      seat.sitDelay = CurTime() + 15
-                     actor:SetState('walk')
+                     actor:SetState(data.next_state or 'walk')
                      seat:SetSitting(NULL)
                   end)
                end)
