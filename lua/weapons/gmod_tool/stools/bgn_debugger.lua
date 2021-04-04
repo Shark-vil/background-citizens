@@ -1,12 +1,6 @@
-if SERVER then
-	util.AddNetworkString('bgn_network_tool_debugger_left_click')
-end
-
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_debugger.name"
-
 TOOL.PanelIsInit = false
-TOOL.IsBGNDebuggerEditor = true
 TOOL.Trace = nil
 TOOL.Lock = false
 TOOL.Distance = 10000
@@ -40,28 +34,23 @@ function TOOL:LeftClick()
 
 	snet.IsValidForClient(ply, function(ply, success)
 		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-
-		if success then
-			net.Start('bgn_network_tool_debugger_left_click')
-			net.WriteEntity(ent)
-			net.Send(ply)
-		end
-	end, 'actor', 'bgn_debugger_tool', nil, ent)
+		if not success then return end
+		snet.Invoke('bgn_tool_debugger_left_click', ply, ent)
+	end, 'actor', ent)
 end
 
 function TOOL:RightClick()
 	if SERVER then
-		self:GetOwner():ConCommand('cl_bgn_debuger_tool_right_click')
+		snet.Invoke('bgn_tool_debugger_right_click', self:GetOwner())
 		return
 	end
 end
 
 if CLIENT then
-	net.Receive('bgn_network_tool_debugger_left_click', function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
+	snet.RegisterCallback('bgn_tool_debugger_left_click', function(ply, ent)
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 		
-		local ent = net.ReadEntity()
 		if not IsValid(ent) or not ent:IsNPC() then
 			bgNPC:Log('Entity is not NPC or is equal to NULL', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
@@ -80,9 +69,9 @@ if CLIENT then
 		surface.PlaySound('common/wpn_select.wav')
 	end)
 
-	concommand.Add('cl_bgn_debuger_tool_right_click', function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
+	snet.RegisterCallback('bgn_tool_debugger_right_click', function()
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 
 		tool.Actor = nil
 		tool.Target = NULL
@@ -90,9 +79,8 @@ if CLIENT then
 	end)
 
 	hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
-		local tool = LocalPlayer():GetTool()
-		if tool == nil or not tool.IsBGNDebuggerEditor then return end
-
+		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
+      if not tool then return end
 		if tool.Actor == nil or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3

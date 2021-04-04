@@ -40,7 +40,7 @@ The wiki is currently under development and some methods may not be described. W
 ```LUA
 -- The hook is called when the NPC is looking at an object.
 -- In this example, the police give the player 2 warnings with animation, and then push him away.
-hook.Add("BGN_NPCLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", function(actor, ent)
+hook.Add("BGN_ActorLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", function(actor, ent)
     if ent:IsPlayer() and actor:GetType() == 'police'
         and actor:GetState() == 'walk'
         and actor:IsSequenceFinished()
