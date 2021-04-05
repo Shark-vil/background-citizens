@@ -8,14 +8,16 @@ if SERVER then
 		if file.Exists(json_file, 'DATA') then
 			file.Delete(json_file)
 			bgNPC:Log('Remove route file - ' .. json_file, 'Route')
+			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. json_file)
 		end
 
 		if file.Exists(dat_file, 'DATA') then
 			file.Delete(dat_file)
 			bgNPC:Log('Remove route file - ' .. dat_file, 'Route')
+			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. dat_file)
 		end
 
-		ply:ConCommand('cl_citizens_load_route')
+		bgNPC.LoadRoutes()
 	end).Protect().Register()
 
 	snet.Callback('bgn_movement_mesh_save_to_file', function(ply, bigdata)
@@ -28,14 +30,19 @@ if SERVER then
 		bgNPC.LoadRoutes()
 	end).Protect().Register()
 else
+	snet.Callback('cl_citizens_remove_route_notify', function(ply, notify_text)
+		if not notify_text then return end
+		notification.AddLegacy(notify_text, NOTIFY_GENERIC, 4)
+	end).Protect().Register()
+
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
 			local map_name = args[2] or game.GetMap()
 			snet.InvokeServer('bgn_movement_mesh_remove_datafile', map_name)
 		else
 			MsgN('[Background NPCs] If you want to delete the mesh file, '
-				.. 'add as the first command argument - yes', 'Route')
-			MsgN('[Background NPCs] Example: cl_citizens_remove_route yes', 'Route')
+				.. 'add as the first command argument - yes')
+			MsgN('[Background NPCs] Example: cl_citizens_remove_route yes')
 		end
 	end, nil, 'Removes the mesh file from the server. The first argument is confirmation, the second argument is the name of the card. If there is no second argument, then the current map is used.')
 
