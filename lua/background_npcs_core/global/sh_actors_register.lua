@@ -204,7 +204,7 @@ if SERVER then
 					-- Backward compatibility with the old version of the config
 					npcData.default_models = npcData.default_models or npcData.defaultModels
 
-					if npcData.default_models and math.random(0, 10) <= 5 then
+					if not npcData.default_models or (npcData.default_models and math.random(0, 10) <= 5) then
 						if not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData) then
 							npc:SetModel(model)
 						end
