@@ -1,5 +1,5 @@
 if SERVER then
-	snet.Callback('bgn_movement_mesh_remove_datafile', function(map_name)
+	snet.Callback('bgn_movement_mesh_remove_datafile', function(ply, map_name)
 		map_name = map_name or ''
 
 		local json_file = 'background_npcs/nodes/' .. map_name .. '.json'
