@@ -49,9 +49,15 @@ script:using('config/states/sh_arrest.lua')
 script:using('config/states/sh_dialogue.lua')
 script:using('config/states/sh_sit_chair.lua')
 
+slib.usingDirectory(root_directory .. '/custom_modules/config',
+	'[Background NPCs | Custom modules] Script load - {file}')
+
 script:using('cvars/sh_cvars.lua')
 script:using('cvars/sv_cvars.lua')
 script:using('cvars/cl_cvars.lua')
+
+slib.usingDirectory(root_directory .. '/custom_modules/preload',
+	'[Background NPCs | Custom modules] Script load - {file}')
 
 script:using('global/sv_meta.lua')
 script:using('global/sh_meta.lua')
@@ -154,8 +160,7 @@ script:using('tool_options/cl_optimization_settings.lua')
 script:using('tool_options/cl_client_settings.lua')
 script:using('tool_options/cl_workshop_settings.lua')
 
--- To connect scripts that depend on the framework
-slib.usingDirectory(root_directory .. '/custom_modules',
+slib.usingDirectory(root_directory .. '/custom_modules/postload',
 	'[Background NPCs | Custom modules] Script load - {file}')
 
 if CLIENT then

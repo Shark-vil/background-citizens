@@ -1,0 +1,1 @@
+MsgN('This is a demo module. I boot before initializing addon scripts, but after loading configs and cvars.')
