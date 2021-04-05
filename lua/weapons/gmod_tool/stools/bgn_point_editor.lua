@@ -20,43 +20,34 @@ TOOL.CreateSelectedNode = nil
 TOOL.LinkFullParents = false
 TOOL.LastNodeRemover = false
 
-function TOOL:LeftClick()
-	if SERVER then
-		self:GetOwner():ConCommand('cl_bgn_tool_left_click')
-		return
+if SERVER then
+	function TOOL:LeftClick()
+		snet.ClientRPC(self, 'LeftClick')
 	end
-end
 
-function TOOL:RightClick()
-	if SERVER then
-		self:GetOwner():ConCommand('cl_bgn_tool_right_click')
-		return
+	function TOOL:RightClick()
+		snet.ClientRPC(self, 'RightClick')
 	end
-end
 
-function TOOL:Reload()
-	if SERVER then
-		self:GetOwner():ConCommand('cl_bgn_tool_reload')
-		return
+	function TOOL:Reload()
+		snet.ClientRPC(self, 'Reload')
 	end
-end
-
-function TOOL:GetTraceInfo()
-	local ply = self:GetOwner()
-	local tr = util.TraceLine({
-		start = ply:GetShootPos(),
-		endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-		filter = function(ent)
-			if ent ~= ply then
-				return true
+else
+	function TOOL:GetTraceInfo()
+		local ply = self:GetOwner()
+		local tr = util.TraceLine({
+			start = ply:GetShootPos(),
+			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
+			filter = function(ent)
+				if ent ~= ply then
+					return true
+				end
 			end
-		end
-	})
+		})
 
-	return tr
-end
+		return tr
+	end
 
-if CLIENT then
 	hook.Add('BGN_LoadingClientRoutes', 'BGN_TOOL_PointEditorReset', function()
 		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
       if not tool then return end
@@ -65,98 +56,89 @@ if CLIENT then
 		tool.CreateSelectedNode = nil
 	end)
 
-	concommand.Add('cl_bgn_tool_left_click', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
-      if not tool then return end
-
-		local type = tool:GetCurrentType()
+	function TOOL:LeftClick()
+		local type = self:GetCurrentType()
 			
 		if type == 'creator' then
-			if tool.SelectedPointId == -1 then
-				tool:AddNode()
+			if self.SelectedPointId == -1 then
+				self:AddNode()
 			else
-				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
+				local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
 				if node then
-					if node == tool.CreateSelectedNode then
-						tool.CreateSelectedNode = nil
-					elseif not tool.CreateSelectedNode then
-						tool.CreateSelectedNode = node
+					if node == self.CreateSelectedNode then
+						self.CreateSelectedNode = nil
+					elseif not self.CreateSelectedNode then
+						self.CreateSelectedNode = node
 					else
-						tool:AddNode()
+						self:AddNode()
 					end
 				end
 			end
 		elseif type == 'remover' then
-			if tool.LastNodeRemover then
-				tool:RemoveLastNode()
-			elseif tool.SelectedPointId ~= -1 then
-				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-				if node then tool:RemoveNode(node) end
+			if self.LastNodeRemover then
+				self:RemoveLastNode()
+			elseif self.SelectedPointId ~= -1 then
+				local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
+				if node then self:RemoveNode(node) end
 			end
-		elseif type == 'linker' and tool.SelectedPointId ~= -1 then
-			local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-			if not tool.LinkerNode then
-				tool.LinkerNode = node
+		elseif type == 'linker' and self.SelectedPointId ~= -1 then
+			local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
+			if not self.LinkerNode then
+				self.LinkerNode = node
 				surface.PlaySound('common/wpn_select.wav')
 			else
-				if tool.LinkerNode == node then
-					tool.LinkerNode = nil
+				if self.LinkerNode == node then
+					self.LinkerNode = nil
 					surface.PlaySound('common/wpn_denyselect.wav')
 				else
-					if tool.LinkFullParents then
-						if tool.LinkerNode:HasParent(node) then
-							tool.LinkerNode:RemoveParentNode(node)
-						elseif tool.LinkerNode.position:DistToSqr(node.position) <= 250000 then
-							tool.LinkerNode:AddParentNode(node)
+					if self.LinkFullParents then
+						if self.LinkerNode:HasParent(node) then
+							self.LinkerNode:RemoveParentNode(node)
+						elseif self.LinkerNode.position:DistToSqr(node.position) <= 250000 then
+							self.LinkerNode:AddParentNode(node)
 						end
 					else
-						if tool.LinkerNode:HasLink(node, 'walk') then
-							tool.LinkerNode:RemoveLink(node, 'walk')
-						elseif tool.LinkerNode.position:DistToSqr(node.position) <= 250000 then
-							tool.LinkerNode:AddLink(node, 'walk')
+						if self.LinkerNode:HasLink(node, 'walk') then
+							self.LinkerNode:RemoveLink(node, 'walk')
+						elseif self.LinkerNode.position:DistToSqr(node.position) <= 250000 then
+							self.LinkerNode:AddLink(node, 'walk')
 						end
 					end
 
-					tool.LinkerNode = nil
+					self.LinkerNode = nil
 					surface.PlaySound('common/wpn_denyselect.wav')
 				end
 			end
-		elseif type == 'parents_cleaner' and tool.SelectedPointId ~= -1 then
-			local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-			if tool.LinkFullParents then
+		elseif type == 'parents_cleaner' and self.SelectedPointId ~= -1 then
+			local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
+			if self.LinkFullParents then
 				node:ClearParents()
 			else
 				node:ClearLinks('walk')
 			end
 			surface.PlaySound('common/wpn_denyselect.wav')
 		end
-	end)
+	end
 
-	concommand.Add('cl_bgn_tool_right_click', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
-      if not tool then return end
+	function TOOL:RightClick()
+		self.LinkerNode = nil
+		self.SelectedPointId = nil
 
-		tool.LinkerNode = nil
-		tool.SelectedPointId = nil
-
-		tool:SwitchType()
+		self:SwitchType()
 		surface.PlaySound('buttons/blip1.wav')
-	end)
+	end
 
-	concommand.Add('cl_bgn_tool_reload', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
-      if not tool then return end
-
-		local type = tool:GetCurrentType()
+	function TOOL:Reload()
+		local type = self:GetCurrentType()
 
 		if type == 'remover' or type == 'last_remover' then
-			tool.LastNodeRemover = not tool.LastNodeRemover
+			self.LastNodeRemover = not self.LastNodeRemover
 		elseif type == 'linker' or type == 'parents_cleaner' then
-			tool.LinkFullParents = not tool.LinkFullParents
+			self.LinkFullParents = not self.LinkFullParents
 		end
 
 		surface.PlaySound('buttons/blip1.wav')
-	end)
+	end
 
 	concommand.Add('cl_tool_point_editor_reconstruct_parents', function()
 		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')

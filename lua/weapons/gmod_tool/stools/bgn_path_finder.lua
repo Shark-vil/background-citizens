@@ -12,15 +12,15 @@ TOOL.EndPos = nil
 
 if SERVER then
    function TOOL:LeftClick()
-      snet.Invoke('bgn_tool_path_finder_left_click', self:GetOwner())
+      snet.ClientRPC(self, 'LeftClick')
    end
 
    function TOOL:RightClick()
-      snet.Invoke('bgn_tool_path_finder_right_click', self:GetOwner())
+      snet.ClientRPC(self, 'RightClick')
    end
 
    function TOOL:Reload()
-      snet.Invoke('bgn_tool_path_finder_reload_click', self:GetOwner())
+      snet.ClientRPC(self, 'Reload')
    end
 else
    function TOOL:GetTrace()
@@ -63,19 +63,16 @@ else
       })
    end
 
-   snet.RegisterCallback('bgn_tool_path_finder_left_click', function()
-      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
-      if not tool then return end
-
-      local tr = tool:GetTrace()
+   function TOOL:LeftClick()
+      local tr = self:GetTrace()
       if not tr.Hit then return end
 
-      tool.StartPos = tr.HitPos
+      self.StartPos = tr.HitPos
 
       surface.PlaySound('buttons/blip1.wav')
-   end)
+   end
 
-   snet.RegisterCallback('bgn_tool_path_finder_right_click', function()
+   function TOOL:RightClick()
       local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
       if not tool then return end
       if tool.StartPos == nil then return end
@@ -91,15 +88,15 @@ else
       end
 
       surface.PlaySound('buttons/blip1.wav')
-   end)
+   end
 
-   snet.RegisterCallback('bgn_tool_path_finder_reload_click', function()
+   function TOOL:Reload()
       local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
       if not tool then return end
 
       tool:ClearPoints()
       surface.PlaySound('common/wpn_denyselect.wav')
-   end)
+   end
    
    local clr_green = Color(72, 232, 9, 200)
    local clr_232_59 = Color(232, 59, 255, 255)
