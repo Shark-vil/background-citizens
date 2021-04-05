@@ -13,6 +13,8 @@ if SERVER then
 			jsonString = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA')
 		end
 
+		BGN_NODE:ClearNodeMap()
+		
 		if jsonString ~= '' then
 			BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 		end
