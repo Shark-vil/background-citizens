@@ -68,9 +68,10 @@ else
 	end
 
 	hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
-      if not tool then return end
-		if tool.Actor == nil or not IsValid(tool.Target) then return end
+		if not SLibraryIsLoaded then return end
+
+      local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
+      if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3
 		local add = 25

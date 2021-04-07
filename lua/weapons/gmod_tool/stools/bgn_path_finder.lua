@@ -73,28 +73,23 @@ else
    end
 
    function TOOL:RightClick()
-      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
-      if not tool then return end
-      if tool.StartPos == nil then return end
+      if self.StartPos == nil then return end
 
-      local tr = tool:GetTrace()
+      local tr = self:GetTrace()
       if not tr.Hit then return end
 
-      tool.EndPos = tr.HitPos
+      self.EndPos = tr.HitPos
 
-      local foundPath = bgNPC:FindWalkPath(tool.StartPos, tool.EndPos)
+      local foundPath = bgNPC:FindWalkPath(self.StartPos, self.EndPos)
       if foundPath and istable(foundPath) then
-         tool.Path = foundPath
+         self.Path = foundPath
       end
 
       surface.PlaySound('buttons/blip1.wav')
    end
 
    function TOOL:Reload()
-      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
-      if not tool then return end
-
-      tool:ClearPoints()
+      self:ClearPoints()
       surface.PlaySound('common/wpn_denyselect.wav')
    end
    
@@ -105,12 +100,10 @@ else
    local vec_20 = Vector(0, 0, 20)
 
    hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PathFinder', function()
-      local wep = LocalPlayer():GetActiveWeapon()
-      if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+      if not SLibraryIsLoaded then return end
 
-      local tool = bgNPC:GetActivePlayerTool('bgn_path_finder')
+      local tool = LocalPlayer():slibGetActiveTool('bgn_path_finder')
       if not tool then return end
-      if #tool.Path == 0 then return end
 
       render.SetColorMaterial()
 

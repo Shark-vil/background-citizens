@@ -143,9 +143,10 @@ else
 
    local halo_color = Color(196, 0, 255)
 	hook.Add("PreDrawHalos", "BGN_TOOL_ActorMover", function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-		if tool.Actor == nil or not IsValid(tool.Target) then return end
+		if not SLibraryIsLoaded then return end
+
+      local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+      if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
       halo.Add({ tool.Target }, halo_color, 3, 3, 2)
 	end)
@@ -157,12 +158,10 @@ else
    local vec_20 = Vector(0, 0, 20)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_ActorMovement', function()
-      local wep = LocalPlayer():GetActiveWeapon()
-      if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+		if not SLibraryIsLoaded then return end
 
-      local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-      if #tool.Path == 0 then return end
+      local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+      if not tool or #tool.Path == 0 then return end
 
       render.SetColorMaterial()
 

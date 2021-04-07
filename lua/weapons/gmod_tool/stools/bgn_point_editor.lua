@@ -141,7 +141,9 @@ else
 	end
 
 	concommand.Add('cl_tool_point_editor_reconstruct_parents', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		if not SLibraryIsLoaded then return end
+
+      local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
       if not tool then return end
 
 		for _, node in ipairs(BGN_NODE:GetMap()) do
@@ -570,10 +572,9 @@ else
 	end
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
-		local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+		if not SLibraryIsLoaded then return end
 
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
       if not tool then return end
 
 		local is_show_global_nodes = GetConVar('bgn_tool_point_editor_show_parents'):GetBool()
@@ -640,10 +641,9 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorDrawCreatorPoint', function()
-		local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		if not SLibraryIsLoaded then return end
+		
+		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
       if not tool or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
@@ -698,10 +698,9 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderLinkerPoints', function()
-		local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		if not SLibraryIsLoaded then return end
+		
+		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
       if not tool or not tool.LinkerNode then return end
 
 		render.SetColorMaterial()
@@ -721,15 +720,13 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderAutoparentsPoints', function()
-		local ply = LocalPlayer()
-		local wep = ply:GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		if not SLibraryIsLoaded then return end
+		
+		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
       if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
-		if  not tr.Hit then return end
+		if not tr.Hit then return end
 
 		local is_autoparent = GetConVar('bgn_tool_point_editor_autoparent'):GetBool()
 		local startPos = tool.CreateSelectedNode.position

@@ -195,13 +195,15 @@ else
 	local clr_green = Color(72, 232, 9, 200)
    
    hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_SeatEditor', function()
+      if not SLibraryIsLoaded then return end
+
 		local wep = LocalPlayer():GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then
          if m_citizen then m_citizen:Remove() m_citizen = nil end
          return
       end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
+		
+		local tool = LocalPlayer():slibGetActiveTool('bgn_seat_tool')
       if not tool then
          if m_citizen then m_citizen:Remove() m_citizen = nil end
          return

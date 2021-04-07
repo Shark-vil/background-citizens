@@ -116,7 +116,9 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 			end
 		end
 
-		bgNPC:SpawnActor(npcType, pos)
+		bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
+			bgNPC:SpawnActor(npcType, nodePosition)
+		end)
 
 		::skip::
 	end
