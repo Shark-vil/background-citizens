@@ -81,6 +81,7 @@ bgNPC.cfg.npcs_template = {
 	},
 	['thief'] = {
 		enabled = true,
+		inherit = 'citizen',
 		class = 'npc_citizen',
 		name = 'Thief',
 		fullness = 8,

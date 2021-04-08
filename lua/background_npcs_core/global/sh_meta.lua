@@ -1,3 +1,67 @@
+local actors_config_cache = {}
+
+function bgNPC:ClearActorsConfig()
+	table.Empty(actors_config_cache)
+end
+
+function bgNPC:GetActorConfig(actor_type)
+	if actors_config_cache[actor_type] then
+		return actors_config_cache[actor_type]
+	else
+		if not bgNPC.cfg.npcs_template[actor_type] then return end
+		local data = table.Copy(bgNPC.cfg.npcs_template[actor_type])
+
+		if data.inherit and data.inherit ~= actor_type then
+			local inherit_data = bgNPC.cfg.npcs_template[data.inherit]
+			if inherit_data then
+				if inherit_data.inherit then
+					inherit_data = bgNPC:GetActorConfig(data.inherit)
+				end
+
+				for ik, iv in pairs(inherit_data) do
+					if ik ~= 'inherit' then
+						local exist = false
+
+						for k, _ in pairs(data) do
+							if k == ik then
+								exist = true
+								break
+							end
+						end
+
+						if not exist then
+							data[ik] = iv
+						end
+					end
+				end
+			end
+		end
+
+		for k, v in pairs(data) do
+			if isstring(v) and string.StartWith(v, '@') then
+				local inherit_actor_type = string.sub(v, 2)
+				if inherit_actor_type ~= actor_type then
+					local inherit_data = bgNPC.cfg.npcs_template[inherit_actor_type]
+
+					if inherit_data.inherit then
+						inherit_data = bgNPC:GetActorConfig(data.inherit)
+					end
+
+					if inherit_data and inherit_data[k] ~= nil then
+						data[k] = inherit_data[k]
+					else
+						data[k] = nil
+					end
+				end
+			end
+		end
+
+		actors_config_cache[actor_type] = data
+
+		return actors_config_cache[actor_type]
+	end
+end
+
 function bgNPC:Log(message, tag)
 	if not GetConVar('bgn_debug'):GetBool() then return end
 	if tag ~= nil then

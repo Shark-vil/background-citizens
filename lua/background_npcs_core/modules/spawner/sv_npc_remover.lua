@@ -1,15 +1,16 @@
 hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
+	bgNPC:ClearActorsConfig()
 	bgNPC.actors = {}
 	bgNPC.factors = {}
 	bgNPC.npcs = {}
 	bgNPC.fnpcs = {}
 end)
 
--- local function CleanupNPCsIfRemovedOrKilled()
--- 	bgNPC:ClearRemovedNPCs()
--- end
--- hook.Add('BGN_OnKilledActor', 'BGN_CleanupNPCsTablesOnNPCKilled', CleanupNPCsIfRemovedOrKilled)
--- hook.Add('EntityRemoved', 'BGN_CleanupNPCsTablesOnEntityRemoved', CleanupNPCsIfRemovedOrKilled)
+cvars.AddChangeCallback('bgn_enable', function(convar_name, value_old, value_new)
+	if value_new == 0 then
+		bgNPC:ClearActorsConfig()
+	end
+end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
 	bgNPC:RemoveNPC(actor:GetNPC())

@@ -100,7 +100,7 @@ end
 function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
    if player.GetCount() == 0 then return end
 
-   local npcData = bgNPC.cfg.npcs_template[npcType]
+   local npcData = bgNPC:GetActorConfig(npcType)
    local is_many_classes = false
    local npc_class
    

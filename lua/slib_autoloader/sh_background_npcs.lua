@@ -56,6 +56,8 @@ script:using('cvars/sh_cvars.lua')
 script:using('cvars/sv_cvars.lua')
 script:using('cvars/cl_cvars.lua')
 
+script:using('commands/sh_cmd_config.lua')
+
 slib.usingDirectory(root_directory .. '/custom_modules/preload',
 	'[Background NPCs | Custom modules] Script load - {file}')
 
