@@ -134,7 +134,7 @@ function bgNPC:SpawnVehicleWithActor(actor)
    elseif vehicles_list[car_class] then
       local vehicle_data = vehicles_list[car_class]
       local vehicle = ents.Create(vehicle_data.Class)
-      vehicle:SetModel(vehicle.Model)
+      vehicle:SetModel(vehicle_data.Model)
       if vehicle_data.KeyValues then
 			for k, v in pairs(vehicle_data.KeyValues) do
 				vehicle:SetKeyValue(k, v)
