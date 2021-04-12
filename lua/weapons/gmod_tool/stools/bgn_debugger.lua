@@ -41,6 +41,12 @@ if SERVER then
 		snet.IsValidForClient(ply, function(ply, success)
 			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 			if not success then return end
+
+			local actor_data = snet.GetNormalizeDataTable(actor)
+			if actor_data and #actor_data ~= 0 then
+				PrintTable(actor_data)
+			end
+
 			snet.ClientRPC(self, 'SetActor', actor.uid)
 		end, 'actor', actor.uid)
 	end
@@ -55,6 +61,11 @@ else
 			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
+		end
+		
+		local actor_data = snet.GetNormalizeDataTable(actor)
+		if actor_data and #actor_data ~= 0 then
+			PrintTable(actor_data)
 		end
 
 		self.Actor = actor
