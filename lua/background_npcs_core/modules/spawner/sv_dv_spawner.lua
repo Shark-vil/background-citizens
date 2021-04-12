@@ -127,15 +127,27 @@ function bgNPC:SpawnVehicleWithActor(actor)
    local car
 
    local simfphys_list = list.Get('simfphys_vehicles')
+   local vehicles_list = list.Get('Vehicles')
+
    if simfphys_list[car_class] then
       car = simfphys.SpawnVehicleSimple(car_class, spawn_pos, spawn_ang)
-   else
-      local vehicle = ents.Create(car_class)
-      if not IsValid(vehicle) then return false end
+   elseif vehicles_list[car_class] then
+      local vehicle_data = vehicles_list[car_class]
+      local vehicle = ents.Create(vehicle_data.Class)
+      vehicle:SetModel(vehicle.Model)
+      if vehicle_data.KeyValues then
+			for k, v in pairs(vehicle_data.KeyValues) do
+				vehicle:SetKeyValue(k, v)
+			end
+		end
+      vehicle.VehicleTable = vehicle_data
       vehicle:SetPos(spawn_pos)
       vehicle:SetAngles(spawn_ang)
       vehicle:Spawn()
+      vehicle:Activate()
       car = vehicle
+   else
+      return false
    end
 
    car.bgn_is_police_car = actor:HasTeam('police')
