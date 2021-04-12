@@ -44,6 +44,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.type = type
 	obj.reaction = ''
 	obj.eternal = false
+	obj.vehicle = nil
+	obj.vehicle_data = {}
 
 	obj.state_data = {
 		state = 'none',
@@ -708,11 +710,33 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 
 		local npc = self.npc
-		if npc:GetPos():DistToSqr(pos) <= 2500 then return end
-		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+		if npc:GetPos():DistToSqr(pos) <= 2500 then 
+			local walk_type = type or 'walk'
+			hook.Run('BGN_ActorFinishedWalk', self, pos, walk_type)	
+			return
+		end
 
-		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
-		if #walkPath == 0 then return end
+		local walkPath = {}
+		if not self:InVehicle() then
+			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+
+			walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
+			if #walkPath == 0 then return end
+		else
+			local dvd = DecentVehicleDestination
+			local decentvehicle = self:GetVehicleAI()
+			local route = dvd.GetRouteVector(decentvehicle:GetPos(), pos)
+
+			if not route then return end
+			
+			decentvehicle.WaypointList = route
+			decentvehicle.Waypoint = nil
+			decentvehicle.NextWaypoint = nil
+
+			for _, v in ipairs(route) do
+				table.insert(walkPath, v.Target)
+			end
+		end
 
 		self.pathType = pathType
 		self.walkTarget = NULL
@@ -722,37 +746,46 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:UpdateMovement()
-		if self.is_animated or #self.walkPath == 0 or not self:IsAlive() then return end
-		
-		local npc = self.npc
-		local hasNext = false
-		local targetPosition = self.walkPath[1]
+		if self.is_animated or not self:IsAlive() then return end
 
-		if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
-			table.remove(self.walkPath, 1)
+		if self:InVehicle() then
+			local vehicle = self:GetVehicle()
+			if vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
+				hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
+			end
+		else
+			if #self.walkPath == 0 then return end
 			
-			if #self.walkPath == 0 then
-				if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
-					self:WalkToPos(nil)
+			local npc = self.npc
+			local hasNext = false
+			local targetPosition = self.walkPath[1]
+
+			if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
+				table.remove(self.walkPath, 1)
+				
+				if #self.walkPath == 0 then
+					if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
+						self:WalkToPos(nil)
+					end
+					return
 				end
-				return
+
+				hasNext = true
 			end
 
-			hasNext = true
-		end
+			if not hasNext then
+				if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+				if npc:IsMoving() then return end
+			end
 
-		if not hasNext then
-			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-			if npc:IsMoving() then return end
-		end
+			local current_schedule = npc:GetCurrentSchedule()
+			for i = 1, #schedule_white_list do
+				if schedule_white_list[i] == current_schedule then return end
+			end
 
-		local current_schedule = npc:GetCurrentSchedule()
-		for i = 1, #schedule_white_list do
-			if schedule_white_list[i] == current_schedule then return end
+			npc:SetLastPosition(targetPosition)
+			npc:SetSchedule(self.walkType)
 		end
-
-		npc:SetLastPosition(targetPosition)
-		npc:SetSchedule(self.walkType)
 	end
 
 	function obj:Walking()
@@ -1166,6 +1199,114 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not IsValid(wep) then return false end
 
 		return not table.IHasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+	end
+
+	function obj:EnterVehicle(vehicle)
+		if not DecentVehicleDestination then return end
+		if not vehicle:IsVehicle() then return end
+
+		local decentvehicle = vehicle.bgn_decentvehicle
+
+		if not decentvehicle or not IsValid(decentvehicle) then
+			decentvehicle = ents.Create('npc_decentvehicle')
+			decentvehicle:SetPos(vehicle:GetPos())
+			decentvehicle:Spawn()
+			vehicle.bgn_decentvehicle = decentvehicle
+		end
+
+		decentvehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function()
+			local npc = self:GetNPC()
+			if not IsValid(npc) or npc:Health() <= 0 then
+				decentvehicle:Remove()
+				return
+			end
+
+			self.eternal = true
+			self.vehicle = vehicle
+			vehicle.bgn_passengers = vehicle.bgn_passengers or {}
+			vehicle.bgn_decentvehicle = decentvehicle
+
+			self.vehicle_data.old_collision_group = npc:GetCollisionGroup()
+			self.vehicle_data.dv = decentvehicle
+
+			npc:slibSetVar('bgn_vehicle_entered', true)
+			npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
+			npc:SetPos(vehicle:GetPos() + vehicle:GetUp() * 100)
+			npc:SetParent(vehicle)
+			npc:SetNoDraw(true)
+			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
+
+			print(self:GetType(), ' - ', vehicle.bgn_is_police_car)
+
+			table.insert(vehicle.bgn_passengers, self)
+
+			if not self.vehicle.bgn_driver then
+				self.vehicle.bgn_driver = self
+			end
+
+			self.walkUpdatePathDelay = 0
+		end)
+	end
+
+	function obj:ExitVehicle()
+		if not DecentVehicleDestination then return end
+
+		local vehicle = self.vehicle
+		if vehicle and IsValid(vehicle) then
+			vehicle.bgn_passengers = vehicle.bgn_passengers or {}
+
+			local pos = vehicle:GetPos()
+			local forward = vehicle:GetForward()
+			local right = vehicle:GetRight()
+			local up = vehicle:GetUp()
+			local npc = self:GetNPC()
+
+			local add_forward = math.random(-100, 100)
+			local add_right = 150
+			if math.random(0, 100) > 50 then
+				add_right = -150
+			end
+
+			npc:slibSetVar('bgn_vehicle_entered', false)
+			npc:SetParent(nil)
+			npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
+			npc:SetPos(pos + (right * add_right) + (forward * add_forward) + (up * 50))
+			npc:SetCollisionGroup(self.vehicle_data.old_collision_group)
+			npc:SetNoDraw(false)
+			npc:PhysWake()
+
+			if vehicle.bgn_driver == self then
+				local decentvehicle = self.vehicle_data.dv
+				if decentvehicle and IsValid(decentvehicle) then
+					decentvehicle:Remove()
+				end
+				vehicle.bgn_driver = nil
+				vehicle.bgn_decentvehicle = nil
+			end
+
+			table.RemoveByValue(vehicle.bgn_passengers, self)
+		end
+
+		self.eternal = false
+		self.vehicle = nil
+		self.vehicle_data = {}
+	end
+
+	function obj:InVehicle()
+		if SERVER then
+			if self.vehicle and IsValid(self.vehicle) then return true end
+			return false
+		else
+			return self:GetNPC():slibGetVar('bgn_vehicle_entered', false)
+		end
+	end
+
+	function obj:GetVehicle()
+		return self.vehicle
+	end
+
+	function obj:GetVehicleAI()
+		return self.vehicle_data.dv
 	end
 
 	function npc:GetActor()

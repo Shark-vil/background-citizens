@@ -91,3 +91,12 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
 	end
 end)
+
+local is_first_bgn_enable = false
+cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
+	if is_first_bgn_enable or new_value ~= 1 then return end
+	is_first_bgn_enable = true
+
+	LocalPlayer():slibNotify('The first launch of "Background NPCs" can cause lags. '
+	.. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
+end)

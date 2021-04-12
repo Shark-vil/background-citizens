@@ -8,7 +8,6 @@ bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_radius_raytracing = 2000
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
--- bgNPC.cvar.bgn_ptp_distance_limit = 500
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment= 1
 bgNPC.cvar.bgn_point_z_limit = 100
@@ -170,4 +169,9 @@ end
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	slib:RegisterGlobalCvar('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType), 
 		FCVAR_ARCHIVE)
+end
+
+for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+	local max_vehicle = v.max_vehicle or 0
+	slib:RegisterGlobalCvar('bgn_npc_vehicle_max_' .. npcType, max_vehicle, FCVAR_ARCHIVE)
 end

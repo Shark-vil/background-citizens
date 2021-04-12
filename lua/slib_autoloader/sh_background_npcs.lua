@@ -26,6 +26,7 @@ bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
 bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
+bgNPC.DVCars = {}
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'
@@ -111,6 +112,7 @@ script:using('modules/routes/sh_seat_saver.lua')
 script:using('modules/spawner/sv_npc_remover.lua')
 script:using('modules/spawner/sv_npc_creator.lua')
 script:using('modules/spawner/sv_dv_spawner.lua')
+script:using('modules/spawner/sv_dv_remover.lua')
 script:using('modules/quest_dialogue/sv_parent_dialogue.lua')
 script:using('modules/states/sv_arrest.lua')
 script:using('modules/states/sv_state_randomize.lua')
@@ -125,6 +127,8 @@ script:using('modules/states/steal_money/sv_n2money.lua')
 script:using('modules/states/steal_money/sv_sandbox.lua')
 script:using('modules/ambient/cl_ambient_sound.lua')
 script:using('modules/dv/sv_fix_autoload_routes.lua')
+script:using('modules/dv/sv_move_to_target.lua')
+script:using('modules/dv/sv_car_damage_reaction.lua')
 
 script:using('actions/sv_open_door.lua')
 script:using('actions/sv_police_luggage.lua')

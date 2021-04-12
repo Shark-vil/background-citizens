@@ -193,4 +193,6 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
    hook.Run('BGN_InitActor', actor)
 
    snet.Create('bgn_add_actor_from_client', npc, npcType, actor.uid).InvokeAll()
+
+   return actor
 end

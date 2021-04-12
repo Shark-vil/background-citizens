@@ -118,10 +118,10 @@ function bgNPC:IsTargetRay(watcher, ent)
 	})
 
 	if not tr.Hit or tr.Entity ~= ent then
-		return false
+		return false, tr.Entity
 	end
 
-	return true
+	return true, tr.Entity
 end
 
 function bgNPC:GetActivePlayerTool(tool_name, ply)

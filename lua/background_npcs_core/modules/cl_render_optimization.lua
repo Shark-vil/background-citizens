@@ -28,23 +28,33 @@ local function func()
    local pass = 0
    local max_pass = 5
    
-   local entities = bgNPC:GetAllNPCs()
-   for i = 1, #entities do
-      local npc = entities[i]
-      if IsValid(npc) and npc:Health() > 0 then
-         local pos = npc:GetPos()
+   local actors = bgNPC:GetAll()
+   for i = 1, #actors do
+      local actor = actors[i]
+      if actor then
+         local npc = actor:GetNPC()
+         
+         if IsValid(npc) and npc:Health() > 0 then
+            local pos = npc:GetPos()
+            local weapon = npc:GetActiveWeapon()
+            local in_vehicle = actor:InVehicle()
 
-         if ply:GetPos():DistToSqr(pos) > min_range and not bgNPC:PlayerIsViewVector(ply, pos) then
-            npc:SetNoDraw(true)
-            pass = pass + 1
-         else
-            npc:SetNoDraw(false)
-            pass = pass + 1
-         end
+            if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range 
+               and not bgNPC:PlayerIsViewVector(ply, pos))
+            then
+               npc:SetNoDraw(true)
+               if IsValid(weapon) then weapon:SetNoDraw(true) end
+               pass = pass + 1
+            else
+               npc:SetNoDraw(false)
+               if IsValid(weapon) then weapon:SetNoDraw(false) end
+               pass = pass + 1
+            end
 
-         if pass == max_pass then
-            pass = 0
-            coroutine.yield()
+            if pass == max_pass then
+               pass = 0
+               coroutine.yield()
+            end
          end
       end
    end
