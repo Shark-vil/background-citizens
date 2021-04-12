@@ -136,7 +136,6 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 						end
 
 						if not isVisible then
-							print('enter to exist car')
 							actor:EnterVehicle(car)
 							return
 						end

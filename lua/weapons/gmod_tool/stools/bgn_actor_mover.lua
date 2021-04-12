@@ -30,17 +30,23 @@ if SERVER then
 			start = ply:GetShootPos(),
 			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
 			filter = function(ent)
-				if ent ~= ply and ent:IsNPC() then
+				if ent ~= ply and (ent:IsNPC() or ent:IsVehicle()) then
 					return true
 				end
 			end
 		})
 
 		if not tr.Hit then return end
+		local actor
 
 		local ent = tr.Entity
-		local actor = bgNPC:GetActor(ent)
-		if actor == nil then
+		if ent:IsVehicle() and ent.bgn_driver then
+			actor = ent.bgn_driver
+		else
+			actor = bgNPC:GetActor(ent)
+		end
+
+		if not actor then
 			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
 			return
 		end
@@ -62,8 +68,8 @@ if SERVER then
 			self.Actor = actor
 			self.Target = actor:GetNPC()
 
-			snet.ClientRPC(self, 'SetActor', ent)
-		end, 'actor', ent)
+			snet.ClientRPC(self, 'SetActor', actor.uid)
+		end, 'actor', actor.uid)
 	end
 
 	function TOOL:RightClick()
@@ -118,16 +124,10 @@ else
 		self.Path = {}
    end
 
-	function TOOL:SetActor(ent)		
-		if not IsValid(ent) or not ent:IsNPC() then
-			bgNPC:Log('Entity is not NPC or is equal to NULL', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
-			return
-		end
-
-		local actor = bgNPC:GetActor(ent)
+	function TOOL:SetActor(uid)
+		local actor = bgNPC:GetActorByUid(uid)
 		if actor == nil then
-			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end

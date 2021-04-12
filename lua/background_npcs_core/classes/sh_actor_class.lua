@@ -1236,8 +1236,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			npc:SetNoDraw(true)
 			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
-			print(self:GetType(), ' - ', vehicle.bgn_is_police_car)
-
 			table.insert(vehicle.bgn_passengers, self)
 
 			if not self.vehicle.bgn_driver then
@@ -1318,6 +1316,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	return obj
 end
 
-snet.RegisterValidator('actor', function(ply, uid, ent)
-	return bgNPC:GetActor(ent) ~= nil
+snet.RegisterValidator('actor', function(ply, uid, actor_uid)
+	return bgNPC:GetActorByUid(actor_uid) ~= nil
 end)

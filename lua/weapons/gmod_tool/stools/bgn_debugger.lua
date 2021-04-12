@@ -34,24 +34,18 @@ if SERVER then
 		snet.IsValidForClient(ply, function(ply, success)
 			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 			if not success then return end
-			snet.ClientRPC(self, 'SetActor', ent)
-		end, 'actor', ent)
+			snet.ClientRPC(self, 'SetActor', actor.uid)
+		end, 'actor', actor.uid)
 	end
 
 	function TOOL:RightClick()
 		snet.ClientRPC(self, 'ResetActor')
 	end
 else
-	function TOOL:SetActor(ent)	
-		if not IsValid(ent) or not ent:IsNPC() then
-			bgNPC:Log('Entity is not NPC or is equal to NULL', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
-			return
-		end
-
-		local actor = bgNPC:GetActor(ent)
+	function TOOL:SetActor(uid)	
+		local actor = bgNPC:GetActorByUid(uid)
 		if actor == nil then
-			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end
