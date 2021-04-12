@@ -24,9 +24,16 @@ if SERVER then
 
 		if not tr.Hit then return end
 
+		local actor
+
 		local ent = tr.Entity
-		local actor = bgNPC:GetActor(ent)
-		if actor == nil then
+		if ent:IsVehicle() and ent.bgn_driver then
+			actor = ent.bgn_driver
+		else
+			actor = bgNPC:GetActor(ent)
+		end
+
+		if not actor then
 			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
 			return
 		end
