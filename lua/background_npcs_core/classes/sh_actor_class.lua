@@ -1210,7 +1210,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not decentvehicle or not IsValid(decentvehicle) then
 			decentvehicle = ents.Create('npc_decentvehicle')
 			decentvehicle:SetPos(vehicle:GetPos())
+			decentvehicle.DontUseSpawnEffect = true
 			decentvehicle:Spawn()
+			decentvehicle:Activate()
 			vehicle.bgn_decentvehicle = decentvehicle
 		end
 
