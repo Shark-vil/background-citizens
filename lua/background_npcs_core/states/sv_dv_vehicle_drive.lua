@@ -1,3 +1,7 @@
+--[[
+   This state is not used. May be removed or changed in the future.
+--]]
+
 hook.Add('BGN_PreSetNPCState', 'BGN_DvVehicle_FindCarOnRadius', function(actor, state)
    if state ~= 'dv_vehicle_drive' or not actor:IsAlive() then return end
    if DecentVehicleDestination == nil or not GetConVar('bgn_enable_dv_support'):GetBool() then

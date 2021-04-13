@@ -95,8 +95,8 @@ function bgNPC:CheckVehicleLimitFromActors(actor_type)
    local limit = GetConVar('bgn_npc_vehicle_max_' .. actor_type):GetInt()
    local count = 0
    for i = 1, #bgNPC.DVCars do
-      local car = bgNPC.DVCars[i]
-      if car.bgn_car_type and car.bgn_car_type == actor_type then
+      local vehicle_provider = bgNPC.DVCars[i]
+      if vehicle_provider.actor_type and vehicle_provider.actor_type == actor_type then
          count = count + 1
       end
    end
@@ -150,9 +150,19 @@ function bgNPC:SpawnVehicleWithActor(actor)
       return false
    end
 
-   car.bgn_is_police_car = actor:HasTeam('police')
-   car.bgn_car_type = actor_type
+   local vehicle_provider
+   if actor:HasTeam('police') then
+      vehicle_provider = BGN_VEHICLE:Instance(car, 'police', actor_type)
+   else
+      vehicle_provider = BGN_VEHICLE:Instance(car, nil, actor_type)
+   end
 
+   local index = BGN_VEHICLE:AddToList(vehicle_provider)
+   if index == -1 then
+      car:Remove()
+      return false
+   end
+   
    car:slibCreateTimer('spawn_dv_ai', 1, 1, function(ent)
       if not IsValid(npc) then
          ent:Remove()
@@ -162,7 +172,6 @@ function bgNPC:SpawnVehicleWithActor(actor)
       npc:SetPos(ent:GetPos())
       actor:EnterVehicle(ent)
    end)
-   
-   table.insert(bgNPC.DVCars, car)
+
    return true
 end

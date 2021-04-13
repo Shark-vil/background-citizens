@@ -31,15 +31,14 @@ hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, atta
    end
 end)
 
-hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, dmginfo)
-	if not GetConVar('bgn_arrest_mode'):GetBool() then return end
-   if not attacker:IsPlayer() then return end
-
+hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, reaction)
 	local TargetActor = bgNPC:GetActor(target)
    if not TargetActor then return end
 
-   local at_damage = TargetActor:GetData().at_damage or {}
-   if not at_damage['fear'] then return end
+   if not GetConVar('bgn_arrest_mode'):GetBool() or not attacker:IsPlayer() then
+      if reaction == 'arrest' then TargetActor:SetReaction('defense') end
+      return
+   end
 
    if not ArrestModule:HasPlayer(attacker) and not WantedModule:HasWanted(attacker) then
       local PoliceActor
@@ -68,11 +67,15 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 
       ArrestModule:AddPlayer(attacker, PoliceActor)
       
+      if PoliceActor:InVehicle() then
+         PoliceActor:ExitVehicle()
+      end
+      
       PoliceActor:RemoveAllTargets()
       PoliceActor:AddTarget(attacker)
       PoliceActor:SetState('arrest')
 
-      if not TargetActor:HasState('fear') then
+      if TargetActor ~= PoliceActor and not TargetActor:HasState('fear') then
          TargetActor:RemoveAllTargets()
          TargetActor:AddEnemy(attacker)
          TargetActor:SetState('fear')

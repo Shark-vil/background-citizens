@@ -2,13 +2,9 @@ hook.Add('PostCleanupMap', 'BGN_CleanDvCarsCache', function()
 	table.Empty(bgNPC.DVCars)
 end)
 
-hook.Add('BGN_DvCarRemoved', 'BGN_DVCars_OnRemoved', function(ent)
-   if ent.bgn_passengers and #ent.bgn_passengers ~= 0 then
-      for _, actor in ipairs(ent.bgn_passengers) do
-         if actor:IsAlive() then
-            actor:GetNPC():Remove()
-         end
-      end
+hook.Add('BGN_DvCarRemoved', 'BGN_DVCars_OnRemoved', function(vehicle_provider)   
+   for _, actor in ipairs(vehicle_provider:GetPassengers()) do
+      actor:GetNPC():Remove()
    end
 end)
 
@@ -22,24 +18,27 @@ timer.Create('BGN_Timer_DVCars_Remover', 1, 0, function()
    local dv_support_enable = GetConVar('bgn_enable_dv_support'):GetBool()
 
    for i = count, 1, -1 do
-      local car = bgNPC.DVCars[i]
+      local vehicle_provider = bgNPC.DVCars[i]
+      local vehicle = vehicle_provider:GetVehicle()
 
-		if not IsValid(car) or not bgn_enable or not dv_support_enable or player.GetCount() == 0 then
-         if car ~= NULL then
-            hook.Run('BGN_DvCarRemoved', car)
-            car:Remove()
-         end
-
+		if not IsValid(vehicle) or not bgn_enable or not dv_support_enable or player.GetCount() == 0 then
+         hook.Run('BGN_DvCarRemoved', vehicle_provider)
+         vehicle_provider:Remove()
          table.remove(bgNPC.DVCars, i)
       else
+         local driver = vehicle_provider:GetDriver()
+         if not driver and vehicle_provider:IsValidAI() then
+            vehicle_provider:GetVehicleAI():Remove()
+         end
+
          local isRemove = true
-         local car_pos = car:GetPos()
+         local vehicle_position = vehicle:GetPos()
 
          for _, ply in ipairs(player.GetAll()) do
             if IsValid(ply) then
-               local ply_pos = ply:GetPos()
-               local dist = car_pos:DistToSqr(ply_pos)
-               if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, car_pos) then
+               local player_position = ply:GetPos()
+               local dist = vehicle_position:DistToSqr(player_position)
+               if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, vehicle_position) then
                   isRemove = false
                   break
                end
@@ -47,9 +46,8 @@ timer.Create('BGN_Timer_DVCars_Remover', 1, 0, function()
          end
 
          if isRemove then
-            hook.Run('BGN_DvCarRemoved', car)
-            car:Remove()
-
+            hook.Run('BGN_DvCarRemoved', vehicle_provider)
+            vehicle_provider:Remove()
             table.remove(bgNPC.DVCars, i)
          end
       end

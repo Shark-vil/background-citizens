@@ -40,12 +40,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.uid = uid
 	obj.npc = npc
 	obj.class = npc:GetClass()
+	obj.collision_group = npc:GetCollisionGroup()
+	obj.model_scale = npc:GetModelScale()
 	obj.data = data
 	obj.type = type
 	obj.reaction = ''
 	obj.eternal = false
 	obj.vehicle = nil
-	obj.vehicle_data = {}
 
 	obj.state_data = {
 		state = 'none',
@@ -278,9 +279,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not IsValid(self.npc) then return end
 		if not self.npc:IsNPC() then return end
 
-		-- self.walkPos = nil
-		-- self.walkPath = {}
-		
 		self.npc:SetNPCState(NPC_STATE_IDLE)
 		self.npc:ClearSchedule()
 
@@ -684,7 +682,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			self:StopWalk()
 		else
 			local npc = self.npc
-			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then return end
+			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then
+				local walk_type = type or 'walk'
+				hook.Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)	
+				return
+			end
 
 			self:SetWalkType(type)
 
@@ -693,6 +695,15 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 				self.walkUpdatePathDelay = 0
 				self.walkPos = nil
 				self.walkTarget = target
+				
+				local decentvehicle = self:GetVehicleAI()
+				if decentvehicle then
+					if decentvehicle.bgn_type == 'police' then
+						decentvehicle.DVPolice_Target = target
+					else
+						self:WalkToPos(target:GetPos(), type, pathType)
+					end
+				end
 			end
 		end
 	end
@@ -1202,46 +1213,41 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:EnterVehicle(vehicle)
-		if not DecentVehicleDestination then return end
-		if not vehicle:IsVehicle() then return end
+		if not DecentVehicleDestination or not vehicle:IsVehicle() then return end
 
-		local decentvehicle = vehicle.bgn_decentvehicle
-
-		if not decentvehicle or not IsValid(decentvehicle) then
-			decentvehicle = ents.Create('npc_decentvehicle')
-			decentvehicle:SetPos(vehicle:GetPos())
-			decentvehicle.DontUseSpawnEffect = true
-			decentvehicle:Spawn()
-			decentvehicle:Activate()
-			vehicle.bgn_decentvehicle = decentvehicle
-		end
-
-		decentvehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function()
-			local npc = self:GetNPC()
-			if not IsValid(npc) or npc:Health() <= 0 then
-				decentvehicle:Remove()
-				return
+		local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
+		if not vehicle_provider then
+			if self:HasTeam('police') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'police')
+			elseif self:HasTeam('taxi') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'taxi')
+			else
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle)
 			end
 
-			self.eternal = true
-			self.vehicle = vehicle
-			vehicle.bgn_passengers = vehicle.bgn_passengers or {}
-			vehicle.bgn_decentvehicle = decentvehicle
+			if not vehicle_provider then return end
+			BGN_VEHICLE:AddToList(vehicle_provider)
+		end
 
-			self.vehicle_data.old_collision_group = npc:GetCollisionGroup()
-			self.vehicle_data.dv = decentvehicle
+		local npc = self:GetNPC()
+		npc:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function()
+			if not vehicle_provider or not IsValid(vehicle) then return end
+
+			self.eternal = true
+			self.vehicle = vehicle_provider
 
 			npc:slibSetVar('bgn_vehicle_entered', true)
 			npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
 			npc:SetPos(vehicle:GetPos() + vehicle:GetUp() * 100)
+			npc:SetModelScale(0.1)
 			npc:SetParent(vehicle)
 			npc:SetNoDraw(true)
 			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
-
-			table.insert(vehicle.bgn_passengers, self)
-
-			if not self.vehicle.bgn_driver then
-				self.vehicle.bgn_driver = self
+			
+			if not vehicle_provider:GetDriver() then
+				vehicle_provider:SetDriver(self)
+			else
+				vehicle_provider:AddPassenger(self)
 			end
 
 			self.walkUpdatePathDelay = 0
@@ -1251,16 +1257,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:ExitVehicle()
 		if not DecentVehicleDestination then return end
 
-		local vehicle = self.vehicle
-		if vehicle and IsValid(vehicle) then
-			vehicle.bgn_passengers = vehicle.bgn_passengers or {}
-
+		local vehicle_provider = self.vehicle
+		if vehicle_provider and IsValid(vehicle_provider) then
+			local vehicle = vehicle_provider:GetVehicle()
 			local pos = vehicle:GetPos()
 			local forward = vehicle:GetForward()
 			local right = vehicle:GetRight()
 			local up = vehicle:GetUp()
 			local npc = self:GetNPC()
-
 			local add_forward = math.random(-100, 100)
 			local add_right = 150
 			if math.random(0, 100) > 50 then
@@ -1269,22 +1273,33 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 			npc:slibSetVar('bgn_vehicle_entered', false)
 			npc:SetParent(nil)
-			npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
-			npc:SetPos(pos + (right * add_right) + (forward * add_forward) + (up * 50))
-			npc:SetCollisionGroup(self.vehicle_data.old_collision_group)
-			npc:SetNoDraw(false)
-			npc:PhysWake()
 
-			if vehicle.bgn_driver == self then
-				local decentvehicle = self.vehicle_data.dv
-				if decentvehicle and IsValid(decentvehicle) then
-					decentvehicle:Remove()
+			local exit_pos = pos + (right * add_right) + (forward * add_forward) + (up * 50)
+			local tr = util.TraceLine({
+				start = exit_pos,
+				endpos = exit_pos - Vector(0, 0, 500),
+				filter = function(ent)
+					if ent ~= npc then return true end
 				end
-				vehicle.bgn_driver = nil
-				vehicle.bgn_decentvehicle = nil
+			})
+
+			if tr.Hit then
+				exit_pos = tr.HitPos + Vector(0, 0, 15)
 			end
 
-			table.RemoveByValue(vehicle.bgn_passengers, self)
+			npc:SetPos(exit_pos)
+			npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
+			npc:SetCollisionGroup(self.collision_group)
+			npc:SetModelScale(self.model_scale)
+			npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
+			npc:PhysWake()
+			npc:SetNoDraw(false)
+
+			if vehicle_provider:GetDriver() == self then
+				vehicle_provider:SetDriver(nil)
+			else
+				vehicle_provider:RemovePassenger(self)
+			end
 		end
 
 		self.eternal = false
@@ -1294,19 +1309,20 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:InVehicle()
 		if SERVER then
-			if self.vehicle and IsValid(self.vehicle) then return true end
-			return false
+			return ( self.vehicle and IsValid(self.vehicle) )
 		else
 			return self:GetNPC():slibGetVar('bgn_vehicle_entered', false)
 		end
 	end
 
 	function obj:GetVehicle()
-		return self.vehicle
+		if not self:InVehicle() then return nil end
+		return self.vehicle:GetVehicle()
 	end
 
 	function obj:GetVehicleAI()
-		return self.vehicle_data.dv
+		if not self:InVehicle() then return nil end
+		return self.vehicle:GetVehicleAI()
 	end
 
 	function npc:GetActor()

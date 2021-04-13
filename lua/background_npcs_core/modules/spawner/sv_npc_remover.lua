@@ -25,9 +25,10 @@ local function FindExistCarAndEnterThis(actor)
 	if actor:HasTeam('police') then
 		local all_players = player.GetAll()
 		for i = 1, #bgNPC.DVCars do
-			local car = bgNPC.DVCars[i]
-			if car.bgn_is_police_car and car.bgn_passengers and #car.bgn_passengers < 4 then
-				local vehiclePosition = car:GetPos()
+			local vehicle_provider = bgNPC.DVCars[i]
+			if vehicle_provider.type == 'police' and #vehicle_provider:GetPassengers() < 4 then
+				local vehicle = vehicle_provider:GetVehicle()
+				local vehiclePosition = vehicle:GetPos()
 				local isVisible = false
 
 				for k = 1, #all_players do
@@ -40,7 +41,7 @@ local function FindExistCarAndEnterThis(actor)
 
 				if not isVisible then
 					print('enter to exist car')
-					actor:EnterVehicle(car)
+					actor:EnterVehicle(vehicle)
 					return true
 				end
 			end

@@ -10,7 +10,7 @@ local function MovementProcess()
       if actor:InVehicle() then
          if actor.walkUpdatePathDelay < CurTime() then
             if IsValid(actor.walkTarget) then
-               actor:WalkToPos(actor.walkTarget:GetPos())
+               actor:WalkToTarget(actor.walkTarget)
             end
             actor.walkUpdatePathDelay = CurTime() + 5
          end

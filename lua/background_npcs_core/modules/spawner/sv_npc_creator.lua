@@ -122,22 +122,25 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 			if actor:HasTeam('police') then
 				local all_players = player.GetAll()
 				for i = 1, #bgNPC.DVCars do
-					local car = bgNPC.DVCars[i]
-					if car.bgn_is_police_car and car.bgn_passengers and #car.bgn_passengers < 4 then
-						local vehiclePosition = car:GetPos()
-						local isVisible = false
+					local vehicle_provider = bgNPC.DVCars[i]
+					if vehicle_provider.type == 'police' and #vehicle_provider:GetPassengers() < 4 then
+						if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() then
+							local vehicle = vehicle_provider:GetVehicle()
+							local vehiclePosition = vehicle:GetPos()
+							local isVisible = false
 
-						for k = 1, #all_players do
-							local ply = all_players[k]
-							if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
-								isVisible = true
-								break
+							for k = 1, #all_players do
+								local ply = all_players[k]
+								if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
+									isVisible = true
+									break
+								end
 							end
-						end
 
-						if not isVisible then
-							actor:EnterVehicle(car)
-							return
+							if not isVisible then
+								actor:EnterVehicle(vehicle)
+								return
+							end
 						end
 					end
 				end

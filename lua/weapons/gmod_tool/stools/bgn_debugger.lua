@@ -43,9 +43,7 @@ if SERVER then
 			if not success then return end
 
 			local actor_data = snet.GetNormalizeDataTable(actor)
-			if actor_data and #actor_data ~= 0 then
-				PrintTable(actor_data)
-			end
+			if actor_data then MsgN('SERVER:') PrintTable(actor_data) end
 
 			snet.ClientRPC(self, 'SetActor', actor.uid)
 		end, 'actor', actor.uid)
@@ -64,9 +62,7 @@ else
 		end
 		
 		local actor_data = snet.GetNormalizeDataTable(actor)
-		if actor_data and #actor_data ~= 0 then
-			PrintTable(actor_data)
-		end
+		if actor_data then MsgN('CLIENT:') PrintTable(actor_data) end
 
 		self.Actor = actor
 		self.Target = actor:GetNPC()

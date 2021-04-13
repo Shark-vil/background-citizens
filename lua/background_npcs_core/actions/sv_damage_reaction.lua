@@ -1,5 +1,5 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
-function(attacker, target, dmginfo)
+function(attacker, target)
 	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
 	for i = 1, #actors do
 		local actor = actors[i]

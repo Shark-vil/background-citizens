@@ -6,19 +6,18 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 
    local cars = bgNPC.DVCars 
    for i = 1, #cars do
-      local vehicle = cars[i]
-      if vehicle and vehicle.bgn_passengers and vehicle == target then
-         for k = 1, #vehicle.bgn_passengers do
-            local actor = vehicle.bgn_passengers[k]
+      local vehicle_provider = cars[i]
+      if vehicle_provider and vehicle_provider:GetVehicle() == target then
+         local passengers = vehicle_provider:GetPassengers()
+
+         for k = 1, #passengers do
+            local actor = passengers[k]
             if actor and actor:IsAlive() then
-               if not actor:HasTeam('police') and math.random(0, 100) < 70 then return end
-               
-               actor:ExitVehicle()
-               actor:AddEnemy(attacker)
-               actor:SetState(actor:GetReactionForDamage())
-               if actor:HasState('fear') then actor:CallForHelp(attacker) end
+               if math.random(0, 100) <= 5 then actor:ExitVehicle() end
+               hook.Run('BGN_TakeDamageFromNPC', attacker, actor:GetNPC())
             end
          end
+
          break
       end
    end
