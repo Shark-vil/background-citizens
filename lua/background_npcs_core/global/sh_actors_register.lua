@@ -14,7 +14,7 @@ end
 
 function bgNPC:AddNPC(actor)
 	local npc = actor:GetNPC()
-	if table.IHasValue(self.npcs, npc) then return end
+	if array.HasValue(self.npcs, npc) then return end
 
 	table.insert(self.actors, actor)
 	table.insert(self.npcs, npc)

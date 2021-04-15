@@ -1,4 +1,6 @@
 hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginfo)
+   if not target:IsVehicle() then return end
+
    local attacker = dmginfo:GetAttacker()
    if not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then
       return
@@ -19,7 +21,12 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
                elseif actor:HasTeam('police') and attacker:GetPos():DistToSqr(vehiclePosition) <= 640000 then
                   actor:ExitVehicle()
                end
-               hook.Run('BGN_TakeDamageFromNPC', attacker, actor:GetNPC())
+               
+               local npc = actor:GetNPC()
+               if IsValid(npc) then
+                  npc:TakeDamage(dmginfo:GetDamage() / math.random(2, 10), attacker, dmginfo:GetInflictor())
+                  -- hook.Run('BGN_TakeDamageFromNPC', attacker, npc)
+               end
             end
          end
 

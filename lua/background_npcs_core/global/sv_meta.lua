@@ -1,16 +1,3 @@
-function bgNPC:IsFearNPC(npc)
-	if IsValid(npc) and npc:IsNPC() then
-		local schedule = npc:GetCurrentSchedule()
-		if npc:IsCurrentSchedule(SCHED_RUN_FROM_ENEMY) 
-			or npc:IsCurrentSchedule(SCHED_WAKE_ANGRY)
-			or schedule == 159
-		then
-			return true
-		end
-	end
-	return false
-end
-
 function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()
@@ -20,13 +7,11 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 
 		switching = switching or false
 
-		if switching then
-			if IsValid(active_weapon) and active_weapon:GetClass() == weapon_class then
-				return
-			end
-		else
-			if IsValid(active_weapon) and active_weapon:GetClass() ~= weapon_class then
-				return
+		if IsValid(active_weapon) then
+			if switching then
+				if active_weapon:GetClass() == weapon_class then return end
+			else
+				if active_weapon:GetClass() ~= weapon_class then return end
 			end
 		end
 		
@@ -37,22 +22,20 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 
 		npc:SelectWeapon(weapon_class)
 	else
-		local weapons = data.weapons
-		if weapons ~= nil and #weapons ~= 0 then
+		local weapon_class = actor.weapon
+		if weapon_class then
 			local active_weapon = npc:GetActiveWeapon()
 
-			if IsValid(active_weapon) and table.IHasValue(weapons, active_weapon:GetClass()) then
+			if IsValid(active_weapon) and active_weapon:GetClass() == weapon_class then
 				return
 			end
 
-			local select_weapon = table.Random(weapons)
-
-			local weapon = npc:GetWeapon(select_weapon)
+			local weapon = npc:GetWeapon(weapon_class)
 			if not IsValid(weapon) then
-				weapon = npc:Give(select_weapon)
+				weapon = npc:Give(weapon_class)
 			end
 
-			npc:SelectWeapon(select_weapon)
+			npc:SelectWeapon(weapon_class)
 		end
 	end
 
@@ -64,76 +47,26 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	end
 end
 
-function bgNPC:IsEnemyTeam(target, team_name)
-	if not IsValid(target) then
-		return false
-	end
+function bgNPC:IsEnemyTeam(target_actor, attacker)
+	if not IsValid(attacker) or attacker:Health() <= 0 then return false end
 
-	local TargetActor = bgNPC:GetActor(target)
+	local AttackerActor = bgNPC:GetActor(attacker)
 
 	for _, actor in ipairs(self:GetAll()) do
-		if not actor:IsAlive() then goto skip end
+		if actor:IsAlive() and actor ~= target_actor then
+			local npc = actor:GetNPC()
 
-		local npc = actor:GetNPC()
-		if target == npc or not IsValid(npc) then goto skip end
-		if not actor:HasTeam(team_name) then goto skip end
-
-		if TargetActor and TargetActor:HasEnemy(npc) then return true end
-
-		if target:IsNPC() then
-			if target:Disposition(npc) == D_HT or npc:Disposition(target) == D_HT then
-				return true
-			end
-		elseif target:IsNextBot() then
-			if npc:Disposition(target) == D_HT then
-				return true
-			end
-		elseif target:IsPlayer() and actor:HasEnemy(target) then
-			return true
-		end
-
-		::skip::
-	end
-	
-	return false
-end
-
-function bgNPC:IsEnemyTeams(target, team_table)
-	for _, actor in ipairs(self:GetAll()) do
-		local npc = actor:GetNPC()
-		if IsValid(target) and IsValid(npc) then
-			if isstring(team_table) then
-				team_table = { team_table }
-			end
-
-			for _, team_name in ipairs(team_table) do
-				if actor:HasTeam(team_name) then
-					if target:IsNPC() and (target:Disposition(npc) == D_HT 
-						or npc:Disposition(target) == D_HT)
-					then
-						return true
-					elseif target:IsPlayer() and actor:HasEnemy(target) then
-						return true
-					end
+			if target_actor:HasTeam(actor) then
+				if actor:HasEnemy(attacker) then
+					return true
+				elseif AttackerActor and AttackerActor:HasEnemy(npc) then
+					return true
+				elseif attacker:IsNPC() and attacker:Disposition(npc) == D_HT then
+					return true
 				end
 			end
 		end
 	end
+
 	return false
 end
-
-function bgNPC:TemporaryVectorVisibility(ent, time)
-	if IsValid(ent) then
-		ent.bgNPCVisibilityDelay = CurTime() + (time or 1)
-		ent.bgNPCVisibility = true
-	end
-end
-
-hook.Add('SetupPlayerVisibility', 'BGN_TemporarilyShowVectorToPlayerForSyncEntities', function(ent)
-	if ent.bgNPCVisibility then
-		AddOriginToPVS(ent:GetPos())
-		if ent.bgNPCVisibilityDelay < CurTime() then
-			ent.bgNPCVisibility = false
-		end
-	end
-end)

@@ -77,7 +77,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SitToChairState", function(actor, state, dat
       end
       
       if #seats ~= 0 then
-         local seat = table.Random(seats)
+         local seat = array.Random(seats)
          seat:SetSitting(npc)
          return  {
             state = 'sit_to_chair_2',

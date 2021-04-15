@@ -6,12 +6,16 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local attacker = dmginfo:GetAttacker()
 	if not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
 	if attacker.bgNPCIgnore or attacker == target then return end
-
+	
+	local result
+	
 	if target:IsNPC() then
-		hook.Run('BGN_TakeDamageFromNPC', attacker, target)
+		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target)
 	elseif target:IsPlayer() then
-		hook.Run('BGN_TakeDamageFromPlayer', attacker, target)
+		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target)
 	end
+
+	if isbool(result) then return result end
 end)
 
 hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target)

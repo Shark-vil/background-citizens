@@ -1,15 +1,15 @@
 hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, state)
-	if not actor:HasTeam('police') then return end
-	if state ~= 'defense' or not actor:IsAlive() then return end
-	if math.random(0, 10) > 1 then return end
-	
-	local enemy = actor:GetEnemy()
-	if not IsValid(enemy) then return end
+	if state == 'defense' then
+		if not actor.weapon then return 'fear' end
 
-	local npc = actor:GetNPC()
-	if enemy:GetPos():DistToSqr(npc:GetPos()) > 250000 then return end
-	
-	npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
+		if actor:HasTeam('police') then
+			local enemy = actor:GetNearEnemy()
+			local npc = actor:GetNPC()
+			if IsValid(enemy) and enemy:GetPos():DistToSqr(npc:GetPos()) < 250000 then
+				npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
+			end
+		end
+	end
 end)
 
 local WantedModule = bgNPC:GetModule('wanted')
@@ -22,10 +22,6 @@ bgNPC:SetStateAction('defense', {
 		local data = actor:GetStateData()
 		
 		data.delay = data.delay or 0
-
-		if enemy:IsPlayer() and enemy:InVehicle() then
-			enemy = enemy:GetVehicle()
-		end
 
 		if data.delay < CurTime() or enemy:IsNPC() or enemy:IsPlayer() then
 			local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
@@ -49,12 +45,12 @@ bgNPC:SetStateAction('defense', {
 
 				if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
 					if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
-						bgNPC:SetActorWeapon(actor, 'weapon_stunstick', true)
+						actor:PrepareWeapon('weapon_stunstick', true)
 					else
-						bgNPC:SetActorWeapon(actor)
+						actor:PrepareWeapon()
 					end
 				else
-					bgNPC:SetActorWeapon(actor)
+					actor:PrepareWeapon()
 				end
 			end
 

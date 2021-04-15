@@ -10,7 +10,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 
    coroutine.yield()
 
-   points = table.shuffle(points)
+   points = array.shuffle(points)
    
    coroutine.yield()
 
@@ -74,7 +74,7 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
    local all_players = player.GetAll()
 
    if not desiredPosition then
-      local ply = table.Random(all_players)
+      local ply = array.Random(all_players)
       desiredPosition = ply:GetPos()
    end
 
@@ -105,7 +105,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
    local npc_class
    
    if istable(npcData.class) then
-      npc_class = table.Random(npcData.class)
+      npc_class = array.Random(npcData.class)
       is_many_classes = true
    else
       npc_class = npcData.class
@@ -135,6 +135,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 
    npc:SetSpawnEffect(enableSpawnEffect or false)
    npc:Spawn()
+   npc:SetOwner(game.GetWorld())
    npc:Activate()
    npc:PhysWake()
 
@@ -144,9 +145,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
       local model
 
       if is_many_classes and npcData.models[npc_class] then
-         model = table.Random(npcData.models[npc_class])
+         model = array.Random(npcData.models[npc_class])
       elseif #npcData.models ~= 0 then
-         model = table.Random(npcData.models)
+         model = array.Random(npcData.models)
       end
 
       if model and util.IsValidModel(model) then
@@ -188,11 +189,11 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 
    local actor = BGN_ACTOR:Instance(npc, npcType, npcData)
    bgNPC:AddNPC(actor)
-   actor:RandomState()
-   
-   hook.Run('BGN_InitActor', actor)
 
    snet.Create('bgn_add_actor_from_client', npc, npcType, actor.uid).InvokeAll()
+   
+   actor:RandomState()
+   hook.Run('BGN_InitActor', actor)
 
    return actor
 end

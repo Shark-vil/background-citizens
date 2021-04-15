@@ -15,7 +15,7 @@ function bgNPC:GetActorConfig(actor_type)
 			local inherit_data = bgNPC.cfg.npcs_template[data.inherit]
 			if inherit_data then
 				if inherit_data.inherit then
-					inherit_data = bgNPC:GetActorConfig(data.inherit)
+					inherit_data = bgNPC:GetActorConfig(inherit_data.inherit)
 				end
 
 				for ik, iv in pairs(inherit_data) do
@@ -39,20 +39,36 @@ function bgNPC:GetActorConfig(actor_type)
 
 		for k, v in pairs(data) do
 			if isstring(v) and string.StartWith(v, '@') then
-				local inherit_actor_type = string.sub(v, 2)
-				if inherit_actor_type ~= actor_type then
-					local inherit_data = bgNPC.cfg.npcs_template[inherit_actor_type]
+				local inherit_groups = string.Explode('@', string.Replace(v, ' ', ''))
 
-					if inherit_data.inherit then
-						inherit_data = bgNPC:GetActorConfig(data.inherit)
-					end
+				for _, inherit_actor_type in ipairs(inherit_groups) do
+					if #inherit_actor_type ~= 0 and inherit_actor_type ~= actor_type then
+						local inherit_data = bgNPC.cfg.npcs_template[inherit_actor_type]
 
-					if inherit_data and inherit_data[k] ~= nil then
-						data[k] = inherit_data[k]
-					else
-						data[k] = nil
+						if inherit_data and inherit_data.inherit then
+							inherit_data = bgNPC:GetActorConfig(data.inherit)
+						end
+
+						if inherit_data and inherit_data[k] ~= nil then
+							if data[k] == nil or isstring(data[k]) then
+								data[k] = inherit_data[k]
+							elseif data[k] ~= nil and istable(data[k]) and istable(inherit_data[k]) then
+								for another_key, another_value in pairs(inherit_data[k]) do
+									if isnumber(another_key) then
+										table.insert(data, another_value)
+									elseif data[another_key] == nil then
+										data[another_key] = another_value
+									end
+								end
+							end
+						elseif data[k] ~= nil and isstring(data[k]) then
+							if string.StartWith(data[k], '@') then
+								data[k] = nil
+							end
+						end
 					end
 				end
+
 			end
 		end
 

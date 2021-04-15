@@ -43,6 +43,14 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.collision_group = npc:GetCollisionGroup()
 	obj.model_scale = npc:GetModelScale()
 	obj.data = data
+	obj.weapon = nil
+
+	if data.weapons then
+		if not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance then
+			obj.weapon = array.Random(data.weapons)
+		end
+	end
+
 	obj.type = type
 	obj.reaction = ''
 	obj.eternal = false
@@ -294,7 +302,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
 		
-		if self:GetNPC() ~= ent and not table.IHasValue(self.targets, ent) then            
+		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then            
 			table.insert(self.targets, ent)
 
 			self:SyncTargets()
@@ -347,7 +355,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param ent entity any entity
 	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
-		return table.IHasValue(self.targets, ent)
+		return array.HasValue(self.targets, ent)
 	end
 
 	-- Returns the number of existing targets for the actor.
@@ -407,7 +415,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not table.IHasValue(self.enemies, ent) then
+		if npc ~= ent and not array.HasValue(self.enemies, ent) then
 			if not hook.Run('BGN_AddActorEnemy', self, ent) then
 				if npc:IsNPC() then
 					local relationship = D_HT
@@ -471,7 +479,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasEnemy(ent)
-		return table.IHasValue(self.enemies, ent)
+		if ent ~= NULL and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
+		return array.HasValue(self.enemies, ent)
 	end
 
 	function obj:EnemiesCount()
@@ -480,6 +489,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:EnemiesRecalculate()
 		local npc = self:GetNPC()
+		local active_enemy = npc:GetEnemy()
+		if IsValid(active_enemy) and active_enemy:IsVehicle() then
+			npc:AddEntityRelationship(active_enemy, D_NU, 99)
+		end
 
       if #self.enemies == 0 then return end
 
@@ -624,6 +637,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if hook_result then
 			if isbool(hook_result) then
 				return
+			elseif isstring(hook_result) then
+				state = hook_result
 			elseif istable(hook_result) then
 				state = hook_result.state or state
 				data = hook_result.data or {}
@@ -804,31 +819,32 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasTeam(value)
+		local value = value
 		if self.data.team ~= nil and value ~= nil then
 			if isstring(value) then
-				return table.IHasValue(self.data.team, value)
+				return array.HasValue(self.data.team, value)
 			end
 
 			if isentity(value) then
 				if value:IsPlayer() then
-					if table.IHasValue(self.data.team, 'player') then
+					if array.HasValue(self.data.team, 'player') then
 						return true
 					else
-						local TeamParentModule = bgNPC:GetModule('team_parent')
-						return TeamParentModule:HasParent(value, self)
+						return bgNPC:GetModule('team_parent'):HasParent(value, self)
 					end
 				elseif value.isBgnActor and (value:IsNPC() or value:IsNextBot()) then
 					local actor = bgNPC:GetActor(value)
-					if actor then value = actor:GetData().team end
+					if not actor then return false end
+					value = actor:GetData().team
 				end
 			end
 			
 			if istable(value) then
+				if value.isBgnClass then value = value:GetData().team end
+
 				for i = 1, #self.data.team do
-					local team_1 = self.data.team[i]
 					for k = 1, #value do
-						local team_2 = value[k]
-						if team_1 == team_2 then return true end
+						if self.data.team[i] == value[k] then return true end
 					end
 				end
 			end
@@ -842,8 +858,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:HasState(state)
 		local current_state = self.state_data.state
-		if current_state == state then
-			return true
+		if isstring(state) then
+			return current_state == state
 		elseif istable(state) then
 			for i = 1, #state do
 				if current_state == state[i] then return true end
@@ -1139,11 +1155,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc_model = self.npc:GetModel()
 		local scream_sound = nil
 		if tobool(string.find(npc_model, 'female_*')) then
-			scream_sound = table.Random(female_scream)
+			scream_sound = array.Random(female_scream)
 		elseif tobool(string.find(npc_model, 'male_*')) then
-			scream_sound = table.Random(male_scream)
+			scream_sound = array.Random(male_scream)
 		else
-			scream_sound = table.Random(table.Inherit(male_scream, female_scream))
+			local concatenated_table = table.Copy(male_scream)
+			table.Add(concatenated_table, female_scream)
+			scream_sound = array.Random(concatenated_table)
 		end
 
 		if scream_sound ~= nil and isstring(scream_sound) then
@@ -1177,19 +1195,19 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:InDangerState()
-		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
+		return array.HasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
 	end
 
 	function obj:InCalmlyState()
-		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
+		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
 	end
 
 	function obj:HasDangerState(state_name)
-		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], state_name)
+		return array.HasValue(bgNPC.cfg.npcs_states['danger'], state_name)
 	end
 
 	function obj:HasCalmlyState(state_name)
-		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
+		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
 	end
 
 	function obj:IsMeleeWeapon()
@@ -1199,7 +1217,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return table.IHasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
+		return array.HasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
 	end
 
 	function obj:IsFirearmsWeapon()
@@ -1209,7 +1227,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return not table.IHasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+		return not array.HasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
 	end
 
 	function obj:EnterVehicle(vehicle)
@@ -1229,26 +1247,42 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			BGN_VEHICLE:AddToList(vehicle_provider)
 		end
 
+		if not vehicle_provider:GetDriver() then
+			local all_seats_are_taken = true
+			for _, ent in ipairs(vehicle:GetChildren()) do
+				if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
+					all_seats_are_taken = false
+					break
+				end
+			end
+			if all_seats_are_taken then return end
+		end
+
 		local npc = self:GetNPC()
-		npc:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function()
+		vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function(vehicle)
 			if not vehicle_provider or not IsValid(vehicle) then return end
+			if not self or not self:IsAlive() then return end
 
 			self.eternal = true
 			self.vehicle = vehicle_provider
 
-			npc:slibSetVar('bgn_vehicle_entered', true)
-			npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-			npc:SetPos(vehicle:GetPos() + vehicle:GetUp() * 100)
-			npc:SetModelScale(0.1)
-			npc:SetParent(vehicle)
 			npc:SetNoDraw(true)
-			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
-			
+
 			if not vehicle_provider:GetDriver() then
 				vehicle_provider:SetDriver(self)
 			else
-				vehicle_provider:AddPassenger(self)
+				if not vehicle_provider:AddPassenger(self) then
+					npc:SetNoDraw(false)
+					return
+				end
 			end
+
+			npc:slibSetVar('bgn_vehicle_entered', true)
+			npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
+			npc:SetPos(vehicle:GetPos() + vehicle:GetUp() * 300)
+			npc:SetModelScale(0.1)
+			npc:SetParent(vehicle)
+			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 			self.walkUpdatePathDelay = 0
 		end)
@@ -1265,10 +1299,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			local right = vehicle:GetRight()
 			local up = vehicle:GetUp()
 			local npc = self:GetNPC()
-			local add_forward = math.random(-100, 100)
-			local add_right = 150
+			local add_forward = math.random(-120, 120)
+			local add_right = 170
 			if math.random(0, 100) > 50 then
-				add_right = -150
+				add_right = -170
 			end
 
 			npc:slibSetVar('bgn_vehicle_entered', false)
@@ -1323,6 +1357,34 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:GetVehicleAI()
 		if not self:InVehicle() then return nil end
 		return self.vehicle:GetVehicleAI()
+	end
+
+	function obj:GetActorWeapon()
+		return self.weapon
+	end
+
+	function obj:GetActiveWeapon()
+		if self:IsAlive() then
+			local npc = self:GetNPC()
+			local weapon  = npc:GetActiveWeapon()
+			if IsValid(weapon) then return weapon end
+		end
+		return NULL
+	end
+
+	function obj:PrepareWeapon(weapon_class, switching)
+		if weapon_class then
+			bgNPC:SetActorWeapon(self, weapon_class, switching)
+		elseif self.weapon then
+			bgNPC:SetActorWeapon(self)
+		end
+	end
+
+	function obj:FoldWeapon()
+		if not self:IsAlive() then return end
+		local npc = self:GetNPC()
+		local weapon  = npc:GetActiveWeapon()
+		if IsValid(weapon) then weapon:Remove() end
 	end
 
 	function npc:GetActor()

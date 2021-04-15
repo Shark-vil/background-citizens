@@ -118,37 +118,9 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 
 		bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
 			local actor = bgNPC:SpawnActor(npcType, nodePosition)
-
-			if actor:HasTeam('police') then
-				local all_players = player.GetAll()
-				for i = 1, #bgNPC.DVCars do
-					local vehicle_provider = bgNPC.DVCars[i]
-					if vehicle_provider.type == 'police' and #vehicle_provider:GetPassengers() < 4 then
-						if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() then
-							local vehicle = vehicle_provider:GetVehicle()
-							local vehiclePosition = vehicle:GetPos()
-							local isVisible = false
-
-							for k = 1, #all_players do
-								local ply = all_players[k]
-								if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
-									isVisible = true
-									break
-								end
-							end
-
-							if not isVisible then
-								actor:EnterVehicle(vehicle)
-								return
-							end
-						end
-					end
-				end
-			elseif math.random(0, 10) > 2 then
-				return
+			if not bgNPC:EnterActorInExistVehicle(actor) then
+				bgNPC:SpawnVehicleWithActor(actor)
 			end
-
-			bgNPC:SpawnVehicleWithActor(actor)
 		end)
 
 		::skip::

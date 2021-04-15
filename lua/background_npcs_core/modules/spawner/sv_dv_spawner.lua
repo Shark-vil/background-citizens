@@ -18,7 +18,7 @@ local function FindSpawnLocation(center)
    local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
    local points = GetNearPoints(center, spawn_radius)
    if #points == 0 then return nil end
-   points = table.shuffle(points)
+   points = array.shuffle(points)
 
    local dvd = DecentVehicleDestination
    local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
@@ -72,9 +72,20 @@ local function FindSpawnLocation(center)
          if point.Neighbors and point.Neighbors[1] then
             local direction_point = dvd.Waypoints[point.Neighbors[1]]
             if direction_point then
-               spawn_angle = (spawn_position + direction_point.Target):Angle()
+               local vector_1 = spawn_position
+               local vector_2 = direction_point.Target
+               local vector_1_normalize = vector_1:GetNormalized()
+               local vector_2_normalize = vector_2:GetNormalized()
+               local dot = math.deg(math.acos(vector_1_normalize:Dot(vector_2_normalize)))
+
+               if dot <= 1 then
+                  spawn_angle = (vector_1 - vector_2):Angle()
+               else
+                  spawn_angle = (vector_1 + vector_2):Angle()
+               end
             end
          end
+
          break
       end
 
@@ -103,26 +114,82 @@ function bgNPC:CheckVehicleLimitFromActors(actor_type)
    return count < limit
 end
 
-function bgNPC:SpawnVehicleWithActor(actor)
+function bgNPC:EnterActorInExistVehicle(actor, bypass)
+   local actor_data = actor:GetData()
+   local chance = actor_data.enter_to_exist_vehicle_chance
+
+   if not bypass and chance and math.random(0, 100) > chance then return false end
+
+   local all_players = player.GetAll()
+
+   for i = 1, #bgNPC.DVCars do
+      local vehicle_provider = bgNPC.DVCars[i]
+      if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() then
+
+         local vehicle = vehicle_provider:GetVehicle()
+         local driver = vehicle_provider:GetDriver()
+
+         if not driver or not driver:HasTeam(vehicle_provider.type) then
+            goto skip_vehicle
+         end
+
+         -- Поместить в расширение метатаблицы авто библиотеки slib
+         local all_seats_are_taken = true
+         for _, ent in ipairs(vehicle:GetChildren()) do
+            if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
+               all_seats_are_taken = false
+               break
+            end
+         end
+
+         if all_seats_are_taken then break end
+         ---  -----------------------------------------------------
+
+         local vehiclePosition = vehicle:GetPos()
+         local isVisible = false
+
+         for k = 1, #all_players do
+            local ply = all_players[k]
+            if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
+               isVisible = true
+               break
+            end
+         end
+
+         if not isVisible then
+            actor:EnterVehicle(vehicle)
+            return true
+         end
+      end
+
+      ::skip_vehicle::
+   end
+
+   return false
+end
+
+function bgNPC:SpawnVehicleWithActor(actor, bypass)
    if not GetConVar('bgn_enable_dv_support'):GetBool() then return false end
 
    local dvd = DecentVehicleDestination
    if not dvd or not dvd.Waypoints or #dvd.Waypoints == 0 or player.GetCount() == 0 then return false end
 
-   local car_classes = actor:GetData().vehicles
+   local actor_data = actor:GetData()
+
+   local car_classes = actor_data.vehicles
    if not car_classes or not istable(car_classes) or #car_classes == 0 then return false end
 
    local actor_type = actor:GetType()
-   if not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
+   if not bypass and not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
 
-   local ply = table.Random(player.GetAll())
+   local ply = array.Random(player.GetAll())
    local data = FindSpawnLocation(ply:GetPos())
 
    if not data then return false end
 
    local npc = actor:GetNPC()
-   local car_class = table.Random(car_classes)
-   local spawn_pos = data[1]
+   local car_class = array.Random(car_classes)
+   local spawn_pos = data[1] + Vector(0, 0, 50)
    local spawn_ang = data[2]
    local car
 
@@ -150,12 +217,7 @@ function bgNPC:SpawnVehicleWithActor(actor)
       return false
    end
 
-   local vehicle_provider
-   if actor:HasTeam('police') then
-      vehicle_provider = BGN_VEHICLE:Instance(car, 'police', actor_type)
-   else
-      vehicle_provider = BGN_VEHICLE:Instance(car, nil, actor_type)
-   end
+   local vehicle_provider = BGN_VEHICLE:Instance(car, actor_data.vehicle_group, actor_type)
 
    local index = BGN_VEHICLE:AddToList(vehicle_provider)
    if index == -1 then

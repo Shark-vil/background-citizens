@@ -34,7 +34,7 @@ function ASSET:CreateMovementMap(npc, radius, ignore_checkers)
    end
 
    if not is_created then
-      local node = table.Random(nodes)
+      local node = array.Random(nodes)
 
       movement_map[npc] = {
          point = node,
@@ -107,7 +107,7 @@ function ASSET:NextMovementPoint(npc)
    local nodes = bgNPC:GetAllPointsInRadius(npc:GetPos(), 500)
    if #nodes ~= 0 then
       return {
-         node = table.Random(nodes),
+         node = array.Random(nodes),
          delay = CurTime() + movement_delay
       }
    end

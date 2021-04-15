@@ -1,17 +1,3 @@
-hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
-	bgNPC:ClearActorsConfig()
-	bgNPC.actors = {}
-	bgNPC.factors = {}
-	bgNPC.npcs = {}
-	bgNPC.fnpcs = {}
-end)
-
-cvars.AddChangeCallback('bgn_enable', function(convar_name, value_old, value_new)
-	if value_new == 0 then
-		bgNPC:ClearActorsConfig()
-	end
-end)
-
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
 	bgNPC:RemoveNPC(actor:GetNPC())
 end)
@@ -22,35 +8,10 @@ hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 end)
 
 local function FindExistCarAndEnterThis(actor)
-	if actor:HasTeam('police') then
-		local all_players = player.GetAll()
-		for i = 1, #bgNPC.DVCars do
-			local vehicle_provider = bgNPC.DVCars[i]
-			if vehicle_provider.type == 'police' and #vehicle_provider:GetPassengers() < 4 then
-				local vehicle = vehicle_provider:GetVehicle()
-				local vehiclePosition = vehicle:GetPos()
-				local isVisible = false
-
-				for k = 1, #all_players do
-					local ply = all_players[k]
-					if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
-						isVisible = true
-						break
-					end
-				end
-
-				if not isVisible then
-					print('enter to exist car')
-					actor:EnterVehicle(vehicle)
-					return true
-				end
-			end
-		end
-	elseif math.random(0, 10) > 2 then
-		return false
+	if not bgNPC:EnterActorInExistVehicle(actor) then
+		return bgNPC:SpawnVehicleWithActor(actor)
 	end
-
-	return bgNPC:SpawnVehicleWithActor(actor)
+	return true
 end
 
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()

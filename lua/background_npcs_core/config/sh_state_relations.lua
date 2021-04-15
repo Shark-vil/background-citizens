@@ -9,7 +9,6 @@ bgNPC.cfg.npcs_states = {
 		'dialogue',
 		'sit_to_chair',
 		'sit_to_chair_2',
-		'dv_vehicle_drive',
 		'steal',
 		'arrest',
 		'retreat'
@@ -20,6 +19,8 @@ bgNPC.cfg.npcs_states = {
 		'calling_police',
 		'impingement',
 		'killer',
-		'zombie'
+		'zombie',
+		'dyspnea_danger',
+		'run_from_danger'
 	}
 }
