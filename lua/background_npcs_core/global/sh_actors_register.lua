@@ -1,7 +1,7 @@
 if CLIENT then
-	snet.Callback('bgn_remove_actor_from_client', function(ply, npc)
-		if not npc then return end
-		bgNPC:RemoveNPC(npc)
+	snet.Callback('bgm_update_death_actors_on_client', function(ply, npc)
+		if npc then bgNPC:RemoveNPC(npc) end
+		bgNPC:ClearRemovedNPCs()
 	end).Register()
 
 	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
@@ -28,7 +28,7 @@ function bgNPC:AddNPC(actor)
 end
 
 function bgNPC:RemoveNPC(npc)
-	snet.Create('bgn_remove_actor_from_client', npc).InvokeAll()
+	snet.Create('bgm_update_death_actors_on_client', npc).InvokeAll()
 
 	for i = #self.actors, 1, -1 do
 		if self.actors[i]:GetNPC() == npc then
@@ -63,35 +63,28 @@ function bgNPC:RemoveNPC(npc)
 	end
 end
 
-local function NpcIsValid(npc)
-	if not IsValid(npc) or npc:Health() <= 0 or (npc:IsNPC() and npc:IsCurrentSchedule(SCHED_DIE)) then
-		return false
-	end
-	return true
-end
-
 function bgNPC:ClearRemovedNPCs()
 	for i = #self.actors, 1, -1 do
 		local npc = self.actors[i]:GetNPC()
-		if not NpcIsValid(npc) then table.remove(self.actors, i) end
+		if not slib.IsAlive(npc) then table.remove(self.actors, i) end
 	end
 
 	for i = #self.npcs, 1, -1 do
 		local npc = self.npcs[i]
-		if not NpcIsValid(npc) then table.remove(self.npcs, i) end
+		if not slib.IsAlive(npc) then table.remove(self.npcs, i) end
 	end
 
 	for key, data in pairs(self.factors) do
 		for i = #data, 1, -1 do
 			local npc = data[i]:GetNPC()
-			if not NpcIsValid(npc) then table.remove(self.factors[key], i) end
+			if not slib.IsAlive(npc) then table.remove(self.factors[key], i) end
 		end
 	end
 
 	for key, data in pairs(self.fnpcs) do
 		for i = #data, 1, -1 do
 			local npc = data[i]
-			if not NpcIsValid(npc) then table.remove(self.fnpcs[key], i) end
+			if not slib.IsAlive(npc) then table.remove(self.fnpcs[key], i) end
 		end
 	end
 end
