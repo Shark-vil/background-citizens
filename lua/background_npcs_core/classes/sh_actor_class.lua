@@ -416,20 +416,18 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not IsValid(ent) or not isentity(ent) then return end
 		if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 		if self:HasTeam(ent) then return end
-		
+
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not array.HasValue(self.enemies, ent) then
-			if not hook.Run('BGN_AddActorEnemy', self, ent) then
-				if npc:IsNPC() then
-					local relationship = D_HT
-					if reaction == 'fear' then relationship = D_FR end
-					npc:AddEntityRelationship(ent, relationship, 99)
-				end
-				table.insert(self.enemies, ent)
-				self:EnemiesRecalculate()
-				self:SyncEnemies()
+		if npc ~= ent and not array.HasValue(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+			if npc:IsNPC() then
+				local relationship = D_HT
+				if reaction == 'fear' then relationship = D_FR end
+				npc:AddEntityRelationship(ent, relationship, 99)
 			end
+			table.insert(self.enemies, ent)
+			self:EnemiesRecalculate()
+			self:SyncEnemies()
 		end
 	end
 
