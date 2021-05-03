@@ -618,6 +618,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if state == 'ignore' then return end
+		if self.old_state.state == state then return end
 
 		data = data or {}
 
