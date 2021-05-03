@@ -39,6 +39,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	obj.uid = uid
 	obj.npc = npc
+	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
 	obj.collision_group = npc:GetCollisionGroup()
 	obj.model_scale = npc:GetModelScale()
