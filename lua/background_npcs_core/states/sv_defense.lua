@@ -71,7 +71,11 @@ bgNPC:SetStateAction('defense', {
 					end
 				end
 			else
-				actor:WalkToTarget(enemy, 'run')
+				if enemy:IsPlayer() and enemy:InVehicle() then
+					actor:WalkToTarget(enemy:GetVehicle(), 'run')
+				else
+					actor:WalkToTarget(enemy, 'run')
+				end
 			end
 
 			data.delay = CurTime() + 3
