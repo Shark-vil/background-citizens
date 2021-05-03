@@ -18,7 +18,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
                   if IsValid(enemy) then
                      local dist = enemy:GetPos():DistToSqr(vehiclePosition)
                   
-                     if enemy:IsPlayer() and enemy:InVehicle() and driver.weapon then
+                     if driver and driver.weapon and enemy:IsPlayer() and enemy:InVehicle() then
                         local isTrueDistance = dist <= 1000000
                         if isTrueDistance then
                            vehicle_provider.bulletFireDelay = vehicle_provider.bulletFireDelay or 0
@@ -62,8 +62,6 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
                            vehicle_provider.actorsExitDelay = CurTime() + 0.5
                         end
                      end
-
-                     actor:WalkToTarget(enemy)
                   end
 
                   isNotDanger = false
