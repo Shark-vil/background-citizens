@@ -18,7 +18,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 end)
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_name, value_old, value_new)
-   local new_value = value_new ^ 2
+   local new_value = tonumber(value_new) ^ 2
    if min_range == new_value then return end
    min_range = new_value
 end)

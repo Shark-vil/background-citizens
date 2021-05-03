@@ -94,7 +94,7 @@ end)
 
 local is_first_bgn_enable = false
 cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
-	if is_first_bgn_enable or new_value ~= 1 then return end
+	if is_first_bgn_enable or tonumber(new_value) ~= 1 then return end
 	is_first_bgn_enable = true
 
 	LocalPlayer():slibNotify('The first launch of "Background NPCs" can cause lags. '

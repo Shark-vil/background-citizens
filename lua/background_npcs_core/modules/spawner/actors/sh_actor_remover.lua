@@ -7,7 +7,7 @@ hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
 end)
 
 cvars.AddChangeCallback('bgn_enable', function(convar_name, value_old, value_new)
-	if value_new == 0 then
+	if tonumber(value_new) == 0 then
 		bgNPC:ClearActorsConfig()
 	end
 end)
