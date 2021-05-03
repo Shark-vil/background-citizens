@@ -614,22 +614,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		return self.state_lock
 	end
 
-	function obj:SetOldState()
-		if self:GetData().disable_states then return end
-		if self.state_lock then return end
-		
-		if self.old_state ~= nil then
-			self.state_data = self.old_state
-			self.old_state = nil
-
-			if IsValid(self.npc) then
-				hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
-			end
-
-			self:SyncState()
-		end
-	end
-
 	function obj:SetState(state, data)
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
