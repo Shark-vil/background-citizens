@@ -634,9 +634,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 		end
 
-		if self.old_state.state ~= state then
-			self:StopWalk()
-		end
+		self:StopWalk()
 
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
