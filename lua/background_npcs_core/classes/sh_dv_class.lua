@@ -141,8 +141,11 @@ function BGN_VEHICLE:Instance(vehicle, type, actor_type)
    return obj
 end
 
+local color_green = Color(0, 255, 0)
+
 function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
    if not decentvehicle.bgn_type or decentvehicle.bgn_type ~= 'police' then return end
+
    local dvd = DecentVehicleDestination
    local original_DVPolice_GenerateWaypoint = decentvehicle.DVPolice_GenerateWaypoint
 
@@ -172,8 +175,8 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
          debugoverlay.Sphere(self.Waypoint.Target, 50, 1, color_green, true)
       end
       
-      if not table.HasValue(self.WaypointList,tg_nearest) then
-         table.insert(self.WaypointList, tg_nearest)
+      if not array.HasValue(self.WaypointList, tg_nearest) then
+         array.add(self.WaypointList, tg_nearest)
          debugoverlay.Sphere(tg_nearest.Target, 30, 1, color_green, true)
       end
    
@@ -186,7 +189,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
             self.Preference.StopEmergency = false -- don't stop after crash
             self.Preference.WaitUntilNext = false -- don't stop at specefid waypoints
    
-            table.insert(dvd.DVPolice_WantedTable, self.DVPolice_LastTarget)
+            array.add(dvd.DVPolice_WantedTable, self.DVPolice_LastTarget)
             self.PreferencesSetUpped = true
          end
          
@@ -194,8 +197,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
             self.DVPolice_Code = 1
             self:SetELS(true) -- set ELS on
    
-            if self.v:GetClass() == "prop_vehicle_jeep"
-            and VC and isfunction(VC.ELS_Lht_SetCode) then
+            if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(VC.ELS_Lht_SetCode) then
                VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
             end
          end
@@ -203,8 +205,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
          if not self:GetELSSound() then
             self.DVPolice_Code = 1
             self:SetELSSound(true) -- and set ELS sound on
-            if self.v:GetClass() == "prop_vehicle_jeep"
-            and VC and isfunction(VC.ELS_Snd_SetCode) then
+            if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(VC.ELS_Snd_SetCode) then
                VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
             end
          end
