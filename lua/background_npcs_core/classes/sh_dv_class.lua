@@ -113,11 +113,11 @@ function BGN_VEHICLE:Instance(vehicle, type, actor_type)
    end
 
    function obj:IsValid()
-      return self.vehicle and self.ai ~= vehicle
+      return self.vehicle and IsValid(self.vehicle)
    end
 
    function obj:IsValidAI()
-      return self.ai and self.ai ~= NULL
+      return self.ai and IsValid(self.ai)
    end
 
    function obj:IsDestroyed()
