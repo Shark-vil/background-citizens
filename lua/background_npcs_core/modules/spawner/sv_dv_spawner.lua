@@ -37,23 +37,21 @@ local function FindSpawnLocation(center)
          local distance = spawn_position:DistToSqr(ply:GetPos())
                
          if distance <= block_radius then goto skip end
-         if distance < radius_visibility and bgNPC:PlayerIsViewVector(ply, spawn_position) then
+         if distance <= radius_visibility and bgNPC:PlayerIsViewVector(ply, spawn_position) then
             if radius_raytracing == 0 then goto skip end
 
             local tr = util.TraceLine({
                start = ply:EyePos(),
                endpos = spawn_position,
                filter = function(ent)
-                  if IsValid(ent) and ent ~= ply 
-                     and not ent:IsVehicle() and ent:IsWorld() 
-                     and not string.StartWith(ent:GetClass(), 'prop_')
-                  then
+                  if IsValid(ent) and ent ~= ply then
                      return true
                   end
                end
             })
 
             if not tr.Hit then goto skip end
+            if spawn_position:DistToSqr(tr.HitPos) <= 90000 then goto skip end
          end
       end
 
