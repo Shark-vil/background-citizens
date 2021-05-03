@@ -149,7 +149,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
    function decentvehicle:DVPolice_GenerateWaypoint(ent, turn)
       if not self or not IsValid(self) then return end
 
-      if not ent:IsPlayer() then
+      if ent:IsVehicle() then
          original_DVPolice_GenerateWaypoint(self, ent, turn)
          return
       end
