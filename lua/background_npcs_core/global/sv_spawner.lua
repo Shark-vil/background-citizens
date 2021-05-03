@@ -24,7 +24,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
          local distance = nodePosition:DistToSqr(ply:GetPos())
                
          if distance <= block_radius then goto skip_walk_nodes end
-         if distance < radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then
+         if distance <= radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then
             if radius_raytracing == 0 then goto skip_walk_nodes end
 
             local tr = util.TraceLine({
