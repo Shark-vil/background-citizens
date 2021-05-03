@@ -1070,12 +1070,12 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:IsSequenceLoopFinished()
 		if self:IsLoopSequence() then
 			if self.loop_time == 0 then return false end
-			
+
 			if self.loop_time_normal > 0 then
 				self.loop_time_normal = self.loop_time - RealTime()
 				if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
 					self:SyncAnimation()
-					self.sync_animation_delay = CurTime() + 0.5
+					self.sync_animation_delay = CurTime() + 1
 				end
 			end
 
@@ -1093,7 +1093,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			self.anim_time_normal = self.anim_time - RealTime()
 			if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
 				self:SyncAnimation()
-				self.sync_animation_delay = CurTime() + 0.5
+				self.sync_animation_delay = CurTime() + 1
 			end
 		end
 
