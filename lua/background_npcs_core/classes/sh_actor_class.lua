@@ -160,6 +160,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	-- Synchronizes the "animation" setting for all clients.
 	function obj:SyncAnimation(ply)
+
 		self:SyncFunction('bgn_actor_sync_data_animation_client', ply, {
 			anim_name = self.anim_name,
 			anim_time = self.anim_time,
@@ -240,8 +241,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- ? Used in system computing, and does nothing by itself.
 	-- @param reaction string reaction to event
 	function obj:SetReaction(reaction)
-		self.reaction = reaction
-		self:SyncReaction()
+		if self.reaction ~= reaction then
+			self.reaction = reaction
+			self:SyncReaction()
+		end
 	end
 
 	-- Will return the last result specified in the reaction variable.
