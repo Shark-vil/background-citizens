@@ -80,9 +80,7 @@ hook.Add("PlayerDeath", "BGN_ResetWantedModeForDeceasedPlayer", function(victim,
 	end
 end)
 
-local function UpdateWantedAndSetReaction(actor, enemy, WantedClass)
-	WantedClass:UpdateWanted()
-
+local function UpdateWantedAndSetReaction(actor, enemy)
 	if not actor:InDangerState() then
 		local reaction = actor:GetReactionForProtect()
 		if reaction == 'arrest' and not GetConVar('bgn_arrest_mode'):GetBool() then
@@ -101,11 +99,13 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	local residents = bgNPC:GetAllByTeam('residents')
 	
-	for enemy, c_Wanted in pairs(wanted_list) do
+	for enemy, WantedClass in pairs(wanted_list) do
+		local is_update = false
+
 		if IsValid(enemy) then
-			local wait_time = c_Wanted.time_reset - CurTime()
+			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
-			c_Wanted:UpdateWaitTime(math.Round(wait_time))
+			WantedClass:UpdateWaitTime(math.Round(wait_time))
 			
 			for _, actor in ipairs(residents) do
 				if actor:IsAlive() then
@@ -113,15 +113,17 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
 					if dist <= 360000 then -- 600 ^ 2
-						UpdateWantedAndSetReaction(actor, enemy, c_Wanted)
+						UpdateWantedAndSetReaction(actor, enemy); is_update = true
 					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
-						UpdateWantedAndSetReaction(actor, enemy, c_Wanted)
+						UpdateWantedAndSetReaction(actor, enemy); is_update = true
 					end
 				end
 			end
 			
-			if c_Wanted.time_reset < CurTime() then
-				asset:RemoveWanted(enemy)
+			if is_update then WantedClass:UpdateWanted() end
+			
+			if WantedClass.time_reset < CurTime() then
+				asset:RemoveWanted(enemy); is_update = false
 			end
 		end
 	end
