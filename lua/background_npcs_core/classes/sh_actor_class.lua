@@ -1167,15 +1167,17 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 		local vehicle_provider = self.vehicle
 		if vehicle_provider and IsValid(vehicle_provider) then
 			local vehicle = vehicle_provider:GetVehicle()
+			local min, max = vehicle:GetModelBounds()
+			local dist = min:Distance(max) / 2
 			local pos = vehicle:GetPos()
 			local forward = vehicle:GetForward()
 			local right = vehicle:GetRight()
 			local up = vehicle:GetUp()
 			local npc = self:GetNPC()
-			local add_forward = math.random(-120, 120)
-			local add_right = 170
+			local add_forward = math.random(-100, 100)
+			local add_right = dist
 			if math.random(0, 100) > 50 then
-				add_right = -170
+				add_right = -dist
 			end
 
 			npc:slibSetVar('bgn_vehicle_entered', false)
