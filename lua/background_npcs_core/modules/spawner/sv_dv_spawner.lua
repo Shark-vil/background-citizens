@@ -94,7 +94,7 @@ local function FindSpawnLocation(center)
 
    if not spawn_position then return end
 
-   spawn_position = spawn_position + Vector(0, 50, 0)
+   spawn_position = spawn_position + Vector(0, 30, 0)
    spawn_angle = spawn_angle or Angle(0, 0, 0)
 
    return { spawn_position, Angle(0, spawn_angle.y, 0) }
