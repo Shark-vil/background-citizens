@@ -1,13 +1,10 @@
 BGN_VEHICLE = {}
 
-local uid = 0
 function BGN_VEHICLE:Instance(vehicle, type, actor_type)
    if not DecentVehicleDestination then return nil end
 
-   uid = uid + 1
-
    local obj = {}
-   obj.uid = uid
+   obj.uid = slib.GetUid()
    obj.vehicle = vehicle
    obj.type = type or 'residents'
    obj.actor_type = actor_type

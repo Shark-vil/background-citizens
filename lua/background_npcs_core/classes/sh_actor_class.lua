@@ -31,13 +31,9 @@ local schedule_white_list = {
 	SCHED_MELEE_ATTACK2
 }
 
-local uid = 0
 function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	local obj = {}
-	
-	uid = custom_uid or (uid + 1)
-
-	obj.uid = uid
+	obj.uid = custom_uid or slib.GetUid()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
