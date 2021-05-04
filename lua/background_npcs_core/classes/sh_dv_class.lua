@@ -61,9 +61,11 @@ function BGN_VEHICLE:Instance(vehicle, type, actor_type)
 		if array.HasValue(self.passengers, actor) then return false end
 
 		if self:GetDriver() ~= actor then
+			local seats_are_taken = true
+
 			for index, ent in ipairs(vehicle:GetChildren()) do
 				if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
-					local passenger = ents.Create("npc_decentvehicle_passenger")
+					local passenger = ents.Create('npc_decentvehicle_passenger')
 					passenger.Seat = ent
 					passenger.SeatIndex = index
 					passenger.actor = actor
@@ -72,8 +74,12 @@ function BGN_VEHICLE:Instance(vehicle, type, actor_type)
 					passenger:Spawn()
 					passenger:Activate()
 					table.insert(self.passengers_models, passenger)
+					seats_are_taken = false
+					break
 				end
 			end
+
+			if seats_are_taken then return false end
 		end
 
 		table.insert(self.passengers, actor)
@@ -166,8 +172,8 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 		end
 
 		turn = turn or false
-		assert(IsEntity(ent), string.format("Entity expected, got %s.", tostring(ent)))
-		assert(isbool(turn), string.format("Bool expected, got %s.", tostring(turn)))
+		assert(IsEntity(ent), string.format('Entity expected, got %s.', tostring(ent)))
+		assert(isbool(turn), string.format('Bool expected, got %s.', tostring(turn)))
 		local is_opposite, foundwp, wpside, back, neighbor = self:GetOppositeLine()
 		local tg_nearest = dvd.GetNearestWaypoint(ent:GetPos())
 
@@ -206,7 +212,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 					self.DVPolice_Code = 1
 					self:SetELS(true) -- set ELS on
 
-					if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(VC.ELS_Lht_SetCode) then
+					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Lht_SetCode) then
 						VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
 					end
 				end
@@ -215,12 +221,12 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 					self.DVPolice_Code = 1
 					self:SetELSSound(true) -- and set ELS sound on
 
-					if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(VC.ELS_Snd_SetCode) then
+					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Snd_SetCode) then
 						VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
 					end
 				end
 
-				hook.Run("Decent Police: Chasing", self, ent)
+				hook.Run('Decent Police: Chasing', self, ent)
 		end)
 	end
 
@@ -235,7 +241,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 			if not self.v.ELSCycleChanged then
 				self.v.ELSCycleChanged = true
 
-				if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
+				if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
 					VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
 					VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
 					self.DVPolice_Code = 1
@@ -265,7 +271,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 					self.Preference.WaitUntilNext = true -- you so.fuckin.precios.when you. stop at specefid waypoints
 					self.PreferencesSetUpped = false
 
-					if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
+					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
 						VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
 						VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
 						self.DVPolice_Code = 1
@@ -274,17 +280,17 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 						self.v.ELSCycleChanged = true
 					end
 
-					hook.Run("Decent Police: Calmed", self)
+					hook.Run('Decent Police: Calmed', self)
 				end
 			elseif not IsValid(self.DVPolice_Target) then
 				-- "wh9t the g0in on wh3r3 is m9 t9rg3t" (if target not is valid)
 				self.DVPolice_Target = nil -- "ak th3n n3v3r mind" (forgot it)
 				self:FindFirstWaypoint()
-				hook.Run("Decent Police: Reset Target", self)
+				hook.Run('Decent Police: Reset Target', self)
 			elseif self:GetPos():DistToSqr(self.DVPolice_Target:GetPos()) > 36000000 then
 				-- If target too far
 				self.DVPolice_LastTarget = self.DVPolice_Target -- don't chase anymore, but remember this guy
-				hook.Run("Decent Police: Added wanted list", self, self.DVPolice_Target)
+				hook.Run('Decent Police: Added wanted list', self, self.DVPolice_Target)
 				local route = dvd.GetRouteVector(self.v:GetPos(), self.DVPolice_Target:GetPos(), self.Group)
 
 				if route then
@@ -293,7 +299,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 					self:FindFirstWaypoint()
 				end
 
-				if self.v:GetClass() == "prop_vehicle_jeep" and VC and not self:TargetStopped() and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
+				if self.v:GetClass() == 'prop_vehicle_jeep' and VC and not self:TargetStopped() and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
 					VC.ELS_Lht_SetCode(self.v, nil, nil, 1) -- change code
 					VC.ELS_Snd_SetCode(self.v, nil, nil, 1) -- change code
 					self.DVPolice_Code = 1
@@ -310,7 +316,7 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 				-- if chasing for 2 mins
 				timer.Simple(ChangeCode:GetInt(), function()
 					if IsValid(self) and not self:TargetStopped() and (self.DVPolice_Target == self.DVPolice_LastTarget or not self.DVPolice_LastTarget and self.DVPolice_Target) then
-						if self.v:GetClass() == "prop_vehicle_jeep" and VC and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
+						if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
 							VC.ELS_Lht_SetCode(self.v, nil, nil, 2) -- change code
 							VC.ELS_Snd_SetCode(self.v, nil, nil, 2) -- change code
 							self.DVPolice_Code = 2
