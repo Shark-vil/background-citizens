@@ -66,25 +66,25 @@ end
 function bgNPC:ClearRemovedNPCs()
 	for i = #self.actors, 1, -1 do
 		local npc = self.actors[i]:GetNPC()
-		if not slib.IsAlive(npc) then table.remove(self.actors, i) end
+		if not IsValid(npc) then table.remove(self.actors, i) end
 	end
 
 	for i = #self.npcs, 1, -1 do
 		local npc = self.npcs[i]
-		if not slib.IsAlive(npc) then table.remove(self.npcs, i) end
+		if not IsValid(npc) then table.remove(self.npcs, i) end
 	end
 
 	for key, data in pairs(self.factors) do
 		for i = #data, 1, -1 do
 			local npc = data[i]:GetNPC()
-			if not slib.IsAlive(npc) then table.remove(self.factors[key], i) end
+			if not IsValid(npc) then table.remove(self.factors[key], i) end
 		end
 	end
 
 	for key, data in pairs(self.fnpcs) do
 		for i = #data, 1, -1 do
 			local npc = data[i]
-			if not slib.IsAlive(npc) then table.remove(self.fnpcs[key], i) end
+			if not IsValid(npc) then table.remove(self.fnpcs[key], i) end
 		end
 	end
 end

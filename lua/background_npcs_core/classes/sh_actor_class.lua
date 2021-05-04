@@ -32,7 +32,7 @@ local schedule_white_list = {
 }
 
 local uid = 0
-function BGN_ACTOR:Instance(npc, type, data, custom_uid)
+function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	local obj = {}
 	
 	uid = custom_uid or (uid + 1)
@@ -45,6 +45,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.model_scale = npc:GetModelScale()
 	obj.data = data
 	obj.weapon = nil
+	obj.sync_players_hash = {}
 
 	if data.weapons then
 		if not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance then
@@ -52,7 +53,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 	end
 
-	obj.type = type
+	obj.type = npcType
 	obj.reaction = ''
 	obj.eternal = false
 	obj.vehicle = nil
@@ -106,76 +107,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		else
 			snet.InvokeAll(name, self.uid, data)
 		end
-	end
-
-	-- Synchronizes all required variables with clients.
-	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
-	function obj:SyncData(ply)
-		self:SyncAnimation(ply)
-		self:SyncEnemies(ply)
-		self:SyncReaction(ply)
-		self:SyncSchedule(ply)
-		self:SyncState(ply)
-		self:SyncTargets(ply)
-	end
-
-	-- Synchronizes the "reaction" setting for all clients.
-	function obj:SyncReaction(ply)
-		self:SyncFunction('bgn_actor_sync_data_reaction_client', ply, {
-			reaction = self.reaction,
-		})
-	end
-
-	-- Synchronizes the "schedule" setting for all clients.
-	function obj:SyncSchedule(ply)
-		self:SyncFunction('bgn_actor_sync_data_schedule_client', ply, {
-			npc_schedule = self.npc_schedule,
-			npc_state = self.npc_state,
-		})
-	end
-
-	-- Synchronizes the "targets" setting for all clients.
-	function obj:SyncTargets(ply)
-		self:SyncFunction('bgn_actor_sync_data_targets_client', ply, {
-			targets = self.targets,
-		})
-	end
-
-	-- Synchronizes the "state" setting for all clients.
-	function obj:SyncState(ply)
-		if not bgNPC.cfg.EnableEasySyncStateDataForClient then
-			self:SyncFunction('bgn_actor_sync_data_state_client', ply, {
-				old_state = self.old_state,
-				state_lock = self.state_lock,
-				state = self.state_data,
-			})
-		else
-			self:SyncFunction('bgn_actor_easy_sync_data_state_client', ply, {
-				old_state = self.old_state.state,
-				state_lock = self.state_lock,
-				state = self.state_data.state,
-			})
-		end
-	end
-
-	-- Synchronizes the "animation" setting for all clients.
-	function obj:SyncAnimation(ply)
-
-		self:SyncFunction('bgn_actor_sync_data_animation_client', ply, {
-			anim_name = self.anim_name,
-			anim_time = self.anim_time,
-			loop_time = self.loop_time,
-			anim_is_loop = self.anim_is_loop,
-			is_animated = self.is_animated,
-			anim_time_normal = self.anim_time_normal,
-			loop_time_normal = self.loop_time_normal,
-		})
-	end
-
-	function obj:SyncEnemies(ply)
-		self:SyncFunction('bgn_actor_sync_data_enemies', ply, {
-			enemies = self.enemies,
-		})
 	end
 
 	-- Sets the random state of the NPC from the "at_random" table.
@@ -241,10 +172,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- ? Used in system computing, and does nothing by itself.
 	-- @param reaction string reaction to event
 	function obj:SetReaction(reaction)
-		if self.reaction ~= reaction then
-			self.reaction = reaction
-			self:SyncReaction()
-		end
+		if self.reaction ~= reaction then self.reaction = reaction end
 	end
 
 	-- Will return the last result specified in the reaction variable.
@@ -296,8 +224,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		self.npc_schedule = self.npc:GetCurrentSchedule()
 		self.npc_state = self.npc:GetNPCState()
-
-		self:SyncSchedule()
 	end
 
 	-- Adds a target for the actor and syncs new targets for clients.
@@ -305,11 +231,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param ent entity any entity other than the actor himself
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
-		
-		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then            
-			table.insert(self.targets, ent)
 
-			self:SyncTargets()
+		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then
+			table.insert(self.targets, ent)
 		end
 	end
 
@@ -343,8 +267,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if old_count > 0 and #self.targets <= 0 then
 			hook.Run('BGN_ResetTargetsForActor', self)
 		end
-
-		self:SyncTargets()
 	end
 
 	-- Removes all targets from the list.
@@ -427,7 +349,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			end
 			table.insert(self.enemies, ent)
 			self:EnemiesRecalculate()
-			self:SyncEnemies()
 		end
 	end
 
@@ -469,8 +390,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			if old_count > 0 and #self.enemies <= 0 then
 				hook.Run('BGN_ResetEnemiesForActor', self)
 			end
-
-			self:SyncEnemies()
 		end
 	end
 
@@ -604,8 +523,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:StateLock(lock)
 		lock = lock or false
 		self.state_lock = lock
-
-		self:SyncState()
 	end
 
 	function obj:IsStateLock()
@@ -645,8 +562,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if IsValid(self.npc) then
 			hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 		end
-
-		self:SyncState()
 		
 		return self.state_data
 	end
@@ -985,8 +900,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			
 			self.npc_schedule = self.npc:GetCurrentSchedule()
 			self.npc_state = self.npc:GetNPCState()
-
-			self:SyncSchedule()
 		end
 	end
 
@@ -1041,8 +954,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
-		self:SyncAnimation()
-
 		return true
 	end
 
@@ -1053,8 +964,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			loop_time = loop_time,
 			action = action,
 		}
-
-		self:SyncAnimation()
 	end
 
 	function obj:HasSequence(sequence_name)
@@ -1071,10 +980,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 			if self.loop_time_normal > 0 then
 				self.loop_time_normal = self.loop_time - RealTime()
-				if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
-					self:SyncAnimation()
-					self.sync_animation_delay = CurTime() + 1
-				end
 			end
 
 			return self.loop_time < RealTime()
@@ -1089,10 +994,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:IsSequenceFinished()
 		if self.anim_time_normal > 0 then
 			self.anim_time_normal = self.anim_time - RealTime()
-			if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
-				self:SyncAnimation()
-				self.sync_animation_delay = CurTime() + 1
-			end
 		end
 
 		return self.anim_time <= RealTime()
@@ -1116,21 +1017,12 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:ResetSequence()
-		-- self.anim_name = ''
-		-- self.anim_time = 0
-		-- self.anim_is_loop = false
+		if self.anim_action ~= nil and not self.anim_action(self) then return end
 
-		if self.anim_action ~= nil then
-			if not self.anim_action(self) then
-				return
-			end
-		end
-		
 		self.is_animated = false
 		self.next_anim = nil
 		self.anim_action = nil
-		
-		self:SyncAnimation()
+
 		self:ClearSchedule()
 	end
 
