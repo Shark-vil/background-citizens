@@ -9,7 +9,6 @@ snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
 	actor.is_animated = data.is_animated
 	actor.state_lock = data.state_lock
 	actor.reaction = data.reaction
-	actor.vehicle = data.vehicle
 	actor.npc_schedule = data.npc_schedule
 	actor.npc_state = data.npc_state
 
