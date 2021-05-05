@@ -24,22 +24,19 @@ function TOOL:GetTraceInfo()
 	return tr
 end
 
-function TOOL:LeftClick()
-   if CLIENT then return end
-   snet.Invoke('bgn_tool_bgn_seat_left_click', self:GetOwner())
-end
+if SERVER then
+   function TOOL:LeftClick()
+      snet.ClientRPC(self, 'LeftClick')
+   end
 
-function TOOL:RightClick()
-   if CLIENT then return end
-   snet.Invoke('bgn_tool_bgn_seat_right_click', self:GetOwner())
-end
+   function TOOL:RightClick()
+      snet.ClientRPC(self, 'RightClick')
+   end
 
-function TOOL:Reload()
-   if CLIENT then return end
-   snet.Invoke('bgn_tool_bgn_seat_reload_click', self:GetOwner())
-end
-
-if CLIENT then
+   function TOOL:Reload()
+      snet.ClientRPC(self, 'Reload')
+   end
+else
    function TOOL:IsLookingVector(vec)
 		local diff = vec - self.Owner:GetShootPos()
 		return self.Owner:GetAimVector():Dot(diff) / diff:Length() >= 0.99
@@ -70,78 +67,59 @@ if CLIENT then
       end
 
       self.SelectedPointId = NewSelectedPointId
-
       self:UpdateControlPanel()
    end
 
-   snet.RegisterCallback('bgn_tool_bgn_seat_reload_click', function()
-      local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
-      if not tool then return end
-
-      for _, t in ipairs(tool.SeatPoints) do
+   function TOOL:Reload()
+      for _, t in ipairs(self.SeatPoints) do
          if t.m_citizen then
             t.m_citizen:Remove()
          end
       end
 
-      table.Empty(tool.SeatPoints)
+      table.Empty(self.SeatPoints)
 
-      tool.SelectedPointId = -1
-      tool.LastIndex = -1
-      tool.SetStartPos = true
-   end)
+      self.SelectedPointId = -1
+      self.LastIndex = -1
+      self.SetStartPos = true
+   end
 
-   snet.RegisterCallback('bgn_tool_bgn_seat_right_click', function()
-      local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+   function TOOL:RightClick()
+      if self.SelectedPointId == -1 then return end
 
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
-      if not tool then return end
-
-      if tool.SelectedPointId == -1 then return end
-
-      local point = tool.SeatPoints[tool.SelectedPointId]
+      local point = self.SeatPoints[self.SelectedPointId]
       if not point then return end
 
       point.m_citizen:Remove()
-      table.remove(tool.SeatPoints, tool.SelectedPointId)
+      table.remove(self.SeatPoints, self.SelectedPointId)
 
-      tool.SelectedPointId = -1
-   end)
+      self.SelectedPointId = -1
+   end
 
-   snet.RegisterCallback('bgn_tool_bgn_seat_left_click', function(ply)
-      local wep = LocalPlayer():GetActiveWeapon()
-		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
-      if not tool then return end
-
-      local tr = tool:GetTraceInfo()
+   function TOOL:LeftClick()
+      local tr = self:GetTraceInfo()
       if not tr.Hit then return end
 
-      if tool.SetStartPos then
+      if self.SetStartPos then
          local m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')
          m_citizen:SetSequence('Sit_Chair')
          m_citizen:Spawn()
 
-         tool.LastIndex = table.insert(tool.SeatPoints, {
+         self.LastIndex = table.insert(self.SeatPoints, {
             data = {
                start_pos =  tr.HitPos,
             },
             m_citizen = m_citizen,
          })
-      elseif tool.LastIndex ~= -1 then
-         tool.SeatPoints[tool.LastIndex].data.position = tr.HitPos
-         tool.SeatPoints[tool.LastIndex].data.offset = tool.VectorOffset
-         tool.SeatPoints[tool.LastIndex].data.angle = tool.AngleOffset
-         tool.LastIndex = -1
+      elseif self.LastIndex ~= -1 then
+         self.SeatPoints[self.LastIndex].data.position = tr.HitPos
+         self.SeatPoints[self.LastIndex].data.offset = self.VectorOffset
+         self.SeatPoints[self.LastIndex].data.angle = self.AngleOffset
+         self.LastIndex = -1
       end
 
-      tool.SetStartPos = not tool.SetStartPos
-   end)
+      self.SetStartPos = not self.SetStartPos
+   end
 
    function TOOL:UpdateControlPanel()
 		if self.PanelIsInit then return end
@@ -217,13 +195,15 @@ if CLIENT then
 	local clr_green = Color(72, 232, 9, 200)
    
    hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_SeatEditor', function()
+      if not SLibraryIsLoaded then return end
+
 		local wep = LocalPlayer():GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then
          if m_citizen then m_citizen:Remove() m_citizen = nil end
          return
       end
-
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
+		
+		local tool = LocalPlayer():slibGetActiveTool('bgn_seat_tool')
       if not tool then
          if m_citizen then m_citizen:Remove() m_citizen = nil end
          return

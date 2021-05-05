@@ -13,7 +13,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = "1.4.7"
+bgNPC.VERSION = '1.4.8'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -26,6 +26,7 @@ bgNPC.wanted = {}
 bgNPC.killing_statistic = {}
 bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
+bgNPC.DVCars = {}
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'
@@ -39,9 +40,9 @@ script:using('config/sh_player.lua')
 script:using('config/sh_darkrp.lua')
 script:using('config/sh_weapons.lua')
 
-hook.Add("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule", function()
+hook.Add('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule', function()
 	include(root_directory .. '/config/sh_player.lua')
-	hook.Remove("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule")
+	hook.Remove('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule')
 end)
 
 script:using('config/states/sh_wanted.lua')
@@ -56,11 +57,14 @@ script:using('cvars/sh_cvars.lua')
 script:using('cvars/sv_cvars.lua')
 script:using('cvars/cl_cvars.lua')
 
+script:using('commands/sh_cmd_config.lua')
+
 slib.usingDirectory(root_directory .. '/custom_modules/preload',
 	'[Background NPCs | Custom modules] Script load - {file}')
 
 script:using('global/sv_meta.lua')
 script:using('global/sh_meta.lua')
+script:using('global/sv_spawner.lua')
 script:using('global/sh_actors_finder.lua')
 script:using('global/sh_actors_register.lua')
 script:using('global/sh_killing_statistic.lua')
@@ -68,10 +72,10 @@ script:using('global/sh_wanted_killing_statistic.lua')
 script:using('global/sh_states.lua')
 script:using('global/sh_find_path_service.lua')
 
-script:using('classes/cl_actor_sync.lua')
 script:using('classes/sh_actor_class.lua')
 script:using('classes/sh_node_class.lua')
 script:using('classes/sh_seat_class.lua')
+script:using('classes/sh_dv_class.lua')
 
 script:using('modules/cl_updatepage.lua')
 script:using('modules/cl_render_optimization.lua')
@@ -105,9 +109,11 @@ script:using('modules/routes/sh_route_loader.lua')
 script:using('modules/routes/cl_compile.lua')
 script:using('modules/routes/sv_oldroute_convert.lua')
 script:using('modules/routes/sh_seat_saver.lua')
-script:using('modules/spawner/sv_npc_remover.lua')
-script:using('modules/spawner/sv_npc_creator.lua')
+script:using('modules/spawner/actors/sh_actor_remover.lua')
+script:using('modules/spawner/actors/sv_actor_remover.lua')
+script:using('modules/spawner/actors/sv_actor_spawner.lua')
 script:using('modules/spawner/sv_dv_spawner.lua')
+script:using('modules/spawner/sv_dv_remover.lua')
 script:using('modules/quest_dialogue/sv_parent_dialogue.lua')
 script:using('modules/states/sv_arrest.lua')
 script:using('modules/states/sv_state_randomize.lua')
@@ -122,6 +128,11 @@ script:using('modules/states/steal_money/sv_n2money.lua')
 script:using('modules/states/steal_money/sv_sandbox.lua')
 script:using('modules/ambient/cl_ambient_sound.lua')
 script:using('modules/dv/sv_fix_autoload_routes.lua')
+script:using('modules/dv/sv_move_to_target.lua')
+script:using('modules/dv/sv_car_damage_reaction.lua')
+script:using('modules/sv_nbc_npc_remover_bypass.lua')
+script:using('modules/synchronization/cl_cync.lua')
+script:using('modules/synchronization/sv_cync.lua')
 
 script:using('actions/sv_open_door.lua')
 script:using('actions/sv_police_luggage.lua')
@@ -135,7 +146,7 @@ script:using('actions/sv_movement_service.lua')
 script:using('actions/sv_enemy_controller.lua')
 
 script:using('states/sv_impingement.lua')
-script:using('states/sv_protection.lua')
+script:using('states/sv_defense.lua')
 script:using('states/sv_fear.lua')
 script:using('states/sv_walk.lua')
 script:using('states/sv_calling_police.lua')
@@ -145,10 +156,11 @@ script:using('states/sv_dialogue.lua')
 script:using('states/sv_sit_to_chair.lua')
 script:using('states/sv_sit_to_chair_2.lua')
 script:using('states/sv_retreat.lua')
-script:using('states/sv_dv_vehicle_drive.lua')
 script:using('states/sv_steal.lua')
 script:using('states/sv_zombie.lua')
 script:using('states/sv_killer.lua')
+script:using('states/sv_dyspnea.lua')
+script:using('states/sv_run_from_danger.lua')
 
 script:using('tool_options/cl_bgn_settings_menu.lua')
 script:using('tool_options/cl_lang.lua')
@@ -159,6 +171,11 @@ script:using('tool_options/cl_active_npc_group_settings.lua')
 script:using('tool_options/cl_optimization_settings.lua')
 script:using('tool_options/cl_client_settings.lua')
 script:using('tool_options/cl_workshop_settings.lua')
+script:using('tool_options/cl_unit_testing.lua')
+
+script:using('tests/cl_test_start.lua')
+script:using('tests/unit/sv_unit_mod_enabled.lua')
+script:using('tests/unit/sv_unit_test_exist_nodes.lua')
 
 slib.usingDirectory(root_directory .. '/custom_modules/postload',
 	'[Background NPCs | Custom modules] Script load - {file}')
@@ -166,7 +183,7 @@ slib.usingDirectory(root_directory .. '/custom_modules/postload',
 if CLIENT then
 	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-		
+
 		timer.Simple(3, function()
 			http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 				function(github_version, length, headers, code)

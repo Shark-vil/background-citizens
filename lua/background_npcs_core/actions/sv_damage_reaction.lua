@@ -1,5 +1,5 @@
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
-function(attacker, target, dmginfo)
+function(attacker, target)
 	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -42,38 +42,26 @@ function(actor, attacker, target, reaction)
 	if not target:IsNPC() and not target:IsNextBot() and not target:IsPlayer() then return end
 
 	local asset = bgNPC:GetModule('first_attacker')
-	local AttackerActor = bgNPC:GetActor(attacker)
-	local TargetActor = bgNPC:GetActor(target)
-
-	if AttackerActor and actor:HasTeam(attacker) then
-		if AttackerActor:HasEnemy(target) or asset:IsFirstAttacker(target, attacker) then
-			actor:AddEnemy(target, reaction)
-			return
-		end
-	end
-
-	if TargetActor and actor:HasTeam(target) then
-		if TargetActor:HasEnemy(attacker) or asset:IsFirstAttacker(attacker, target) then
-			actor:AddEnemy(attacker, reaction)
-			return
-		end
-	end
-
+	
 	if actor:HasTeam(attacker) then
 		actor:AddEnemy(target, reaction)
-	elseif actor:HasTeam(target) and bgNPC:IsEnemyTeam(attacker, actor:GetData().team) then
-		actor:AddEnemy(attacker, reaction)
-	elseif asset:IsFirstAttacker(target, attacker) then
+		return
+	end
+
+	if not bgNPC:GetActor(target) then
+		if target:IsNPC() and attacker:IsPlayer() and target:Disposition(attacker) ~= D_HT then
+			actor:AddEnemy(attacker, reaction)
+			return
+		end
+	end
+
+	local AttackerActor = bgNPC:GetActor(attacker)
+
+	if asset:IsFirstAttacker(target, attacker) or bgNPC:IsEnemyTeam(actor, target) then
+		actor:AddEnemy(target, reaction)
+	elseif AttackerActor and bgNPC:IsEnemyTeam(AttackerActor, target) then
 		actor:AddEnemy(target, reaction)
 	else
-		if attacker:IsPlayer() then
-			if target:IsNextBot() or (target:IsNPC() and target:Disposition(attacker) == D_HT) then
-				actor:AddEnemy(target, reaction)
-			else
-				actor:AddEnemy(attacker, reaction)
-			end
-		else
-			actor:AddEnemy(attacker, reaction)
-		end
+		actor:AddEnemy(attacker, reaction)
 	end
 end)

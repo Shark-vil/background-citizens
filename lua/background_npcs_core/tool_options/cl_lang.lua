@@ -115,6 +115,7 @@ en_lang['bgn.settings.states_title'] = 'States Settings'
 en_lang['bgn.settings.active_title'] = 'Active NPC Groups'
 en_lang['bgn.settings.workshop_title'] = 'Workshop Services'
 en_lang['bgn.settings.optimization_title'] = 'Optimization settings'
+en_lang['bgn.settings.unit_tests_title'] = 'Unit Tests'
 
 
 --[[
@@ -228,7 +229,7 @@ ru_lang['bgn.settings.states_title'] = 'Настройки Состояний'
 ru_lang['bgn.settings.active_title'] = 'Активные Группы NPC'
 ru_lang['bgn.settings.workshop_title'] = 'Сервис Мастерской'
 ru_lang['bgn.settings.optimization_title'] = 'Настройки оптимизации'
-
+ru_lang['bgn.settings.unit_tests_title'] = 'Unit Tests'
 
 
 ---------------------------------------------

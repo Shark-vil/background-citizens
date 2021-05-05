@@ -23,11 +23,7 @@ function ASSET:AddWanted(ent)
 				self.wait_time = self.time
 
 				if SERVER then
-					bgNPC:TemporaryVectorVisibility(ent, 3)
-					timer.Simple(1, function() 
-						if not IsValid(ent) then return end
-						snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
-					end)
+					snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
 				end
 			end,
 			
@@ -35,11 +31,7 @@ function ASSET:AddWanted(ent)
 				self.wait_time = time
 
 				if SERVER then
-					bgNPC:TemporaryVectorVisibility(ent, 3)
-					timer.Simple(1, function() 
-						if not IsValid(ent) then return end
-						snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
-					end)
+					snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
 				end
 			end,
 
@@ -53,11 +45,9 @@ function ASSET:AddWanted(ent)
 
 				self.level = level
 
-				bgNPC:TemporaryVectorVisibility(ent, 3)
-				timer.Simple(1, function() 
-					if not IsValid(ent) then return end
+				if SERVER then
 					snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
-				end)
+				end
 
 				local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
 				self.next_kill_update = bgNPC:GetWantedKillingStatisticSumm(ent) + cfg_kills
@@ -69,11 +59,9 @@ function ASSET:AddWanted(ent)
 				if self.level + 1 <= self.level_max then
 					self.level = self.level + 1
 
-					bgNPC:TemporaryVectorVisibility(ent, 3)
-					timer.Simple(1, function() 
-						if not IsValid(ent) then return end
+					if SERVER then
 						snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
-					end)
+					end
 
 					local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
 					self.next_kill_update = self.next_kill_update + cfg_kills
@@ -87,12 +75,8 @@ function ASSET:AddWanted(ent)
 					self.level = self.level - 1
 					if self.level == 0 then
 						ASSET:RemoveWanted(ent)
-					else
-						bgNPC:TemporaryVectorVisibility(ent, 3)
-						timer.Simple(1, function() 
-							if not IsValid(ent) then return end
-							snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
-						end)
+					elseif SERVER then
+						snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
 					end
 
 					local cfg_kills = bgNPC.cfg.wanted.levels[self.level + 1]
@@ -110,11 +94,7 @@ function ASSET:AddWanted(ent)
 		wanted_list[ent] = c_Wanted
 
 		if SERVER then
-			bgNPC:TemporaryVectorVisibility(ent, 3)
-			timer.Simple(1, function() 
-				if not IsValid(ent) then return end
-				snet.InvokeAll('bgn_module_wanted_AddWanted', ent)
-			end)
+			snet.InvokeAll('bgn_module_wanted_AddWanted', ent)
 		end
 
 		hook.Run('BGN_AddWantedTarget', ent)
@@ -130,11 +110,7 @@ function ASSET:RemoveWanted(ent)
 		wanted_list[ent] = nil
 
 		if SERVER then
-			bgNPC:TemporaryVectorVisibility(ent, 3)
-			timer.Simple(1, function() 
-				if not IsValid(ent) then return end
-				snet.InvokeAll('bgn_module_wanted_RemoveWanted', ent)
-			end)
+			snet.InvokeAll('bgn_module_wanted_RemoveWanted', ent)
 		end
 
 		hook.Run('BGN_RemoveWantedTarget', ent)
@@ -183,10 +159,12 @@ hook.Add('PostCleanupMap', 'BGN_WantedModule_ClearWantedListOnCleanupMap', funct
 	ASSET:ClearAll()
 end)
 
-if CLIENT then
-	timer.Create('BGN_WantedModule_AutoClearDeathTargets', 1, 0, function()
-		ASSET:ClearDeath()
-	end)
-end
+hook.Add('PlayerDeath', 'BGN_WantedModule_PlayerDeathRemoveWanted', function(ply)
+	if ASSET:HasWanted(ply) then ASSET:RemoveWanted(ply) end
+end)
+
+timer.Create('BGN_WantedModule_AutoClearDeathTargets', 1, 0, function()
+	ASSET:ClearDeath()
+end)
 
 list.Set('BGN_Modules', 'wanted', ASSET)

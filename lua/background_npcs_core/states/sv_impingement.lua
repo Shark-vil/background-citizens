@@ -21,7 +21,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 		end
 	end
 
-	local target = table.Random(targets)
+	local target = array.Random(targets)
 	if IsValid(target) then
 		actor:AddEnemy(target)
 	else
@@ -37,8 +37,6 @@ hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
 	end
 end)
 
-local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
-
 bgNPC:SetStateAction('impingement', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
@@ -49,12 +47,8 @@ bgNPC:SetStateAction('impingement', {
 
 		data.delay = data.delay or 0
 
-		if enemy:IsPlayer() and enemy:InVehicle() then
-			enemy = enemy:GetVehicle()
-		end
-
 		if data.delay < CurTime() then
-			bgNPC:SetActorWeapon(actor)
+			actor:PrepareWeapon()
 
 			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 

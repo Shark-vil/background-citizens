@@ -7,81 +7,79 @@ TOOL.Distance = 10000
 TOOL.Actor = nil
 TOOL.Target = NULL
 
-function TOOL:LeftClick()
-	if CLIENT then return end
+if SERVER then
+	function TOOL:LeftClick()
+		local ply = self:GetOwner()
+		if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
 
-	local ply = self:GetOwner()
-	if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
-
-	local tr = util.TraceLine({
-		start = ply:GetShootPos(),
-		endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-		filter = function(ent)
-			if ent ~= ply and ent:IsNPC() then
-				return true
+		local tr = util.TraceLine({
+			start = ply:GetShootPos(),
+			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
+			filter = function(ent)
+				if ent ~= ply and ent:IsNPC() then
+					return true
+				end
 			end
-		end
-	})
+		})
 
-	if not tr.Hit then return end
+		if not tr.Hit then return end
 
-	local ent = tr.Entity
-	local actor = bgNPC:GetActor(ent)
-	if actor == nil then
-		bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
-		return
-	end
+		local actor
 
-	snet.IsValidForClient(ply, function(ply, success)
-		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-		if not success then return end
-		snet.Invoke('bgn_tool_debugger_left_click', ply, ent)
-	end, 'actor', ent)
-end
-
-function TOOL:RightClick()
-	if SERVER then
-		snet.Invoke('bgn_tool_debugger_right_click', self:GetOwner())
-		return
-	end
-end
-
-if CLIENT then
-	snet.RegisterCallback('bgn_tool_debugger_left_click', function(ply, ent)
-		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
-      if not tool then return end
-		
-		if not IsValid(ent) or not ent:IsNPC() then
-			bgNPC:Log('Entity is not NPC or is equal to NULL', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
-			return
+		local ent = tr.Entity
+		if ent:IsVehicle() and ent.bgn_driver then
+			actor = ent.bgn_driver
+		else
+			actor = bgNPC:GetActor(ent)
 		end
 
-		local actor = bgNPC:GetActor(ent)
-		if actor == nil then
+		if not actor then
 			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end
 
-		tool.Actor = actor
-		tool.Target = actor:GetNPC()
+		snet.IsValidForClient(ply, function(ply, success)
+			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
+			if not success then return end
+
+			local actor_data = snet.GetNormalizeDataTable(actor)
+			if actor_data then MsgN('SERVER:') PrintTable(actor_data) end
+
+			snet.ClientRPC(self, 'SetActor', actor.uid)
+		end, 'actor', actor.uid)
+	end
+
+	function TOOL:RightClick()
+		snet.ClientRPC(self, 'ResetActor')
+	end
+else
+	function TOOL:SetActor(uid)	
+		local actor = bgNPC:GetActorByUid(uid)
+		if actor == nil then
+			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
+			surface.PlaySound('common/wpn_denyselect.wav')
+			return
+		end
+		
+		local actor_data = snet.GetNormalizeDataTable(actor)
+		if actor_data then MsgN('CLIENT:') PrintTable(actor_data) end
+
+		self.Actor = actor
+		self.Target = actor:GetNPC()
 		surface.PlaySound('common/wpn_select.wav')
-	end)
+	end
 
-	snet.RegisterCallback('bgn_tool_debugger_right_click', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
-      if not tool then return end
-
-		tool.Actor = nil
-		tool.Target = NULL
+	function TOOL:ResetActor()
+		self.Actor = nil
+		self.Target = NULL
 		surface.PlaySound('buttons/blip1.wav')
-	end)
+	end
 
 	hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_debugger')
-      if not tool then return end
-		if tool.Actor == nil or not IsValid(tool.Target) then return end
+		if not SLibraryIsLoaded then return end
+
+      local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
+      if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3
 		local add = 25

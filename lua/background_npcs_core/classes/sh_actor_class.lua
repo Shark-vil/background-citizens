@@ -31,19 +31,28 @@ local schedule_white_list = {
 	SCHED_MELEE_ATTACK2
 }
 
-local uid = 0
-function BGN_ACTOR:Instance(npc, type, data, custom_uid)
+function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	local obj = {}
-	
-	uid = custom_uid or (uid + 1)
-
-	obj.uid = uid
+	obj.uid = custom_uid or slib.GetUid()
 	obj.npc = npc
+	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
+	obj.collision_group = npc:GetCollisionGroup()
+	obj.model_scale = npc:GetModelScale()
 	obj.data = data
-	obj.type = type
+	obj.weapon = nil
+	obj.sync_players_hash = {}
+
+	if data.weapons then
+		if not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance then
+			obj.weapon = array.Random(data.weapons)
+		end
+	end
+
+	obj.type = npcType
 	obj.reaction = ''
 	obj.eternal = false
+	obj.vehicle = nil
 
 	obj.state_data = {
 		state = 'none',
@@ -75,6 +84,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	obj.walkType = SCHED_FORCED_GO
 	obj.walkUpdatePathDelay = 0
 	obj.pathType = nil
+	obj.isChase = false
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -94,75 +104,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		else
 			snet.InvokeAll(name, self.uid, data)
 		end
-	end
-
-	-- Synchronizes all required variables with clients.
-	-- @param ply entity|nil The entity of the player for which you want to sync data (If not, then sync will be for everyone)
-	function obj:SyncData(ply)
-		self:SyncAnimation(ply)
-		self:SyncEnemies(ply)
-		self:SyncReaction(ply)
-		self:SyncSchedule(ply)
-		self:SyncState(ply)
-		self:SyncTargets(ply)
-	end
-
-	-- Synchronizes the "reaction" setting for all clients.
-	function obj:SyncReaction(ply)
-		self:SyncFunction('bgn_actor_sync_data_reaction_client', ply, {
-			reaction = self.reaction,
-		})
-	end
-
-	-- Synchronizes the "schedule" setting for all clients.
-	function obj:SyncSchedule(ply)
-		self:SyncFunction('bgn_actor_sync_data_schedule_client', ply, {
-			npc_schedule = self.npc_schedule,
-			npc_state = self.npc_state,
-		})
-	end
-
-	-- Synchronizes the "targets" setting for all clients.
-	function obj:SyncTargets(ply)
-		self:SyncFunction('bgn_actor_sync_data_targets_client', ply, {
-			targets = self.targets,
-		})
-	end
-
-	-- Synchronizes the "state" setting for all clients.
-	function obj:SyncState(ply)
-		if not bgNPC.cfg.EnableEasySyncStateDataForClient then
-			self:SyncFunction('bgn_actor_sync_data_state_client', ply, {
-				old_state = self.old_state,
-				state_lock = self.state_lock,
-				state = self.state_data,
-			})
-		else
-			self:SyncFunction('bgn_actor_easy_sync_data_state_client', ply, {
-				old_state = self.old_state.state,
-				state_lock = self.state_lock,
-				state = self.state_data.state,
-			})
-		end
-	end
-
-	-- Synchronizes the "animation" setting for all clients.
-	function obj:SyncAnimation(ply)
-		self:SyncFunction('bgn_actor_sync_data_animation_client', ply, {
-			anim_name = self.anim_name,
-			anim_time = self.anim_time,
-			loop_time = self.loop_time,
-			anim_is_loop = self.anim_is_loop,
-			is_animated = self.is_animated,
-			anim_time_normal = self.anim_time_normal,
-			loop_time_normal = self.loop_time_normal,
-		})
-	end
-
-	function obj:SyncEnemies(ply)
-		self:SyncFunction('bgn_actor_sync_data_enemies', ply, {
-			enemies = self.enemies,
-		})
 	end
 
 	-- Sets the random state of the NPC from the "at_random" table.
@@ -228,8 +169,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- ? Used in system computing, and does nothing by itself.
 	-- @param reaction string reaction to event
 	function obj:SetReaction(reaction)
-		self.reaction = reaction
-		self:SyncReaction()
+		if self.reaction ~= reaction then self.reaction = reaction end
 	end
 
 	-- Will return the last result specified in the reaction variable.
@@ -276,16 +216,11 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not IsValid(self.npc) then return end
 		if not self.npc:IsNPC() then return end
 
-		-- self.walkPos = nil
-		-- self.walkPath = {}
-		
 		self.npc:SetNPCState(NPC_STATE_IDLE)
 		self.npc:ClearSchedule()
 
 		self.npc_schedule = self.npc:GetCurrentSchedule()
 		self.npc_state = self.npc:GetNPCState()
-
-		self:SyncSchedule()
 	end
 
 	-- Adds a target for the actor and syncs new targets for clients.
@@ -293,11 +228,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param ent entity any entity other than the actor himself
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
-		
-		if self:GetNPC() ~= ent and not table.IHasValue(self.targets, ent) then            
-			table.insert(self.targets, ent)
 
-			self:SyncTargets()
+		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then
+			table.insert(self.targets, ent)
 		end
 	end
 
@@ -331,8 +264,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if old_count > 0 and #self.targets <= 0 then
 			hook.Run('BGN_ResetTargetsForActor', self)
 		end
-
-		self:SyncTargets()
 	end
 
 	-- Removes all targets from the list.
@@ -347,7 +278,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	-- @param ent entity any entity
 	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
-		return table.IHasValue(self.targets, ent)
+		return array.HasValue(self.targets, ent)
 	end
 
 	-- Returns the number of existing targets for the actor.
@@ -404,20 +335,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if not IsValid(ent) or not isentity(ent) then return end
 		if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 		if self:HasTeam(ent) then return end
-		
+
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not table.IHasValue(self.enemies, ent) then
-			if not hook.Run('BGN_AddActorEnemy', self, ent) then
-				if npc:IsNPC() then
-					local relationship = D_HT
-					if reaction == 'fear' then relationship = D_FR end
-					npc:AddEntityRelationship(ent, relationship, 99)
-				end
-				table.insert(self.enemies, ent)
-				self:EnemiesRecalculate()
-				self:SyncEnemies()
+		if npc ~= ent and not array.HasValue(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+			if npc:IsNPC() then
+				local relationship = D_HT
+				if reaction == 'fear' then relationship = D_FR end
+				npc:AddEntityRelationship(ent, relationship, 99)
 			end
+			table.insert(self.enemies, ent)
+			self:EnemiesRecalculate()
 		end
 	end
 
@@ -459,8 +387,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			if old_count > 0 and #self.enemies <= 0 then
 				hook.Run('BGN_ResetEnemiesForActor', self)
 			end
-
-			self:SyncEnemies()
 		end
 	end
 
@@ -471,7 +397,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasEnemy(ent)
-		return table.IHasValue(self.enemies, ent)
+		if ent ~= NULL and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
+		return array.HasValue(self.enemies, ent)
 	end
 
 	function obj:EnemiesCount()
@@ -480,6 +407,10 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:EnemiesRecalculate()
 		local npc = self:GetNPC()
+		local active_enemy = npc:GetEnemy()
+		if IsValid(active_enemy) and active_enemy:IsVehicle() then
+			npc:AddEntityRelationship(active_enemy, D_NU, 99)
+		end
 
       if #self.enemies == 0 then return end
 
@@ -589,34 +520,17 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:StateLock(lock)
 		lock = lock or false
 		self.state_lock = lock
-
-		self:SyncState()
 	end
 
 	function obj:IsStateLock()
 		return self.state_lock
 	end
 
-	function obj:SetOldState()
-		if self:GetData().disable_states then return end
-		if self.state_lock then return end
-		
-		if self.old_state ~= nil then
-			self.state_data = self.old_state
-			self.old_state = nil
-
-			if IsValid(self.npc) then
-				hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
-			end
-
-			self:SyncState()
-		end
-	end
-
 	function obj:SetState(state, data)
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if state == 'ignore' then return end
+		if self.old_state.state == state then return end
 
 		data = data or {}
 
@@ -624,15 +538,15 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if hook_result then
 			if isbool(hook_result) then
 				return
+			elseif isstring(hook_result) then
+				state = hook_result
 			elseif istable(hook_result) then
 				state = hook_result.state or state
 				data = hook_result.data or {}
 			end
 		end
 
-		if self.old_state.state ~= state then
-			self:StopWalk()
-		end
+		self:StopWalk()
 
 		self.old_state = self.state_data
 		self.state_data = { state = state, data = data }
@@ -645,8 +559,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		if IsValid(self.npc) then
 			hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 		end
-
-		self:SyncState()
 		
 		return self.state_data
 	end
@@ -672,17 +584,22 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		self.walkPos = nil
 		self.walkUpdatePathDelay = 0
 		self.pathType = nil
+		self.isChase = false
 		self:SetWalkType()
 	end
 
-	function obj:WalkToTarget(target, type, pathType)
+	function obj:WalkToTarget(target, moveType, pathType)
 		if self:GetNPC():IsNextBot() then return end
 		
 		if target == nil or not IsValid(target) then
 			self:StopWalk()
 		else
 			local npc = self.npc
-			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then return end
+			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then
+				local walk_type = moveType or 'walk'
+				hook.Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)	
+				return
+			end
 
 			self:SetWalkType(type)
 
@@ -691,11 +608,21 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 				self.walkUpdatePathDelay = 0
 				self.walkPos = nil
 				self.walkTarget = target
+
+				local decentvehicle = self:GetVehicleAI()
+				if decentvehicle then
+					self.isChase = true
+					if decentvehicle.bgn_type == 'police' then
+						decentvehicle.DVPolice_Target = target
+					else
+						self:WalkToPos(target:GetPos(), moveType, pathType)
+					end
+				end
 			end
 		end
 	end
 
-	function obj:WalkToPos(pos, type, pathType)
+	function obj:WalkToPos(pos, moveType, pathType)
 		if self:GetNPC():IsNextBot() then return end
 
 		if pos == nil then 
@@ -708,51 +635,84 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		end
 
 		local npc = self.npc
-		if npc:GetPos():DistToSqr(pos) <= 2500 then return end
-		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+		if npc:GetPos():DistToSqr(pos) <= 2500 then 
+			local walk_type = moveType or 'walk'
+			hook.Run('BGN_ActorFinishedWalk', self, pos, walk_type)	
+			return
+		end
 
-		local walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
-		if #walkPath == 0 then return end
+		local walkPath = {}
+		if not self:InVehicle() then
+			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 
-		self.pathType = pathType
-		self.walkTarget = NULL
-		self:SetWalkType(type)
+			walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
+			if #walkPath == 0 then return end
+
+			self.pathType = pathType
+			self:SetWalkType(moveType)
+		else
+			local dvd = DecentVehicleDestination
+			local decentvehicle = self:GetVehicleAI()
+			local route = dvd.GetRouteVector(decentvehicle:GetPos(), pos)
+			if not route then return end
+
+			decentvehicle.WaypointList = route
+			decentvehicle.Waypoint = nil
+			decentvehicle.NextWaypoint = nil
+
+			for _, v in ipairs(route) do
+				table.insert(walkPath, v.Target)
+			end
+		end
+
+		if not self.isChase then
+			self.walkTarget = NULL
+		end
 		self.walkPos = pos
 		self.walkPath = walkPath
 	end
 
 	function obj:UpdateMovement()
-		if self.is_animated or #self.walkPath == 0 or not self:IsAlive() then return end
-		
-		local npc = self.npc
-		local hasNext = false
-		local targetPosition = self.walkPath[1]
+		if self.is_animated or not self:IsAlive() then return end
 
-		if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
-			table.remove(self.walkPath, 1)
+		if self:InVehicle() then
+			local vehicle = self:GetVehicle()
+			if vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
+				hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
+			end
+		else
+			if #self.walkPath == 0 then return end
 			
-			if #self.walkPath == 0 then
-				if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
-					self:WalkToPos(nil)
+			local npc = self.npc
+			local hasNext = false
+			local targetPosition = self.walkPath[1]
+
+			if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
+				table.remove(self.walkPath, 1)
+				
+				if #self.walkPath == 0 then
+					if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
+						self:WalkToPos(nil)
+					end
+					return
 				end
-				return
+
+				hasNext = true
 			end
 
-			hasNext = true
-		end
+			if not hasNext then
+				if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+				if npc:IsMoving() then return end
+			end
 
-		if not hasNext then
-			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-			if npc:IsMoving() then return end
-		end
+			local current_schedule = npc:GetCurrentSchedule()
+			for i = 1, #schedule_white_list do
+				if schedule_white_list[i] == current_schedule then return end
+			end
 
-		local current_schedule = npc:GetCurrentSchedule()
-		for i = 1, #schedule_white_list do
-			if schedule_white_list[i] == current_schedule then return end
+			npc:SetLastPosition(targetPosition)
+			npc:SetSchedule(self.walkType)
 		end
-
-		npc:SetLastPosition(targetPosition)
-		npc:SetSchedule(self.walkType)
 	end
 
 	function obj:Walking()
@@ -760,31 +720,32 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:HasTeam(value)
+		local value = value
 		if self.data.team ~= nil and value ~= nil then
 			if isstring(value) then
-				return table.IHasValue(self.data.team, value)
+				return array.HasValue(self.data.team, value)
 			end
 
 			if isentity(value) then
 				if value:IsPlayer() then
-					if table.IHasValue(self.data.team, 'player') then
+					if array.HasValue(self.data.team, 'player') then
 						return true
 					else
-						local TeamParentModule = bgNPC:GetModule('team_parent')
-						return TeamParentModule:HasParent(value, self)
+						return bgNPC:GetModule('team_parent'):HasParent(value, self)
 					end
 				elseif value.isBgnActor and (value:IsNPC() or value:IsNextBot()) then
 					local actor = bgNPC:GetActor(value)
-					if actor then value = actor:GetData().team end
+					if not actor then return false end
+					value = actor:GetData().team
 				end
 			end
 			
 			if istable(value) then
+				if value.isBgnClass then value = value:GetData().team end
+
 				for i = 1, #self.data.team do
-					local team_1 = self.data.team[i]
 					for k = 1, #value do
-						local team_2 = value[k]
-						if team_1 == team_2 then return true end
+						if self.data.team[i] == value[k] then return true end
 					end
 				end
 			end
@@ -798,8 +759,8 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 	function obj:HasState(state)
 		local current_state = self.state_data.state
-		if current_state == state then
-			return true
+		if isstring(state) then
+			return current_state == state
 		elseif istable(state) then
 			for i = 1, #state do
 				if current_state == state[i] then return true end
@@ -940,8 +901,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			
 			self.npc_schedule = self.npc:GetCurrentSchedule()
 			self.npc_state = self.npc:GetNPCState()
-
-			self:SyncSchedule()
 		end
 	end
 
@@ -996,8 +955,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 
 		hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
-		self:SyncAnimation()
-
 		return true
 	end
 
@@ -1008,8 +965,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 			loop_time = loop_time,
 			action = action,
 		}
-
-		self:SyncAnimation()
 	end
 
 	function obj:HasSequence(sequence_name)
@@ -1023,13 +978,9 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:IsSequenceLoopFinished()
 		if self:IsLoopSequence() then
 			if self.loop_time == 0 then return false end
-			
+
 			if self.loop_time_normal > 0 then
 				self.loop_time_normal = self.loop_time - RealTime()
-				if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
-					self:SyncAnimation()
-					self.sync_animation_delay = CurTime() + 0.5
-				end
 			end
 
 			return self.loop_time < RealTime()
@@ -1044,10 +995,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	function obj:IsSequenceFinished()
 		if self.anim_time_normal > 0 then
 			self.anim_time_normal = self.anim_time - RealTime()
-			if bgNPC.cfg.SyncUpdateAnimationForClient and self.sync_animation_delay < CurTime() then
-				self:SyncAnimation()
-				self.sync_animation_delay = CurTime() + 0.5
-			end
 		end
 
 		return self.anim_time <= RealTime()
@@ -1071,21 +1018,12 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:ResetSequence()
-		-- self.anim_name = ''
-		-- self.anim_time = 0
-		-- self.anim_is_loop = false
+		if self.anim_action ~= nil and not self.anim_action(self) then return end
 
-		if self.anim_action ~= nil then
-			if not self.anim_action(self) then
-				return
-			end
-		end
-		
 		self.is_animated = false
 		self.next_anim = nil
 		self.anim_action = nil
-		
-		self:SyncAnimation()
+
 		self:ClearSchedule()
 	end
 
@@ -1095,11 +1033,13 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local npc_model = self.npc:GetModel()
 		local scream_sound = nil
 		if tobool(string.find(npc_model, 'female_*')) then
-			scream_sound = table.Random(female_scream)
+			scream_sound = array.Random(female_scream)
 		elseif tobool(string.find(npc_model, 'male_*')) then
-			scream_sound = table.Random(male_scream)
+			scream_sound = array.Random(male_scream)
 		else
-			scream_sound = table.Random(table.Inherit(male_scream, female_scream))
+			local concatenated_table = table.Copy(male_scream)
+			table.Add(concatenated_table, female_scream)
+			scream_sound = array.Random(concatenated_table)
 		end
 
 		if scream_sound ~= nil and isstring(scream_sound) then
@@ -1133,19 +1073,19 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	end
 
 	function obj:InDangerState()
-		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
+		return array.HasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
 	end
 
 	function obj:InCalmlyState()
-		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
+		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
 	end
 
 	function obj:HasDangerState(state_name)
-		return table.IHasValue(bgNPC.cfg.npcs_states['danger'], state_name)
+		return array.HasValue(bgNPC.cfg.npcs_states['danger'], state_name)
 	end
 
 	function obj:HasCalmlyState(state_name)
-		return table.IHasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
+		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
 	end
 
 	function obj:IsMeleeWeapon()
@@ -1155,7 +1095,7 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return table.IHasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
+		return array.HasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
 	end
 
 	function obj:IsFirearmsWeapon()
@@ -1165,7 +1105,166 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return not table.IHasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+		return not array.HasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+	end
+
+	function obj:EnterVehicle(vehicle)
+		if not DecentVehicleDestination or not vehicle:IsVehicle() then return end
+
+		local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
+		if not vehicle_provider then
+			if self:HasTeam('police') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'police')
+			elseif self:HasTeam('taxi') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'taxi')
+			else
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle)
+			end
+
+			if not vehicle_provider then return end
+			BGN_VEHICLE:AddToList(vehicle_provider)
+		end
+
+		if not vehicle_provider:GetDriver() then
+			local all_seats_are_taken = true
+			for _, ent in ipairs(vehicle:GetChildren()) do
+				if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
+					all_seats_are_taken = false
+					break
+				end
+			end
+			if all_seats_are_taken then return end
+		end
+
+		local npc = self:GetNPC()
+		vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function(vehicle)
+			if not vehicle_provider or not IsValid(vehicle) then return end
+			if not self or not self:IsAlive() then return end
+
+			self.eternal = true
+			self.vehicle = vehicle_provider
+
+			npc:SetNoDraw(true)
+
+			if not vehicle_provider:GetDriver() then
+				vehicle_provider:SetDriver(self)
+			else
+				if not vehicle_provider:AddPassenger(self) then
+					npc:SetNoDraw(false)
+					return
+				end
+			end
+
+			npc:slibSetVar('bgn_vehicle_entered', true)
+			npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
+			npc:SetPos(vehicle:GetPos() + vehicle:GetUp() * 300)
+			npc:SetModelScale(0.1)
+			npc:SetParent(vehicle)
+			npc:AddEFlags(EFL_NO_THINK_FUNCTION)
+
+			self.walkUpdatePathDelay = 0
+		end)
+	end
+
+	function obj:ExitVehicle()
+		if not DecentVehicleDestination then return end
+
+		local vehicle_provider = self.vehicle
+		if vehicle_provider and IsValid(vehicle_provider) then
+			local vehicle = vehicle_provider:GetVehicle()
+			local min, max = vehicle:GetModelBounds()
+			local dist = min:Distance(max) / 2
+			local pos = vehicle:GetPos()
+			local forward = vehicle:GetForward()
+			local right = vehicle:GetRight()
+			local up = vehicle:GetUp()
+			local npc = self:GetNPC()
+			local add_forward = math.random(-100, 100)
+			local add_right = dist
+			if math.random(0, 100) > 50 then
+				add_right = -dist
+			end
+
+			npc:slibSetVar('bgn_vehicle_entered', false)
+			npc:SetParent(nil)
+
+			local exit_pos = pos + (right * add_right) + (forward * add_forward) + (up * 50)
+			local tr = util.TraceLine({
+				start = exit_pos,
+				endpos = exit_pos - Vector(0, 0, 500),
+				filter = function(ent)
+					if ent ~= npc then return true end
+				end
+			})
+
+			if tr.Hit then
+				exit_pos = tr.HitPos + Vector(0, 0, 15)
+			end
+
+			npc:SetPos(exit_pos)
+			npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
+			npc:SetCollisionGroup(self.collision_group)
+			npc:SetModelScale(self.model_scale)
+			npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
+			npc:PhysWake()
+			npc:SetNoDraw(false)
+
+			if vehicle_provider:GetDriver() == self then
+				vehicle_provider:SetDriver(nil)
+			else
+				vehicle_provider:RemovePassenger(self)
+			end
+		end
+
+		self.eternal = false
+		self.vehicle = nil
+		self.vehicle_data = {}
+	end
+
+	function obj:InVehicle()
+		if SERVER then
+			return ( self.vehicle and IsValid(self.vehicle) )
+		else
+			return self:GetNPC():slibGetVar('bgn_vehicle_entered', false)
+		end
+	end
+
+	function obj:GetVehicle()
+		if not self:InVehicle() then return nil end
+		return self.vehicle:GetVehicle()
+	end
+
+	function obj:GetVehicleAI()
+		if not self:InVehicle() then return nil end
+		return self.vehicle:GetVehicleAI()
+	end
+
+	function obj:GetActorWeapon()
+		return self.weapon
+	end
+
+	function obj:GetActiveWeapon()
+		if self:IsAlive() then
+			local npc = self:GetNPC()
+			local weapon  = npc:GetActiveWeapon()
+			if IsValid(weapon) then return weapon end
+		end
+		return NULL
+	end
+
+	function obj:PrepareWeapon(weapon_class, switching)
+		if weapon_class then
+			bgNPC:SetActorWeapon(self, weapon_class, switching)
+		elseif self.weapon then
+			bgNPC:SetActorWeapon(self)
+		end
+	end
+
+	function obj:FoldWeapon()
+		if not self:IsAlive() then return end
+		local npc = self:GetNPC()
+		local weapon  = npc:GetActiveWeapon()
+		if IsValid(weapon) then weapon:Remove() end
 	end
 
 	function npc:GetActor()
@@ -1177,6 +1276,6 @@ function BGN_ACTOR:Instance(npc, type, data, custom_uid)
 	return obj
 end
 
-snet.RegisterValidator('actor', function(ply, uid, ent)
-	return bgNPC:GetActor(ent) ~= nil
+snet.RegisterValidator('actor', function(ply, uid, actor_uid)
+	return bgNPC:GetActorByUid(actor_uid) ~= nil
 end)

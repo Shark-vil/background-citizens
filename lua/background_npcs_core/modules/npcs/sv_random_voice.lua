@@ -39,7 +39,7 @@ timer.Create('BGN_ActorsResidentsRandomVoice', 10, 0, function()
 
       local rnd = math.random(0, 100)
 		if rnd < 20 then
-			local sound = table.Random(replics)
+			local sound = array.Random(replics)
          actor:GetNPC():EmitSound(sound, math.random(50, 70), 100, 1, CHAN_AUTO)
          table.insert(delay_actors, {
             actor = actor,

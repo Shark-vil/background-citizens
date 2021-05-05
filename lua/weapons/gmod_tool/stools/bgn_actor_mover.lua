@@ -1,8 +1,3 @@
-if SERVER then
-	util.AddNetworkString('bgn_network_tool_actor_mover_left_click')
-   util.AddNetworkString('bgn_network_tool_actor_mover_reset')
-end
-
 TOOL.Category = "Background NPCs"
 TOOL.Name = "#tool.bgn_actor_mover.name"
 TOOL.Trace = nil
@@ -12,159 +7,146 @@ TOOL.Target = NULL
 TOOL.Path = {}
 TOOL.UpdatePathDelay = 0
 
-hook.Add('BGN_PreSetNPCState', 'BGN_Debugger_ActorMover', function(actor)
-   if actor.debugger then return true end
-end)
+if SERVER then
+	hook.Add('BGN_PreSetNPCState', 'BGN_Debugger_ActorMover', function(actor)
+		if actor.debugger then return true end
+	end)
 
-function TOOL:Think()
-	if CLIENT or self.Actor == nil or not IsValid(self.Target) then return end
-	-- print(self.Target:IsMoving(), self.Actor.walkPos, #self.Actor.walkPath)
-
-	if self.UpdatePathDelay < CurTime() then
-		snet.Invoke('bgn_tool_actor_mover_update_path', self:GetOwner(), self.Actor.walkPath)
-		self.UpdatePathDelay = CurTime() + 1
-	end
-end
-
-function TOOL:LeftClick()
-	if CLIENT then return end
-
-	local ply = self:GetOwner()
-	if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
-
-	local tr = util.TraceLine({
-		start = ply:GetShootPos(),
-		endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-		filter = function(ent)
-			if ent ~= ply and ent:IsNPC() then
-				return true
-			end
+	function TOOL:Think()
+		if self.Actor == nil or not IsValid(self.Target) then return end
+		if self.UpdatePathDelay < CurTime() then
+			snet.ClientRPC(self, 'UpdatePath', self.Actor.walkPath)
+			self.UpdatePathDelay = CurTime() + 1
 		end
-	})
-
-	if not tr.Hit then return end
-
-	local ent = tr.Entity
-	local actor = bgNPC:GetActor(ent)
-	if actor == nil then
-		bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
-		return
 	end
 
-	snet.IsValidForClient(ply, function(ply, success)
-		bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-		if not success then return end
+	function TOOL:LeftClick()
+		if CLIENT then return end
 
-		if self.Actor then
+		local ply = self:GetOwner()
+		if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
+
+		local tr = util.TraceLine({
+			start = ply:GetShootPos(),
+			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
+			filter = function(ent)
+				if ent ~= ply and (ent:IsNPC() or ent:IsVehicle()) then
+					return true
+				end
+			end
+		})
+
+		if not tr.Hit then return end
+		local actor
+
+		local ent = tr.Entity
+		if ent:IsVehicle() and ent.bgn_driver then
+			actor = ent.bgn_driver
+		else
+			actor = bgNPC:GetActor(ent)
+		end
+
+		if not actor then
+			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			return
+		end
+
+		snet.IsValidForClient(ply, function(ply, success)
+			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
+			if not success then return end
+
+			if self.Actor then
+				self.Actor.debugger = false
+				self.Actor.eternal = false
+				self.Actor:RandomState()
+			end
+
+			actor:SetState('none')
+			actor.debugger = true
+			actor.eternal = true
+			
+			self.Actor = actor
+			self.Target = actor:GetNPC()
+
+			snet.ClientRPC(self, 'SetActor', actor.uid)
+		end, 'actor', actor.uid)
+	end
+
+	function TOOL:RightClick()
+		if SERVER then
+			local ply = self:GetOwner()
+			if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
+			if not IsValid(self.Target) or self.Actor == nil then return end
+
+			local tr = util.TraceLine({
+				start = ply:GetShootPos(),
+				endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
+				filter = function(ent)
+					if ent ~= ply then
+						return true
+					end
+				end
+			})
+			
+			if not tr.Hit then return end
+			self.Actor:ClearSchedule()
+
+			local pos = tr.HitPos
+			
+			if self.Target:GetPos():Distance(pos) <= 500 then
+				self.Actor:WalkToPos(pos)
+			else
+				self.Actor:WalkToPos(pos, 'run')
+			end
+
+			snet.ClientRPC(self, 'UpdatePath', self.Actor.walkPath)
+		end
+	end
+
+	function TOOL:Reload()
+		if CLIENT then return end
+
+		if self.Actor ~= nil then
 			self.Actor.debugger = false
 			self.Actor.eternal = false
 			self.Actor:RandomState()
 		end
 
-		actor:SetState('none')
-		actor.debugger = true
-		actor.eternal = true
-		
-		self.Actor = actor
-		self.Target = actor:GetNPC()
+		self.Actor = nil
+		self.Target = NULL
 
-		net.Start('bgn_network_tool_actor_mover_left_click')
-		net.WriteEntity(ent)
-		net.Send(ply)
-	end, 'actor', ent)
-end
-
-function TOOL:RightClick()
-	if SERVER then
-      local ply = self:GetOwner()
-	   if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
-      if not IsValid(self.Target) or self.Actor == nil then return end
-
-		local tr = util.TraceLine({
-         start = ply:GetShootPos(),
-         endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-         filter = function(ent)
-            if ent ~= ply then
-               return true
-            end
-         end
-      })
-		
-      if not tr.Hit then return end
-		self.Actor:ClearSchedule()
-
-		local pos = tr.HitPos
-		
-		if self.Target:GetPos():Distance(pos) <= 500 then
-      	self.Actor:WalkToPos(pos)
-		else
-			self.Actor:WalkToPos(pos, 'run')
-		end
-
-		snet.Invoke('bgn_tool_actor_mover_update_path', self:GetOwner(), self.Actor.walkPath)
+		snet.ClientRPC(self, 'ResetActor')
 	end
-end
-
-function TOOL:Reload()
-   if CLIENT then return end
-
-   if self.Actor ~= nil then
-      self.Actor.debugger = false
-		self.Actor.eternal = false
-      self.Actor:RandomState()
+else
+   function TOOL:ResetActor()
+      self.Actor = nil
+      self.Target = NULL
+		self.Path = {}
    end
 
-   self.Actor = nil
-   self.Target = NULL
-
-   net.Start('bgn_network_tool_actor_mover_reset')
-   net.Send(self:GetOwner())
-end
-
-if CLIENT then
-   net.Receive('bgn_network_tool_actor_mover_reset', function()
-      local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-
-      tool.Actor = nil
-      tool.Target = NULL
-		tool.Path = {}
-   end)
-
-	net.Receive('bgn_network_tool_actor_mover_left_click', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-		
-		local ent = net.ReadEntity()
-		if not IsValid(ent) or not ent:IsNPC() then
-			bgNPC:Log('Entity is not NPC or is equal to NULL', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
-			return
-		end
-
-		local actor = bgNPC:GetActor(ent)
+	function TOOL:SetActor(uid)
+		local actor = bgNPC:GetActorByUid(uid)
 		if actor == nil then
-			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end
 
-		tool.Actor = actor
-		tool.Target = actor:GetNPC()
+		self.Actor = actor
+		self.Target = actor:GetNPC()
 		surface.PlaySound('common/wpn_select.wav')
-	end)
+	end
 
-	snet.RegisterCallback('bgn_tool_actor_mover_update_path', function(ply, path)
-		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-		tool.Path = path
-	end)
+	function TOOL:UpdatePath(path)
+		self.Path = path
+	end
 
    local halo_color = Color(196, 0, 255)
 	hook.Add("PreDrawHalos", "BGN_TOOL_ActorMover", function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-		if tool.Actor == nil or not IsValid(tool.Target) then return end
+		if not SLibraryIsLoaded then return end
+
+      local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+      if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
       halo.Add({ tool.Target }, halo_color, 3, 3, 2)
 	end)
@@ -176,12 +158,10 @@ if CLIENT then
    local vec_20 = Vector(0, 0, 20)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_ActorMovement', function()
-      local wep = LocalPlayer():GetActiveWeapon()
-      if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+		if not SLibraryIsLoaded then return end
 
-      local tool = bgNPC:GetActivePlayerTool('bgn_actor_mover')
-		if not tool then return end
-      if #tool.Path == 0 then return end
+      local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+      if not tool or #tool.Path == 0 then return end
 
       render.SetColorMaterial()
 

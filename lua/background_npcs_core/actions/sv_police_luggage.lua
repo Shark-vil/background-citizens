@@ -18,15 +18,15 @@ local function TargetPlayerPush(npc, target, velocity)
 		"physics/body/body_medium_impact_soft7.wav",
 	}
 
-	target:EmitSound(table.Random(slapSounds), 75, 100, 0.3, CHAN_AUTO)
+	target:EmitSound(array.Random(slapSounds), 75, 100, 0.3, CHAN_AUTO)
 	target:SetVelocity(forward * velocity)
 end
 
 
 hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushDanger", function(actor, ent, distance)
-	if distance > 50 or not ent:IsPlayer() then return end
+	if distance > 50 or not ent:IsPlayer() or ent:InVehicle() then return end
 	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
-	if not actor:HasTeam('police') then return end
+	if not actor:HasTeam('police') or actor:HasState('arrest') then return end
 	
 	local LuggagePush = actor:IsValidSequence('LuggagePush')
 	local MeleeGunhit = actor:IsValidSequence('MeleeGunhit')
@@ -52,9 +52,9 @@ hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushDanger", function(actor
 end)
 
 hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushCalmly", function(actor, ent, distance)
-	if distance > 50 or not ent:IsPlayer() then return end
+	if distance > 50 or not ent:IsPlayer() or ent:InVehicle() then return end
 	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
-	if not actor:HasTeam('police') then return end
+	if not actor:HasTeam('police') or actor:HasState('arrest') then return end
 
 	local LuggagePush = actor:IsValidSequence('LuggagePush')
 	local LuggageWarn = actor:IsValidSequence('LuggageWarn')

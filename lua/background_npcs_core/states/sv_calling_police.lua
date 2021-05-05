@@ -21,8 +21,6 @@ bgNPC:SetStateAction('calling_police', {
 			local rnd = math.random(0, 100)
 			if rnd > 80 then
 				actor:CallForHelp(enemy)
-			-- elseif rnd > 70 then
-			-- 	actor:FearScream()
 			end
 
 			actor:SetState('fear')
@@ -40,14 +38,12 @@ bgNPC:SetStateAction('calling_police', {
 
 				do
 					for _, enemy in pairs(actor.enemies) do
-						if IsValid(enemy) then
-							if not hook.Run('BGN_PreCallingPolice', actor, enemy) then
-								if asset:HasWanted(enemy) then
-									local c_Wanted = asset:GetWanted(enemy)
-									c_Wanted:UpdateWanted(enemy)
-								else
-									asset:AddWanted(enemy)
-								end
+						if IsValid(enemy and not hook.Run('BGN_PreCallingPolice', actor, enemy)) then
+							if asset:HasWanted(enemy) then
+								local WantedClass = asset:GetWanted(enemy)
+								WantedClass:UpdateWanted(enemy)
+							else
+								asset:AddWanted(enemy)
 							end
 						end
 					end
