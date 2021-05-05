@@ -13,7 +13,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = "1.4.7"
+bgNPC.VERSION = '1.4.8'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -40,9 +40,9 @@ script:using('config/sh_player.lua')
 script:using('config/sh_darkrp.lua')
 script:using('config/sh_weapons.lua')
 
-hook.Add("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule", function()
+hook.Add('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule', function()
 	include(root_directory .. '/config/sh_player.lua')
-	hook.Remove("PostGamemodeLoaded", "BGN_LoadAllowTeamsFromTeamParentModule")
+	hook.Remove('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule')
 end)
 
 script:using('config/states/sh_wanted.lua')
@@ -183,7 +183,7 @@ slib.usingDirectory(root_directory .. '/custom_modules/postload',
 if CLIENT then
 	hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-		
+
 		timer.Simple(3, function()
 			http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 				function(github_version, length, headers, code)
