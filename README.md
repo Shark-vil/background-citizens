@@ -33,41 +33,11 @@ This addon can rather be considered a base for development. There is basic funct
 ### **Warning**
 The wiki is currently under development and some methods may not be described. When the wiki is complete, this warning will be removed.
 
-[WIKI SITE](https://background-npcs.itpony.ru/wiki)
+**[Outside documentation](https://background-npcs.itpony.ru)**
+
+**[Inside documentation](https://shark-vil.github.io/background-citizens)**
+
 ---
-
-### **Simple code example:**
-```LUA
--- The hook is called when the NPC is looking at an object.
--- In this example, the police give the player 2 warnings with animation, and then push him away.
-hook.Add("BGN_ActorLookAtObject", "BGN_PoliceWarnAndPushPlayerIfHeIsClose", function(actor, ent)
-    if ent:IsPlayer() and actor:GetType() == 'police'
-        and actor:GetState() == 'walk'
-        and actor:IsSequenceFinished()
-    then
-        if ent:GetPos():DistToSqr(actor:GetNPC():GetPos()) > 50 ^ 2 then return end
-
-        -- Get temporary table of state data
-        local data = actor:GetStateData()
-        -- Add a variable to the temporary state table, if it does not exist
-        data.LuggageWarn = data.LuggageWarn or 0
-
-        if data.LuggageWarn < 2 then
-            -- Play warn animation
-            actor:PlayStaticSequence('LuggageWarn')
-            data.LuggageWarn = data.LuggageWarn + 1
-        else
-            -- Play push animation
-            actor:PlayStaticSequence('LuggagePush')
-
-            -- A local function that pushes the player away from the entity
-            TargetPlayerPush(actor:GetNPC(), ent, 250)
-
-            data.LuggageWarn = 0
-        end
-    end
-end)
-```
 
 NPCs do not have extra code and overloaded tables. For each background NPC an "**Actor**" class is created, through which most actions are carried out. This makes the code cleaner.
 
