@@ -84,6 +84,7 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	obj.walkType = SCHED_FORCED_GO
 	obj.walkUpdatePathDelay = 0
 	obj.pathType = nil
+	obj.isChase = false
 
 	obj.isBgnClass = true
 	obj.targets = {}
@@ -583,10 +584,11 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 		self.walkPos = nil
 		self.walkUpdatePathDelay = 0
 		self.pathType = nil
+		self.isChase = false
 		self:SetWalkType()
 	end
 
-	function obj:WalkToTarget(target, type, pathType)
+	function obj:WalkToTarget(target, moveType, pathType)
 		if self:GetNPC():IsNextBot() then return end
 		
 		if target == nil or not IsValid(target) then
@@ -594,7 +596,7 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 		else
 			local npc = self.npc
 			if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then
-				local walk_type = type or 'walk'
+				local walk_type = moveType or 'walk'
 				hook.Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)	
 				return
 			end
@@ -606,20 +608,21 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 				self.walkUpdatePathDelay = 0
 				self.walkPos = nil
 				self.walkTarget = target
-				
+
 				local decentvehicle = self:GetVehicleAI()
 				if decentvehicle then
+					self.isChase = true
 					if decentvehicle.bgn_type == 'police' then
 						decentvehicle.DVPolice_Target = target
 					else
-						self:WalkToPos(target:GetPos(), type, pathType)
+						self:WalkToPos(target:GetPos(), moveType, pathType)
 					end
 				end
 			end
 		end
 	end
 
-	function obj:WalkToPos(pos, type, pathType)
+	function obj:WalkToPos(pos, moveType, pathType)
 		if self:GetNPC():IsNextBot() then return end
 
 		if pos == nil then 
@@ -633,7 +636,7 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 
 		local npc = self.npc
 		if npc:GetPos():DistToSqr(pos) <= 2500 then 
-			local walk_type = type or 'walk'
+			local walk_type = moveType or 'walk'
 			hook.Run('BGN_ActorFinishedWalk', self, pos, walk_type)	
 			return
 		end
@@ -644,13 +647,15 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 
 			walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
 			if #walkPath == 0 then return end
+
+			self.pathType = pathType
+			self:SetWalkType(moveType)
 		else
 			local dvd = DecentVehicleDestination
 			local decentvehicle = self:GetVehicleAI()
 			local route = dvd.GetRouteVector(decentvehicle:GetPos(), pos)
-
 			if not route then return end
-			
+
 			decentvehicle.WaypointList = route
 			decentvehicle.Waypoint = nil
 			decentvehicle.NextWaypoint = nil
@@ -660,9 +665,9 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 			end
 		end
 
-		self.pathType = pathType
-		self.walkTarget = NULL
-		self:SetWalkType(type)
+		if not self.isChase then
+			self.walkTarget = NULL
+		end
 		self.walkPos = pos
 		self.walkPath = walkPath
 	end
