@@ -1,21 +1,21 @@
 BGN_VEHICLE = {}
 
-function BGN_VEHICLE:Instance(vehicle, type, actor_type)
+function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 	if not DecentVehicleDestination then return nil end
 	local obj = {}
 	obj.uid = slib.GetUid()
 	obj.vehicle = vehicle
-	obj.type = type or 'residents'
+	obj.type = vehicle_type or 'residents'
 	obj.actor_type = actor_type
 	obj.ai = nil
 	obj.passengers = {}
 	obj.passengers_models = {}
 	obj.driver = nil
 
-	if type == 'police' then
+	if vehicle_type == 'police' then
 		obj.ai_class = 'npc_dvpolice'
 		obj.ai_type = 'police'
-	elseif type == 'taxi' then
+	elseif vehicle_type == 'taxi' then
 		obj.ai_class = 'npc_dvtaxi'
 		obj.ai_type = 'taxi'
 	else
