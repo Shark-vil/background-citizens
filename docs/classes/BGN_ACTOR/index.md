@@ -1,4 +1,4 @@
-# BGN_ACTOR
+# Information
 
 ## Description
 Used to initialize the actor object.

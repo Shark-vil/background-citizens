@@ -1,4 +1,4 @@
-# ACTOR:RandomState
+# RandomState
 
 ```lua
 	ACTOR:RandomState()
