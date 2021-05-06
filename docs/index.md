@@ -3,7 +3,7 @@ This documentation is for "*Background NPCs*". General information on setting up
 
 ## Pages
 ### Classes
-- [BGN_ACTOR](./classes/BGN_ACTOR/BGN_ACTOR.md)
+- [BGN_ACTOR](./classes/BGN_ACTOR/index.md)
 
 ### Class objects
-- [BGN_ACTOR](./class-objects/actor/ACTOR.md)
+- [ACTOR](./class-objects/actor/index.md)
