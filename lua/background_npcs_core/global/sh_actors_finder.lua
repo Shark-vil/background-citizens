@@ -27,7 +27,7 @@ function bgNPC:GetAllPoints(linkType)
 			if not v.links[linkType] or #v.links[linkType] == 0 then
 				goto skip
 			end
-			
+
 			table.insert(points, v)
 
 			::skip::
@@ -40,19 +40,16 @@ end
 
 function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
-	local radius = radius or 500
-	radius = radius ^ 2
+	radius = (radius or 500) ^ 2
 
 	local map = BGN_NODE:GetMap()
 	for i = 1, #map do
 		local v = map[i]
 		if v.position:DistToSqr(center) <= radius then
-			if linkType then
-				if not v.links[linkType] or #v.links[linkType] == 0 then
-					goto skip
-				end
+			if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+				goto skip
 			end
-			
+
 			table.insert(radius_positions, v)
 		end
 
@@ -64,18 +61,15 @@ end
 
 function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
-	local radius = radius or 500
-	radius = radius ^ 2
+	radius = (radius or 500) ^ 2
 
 	local map = BGN_NODE:GetMap()
 	for i = 1, #map do
 		local v = map[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
-		
+
 		if v.position:DistToSqr(center) <= radius then
 			table.insert(radius_positions, i)
 		end
@@ -89,27 +83,21 @@ end
 function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 	local point = nil
 	local dist = nil
-	local radius = radius or 500
-	
+	radius = radius or 500
+
 	local radius_points = self:GetAllPointsInRadius(center, radius)
 	for i = 1, #radius_points do
 		local v = radius_points[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = center:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance < dist then
 			point = v
-			dist = center:DistToSqr(v.position)
-      else
-         local checkDist = center:DistToSqr(v.position)
-         if checkDist < dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -125,22 +113,16 @@ function bgNPC:GetDistantPointInRadius(center, radius, linkType)
 	local radius_points = self:GetAllPointsInRadius(center, radius)
 	for i = 1, #radius_points do
 		local v = radius_points[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = center:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance > dist then
 			point = v
-			dist = center:DistToSqr(v.position)
-      else
-         local checkDist = center:DistToSqr(v.position)
-         if checkDist > dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -155,22 +137,16 @@ function bgNPC:GetClosestPointInChunk(center, linkType)
 	local nodes = BGN_NODE:GetChunkNodes(center)
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = center:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance < dist then
 			point = v
-			dist = center:DistToSqr(v.position)
-      else
-         local checkDist = center:DistToSqr(v.position)
-         if checkDist < dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -185,22 +161,16 @@ function bgNPC:GetDistantPointInChunk(center, linkType)
 	local nodes = BGN_NODE:GetChunkNodes(center)
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = center:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance > dist then
 			point = v
-			dist = center:DistToSqr(v.position)
-      else
-         local checkDist = center:DistToSqr(v.position)
-         if checkDist > dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -215,22 +185,16 @@ function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
 	local nodes = BGN_NODE:GetChunkNodes(center)
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = pos:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance < dist then
 			point = v
-			dist = pos:DistToSqr(v.position)
-      else
-         local checkDist = pos:DistToSqr(v.position)
-         if checkDist < dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -245,22 +209,16 @@ function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
 	local nodes = BGN_NODE:GetChunkNodes(center)
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType then
-			if not v.links[linkType] or #v.links[linkType] == 0 then
-				goto skip
-			end
+		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
+			goto skip
 		end
 
-		if point == nil then
+		local calcualte_distance = pos:DistToSqr(v.position)
+
+		if dist == nil or calcualte_distance > dist then
 			point = v
-			dist = pos:DistToSqr(v.position)
-      else
-         local checkDist = pos:DistToSqr(v.position)
-         if checkDist > dist then
-            point = v
-            dist = checkDist
-         end
-      end
+			dist = calcualte_distance
+		end
 
 		::skip::
 	end
@@ -306,8 +264,8 @@ function bgNPC:GetAllNPCs()
 	return self.npcs
 end
 
-function bgNPC:GetAllNPCsByType(type)
-	return self.fnpcs[type] or {}
+function bgNPC:GetAllNPCsByType(npc_type)
+	return self.fnpcs[npc_type] or {}
 end
 
 function bgNPC:GetNear(center)
@@ -319,15 +277,11 @@ function bgNPC:GetNear(center)
 		local actor = actors[i]
 		local npc = actor:GetNPC()
 		if IsValid(npc) then
-			if dist == nil then
-				dist = npc:GetPos():DistToSqr(center)
+			local calcualte_distance = npc:GetPos():DistToSqr(center)
+
+			if dist == nil or calcualte_distance < dist then
+				dist = calcualte_distance
 				near_actor = actor
-			else
-				local new_dist = npc:GetPos():DistToSqr(center)
-				if new_dist < dist then
-					dist = new_dist
-					near_actor = actor
-				end
 			end
 		end
 	end
@@ -336,7 +290,7 @@ function bgNPC:GetNear(center)
 end
 
 
-function bgNPC:GetNearByType(center, type)
+function bgNPC:GetNearByType(center, npc_type)
 	local near_actor = nil
 	local dist = nil
 
@@ -344,16 +298,12 @@ function bgNPC:GetNearByType(center, type)
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
-		if actor:GetType() == type and IsValid(npc) then
-			if dist == nil then
-				dist = npc:GetPos():DistToSqr(center)
+		if actor:GetType() == npc_type and IsValid(npc) then
+			local calcualte_distance = npc:GetPos():DistToSqr(center)
+
+			if dist == nil or calcualte_distance < dist then
+				dist = calcualte_distance
 				near_actor = actor
-			else
-				local new_dist = npc:GetPos():DistToSqr(center)
-				if new_dist < dist then
-					dist = new_dist
-					near_actor = actor
-				end
 			end
 		end
 	end
@@ -364,7 +314,7 @@ end
 function bgNPC:GetAllByRadius(center, radius)
 	local npcs = {}
 	radius = radius ^ 2
-	
+
 	local actors = self:GetAll()
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -384,11 +334,12 @@ end
 function bgNPC:IsTeamOnce(npc1, npc2)
 	local actor1 = self:GetActor(npc1)
 	local actor2 = self:GetActor(npc2)
-	if actor1 ~= nil and actor2 ~= nil then
+
+	if actor1 and actor2 then
 		local data1 = actor1:GetData()
 		local data2 = actor2:GetData()
 
-		if data1.team ~= nil and data2.team ~= nil then
+		if data1.team and data2.team then
 			for i = 1, #data1.team do
 				for k = 1, #data2.team do
 					if data1.team[i] == data2.team[k] then
