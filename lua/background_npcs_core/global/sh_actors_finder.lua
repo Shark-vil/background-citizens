@@ -20,8 +20,8 @@ function bgNPC:GetAllPoints(linkType)
 		return BGN_NODE:GetMap()
 	else
 		local points = {}
-
 		local map = BGN_NODE:GetMap()
+
 		for i = 1, #map do
 			local v = map[i]
 			if not v.links[linkType] or #v.links[linkType] == 0 then
@@ -40,9 +40,9 @@ end
 
 function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
-	radius = (radius or 500) ^ 2
-
+	local radius = (radius or 500) ^ 2
 	local map = BGN_NODE:GetMap()
+
 	for i = 1, #map do
 		local v = map[i]
 		if v.position:DistToSqr(center) <= radius then
@@ -61,9 +61,9 @@ end
 
 function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
-	radius = (radius or 500) ^ 2
-
+	local radius = (radius or 500) ^ 2
 	local map = BGN_NODE:GetMap()
+
 	for i = 1, #map do
 		local v = map[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -83,9 +83,9 @@ end
 function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 	local point = nil
 	local dist = nil
-	radius = radius or 500
-
+	local radius = radius or 500
 	local radius_points = self:GetAllPointsInRadius(center, radius)
+
 	for i = 1, #radius_points do
 		local v = radius_points[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -109,8 +109,8 @@ function bgNPC:GetDistantPointInRadius(center, radius, linkType)
 	local point = nil
 	local dist = nil
 	local radius = radius or 500
-
 	local radius_points = self:GetAllPointsInRadius(center, radius)
+
 	for i = 1, #radius_points do
 		local v = radius_points[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -133,8 +133,8 @@ end
 function bgNPC:GetClosestPointInChunk(center, linkType)
 	local point = nil
 	local dist = nil
-
 	local nodes = BGN_NODE:GetChunkNodes(center)
+
 	for i = 1, #nodes do
 		local v = nodes[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -157,8 +157,8 @@ end
 function bgNPC:GetDistantPointInChunk(center, linkType)
 	local point = nil
 	local dist = nil
-
 	local nodes = BGN_NODE:GetChunkNodes(center)
+
 	for i = 1, #nodes do
 		local v = nodes[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -181,8 +181,8 @@ end
 function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
 	local point = nil
 	local dist = nil
-
 	local nodes = BGN_NODE:GetChunkNodes(center)
+
 	for i = 1, #nodes do
 		local v = nodes[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -205,8 +205,8 @@ end
 function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
 	local point = nil
 	local dist = nil
-
 	local nodes = BGN_NODE:GetChunkNodes(center)
+
 	for i = 1, #nodes do
 		local v = nodes[i]
 		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
@@ -271,8 +271,8 @@ end
 function bgNPC:GetNear(center)
 	local near_actor = nil
 	local dist = nil
-
 	local actors = self:GetAll()
+
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
@@ -293,8 +293,8 @@ end
 function bgNPC:GetNearByType(center, npc_type)
 	local near_actor = nil
 	local dist = nil
-
 	local actors = self:GetAll()
+
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
@@ -313,9 +313,9 @@ end
 
 function bgNPC:GetAllByRadius(center, radius)
 	local npcs = {}
-	radius = radius ^ 2
-
+	local radius = radius ^ 2
 	local actors = self:GetAll()
+
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
