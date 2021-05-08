@@ -188,10 +188,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
    end
 
    local actor = BGN_ACTOR:Instance(npc, npcType, npcData)
-   bgNPC:AddNPC(actor)
 
-   snet.Create('bgn_add_actor_from_client', npc, npcType, actor.uid).InvokeAll()
-   
    actor:RandomState()
    hook.Run('BGN_InitActor', actor)
 

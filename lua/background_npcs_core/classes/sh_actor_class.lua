@@ -31,8 +31,14 @@ local schedule_white_list = {
 	SCHED_MELEE_ATTACK2
 }
 
-function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
+function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)
+	if not bgNPC.cfg.npcs_template[npc_type] then return end
+
+	local not_sync_actor_on_client = not_sync_actor_on_client or false
+	local not_auto_added_to_list = not_auto_added_to_list or false
+	local data = table.Copy(bgNPC.cfg.npcs_template[npc_type])
 	local obj = {}
+
 	obj.uid = custom_uid or slib.GetUid()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
@@ -43,13 +49,11 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	obj.weapon = nil
 	obj.sync_players_hash = {}
 
-	if data.weapons then
-		if not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance then
-			obj.weapon = array.Random(data.weapons)
-		end
+	if data.weapons and (not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance) then
+		obj.weapon = array.Random(data.weapons)
 	end
 
-	obj.type = npcType
+	obj.type = npc_type
 	obj.reaction = ''
 	obj.eternal = false
 	obj.vehicle = nil
@@ -1272,6 +1276,14 @@ function BGN_ACTOR:Instance(npc, npcType, data, custom_uid)
 	end
 
 	npc.isBgnActor = true
+
+	if SERVER and not not_sync_actor_on_client then
+		snet.Create('bgn_add_actor_from_client', npc, npc_type, obj.uid).InvokeAll()
+	end
+
+	if not not_auto_added_to_list then
+		bgNPC:AddNPC(obj)
+	end
 
 	return obj
 end

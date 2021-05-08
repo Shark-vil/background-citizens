@@ -4,11 +4,9 @@ if CLIENT then
 		bgNPC:ClearRemovedNPCs()
 	end).Register()
 
-	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npcType, uid)
+	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npc_type, uid)
 		if bgNPC:GetActor(npc) ~= nil then return end
-
-		local actor = BGN_ACTOR:Instance(npc, npcType, bgNPC.cfg.npcs_template[npcType], uid)
-		bgNPC:AddNPC(actor)
+		BGN_ACTOR:Instance(npc, npc_type, uid)
 	end).Validator(SNET_ENTITY_VALIDATOR).Register()
 end
 
