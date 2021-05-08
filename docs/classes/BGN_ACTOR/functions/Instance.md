@@ -19,7 +19,6 @@ Creates an actor object and associates it with the given NPC.
 The code is executed on the server. In this example, an actor with the "citizen" behavior will bind to all NPCs that the player spawns from the spawn menu, after which a message with his unique identifier will be displayed on the console.
 
 ```lua
-	-- 
 	hook.Add('PlayerSpawnedNPC', 'BindingActorToNPCFromTheSpawnMenu', function(ply, npc)
 		local actor = BGN_ACTOR:Instance(npc, 'citizen')
 		print('A new actor has been created with ID - ', actor.uid)
