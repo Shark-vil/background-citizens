@@ -32,11 +32,12 @@ local schedule_white_list = {
 }
 
 function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)
-	if not bgNPC.cfg.npcs_template[npc_type] then return end
+	local npc_data = bgNPC:GetActorConfig(npc_type)
+	if not npc_data then return end
 
 	local not_sync_actor_on_client = not_sync_actor_on_client or false
 	local not_auto_added_to_list = not_auto_added_to_list or false
-	local data = table.Copy(bgNPC.cfg.npcs_template[npc_type])
+	local data = table.Copy(npc_data)
 	local obj = {}
 
 	obj.uid = custom_uid or slib.GetUid()
