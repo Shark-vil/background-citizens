@@ -287,7 +287,7 @@ else
 		end
 
 		if not isAutoCreated then
-			newNode = BGN_NODE:Instance(tr.HitPos + Vector(0, 0, 10))
+			newNode = BGN_NODE:Instance(tr.HitPos)
 			BGN_NODE:AddNodeToMap(newNode)
 
 			if self.CreateSelectedNode then
@@ -295,6 +295,8 @@ else
 			end
 
 			self:ConstructParent(newNode)
+
+			newNode.position = newNode.position + Vector(0, 0, 10)
 		end
 
 		if self.CreateSelectedNode and countPoints == 0 then
