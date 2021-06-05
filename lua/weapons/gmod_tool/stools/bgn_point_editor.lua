@@ -577,7 +577,7 @@ else
 		if not SLibraryIsLoaded then return end
 
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-      if not tool then return end
+    if not tool then return end
 
 		local is_show_global_nodes = GetConVar('bgn_tool_point_editor_show_parents'):GetBool()
 		local count = #tool.RangePoints
@@ -646,7 +646,7 @@ else
 		if not SLibraryIsLoaded then return end
 		
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-      if not tool or tool:GetCurrentType() ~= 'creator' then return end
+		if not tool or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
 		if tr.Hit and tool:GetCurrentType() == 'creator' then
@@ -703,7 +703,7 @@ else
 		if not SLibraryIsLoaded then return end
 		
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-      if not tool or not tool.LinkerNode then return end
+    if not tool or not tool.LinkerNode then return end
 
 		render.SetColorMaterial()
 		render.DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_green)
@@ -725,7 +725,7 @@ else
 		if not SLibraryIsLoaded then return end
 		
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-      if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
+    if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
 		if not tr.Hit then return end
