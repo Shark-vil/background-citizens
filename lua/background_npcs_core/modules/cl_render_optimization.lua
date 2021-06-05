@@ -25,7 +25,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_
 end)
 
 local max_pass = 5
-local function async_method(yield)
+async.Add('bgn_client_render_optimization', function(yield)
    if not is_active then return end
 
    local ply = LocalPlayer()
@@ -57,5 +57,6 @@ local function async_method(yield)
          end
       end
    end
-end
-async.Add('bgn_client_render_optimization', async_method)
+
+   return yield(true)
+end)

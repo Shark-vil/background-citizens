@@ -22,7 +22,7 @@ cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 end)
 
 local max_pass = 5
-local function async_method(yield)
+async.Add('bgn_server_logic_optimization', function(yield)
    if not bgn_enable or bgn_disable_logic_radius <= 0 then return end
 
    local actors = bgNPC:GetAll()
@@ -89,5 +89,6 @@ local function async_method(yield)
          end
       end
    end
-end
-async.Add('bgn_server_logic_optimization', async_method)
+
+   return yield(true)
+end)
