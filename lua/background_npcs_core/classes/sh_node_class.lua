@@ -15,17 +15,17 @@ function BGN_NODE:Instance(position)
 
    function obj:_snet_getdata()
       local netobj = {}
-      netobj.index = self.index
-      netobj.isNode = self.isNode
-      netobj.position = self.position
+      netobj.index = obj.index
+      netobj.isNode = obj.isNode
+      netobj.position = obj.position
       netobj.parents = {}
       netobj.links = {}
 
-      for i = 1, #self.parents do
-         table.insert(netobj.parents, self.parents[i].index)
+      for i = 1, #obj.parents do
+         table.insert(netobj.parents, obj.parents[i].index)
       end
 
-      for linkType, nodes in pairs(self.links) do
+      for linkType, nodes in pairs(obj.links) do
          netobj.links[linkType] = netobj.links[linkType] or {}
          for i = 1, #nodes do
             table.insert(netobj.links[linkType], nodes[i].index)
