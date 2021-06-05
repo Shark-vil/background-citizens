@@ -673,6 +673,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		if not self.isChase then
 			self.walkTarget = NULL
 		end
+
 		self.walkPos = pos
 		self.walkPath = walkPath
 	end
@@ -764,9 +765,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	function obj:HasState(state)
 		local current_state = self.state_data.state
-		if isstring(state) then
+		local type_value = type(state)
+		if type_value == 'string' then
 			return current_state == state
-		elseif istable(state) then
+		elseif type_value == 'table' then
 			for i = 1, #state do
 				if current_state == state[i] then return true end
 			end
