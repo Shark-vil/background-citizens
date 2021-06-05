@@ -58,7 +58,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 											vehicle_provider.bulletFireDelay = CurTime() + limit + delay + 3
 										end
 									end
-								else
+								elseif not actor:HasState({ 'fear', 'dyspnea_danger', 'run_from_danger' }) then
 									local isTrueDistance = dist <= 640000
 									local delay = vehicle_provider.actorsExitDelay or 0
 
