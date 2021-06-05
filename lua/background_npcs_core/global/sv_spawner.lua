@@ -189,7 +189,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		end
 	end
 
-	local actor = BGN_ACTOR:Instance(npc, npcType, npcData)
+	local actor = BGN_ACTOR:Instance(npc, npcType)
 	actor:RandomState()
 	hook.Run('BGN_InitActor', actor)
 
