@@ -1,3 +1,4 @@
--- Fuck you, gmod.
--- Fix cache old files inject.
--- Garry, WTF?
+-- This script does nothing.
+-- This is a stub against the old gmod cache.
+-- New scripts loader path:
+-- lua\slib_autoloader\sh_background_npcs.lua
