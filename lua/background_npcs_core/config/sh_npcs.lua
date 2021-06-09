@@ -108,6 +108,7 @@ bgNPC.cfg.npcs_template = {
 		max_vehicle = 2,
 		enter_to_exist_vehicle_chance = 100,
 		vehicle_group = 'taxi',
+		vehicles_random_color = true,
 		vehicles = {
 			'sim_fphys_dukes',
 		},
