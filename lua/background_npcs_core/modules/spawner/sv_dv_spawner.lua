@@ -228,6 +228,10 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 		return false
 	end
 
+	if actor_data.vehicles_random_color then
+		car:SetColor(ColorRand())
+	end
+
 	car:slibCreateTimer('spawn_dv_ai', 1, 1, function(ent)
 		if not IsValid(npc) then
 			ent:Remove()
