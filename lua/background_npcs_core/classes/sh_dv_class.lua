@@ -11,16 +11,20 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 	obj.passengers = {}
 	obj.passengers_models = {}
 	obj.driver = nil
+	obj.passengers_limit = -1
 
 	if vehicle_type == 'police' then
 		obj.ai_class = 'npc_dvpolice'
 		obj.ai_type = 'police'
+		obj.passengers_limit = math.random(1, 10)
 	elseif vehicle_type == 'taxi' then
 		obj.ai_class = 'npc_dvtaxi'
 		obj.ai_type = 'taxi'
+		obj.passengers_limit = 1
 	else
 		obj.ai_class = 'npc_decentvehicle'
 		obj.ai_type = 'default'
+		obj.passengers_limit = math.random(1, 4)
 	end
 
 	function obj:Initialize()
@@ -60,6 +64,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 	function obj:AddPassenger(actor)
 		if array.HasValue(self.passengers, actor) then return false end
+		if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
 
 		if self:GetDriver() ~= actor then
 			local seats_are_taken = true
