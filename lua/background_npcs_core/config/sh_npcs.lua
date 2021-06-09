@@ -64,22 +64,16 @@ bgNPC.cfg.npcs_template = {
 		enter_to_exist_vehicle_chance = 10,
 		vehicle_group = 'residents',
 		vehicles = {
-			'sim_fphys_re7_dodge',
+			'sim_fphys_pwavia',
+			'sim_fphys_pwgaz52',
+			'sim_fphys_pwhatchback',
+			'sim_fphys_pwliaz',
 			'sim_fphys_pwmoskvich',
 			'sim_fphys_pwtrabant',
 			'sim_fphys_pwtrabant02',
 			'sim_fphys_pwvan',
 			'sim_fphys_pwvolga',
 			'sim_fphys_pwzaz',
-			'sim_fphys_pwhatchback',
-			'sim_fphys_pwliaz',
-			'sim_fphys_pwgaz52',
-			'sim_fphys_pwavia',
-			'sim_fphys_cod_st_wagon',
-			'sim_fphys_madmax_interceptor_falcon',
-			'sim_fphys_hp_izhkomby',
-			'sim_fphys_opel_blitz',
-			'sim_fphys_zil_130',
 		},
 		at_random_range = 110,
 		at_random = {
@@ -201,9 +195,7 @@ bgNPC.cfg.npcs_template = {
 		vehicle_group = 'police',
 		enter_to_exist_vehicle_chance = 30,
 		vehicles = {
-			'sim_fphys_tdmchargersrt8_police2012',
-			'sim_fphys_tdmchargersrt8_police',
-			'sim_fphys_forcrownvic_police'
+			'sim_fphys_combineapc'
 		},
 		random_skin = true,
 		random_bodygroups = true,
@@ -287,6 +279,7 @@ bgNPC.cfg.npcs_template = {
 		health = { 110, 120 },
 		weapon_skill = WEAPON_PROFICIENCY_PERFECT,
 		vehicle_group = '@police',
+		vehicles = '@special_forces',
 		enter_to_exist_vehicle_chance = '@police',
 		money = { 0, 300 },
 		at_random = { ['walk'] = 100 },
@@ -309,7 +302,7 @@ bgNPC.cfg.npcs_template = {
 		at_damage = { ['defense'] = 100 },
 		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
-		validator = function(self, type)
+		validator = function(self, npc_type)
 			if list.Get('NPC')[self.class] == nil then
 				return false
 			end
