@@ -77,7 +77,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 						local els = decentvehicle:GetELS()
 						if els and (not driver or isNotDanger) then
 							decentvehicle:SetELS(false)
-						elseif not els and driver and driver:HasTeam('police') then
+						elseif not els and driver and not isNotDanger and driver:HasTeam('police') then
 							decentvehicle:SetELS(true)
 						end
 					end
