@@ -100,6 +100,35 @@ bgNPC.cfg.npcs_template = {
 			['calling_police'] = 20,
 		}
 	},
+	['taxi_driver'] = {
+		enabled = true,
+		class = 'npc_citizen',
+		name = 'Taxi driver',
+		limit = 2,
+		team = '@citizen',
+		weapons = '@citizen',
+		getting_weapon_chance = '@citizen',
+		money = '@citizen',
+		health = '@citizen',
+		weapon_skill = '@citizen',
+		max_vehicle = 2,
+		enter_to_exist_vehicle_chance = 100,
+		vehicle_group = 'taxi',
+		vehicles = {
+			'sim_fphys_dukes',
+		},
+		at_random_range = '@citizen',
+		at_random = '@citizen',
+		at_damage_range = '@citizen',
+		at_damage = '@citizen',
+		at_protect_range = '@citizen',
+		at_protect = '@citizen',
+		validator = function(self, npc_type)
+			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+				return false
+			end
+		end,
+	},
 	['thief'] = {
 		enabled = true,
 		inherit = 'citizen',
