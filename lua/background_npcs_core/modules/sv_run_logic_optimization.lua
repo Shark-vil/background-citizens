@@ -89,6 +89,4 @@ async.Add('bgn_server_logic_optimization', function(yield)
          end
       end
    end
-
-   return yield(true)
 end)

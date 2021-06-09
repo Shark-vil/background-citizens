@@ -57,6 +57,4 @@ async.Add('bgn_client_render_optimization', function(yield)
          end
       end
    end
-
-   return yield(true)
 end)
