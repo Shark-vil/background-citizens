@@ -29,6 +29,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 		decentvehicle:SetPos(vehicle:GetPos())
 		decentvehicle.DontUseSpawnEffect = true
 		decentvehicle.bgn_type = self.ai_type
+		BGN_VEHICLE:OverrideVehicle(decentvehicle)
 		BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 		decentvehicle:Spawn()
 		decentvehicle:Activate()
@@ -158,8 +159,31 @@ end
 
 local color_green = Color(0, 255, 0)
 
+function BGN_VEHICLE:OverrideVehicle(decentvehicle)
+	local original_GetCurrentMaxSpeed = decentvehicle.GetCurrentMaxSpeed
+
+	function decentvehicle:GetCurrentMaxSpeed()
+		local limit = self.Waypoint.SpeedLimit
+		local provider = BGN_VEHICLE:GetVehicleProvider(self)
+
+		if not provider then return end
+
+		local actor = provider:GetDriver()
+		if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
+			self.Waypoint.SpeedLimit = limit * 10
+		end
+
+		if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
+			return self.BaseClass.GetCurrentMaxSpeed(self)
+		else
+			return original_GetCurrentMaxSpeed(self)
+		end
+	end
+end
+
 function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 	if not decentvehicle.bgn_type or decentvehicle.bgn_type ~= 'police' then return end
+
 	local dvd = DecentVehicleDestination
 	local original_DVPolice_GenerateWaypoint = decentvehicle.DVPolice_GenerateWaypoint
 
@@ -326,16 +350,6 @@ function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
 			end
 
 			return self.BaseClass.Think(self)
-	end
-
-	function decentvehicle:GetCurrentMaxSpeed()
-		local limit = self.Waypoint.SpeedLimit
-
-		if self.DVPolice_Target and IsValid(self.DVPolice_Target) then
-			self.Waypoint.SpeedLimit = limit * 10
-		end
-
-		return self.BaseClass.GetCurrentMaxSpeed(self)
 	end
 end
 
