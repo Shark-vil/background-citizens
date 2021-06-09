@@ -62,12 +62,12 @@ end
 slib:RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 	local old_progress = -1
 
+	if not navmesh.IsLoaded() then
+		snet.Invoke('bgn_generate_navmesh_not_exists', ply)
+		return
+	end
+	
 	async.Add('bgn_generate_navmesh', function(yield)
-		if not navmesh.IsLoaded() then
-			snet.Invoke('bgn_generate_navmesh_not_exists', ply)
-			return
-		end
-
 		BGN_NODE:ClearNodeMap()
 
 		local navmesh_map = navmesh.GetAllNavAreas()
@@ -107,6 +107,8 @@ slib:RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 			.Invoke(ply)
 
 		snet.Invoke('bgn_generate_navmesh_progress_kill', ply)
+
+		return yield('stop')
 	end)
 end)
 
