@@ -617,11 +617,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 				local decentvehicle = self:GetVehicleAI()
 				if decentvehicle then
 					self.isChase = true
-					if decentvehicle.bgn_type == 'police' then
-						decentvehicle.DVPolice_Target = target
-					else
-						self:WalkToPos(target:GetPos(), moveType, pathType)
-					end
+					self:WalkToPos(target:GetPos(), moveType, pathType)
 				end
 			end
 		end
