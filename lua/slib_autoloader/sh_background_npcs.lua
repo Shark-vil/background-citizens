@@ -174,10 +174,12 @@ script:using('tool_options/cl_optimization_settings.lua')
 script:using('tool_options/cl_client_settings.lua')
 script:using('tool_options/cl_workshop_settings.lua')
 script:using('tool_options/cl_unit_testing.lua')
+script:using('tool_options/cl_wanted_settings.lua')
 
 script:using('tests/cl_test_start.lua')
 script:using('tests/unit/sv_unit_mod_enabled.lua')
 script:using('tests/unit/sv_unit_test_exist_nodes.lua')
+script:using('tests/unit/sv_unit_dv_points_exists.lua')
 
 slib.usingDirectory(root_directory .. '/custom_modules/postload',
 	'[Background NPCs | Custom modules] Script load - {file}')
