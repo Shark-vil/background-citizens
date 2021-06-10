@@ -800,10 +800,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		for i = 1, #points do
 			local point = points[i]
 			if point == nil then
-				point = value.position
+				point = point.position
 				dist = point:DistToSqr(pos)
-			elseif value.position:DistToSqr(pos) > dist then
-				point = value.position
+			elseif point.position:DistToSqr(pos) > dist then
+				point = point.position
 				dist = point:DistToSqr(pos)
 			end
 		end
@@ -823,10 +823,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		for i = 1, #points do
 			local point = points[i]
 			if point == nil then
-				point = value.position
+				point = point.position
 				dist = point:DistToSqr(pos)
-			elseif value.position:DistToSqr(pos) < dist then
-				point = value.position
+			elseif point.position:DistToSqr(pos) < dist then
+				point = point.position
 				dist = point:DistToSqr(pos)
 			end
 		end
