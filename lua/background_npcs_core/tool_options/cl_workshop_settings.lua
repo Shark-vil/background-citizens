@@ -1,7 +1,7 @@
 local function TOOL_MENU(Panel)
 	Panel:AddControl("Button", {
 		["Label"] = "#bgn.settings.workshop.cl_citizens_compile_route",
-		["Command"] = "cl_citizens_compile_route",
+		["Command"] = "bgn_compile",
 	})
 end
 
