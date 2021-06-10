@@ -38,7 +38,7 @@ bgNPC:SetStateAction('calling_police', {
 
 				do
 					for _, enemy in pairs(actor.enemies) do
-						if IsValid(enemy and not hook.Run('BGN_PreCallingPolice', actor, enemy)) then
+						if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
 							if asset:HasWanted(enemy) then
 								local WantedClass = asset:GetWanted(enemy)
 								WantedClass:UpdateWanted(enemy)
