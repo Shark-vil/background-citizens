@@ -27,6 +27,7 @@ bgNPC.killing_statistic = {}
 bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
 bgNPC.DVCars = {}
+bgNPC.state_actions = {}
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'
