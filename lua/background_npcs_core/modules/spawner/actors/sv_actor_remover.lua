@@ -119,7 +119,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	end
 end)
 
-hook.Add("BGN_ResetTargetsForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
+hook.Add("BGN_ResetEnemiesForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
 	if not actor:HasTeam('police') then return end
 	if actor.eternal then return end
 
