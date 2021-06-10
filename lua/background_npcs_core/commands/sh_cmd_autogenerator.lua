@@ -76,7 +76,7 @@ slib:RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 		for i = 1, max do
 			local area = navmesh_map[i]
 
-			local pos = area:GetRandomPoint()
+			local pos = area:GetCenter()
 			local tr = util.TraceLine({
 				start = pos,
 				endpos = pos - Vector(0, 0, 10),
@@ -88,7 +88,7 @@ slib:RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 			})
 
 			if tr.Hit then
-				local node = BGN_NODE:Instance(area:GetCenter())
+				local node = BGN_NODE:Instance(pos + Vector(0, 0, 10))
 				ConstructParent(node, args[1], yield)
 				BGN_NODE:AddNodeToMap(node)
 			end
