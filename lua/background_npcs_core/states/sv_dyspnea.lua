@@ -27,7 +27,7 @@ bgNPC:SetStateAction('dyspnea_danger', {
 		if dist < 1000000 then
 			if dist < 40000 then
 				actor:SetState('fear')
-			elseif math.random(0, 100) < 49 then
+			elseif math.random(0, 100) < 40 then
 				actor:SetState('run_from_danger', {
 					dyspnea_delay = CurTime() + math.random(10, 20)
 				})
