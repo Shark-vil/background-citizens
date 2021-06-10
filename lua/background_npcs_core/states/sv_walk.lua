@@ -27,6 +27,7 @@ bgNPC:SetStateAction('walk', {
 		if data.updatePoint < CurTime() then
 			local node = GetNextNode(actor)
 			actor:WalkToPos(node.position, data.schedule, 'walk')
+			if #actor.walkPath == 0 then return end
 			data.updatePoint = CurTime() + math.random(15, 30)
 		end
 	end
