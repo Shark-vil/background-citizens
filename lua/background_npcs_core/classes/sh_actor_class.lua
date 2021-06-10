@@ -568,14 +568,14 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		return self.state_data
 	end
 
-	function obj:SetWalkType(type)
-		local type = type or 'walk'
+	function obj:SetWalkType(moveType)
+		local moveType = moveType or 'walk'
 		local schedule = SCHED_FORCED_GO
 
-		if isnumber(type) then
-			schedule = type
-		elseif isstring(type) then
-			if type == 'run' then
+		if isnumber(moveType) then
+			schedule = moveType
+		elseif isstring(moveType) then
+			if moveType == 'run' then
 				schedule = SCHED_FORCED_GO_RUN
 			end
 		end
@@ -606,7 +606,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 				return
 			end
 
-			self:SetWalkType(type)
+			self:SetWalkType(moveType)
 
 			if self.walkTarget ~= target then
 				self.pathType = pathType
@@ -702,18 +702,22 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 				hasNext = true
 			end
 
+			local current_schedule = npc:GetCurrentSchedule()
+
+			if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or (self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO) then
+				npc:SetSchedule(self.walkType)
+			end
+
 			if not hasNext then
 				if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 				if npc:IsMoving() then return end
 			end
 
-			local current_schedule = npc:GetCurrentSchedule()
 			for i = 1, #schedule_white_list do
 				if schedule_white_list[i] == current_schedule then return end
 			end
 
 			npc:SetLastPosition(targetPosition)
-			npc:SetSchedule(self.walkType)
 		end
 	end
 

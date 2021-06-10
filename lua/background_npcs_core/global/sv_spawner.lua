@@ -14,6 +14,14 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	for i = 1, #points do
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
+		
+		local entities = ents.FindInSphere(nodePosition, 150)
+		for e = 1, #entities do
+			local ent = entities[e]
+			if IsValid(ent) and ent:IsNPC() then
+				goto skip_walk_nodes
+			end
+		end
 
 		for p = 1, #all_players do
 			local ply = all_players[p]
@@ -47,7 +55,9 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 		end
 
 		if nodePosition then break end
+
 		::skip_walk_nodes::
+
 		nodePosition = nil
 		current_pass = current_pass + 1
 

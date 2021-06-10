@@ -36,7 +36,7 @@ function ASSET:AddWanted(ent)
 			end,
 
 			SetLevel = function(self, level)
-				if level <= 0 then
+				if not isnumber(level) or level <= 0 then
 					ASSET:RemoveWanted(ent)
 					return
 				elseif level > self.level_max then

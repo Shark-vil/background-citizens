@@ -13,7 +13,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.4.8'
+bgNPC.VERSION = '1.4.9'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -27,6 +27,7 @@ bgNPC.killing_statistic = {}
 bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
 bgNPC.DVCars = {}
+bgNPC.state_actions = {}
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'

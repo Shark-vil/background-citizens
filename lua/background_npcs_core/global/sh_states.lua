@@ -1,31 +1,31 @@
-local state_actions = {}
-
 function bgNPC:SetStateAction(state_name, data)
-   state_actions[state_name] = data
+   bgNPC.state_actions[state_name] = data
 end
 
 function bgNPC:CallStateAction(actor, state_name, state_data, func_name)
-   local action = state_actions[state_name]
+   local action = bgNPC.state_actions[state_name]
    if not action then return end
 
    local func = action[func_name]
    if not func then return end
    
-   xpcall(function()
-      func(actor, state_name, state_data)
-   end, function(err)
-      print('[ERROR] Background NPCs action: ', err)
-   end)
+   func(actor, state_name, state_data)
 end
 
-timer.Create('BGN_StateMachine', 1, 0, function()
-   local actors = bgNPC:GetAll()
-   for i = 1, #actors do
-      local actor = actors[i]
-      if actor:IsAlive() and not actor.system_state_machine_update_stop then
-         bgNPC:CallStateAction(actor, actor:GetState(), actor:GetStateData(), 'update')
+timer.Create('BGN_StateMachineController', 5, 0, function()
+   if timer.Exists('BGN_StateMachine') then return end
+
+   MsgN('[Background NPCs] Starting the state machine')
+
+   timer.Create('BGN_StateMachine', 1, 0, function()
+      local actors = bgNPC:GetAll()
+      for i = 1, #actors do
+         local actor = actors[i]
+         if actor:IsAlive() and not actor.system_state_machine_update_stop then
+            bgNPC:CallStateAction(actor, actor:GetState(), actor:GetStateData(), 'update')
+         end
       end
-   end
+   end)
 end)
 
 hook.Add('BGN_SetNPCState', 'BGN_StateMachine_Changes', function(actor, state, data)
