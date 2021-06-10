@@ -718,6 +718,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 			end
 
 			npc:SetLastPosition(targetPosition)
+			npc:SetSchedule(self.walkType)
 		end
 	end
 
