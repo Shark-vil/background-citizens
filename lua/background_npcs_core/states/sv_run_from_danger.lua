@@ -24,6 +24,7 @@ bgNPC:SetStateAction('run_from_danger', {
 				local position = actor:GetDistantPointToPoint(enemy:GetPos(), math.random(700, 1500))
 				if position then
 					actor:WalkToPos(position, 'run')
+					if #actor.walkPath == 0 then return end
 					data.update_run_position_delay = CurTime() + math.random(10, 15)
 				end
 			end

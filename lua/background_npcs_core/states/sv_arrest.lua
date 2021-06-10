@@ -84,6 +84,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 			TargetActor:AddEnemy(attacker)
 			TargetActor:SetState('fear')
 		end
+
+		return false
 	else
 		local ArrestComponent = ArrestModule:GetPlayer(attacker)
 		if not ArrestComponent then return end
@@ -96,8 +98,6 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 			end
 		end
 	end
-
-	return false
 end)
 
 bgNPC:SetStateAction('arrest', {

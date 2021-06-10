@@ -64,22 +64,16 @@ bgNPC.cfg.npcs_template = {
 		enter_to_exist_vehicle_chance = 10,
 		vehicle_group = 'residents',
 		vehicles = {
-			'sim_fphys_re7_dodge',
+			'sim_fphys_pwavia',
+			'sim_fphys_pwgaz52',
+			'sim_fphys_pwhatchback',
+			'sim_fphys_pwliaz',
 			'sim_fphys_pwmoskvich',
 			'sim_fphys_pwtrabant',
 			'sim_fphys_pwtrabant02',
 			'sim_fphys_pwvan',
 			'sim_fphys_pwvolga',
 			'sim_fphys_pwzaz',
-			'sim_fphys_pwhatchback',
-			'sim_fphys_pwliaz',
-			'sim_fphys_pwgaz52',
-			'sim_fphys_pwavia',
-			'sim_fphys_cod_st_wagon',
-			'sim_fphys_madmax_interceptor_falcon',
-			'sim_fphys_hp_izhkomby',
-			'sim_fphys_opel_blitz',
-			'sim_fphys_zil_130',
 		},
 		at_random_range = 110,
 		at_random = {
@@ -99,6 +93,36 @@ bgNPC.cfg.npcs_template = {
 			['defense'] = 10,
 			['calling_police'] = 20,
 		}
+	},
+	['taxi_driver'] = {
+		enabled = true,
+		class = 'npc_citizen',
+		name = 'Taxi driver',
+		limit = 2,
+		team = '@citizen',
+		weapons = '@citizen',
+		getting_weapon_chance = '@citizen',
+		money = '@citizen',
+		health = '@citizen',
+		weapon_skill = '@citizen',
+		max_vehicle = 2,
+		enter_to_exist_vehicle_chance = 100,
+		vehicle_group = 'taxi',
+		vehicles_random_color = true,
+		vehicles = {
+			'sim_fphys_dukes',
+		},
+		at_random_range = '@citizen',
+		at_random = '@citizen',
+		at_damage_range = '@citizen',
+		at_damage = '@citizen',
+		at_protect_range = '@citizen',
+		at_protect = '@citizen',
+		validator = function(self, npc_type)
+			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+				return false
+			end
+		end,
 	},
 	['thief'] = {
 		enabled = true,
@@ -172,9 +196,7 @@ bgNPC.cfg.npcs_template = {
 		vehicle_group = 'police',
 		enter_to_exist_vehicle_chance = 30,
 		vehicles = {
-			'sim_fphys_tdmchargersrt8_police2012',
-			'sim_fphys_tdmchargersrt8_police',
-			'sim_fphys_forcrownvic_police'
+			'sim_fphys_combineapc'
 		},
 		random_skin = true,
 		random_bodygroups = true,
@@ -258,6 +280,7 @@ bgNPC.cfg.npcs_template = {
 		health = { 110, 120 },
 		weapon_skill = WEAPON_PROFICIENCY_PERFECT,
 		vehicle_group = '@police',
+		vehicles = '@special_forces',
 		enter_to_exist_vehicle_chance = '@police',
 		money = { 0, 300 },
 		at_random = { ['walk'] = 100 },
@@ -280,7 +303,7 @@ bgNPC.cfg.npcs_template = {
 		at_damage = { ['defense'] = 100 },
 		at_protect_range = 100,
 		at_protect = { ['defense'] = 100 },
-		validator = function(self, type)
+		validator = function(self, npc_type)
 			if list.Get('NPC')[self.class] == nil then
 				return false
 			end

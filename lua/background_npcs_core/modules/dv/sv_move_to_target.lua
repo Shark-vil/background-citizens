@@ -58,7 +58,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 											vehicle_provider.bulletFireDelay = CurTime() + limit + delay + 3
 										end
 									end
-								else
+								elseif not actor:HasState({ 'fear', 'dyspnea_danger', 'run_from_danger' }) then
 									local isTrueDistance = dist <= 640000
 									local delay = vehicle_provider.actorsExitDelay or 0
 
@@ -74,59 +74,13 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 					end
 
 					if IsValid(decentvehicle) then
-						if decentvehicle:GetELS() and (not driver or isNotDanger) then
+						local els = decentvehicle:GetELS()
+						if els and (not driver or isNotDanger) then
 							decentvehicle:SetELS(false)
-						elseif not decentvehicle:GetELS() and driver and driver:HasTeam('police') then
+						elseif not els and driver and not isNotDanger and driver:HasTeam('police') then
 							decentvehicle:SetELS(true)
 						end
 					end
-			end
-		end
-	end
-end)
-
-timer.Create('BGN_DVCars_AlarmOtherActorsInRoad', 0.5, 0, function()
-	local cars = bgNPC.DVCars
-
-	for i = 1, #cars do
-		local vehicle_provider = cars[i]
-
-		if vehicle_provider then
-			local vehicle = vehicle_provider:GetVehicle()
-			local decentvehicle = vehicle_provider:GetVehicleAI()
-
-			if IsValid(vehicle) and IsValid(decentvehicle) then
-				local on_signal = false
-				local forward_pos = vehicle:GetPos() + decentvehicle:GetForward() * 150
-				debugoverlay.Sphere(forward_pos, 100, 1, Color(0, 100, 150))
-
-				for _, ent in ipairs(ents.FindInSphere(forward_pos, 100)) do
-					if not ent:IsPlayer() and not ent:IsNPC() and not ent:IsNextBot() then
-						goto skip
-					end
-
-					local AnotherActor = bgNPC:GetActor(ent)
-
-					if AnotherActor then
-						if not AnotherActor:IsAlive() or AnotherActor:InVehicle() then
-							goto skip
-						end
-
-						if AnotherActor:InCalmlyState() and not AnotherActor:HasState('walk') then
-							AnotherActor:SetState('walk')
-						end
-					end
-
-					if not on_signal then
-						on_signal = true
-					end
-
-					::skip::
-				end
-
-				if decentvehicle:GetELS() ~= on_signal then
-					decentvehicle:SetELS(on_signal)
-				end
 			end
 		end
 	end

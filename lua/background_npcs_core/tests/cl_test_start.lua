@@ -4,4 +4,5 @@ concommand.Add('bgn_unit_tests_start', function()
 
    snet.Invoke('bgn_sv_unit_test_mod_enabled')
    snet.Invoke('bgn_sv_unit_test_exist_nodes')
+   snet.Invoke('bgn_sv_unit_dv_points_exists')
 end)

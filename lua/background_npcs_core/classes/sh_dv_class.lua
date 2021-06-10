@@ -11,16 +11,16 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 	obj.passengers = {}
 	obj.passengers_models = {}
 	obj.driver = nil
+	obj.passengers_limit = -1
 
-	if vehicle_type == 'police' then
-		obj.ai_class = 'npc_dvpolice'
-		obj.ai_type = 'police'
-	elseif vehicle_type == 'taxi' then
+	if vehicle_type == 'taxi' then
 		obj.ai_class = 'npc_dvtaxi'
 		obj.ai_type = 'taxi'
+		obj.passengers_limit = 1
 	else
 		obj.ai_class = 'npc_decentvehicle'
 		obj.ai_type = 'default'
+		obj.passengers_limit = math.random(1, 4)
 	end
 
 	function obj:Initialize()
@@ -29,7 +29,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 		decentvehicle:SetPos(vehicle:GetPos())
 		decentvehicle.DontUseSpawnEffect = true
 		decentvehicle.bgn_type = self.ai_type
-		BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
+		BGN_VEHICLE:OverrideVehicle(decentvehicle)
 		decentvehicle:Spawn()
 		decentvehicle:Activate()
 		self.ai = decentvehicle
@@ -59,6 +59,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 	function obj:AddPassenger(actor)
 		if array.HasValue(self.passengers, actor) then return false end
+		if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
 
 		if self:GetDriver() ~= actor then
 			local seats_are_taken = true
@@ -158,184 +159,25 @@ end
 
 local color_green = Color(0, 255, 0)
 
-function BGN_VEHICLE:OverridePoliceVehicle(decentvehicle)
-	if not decentvehicle.bgn_type or decentvehicle.bgn_type ~= 'police' then return end
-	local dvd = DecentVehicleDestination
-	local original_DVPolice_GenerateWaypoint = decentvehicle.DVPolice_GenerateWaypoint
-
-	function decentvehicle:DVPolice_GenerateWaypoint(ent, turn)
-		if not self or not IsValid(self) then return end
-
-		if ent:IsVehicle() then
-			original_DVPolice_GenerateWaypoint(self, ent, turn)
-			return
-		end
-
-		turn = turn or false
-		assert(IsEntity(ent), string.format('Entity expected, got %s.', tostring(ent)))
-		assert(isbool(turn), string.format('Bool expected, got %s.', tostring(turn)))
-		local is_opposite, foundwp, wpside, back, neighbor = self:GetOppositeLine()
-		local tg_nearest = dvd.GetNearestWaypoint(ent:GetPos())
-
-		-- if moving towards us
-		if turn then
-			if tg_nearest == foundwp then
-				self.Waypoint = foundwp
-			elseif tg_nearest == neighbor then
-				self.Waypoint = neighbor
-			else
-				self.Waypoint = neighbor
-			end
-
-			debugoverlay.Sphere(self.Waypoint.Target, 50, 1, color_green, true)
-		end
-
-		if not array.HasValue(self.WaypointList, tg_nearest) then
-			array.insert(self.WaypointList, tg_nearest)
-			debugoverlay.Sphere(tg_nearest.Target, 30, 1, color_green, true)
-		end
-
-		-- idk why, but first it need to wait before get route
-		timer.Simple(.2, function()
-				if not self or not IsValid(self) then return end
-
-				if self.Preference and not self.PreferencesSetUpped then
-					self.Preference.StopAtTL = false -- don't stop at traffic light
-					self.Preference.GiveWay = false -- don't give way
-					self.Preference.StopEmergency = false -- don't stop after crash
-					self.Preference.WaitUntilNext = false -- don't stop at specefid waypoints
-					array.insert(dvd.DVPolice_WantedTable, self.DVPolice_LastTarget)
-					self.PreferencesSetUpped = true
-				end
-
-				if not self:GetELS() then
-					self.DVPolice_Code = 1
-					self:SetELS(true) -- set ELS on
-
-					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Lht_SetCode) then
-						VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
-					end
-				end
-
-				if not self:GetELSSound() then
-					self.DVPolice_Code = 1
-					self:SetELSSound(true) -- and set ELS sound on
-
-					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Snd_SetCode) then
-						VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
-					end
-				end
-
-				hook.Run('Decent Police: Chasing', self, ent)
-		end)
-	end
-
-	local ChangeCode = dvd.CVars.Police.ChangeCode
-
-	function decentvehicle:Think()
-			if self.DVPolice_Target and self:TargetStopped() and self.Trace.Entity == self.DVPolice_Target then
-				self.Waypoint = dvd.GetNearestWaypoint(self.DVPolice_Target:GetPos())
-			end
-
-			-- for VCMod
-			if not self.v.ELSCycleChanged then
-				self.v.ELSCycleChanged = true
-
-				if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
-					VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
-					VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
-					self.DVPolice_Code = 1
-					self:SetELS(false)
-					self:SetELSSound(false)
-				end
-			end
-
-			-- if we don't have target
-			if not IsValid(self.DVPolice_Target) then
-				if not self.Waypoint then
-					self.WaypointList = {}
-					self.NextWaypoint = nil
-					self:FindFirstWaypoint()
-				end
-
-				-- and ELS enabled
-				if self:GetELS() then
-					self.WaypointList = {}
-					self.NextWaypoint = nil
-					self:FindFirstWaypoint()
-					self:SetELS(false) -- then disable it
-					self:SetELSSound(false) -- and it
-					self.Preference.StopAtTL = true -- again be polite
-					self.Preference.GiveWay = true -- very polite
-					self.Preference.StopEmergency = true -- so damn polite stop after crash
-					self.Preference.WaitUntilNext = true -- you so.fuckin.precios.when you. stop at specefid waypoints
-					self.PreferencesSetUpped = false
-
-					if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(self.v.VC_setELSLightsCycle) and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
-						VC.ELS_Lht_SetCode(self.v, nil, nil, 1)
-						VC.ELS_Snd_SetCode(self.v, nil, nil, 1)
-						self.DVPolice_Code = 1
-						self:SetELS(false)
-						self:SetELSSound(false)
-						self.v.ELSCycleChanged = true
-					end
-
-					hook.Run('Decent Police: Calmed', self)
-				end
-			elseif not IsValid(self.DVPolice_Target) then
-				-- "wh9t the g0in on wh3r3 is m9 t9rg3t" (if target not is valid)
-				self.DVPolice_Target = nil -- "ak th3n n3v3r mind" (forgot it)
-				self:FindFirstWaypoint()
-				hook.Run('Decent Police: Reset Target', self)
-			elseif self:GetPos():DistToSqr(self.DVPolice_Target:GetPos()) > 36000000 then
-				-- If target too far
-				self.DVPolice_LastTarget = self.DVPolice_Target -- don't chase anymore, but remember this guy
-				hook.Run('Decent Police: Added wanted list', self, self.DVPolice_Target)
-				local route = dvd.GetRouteVector(self.v:GetPos(), self.DVPolice_Target:GetPos(), self.Group)
-
-				if route then
-					self.WaypointList = route -- go to the last known pos
-				else
-					self:FindFirstWaypoint()
-				end
-
-				if self.v:GetClass() == 'prop_vehicle_jeep' and VC and not self:TargetStopped() and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
-					VC.ELS_Lht_SetCode(self.v, nil, nil, 1) -- change code
-					VC.ELS_Snd_SetCode(self.v, nil, nil, 1) -- change code
-					self.DVPolice_Code = 1
-				end
-
-				self.DVPolice_Target = nil -- and clean up target
-			else
-				local tg_speed = math.Round(self.DVPolice_Target:GetVelocity():Length() * 0.09144, 0)
-
-				if not self:TargetStopped() then
-					self:DVPolice_GenerateWaypoint(self.DVPolice_Target, self:IsTargetInBack(self.DVPolice_Target))
-				end
-
-				-- if chasing for 2 mins
-				timer.Simple(ChangeCode:GetInt(), function()
-					if IsValid(self) and not self:TargetStopped() and (self.DVPolice_Target == self.DVPolice_LastTarget or not self.DVPolice_LastTarget and self.DVPolice_Target) then
-						if self.v:GetClass() == 'prop_vehicle_jeep' and VC and isfunction(VC.ELS_Lht_SetCode) and isfunction(VC.ELS_Snd_SetCode) then
-							VC.ELS_Lht_SetCode(self.v, nil, nil, 2) -- change code
-							VC.ELS_Snd_SetCode(self.v, nil, nil, 2) -- change code
-							self.DVPolice_Code = 2
-						end
-					end
-				end)
-			end
-
-			return self.BaseClass.Think(self)
-	end
+function BGN_VEHICLE:OverrideVehicle(decentvehicle)
+	local original_GetCurrentMaxSpeed = decentvehicle.GetCurrentMaxSpeed
 
 	function decentvehicle:GetCurrentMaxSpeed()
 		local limit = self.Waypoint.SpeedLimit
+		local provider = BGN_VEHICLE:GetVehicleProvider(self)
 
-		if self.DVPolice_Target and IsValid(self.DVPolice_Target) then
+		if not provider then return end
+
+		local actor = provider:GetDriver()
+		if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
 			self.Waypoint.SpeedLimit = limit * 10
 		end
 
-		return self.BaseClass.GetCurrentMaxSpeed(self)
+		if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
+			return self.BaseClass.GetCurrentMaxSpeed(self)
+		else
+			return original_GetCurrentMaxSpeed(self)
+		end
 	end
 end
 

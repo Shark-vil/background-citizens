@@ -11,8 +11,10 @@ function bgNPC:CallStateAction(actor, state_name, state_data, func_name)
    local func = action[func_name]
    if not func then return end
    
-   pcall(function()
+   xpcall(function()
       func(actor, state_name, state_data)
+   end, function(err)
+      print('[ERROR] Background NPCs action: ', err)
    end)
 end
 

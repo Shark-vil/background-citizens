@@ -12,7 +12,9 @@ bgNPC:SetStateAction('dyspnea_danger', {
 		if not data.isAnimationPlayed then
 			actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02_Entry', false, nil, function()
 				actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02', true, math.random(5, 15), function()
-					actor:SetState('run_from_danger')
+					actor:SetState('run_from_danger', {
+						dyspnea_delay = CurTime() + math.random(10, 20)
+					})
 				end)
 			end)
 
@@ -25,7 +27,7 @@ bgNPC:SetStateAction('dyspnea_danger', {
 		if dist < 1000000 then
 			if dist < 40000 then
 				actor:SetState('fear')
-			elseif math.random(0, 100) < 30 then
+			elseif math.random(0, 100) < 40 then
 				actor:SetState('run_from_danger', {
 					dyspnea_delay = CurTime() + math.random(10, 20)
 				})
