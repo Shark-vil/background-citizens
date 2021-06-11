@@ -5,7 +5,11 @@ concommand.Add('bgn_compile', function(ply, cmd, args)
 end, nil, 'Saves your points as a lua script so you can place your mesh in the workshop.')
 
 local function get_write_string(file_path, json_data)
+	local directory_name = string.GetPathFromFilename(file_path)
 	local code_string = ""
+	code_string = code_string.."if not file.Exists('"..directory_name.."', 'DATA') then "
+	code_string = code_string.."file.CreateDir('"..directory_name.."')"
+	code_string = code_string.." end "
 	code_string = code_string.."if not file.Exists('"..file_path.."', 'DATA') then "
 	code_string = code_string.."file.Write('"..file_path.."', util.Compress('"..json_data.."'))"
 	code_string = code_string.." end "
