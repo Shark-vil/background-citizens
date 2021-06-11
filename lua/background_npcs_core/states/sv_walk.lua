@@ -26,9 +26,13 @@ bgNPC:SetStateAction('walk', {
 
 		if data.updatePoint < CurTime() then
 			local node = GetNextNode(actor)
-			actor:WalkToPos(node.position, data.schedule, 'walk')
-			if #actor.walkPath == 0 then return end
-			data.updatePoint = CurTime() + math.random(15, 30)
+			if node then
+				actor:WalkToPos(node.position, data.schedule, 'walk')
+				if #actor.walkPath == 0 then return end
+				data.updatePoint = CurTime() + math.random(15, 30)
+			else
+				bgNPC:Log('NPC cannot find a point nearby', 'sv_walk')
+			end
 		end
 	end
 })
@@ -36,7 +40,7 @@ bgNPC:SetStateAction('walk', {
 hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
 	if not bgNPC.PointsExist then return end
 	if actor:GetState() ~= 'walk' then return end
-	bgNPC:Log('NPC has reached the desired point', 'Walking')
+	bgNPC:Log('NPC has reached the desired point', 'sv_walk')
 	local data = actor:GetStateData()
 	local node = GetNextNode(actor)
 	actor:WalkToPos(node.position, data.schedule, 'walk')
