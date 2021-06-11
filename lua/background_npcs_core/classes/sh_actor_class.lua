@@ -615,7 +615,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 				self.walkTarget = target
 
 				local decentvehicle = self:GetVehicleAI()
-				if decentvehicle then
+				if IsValid(decentvehicle) then
 					self.isChase = true
 					self:WalkToPos(target:GetPos(), moveType, pathType)
 				end
@@ -654,15 +654,19 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		else
 			local dvd = DecentVehicleDestination
 			local decentvehicle = self:GetVehicleAI()
-			local route = dvd.GetRouteVector(decentvehicle:GetPos(), pos)
-			if not route then return end
+			if IsValid(decentvehicle) then
+				local route = dvd.GetRouteVector(decentvehicle:GetPos(), pos)
+				if not route then return end
 
-			decentvehicle.WaypointList = route
-			decentvehicle.Waypoint = nil
-			decentvehicle.NextWaypoint = nil
+				decentvehicle.WaypointList = route
+				decentvehicle.Waypoint = nil
+				decentvehicle.NextWaypoint = nil
 
-			for _, v in ipairs(route) do
-				table.insert(walkPath, v.Target)
+				for _, v in ipairs(route) do
+					table.insert(walkPath, v.Target)
+				end
+			else
+				bgNPC:Log('Trying to build a path for a vehicle that doesn\'t exist', 'sh_actor_class:WalkToPos')
 			end
 		end
 
