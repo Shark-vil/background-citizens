@@ -230,8 +230,8 @@ function bgNPC:GetAll()
 	return self.actors
 end
 
-function bgNPC:GetAllByType(type)
-	return self.factors[type] or {}
+function bgNPC:GetAllByType(npc_type)
+	return self.factors[npc_type] or {}
 end
 
 function bgNPC:GetAllByTeam(team_data)
