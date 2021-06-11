@@ -27,8 +27,12 @@ bgNPC:SetStateAction('retreat', {
 					node = actor:GetDistantPointInRadius(1000)
 			end
 
-			actor:WalkToPos(node:GetPos(), 'run')
-			data.updatePoint = CurTime() + 5
+			if node then
+				actor:WalkToPos(node:GetPos(), 'run')
+				data.updatePoint = CurTime() + 5
+			else
+				bgNPC:Log('NPC cannot find a point nearby', 'sv_retreat')
+			end
 		end
 	end
 })
