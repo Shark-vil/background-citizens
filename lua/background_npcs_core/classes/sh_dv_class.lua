@@ -1,10 +1,10 @@
 BGN_VEHICLE = {}
 
-function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
+function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	if not DecentVehicleDestination then return nil end
 	local obj = {}
 	obj.uid = slib.GetUid()
-	obj.vehicle = vehicle
+	obj.vehicle = vehicle_entity
 	obj.type = vehicle_type or 'residents'
 	obj.actor_type = actor_type
 	obj.ai = nil
@@ -25,6 +25,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 	function obj:Initialize()
 		if self.ai or IsValid(self.ai) then return end
+		local vehicle = self.vehicle
 		local decentvehicle = ents.Create(self.ai_class)
 		decentvehicle:SetPos(vehicle:GetPos())
 		decentvehicle.DontUseSpawnEffect = true
@@ -63,6 +64,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 		if self:GetDriver() ~= actor then
 			local seats_are_taken = true
+			local vehicle = self.vehicle
 
 			for index, ent in ipairs(vehicle:GetChildren()) do
 				if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
@@ -70,7 +72,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 					passenger.Seat = ent
 					passenger.SeatIndex = index
 					passenger.actor = actor
-					passenger.v = self.vehicle
+					passenger.v = vehicle
 					passenger:SetPos(vehicle:GetPos())
 					passenger:Spawn()
 					passenger:Activate()
@@ -157,27 +159,27 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 	return obj
 end
 
-local color_green = Color(0, 255, 0)
-
 function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 	local original_GetCurrentMaxSpeed = decentvehicle.GetCurrentMaxSpeed
 
 	function decentvehicle:GetCurrentMaxSpeed()
-		local limit = self.Waypoint.SpeedLimit
-		local provider = BGN_VEHICLE:GetVehicleProvider(self)
+		if self.Waypoint and self.Waypoint.SpeedLimit then
+			local limit = self.Waypoint.SpeedLimit
+			local provider = BGN_VEHICLE:GetVehicleProvider(self)
 
-		if not provider then return end
+			if provider then
+				local actor = provider:GetDriver()
+				if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
+					self.Waypoint.SpeedLimit = limit * 10
+				end
 
-		local actor = provider:GetDriver()
-		if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
-			self.Waypoint.SpeedLimit = limit * 10
+				if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
+					return self.BaseClass.GetCurrentMaxSpeed(self)
+				end
+			end
 		end
 
-		if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
-			return self.BaseClass.GetCurrentMaxSpeed(self)
-		else
-			return original_GetCurrentMaxSpeed(self)
-		end
+		return original_GetCurrentMaxSpeed(self)
 	end
 end
 
@@ -206,13 +208,15 @@ function BGN_VEHICLE:GetVehicleProvider(vehicle)
 end
 
 if SERVER and not BGN_VEHICLE_GARRYSMOD_METATABLE_OVERRIDE_SUCCESS then
-	local vehiclemeta = FindMetaTable('Vehicle')
-	local GetDriver = vehiclemeta.GetDriver
+	local VehicleBase = FindMetaTable('Vehicle')
+	local original_GetDriver = VehicleBase.GetDriver
 
-	function vehiclemeta:GetDriver(...)
-		if self.BGN_DecentVehiclePassenger and IsValid(self.BGN_DecentVehiclePassenger) then return self.BGN_DecentVehiclePassenger end
+	function VehicleBase:GetDriver(...)
+		if self.BGN_DecentVehiclePassenger and IsValid(self.BGN_DecentVehiclePassenger) then
+			return self.BGN_DecentVehiclePassenger
+		end
 
-		return GetDriver(self, ...)
+		return original_GetDriver(self, ...)
 	end
 
 	BGN_VEHICLE_GARRYSMOD_METATABLE_OVERRIDE_SUCCESS = true

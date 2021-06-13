@@ -49,6 +49,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.data = data
 	obj.weapon = nil
 	obj.sync_players_hash = {}
+	obj.state_delay = -1
 
 	if data.weapons and (not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance) then
 		obj.weapon = array.Random(data.weapons)
@@ -97,6 +98,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	obj.npc_schedule = -1
 	obj.npc_state = -1
+
+	function obj:SetStateDelay(time)
+		self.state_delay = CurTime() + time
+	end
 
 	function obj:SyncFunction(name, ply, data)
 		if CLIENT then return end

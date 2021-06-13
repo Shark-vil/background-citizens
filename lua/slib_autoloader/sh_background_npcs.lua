@@ -13,7 +13,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.4.12'
+bgNPC.VERSION = '1.4.13'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -83,6 +83,8 @@ script:using('modules/cl_updatepage.lua')
 script:using('modules/cl_render_optimization.lua')
 script:using('modules/sv_run_logic_optimization.lua')
 script:using('modules/debug/cl_render_target_path.lua')
+script:using('modules/debug/sv_movement_render.lua')
+script:using('modules/debug/cl_movement_render.lua')
 script:using('modules/sv_npc_look_at_object.lua')
 script:using('modules/sv_player_look_at_object.lua')
 script:using('modules/sv_static_animation_controller.lua')
