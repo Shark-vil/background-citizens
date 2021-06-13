@@ -1,10 +1,10 @@
 BGN_VEHICLE = {}
 
-function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
+function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	if not DecentVehicleDestination then return nil end
 	local obj = {}
 	obj.uid = slib.GetUid()
-	obj.vehicle = vehicle
+	obj.vehicle = vehicle_entity
 	obj.type = vehicle_type or 'residents'
 	obj.actor_type = actor_type
 	obj.ai = nil
@@ -25,6 +25,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 	function obj:Initialize()
 		if self.ai or IsValid(self.ai) then return end
+		local vehicle = self.vehicle
 		local decentvehicle = ents.Create(self.ai_class)
 		decentvehicle:SetPos(vehicle:GetPos())
 		decentvehicle.DontUseSpawnEffect = true
@@ -63,6 +64,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 
 		if self:GetDriver() ~= actor then
 			local seats_are_taken = true
+			local vehicle = self.vehicle
 
 			for index, ent in ipairs(vehicle:GetChildren()) do
 				if ent:GetClass() == 'prop_vehicle_prisoner_pod' and not IsValid(ent:GetDriver()) then
@@ -70,7 +72,7 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 					passenger.Seat = ent
 					passenger.SeatIndex = index
 					passenger.actor = actor
-					passenger.v = self.vehicle
+					passenger.v = vehicle
 					passenger:SetPos(vehicle:GetPos())
 					passenger:Spawn()
 					passenger:Activate()
