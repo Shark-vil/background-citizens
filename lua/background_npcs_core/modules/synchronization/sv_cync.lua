@@ -1,7 +1,7 @@
 local sync_radius = 700
 local sync_distance = sync_radius ^ 2
 
-timer.Create('BGN_SynchronizationService', 3, 0, function()
+timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 	local sync_list = {}
 
 	do
