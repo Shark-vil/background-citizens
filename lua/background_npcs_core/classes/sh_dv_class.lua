@@ -157,8 +157,6 @@ function BGN_VEHICLE:Instance(vehicle, vehicle_type, actor_type)
 	return obj
 end
 
-local color_green = Color(0, 255, 0)
-
 function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 	local original_GetCurrentMaxSpeed = decentvehicle.GetCurrentMaxSpeed
 
