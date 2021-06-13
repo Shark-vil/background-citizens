@@ -21,7 +21,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 	for i = 1, #actors do
 		local actor = actors[i]
 
-		if actor.walkPath then
+		if actor and actor.walkPath and actor:IsAlive() then
 			local count = #actor.walkPath
 
 			if count ~= 0 then
