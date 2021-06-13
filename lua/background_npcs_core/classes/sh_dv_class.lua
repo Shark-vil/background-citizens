@@ -206,13 +206,15 @@ function BGN_VEHICLE:GetVehicleProvider(vehicle)
 end
 
 if SERVER and not BGN_VEHICLE_GARRYSMOD_METATABLE_OVERRIDE_SUCCESS then
-	local vehiclemeta = FindMetaTable('Vehicle')
-	local GetDriver = vehiclemeta.GetDriver
+	local VehicleBase = FindMetaTable('Vehicle')
+	local original_GetDriver = VehicleBase.GetDriver
 
-	function vehiclemeta:GetDriver(...)
-		if self.BGN_DecentVehiclePassenger and IsValid(self.BGN_DecentVehiclePassenger) then return self.BGN_DecentVehiclePassenger end
+	function VehicleBase:GetDriver(...)
+		if self.BGN_DecentVehiclePassenger and IsValid(self.BGN_DecentVehiclePassenger) then
+			return self.BGN_DecentVehiclePassenger
+		end
 
-		return GetDriver(self, ...)
+		return original_GetDriver(self, ...)
 	end
 
 	BGN_VEHICLE_GARRYSMOD_METATABLE_OVERRIDE_SUCCESS = true
