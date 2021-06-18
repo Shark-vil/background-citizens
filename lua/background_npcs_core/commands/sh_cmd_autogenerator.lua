@@ -59,7 +59,7 @@ local function ConstructParent(node, set_max_pass, yield)
 	end
 end
 
-slib:RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
+slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 	local old_progress = -1
 
 	if not navmesh.IsLoaded() then
