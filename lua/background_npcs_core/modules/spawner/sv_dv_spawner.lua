@@ -19,7 +19,7 @@ local function FindSpawnLocation(center)
 	local points = GetNearPoints(center, spawn_radius)
 	if #points == 0 then return nil end
 
-	points = table.shuffleBySeq(points)
+	points = table.shuffle(points)
 	local dvd = DecentVehicleDestination
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2

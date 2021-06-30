@@ -8,7 +8,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	local current_pass = 0
 	local nodePosition
 	coroutine.yield()
-	points = table.shuffleBySeq(points)
+	points = table.shuffle(points)
 	coroutine.yield()
 
 	for i = 1, #points do
