@@ -40,7 +40,7 @@ function ASSET:SetDialogue(actor1, actor2)
    local npc1_model = actor1:GetNPC():GetModel()
    local npc2_model = actor2:GetNPC():GetModel()
 
-   local dialogue = array.Random(bgNPC.cfg.dialogues)
+   local dialogue = table.RandomBySeq(bgNPC.cfg.dialogues)
    local replic = dialogue.list[1]
 
    if dialogue.interlocutors == nil then

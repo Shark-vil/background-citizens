@@ -328,7 +328,7 @@ function bgNPC:GetAllByRadius(center, radius)
 end
 
 function bgNPC:HasNPC(npc)
-	return array.HasValue(bgNPC:GetAllNPCs(), npc)
+	return table.HasValueBySeq(bgNPC:GetAllNPCs(), npc)
 end
 
 function bgNPC:IsTeamOnce(npc1, npc2)

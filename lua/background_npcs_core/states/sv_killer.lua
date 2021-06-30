@@ -59,7 +59,7 @@ bgNPC:SetStateAction('killer', {
 					local isMeleeWeapon = false
 					local npcWeapon = npc:GetActiveWeapon()
 					if IsValid(npcWeapon) then
-						isMeleeWeapon = array.HasValue(MeleeWeapon, npcWeapon:GetClass())
+						isMeleeWeapon = table.HasValueBySeq(MeleeWeapon, npcWeapon:GetClass())
 					end
 		
 					if isMeleeWeapon then

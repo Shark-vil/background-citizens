@@ -21,7 +21,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 		end
 	end
 
-	local target = array.Random(targets)
+	local target = table.RandomBySeq(targets)
 	if IsValid(target) then
 		actor:AddEnemy(target)
 	else

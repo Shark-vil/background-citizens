@@ -52,7 +52,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.state_delay = -1
 
 	if data.weapons and (not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance) then
-		obj.weapon = array.Random(data.weapons)
+		obj.weapon = table.RandomBySeq(data.weapons)
 	end
 
 	obj.type = npc_type
@@ -239,7 +239,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
 
-		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then
+		if self:GetNPC() ~= ent and not table.HasValueBySeq(self.targets, ent) then
 			table.insert(self.targets, ent)
 		end
 	end
@@ -288,7 +288,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	-- @param ent entity any entity
 	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
-		return array.HasValue(self.targets, ent)
+		return table.HasValueBySeq(self.targets, ent)
 	end
 
 	-- Returns the number of existing targets for the actor.
@@ -348,7 +348,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not array.HasValue(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+		if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
 			if npc:IsNPC() then
 				local relationship = D_HT
 				if reaction == 'fear' then relationship = D_FR end
@@ -408,7 +408,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	function obj:HasEnemy(ent)
 		if ent ~= NULL and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
-		return array.HasValue(self.enemies, ent)
+		return table.HasValueBySeq(self.enemies, ent)
 	end
 
 	function obj:EnemiesCount()
@@ -739,12 +739,12 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local value = value
 		if self.data.team ~= nil and value ~= nil then
 			if isstring(value) then
-				return array.HasValue(self.data.team, value)
+				return table.HasValueBySeq(self.data.team, value)
 			end
 
 			if isentity(value) then
 				if value:IsPlayer() then
-					if array.HasValue(self.data.team, 'player') then
+					if table.HasValueBySeq(self.data.team, 'player') then
 						return true
 					else
 						return bgNPC:GetModule('team_parent'):HasParent(value, self)
@@ -1050,13 +1050,13 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local npc_model = self.npc:GetModel()
 		local scream_sound = nil
 		if tobool(string.find(npc_model, 'female_*')) then
-			scream_sound = array.Random(female_scream)
+			scream_sound = table.RandomBySeq(female_scream)
 		elseif tobool(string.find(npc_model, 'male_*')) then
-			scream_sound = array.Random(male_scream)
+			scream_sound = table.RandomBySeq(male_scream)
 		else
 			local concatenated_table = table.Copy(male_scream)
 			table.Add(concatenated_table, female_scream)
-			scream_sound = array.Random(concatenated_table)
+			scream_sound = table.RandomBySeq(concatenated_table)
 		end
 
 		if scream_sound ~= nil and isstring(scream_sound) then
@@ -1090,19 +1090,19 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 
 	function obj:InDangerState()
-		return array.HasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
+		return table.HasValueBySeq(bgNPC.cfg.npcs_states['danger'], self:GetState())
 	end
 
 	function obj:InCalmlyState()
-		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
+		return table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], self:GetState())
 	end
 
 	function obj:HasDangerState(state_name)
-		return array.HasValue(bgNPC.cfg.npcs_states['danger'], state_name)
+		return table.HasValueBySeq(bgNPC.cfg.npcs_states['danger'], state_name)
 	end
 
 	function obj:HasCalmlyState(state_name)
-		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
+		return table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], state_name)
 	end
 
 	function obj:IsMeleeWeapon()
@@ -1112,7 +1112,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return array.HasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
+		return table.HasValueBySeq(bgNPC.cfg.weapons['melee'], wep:GetClass())
 	end
 
 	function obj:IsFirearmsWeapon()
@@ -1122,7 +1122,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return not array.HasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+		return not table.HasValueBySeq(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
 	end
 
 	function obj:EnterVehicle(vehicle)

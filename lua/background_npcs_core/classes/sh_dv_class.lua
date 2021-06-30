@@ -59,7 +59,7 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	end
 
 	function obj:AddPassenger(actor)
-		if array.HasValue(self.passengers, actor) then return false end
+		if table.HasValueBySeq(self.passengers, actor) then return false end
 		if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
 
 		if self:GetDriver() ~= actor then

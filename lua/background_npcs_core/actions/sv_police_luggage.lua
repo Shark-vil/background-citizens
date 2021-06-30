@@ -18,7 +18,7 @@ local function TargetPlayerPush(npc, target, velocity)
 		"physics/body/body_medium_impact_soft7.wav",
 	}
 
-	target:EmitSound(array.Random(slapSounds), 75, 100, 0.3, CHAN_AUTO)
+	target:EmitSound(table.RandomBySeq(slapSounds), 75, 100, 0.3, CHAN_AUTO)
 	target:SetVelocity(forward * velocity)
 end
 

@@ -16,7 +16,7 @@ hook.Add('BGN_StealFinish', 'BGN_Sandbox_StealMoney', function(actor, target, su
    local activeWeapon = target:GetActiveWeapon()
 
    for _, weapon in ipairs(target:GetWeapons()) do
-      if activeWeapon ~= weapon and not array.HasValue(weapon_ignore, weapon:GetClass()) then
+      if activeWeapon ~= weapon and not table.HasValueBySeq(weapon_ignore, weapon:GetClass()) then
          stealWeapon = weapon
          break
       end

@@ -21,7 +21,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, da
 
 	local npc = actor:GetNPC()
 	local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
-	local ActorTarget = array.Random(actors)
+	local ActorTarget = table.RandomBySeq(actors)
 
 	if ActorTarget ~= actor and ActorTarget:IsAlive() then
 		if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return true end

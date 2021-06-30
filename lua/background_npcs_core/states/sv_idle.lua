@@ -1,6 +1,6 @@
 hook.Add("BGN_PreSetNPCState", "BGN_IdleStateDayaValidate", function(actor, state, data)
 	if actor:HasState('idle') then
-		if array.HasValue(bgNPC.cfg.npcs_states['calmly'], state) then
+		if table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], state) then
 			return true
 		end
 	end

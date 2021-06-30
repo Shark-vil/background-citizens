@@ -8,7 +8,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	local current_pass = 0
 	local nodePosition
 	coroutine.yield()
-	points = array.shuffle(points)
+	points = table.shuffleBySeq(points)
 	coroutine.yield()
 
 	for i = 1, #points do
@@ -82,7 +82,7 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	local all_players = player.GetAll()
 
 	if not desiredPosition then
-		local ply = array.Random(all_players)
+		local ply = table.RandomBySeq(all_players)
 		desiredPosition = ply:GetPos()
 	end
 
@@ -113,7 +113,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	local npc_class
 
 	if istable(npcData.class) then
-		npc_class = array.Random(npcData.class)
+		npc_class = table.RandomBySeq(npcData.class)
 		is_many_classes = true
 	else
 		npc_class = npcData.class
@@ -157,9 +157,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
-			model = array.Random(npcData.models[npc_class])
+			model = table.RandomBySeq(npcData.models[npc_class])
 		elseif #npcData.models ~= 0 then
-			model = array.Random(npcData.models)
+			model = table.RandomBySeq(npcData.models)
 		end
 
 		if model and util.IsValidModel(model) then

@@ -19,7 +19,7 @@ local function FindSpawnLocation(center)
 	local points = GetNearPoints(center, spawn_radius)
 	if #points == 0 then return nil end
 
-	points = array.shuffle(points)
+	points = table.shuffleBySeq(points)
 	local dvd = DecentVehicleDestination
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
@@ -185,12 +185,12 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local actor_type = actor:GetType()
 	if not bypass and not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
 
-	local ply = array.Random(player.GetAll())
+	local ply = table.RandomBySeq(player.GetAll())
 	local data = FindSpawnLocation(ply:GetPos())
 	if not data then return false end
 
 	local npc = actor:GetNPC()
-	local car_class = array.Random(car_classes)
+	local car_class = table.RandomBySeq(car_classes)
 	local spawn_pos = data[1] + Vector(0, 0, 50)
 	local spawn_ang = data[2]
 	local car

@@ -1,5 +1,5 @@
 local function GetNextNode(actor)
-	return array.Random(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
+	return table.RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
 end
 
 bgNPC:SetStateAction('walk', {
