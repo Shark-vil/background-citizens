@@ -1,4 +1,12 @@
+local function DebugIsEnabled()
+	if not GetConVar('bgn_debug'):GetBool() then return false end
+	if not GetConVar('bgn_cl_draw_npc_path'):GetBool() then return false end
+	return true
+end
+
 snet.RegisterCallback('bgn_debug_send_actor_movement_path', function(ply, uid, path)
+	if not DebugIsEnabled() then return end
+
 	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 	actor.walkPath = path
@@ -12,11 +20,14 @@ local color_black = Color(0, 0, 0)
 local vec_20 = Vector(0, 0, 20)
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
-	if not GetConVar('bgn_debug'):GetBool() then return end
+	if not DebugIsEnabled() then return end
 
 	render.SetColorMaterial()
 
 	local actors = bgNPC:GetAll()
+	local cam_angle = LocalPlayer():EyeAngles()
+	cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
+	cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 	
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -39,10 +50,6 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 				end
 
 				render.DrawSphere(pos, 10, 30, 30, clr_green)
-
-				local cam_angle = LocalPlayer():EyeAngles()
-				cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
-				cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 
 				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw.SimpleTextOutlined(tostring(i), 

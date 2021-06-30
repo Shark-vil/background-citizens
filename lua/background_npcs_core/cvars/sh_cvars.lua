@@ -36,12 +36,10 @@ bgNPC.cvar.bgn_tool_seat_offset_pos_z = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
-
-if CLIENT then
-	bgNPC.cvar.bgn_cl_field_view_optimization = 1
-	bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
-	bgNPC.cvar.bgn_cl_ambient_sound = 1
-end
+bgNPC.cvar.bgn_cl_draw_npc_path = 0
+bgNPC.cvar.bgn_cl_field_view_optimization = 1
+bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
+bgNPC.cvar.bgn_cl_ambient_sound = 1
 
 function bgNPC:IsActiveNPCType(type)
 	return GetConVar('bgn_npc_type_' .. type):GetBool()
