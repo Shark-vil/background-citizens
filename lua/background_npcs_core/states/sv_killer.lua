@@ -82,5 +82,8 @@ bgNPC:SetStateAction('killer', {
 
 			data.delay = CurTime() + 3
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
 	end
 })
