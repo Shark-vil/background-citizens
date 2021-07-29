@@ -25,9 +25,12 @@ function(attacker, target)
 			goto skip
 		end
 
-		if actor:HasState(bgNPC.cfg.npcs_states['calmly']) then
+		if actor:InCalmlyState() then
+			local last_reaction = actor:GetLastReaction()
+			if last_reaction == 'ignore' then goto skip end
+
 			actor:RemoveAllTargets()
-			actor:SetState(actor:GetLastReaction())
+			actor:SetState(last_reaction, nil, true)
 		end
 
 		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
