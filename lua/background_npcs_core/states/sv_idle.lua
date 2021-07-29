@@ -1,33 +1,20 @@
-hook.Add("BGN_PreSetNPCState", "BGN_IdleStateDayaValidate", function(actor, state, data)
-	if actor:HasState('idle') then
-		if table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], state) then
-			return true
-		end
-	end
-
-	if state ~= 'idle' then return end
-
-	local delay = math.random(10, 30)
-
-	return {
-		state = state,
-		data = {
-			time = delay,
-			delay = CurTime() + delay
-		}
-	}
-end)
-
-hook.Add("BGN_SetNPCState", "BGN_SetIdleNPCAnimationIfStateEqualIdle", function(actor, state, data)
-	if state ~= 'idle' then return end
-	local id = tostring(math.random(1, 4))
-	actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
-end)
+local function idle_is_finish(actor, data)
+	return data.delay < CurTime()
+end
 
 bgNPC:SetStateAction('idle', {
-	update = function(actor)
-		if actor:GetStateData().delay < CurTime() then
-			actor:RandomState()
-		end
+	start = function(actor, state, data)
+		local delay = math.random(10, 30)
+		data.time = delay
+		data.delay = CurTime() + delay
+
+		local id = tostring(math.random(1, 4))
+		actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
+	end,
+	update = function(actor, state, data)
+		if idle_is_finish(actor, data) then actor:RandomState() end
+	end,
+	not_stop = function(actor, state, data)
+		return not idle_is_finish(actor, data)
 	end
 })
