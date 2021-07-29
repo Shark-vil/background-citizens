@@ -1,7 +1,10 @@
-hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, state)
-	if state == 'defense' then
-		if not actor.weapon then return 'fear' end
+local WantedModule = bgNPC:GetModule('wanted')
 
+bgNPC:SetStateAction('defense', {
+	pre_start = function(actor)
+		if not actor.weapon then return 'fear' end
+	end,
+	state = function(actor)
 		if actor:HasTeam('police') then
 			local enemy = actor:GetNearEnemy()
 			local npc = actor:GetNPC()
@@ -9,11 +12,7 @@ hook.Add("BGN_PreSetNPCState", "BGN_PlaySoundForDefenseState", function(actor, s
 				npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
 			end
 		end
-	end
-end)
-
-local WantedModule = bgNPC:GetModule('wanted')
-bgNPC:SetStateAction('defense', {
+	end,
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
@@ -80,5 +79,8 @@ bgNPC:SetStateAction('defense', {
 
 			data.delay = CurTime() + 3
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
 	end
 })
