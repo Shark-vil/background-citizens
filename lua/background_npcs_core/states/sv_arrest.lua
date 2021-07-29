@@ -166,5 +166,13 @@ bgNPC:SetStateAction('arrest', {
 				end
 			end
 		end
-	end
+	end,
+	not_stop = function(actor, state, data)
+		local target = actor:GetFirstTarget()
+		if IsValid(target) then
+			local ArrestComponent = ArrestModule:GetPlayer(target)
+			if ArrestComponent and ArrestComponent.arrested then return true end
+		end
+		return false
+	end,
 })
