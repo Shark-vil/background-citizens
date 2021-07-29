@@ -22,9 +22,9 @@ bgNPC:SetStateAction('retreat', {
 			local node
 
 			if IsValid(enemy) then
-					node = actor:GetDistantPointToPoint(1000, enemy:GetPos())
+				node = actor:GetDistantPointToPoint(1000, enemy:GetPos())
 			else
-					node = actor:GetDistantPointInRadius(1000)
+				node = actor:GetDistantPointInRadius(1000)
 			end
 
 			if node then
@@ -34,5 +34,8 @@ bgNPC:SetStateAction('retreat', {
 				bgNPC:Log('NPC cannot find a point nearby', 'sv_retreat')
 			end
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
 	end
 })
