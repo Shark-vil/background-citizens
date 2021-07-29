@@ -251,36 +251,43 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
 		local ent = ent
+		local index_type = type(index)
 
-		if index ~= nil then
-			if not isnumber(index) then return end
-			ent = self.targets[index]
-		end
-
-		if not isentity(ent) then return end
+		if isnumber(index) then ent = self.targets[index] end
 
 		local old_count = #self.targets
 
-		if ent == self.walkTarget then
-			self.walkTarget = NULL
+		if not hook.Run('BGN_RemoveActorTarget', self, ent) then
+			local npc = self:GetNPC()
+
+			if isentity(ent) and ent == self.walkTarget then self.walkTarget = NULL end
+
+			if isnumber(index) then
+				table.remove(self.targets, index)
+			elseif isentity(ent) then
+				table.RemoveValueBySeq(self.targets, ent)
+			end
+
+			if old_count > 0 and #self.targets == 0 then
+				hook.Run('BGN_ResetTargetsForActor', self)
+			end
 		end
 
-		if index ~= nil then
-			table.remove(self.targets, index)
-		else
-			table.RemoveByValue(self.targets, ent)
-		end
-
-		if old_count > 0 and #self.targets <= 0 then
-			hook.Run('BGN_ResetTargetsForActor', self)
-		end
+		return #self.targets
 	end
 
 	-- Removes all targets from the list.
 	-- ? Actually calls method "RemoveTarget" for all targets in the list.
 	function obj:RemoveAllTargets()
-		for i = 1, #self.targets do
-			self:RemoveTarget(self.targets[i])
+		local last_count = 0
+		for i = #self.targets, 1, -1 do
+			last_count = self:RemoveTarget(nil, i)
+		end
+
+		-- Safety bag. It may be removed in the future.
+		if last_count > 0 then
+			table.Empty(self.targets)
+			hook.Run('BGN_ResetTargetsForActor', self)
 		end
 	end
 
@@ -362,47 +369,46 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	function obj:RemoveEnemy(ent, index)
 		local ent = ent
 
-		if index ~= nil then
-			if not isnumber(index) then return end
-			ent = self.enemies[index]
-		end
-
-		if not isentity(ent) then return end
+		if isnumber(index) then ent = self.enemies[index] end
 
 		local old_count = #self.enemies
 
-		if ent == self.walkTarget then
-			self.walkTarget = NULL
-		end
-
 		if not hook.Run('BGN_RemoveActorEnemy', self, ent) then
 			local npc = self:GetNPC()
-			
-			if npc:IsNPC() then
-				if npc:GetEnemy() == ent then
-					npc:SetEnemy(NULL)
-				end
 
-				if IsValid(ent) then
-					npc:AddEntityRelationship(ent, D_NU, 99)
+			if isentity(ent) then
+				if ent == self.walkTarget then self.walkTarget = NULL end
+				
+				if IsValid(npc) and npc:IsNPC() then
+					if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
+					if IsValid(ent) then npc:AddEntityRelationship(ent, D_NU, 99) end
 				end
 			end
 
-			if index ~= nil then
+			if isnumber(index) then
 				table.remove(self.enemies, index)
-			else
-				table.RemoveByValue(self.enemies, ent)
+			elseif isentity(ent) then
+				table.RemoveValueBySeq(self.enemies, ent)
 			end
 
-			if old_count > 0 and #self.enemies <= 0 then
+			if old_count > 0 and #self.enemies == 0 then
 				hook.Run('BGN_ResetEnemiesForActor', self)
 			end
 		end
+
+		return #self.enemies
 	end
 
 	function obj:RemoveAllEnemies()
-		for i = 1, #self.enemies do
-			self:RemoveEnemy(self.enemies[i])
+		local last_count = 0
+		for i = #self.enemies, 1, -1 do
+			last_count = self:RemoveEnemy(nil, i)
+		end
+
+		-- Safety bag. It may be removed in the future.
+		if last_count > 0 then
+			table.Empty(self.enemies)
+			hook.Run('BGN_ResetEnemiesForActor', self)
 		end
 	end
 
@@ -422,7 +428,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 			npc:AddEntityRelationship(active_enemy, D_NU, 99)
 		end
 
-      if #self.enemies == 0 then return end
+    if #self.enemies == 0 then return end
 
 		for i = 1, #self.enemies do
 			local enemy = self.enemies[i]
@@ -443,6 +449,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 					local time = npc:GetEnemyLastTimeSeen(enemy)
 					if time + 20 < CurTime() then
 						self:RemoveEnemy(enemy)
+						print(self.uid, 'remove enemy - ', enemy)
 					end
 				end
 			end
