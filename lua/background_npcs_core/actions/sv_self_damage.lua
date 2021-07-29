@@ -46,8 +46,11 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		end
 		
 		if ActorTarget:InCalmlyState() then
+			local last_reaction = ActorTarget:GetLastReaction()
+			if last_reaction == 'ignore' then return end
+			
 			ActorTarget:RemoveAllTargets()
-			ActorTarget:SetState(ActorTarget:GetLastReaction())
+			ActorTarget:SetState(last_reaction, nil, true)
 		end
 
 		ActorTarget:AddEnemy(attacker, reaction)
