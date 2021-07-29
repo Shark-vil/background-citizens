@@ -202,6 +202,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	local actor = BGN_ACTOR:Instance(npc, npcType)
 	actor:RandomState()
 	hook.Run('BGN_InitActor', actor)
+	actor:RemoveAllEnemies()
+	actor:RemoveAllTargets()
+	hook.Run('BGN_PostInitActor', actor)
 
 	return actor
 end

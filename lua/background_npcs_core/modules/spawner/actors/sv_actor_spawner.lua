@@ -31,20 +31,30 @@ hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
 	end
 end)
 
+local function _SetNPCRelationship(actor_npc, npc)
+	if GetConVar('bgn_ignore_another_npc'):GetBool() then
+		actor_npc:AddEntityRelationship(npc, D_NU, 99)
+		npc:AddEntityRelationship(actor_npc, D_NU, 99)
+	else
+		local ply = player.GetAll()[1]
+		if ply and npc:Disposition(ply) ~= D_HT then
+			actor_npc:AddEntityRelationship(npc, D_NU, 99)
+			npc:AddEntityRelationship(actor_npc, D_NU, 99)
+		end
+	end
+end
+
 hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
 	local actor_npc = actor:GetNPC()
-	if not IsValid(actor_npc) then return end
+	if not IsValid(actor_npc) or not actor_npc:IsNPC() then return end
 
 	local entities = ents.GetAll()
 	for i = 1, #entities do
 		local npc = entities[i]
-		if npc:IsNPC() and not npc.isBgnActor then
-			actor:RemoveTarget(npc)
-
-			actor_npc:AddEntityRelationship(npc, D_NU, 99)
-			npc:AddEntityRelationship(actor_npc, D_NU, 99)
+		if npc and npc:IsNPC() and not npc.isBgnActor then
+			_SetNPCRelationship(actor_npc, npc)
 		end
 	end
 end)
@@ -60,12 +70,13 @@ hook.Add("OnEntityCreated", "BGN_AddAnotherNPCToIgnore", function(ent)
 		local actors = bgNPC:GetAll()
 		for i = 1, #actors do
 			local actor = actors[i]
-			local npc = actor:GetNPC()
-			if IsValid(npc) then
-				actor:RemoveTarget(ent)
-				
-				ent:AddEntityRelationship(npc, D_NU, 99)
-				npc:AddEntityRelationship(ent, D_NU, 99)
+			if actor then
+				local npc = actor:GetNPC()
+				if IsValid(npc) and npc:IsNPC() then
+					_SetNPCRelationship(npc, ent)
+					actor:RemoveTarget(ent)
+					actor:RemoveEnemy(ent)
+				end
 			end
 		end
 	end)
