@@ -543,39 +543,69 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		return self.state_lock
 	end
 
-	function obj:SetState(state, data)
-		if self:GetData().disable_states then return end
-		if self.state_lock then return end
-		if state == 'ignore' then return end
-		if self.state_data.state == state then return end
+	function obj:CallStateAction(current_state, func_name, ...)
+		current_state = current_state or self.state_data.state
+		return bgNPC:CallStateAction(current_state, func_name, self, ...)
+	end
 
-		data = data or {}
+	function obj:SetState(state, data, forced)
+		forced = forced or false
 
-		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
-		if hook_result then
-			if isbool(hook_result) then
-				return
-			elseif isstring(hook_result) then
-				state = hook_result
-			elseif istable(hook_result) then
-				state = hook_result.state or state
-				data = hook_result.data or {}
-			end
+		if not forced then
+			if state == 'ignore' then return end
+			if self:GetData().disable_states then return end
+			if self.state_lock then return end
+			if self.state_data.state == state then return end
+			if self.state_delay > CurTime() then return end
 		end
 
-		self:StopWalk()
+		state = state or 'none'
+		data = data or {}
 
-		self.old_state = self.state_data
-		self.state_data = { state = state, data = data }
+		local current_state = self.state_data.state
+		local current_data = self.state_data.data
+
+		local is_locked = self:CallStateAction(nil, 'not_stop', current_state, current_data, state, data)
+		if not forced and is_locked then return end
+
+		-- local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
+		-- if hook_result then
+		-- 	if isbool(hook_result) then
+		-- 		return
+		-- 	elseif isstring(hook_result) then
+		-- 		state = hook_result
+		-- 	elseif istable(hook_result) then
+		-- 		state = hook_result.state or state
+		-- 		data = hook_result.data or {}
+		-- 	end
+		-- end
+
+		if not forced and bgNPC:StateActionExists(state, 'validator') then
+			if not self:CallStateAction(state, 'validator', state, data) then return end
+		end
+
+		local new_state, new_data = self:CallStateAction(state, 'pre_start', state, data)
+		if type(new_state) == 'boolean' and new_state == true then return end
+
+		state = new_state or state
+		data = new_data or data
+
+		self:CallStateAction(nil, 'stop', current_state, current_data)
 
 		if SERVER then
+			self:StopWalk()
 			self.anim_action = nil
 			self:ResetSequence()
 		end
 
-		if IsValid(self.npc) then
-			hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
-		end
+		state = new_state or state
+		data = new_data or data
+
+		self.old_state = self.state_data
+		self.state_data = { state = state, data = data }
+
+		self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
+		hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 		
 		return self.state_data
 	end
