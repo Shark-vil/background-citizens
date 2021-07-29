@@ -20,8 +20,8 @@ hook.Add("EntityTakeDamage", "BGN_FoundFirstAttacker", function(target, dmginfo)
 
    local a, t = hook.Run('BGN_Module_FirstAttackerValidator', attacker, target)
 
-   if a ~= nil then attacker = a end
-   if t ~= nil then target = t end
+   if a and type(a) == 'Entity' then attacker = a end
+   if t and type(t) == 'Entity' then target = t end
 
    table.insert(first_attackers, {
       attacker = attacker,
@@ -32,9 +32,9 @@ end)
 function ASSET:IsFirstAttacker(attacker, victim)
    for i = 1, #first_attackers do
       local data = first_attackers[i]
-      if data.victim == attacker then
-         return false
-      end
+      -- if data.victim == attacker then
+      --    return false
+      -- end
 
       if data.attacker == attacker and data.victim == victim then
          return true
