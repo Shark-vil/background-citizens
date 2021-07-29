@@ -34,7 +34,7 @@ bgNPC:SetStateAction('dyspnea_danger', {
 			end
 		end
 	end,
-	stop = function(actor)
-		actor:ResetSequence()
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
 	end
 })
