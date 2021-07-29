@@ -118,6 +118,8 @@ function ASSET:UnsetDialogue(id)
    for i = #dialogue_actors, 1, -1 do
       local dialogue = dialogue_actors[i]
       if dialogue.id == id then
+         table.remove(dialogue_actors, i)
+         
          local actor1 = dialogue.interlocutors[1]
          local actor2 = dialogue.interlocutors[2]
 
@@ -128,7 +130,6 @@ function ASSET:UnsetDialogue(id)
             actor2:RandomState()
          end
 
-         table.remove(dialogue_actors, i)
          break
       end
    end
