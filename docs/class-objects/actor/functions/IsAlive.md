@@ -1,6 +1,6 @@
 # IsAlive
 
-## SERVER
+## SHARED
 ```lua
 	ACTOR:IsAlive()
 ```

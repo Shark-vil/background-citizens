@@ -1,6 +1,6 @@
 # GetNPC
 
-## SERVER
+## SHARED
 ```lua
 	ACTOR:GetNPC()
 ```

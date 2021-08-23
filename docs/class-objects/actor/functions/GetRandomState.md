@@ -1,6 +1,6 @@
 # GetRandomState
 
-## SERVER
+## SHARED
 ```lua
 	ACTOR:GetRandomState()
 ```
