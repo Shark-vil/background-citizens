@@ -4,4 +4,12 @@
 The main object of the actor. This object is an intermediary between the NPC entity. It does not directly change the entities of the NPC, but is a shell for performing operations.
 
 ## Functions
+- [GetLastReaction](./functions/GetLastReaction.md)
+- [GetNPC](./functions/GetNPC.md)
+- [GetRandomState](./functions/GetRandomState.md)
+- [IsAlive](./functions/IsAlive.md)
+- [IsStateDelay](./functions/IsStateDelay.md)
 - [RandomState](./functions/RandomState.md)
+- [ResetStateDelay](./functions/ResetStateDelay.md)
+- [SetReaction](./functions/SetReaction.md)
+- [SetStateDelay](./functions/SetStateDelay.md)
