@@ -103,6 +103,14 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		self.state_delay = CurTime() + time
 	end
 
+	function obj:IsStateDelay()
+		return self.state_delay > CurTime()
+	end
+
+	function obj:ResetStateDelay()
+		self.state_delay = 0
+	end
+
 	function obj:SyncFunction(name, ply, data)
 		if CLIENT then return end
 		if not self:IsAlive() then return end
