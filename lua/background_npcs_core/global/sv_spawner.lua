@@ -132,6 +132,10 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	end
 
 	local npc = ents.Create(npc_class)
+	if not IsValid(npc) then
+		MsgN('[Background NPCs] ERROR: Actor with class - ' .. npc_class .. ' cannot be created!')
+		return
+	end
 	npc:SetPos(desiredPosition)
 
 	--[[
