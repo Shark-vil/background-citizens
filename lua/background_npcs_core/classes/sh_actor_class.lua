@@ -421,8 +421,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 
 	function obj:HasEnemy(ent)
-		if ent ~= NULL and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
-		return table.HasValueBySeq(self.enemies, ent)
+		local _ent = ent
+		if _ent.isBgnClass then _ent = ent:GetNPC() end
+		if IsValid(_ent) and _ent:IsNPC() and _ent:Disposition(self:GetNPC()) == D_HT then return true end
+		return table.HasValueBySeq(self.enemies, _ent)
 	end
 
 	function obj:EnemiesCount()
