@@ -1,6 +1,6 @@
 local asset = bgNPC:GetModule('wanted')
 
-bgNPC:SetStateAction('retreat', {
+bgNPC:SetStateAction('retreat', 'danger', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -36,6 +36,6 @@ bgNPC:SetStateAction('retreat', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

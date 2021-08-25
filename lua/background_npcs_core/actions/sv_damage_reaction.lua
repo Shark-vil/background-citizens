@@ -28,7 +28,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			goto skip
 		end
 
-		if actor:InCalmlyState() then
+		if actor:EqualStateGroup('calm') then
 			local last_reaction = actor:GetLastReaction()
 			if last_reaction == 'ignore' then goto skip end
 

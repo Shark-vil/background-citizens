@@ -1,6 +1,6 @@
 local asset = bgNPC:GetModule('actors_dialogue')
 
-bgNPC:SetStateAction('dialogue', {
+bgNPC:SetStateAction('dialogue', 'calm', {
 	validator = function(actor)
 		if GetConVar('bgn_disable_dialogues'):GetBool() then return end
 

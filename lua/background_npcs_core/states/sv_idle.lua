@@ -2,7 +2,7 @@ local function idle_is_finish(actor, data)
 	return data.delay < CurTime()
 end
 
-bgNPC:SetStateAction('idle', {
+bgNPC:SetStateAction('idle', 'calm', {
 	start = function(actor, state, data)
 		local delay = math.random(10, 30)
 		data.time = delay

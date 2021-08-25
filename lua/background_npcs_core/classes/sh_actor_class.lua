@@ -1134,20 +1134,12 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		end
 	end
 
-	function obj:InDangerState()
-		return table.HasValueBySeq(bgNPC.cfg.npcs_states['danger'], self:GetState())
+	function obj:EqualStateGroup(group_name)
+		return bgNPC:GetStateGroupName(self:GetState()) == group_name
 	end
 
-	function obj:InCalmlyState()
-		return table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], self:GetState())
-	end
-
-	function obj:HasDangerState(state_name)
-		return table.HasValueBySeq(bgNPC.cfg.npcs_states['danger'], state_name)
-	end
-
-	function obj:HasCalmlyState(state_name)
-		return table.HasValueBySeq(bgNPC.cfg.npcs_states['calmly'], state_name)
+	function obj:HasStateGroup(state_name, group_name)
+		return bgNPC:GetStateGroupName(state_name) == group_name
 	end
 
 	function obj:IsMeleeWeapon()

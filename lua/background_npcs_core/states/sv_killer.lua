@@ -1,6 +1,6 @@
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
-bgNPC:SetStateAction('killer', {
+bgNPC:SetStateAction('killer', 'danger', {
 	start = function(actor)
 		if actor.eternal then
 			actor:GetData().not_eternal = true
@@ -84,6 +84,6 @@ bgNPC:SetStateAction('killer', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

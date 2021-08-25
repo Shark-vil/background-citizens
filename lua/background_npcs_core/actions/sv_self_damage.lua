@@ -50,7 +50,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			return hook_result
 		end
 		
-		if ActorTarget:InCalmlyState() then
+		if ActorTarget:EqualStateGroup('calm') then
 			local last_reaction = ActorTarget:GetLastReaction()
 			if last_reaction == 'ignore' then return end
 			

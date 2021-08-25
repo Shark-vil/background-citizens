@@ -55,7 +55,7 @@ local function FindCustomChair(actor)
 	end
 end
 
-bgNPC:SetStateAction('sit_to_chair', {
+bgNPC:SetStateAction('sit_to_chair', 'calm', {
 	pre_start = function(actor, state, data)
 		local chair, cahirId = FindChair(actor, state, data)
 

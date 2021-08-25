@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('calling_police', {
+bgNPC:SetStateAction('calling_police', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetEnemy()
 		if not IsValid(enemy) then return end
@@ -69,6 +69,6 @@ bgNPC:SetStateAction('calling_police', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasDangerState(new_state)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

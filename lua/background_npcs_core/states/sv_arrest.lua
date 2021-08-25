@@ -135,7 +135,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 	end
 end)
 
-bgNPC:SetStateAction('arrest', {
+bgNPC:SetStateAction('arrest', 'guarded', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local target = actor:GetFirstTarget()

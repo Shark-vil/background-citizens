@@ -1,5 +1,10 @@
-function bgNPC:SetStateAction(state_name, data)
+function bgNPC:SetStateAction(state_name, group_name, data)
    bgNPC.state_actions[state_name] = data
+   bgNPC.state_actions_groups[state_name] = group_name
+end
+
+function bgNPC:GetStateGroupName(state_name)
+   return bgNPC.state_actions_groups[state_name] or 'none'
 end
 
 function bgNPC:CallStateAction(state_name, func_name, ...)

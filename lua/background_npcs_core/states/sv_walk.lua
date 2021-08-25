@@ -2,7 +2,7 @@ local function GetNextNode(actor)
 	return table.RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
 end
 
-bgNPC:SetStateAction('walk', {
+bgNPC:SetStateAction('walk', 'calm', {
 	update = function(actor)
 		if not bgNPC.PointsExist then return end
 		local data = actor:GetStateData()

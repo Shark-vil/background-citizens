@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('sit_to_chair_2', {
+bgNPC:SetStateAction('sit_to_chair_2', 'calm', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
