@@ -129,7 +129,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 
 		bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
 			local actor = bgNPC:SpawnActor(npcType, nodePosition)
-			if not bgNPC:EnterActorInExistVehicle(actor) then
+			if actor and not bgNPC:EnterActorInExistVehicle(actor) then
 				bgNPC:SpawnVehicleWithActor(actor)
 			end
 		end)
