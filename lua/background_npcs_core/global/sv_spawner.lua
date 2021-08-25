@@ -143,10 +143,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		If you give out a weapon or something similar, it will crash the game!
 	--]]
 	if hook.Run('BGN_PreSpawnActor', npc, npcType, npcData) then
-		if IsValid(npc) then
-			npc:Remove()
-		end
-
+		if IsValid(npc) then npc:Remove() end
 		return
 	end
 
