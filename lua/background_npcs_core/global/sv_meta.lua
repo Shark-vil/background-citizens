@@ -52,10 +52,15 @@ function bgNPC:IsEnemyTeam(target_actor, attacker)
 
 	local actors = self:GetAll()
 	local asset = bgNPC:GetModule('first_attacker')
+	local AttackerActor = bgNPC:GetActor(attacker)
 
 	for i = #actors, 1, -1 do
 		local actor = actors[i]
 		if actor and actor:IsAlive() and actor:HasTeam(target_actor) then
+			if AttackerActor and not actor:HasTeam(AttackerActor) and AttackerActor:HasEnemy(actor) then
+				return true
+			end
+
 			if actor:HasEnemy(attacker) or asset:IsFirstAttacker(attacker, actor:GetNPC()) then
 				return true
 			end
@@ -88,13 +93,14 @@ function bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
 	if IsAttackerTeam then return target end
 	if IsTargetTeam then return attacker end
 
-	local asset = bgNPC:GetModule('first_attacker')
+	local FirstAttackerModule = bgNPC:GetModule('first_attacker')
+	local WantedModule = bgNPC:GetModule('wanted')
 	local AttackerType = GetEntityType(attacker)
 	local TargetType = GetEntityType(target)
 	local ActorAttacker =  bgNPC:GetActor(attacker)
 	local ActorTarget =  bgNPC:GetActor(target)
-	local AttackerIsFirstAttacker = asset:IsFirstAttacker(attacker, target)
-	local TargetIsFirstAttacker = asset:IsFirstAttacker(target, attacker)
+	local AttackerIsFirstAttacker = FirstAttackerModule:IsFirstAttacker(attacker, target)
+	local TargetIsFirstAttacker = FirstAttackerModule:IsFirstAttacker(target, attacker)
 
 	-- If a player attacks an NPC who is not an actor
 	if not ActorTarget and TargetType == 'npc' and attacker:IsPlayer() then
@@ -105,28 +111,25 @@ function bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
 	end
 
 	-- If the player is attacked by an NPC who is not an actor
-	if not ActorAttacker and target:IsPlayer() then return attacker end
+	if not ActorAttacker and AttackerType ~= 'player' and target:IsPlayer() then return attacker end
+
+	if WantedModule:HasWanted(attacker) then return attacker end
+	if WantedModule:HasWanted(target) then return target end
 
 	-- If at least one of the target's opponents in the actor's team
 	if bgNPC:IsEnemyTeam(actor, target) then return target end
 	-- If at least one of the actor's team is the opponent of the attacker
 	if bgNPC:IsEnemyTeam(actor, attacker) then return attacker end
 
-	-- If the target has an enemy attacker
-	if ActorTarget and not ActorTarget:HasEnemy(attacker) then return attacker end
 	-- If the attacker has an enemy target
 	if ActorAttacker and not ActorAttacker:HasEnemy(target) then return target end
+	-- If the target has an enemy attacker
+	if ActorTarget and not ActorTarget:HasEnemy(attacker) then return attacker end
 
-	if target:IsPlayer() then 
-		-- If the player is attacked by the actor who first started the fight
-		if AttackerIsFirstAttacker then return attacker end
+	if target:IsPlayer() or attacker:IsPlayer() then 
 		-- If the player is attacked by the actor who was the first victim
 		if TargetIsFirstAttacker then return target end
-	end
-	
-	-- The last simple check, in case the previous ones did not work
-	if attacker:IsPlayer() then
-		if TargetIsFirstAttacker then return target end
+		-- If the player is attacked by the actor who first started the fight
 		if AttackerIsFirstAttacker then return attacker end
 	end
 end
