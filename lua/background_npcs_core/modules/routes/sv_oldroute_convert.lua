@@ -8,6 +8,15 @@ local function getJsonString()
       jsonString = file.Read('citizens_points/' .. game.GetMap() .. '.json', 'DATA')
    end
 
+   if not jsonString then
+      if file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA') then
+         local file_data = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA')
+         jsonString = util.Decompress(file_data)
+      elseif file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA') then
+         jsonString = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA')
+      end
+   end
+
    return jsonString
 end
 
