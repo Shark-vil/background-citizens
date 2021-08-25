@@ -14,6 +14,24 @@ local function FindExistCarAndEnterThis(actor)
 	return true
 end
 
+local function TeleportActor(actor, npc, pos)
+	if not IsValid(npc) then return end
+
+	local current_state = actor:GetState()
+	local current_data = actor:GetStateData()
+
+	actor:CallStateAction(nil, 'stop', current_state, current_data)
+	actor.anim_action = nil
+	actor:ResetSequence()
+
+	npc:SetPos(pos)
+	npc:PhysWake()
+
+	actor:RandomState()
+
+	hook.Run('BGN_RespawnActor', actor, pos)
+end
+
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local actors = bgNPC:GetAll()
 
@@ -74,11 +92,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 						if not is_entered_vehicle then
 							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
-								if not IsValid(npc) then return end
-								npc:SetPos(nodePosition)
-								npc:PhysWake()
-
-								hook.Run('BGN_RespawnActor', actor, nodePosition)
+								TeleportActor(actor, npc, nodePosition)
 							end)
 						end
 					else
@@ -102,11 +116,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 							local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 							if not is_entered_vehicle then
 								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
-									if not IsValid(npc) then return end
-									npc:SetPos(nodePosition)
-									npc:PhysWake()
-
-									hook.Run('BGN_RespawnActor', actor, nodePosition)
+									TeleportActor(actor, npc, nodePosition)
 								end)
 							end
 						end
