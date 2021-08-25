@@ -130,6 +130,12 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 
 			if target:Health() <= 20 or ArrestComponent.damege_count > 5 then
 				_SetEnemyDefense(ArrestComponent.policeActor, attacker)
+			else
+				if TargetActor:HasTeam('police') then
+					TargetActor:AddTarget(attacker)
+					TargetActor:SetState('arrest')
+					return false
+				end
 			end
 		end
 	end
