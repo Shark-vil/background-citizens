@@ -45,6 +45,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
+	local player_count = player.GetCount()
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -55,7 +56,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 		local npc = actor:GetNPC()
 		
-		if not bgn_enable or player.GetCount() == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
+		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
 			if not hook.Run('BGN_PreRemoveNPC', npc) then
 				bgNPC:RemoveNPC(npc)
 				npc:Remove()
