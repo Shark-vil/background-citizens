@@ -36,7 +36,7 @@ function BGN_NODE:Instance(position)
    end
 
    function obj:AddParentNode(node)
-      if self == node or array.HasValue(self.parents, node) then return end
+      if self == node or table.HasValueBySeq(self.parents, node) then return end
       table.insert(self.parents, node)
       if not node:HasParent(self) then node:AddParentNode(self) end
    end
@@ -70,7 +70,7 @@ function BGN_NODE:Instance(position)
    end
 
    function obj:HasParent(node)
-      return array.HasValue(self.parents, node)
+      return table.HasValueBySeq(self.parents, node)
    end
 
    function obj:AddLink(node, linkType)
@@ -78,7 +78,7 @@ function BGN_NODE:Instance(position)
       if not linkType then return end
       
       self.links[linkType] = self.links[linkType] or {}
-      if array.HasValue(self.links[linkType], node) then return end
+      if table.HasValueBySeq(self.links[linkType], node) then return end
 
       if not node:HasParent(self) then node:AddParentNode(self) end
       
@@ -126,7 +126,7 @@ function BGN_NODE:Instance(position)
 
    function obj:HasLink(node, linkType)
       if not self.links[linkType] then return false end
-      return array.HasValue(self.links[linkType], node)
+      return table.HasValueBySeq(self.links[linkType], node)
    end
 
    function obj:GetLinks(linkType)
@@ -176,7 +176,7 @@ function BGN_NODE:Instance(position)
       end
 
       local chunkId = self:GetChunkID()
-      if BGN_NODE.Chunks[chunkId] and array.HasValue(BGN_NODE.Chunks[chunkId], self.index) then
+      if BGN_NODE.Chunks[chunkId] and table.HasValueBySeq(BGN_NODE.Chunks[chunkId], self.index) then
          table.remove(BGN_NODE.Chunks[chunkId], self.index)
       end
 
@@ -233,7 +233,7 @@ function BGN_NODE:AddNodeToMap(node)
    
    local chunkId = node:GetChunkID()
    self.Chunks[chunkId] = self.Chunks[chunkId] or {}
-   if not array.HasValue(self.Chunks[chunkId], index) then
+   if not table.HasValueBySeq(self.Chunks[chunkId], index) then
       table.insert(self.Chunks[chunkId], index)
    end
 end

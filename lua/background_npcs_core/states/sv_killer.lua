@@ -1,6 +1,6 @@
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
-bgNPC:SetStateAction('killer', {
+bgNPC:SetStateAction('killer', 'danger', {
 	start = function(actor)
 		if actor.eternal then
 			actor:GetData().not_eternal = true
@@ -59,7 +59,7 @@ bgNPC:SetStateAction('killer', {
 					local isMeleeWeapon = false
 					local npcWeapon = npc:GetActiveWeapon()
 					if IsValid(npcWeapon) then
-						isMeleeWeapon = array.HasValue(MeleeWeapon, npcWeapon:GetClass())
+						isMeleeWeapon = table.HasValueBySeq(MeleeWeapon, npcWeapon:GetClass())
 					end
 		
 					if isMeleeWeapon then
@@ -82,5 +82,8 @@ bgNPC:SetStateAction('killer', {
 
 			data.delay = CurTime() + 3
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

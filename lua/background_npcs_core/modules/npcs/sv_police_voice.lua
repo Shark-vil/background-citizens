@@ -15,7 +15,7 @@ hook.Add("BGN_SetNPCState", "BGN_PoliceVoiceOnDefenseState", function(actor, sta
 	if actor:HasTeam('police') and state == 'defense' then
 		local rnd = math.random(0, 100)
 		if rnd < 50 then
-			local sound = array.Random(replics)
+			local sound = table.RandomBySeq(replics)
 			actor:GetNPC():EmitSound(sound)
 		end
 	end

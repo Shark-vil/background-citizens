@@ -47,7 +47,7 @@ hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, stat
 	}
 end)
 
-bgNPC:SetStateAction('steal', {
+bgNPC:SetStateAction('steal', 'wary', {
 	update = function(actor)
 		local polices = bgNPC:GetAllByTeam('police')
 		local npc = actor:GetNPC()
@@ -113,6 +113,8 @@ bgNPC:SetStateAction('steal', {
 					actor:PlayStaticSequence('Crouch_IdleD', true, 5, function()
 						actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
 							data.isPlayAnim = false
+							data.isWanted = true
+							
 							hook.Run('BGN_StealFinish', actor, target, true)
 							actor:SetState('retreat')
 						end)
@@ -134,5 +136,8 @@ bgNPC:SetStateAction('steal', {
 				end
 			end
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return not data.isWanted and IsValid(actor:GetFirstTarget())
 	end
 })

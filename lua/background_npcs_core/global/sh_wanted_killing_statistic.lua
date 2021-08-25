@@ -9,15 +9,15 @@ function bgNPC:AddWantedKillingStatistic(attacker, actor)
 
 	self.wanted_killing_statistic[attacker] = self.wanted_killing_statistic[attacker] or {}
 
-	local type = actor:GetType()
-	self.wanted_killing_statistic[attacker][type] = self.wanted_killing_statistic[attacker][type] or 0
-	self.wanted_killing_statistic[attacker][type] = self.wanted_killing_statistic[attacker][type] + 1
+	local npc_type = actor:GetType()
+	self.wanted_killing_statistic[attacker][npc_type] = self.wanted_killing_statistic[attacker][npc_type] or 0
+	self.wanted_killing_statistic[attacker][npc_type] = self.wanted_killing_statistic[attacker][npc_type] + 1
 
 	if SERVER then
 		snet.InvokeAll('bgn_sync_wanted_killing_statistic', self.wanted_killing_statistic)
 	end
 
-	return self.wanted_killing_statistic[attacker][type]
+	return self.wanted_killing_statistic[attacker][npc_type]
 end
 
 function bgNPC:ResetWantedKillingStatistic(attacker)
@@ -38,13 +38,13 @@ function bgNPC:ResetWantedKillingStatisticAll()
 	end
 end
 
-function bgNPC:GetWantedKillingStatistic(attacker, type)
+function bgNPC:GetWantedKillingStatistic(attacker, npc_type)
 	self.wanted_killing_statistic[attacker] = self.wanted_killing_statistic[attacker] or {}
-	if type == nil then
+	if npc_type == nil then
 		return self.wanted_killing_statistic[attacker]
 	else
-		self.wanted_killing_statistic[attacker][type] = self.wanted_killing_statistic[attacker][type] or 0
-		return self.wanted_killing_statistic[attacker][type]
+		self.wanted_killing_statistic[attacker][npc_type] = self.wanted_killing_statistic[attacker][npc_type] or 0
+		return self.wanted_killing_statistic[attacker][npc_type]
 	end
 end
 

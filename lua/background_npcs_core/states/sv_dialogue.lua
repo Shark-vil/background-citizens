@@ -1,48 +1,25 @@
 local asset = bgNPC:GetModule('actors_dialogue')
 
-hook.Add("BGN_PreSetNPCState", "BGN_SetDialogueState", function(actor, state, data)
-	if actor:HasState('dialogue') then
-		if state ~= 'fear' and state ~= 'defense' then
-			if asset:GetDialogue(actor) ~= nil then return true end
-		else
-			asset:RemoveBadValues()
-			return
+bgNPC:SetStateAction('dialogue', 'calm', {
+	validator = function(actor)
+		if GetConVar('bgn_disable_dialogues'):GetBool() then return end
+
+		local npc = actor:GetNPC()
+		local actors = bgNPC:GetAllByRadius(npc:GetPos(), 300)
+		local ActorTarget = table.RandomBySeq(actors)
+	
+		if ActorTarget ~= actor and ActorTarget:IsAlive() then
+			if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return end
+			if not asset:SetDialogue(actor, ActorTarget) then return end
+	
+			ActorTarget:SetState('dialogue', { isIgnore = true }, true)
+
+			return true
 		end
-	end
-
-	if data ~= nil and data.isIgnore then return end
-	if state ~= 'dialogue' then return end
-
-	if GetConVar('bgn_disable_dialogues'):GetBool() then
-		return {
-			state = 'walk'
-		}
-	end
-
-	local npc = actor:GetNPC()
-	local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
-	local ActorTarget = array.Random(actors)
-
-	if ActorTarget ~= actor and ActorTarget:IsAlive() then
-		if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return true end
-		if not asset:SetDialogue(actor, ActorTarget) then return true end
-
-		ActorTarget:SetState('dialogue', {
-			isIgnore = true
-		})
-	else
-		return true
-	end
-end)
-
-bgNPC:SetStateAction('dialogue', {
+	end,
 	update = function(actor)
 		local dialogue = asset:GetDialogue(actor)
-
-		if dialogue == nil then
-			actor:SetState('walk')
-			return
-		end
+		if not dialogue then return end
 
 		asset:SwitchDialogue(actor)
 		local actor1 = dialogue.interlocutors[1]
@@ -58,6 +35,9 @@ bgNPC:SetStateAction('dialogue', {
 				actor2:WalkToPos(npc1:GetPos())
 				data.updateWalk = CurTime() + 3
 			else
+				actor1:StopWalk()
+				actor2:StopWalk()
+
 				local npc1Angle = npc1:GetAngles()
 				local npc2Angle = npc2:GetAngles()
 				local npc1NewAngle = (npc2:GetPos() - npc1:GetPos()):Angle()
@@ -79,5 +59,8 @@ bgNPC:SetStateAction('dialogue', {
 				npc2:PhysWake()
 			end
 		end
+	end,
+	not_stop = function(actor)
+		return asset:GetDialogue(actor) ~= nil
 	end
 })

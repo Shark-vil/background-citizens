@@ -81,7 +81,7 @@ hook.Add("PlayerDeath", "BGN_ResetWantedModeForDeceasedPlayer", function(victim,
 end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
-	if not actor:InDangerState() then
+	if not actor:EqualStateGroup('danger') then
 		local reaction = actor:GetReactionForProtect()
 		if reaction == 'arrest' and not GetConVar('bgn_arrest_mode'):GetBool() then
 			reaction = 'defense'

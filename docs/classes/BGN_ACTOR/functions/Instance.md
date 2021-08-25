@@ -15,6 +15,9 @@ Creates an actor object and associates it with the given NPC.
 4. **not_sync_actor_on_client** boolean *(Optional | Default: false)* - if the value is set to "true", then no information about the actor will be sent to clients.
 5. **not_auto_added_to_list** boolean *(Optional | Default: false)* - if the value is set to "true", then the actor will not be automatically added to the general list of all actors.
 
+## Return
+1. **ACTOR_CLASS** - New actor object.
+
 ## Example
 The code is executed on the server. In this example, an actor with the "citizen" behavior will bind to all NPCs that the player spawns from the spawn menu, after which a message with his unique identifier will be displayed on the console.
 

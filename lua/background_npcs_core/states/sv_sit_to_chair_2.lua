@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('sit_to_chair_2', {
+bgNPC:SetStateAction('sit_to_chair_2', 'calm', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -32,18 +32,32 @@ bgNPC:SetStateAction('sit_to_chair_2', {
 							local data = actor:GetStateData()
 							if data.isStandAnimation then return end
 							data.isStandAnimation = true
-							npc:SetAngles(Angle(0, 0, 0))
-							npc:SetPos(data.old_pos)
-							-- npc:SetCollisionGroup(data.oldCollisionGroup)
-							npc:PhysWake()
 							data.isStand = true
-							seat.sitDelay = CurTime() + 15
 							actor:SetState(data.next_state or 'walk')
-							seat:SetSitting(NULL)
 						end)
 					end)
 				end)
 			end
 		end
+	end,
+	stop = function(actor, state, data)
+		local data = actor:GetStateData()
+		local npc = actor:GetNPC()
+		if IsValid(npc) and not data.isStandAnimation then
+			if data.old_pos then
+				npc:SetAngles(Angle(0, 0, 0))
+				npc:SetPos(data.old_pos)
+			end
+			-- npc:SetCollisionGroup(data.oldCollisionGroup)
+			npc:PhysWake()
+			local seat = data.seat
+			if seat then
+				seat.sitDelay = CurTime() + 15
+				seat:SetSitting(NULL)
+			end
+		end
+	end,
+	not_stop = function(actor, state, data)
+		return ( actor:EnemiesCount() == 0 and not data.isStand )
 	end
 })

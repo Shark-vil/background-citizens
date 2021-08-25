@@ -18,7 +18,7 @@ local function TargetPlayerPush(npc, target, velocity)
 		"physics/body/body_medium_impact_soft7.wav",
 	}
 
-	target:EmitSound(array.Random(slapSounds), 75, 100, 0.3, CHAN_AUTO)
+	target:EmitSound(table.RandomBySeq(slapSounds), 75, 100, 0.3, CHAN_AUTO)
 	target:SetVelocity(forward * velocity)
 end
 
@@ -33,7 +33,7 @@ hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushDanger", function(actor
 
 	if not LuggagePush and MeleeGunhit then return end
 
-	if actor:InDangerState() and actor:IsSequenceFinished() then
+	if actor:EqualStateGroup('danger') and actor:IsSequenceFinished() then
 		local data = actor:GetStateData()
 
 		data.LuggagePushDelay = data.LuggagePushDelay or 0
@@ -61,7 +61,7 @@ hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushCalmly", function(actor
 
 	if not LuggagePush and not LuggageWarn then return end
 
-	if actor:InCalmlyState() and actor:IsSequenceFinished() then
+	if actor:EqualStateGroup('calm') and actor:IsSequenceFinished() then
 		local data = actor:GetStateData()
 		local npc = actor:GetNPC()
 		data.LuggageWarn = data.LuggageWarn or 0

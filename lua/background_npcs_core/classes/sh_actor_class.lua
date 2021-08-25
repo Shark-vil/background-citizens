@@ -52,7 +52,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.state_delay = -1
 
 	if data.weapons and (not data.getting_weapon_chance or math.random(0, 100) < data.getting_weapon_chance) then
-		obj.weapon = array.Random(data.weapons)
+		obj.weapon = table.RandomBySeq(data.weapons)
 	end
 
 	obj.type = npc_type
@@ -101,6 +101,14 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	function obj:SetStateDelay(time)
 		self.state_delay = CurTime() + time
+	end
+
+	function obj:IsStateDelay()
+		return self.state_delay > CurTime()
+	end
+
+	function obj:ResetStateDelay()
+		self.state_delay = 0
 	end
 
 	function obj:SyncFunction(name, ply, data)
@@ -239,7 +247,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	function obj:AddTarget(ent)
 		if not IsValid(ent) or not isentity(ent) then return end
 
-		if self:GetNPC() ~= ent and not array.HasValue(self.targets, ent) then
+		if self:GetNPC() ~= ent and not table.HasValueBySeq(self.targets, ent) then
 			table.insert(self.targets, ent)
 		end
 	end
@@ -251,36 +259,43 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	-- ? If there is no entity, use an index. If there is no index, use entity.
 	function obj:RemoveTarget(ent, index)
 		local ent = ent
+		local index_type = type(index)
 
-		if index ~= nil then
-			if not isnumber(index) then return end
-			ent = self.targets[index]
-		end
-
-		if not isentity(ent) then return end
+		if isnumber(index) then ent = self.targets[index] end
 
 		local old_count = #self.targets
 
-		if ent == self.walkTarget then
-			self.walkTarget = NULL
+		if not hook.Run('BGN_RemoveActorTarget', self, ent) then
+			local npc = self:GetNPC()
+
+			if isentity(ent) and ent == self.walkTarget then self.walkTarget = NULL end
+
+			if isnumber(index) then
+				table.remove(self.targets, index)
+			elseif isentity(ent) then
+				table.RemoveValueBySeq(self.targets, ent)
+			end
+
+			if old_count > 0 and #self.targets == 0 then
+				hook.Run('BGN_ResetTargetsForActor', self)
+			end
 		end
 
-		if index ~= nil then
-			table.remove(self.targets, index)
-		else
-			table.RemoveByValue(self.targets, ent)
-		end
-
-		if old_count > 0 and #self.targets <= 0 then
-			hook.Run('BGN_ResetTargetsForActor', self)
-		end
+		return #self.targets
 	end
 
 	-- Removes all targets from the list.
 	-- ? Actually calls method "RemoveTarget" for all targets in the list.
 	function obj:RemoveAllTargets()
-		for i = 1, #self.targets do
-			self:RemoveTarget(self.targets[i])
+		local last_count = 0
+		for i = #self.targets, 1, -1 do
+			last_count = self:RemoveTarget(nil, i)
+		end
+
+		-- Safety bag. It may be removed in the future.
+		if last_count > 0 then
+			table.Empty(self.targets)
+			hook.Run('BGN_ResetTargetsForActor', self)
 		end
 	end
 
@@ -288,7 +303,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	-- @param ent entity any entity
 	-- @return boolean is_exist will return true if the entity is the target, otherwise false
 	function obj:HasTarget(ent)
-		return array.HasValue(self.targets, ent)
+		return table.HasValueBySeq(self.targets, ent)
 	end
 
 	-- Returns the number of existing targets for the actor.
@@ -348,7 +363,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 		local npc = self:GetNPC()
 
-		if npc ~= ent and not array.HasValue(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+		if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
 			if npc:IsNPC() then
 				local relationship = D_HT
 				if reaction == 'fear' then relationship = D_FR end
@@ -362,53 +377,54 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	function obj:RemoveEnemy(ent, index)
 		local ent = ent
 
-		if index ~= nil then
-			if not isnumber(index) then return end
-			ent = self.enemies[index]
-		end
-
-		if not isentity(ent) then return end
+		if isnumber(index) then ent = self.enemies[index] end
 
 		local old_count = #self.enemies
 
-		if ent == self.walkTarget then
-			self.walkTarget = NULL
-		end
-
 		if not hook.Run('BGN_RemoveActorEnemy', self, ent) then
 			local npc = self:GetNPC()
-			
-			if npc:IsNPC() then
-				if npc:GetEnemy() == ent then
-					npc:SetEnemy(NULL)
-				end
 
-				if IsValid(ent) then
-					npc:AddEntityRelationship(ent, D_NU, 99)
+			if isentity(ent) then
+				if ent == self.walkTarget then self.walkTarget = NULL end
+				
+				if IsValid(npc) and npc:IsNPC() then
+					if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
+					if IsValid(ent) then npc:AddEntityRelationship(ent, D_NU, 99) end
 				end
 			end
 
-			if index ~= nil then
+			if isnumber(index) then
 				table.remove(self.enemies, index)
-			else
-				table.RemoveByValue(self.enemies, ent)
+			elseif isentity(ent) then
+				table.RemoveValueBySeq(self.enemies, ent)
 			end
 
-			if old_count > 0 and #self.enemies <= 0 then
+			if old_count > 0 and #self.enemies == 0 then
 				hook.Run('BGN_ResetEnemiesForActor', self)
 			end
 		end
+
+		return #self.enemies
 	end
 
 	function obj:RemoveAllEnemies()
-		for i = 1, #self.enemies do
-			self:RemoveEnemy(self.enemies[i])
+		local last_count = 0
+		for i = #self.enemies, 1, -1 do
+			last_count = self:RemoveEnemy(nil, i)
+		end
+
+		-- Safety bag. It may be removed in the future.
+		if last_count > 0 then
+			table.Empty(self.enemies)
+			hook.Run('BGN_ResetEnemiesForActor', self)
 		end
 	end
 
 	function obj:HasEnemy(ent)
-		if ent ~= NULL and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
-		return array.HasValue(self.enemies, ent)
+		local _ent = ent
+		if _ent.isBgnClass then _ent = ent:GetNPC() end
+		if IsValid(_ent) and _ent:IsNPC() and _ent:Disposition(self:GetNPC()) == D_HT then return true end
+		return table.HasValueBySeq(self.enemies, _ent)
 	end
 
 	function obj:EnemiesCount()
@@ -422,7 +438,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 			npc:AddEntityRelationship(active_enemy, D_NU, 99)
 		end
 
-      if #self.enemies == 0 then return end
+    if #self.enemies == 0 then return end
 
 		for i = 1, #self.enemies do
 			local enemy = self.enemies[i]
@@ -443,6 +459,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 					local time = npc:GetEnemyLastTimeSeen(enemy)
 					if time + 20 < CurTime() then
 						self:RemoveEnemy(enemy)
+						-- print(self.uid, 'remove enemy - ', enemy)
 					end
 				end
 			end
@@ -536,39 +553,69 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		return self.state_lock
 	end
 
-	function obj:SetState(state, data)
-		if self:GetData().disable_states then return end
-		if self.state_lock then return end
-		if state == 'ignore' then return end
-		if self.old_state.state == state then return end
+	function obj:CallStateAction(current_state, func_name, ...)
+		current_state = current_state or self.state_data.state
+		return bgNPC:CallStateAction(current_state, func_name, self, ...)
+	end
 
-		data = data or {}
+	function obj:SetState(state, data, forced)
+		forced = forced or false
 
-		local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
-		if hook_result then
-			if isbool(hook_result) then
-				return
-			elseif isstring(hook_result) then
-				state = hook_result
-			elseif istable(hook_result) then
-				state = hook_result.state or state
-				data = hook_result.data or {}
-			end
+		if not forced then
+			if state == 'ignore' then return end
+			if self:GetData().disable_states then return end
+			if self.state_lock then return end
+			if self.state_data.state == state then return end
+			if self.state_delay > CurTime() then return end
 		end
 
-		self:StopWalk()
+		state = state or 'none'
+		data = data or {}
 
-		self.old_state = self.state_data
-		self.state_data = { state = state, data = data }
+		local current_state = self.state_data.state
+		local current_data = self.state_data.data
+
+		local is_locked = self:CallStateAction(nil, 'not_stop', current_state, current_data, state, data)
+		if not forced and is_locked then return end
+
+		-- local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
+		-- if hook_result then
+		-- 	if isbool(hook_result) then
+		-- 		return
+		-- 	elseif isstring(hook_result) then
+		-- 		state = hook_result
+		-- 	elseif istable(hook_result) then
+		-- 		state = hook_result.state or state
+		-- 		data = hook_result.data or {}
+		-- 	end
+		-- end
+
+		if not forced and bgNPC:StateActionExists(state, 'validator') then
+			if not self:CallStateAction(state, 'validator', state, data) then return end
+		end
+
+		local new_state, new_data = self:CallStateAction(state, 'pre_start', state, data)
+		if type(new_state) == 'boolean' and new_state == true then return end
+
+		state = new_state or state
+		data = new_data or data
+
+		self:CallStateAction(nil, 'stop', current_state, current_data)
 
 		if SERVER then
+			self:StopWalk()
 			self.anim_action = nil
 			self:ResetSequence()
 		end
 
-		if IsValid(self.npc) then
-			hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
-		end
+		state = new_state or state
+		data = new_data or data
+
+		self.old_state = self.state_data
+		self.state_data = { state = state, data = data }
+
+		self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
+		hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 		
 		return self.state_data
 	end
@@ -739,12 +786,12 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local value = value
 		if self.data.team ~= nil and value ~= nil then
 			if isstring(value) then
-				return array.HasValue(self.data.team, value)
+				return table.HasValueBySeq(self.data.team, value)
 			end
 
 			if isentity(value) then
 				if value:IsPlayer() then
-					if array.HasValue(self.data.team, 'player') then
+					if table.HasValueBySeq(self.data.team, 'player') then
 						return true
 					else
 						return bgNPC:GetModule('team_parent'):HasParent(value, self)
@@ -1050,13 +1097,13 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local npc_model = self.npc:GetModel()
 		local scream_sound = nil
 		if tobool(string.find(npc_model, 'female_*')) then
-			scream_sound = array.Random(female_scream)
+			scream_sound = table.RandomBySeq(female_scream)
 		elseif tobool(string.find(npc_model, 'male_*')) then
-			scream_sound = array.Random(male_scream)
+			scream_sound = table.RandomBySeq(male_scream)
 		else
 			local concatenated_table = table.Copy(male_scream)
 			table.Add(concatenated_table, female_scream)
-			scream_sound = array.Random(concatenated_table)
+			scream_sound = table.RandomBySeq(concatenated_table)
 		end
 
 		if scream_sound ~= nil and isstring(scream_sound) then
@@ -1089,20 +1136,12 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		end
 	end
 
-	function obj:InDangerState()
-		return array.HasValue(bgNPC.cfg.npcs_states['danger'], self:GetState())
+	function obj:EqualStateGroup(group_name)
+		return bgNPC:GetStateGroupName(self:GetState()) == group_name
 	end
 
-	function obj:InCalmlyState()
-		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], self:GetState())
-	end
-
-	function obj:HasDangerState(state_name)
-		return array.HasValue(bgNPC.cfg.npcs_states['danger'], state_name)
-	end
-
-	function obj:HasCalmlyState(state_name)
-		return array.HasValue(bgNPC.cfg.npcs_states['calmly'], state_name)
+	function obj:HasStateGroup(state_name, group_name)
+		return bgNPC:GetStateGroupName(state_name) == group_name
 	end
 
 	function obj:IsMeleeWeapon()
@@ -1112,7 +1151,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return array.HasValue(bgNPC.cfg.weapons['melee'], wep:GetClass())
+		return table.HasValueBySeq(bgNPC.cfg.weapons['melee'], wep:GetClass())
 	end
 
 	function obj:IsFirearmsWeapon()
@@ -1122,7 +1161,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		local wep = npc:GetActiveWeapon()
 		if not IsValid(wep) then return false end
 
-		return not array.HasValue(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+		return not table.HasValueBySeq(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
 	end
 
 	function obj:EnterVehicle(vehicle)

@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('fear', {
+bgNPC:SetStateAction('fear', 'danger', {
 	start = function(actor)		
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
@@ -30,6 +30,9 @@ bgNPC:SetStateAction('fear', {
 				dyspnea_delay = CurTime() + math.random(10, 20)
 			})
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })
 

@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('zombie', {
+bgNPC:SetStateAction('zombie', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
@@ -18,5 +18,8 @@ bgNPC:SetStateAction('zombie', {
 			end
 			data.delay = CurTime() + 3
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

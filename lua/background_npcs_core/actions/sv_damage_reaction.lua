@@ -1,9 +1,12 @@
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', 
-function(attacker, target)
+local function IsIndifference(percent)
+	return math.random(1, 100) < percent
+end
+
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
 	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
 	for i = 1, #actors do
 		local actor = actors[i]
-		if actor:HasTeam(target) and actor:HasTeam(attacker) then
+		if IsIndifference(10) or (actor:HasTeam(target) and actor:HasTeam(attacker)) then
 			goto skip
 		end
 
@@ -25,43 +28,21 @@ function(attacker, target)
 			goto skip
 		end
 
-		if actor:HasState(bgNPC.cfg.npcs_states['calmly']) then
+		if actor:EqualStateGroup('calm') then
+			local last_reaction = actor:GetLastReaction()
+			if last_reaction == 'ignore' then goto skip end
+
 			actor:RemoveAllTargets()
-			actor:SetState(actor:GetLastReaction())
+			actor:SetState(last_reaction, nil, true)
+		end
+
+		local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
+		if enemy and IsValid(enemy) then
+			actor:AddEnemy(enemy, reaction)
 		end
 
 		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
 
 		::skip::
-	end
-end)
-
-hook.Add("BGN_PostDamageToAnotherActor", "BGN_AddActorsTargetByProtectOrFearActions", 
-function(actor, attacker, target, reaction)
-	if reaction == 'ignore' then return end
-	if not target:IsNPC() and not target:IsNextBot() and not target:IsPlayer() then return end
-
-	local asset = bgNPC:GetModule('first_attacker')
-	
-	if actor:HasTeam(attacker) then
-		actor:AddEnemy(target, reaction)
-		return
-	end
-
-	if not bgNPC:GetActor(target) then
-		if target:IsNPC() and attacker:IsPlayer() and target:Disposition(attacker) ~= D_HT then
-			actor:AddEnemy(attacker, reaction)
-			return
-		end
-	end
-
-	local AttackerActor = bgNPC:GetActor(attacker)
-
-	if asset:IsFirstAttacker(target, attacker) or bgNPC:IsEnemyTeam(actor, target) then
-		actor:AddEnemy(target, reaction)
-	elseif AttackerActor and bgNPC:IsEnemyTeam(AttackerActor, target) then
-		actor:AddEnemy(target, reaction)
-	else
-		actor:AddEnemy(attacker, reaction)
 	end
 end)

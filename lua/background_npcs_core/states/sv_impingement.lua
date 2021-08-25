@@ -21,7 +21,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 		end
 	end
 
-	local target = array.Random(targets)
+	local target = table.RandomBySeq(targets)
 	if IsValid(target) then
 		actor:AddEnemy(target)
 	else
@@ -37,7 +37,7 @@ hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
 	end
 end)
 
-bgNPC:SetStateAction('impingement', {
+bgNPC:SetStateAction('impingement', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
@@ -72,5 +72,8 @@ bgNPC:SetStateAction('impingement', {
 
 			data.delay = CurTime() + 3
 		end
+	end,
+	not_stop = function(actor, state, data, new_state, new_data)
+		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

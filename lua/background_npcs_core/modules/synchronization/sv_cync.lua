@@ -18,13 +18,13 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 				for k = 1, #players do
 					local ply = players[k]
 					if ply:GetPos():DistToSqr(pos) <= sync_distance and ply:slibIsViewVector(pos) then
-						array.insert(sync_players, ply)
+						table.push(sync_players, ply)
 					end
 				end
 			end
 
 			if #sync_players ~= 0 then
-				array.insert(sync_list, {
+				table.push(sync_list, {
 					actor = actor,
 					players = sync_players
 				})

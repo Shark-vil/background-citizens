@@ -8,7 +8,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	local current_pass = 0
 	local nodePosition
 	coroutine.yield()
-	points = array.shuffle(points)
+	points = table.shuffle(points)
 	coroutine.yield()
 
 	for i = 1, #points do
@@ -82,7 +82,7 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	local all_players = player.GetAll()
 
 	if not desiredPosition then
-		local ply = array.Random(all_players)
+		local ply = table.RandomBySeq(all_players)
 		desiredPosition = ply:GetPos()
 	end
 
@@ -113,7 +113,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	local npc_class
 
 	if istable(npcData.class) then
-		npc_class = array.Random(npcData.class)
+		npc_class = table.RandomBySeq(npcData.class)
 		is_many_classes = true
 	else
 		npc_class = npcData.class
@@ -132,6 +132,10 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	end
 
 	local npc = ents.Create(npc_class)
+	if not IsValid(npc) then
+		MsgN('[Background NPCs] ERROR: Actor with class - ' .. npc_class .. ' cannot be created!')
+		return
+	end
 	npc:SetPos(desiredPosition)
 
 	--[[
@@ -139,10 +143,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		If you give out a weapon or something similar, it will crash the game!
 	--]]
 	if hook.Run('BGN_PreSpawnActor', npc, npcType, npcData) then
-		if IsValid(npc) then
-			npc:Remove()
-		end
-
+		if IsValid(npc) then npc:Remove() end
 		return
 	end
 
@@ -157,9 +158,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
-			model = array.Random(npcData.models[npc_class])
+			model = table.RandomBySeq(npcData.models[npc_class])
 		elseif #npcData.models ~= 0 then
-			model = array.Random(npcData.models)
+			model = table.RandomBySeq(npcData.models)
 		end
 
 		if model and util.IsValidModel(model) then
@@ -202,6 +203,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	local actor = BGN_ACTOR:Instance(npc, npcType)
 	actor:RandomState()
 	hook.Run('BGN_InitActor', actor)
+	actor:RemoveAllEnemies()
+	actor:RemoveAllTargets()
+	hook.Run('BGN_PostInitActor', actor)
 
 	return actor
 end

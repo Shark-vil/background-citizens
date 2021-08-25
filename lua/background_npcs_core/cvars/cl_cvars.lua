@@ -1,3 +1,7 @@
+CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path, 
+{ FCVAR_ARCHIVE }, 
+'Draw the path of movement of the NPC.')
+
 CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization, 
 { FCVAR_ARCHIVE }, 
 'Enable field of view optimization.')
