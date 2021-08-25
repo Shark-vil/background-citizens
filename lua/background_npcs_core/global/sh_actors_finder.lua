@@ -5,6 +5,15 @@ function bgNPC:GetActor(npc)
 	return nil
 end
 
+function bgNPC:GetFirstActorInList()
+	local actors = self:GetAll()
+	for i = 1, #actors do
+		local actor = actors[i]
+		if actor then return actor end
+	end
+	return nil
+end
+
 function bgNPC:GetActorByUid(uid)
 	if uid then
 		local actors = self:GetAll()
