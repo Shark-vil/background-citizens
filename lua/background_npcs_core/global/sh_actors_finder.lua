@@ -9,7 +9,8 @@ function bgNPC:GetActorByUid(uid)
 	if uid then
 		local actors = self:GetAll()
 		for i = 1, #actors do
-			if actors[i].uid == uid then return actors[i] end
+			local actor = actors[i]
+			if actor.uid == uid then return actor end
 		end
 	end
 	return nil
@@ -24,7 +25,9 @@ function bgNPC:GetAllPoints(linkType)
 
 		for i = 1, #map do
 			local v = map[i]
-			if not v.links[linkType] or #v.links[linkType] == 0 then
+			local links_list = v.links[linkType]
+
+			if not links_list or #links_list == 0 then
 				goto skip
 			end
 
@@ -37,7 +40,6 @@ function bgNPC:GetAllPoints(linkType)
 	end
 end
 
-
 function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	local radius_positions = {}
 	local radius = (radius or 500) ^ 2
@@ -46,8 +48,11 @@ function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 	for i = 1, #map do
 		local v = map[i]
 		if v.position:DistToSqr(center) <= radius then
-			if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-				goto skip
+			if linkType then
+				local links_list = v.links[linkType]
+				if not links_list or #links_list == 0 then
+					goto skip
+				end
 			end
 
 			table.insert(radius_positions, v)
@@ -66,8 +71,11 @@ function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 
 	for i = 1, #map do
 		local v = map[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		if v.position:DistToSqr(center) <= radius then
@@ -88,8 +96,11 @@ function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 
 	for i = 1, #radius_points do
 		local v = radius_points[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
@@ -113,8 +124,11 @@ function bgNPC:GetDistantPointInRadius(center, radius, linkType)
 
 	for i = 1, #radius_points do
 		local v = radius_points[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
@@ -137,8 +151,11 @@ function bgNPC:GetClosestPointInChunk(center, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
@@ -161,8 +178,11 @@ function bgNPC:GetDistantPointInChunk(center, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
@@ -185,8 +205,11 @@ function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = pos:DistToSqr(v.position)
@@ -209,8 +232,11 @@ function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
-		if linkType and (not v.links[linkType] or #v.links[linkType] == 0) then
-			goto skip
+		if linkType then
+			local links_list = v.links[linkType]
+			if not links_list or #links_list == 0 then
+				goto skip
+			end
 		end
 
 		local calcualte_distance = pos:DistToSqr(v.position)
