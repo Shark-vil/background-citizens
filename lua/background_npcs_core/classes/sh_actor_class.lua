@@ -449,7 +449,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 					local time = npc:GetEnemyLastTimeSeen(enemy)
 					if time + 20 < CurTime() then
 						self:RemoveEnemy(enemy)
-						print(self.uid, 'remove enemy - ', enemy)
+						-- print(self.uid, 'remove enemy - ', enemy)
 					end
 				end
 			end
