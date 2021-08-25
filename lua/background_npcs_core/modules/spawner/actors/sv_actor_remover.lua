@@ -15,7 +15,7 @@ local function FindExistCarAndEnterThis(actor)
 end
 
 local function TeleportActor(actor, npc, pos)
-	if not IsValid(npc) then return end
+	if not actor or not IsValid(npc) then return end
 
 	local current_state = actor:GetState()
 	local current_data = actor:GetStateData()
