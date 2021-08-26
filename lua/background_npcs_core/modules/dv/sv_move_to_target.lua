@@ -17,7 +17,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 					for k = 1, #passengers do
 						local actor = passengers[k]
 
-						if actor and actor:IsAlive() and actor:InDangerState() and not actor:HasState('fear') then
+						if actor and actor:IsAlive() and actor:EqualStateGroup('danger') and not actor:HasState('fear') then
 							local enemy = actor:GetNearEnemy()
 
 							if IsValid(enemy) then
