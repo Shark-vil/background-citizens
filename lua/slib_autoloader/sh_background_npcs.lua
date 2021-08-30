@@ -4,6 +4,7 @@
 --]]
 
 file.CreateDir('background_npcs')
+file.CreateDir('citizens_points')
 file.CreateDir('background_npcs/nodes')
 file.CreateDir('background_npcs/seats')
 file.CreateDir('background_npcs/compile')
