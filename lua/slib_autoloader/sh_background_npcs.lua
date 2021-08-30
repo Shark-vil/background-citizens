@@ -4,6 +4,7 @@
 --]]
 
 file.CreateDir('background_npcs')
+file.CreateDir('citizens_points')
 file.CreateDir('background_npcs/nodes')
 file.CreateDir('background_npcs/seats')
 file.CreateDir('background_npcs/compile')
@@ -13,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.4.16'
+bgNPC.VERSION = '1.4.17'
 
 -- Do not change -------------
 bgNPC.cfg = {}
