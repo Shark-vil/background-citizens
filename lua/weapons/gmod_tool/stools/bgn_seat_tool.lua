@@ -73,6 +73,8 @@ else
 	end
 
 	function TOOL:Reload()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+
 		for _, t in ipairs(self.SeatPoints) do
 			if t.m_citizen then
 				t.m_citizen:Remove()
@@ -86,15 +88,20 @@ else
 	end
 
 	function TOOL:RightClick()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
 		if self.SelectedPointId == -1 then return end
+
 		local point = self.SeatPoints[self.SelectedPointId]
 		if not point then return end
+
 		point.m_citizen:Remove()
 		table.remove(self.SeatPoints, self.SelectedPointId)
 		self.SelectedPointId = -1
 	end
 
 	function TOOL:LeftClick()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+		
 		local tr = self:GetTraceInfo()
 		if not tr.Hit then return end
 

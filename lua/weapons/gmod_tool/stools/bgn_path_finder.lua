@@ -67,6 +67,8 @@ else
    end
 
    function TOOL:LeftClick()
+      if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+
       local tr = self:GetTrace()
       if not tr.Hit then return end
 
@@ -76,6 +78,7 @@ else
    end
 
    function TOOL:RightClick()
+      if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
       if self.StartPos == nil then return end
 
       local tr = self:GetTrace()
@@ -92,6 +95,8 @@ else
    end
 
    function TOOL:Reload()
+      if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+      
       self:ClearPoints()
       surface.PlaySound('common/wpn_denyselect.wav')
    end
