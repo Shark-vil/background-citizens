@@ -21,8 +21,6 @@ if SERVER then
 	end
 
 	function TOOL:LeftClick()
-		if CLIENT then return end
-
 		local ply = self:GetOwner()
 		if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
 

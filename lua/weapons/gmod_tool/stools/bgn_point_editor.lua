@@ -22,14 +22,17 @@ TOOL.LastNodeRemover = false
 
 if SERVER then
 	function TOOL:LeftClick()
+		if not game.SinglePlayer() then return end
 		snet.ClientRPC(self, 'LeftClick')
 	end
 
 	function TOOL:RightClick()
+		if not game.SinglePlayer() then return end
 		snet.ClientRPC(self, 'RightClick')
 	end
 
 	function TOOL:Reload()
+		if not game.SinglePlayer() then return end
 		snet.ClientRPC(self, 'Reload')
 	end
 else
@@ -57,6 +60,8 @@ else
 	end)
 
 	function TOOL:LeftClick()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+
 		local type = self:GetCurrentType()
 			
 		if type == 'creator' then
@@ -121,6 +126,8 @@ else
 	end
 
 	function TOOL:RightClick()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+
 		self.LinkerNode = nil
 		self.SelectedPointId = nil
 
@@ -129,6 +136,8 @@ else
 	end
 
 	function TOOL:Reload()
+		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+		
 		local type = self:GetCurrentType()
 
 		if type == 'remover' or type == 'last_remover' then
