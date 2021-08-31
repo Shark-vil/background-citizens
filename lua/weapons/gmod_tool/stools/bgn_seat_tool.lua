@@ -11,13 +11,12 @@ TOOL.SetStartPos = true
 
 function TOOL:GetTraceInfo()
 	local ply = self:GetOwner()
+
 	local tr = util.TraceLine({
 		start = ply:GetShootPos(),
 		endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
 		filter = function(ent)
-			if ent ~= ply then
-				return true
-			end
+			if ent ~= ply then return true end
 		end
 	})
 
@@ -25,118 +24,119 @@ function TOOL:GetTraceInfo()
 end
 
 if SERVER then
-   function TOOL:LeftClick()
-      snet.ClientRPC(self, 'LeftClick')
-   end
+	function TOOL:LeftClick()
+		if not game.SinglePlayer() then return end
+		snet.ClientRPC(self, 'LeftClick')
+	end
 
-   function TOOL:RightClick()
-      snet.ClientRPC(self, 'RightClick')
-   end
+	function TOOL:RightClick()
+		if not game.SinglePlayer() then return end
+		snet.ClientRPC(self, 'RightClick')
+	end
 
-   function TOOL:Reload()
-      snet.ClientRPC(self, 'Reload')
-   end
+	function TOOL:Reload()
+		if not game.SinglePlayer() then return end
+		snet.ClientRPC(self, 'Reload')
+	end
 else
-   function TOOL:IsLookingVector(vec)
+	function TOOL:IsLookingVector(vec)
 		local diff = vec - self.Owner:GetShootPos()
 		return self.Owner:GetAimVector():Dot(diff) / diff:Length() >= 0.99
 	end
 
-   function TOOL:Think()
-      do
-         local x = GetConVar('bgn_tool_seat_offset_pos_x'):GetInt()
-         local y = GetConVar('bgn_tool_seat_offset_pos_y'):GetInt()
-         local z = GetConVar('bgn_tool_seat_offset_pos_z'):GetInt()
-         self.VectorOffset = Vector(x, y, z)
-      end
+	function TOOL:Think()
+		do
+			local x = GetConVar('bgn_tool_seat_offset_pos_x'):GetInt()
+			local y = GetConVar('bgn_tool_seat_offset_pos_y'):GetInt()
+			local z = GetConVar('bgn_tool_seat_offset_pos_z'):GetInt()
+			self.VectorOffset = Vector(x, y, z)
+		end
 
-      do
-         local x = GetConVar('bgn_tool_seat_offset_angle_x'):GetInt()
-         local y = GetConVar('bgn_tool_seat_offset_angle_y'):GetInt()
-         local z = GetConVar('bgn_tool_seat_offset_angle_z'):GetInt()
-         self.AngleOffset = Angle(x, y, z)
-      end
+		do
+			local x = GetConVar('bgn_tool_seat_offset_angle_x'):GetInt()
+			local y = GetConVar('bgn_tool_seat_offset_angle_y'):GetInt()
+			local z = GetConVar('bgn_tool_seat_offset_angle_z'):GetInt()
+			self.AngleOffset = Angle(x, y, z)
+		end
 
-      local NewSelectedPointId = -1
+		local NewSelectedPointId = -1
 
-      for index, t in ipairs(self.SeatPoints) do
-         if NewSelectedPointId == -1 and t.data.position and self:IsLookingVector(t.data.position) then
-            NewSelectedPointId = index
-            break
-         end
-      end
+		for index, t in ipairs(self.SeatPoints) do
+			if NewSelectedPointId == -1 and t.data.position and self:IsLookingVector(t.data.position) then
+				NewSelectedPointId = index
+				break
+			end
+		end
 
-      self.SelectedPointId = NewSelectedPointId
-      self:UpdateControlPanel()
-   end
+		self.SelectedPointId = NewSelectedPointId
+		self:UpdateControlPanel()
+	end
 
-   function TOOL:Reload()
-      for _, t in ipairs(self.SeatPoints) do
-         if t.m_citizen then
-            t.m_citizen:Remove()
-         end
-      end
+	function TOOL:Reload()
+		for _, t in ipairs(self.SeatPoints) do
+			if t.m_citizen then
+				t.m_citizen:Remove()
+			end
+		end
 
-      table.Empty(self.SeatPoints)
+		table.Empty(self.SeatPoints)
+		self.SelectedPointId = -1
+		self.LastIndex = -1
+		self.SetStartPos = true
+	end
 
-      self.SelectedPointId = -1
-      self.LastIndex = -1
-      self.SetStartPos = true
-   end
+	function TOOL:RightClick()
+		if self.SelectedPointId == -1 then return end
+		local point = self.SeatPoints[self.SelectedPointId]
+		if not point then return end
+		point.m_citizen:Remove()
+		table.remove(self.SeatPoints, self.SelectedPointId)
+		self.SelectedPointId = -1
+	end
 
-   function TOOL:RightClick()
-      if self.SelectedPointId == -1 then return end
+	function TOOL:LeftClick()
+		local tr = self:GetTraceInfo()
+		if not tr.Hit then return end
 
-      local point = self.SeatPoints[self.SelectedPointId]
-      if not point then return end
+		if self.SetStartPos then
+			local m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')
+			m_citizen:SetSequence('Sit_Chair')
+			m_citizen:Spawn()
 
-      point.m_citizen:Remove()
-      table.remove(self.SeatPoints, self.SelectedPointId)
+			self.LastIndex = table.insert(self.SeatPoints, {
+				data = {
+					start_pos = tr.HitPos,
+				},
+				m_citizen = m_citizen,
+			})
+		elseif self.LastIndex ~= -1 then
+			self.SeatPoints[self.LastIndex].data.position = tr.HitPos
+			self.SeatPoints[self.LastIndex].data.offset = self.VectorOffset
+			self.SeatPoints[self.LastIndex].data.angle = self.AngleOffset
+			self.LastIndex = -1
+		end
 
-      self.SelectedPointId = -1
-   end
+		self.SetStartPos = not self.SetStartPos
+	end
 
-   function TOOL:LeftClick()
-      local tr = self:GetTraceInfo()
-      if not tr.Hit then return end
-
-      if self.SetStartPos then
-         local m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')
-         m_citizen:SetSequence('Sit_Chair')
-         m_citizen:Spawn()
-
-         self.LastIndex = table.insert(self.SeatPoints, {
-            data = {
-               start_pos =  tr.HitPos,
-            },
-            m_citizen = m_citizen,
-         })
-      elseif self.LastIndex ~= -1 then
-         self.SeatPoints[self.LastIndex].data.position = tr.HitPos
-         self.SeatPoints[self.LastIndex].data.offset = self.VectorOffset
-         self.SeatPoints[self.LastIndex].data.angle = self.AngleOffset
-         self.LastIndex = -1
-      end
-
-      self.SetStartPos = not self.SetStartPos
-   end
-
-   function TOOL:UpdateControlPanel()
+	function TOOL:UpdateControlPanel()
 		if self.PanelIsInit then return end
+		local Panel = controlpanel.Get("bgn_seat_tool")
 
-		local Panel = controlpanel.Get( "bgn_seat_tool" )
-		if not Panel then bgNPC:Log("Couldn't find bgn_seat_tool panel!", 'Tool') return end
-	
+		if not Panel then
+			bgNPC:Log("Couldn't find bgn_seat_tool panel!", 'Tool')
+			return
+		end
+
 		self.PanelIsInit = true
-	
 		Panel:ClearControls()
 
-      Panel:AddControl("Button", {
+		Panel:AddControl("Button", {
 			["Label"] = "Save",
 			["Command"] = "bgn_tool_seat_save",
 		})
-	
-      Panel:AddControl("Button", {
+
+		Panel:AddControl("Button", {
 			["Label"] = "Load",
 			["Command"] = "bgn_tool_seat_load",
 		})
@@ -149,7 +149,7 @@ else
 			["Max"] = "180"
 		})
 
-      Panel:AddControl("Slider", {
+		Panel:AddControl("Slider", {
 			["Label"] = "Pos Y",
 			["Command"] = "bgn_tool_seat_offset_pos_y",
 			["Type"] = "Integer",
@@ -157,7 +157,7 @@ else
 			["Max"] = "180"
 		})
 
-      Panel:AddControl("Slider", {
+		Panel:AddControl("Slider", {
 			["Label"] = "Pos Z",
 			["Command"] = "bgn_tool_seat_offset_pos_z",
 			["Type"] = "Integer",
@@ -165,7 +165,7 @@ else
 			["Max"] = "180"
 		})
 
-      Panel:AddControl("Slider", {
+		Panel:AddControl("Slider", {
 			["Label"] = "Ang X",
 			["Command"] = "bgn_tool_seat_offset_angle_x",
 			["Type"] = "Integer",
@@ -173,7 +173,7 @@ else
 			["Max"] = "180"
 		})
 
-      Panel:AddControl("Slider", {
+		Panel:AddControl("Slider", {
 			["Label"] = "Ang Y",
 			["Command"] = "bgn_tool_seat_offset_angle_y",
 			["Type"] = "Integer",
@@ -181,7 +181,7 @@ else
 			["Max"] = "180"
 		})
 
-      Panel:AddControl("Slider", {
+		Panel:AddControl("Slider", {
 			["Label"] = "Ang Z",
 			["Command"] = "bgn_tool_seat_offset_angle_Z",
 			["Type"] = "Integer",
@@ -190,76 +190,93 @@ else
 		})
 	end
 
-   local m_citizen
-   local clr = Color(255, 225, 0, 200)
+	local m_citizen
+	local clr = Color(255, 225, 0, 200)
 	local clr_green = Color(72, 232, 9, 200)
-   
-   hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_SeatEditor', function()
-      if not SLibraryIsLoaded then return end
 
+	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_SeatEditor', function()
+		if not SLibraryIsLoaded then return end
 		local wep = LocalPlayer():GetActiveWeapon()
+
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then
-         if m_citizen then m_citizen:Remove() m_citizen = nil end
-         return
-      end
-		
+			if m_citizen then
+				m_citizen:Remove()
+				m_citizen = nil
+			end
+
+			return
+		end
+
 		local tool = LocalPlayer():slibGetActiveTool('bgn_seat_tool')
-      if not tool then
-         if m_citizen then m_citizen:Remove() m_citizen = nil end
-         return
-      end
 
-      local tr = tool:GetTraceInfo()
-      if not tr.Hit then return end
+		if not tool then
+			if m_citizen then
+				m_citizen:Remove()
+				m_citizen = nil
+			end
 
-      if tool.SelectedPointId ~= -1 then
-         if m_citizen then m_citizen:Remove() m_citizen = nil end
-      else
-         if tool.SetStartPos then
-            render.DrawSphere(tr.HitPos, 10, 20, 20, clr_green)
-            if m_citizen then m_citizen:Remove() m_citizen = nil end
-         else
-            if not m_citizen then
-               m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')
-               m_citizen:SetSequence('Sit_Chair')
-               m_citizen:Spawn()
-            end
+			return
+		end
 
-            m_citizen:SetPos(tr.HitPos + tool.VectorOffset)
-            m_citizen:SetAngles(tool.AngleOffset)
-         end
-      end
+		local tr = tool:GetTraceInfo()
+		if not tr.Hit then return end
 
-      render.SetColorMaterial()
+		if tool.SelectedPointId ~= -1 then
+			if m_citizen then
+				m_citizen:Remove()
+				m_citizen = nil
+			end
+		else
+			if tool.SetStartPos then
+				render.DrawSphere(tr.HitPos, 10, 20, 20, clr_green)
 
-      for index, t in ipairs(tool.SeatPoints) do
-         local data = t.data
-         if not data.position and data.start_pos then
-            render.DrawLine(data.start_pos, tr.HitPos, clr)
-         end
-      end
+				if m_citizen then
+					m_citizen:Remove()
+					m_citizen = nil
+				end
+			else
+				if not m_citizen then
+					m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')
+					m_citizen:SetSequence('Sit_Chair')
+					m_citizen:Spawn()
+				end
 
-      for index, t in ipairs(tool.SeatPoints) do
-         local data = t.data
-         if data.start_pos and data.position then
-            local model = t.m_citizen
+				m_citizen:SetPos(tr.HitPos + tool.VectorOffset)
+				m_citizen:SetAngles(tool.AngleOffset)
+			end
+		end
 
-            if tool.SelectedPointId == index then
-               model:SetColor(Color(100, 0, 0))
-            else
-               model:SetColor(Color(255, 255, 255))
-            end
+		render.SetColorMaterial()
 
-            model:SetPos(data.position + data.offset)
-            model:SetAngles(data.angle)
+		for index, t in ipairs(tool.SeatPoints) do
+			local data = t.data
 
-            render.DrawSphere(data.start_pos, 10, 20, 20, clr_green)
-            render.DrawLine(data.start_pos, data.position, clr)
-         end
-      end
-   end)
+			if not data.position and data.start_pos then
+				render.DrawLine(data.start_pos, tr.HitPos, clr)
+			end
+		end
 
-   local en_lang = {
+		for index, t in ipairs(tool.SeatPoints) do
+			local data = t.data
+
+			if data.start_pos and data.position then
+				local model = t.m_citizen
+
+				if tool.SelectedPointId == index then
+					model:SetColor(Color(100, 0, 0))
+				else
+					model:SetColor(Color(255, 255, 255))
+				end
+
+				model:SetPos(data.position + data.offset)
+				model:SetAngles(data.angle)
+				render.DrawSphere(data.start_pos, 10, 20, 20, clr_green)
+				render.DrawLine(data.start_pos, data.position, clr)
+			end
+		end
+	end)
+
+	local en_lang = {
 		['tool.bgn_seat_tool.name'] = 'Seat position',
 		['tool.bgn_seat_tool.desc'] = '',
 		['tool.bgn_seat_tool.0'] = '',
@@ -272,6 +289,7 @@ else
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
+
 	for k, v in pairs(lang) do
 		language.Add(k, v)
 	end

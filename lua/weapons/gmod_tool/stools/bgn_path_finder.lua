@@ -12,14 +12,17 @@ TOOL.EndPos = nil
 
 if SERVER then
    function TOOL:LeftClick()
+      if not game.SinglePlayer() then return end
       snet.ClientRPC(self, 'LeftClick')
    end
 
    function TOOL:RightClick()
+      if not game.SinglePlayer() then return end
       snet.ClientRPC(self, 'RightClick')
    end
 
    function TOOL:Reload()
+      if not game.SinglePlayer() then return end
       snet.ClientRPC(self, 'Reload')
    end
 else
