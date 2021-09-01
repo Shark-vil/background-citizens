@@ -38,11 +38,11 @@ if SERVER then
 	snet.Callback('bgn_movement_mesh_load', function(ply)
 		bgNPC.LoadRoutes()
 		bgNPC.SendRoutesFromClient(ply)
-	end).Protect().Register()
+	end).Protect()
 
 	snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
 		bgNPC.SendRoutesFromClient(ply)
-	end).Protect().Register()
+	end).Protect()
 
 	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
 		hook.Run('BGN_PreLoadRoutes', game.GetMap())
@@ -54,7 +54,7 @@ else
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 
 		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
-      if not tool then return end
+		if not tool then return end
 
 		tool:ClearPoints()
 	end)
@@ -80,7 +80,7 @@ else
 
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
-	net.Callback('bgn_movement_mesh_load_from_client_cl', function(ply, data_table)
+	snet.Callback('bgn_movement_mesh_load_from_client_cl', function(ply, data_table)
 		local newMap = BGN_NODE:JsonToMap(data_table)
 		local count = table.Count(newMap)
 
@@ -95,5 +95,5 @@ else
 
 		BGN_NODE:SetMap(newMap)
 		hook.Run('BGN_LoadingClientRoutes', BGN_NODE:GetMap())
-	end).Protect().Register()
+	end).Protect()
 end
