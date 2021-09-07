@@ -14,6 +14,7 @@
 - **bgn_my_custom_models**\lua\background_npcs_core\custom_modules\config\\**mynick_folder\sh_my_custom_module.lua**
 
 You can just put the file in the "config" folder, but then it is recommended to come up with a more unique file name:
+
 - **bgn_my_custom_models**\lua\background_npcs_core\custom_modules\config\\**sh_mynick_my_custom_module.lua**
 
 ### 4. See the standard config for orientation:
