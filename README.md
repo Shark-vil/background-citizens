@@ -17,16 +17,10 @@
 This is an addon that will automatically spawn NPCs on the map at predetermined movement points. NPCs can walk around the map, perform random actions, attack or defend.
 
 ### **Performance**
-The system is quite optimized and almost does not load the system. NPCs are removed when they disappear from the player's field of view, and appear with a certain delay. The spawn process is performed between server frames, which does not create unnecessary lags.
+The addon is quite optimized and almost does not generate lags. NPCs are removed when they disappear from the player's field of view, and appear with a certain delay. The spawn process is performed between server frames, which does not create unnecessary lags.
 
 ### **Assignment**
 This addon can rather be considered a base for development. There is basic functionality here, but if you are a developer, you can fairly easily extend the system to suit your conditions and for any gamemode.
-
-## F.A.Q.
-***
-* **[How do I use a wiki?](https://background-npcs.itpony.ru/wiki/How%20do%20I%20use%20a%20wiki?)**
-* **[How to change config?](https://background-npcs.itpony.ru/wiki/How%20to%20change%20config)**
-* **[Nothing works for me!](https://background-npcs.itpony.ru/wiki/Nothing%20works%20for%20me!)**
 
 ## Documentation
 ***
@@ -36,17 +30,3 @@ The wiki is currently under development and some methods may not be described. W
 **[Outside documentation](https://background-npcs.itpony.ru)**
 
 **[Inside documentation](https://shark-vil.github.io/background-citizens)**
-
----
-
-NPCs do not have extra code and overloaded tables. For each background NPC an "**Actor**" class is created, through which most actions are carried out. This makes the code cleaner.
-
-## Performance testing
-During testing, we used the factory settings of cvars.
-
-### Local Server
-#### **Disable Background NPCs**
-![Disable Background NPCs](https://i.imgur.com/Gf6ZKPM.jpg)
-
-#### **Enable Background NPCs**
-![Enable Background NPCs](https://i.imgur.com/xDAcsvn.png)
