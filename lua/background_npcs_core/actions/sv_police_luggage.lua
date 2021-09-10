@@ -8,14 +8,14 @@ local function TargetPlayerPush(npc, target, velocity)
 	target:ViewPunch(Angle(angle_punch_pitch, angle_punch_yaw, 0))
 
 	local slapSounds = {
-		"physics/body/body_medium_impact_hard1.wav",
-		"physics/body/body_medium_impact_hard2.wav",
-		"physics/body/body_medium_impact_hard3.wav",
-		"physics/body/body_medium_impact_hard5.wav",
-		"physics/body/body_medium_impact_hard6.wav",
-		"physics/body/body_medium_impact_soft5.wav",
-		"physics/body/body_medium_impact_soft6.wav",
-		"physics/body/body_medium_impact_soft7.wav",
+		'physics/body/body_medium_impact_hard1.wav',
+		'physics/body/body_medium_impact_hard2.wav',
+		'physics/body/body_medium_impact_hard3.wav',
+		'physics/body/body_medium_impact_hard5.wav',
+		'physics/body/body_medium_impact_hard6.wav',
+		'physics/body/body_medium_impact_soft5.wav',
+		'physics/body/body_medium_impact_soft6.wav',
+		'physics/body/body_medium_impact_soft7.wav',
 	}
 
 	target:EmitSound(table.RandomBySeq(slapSounds), 75, 100, 0.3, CHAN_AUTO)
@@ -23,11 +23,11 @@ local function TargetPlayerPush(npc, target, velocity)
 end
 
 
-hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushDanger", function(actor, ent, distance)
+hook.Add('BGN_ActorVisibleAtObject', 'BGN_PolicPlayerPushDanger', function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() or ent:InVehicle() then return end
 	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
 	if not actor:HasTeam('police') or actor:HasState('arrest') then return end
-	
+
 	local LuggagePush = actor:IsValidSequence('LuggagePush')
 	local MeleeGunhit = actor:IsValidSequence('MeleeGunhit')
 
@@ -51,7 +51,7 @@ hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushDanger", function(actor
 	end
 end)
 
-hook.Add("BGN_ActorVisibleAtObject", "BGN_PolicPlayerPushCalmly", function(actor, ent, distance)
+hook.Add('BGN_ActorVisibleAtObject', 'BGN_PolicPlayerPushCalmly', function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() or ent:InVehicle() then return end
 	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
 	if not actor:HasTeam('police') or actor:HasState('arrest') then return end

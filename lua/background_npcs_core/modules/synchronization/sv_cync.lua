@@ -1,3 +1,10 @@
+local timer = timer
+local player = player
+local bgNPC = bgNPC
+local table = table
+local slib = slib
+local snet = snet
+--
 local sync_radius = 700
 local sync_distance = sync_radius ^ 2
 

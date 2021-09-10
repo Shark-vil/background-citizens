@@ -1,3 +1,12 @@
+local BaseClass = include('sh_actor_base.lua')
+local slib = slib
+local table = table
+local math = math
+local SERVER = SERVER
+local snet = snet
+local bgNPC = bgNPC
+local setmetatable = setmetatable
+--
 BGN_ACTOR = {}
 
 function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)

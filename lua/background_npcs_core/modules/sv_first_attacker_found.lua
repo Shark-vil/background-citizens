@@ -6,7 +6,7 @@ local function EntityHasValid(ent)
    return false
 end
 
-hook.Add("EntityTakeDamage", "BGN_FoundFirstAttacker", function(target, dmginfo)
+hook.Add('EntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, dmginfo)
    local attacker = dmginfo:GetAttacker()
 
    if not EntityHasValid(attacker) or not EntityHasValid(target) then return end
@@ -80,7 +80,7 @@ hook.Add('PlayerDeath', 'BGN_FirstAttackerModule_ClearAttackersList', function(p
    ASSET:RemoveAttacker(ply)
 end)
 
-hook.Add("BGN_PlayerArrest", "BGN_FirstAttackerModule_DeletePlayerItemIfExists", function(ply)
+hook.Add('BGN_PlayerArrest', 'BGN_FirstAttackerModule_DeletePlayerItemIfExists', function(ply)
    ASSET:RemoveAttacker(ply)
 end)
 

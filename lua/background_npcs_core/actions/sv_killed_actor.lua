@@ -1,14 +1,17 @@
-hook.Add("OnNPCKilled", "BGN_OnKilledActor", function(npc, attacker, inflictor)
+local bgNPC = bgNPC
+--
+
+hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 	local actor = bgNPC:GetActor(npc)
 	if actor then
 		bgNPC:AddKillingStatistic(attacker, actor)
 		bgNPC:AddWantedKillingStatistic(attacker, actor)
-		
+
 		hook.Run('BGN_OnKilledActor', actor, attacker)
 	end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_DelayActorRespawn", function(actor)
+hook.Add('BGN_OnKilledActor', 'BGN_DelayActorRespawn', function(actor)
 	local data = actor:GetData()
 	if data.respawn_delay ~= nil then
 		local actor_type = actor:GetType()
@@ -20,7 +23,7 @@ hook.Add("BGN_OnKilledActor", "BGN_DelayActorRespawn", function(actor)
 
 		local count = bgNPC.respawn_actors_delay[actor_type].count
 		bgNPC.respawn_actors_delay[actor_type].count = count + 1
-		
+
 		if bgNPC.respawn_actors_delay[actor_type].time < CurTime() then
 			bgNPC.respawn_actors_delay[actor_type].time = CurTime() + data.respawn_delay
 		end

@@ -4,24 +4,24 @@ concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 	local version = args[1] or bgNPC.VERSION
 
 	local ru_lang = {
-		['title'] = "Фоновые NPCs - Страница обновления",
-		['html_button'] = "Перейти по ссылке",
-		['html_button_back'] = "Вернуться на главную",
-		['link'] = "https://github.com/Shark-vil/background-citizens/releases/tag/" .. version
+		['title'] = 'Фоновые NPCs - Страница обновления',
+		['html_button'] = 'Перейти по ссылке',
+		['html_button_back'] = 'Вернуться на главную',
+		['link'] = 'https://github.com/Shark-vil/background-citizens/releases/tag/' .. version
 	}
 
 	local en_lang = {
-		['title'] = "Background NPCs - Update page",
-		['html_button'] = "Go to the link",
-		['html_button_back'] = "Go back to the main",
-		['link'] = "https://github.com/Shark-vil/background-citizens/releases/tag/" .. version
+		['title'] = 'Background NPCs - Update page',
+		['html_button'] = 'Go to the link',
+		['html_button_back'] = 'Go back to the main',
+		['link'] = 'https://github.com/Shark-vil/background-citizens/releases/tag/' .. version
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
 
 	http.Fetch(lang['link'],
 		function(github_version, length, headers, code)
-			if code ~= 200 then 
+			if code ~= 200 then
 				chat.AddText(Color(255, 0, 0), '[WARNING] ', Color(255, 196, 0), 'There is no page for this version.')
 				return
 			end
@@ -31,7 +31,7 @@ concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 
 			local MainWindow, ParentUrlField, ParentUrlButton, ParentUrlButtonBack, ParnetHtmlPanel
 
-			MainWindow = vgui.Create( "DFrame" )
+			MainWindow = vgui.Create( 'DFrame' )
 			MainWindow:SetSize( Width, Height )
 			MainWindow:SetTitle( lang['title'] )
 			MainWindow:Center()
@@ -40,7 +40,7 @@ concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 				surface.PlaySound('buttons/button4.wav')
 			end
 
-			ParentUrlField = vgui.Create( "DTextEntry", MainWindow )
+			ParentUrlField = vgui.Create( 'DTextEntry', MainWindow )
 			ParentUrlField:SetPos( 10, 30 )
 			ParentUrlField:SetTall( 25 )
 			ParentUrlField:SetWide( Width - 300 - 10 )
@@ -50,12 +50,12 @@ concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 				ParnetHtmlPanel:OpenURL( ParentUrlField:GetValue() )
 			end
 
-			ParentUrlButton = vgui.Create( "DButton", MainWindow )
+			ParentUrlButton = vgui.Create( 'DButton', MainWindow )
 			ParentUrlButton:SetPos( Width - 295, 30 )
 			ParentUrlButton:SetSize( 140, 25 )
 			ParentUrlButton:SetText( lang['html_button'] )
 
-			ParentUrlButtonBack = vgui.Create( "DButton", MainWindow )
+			ParentUrlButtonBack = vgui.Create( 'DButton', MainWindow )
 			ParentUrlButtonBack:SetPos( Width - 150, 30 )
 			ParentUrlButtonBack:SetSize( 140, 25 )
 			ParentUrlButtonBack:SetText( lang['html_button_back'] )
@@ -63,7 +63,7 @@ concommand.Add('bgn_updateinfo', function(ply, cmd, args)
 				ParnetHtmlPanel:OpenURL( lang['link'] )
 			end
 
-			ParnetHtmlPanel = vgui.Create( "DHTML", MainWindow )
+			ParnetHtmlPanel = vgui.Create( 'DHTML', MainWindow )
 			ParnetHtmlPanel:SetPos( 10, 60 )
 			ParnetHtmlPanel:SetSize( Width - 20, Height - 70 )
 			ParnetHtmlPanel:OpenURL( lang['link'] )

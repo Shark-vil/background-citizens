@@ -1,3 +1,23 @@
+local CurTime = CurTime
+local IsValid = IsValid
+local snet = snet
+local hook = hook
+local math = math
+local table = table
+local pairs = pairs
+local bgNPC = bgNPC
+local istable = istable
+local isentity = isentity
+local isnumber = isnumber
+local isstring = isstring
+local type = type
+local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
+local SCHED_FORCED_GO = SCHED_FORCED_GO
+local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
+local GetConVar = GetConVar
+local tobool = tobool
+local string = string
+--
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
 	'vo/coast/bugbait/sandy_help.wav',

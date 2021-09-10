@@ -1,3 +1,7 @@
+local bgNPC = bgNPC
+local snet = snet
+--
+
 snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
 	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end

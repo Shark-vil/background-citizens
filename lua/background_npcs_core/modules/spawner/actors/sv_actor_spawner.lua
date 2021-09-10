@@ -1,5 +1,18 @@
+local bgNPC = bgNPC
+local hook = hook
+local timer = timer
+local IsValid = IsValid
+local player = player
+local ipairs = ipairs
+local GetConVar = GetConVar
+local ents = ents
+local pairs = pairs
+local CurTime = CurTime
+local isbool = isbool
+--
+
 -- Еб*ный костыль.
-hook.Add("BGN_InitActor", "BGN_RemoveActorTargetFixer", function(actor)
+hook.Add('BGN_InitActor', 'BGN_RemoveActorTargetFixer', function(actor)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 
@@ -44,7 +57,7 @@ local function _SetNPCRelationship(actor_npc, npc)
 	end
 end
 
-hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
+hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', function(actor)
 	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
 	local actor_npc = actor:GetNPC()
@@ -59,7 +72,7 @@ hook.Add("BGN_InitActor", "BGN_AddAnotherNPCToIgnore", function(actor)
 	end
 end)
 
-hook.Add("OnEntityCreated", "BGN_AddAnotherNPCToIgnore", function(ent)
+hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(ent)
 	if not ent:IsNPC() then return end
 	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
@@ -89,10 +102,10 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 	bgNPC:ClearRemovedNPCs()
 
 	for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
-		if not bgNPC:IsActiveNPCType(npcType) then goto skip end
+		if not bgNPC:IsActiveNPCType(npcType) then continue end
 
 		local max_limit = bgNPC:GetLimitActors(npcType)
-		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then goto skip end
+		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then continue end
 
 		local pos
 
@@ -107,13 +120,13 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 				end
 			end
 
-			if not success then goto skip end
+			if not success then continue end
 		end
-		
+
 		if npc_data.validator then
 			local result = npc_data.validator(npc_data, npcType)
 			if isbool(result) and not result then
-				goto skip
+				continue
 			end
 		end
 
@@ -123,7 +136,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 				bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
 				bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
 			else
-				goto skip
+				continue
 			end
 		end
 
@@ -133,12 +146,10 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 				bgNPC:SpawnVehicleWithActor(actor)
 			end
 		end)
-
-		::skip::
 	end
 end)
 
-hook.Add("BGN_InitActor", "BGN_CheckActorSpawnWantedLevel", function(actor)
+hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
 	if not actor:HasTeam('police') then return end
 
 	local data = actor:GetData()
