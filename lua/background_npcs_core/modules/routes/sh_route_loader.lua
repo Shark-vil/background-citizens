@@ -30,7 +30,7 @@ if SERVER then
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.Create('bgn_movement_mesh_load_from_client_cl')
+		snet.Request('bgn_movement_mesh_load_from_client_cl')
 			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
 			.Invoke(ply)
 	end

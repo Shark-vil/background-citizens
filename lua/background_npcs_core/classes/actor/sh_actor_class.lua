@@ -87,7 +87,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	npc.isBgnActor = true
 
 	if SERVER and not not_sync_actor_on_client then
-		snet.Create('bgn_add_actor_from_client', npc, npc_type, obj.uid).InvokeAll()
+		snet.Request('bgn_add_actor_from_client', npc, npc_type, obj.uid).InvokeAll()
 	end
 
 	if not not_auto_added_to_list then

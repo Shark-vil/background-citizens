@@ -59,14 +59,14 @@ local function ConstructParent(node, set_max_pass, yield)
 	end
 end
 
-slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
+scommand.Register('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 	local old_progress = -1
 
 	if not navmesh.IsLoaded() then
 		snet.Invoke('bgn_generate_navmesh_not_exists', ply)
 		return
 	end
-	
+
 	async.Add('bgn_generate_navmesh', function(yield)
 		BGN_NODE:ClearNodeMap()
 
@@ -102,7 +102,7 @@ slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 			::skip::
 		end
 
-		snet.Create('bgn_movement_mesh_load_from_client_cl')
+		snet.Request('bgn_movement_mesh_load_from_client_cl')
 			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
 			.Invoke(ply)
 
@@ -110,7 +110,7 @@ slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 
 		return yield('stop')
 	end)
-end)
+end).Access( { isAdmin = true } )
 
 if CLIENT then
 	snet.RegisterCallback('bgn_generate_navmesh_progress', function(ply, percent)
