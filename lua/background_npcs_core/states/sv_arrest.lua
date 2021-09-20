@@ -192,9 +192,9 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 					ArrestModule:RemovePlayer(target)
 
 					if not hook.Run('BGN_PlayerArrest', target, actor) then
-						ply:EmitSound('background_npcs/handcuffs_sound1.mp3')
-						ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 3)
-						ply:KillSilent()
+						target:EmitSound('background_npcs/handcuffs_sound1.mp3')
+						target:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 3)
+						target:KillSilent()
 					end
 
 					for _, selectActor in ipairs(bgNPC:GetAll()) do
