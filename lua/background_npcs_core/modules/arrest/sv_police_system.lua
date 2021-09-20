@@ -43,4 +43,6 @@ hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', functio
 	end)
 
 	fakePlayer:slibAutoDestroy(5)
+
+	return true
 end)
