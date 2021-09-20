@@ -26,6 +26,7 @@ bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_disable_citizens_weapons = 0
 bgNPC.cvar.bgn_disable_halo = 0
 bgNPC.cvar.bgn_enable_dv_support = 1
+bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_movement_checking_parts = 5
@@ -168,6 +169,11 @@ scvar.Register('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo,
 scvar.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support,
 	FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
 	.Access(DefaultAccess)
+
+scvar.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_system_support,
+	FCVAR_ARCHIVE,
+	'Enables compatibility with the "Police System" addon and overrides the default arrest method.'
+).Access(DefaultAccess)
 
 scvar.Register('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues,
 	FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
