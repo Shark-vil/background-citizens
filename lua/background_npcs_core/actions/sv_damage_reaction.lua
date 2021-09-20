@@ -1,5 +1,4 @@
 local bgNPC = bgNPC
-local math = math
 local hook = hook
 --
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
