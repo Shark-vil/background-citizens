@@ -3,7 +3,7 @@ local slib = slib
 local table = table
 local math = math
 local SERVER = SERVER
-local snet = snet
+local snet = slib.Components.Network
 local bgNPC = bgNPC
 local setmetatable = setmetatable
 --

@@ -1,3 +1,6 @@
+local snet = slib.Components.Network
+--
+
 snet.Callback('bgn_sv_unit_dv_points_exists', function(ply)
 	local dvd = DecentVehicleDestination
 	if not dvd then

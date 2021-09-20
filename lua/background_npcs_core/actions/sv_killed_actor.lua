@@ -1,4 +1,5 @@
 local bgNPC = bgNPC
+local hook = hook
 --
 
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)

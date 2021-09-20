@@ -1,3 +1,14 @@
+local snet = slib.Components.Network
+local ipairs = ipairs
+local table = table
+local LerpVector = LerpVector
+local math = math
+local util = util
+local Vector = Vector
+local scommand = slib.Components.GlobalCommand
+local CLIENT = CLIENT
+--
+
 local function AutoCreatePoints(startPos, endPos)
 	local points = {}
 	local dist = startPos:Distance(endPos)
@@ -36,9 +47,7 @@ local function ConstructParent(node, set_max_pass, yield)
 					end
 				})
 
-				if not tr.Hit then
-					goto skip
-				end
+				if not tr.Hit then continue end
 			end
 
 			if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos) 
@@ -48,8 +57,6 @@ local function ConstructParent(node, set_max_pass, yield)
 				anotherNode:AddLink(node, 'walk')
 			end
 		end
-
-		::skip::
 
 		current_pass = current_pass + 1
 		if current_pass == max_pass then
@@ -98,8 +105,6 @@ scommand.Register('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 				snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress)
 				old_progress = new_progress
 			end
-
-			::skip::
 		end
 
 		snet.Request('bgn_movement_mesh_load_from_client_cl')

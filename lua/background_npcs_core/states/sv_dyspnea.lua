@@ -1,4 +1,4 @@
-hook.Add("BGN_PreSetNPCState", "BGN_OverrideDyspneaDangerStateToCallingPolice", function(actor, state)
+hook.Add('BGN_PreSetNPCState', 'BGN_OverrideDyspneaDangerStateToCallingPolice', function(actor, state)
 	if state == 'dyspnea_danger' and math.random(0, 100) < 10 then return 'calling_police' end
 end)
 

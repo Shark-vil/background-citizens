@@ -1,8 +1,8 @@
 bgNPC:SetStateAction('fear', 'danger', {
-	start = function(actor)		
+	start = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
-	
+
 		local npc = actor:GetNPC()
 		local dist = enemy:GetPos():DistToSqr(npc:GetPos())
 		if dist <= 490000 and math.random(0, 10) > 5 then
@@ -49,7 +49,7 @@ timer.Create('BGN_Timer_FearStateAnimationController', 0.3, 0, function()
 			end
 
 			local animation_twitching = math.random(0, 100)
-			
+
 			if data.animation_type > 30 then
 				if animation_twitching >= 10 then
 					actor:PlayStaticSequence('Fear_Reaction_Idle', true)

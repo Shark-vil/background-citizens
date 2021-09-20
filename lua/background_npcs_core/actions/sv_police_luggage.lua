@@ -1,3 +1,18 @@
+local math = math
+local table = table
+local hook = hook
+--
+local slapSounds = {
+	'physics/body/body_medium_impact_hard1.wav',
+	'physics/body/body_medium_impact_hard2.wav',
+	'physics/body/body_medium_impact_hard3.wav',
+	'physics/body/body_medium_impact_hard5.wav',
+	'physics/body/body_medium_impact_hard6.wav',
+	'physics/body/body_medium_impact_soft5.wav',
+	'physics/body/body_medium_impact_soft6.wav',
+	'physics/body/body_medium_impact_soft7.wav',
+}
+
 local function TargetPlayerPush(npc, target, velocity)
 	local forward = npc:GetForward()
 	local angle_punch_pitch = math.Rand(-20, 20)
@@ -5,19 +20,8 @@ local function TargetPlayerPush(npc, target, velocity)
 	if math.random(0, 1) == 1 then
 		angle_punch_yaw = angle_punch_yaw * -1
 	end
+
 	target:ViewPunch(Angle(angle_punch_pitch, angle_punch_yaw, 0))
-
-	local slapSounds = {
-		'physics/body/body_medium_impact_hard1.wav',
-		'physics/body/body_medium_impact_hard2.wav',
-		'physics/body/body_medium_impact_hard3.wav',
-		'physics/body/body_medium_impact_hard5.wav',
-		'physics/body/body_medium_impact_hard6.wav',
-		'physics/body/body_medium_impact_soft5.wav',
-		'physics/body/body_medium_impact_soft6.wav',
-		'physics/body/body_medium_impact_soft7.wav',
-	}
-
 	target:EmitSound(table.RandomBySeq(slapSounds), 75, 100, 0.3, CHAN_AUTO)
 	target:SetVelocity(forward * velocity)
 end

@@ -1,3 +1,14 @@
+local bgNPC = bgNPC
+local SERVER = SERVER
+local IsValid = IsValid
+local GetConVar = GetConVar
+local CurTime = CurTime
+local snet = slib.Components.Network
+local isnumber = isnumber
+local hook = hook
+local table = table
+local list = list
+--
 local ASSET = {}
 local wanted_list = {}
 
@@ -26,7 +37,7 @@ function ASSET:AddWanted(ent)
 					snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
 				end
 			end,
-			
+
 			UpdateWaitTime = function(self, time)
 				self.wait_time = time
 
@@ -55,7 +66,7 @@ function ASSET:AddWanted(ent)
 
 			LevelUp = function(self)
 				if not GetConVar('bgn_wanted_level'):GetBool() then return end
-				
+
 				if self.level + 1 <= self.level_max then
 					self.level = self.level + 1
 

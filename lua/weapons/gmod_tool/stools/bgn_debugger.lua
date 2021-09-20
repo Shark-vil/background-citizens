@@ -1,5 +1,15 @@
-TOOL.Category = "Background NPCs"
-TOOL.Name = "#tool.bgn_debugger.name"
+local snet = slib.Components.Network
+local util = util
+local bgNPC = bgNPC
+local MsgN = MsgN
+local surface = surface
+local LocalPlayer = LocalPlayer
+local GetConVar = GetConVar
+local language = language
+--
+
+TOOL.Category = 'Background NPCs'
+TOOL.Name = '#tool.bgn_debugger.name'
 TOOL.PanelIsInit = false
 TOOL.Trace = nil
 TOOL.Lock = false
@@ -60,7 +70,7 @@ else
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end
-		
+
 		local actor_data = snet.GetNormalizeDataTable(actor)
 		if actor_data then MsgN('CLIENT:') PrintTable(actor_data) end
 
@@ -75,11 +85,11 @@ else
 		surface.PlaySound('buttons/blip1.wav')
 	end
 
-	hook.Add("HUDPaint", "BGN_TOOL_DrawDebbugerText", function()
+	hook.Add('HUDPaint', 'BGN_TOOL_DrawDebbugerText', function()
 		if not SLibraryIsLoaded then return end
 
-      local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
-      if not tool or not tool.Actor or not IsValid(tool.Target) then return end
+		local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
+		if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3
 		local add = 25
@@ -87,14 +97,14 @@ else
 		surface.SetDrawColor(0, 0, 0, 150)
 		surface.DrawRect(25, ypos - 10, 240, 260)
 
-		surface.SetFont("Trebuchet18")
+		surface.SetFont('Trebuchet18')
 		surface.SetTextColor(255, 255, 255)
 
 		surface.SetTextPos(30, ypos)
 		surface.DrawText('Uid - ' .. tostring(tool.Actor.uid))
 
 		ypos = ypos + add
-		surface.SetTextPos(30, ypos) 
+		surface.SetTextPos(30, ypos)
 		surface.DrawText('State - ' .. tool.Actor:GetState())
 
 		ypos = ypos + add
@@ -129,17 +139,17 @@ else
 		surface.SetTextPos(30, ypos)
 		surface.DrawText('NPC state - ' .. tostring(tool.Actor.npc_state))
 	end)
-	
+
 	function TOOL:UpdateControlPanel()
-		local Panel = controlpanel.Get("bgn_debugger")
-		if not Panel then bgNPC:Log("Couldn't find bgn_debugger panel!", 'Tool') return end
+		local Panel = controlpanel.Get('bgn_debugger')
+		if not Panel then bgNPC:Log('Couldn\'t find bgn_debugger panel!', 'Tool') return end
 		if self.PanelIsInit then return end
-	
+
 		self.PanelIsInit = true
-	
+
 		Panel:ClearControls()
 	end
-	
+
 	local en_lang = {
 		['tool.bgn_debugger.name'] = 'Actor debugger',
 		['tool.bgn_debugger.desc'] = 'A tool for debugging the work of actors.',

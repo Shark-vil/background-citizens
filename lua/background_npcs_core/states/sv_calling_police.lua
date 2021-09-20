@@ -1,9 +1,9 @@
 bgNPC:SetStateAction('calling_police', 'danger', {
 	update = function(actor)
-		local enemy = actor:GetEnemy()
-		if not IsValid(enemy) then return end
+		local currentEnemy = actor:GetEnemy()
+		if not IsValid(currentEnemy) then return end
 
-		local TargetActor = bgNPC:GetActor(enemy)
+		local TargetActor = bgNPC:GetActor(currentEnemy)
 		if TargetActor ~= nil and TargetActor:HasTeam('police') then
 			actor:SetState('fear')
 			return
@@ -17,10 +17,10 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 		end
 
 		-- 90000 = 300 ^ 2
-		if not bgNPC:IsTargetRay(npc, enemy) or npc:GetPos():DistToSqr(enemy:GetPos()) < 90000 then
+		if not bgNPC:IsTargetRay(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
 			local rnd = math.random(0, 100)
 			if rnd > 80 then
-				actor:CallForHelp(enemy)
+				actor:CallForHelp(currentEnemy)
 			end
 
 			actor:SetState('fear')
@@ -28,7 +28,7 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 		end
 
 		local data = actor:GetStateData()
-		
+
 		if data.calling_time == nil then
 			data.calling_time = CurTime() + 15
 			npc:EmitSound('buttons/button19.wav', 200, 100, 1, CHAN_AUTO)
@@ -36,21 +36,19 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 			if data.calling_time < CurTime() then
 				local asset = bgNPC:GetModule('wanted')
 
-				do
-					for _, enemy in pairs(actor.enemies) do
-						if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
-							if asset:HasWanted(enemy) then
-								local WantedClass = asset:GetWanted(enemy)
-								WantedClass:UpdateWanted(enemy)
-							else
-								asset:AddWanted(enemy)
-							end
+				for _, enemy in pairs(actor.enemies) do
+					if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+						if asset:HasWanted(enemy) then
+							local WantedClass = asset:GetWanted(enemy)
+							WantedClass:UpdateWanted(enemy)
+						else
+							asset:AddWanted(enemy)
 						end
 					end
 				end
 
 				npc:EmitSound('buttons/combine_button1.wav', 200, 100, 1, CHAN_AUTO)
-				
+
 				if not hook.Run('BGN_PostCallingPolice', actor) then
 					actor:SetState('fear')
 				end

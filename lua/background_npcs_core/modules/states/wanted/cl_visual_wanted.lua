@@ -1,13 +1,29 @@
+local hook = hook
+local GetConVar = GetConVar
+local LocalPlayer = LocalPlayer
+local table = table
+local pairs = pairs
+local table = table
+local bgNPC = bgNPC
+local IsValid = IsValid
+local halo = halo
+local surface = surface
+local math = math
+local string = string
+local cam = cam
+local draw = draw
+local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
+--
 local asset = bgNPC:GetModule('wanted')
 
-hook.Add("PreDrawHalos", "BGN_RenderOutlineOnPlayerWanted", function()
+hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
 	if not LocalPlayer().snet_ready then return end
 	if GetConVar('bgn_disable_halo'):GetBool() then return end
 
 	local wanted_list = asset:GetAllWanted()
 
 	if table.Count(wanted_list) == 0 then return end
-	
+
 	local targets = {}
 	for ent, _ in pairs(wanted_list) do
 		if IsValid(ent) then
@@ -22,7 +38,7 @@ end)
 
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 	if not LocalPlayer().snet_ready then return end
-	
+
 	local is_draw_text = GetConVar('bgn_wanted_hud_text'):GetBool()
 	local is_draw_stars = GetConVar('bgn_wanted_hud_stars'):GetBool()
 
@@ -39,9 +55,9 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 	if not asset:HasWanted(LocalPlayer()) then return end
 
 	local c_Wanted = asset:GetWanted(LocalPlayer())
-	
+
 	if is_draw_text then
-		surface.SetFont("Trebuchet24")
+		surface.SetFont('Trebuchet24')
 		surface.SetTextColor(255, 0, 0)
 		surface.SetTextPos(30, 30)
 
@@ -70,20 +86,18 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 	end
 end)
 
-hook.Add("PreDrawHalos", "BGN_RenderOutlineOnNPCCallingPolice", function()
+hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnNPCCallingPolice', function()
 	if not LocalPlayer().snet_ready then return end
 	if GetConVar('bgn_disable_halo'):GetBool() then return end
-	
+
 	local npcs = {}
 
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		local npc = actor:GetNPC()
-		if IsValid(npc) then
-			if actor:GetState() == 'calling_police' then
-				if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 then -- 2500 ^ 2
-					table.insert(npcs, npc)
-				end
-			end
+		if IsValid(npc) and actor:GetState() == 'calling_police'
+			and npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 -- 2500 ^ 2
+		then
+			table.insert(npcs, npc)
 		end
 	end
 
@@ -99,19 +113,17 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', fun
 
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		local npc = actor:GetNPC()
-		if IsValid(npc) then
-			if actor:GetState() == 'calling_police' then
-				if npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 then -- 2500 ^ 2
-					local angle = LocalPlayer():EyeAngles()
-					angle:RotateAroundAxis(angle:Forward(), 90)
-					angle:RotateAroundAxis(angle:Right(), 90)
-			
-					cam.Start3D2D(npc:GetPos() + npc:GetForward() + npc:GetUp() * 78, angle, 0.25)
-						draw.SimpleTextOutlined(text, "DermaLarge", 0, -15, color_text, 
-							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_text_outline)
-					cam.End3D2D()
-				end
-			end
+		if IsValid(npc) and actor:GetState() == 'calling_police'
+			and npc:GetPos():DistToSqr(LocalPlayer():GetPos()) < 6250000 -- 2500 ^ 2
+		then
+			local angle = LocalPlayer():EyeAngles()
+			angle:RotateAroundAxis(angle:Forward(), 90)
+			angle:RotateAroundAxis(angle:Right(), 90)
+
+			cam.Start3D2D(npc:GetPos() + npc:GetForward() + npc:GetUp() * 78, angle, 0.25)
+				draw.SimpleTextOutlined(text, 'DermaLarge', 0, -15, color_text,
+				TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_text_outline)
+			cam.End3D2D()
 		end
 	end
 end)

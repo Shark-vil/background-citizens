@@ -2,32 +2,27 @@ local function FindChair(actor)
 	local npc = actor:GetNPC()
 	local npc_pos = npc:GetPos()
 	local entities = ents.FindInSphere(npc_pos, 500)
-	local chair = NULL
-	local cahirId = -1
 
 	for _, ent in ipairs(entities) do
-		if not IsValid(ent) or not ent:GetClass():StartWith('prop_') then goto skip end
+		if not IsValid(ent) or not ent:GetClass():StartWith('prop_') then continue end
 
 		local ent_model = ent:GetModel()
-		if not ent_model then goto skip end
+		if not ent_model then continue end
 
 		ent_model = ent_model:lower()
 
 		for id, chair_data in ipairs(bgNPC.cfg.sit_chairs) do
 			for _, model in ipairs(chair_data.models) do
-				if model:lower() == ent_model and not ent.occupied then
-					if ent.sitDelay == nil or ent.sitDelay < CurTime() then
+				if model:lower() == ent_model and not ent.occupied
+					and ( not ent.sitDelay or ent.sitDelay < CurTime() )
+				then
 						local ang = ent:GetAngles()
-
 						if math.abs(ang.x) < 10 and math.abs(ang.z) < 10 then
 							return ent, id
 						end
-					end
 				end
 			end
 		end
-
-		::skip::
 	end
 end
 
@@ -37,17 +32,15 @@ local function FindCustomChair(actor)
 	local seats = {}
 
 	for _, seat in ipairs(BGN_SEAT:GetAllSeats()) do
-		if seat.sitDelay and seat.sitDelay > CurTime() then goto skip end
+		if seat.sitDelay and seat.sitDelay > CurTime() then continue end
 
 		if not IsValid(seat:GetSitting()) and seat:GetPos():DistToSqr(npc_pos) < 250000 then
 			for _, ent in ipairs(ents.FindInSphere(seat:GetPos(), 10)) do
-				if ent:IsPlayer() then goto skip end
+				if ent:IsPlayer() then continue end
 			end
 
 			table.insert(seats, seat)
 		end
-
-		::skip::
 	end
 
 	if #seats ~= 0 then
@@ -58,6 +51,7 @@ end
 bgNPC:SetStateAction('sit_to_chair', 'calm', {
 	pre_start = function(actor, state, data)
 		local chair, cahirId = FindChair(actor, state, data)
+		local npc = actor:GetNPC()
 
 		if IsValid(chair) and cahirId then
 			chair.occupied = true
@@ -68,6 +62,7 @@ bgNPC:SetStateAction('sit_to_chair', 'calm', {
 				isSit = false,
 				isMove = false,
 				isStand = false,
+				oldCollisionGroup = npc:GetCollisionGroup()
 			}
 		else
 			local seat = FindCustomChair(actor)
@@ -81,12 +76,12 @@ bgNPC:SetStateAction('sit_to_chair', 'calm', {
 				isSit = false,
 				isMove = false,
 				isStand = false,
+				oldCollisionGroup = npc:GetCollisionGroup()
 			}
 		end
 	end,
 	update = function(actor, state, data)
 		local npc = actor:GetNPC()
-		data.oldCollisionGroup = data.oldCollisionGroup or npc:GetCollisionGroup()
 		local chair = data.chair
 		local chairData = bgNPC.cfg.sit_chairs[data.chairDataId]
 
@@ -138,7 +133,6 @@ bgNPC:SetStateAction('sit_to_chair', 'calm', {
 					actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
 						actor:PlayStaticSequence('Sit_Chair_To_Idle', false, nil, function()
 							if not IsValid(npc) then return end
-							local data = actor:GetStateData()
 							if data.isStandAnimation then return end
 							data.isStandAnimation = true
 							data.isStand = true
@@ -150,11 +144,13 @@ bgNPC:SetStateAction('sit_to_chair', 'calm', {
 		end
 	end,
 	stop = function(actor, state, data)
-		local data = actor:GetStateData()
 		local npc = actor:GetNPC()
+		local chair = data.chair
+		local isValidChair = ( chair and IsValid(chair) )
+
 		if IsValid(npc) then
 			npc:SetParent(nil)
-			if IsValid(chair) then
+			if isValidChair then
 				npc:SetAngles(Angle(0, chair:GetAngles().y, 0))
 			else
 				npc:SetAngles(Angle(0, 0, 0))
@@ -162,14 +158,13 @@ bgNPC:SetStateAction('sit_to_chair', 'calm', {
 			npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
 			npc:SetCollisionGroup(data.oldCollisionGroup)
 			npc:PhysWake()
-			local chair = data.chair
-			if chair and IsValid(chair) then
+			if isValidChair then
 				chair.sitDelay = CurTime() + 15
 				chair.occupied = false
 			end
 		end
 	end,
 	not_stop = function(actor, state, data)
-		return ( actor:EnemiesCount() == 0 and not data.isStand and IsValid(data.chair) )
+		return actor:EnemiesCount() == 0 and not data.isStand and IsValid(data.chair)
 	end
 })

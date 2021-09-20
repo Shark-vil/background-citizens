@@ -1,3 +1,11 @@
+local bgNPC = bgNPC
+local CLIENT = CLIENT
+local snet = slib.Components.Network
+local table = table
+local pairs = pairs
+local IsValid = IsValid
+--
+
 if CLIENT then
 	snet.Callback('bgm_update_death_actors_on_client', function(ply, npc)
 		if npc then bgNPC:RemoveNPC(npc) end
@@ -17,12 +25,12 @@ function bgNPC:AddNPC(actor)
 	table.insert(self.actors, actor)
 	table.insert(self.npcs, npc)
 
-	local type = actor:GetType()
-	self.factors[type] = self.factors[type] or {}
-	table.insert(self.factors[type], actor)
+	local npc_type = actor:GetType()
+	self.factors[npc_type] = self.factors[npc_type] or {}
+	table.insert(self.factors[npc_type], actor)
 
-	self.fnpcs[type] = self.fnpcs[type] or {}
-	table.insert(self.fnpcs[type], npc)
+	self.fnpcs[npc_type] = self.fnpcs[npc_type] or {}
+	table.insert(self.fnpcs[npc_type], npc)
 end
 
 function bgNPC:RemoveNPC(npc)

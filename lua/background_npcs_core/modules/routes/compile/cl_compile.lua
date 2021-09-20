@@ -1,3 +1,12 @@
+local bgNPC = bgNPC
+local concommand = concommand
+local string = string
+local snet = slib.Components.Network
+local file = file
+local notification = notification
+local LocalPlayer = LocalPlayer
+--
+
 concommand.Add('bgn_compile', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	bgNPC:Log('Wait for all points to load...', 'Route')
@@ -6,18 +15,18 @@ end, nil, 'Saves your points as a lua script so you can place your mesh in the w
 
 local function get_write_string(file_path, json_data)
 	local directory_name = string.GetPathFromFilename(file_path)
-	local code_string = ""
-	code_string = code_string.."if not file.Exists('"..directory_name.."', 'DATA') then "
-	code_string = code_string.."file.CreateDir('"..directory_name.."')"
-	code_string = code_string.." end "
-	code_string = code_string.."if not file.Exists('"..file_path.."', 'DATA') then "
-	code_string = code_string.."file.Write('"..file_path.."', util.Compress('"..json_data.."'))"
-	code_string = code_string.." end "
+	local code_string = ''
+	code_string = code_string .. 'if not file.Exists(\'' .. directory_name .. '\', \'DATA\') then '
+	code_string = code_string .. 'file.CreateDir(\'' .. directory_name .. '\')'
+	code_string = code_string .. ' end '
+	code_string = code_string .. 'if not file.Exists(\'' .. file_path .. '\', \'DATA\') then '
+	code_string = code_string .. 'file.Write(\'' .. file_path .. '\', util.Compress(\'' .. json_data .. '\'))'
+	code_string = code_string .. ' end '
 	return code_string
 end
 
 local function data_is_valid(data)
-	return (data and data ~= '')
+	return data and data ~= ''
 end
 
 snet.Callback('cl_start_bgn_compile', function(ply, data)
@@ -44,16 +53,17 @@ snet.Callback('cl_start_bgn_compile', function(ply, data)
 	end
 
 	if not data_is_valid(code_string) then
-		notification.AddLegacy("You do not have all the data you need to save", NOTIFY_ERROR, 4)
-		return 
+		notification.AddLegacy('You do not have all the data you need to save', NOTIFY_ERROR, 4)
+		return
 	end
 
 	file.Write(compile_path, code_string)
 
-	notification.AddLegacy("Finaly compile! Check the chat or console for information.", NOTIFY_GENERIC, 4)
+	notification.AddLegacy('Finaly compile! Check the chat or console for information.', NOTIFY_GENERIC, 4)
 
-	LocalPlayer():ChatPrint('>> ' .. map_name .. ' <<')
-	LocalPlayer():ChatPrint('Finaly compile! File path - ../GarrysMod/garrysmod/data/' .. compile_path)
-	LocalPlayer():ChatPrint('Change .txt to .lua and place this file in directory - lua/autorun/server')
-	LocalPlayer():ChatPrint('==============')
+	local localPlayer = LocalPlayer()
+	localPlayer:ChatPrint('>> ' .. map_name .. ' <<')
+	localPlayer:ChatPrint('Finaly compile! File path - ../GarrysMod/garrysmod/data/' .. compile_path)
+	localPlayer:ChatPrint('Change .txt to .lua and place this file in directory - lua/autorun/server')
+	localPlayer:ChatPrint('==============')
 end).Protect()

@@ -18,7 +18,7 @@ bgNPC:SetStateAction('killer', 'danger', {
 			actor:SetState('retreat')
 			return
 		end
-		
+
 		local npc = actor:GetNPC()
 		npc:SetHealth(100)
 		local data = actor:GetStateData()
@@ -55,13 +55,13 @@ bgNPC:SetStateAction('killer', 'danger', {
 			else
 				if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
 					bgNPC:SetActorWeapon(actor)
-		
+
 					local isMeleeWeapon = false
 					local npcWeapon = npc:GetActiveWeapon()
 					if IsValid(npcWeapon) then
 						isMeleeWeapon = table.HasValueBySeq(MeleeWeapon, npcWeapon:GetClass())
 					end
-		
+
 					if isMeleeWeapon then
 						actor:WalkToTarget(enemy, 'run')
 					else

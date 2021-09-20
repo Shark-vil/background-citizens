@@ -1,3 +1,13 @@
+local bgNPC = bgNPC
+local CLIENT = CLIENT
+local SERVER = SERVER
+local snet = slib.Components.Network
+local ipairs = ipairs
+local pairs = pairs
+local player = player
+local hook = hook
+--
+
 if CLIENT then
 	snet.RegisterCallback('bgn_sync_wanted_killing_statistic', function(ply, data)
 		bgNPC.wanted_killing_statistic = data
@@ -53,7 +63,7 @@ function bgNPC:GetWantedKillingStatisticSumm(attacker)
 	if table.Count(self.wanted_killing_statistic[attacker]) == 0 then
 		return 0
 	end
-	
+
 	local summ = 0
 	for _, count in pairs(self.wanted_killing_statistic[attacker]) do
 		summ = summ + count
@@ -62,5 +72,5 @@ function bgNPC:GetWantedKillingStatisticSumm(attacker)
 end
 
 hook.Add('PostCleanupMap', 'BGN_ResetWantedKillingStatistic', function()
-   bgNPC:ResetWantedKillingStatisticAll()
+	bgNPC:ResetWantedKillingStatisticAll()
 end)

@@ -2,16 +2,11 @@ local bgNPC = bgNPC
 local math = math
 local hook = hook
 --
-
-local function IsIndifference(percent)
-	return math.random(1, 100) < percent
-end
-
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
 	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
 	for i = 1, #actors do
 		local actor = actors[i]
-		if IsIndifference(10) or (actor:HasTeam(target) and actor:HasTeam(attacker)) then continue end
+		if actor:HasTeam(target) and actor:HasTeam(attacker) then continue end
 
 		local reaction = actor:GetReactionForProtect()
 
@@ -21,7 +16,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if npc == target then continue end
 		if not bgNPC:IsTargetRay(npc, attacker) and not bgNPC:IsTargetRay(npc, target) then continue end
 
-		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction) 
+		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
 		if hook_result then continue end
 
 		if actor:EqualStateGroup('calm') then

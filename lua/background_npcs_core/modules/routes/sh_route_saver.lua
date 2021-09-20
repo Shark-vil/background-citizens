@@ -1,3 +1,13 @@
+local bgNPC = bgNPC
+local snet = slib.Components.Network
+local file = file
+local notification = notification
+local NOTIFY_GENERIC = NOTIFY_GENERIC
+local game = game
+local MsgN = MsgN
+local vgui = vgui
+--
+
 if SERVER then
 	snet.Callback('bgn_movement_mesh_remove_datafile', function(ply, map_name)
 		map_name = map_name or ''
@@ -58,26 +68,26 @@ else
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
 			snet.Request('bgn_movement_mesh_save_to_file').BigData({ 
-				from_json = from_json, 
+				from_json = from_json,
 				data = jsonNodes
 			}, nil, 'Sending the mesh to the server').InvokeServer()
 		else
-			local MainMenu = vgui.Create("DFrame")
-			MainMenu:SetPos(ScrW()/2 - 500/2, ScrH()/2 - 230/2)
+			local MainMenu = vgui.Create('DFrame')
+			MainMenu:SetPos(ScrW() / 2 - 500 / 2, ScrH() / 2 - 230 / 2)
 			MainMenu:SetSize(500, 230)
-			MainMenu:SetTitle("Background NPCs - Warning!")
+			MainMenu:SetTitle('Background NPCs - Warning!')
 			MainMenu:SetDraggable(true)
 			MainMenu:MakePopup()
 			MainMenu.Paint = function(self, w, h)
 				draw.RoundedBox(8, 0, 0, w, h, Color(0, 0, 0, 250))
 			end
 
-			local maleImage = vgui.Create("DImage", MainMenu)
+			local maleImage = vgui.Create('DImage', MainMenu)
 			maleImage:SetPos(10, 90)
 			maleImage:SetSize(150, 150)
-			maleImage:SetImage("background_npcs/vgui/missing_slib.png")
+			maleImage:SetImage('background_npcs/vgui/missing_slib.png')
 
-			local MainMenu_Label = vgui.Create("DLabel", MainMenu)
+			local MainMenu_Label = vgui.Create('DLabel', MainMenu)
 			MainMenu_Label:SetPos(170, 20)
 			MainMenu_Label:SetSize(350, 150)
 			if GetConVar('cl_language'):GetString() == 'russian' then
@@ -85,32 +95,32 @@ else
 
 				Вы собирайтесь сохранить пустую карту передвижения.
 				Вы окончательно замените старый файл на сервере.
-				Нажмите "Save" если уверены в своих действиях.
+				Нажмите 'Save' если уверены в своих действиях.
 				]])
 			else
 				MainMenu_Label:SetText([[ATTENTION!
 
 				Are you going to keep a empty movement map.
 				You will permanently replace the old file on the server.
-				Click "Save" if you are sure of your actions.
+				Click 'Save' if you are sure of your actions.
 				]])
 			end
 
-			local ButtonYes = vgui.Create("DButton", MainMenu)
-			ButtonYes:SetText("Save")
+			local ButtonYes = vgui.Create('DButton', MainMenu)
+			ButtonYes:SetText('Save')
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
-			ButtonYes.DoClick = function()				
+			ButtonYes.DoClick = function()
 				snet.Request('bgn_movement_mesh_save_to_file').BigData({ 
 					from_json = from_json, 
 					data = jsonNodes
 				}, nil, 'Sending the mesh to the server').InvokeServer()
-		
+
 				MainMenu:Close()
 			end
 
-			local ButtonNo = vgui.Create("DButton", MainMenu)
-			ButtonNo:SetText("Cancel")
+			local ButtonNo = vgui.Create('DButton', MainMenu)
+			ButtonNo:SetText('Cancel')
 			ButtonNo:SetPos(350, 170)
 			ButtonNo:SetSize(100, 30)
 			ButtonNo.DoClick = function()

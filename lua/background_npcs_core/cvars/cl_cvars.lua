@@ -1,3 +1,11 @@
+local CreateConVar = CreateConVar
+local RunConsoleCommand = RunConsoleCommand
+local pairs = pairs
+local LocalPlayer = LocalPlayer
+local cvars = cvars
+local tonumber = tonumber
+--
+
 CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path,
 { FCVAR_ARCHIVE }, 'Draw the path of movement of the NPC.')
 

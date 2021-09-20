@@ -16,10 +16,10 @@ bgNPC:SetStateAction('defense', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
-		
+
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
-		
+
 		data.delay = data.delay or 0
 
 		if data.delay < CurTime() or enemy:IsNPC() or enemy:IsPlayer() then
@@ -34,12 +34,10 @@ bgNPC:SetStateAction('defense', 'danger', {
 					data.notGun = false
 				end
 
-				if data.notGun then
-					if data.notGunDelay < CurTime() or killingSumm > 0 or enemy:IsNextBot()
-						or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
-					then
-						data.notGun = false
-					end
+				if data.notGun and ( data.notGunDelay < CurTime() or killingSumm > 0 or enemy:IsNextBot()
+					or ( enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()) ) )
+				then
+					data.notGun = false
 				end
 
 				if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then

@@ -1,3 +1,16 @@
+local bgNPC = bgNPC
+local file = file
+local util = util
+local bgNPC = bgNPC
+local concommand = concommand
+local snet = slib.Components.Network
+local hook = hook
+local notification = notification
+local SERVER = SERVER
+local LocalPlayer = LocalPlayer
+local IsValid = IsValid
+--
+
 if SERVER then
 	bgNPC.PointsExist = false
 
@@ -14,7 +27,7 @@ if SERVER then
 		end
 
 		BGN_NODE:ClearNodeMap()
-		
+
 		if jsonString ~= '' then
 			BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 		end
@@ -44,7 +57,7 @@ if SERVER then
 		bgNPC.SendRoutesFromClient(ply)
 	end).Protect()
 
-	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
+	hook.Add('InitPostEntity', 'BGN_FirstInitializeRoutesOnMap', function()
 		hook.Run('BGN_PreLoadRoutes', game.GetMap())
 		bgNPC.LoadRoutes()
 	end)
@@ -67,7 +80,7 @@ else
 	concommand.Add('cl_citizens_load_route', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load')
 
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
@@ -75,7 +88,7 @@ else
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
 
 	end, nil, 'Technical command. Used to get an array of points from the server.')
@@ -87,9 +100,9 @@ else
 		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
 		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then
 			if count == 0 then
-				notification.AddLegacy("[For admin] Mesh file not found. Background NPCs will not spawn.", NOTIFY_ERROR, 4)
+				notification.AddLegacy('[For admin] Mesh file not found. Background NPCs will not spawn.', NOTIFY_ERROR, 4)
 			else
-				notification.AddLegacy("[For admin] Loaded " .. count .. " mesh points to move and spawn Background NPCs.", NOTIFY_GENERIC, 4)
+				notification.AddLegacy('[For admin] Loaded ' .. count .. ' mesh points to move and spawn Background NPCs.', NOTIFY_GENERIC, 4)
 			end
 		end
 

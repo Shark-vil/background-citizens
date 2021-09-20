@@ -1,10 +1,11 @@
 local CurTime = CurTime
 local IsValid = IsValid
-local snet = snet
+local snet = slib.Components.Network
 local hook = hook
 local math = math
 local table = table
 local pairs = pairs
+local ipairs = ipairs
 local bgNPC = bgNPC
 local istable = istable
 local isentity = isentity
@@ -17,6 +18,8 @@ local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
 local GetConVar = GetConVar
 local tobool = tobool
 local string = string
+local SERVER = SERVER
+local CLIENT = CLIENT
 --
 local male_scream = {
 	'ambient/voices/m_scream1.wav',

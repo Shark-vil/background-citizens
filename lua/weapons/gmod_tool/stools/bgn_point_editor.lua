@@ -1,5 +1,24 @@
-TOOL.Category = "Background NPCs"
-TOOL.Name = "#tool.bgn_point_editor.name"
+local bgNPC = bgNPC
+local game = game
+local util = util
+local snet = slib.Components.Network
+local hook = hook
+local IsFirstTimePredicted = IsFirstTimePredicted
+local surface = surface
+local concommand = concommand
+local table = table
+local GetConVar = GetConVar
+local cam = cam
+local render = render
+local draw = draw
+local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
+local LocalPlayer = LocalPlayer
+local language = language
+local ipairs = ipairs
+local pairs = pairs
+--
+TOOL.Category = 'Background NPCs'
+TOOL.Name = '#tool.bgn_point_editor.name'
 TOOL.PanelIsInit = false
 TOOL.Lock = false
 TOOL.Distance = 10000
@@ -53,7 +72,7 @@ else
 
 	hook.Add('BGN_LoadingClientRoutes', 'BGN_TOOL_PointEditorReset', function()
 		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
-      if not tool then return end
+		if not tool then return end
 
 		tool.LinkerNode = nil
 		tool.CreateSelectedNode = nil
@@ -62,9 +81,9 @@ else
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
 
-		local type = self:GetCurrentType()
-			
-		if type == 'creator' then
+		local tool_type = self:GetCurrentType()
+
+		if tool_type == 'creator' then
 			if self.SelectedPointId == -1 then
 				self:AddNode()
 			else
@@ -79,14 +98,14 @@ else
 					end
 				end
 			end
-		elseif type == 'remover' then
+		elseif tool_type == 'remover' then
 			if self.LastNodeRemover then
 				self:RemoveLastNode()
 			elseif self.SelectedPointId ~= -1 then
 				local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
 				if node then self:RemoveNode(node) end
 			end
-		elseif type == 'linker' and self.SelectedPointId ~= -1 then
+		elseif tool_type == 'linker' and self.SelectedPointId ~= -1 then
 			local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
 			if not self.LinkerNode then
 				self.LinkerNode = node
@@ -114,7 +133,7 @@ else
 					surface.PlaySound('common/wpn_denyselect.wav')
 				end
 			end
-		elseif type == 'parents_cleaner' and self.SelectedPointId ~= -1 then
+		elseif tool_type == 'parents_cleaner' and self.SelectedPointId ~= -1 then
 			local node = BGN_NODE:GetNodeByIndex(self.SelectedPointId)
 			if self.LinkFullParents then
 				node:ClearParents()
@@ -137,12 +156,12 @@ else
 
 	function TOOL:Reload()
 		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
-		
-		local type = self:GetCurrentType()
 
-		if type == 'remover' or type == 'last_remover' then
+		local tool_type = self:GetCurrentType()
+
+		if tool_type == 'remover' or tool_type == 'last_remover' then
 			self.LastNodeRemover = not self.LastNodeRemover
-		elseif type == 'linker' or type == 'parents_cleaner' then
+		elseif tool_type == 'linker' or tool_type == 'parents_cleaner' then
 			self.LinkFullParents = not self.LinkFullParents
 		end
 
@@ -152,8 +171,8 @@ else
 	concommand.Add('cl_tool_point_editor_reconstruct_parents', function()
 		if not SLibraryIsLoaded then return end
 
-      local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-      if not tool then return end
+		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		if not tool then return end
 
 		for _, node in ipairs(BGN_NODE:GetMap()) do
 			table.Empty(node.parents)
@@ -174,21 +193,20 @@ else
 
 		self.CreateSelectedNode = nil
 	end
-	
+
 	function TOOL:GetCurrentType()
 		return self.Types[self.CurrentTypeId]
 	end
-	
+
 	function TOOL:IsLookingVector(vec)
-		local diff = vec - self.Owner:GetShootPos()
-		return self.Owner:GetAimVector():Dot(diff) / diff:Length() >= 0.998
+		local owner = self:GetOwner()
+		local diff = vec - owner:GetShootPos()
+		return owner:GetAimVector():Dot(diff) / diff:Length() >= 0.998
 	end
-	
+
 	function TOOL:Think()
 		if SERVER then return end
-	
-		local owner = self.Owner
-	
+		local owner = self:GetOwner()
 		if not owner:Alive() then return end
 
 		if not timer.Exists('BGN_PointEditorToolRefreshRangePoints') then
@@ -198,13 +216,13 @@ else
 					timer.Remove('BGN_PointEditorToolRefreshRangePoints')
 					return
 				end
-		
+
 				local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
 				if not tool then
 					timer.Remove('BGN_PointEditorToolRefreshRangePoints')
 					return
 				end
-		
+
 				local dist = GetConVar('bgn_tool_draw_distance'):GetFloat() ^ 2
 				local NewSelectedPointId = -1
 				local NewRangePoints = {}
@@ -231,8 +249,8 @@ else
 							behindTheWall = tr.Hit
 						})
 
-						if NewSelectedPointId == -1 and tool:IsLookingVector(pos) then
-							if not tr.Hit then NewSelectedPointId = index end
+						if NewSelectedPointId == -1 and tool:IsLookingVector(pos) and not tr.Hit then
+							NewSelectedPointId = index
 						end
 					end
 				end
@@ -244,7 +262,7 @@ else
 
 		self:UpdateControlPanel()
 	end
-	
+
 	function TOOL:AddNode()
 		local tr = self:GetTraceInfo()
 		if not tr.Hit then return end
@@ -290,7 +308,7 @@ else
 						previewNode = node
 					end
 				end
-				
+
 				isAutoCreated = true
 			end
 		end
@@ -321,7 +339,7 @@ else
 		node:RemoveFromMap()
 		surface.PlaySound('common/wpn_denyselect.wav')
 	end
-	
+
 	function TOOL:RemoveLastNode()
 		local nodes = BGN_NODE:GetNodeMap()
 		local count = #nodes
@@ -367,7 +385,7 @@ else
 		end
 		return points
 	end
-	
+
 	function TOOL:ClearPoints()
 		BGN_NODE:ClearNodeMap()
 		self.CreateSelectedNode = nil
@@ -376,12 +394,12 @@ else
 
 	function TOOL:ConstructParent(node)
 		local is_autoparent = GetConVar('bgn_tool_point_editor_autoparent'):GetBool()
-		
+
 		for _, anotherNode in ipairs(BGN_NODE:GetNodeMap()) do
 			if anotherNode ~= node then
 				local pos = anotherNode:GetPos()
-				
-				if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos) 
+
+				if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos)
 					and node:CheckHeightLimitToNode(pos) and node:CheckTraceSuccessToNode(pos)
 				then
 					anotherNode:AddParentNode(node)
@@ -395,26 +413,26 @@ else
 	end
 
 	function TOOL:DrawHUD()
-		surface.SetFont("Trebuchet24")
+		surface.SetFont('Trebuchet24')
 		surface.SetTextColor(255, 255, 255)
-		surface.SetTextPos(30, ScrH() / 2) 
-		local type = self:GetCurrentType()
-		if type == 'creator' then
+		surface.SetTextPos(30, ScrH() / 2)
+		local tool_type = self:GetCurrentType()
+		if tool_type == 'creator' then
 			surface.DrawText('#tool.bgn_point_editor.vis.creator')
-		elseif type == 'remover' then
+		elseif tool_type == 'remover' then
 			if self.LastNodeRemover then
 				surface.DrawText(language.GetPhrase('tool.bgn_point_editor.vis.last_remover')
 					.. ' - ' .. tostring(BGN_NODE:CountNodesOnMap()))
 			else
 				surface.DrawText('#tool.bgn_point_editor.vis.remover')
 			end
-		elseif type == 'linker' then
+		elseif tool_type == 'linker' then
 			if self.LinkFullParents then
 				surface.DrawText('#tool.bgn_point_editor.vis.linker_parents')
 			else
 				surface.DrawText('#tool.bgn_point_editor.vis.linker')
 			end
-		elseif type == 'parents_cleaner' then
+		elseif tool_type == 'parents_cleaner' then
 			if self.LinkFullParents then
 				surface.DrawText('#tool.bgn_point_editor.vis.linker_cleaner_parents')
 			else
@@ -422,79 +440,79 @@ else
 			end
 		end
 	end
-	
+
 	function TOOL:UpdateControlPanel()
 		if self.PanelIsInit then return end
 
-		local Panel = controlpanel.Get( "bgn_point_editor" )
-		if not Panel then bgNPC:Log("Couldn't find bgn_point_editor panel!", 'Tool') return end
-	
+		local Panel = controlpanel.Get( 'bgn_point_editor' )
+		if not Panel then bgNPC:Log('Couldn\'t find bgn_point_editor panel!', 'Tool') return end
+
 		self.PanelIsInit = true
-	
+
 		Panel:ClearControls()
-	
-		Panel:AddControl("Button", {
-			["Label"] = "#tool.bgn_point_editor.pnl.load_points",
-			["Command"] = "cl_citizens_load_route_from_client",
-		})
-	
-		Panel:AddControl("Button", {
-			["Label"] = "#tool.bgn_point_editor.pnl.save_points",
-			["Command"] = "cl_citizens_save_route",
+
+		Panel:AddControl('Button', {
+			['Label'] = '#tool.bgn_point_editor.pnl.load_points',
+			['Command'] = 'cl_citizens_load_route_from_client',
 		})
 
-		Panel:AddControl("Button", {
-			["Label"] = "#tool.bgn_point_editor.pnl.clear_points",
-			["Command"] = "cl_bgn_clear_tool_points",
+		Panel:AddControl('Button', {
+			['Label'] = '#tool.bgn_point_editor.pnl.save_points',
+			['Command'] = 'cl_citizens_save_route',
+		})
+
+		Panel:AddControl('Button', {
+			['Label'] = '#tool.bgn_point_editor.pnl.clear_points',
+			['Command'] = 'cl_bgn_clear_tool_points',
 		})
 
 		Panel:AddControl('CheckBox', {
 			Label = '#tool.bgn_point_editor.autoparent',
-			Command = 'bgn_tool_point_editor_autoparent' 
+			Command = 'bgn_tool_point_editor_autoparent'
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.autoparent.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
 			Label = '#tool.bgn_point_editor.autoalignment',
-			Command = 'bgn_tool_point_editor_autoalignment' 
+			Command = 'bgn_tool_point_editor_autoalignment'
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.autoalignment.desc'
 		})
 
-		Panel:AddControl("Button", {
-			["Label"] = "#tool.bgn_point_editor.pnl.reconstruct_parents",
-			["Command"] = "cl_tool_point_editor_reconstruct_parents",
+		Panel:AddControl('Button', {
+			['Label'] = '#tool.bgn_point_editor.pnl.reconstruct_parents',
+			['Command'] = 'cl_tool_point_editor_reconstruct_parents',
 		})
-	
-		Panel:AddControl("Slider", {
-			["Label"] = "#tool.bgn_point_editor.pnl.z_limit",
-			["Command"] = "bgn_point_z_limit",
-			["Type"] = "Float",
-			["Min"] = "0",
-			["Max"] = "500"
+
+		Panel:AddControl('Slider', {
+			['Label'] = '#tool.bgn_point_editor.pnl.z_limit',
+			['Command'] = 'bgn_point_z_limit',
+			['Type'] = 'Float',
+			['Min'] = '0',
+			['Max'] = '500'
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.pnl.z_limit.desc'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "#tool.bgn_point_editor.pnl.bgn_tool_draw_distance",
-			["Command"] = "bgn_tool_draw_distance",
-			["Type"] = "Float",
-			["Min"] = "0",
-			["Max"] = "2000"
+		Panel:AddControl('Slider', {
+			['Label'] = '#tool.bgn_point_editor.pnl.bgn_tool_draw_distance',
+			['Command'] = 'bgn_tool_draw_distance',
+			['Type'] = 'Float',
+			['Min'] = '0',
+			['Max'] = '2000'
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
 			Label = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents',
-			Command = 'bgn_tool_point_editor_show_parents' 
+			Command = 'bgn_tool_point_editor_show_parents'
 		}); Panel:AddControl('Label', {
 			Text = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'
 		})
 	end
-	
+
 	local en_lang = {
 		['tool.bgn_point_editor.name'] = 'Points Editor',
 		['tool.bgn_point_editor.desc'] = 'Tool for editing the points of movement of background NPCs.',
@@ -586,7 +604,7 @@ else
 		if not SLibraryIsLoaded then return end
 
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-    if not tool then return end
+		if not tool then return end
 
 		local is_show_global_nodes = GetConVar('bgn_tool_point_editor_show_parents'):GetBool()
 		local count = #tool.RangePoints
@@ -637,13 +655,13 @@ else
 					if index == tool.SelectedPointId then
 						local linksCount = table.Count(node:GetLinks('walk'))
 						if linksCount ~= 0 then
-							draw.SimpleTextOutlined('Walk links - ' .. linksCount, 
-								"TargetID", 0, 0, color_white, 
+							draw.SimpleTextOutlined('Walk links - ' .. linksCount,
+								'TargetID', 0, 0, color_white,
 								TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 						end
 
-						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected', 
-							"TargetID", 0, 25, color_white, 
+						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected',
+							'TargetID', 0, 25, color_white,
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 					end
 				cam.End3D2D()
@@ -653,7 +671,7 @@ else
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorDrawCreatorPoint', function()
 		if not SLibraryIsLoaded then return end
-		
+
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
 		if not tool or tool:GetCurrentType() ~= 'creator' then return end
 
@@ -669,7 +687,7 @@ else
 				local nodes = BGN_NODE:GetNodeMap()
 				for i = 1, #nodes do
 					local node = nodes[i]
-					if node:CheckDistanceLimitToNode(tracePos) and node:CheckHeightLimitToNode(tracePos) 
+					if node:CheckDistanceLimitToNode(tracePos) and node:CheckHeightLimitToNode(tracePos)
 						and node:CheckTraceSuccessToNode(tracePos)
 					then
 						tooFar = false
@@ -684,8 +702,8 @@ else
 				render.SetColorMaterial()
 				render.DrawSphere(tracePos, 10, 20, 20, clr)
 				cam.Start3D2D(tracePos + vec_20, cam_angle, 0.9)
-					draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos', 
-						"TargetID", 0, 0, color_white, 
+					draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos',
+						'TargetID', 0, 0, color_white,
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 				cam.End3D2D()
 			else
@@ -695,8 +713,8 @@ else
 					render.SetColorMaterial()
 					render.DrawSphere(tracePos, 10, 20, 20, clr_green)
 					cam.Start3D2D(tracePos + vec_20, cam_angle, 0.9)
-						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place', 
-							"TargetID", 0, 0, color_white, 
+						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place',
+							'TargetID', 0, 0, color_white,
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 					cam.End3D2D()
 
@@ -710,9 +728,9 @@ else
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderLinkerPoints', function()
 		if not SLibraryIsLoaded then return end
-		
+
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-    if not tool or not tool.LinkerNode then return end
+		if not tool or not tool.LinkerNode then return end
 
 		render.SetColorMaterial()
 		render.DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_green)
@@ -732,9 +750,9 @@ else
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderAutoparentsPoints', function()
 		if not SLibraryIsLoaded then return end
-		
+
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
-    if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
+		if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
 		if not tr.Hit then return end
@@ -773,7 +791,7 @@ else
 						if is_autoparent then
 							for _, value in ipairs(tool.RangePoints) do
 								local node = value.node
-								if node:CheckDistanceLimitToNode(pos) and node:CheckHeightLimitToNode(pos) 
+								if node:CheckDistanceLimitToNode(pos) and node:CheckHeightLimitToNode(pos)
 									and node:CheckTraceSuccessToNode(pos)
 								then
 									render.DrawLine(pos, node:GetPos(), clr_future)

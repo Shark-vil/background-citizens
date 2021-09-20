@@ -1,3 +1,15 @@
+local GetConVar = GetConVar
+local snet = slib.Components.Network
+local hook = hook
+local render = render
+local bgNPC = bgNPC
+local LocalPlayer = LocalPlayer
+local LocalToWorld = LocalToWorld
+local cam = cam
+local draw = draw
+local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
+--
+
 local function DebugIsEnabled()
 	if not GetConVar('bgn_debug'):GetBool() then return false end
 	if not GetConVar('bgn_cl_draw_npc_path'):GetBool() then return false end
@@ -28,7 +40,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 	local cam_angle = LocalPlayer():EyeAngles()
 	cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
 	cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
-	
+
 	for i = 1, #actors do
 		local actor = actors[i]
 
@@ -52,8 +64,8 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 				render.DrawSphere(pos, 10, 30, 30, clr_green)
 
 				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-					draw.SimpleTextOutlined(tostring(i), 
-						"TargetID", 0, 0, color_white, 
+					draw.SimpleTextOutlined(tostring(i),
+						'TargetID', 0, 0, color_white,
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 				cam.End3D2D()
 			end

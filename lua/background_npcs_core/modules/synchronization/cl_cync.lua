@@ -1,5 +1,5 @@
 local bgNPC = bgNPC
-local snet = snet
+local snet = slib.Components.Network
 --
 
 snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
