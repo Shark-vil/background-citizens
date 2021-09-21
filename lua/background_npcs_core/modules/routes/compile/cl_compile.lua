@@ -48,7 +48,7 @@ snet.Callback('cl_start_bgn_compile', function(ply, data)
 		return
 	end
 
-	file.Write(compile_path, code_string)
+	file.Write(compile_path, util.Compress(code_string))
 
 	notification.AddLegacy('Finaly compile! Check the chat or console for information.', NOTIFY_GENERIC, 4)
 
