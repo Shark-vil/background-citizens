@@ -25,7 +25,7 @@ snet.Callback('cl_start_bgn_compile', function(ply, data)
 	local nodes = data.nodes
 	local seats = data.seats
 	local dv_nodes = data.dv_nodes
-	local compile_path = 'background_npcs/compile/bgn_compile_' .. map_name .. '.txt'
+	local compile_path = 'background_npcs/compile/' .. map_name .. '.txt'
 	local code_string = ''
 
 	if data_is_valid(nodes) then
