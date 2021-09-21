@@ -10,3 +10,4 @@ local function init_dv_waypoints()
 end
 hook.Add('PostCleanupMap', 'BGN_DV_FixRoutesAutoLoadPostCleanupMap', init_dv_waypoints)
 hook.Add('InitPostEntity', 'BGN_DV_RoutesAutoLoadAfterInitEntities', init_dv_waypoints)
+hook.Add('BGN_PostLoadRoutes', 'BGN_DV_RoutesAutoLoadAfterInitEntities', init_dv_waypoints)
