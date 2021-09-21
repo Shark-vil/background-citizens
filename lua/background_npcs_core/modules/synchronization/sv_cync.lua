@@ -1,9 +1,7 @@
-local timer = timer
-local player = player
 local bgNPC = bgNPC
-local table = table
-local slib = slib
-local snet = slib.Components.Network
+local player_GetAll = player.GetAll
+local slib_GetHashSumm = slib.GetHashSumm
+local table_push = table.push
 --
 local sync_radius = 700
 local sync_distance = sync_radius ^ 2
@@ -13,7 +11,7 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 
 	do
 		local actors = bgNPC:GetAll()
-		local players = player.GetAll()
+		local players = player_GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -25,13 +23,13 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 				for k = 1, #players do
 					local ply = players[k]
 					if ply:GetPos():DistToSqr(pos) <= sync_distance and ply:slibIsViewVector(pos) then
-						table.push(sync_players, ply)
+						table_push(sync_players, ply)
 					end
 				end
 			end
 
 			if #sync_players ~= 0 then
-				table.push(sync_list, {
+				table_push(sync_list, {
 					actor = actor,
 					players = sync_players
 				})
@@ -46,6 +44,8 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 		if actor and actor:IsAlive() then
 			local players = sync_list_value.players
 			local sync_data = {
+				name = actor:GetName(),
+				gender = actor:GetGender(),
 				state = actor:GetState(),
 				enemies = actor.enemies,
 				targets = actor.targets,
@@ -57,7 +57,7 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 				npc_state = actor.npc_state,
 			}
 
-			local sync_hash = slib.GetHashSumm(sync_data)
+			local sync_hash = slib_GetHashSumm(sync_data)
 
 			for k = 1, #players do
 				local ply = players[k]

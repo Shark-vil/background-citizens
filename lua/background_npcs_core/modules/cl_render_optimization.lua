@@ -1,13 +1,10 @@
 local bgNPC = bgNPC
-local cvars = cvars
-local tobool = tobool
 local IsValid = IsValid
-local tonumber = tonumber
-local async = async
-local IsValid = IsValid
+local LocalPlayer = LocalPlayer
 --
 local is_active = GetConVar('bgn_cl_field_view_optimization'):GetBool()
 local min_range = GetConVar('bgn_cl_field_view_optimization_range'):GetFloat() ^ 2
+local max_pass = 5
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, value_old, value_new)
 	local new_value = tobool(value_new)
@@ -33,13 +30,12 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_
 	min_range = new_value
 end)
 
-local max_pass = 5
-
 async.Add('bgn_client_render_optimization', function(yield)
 	if not is_active then return end
 	local ply = LocalPlayer()
 	local actors = bgNPC:GetAll()
 	local pass = 0
+
 	yield()
 
 	for i = 1, #actors do

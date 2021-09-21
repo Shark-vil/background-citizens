@@ -1,16 +1,3 @@
-local bgNPC = bgNPC
-local file = file
-local util = util
-local bgNPC = bgNPC
-local concommand = concommand
-local snet = slib.Components.Network
-local hook = hook
-local notification = notification
-local SERVER = SERVER
-local LocalPlayer = LocalPlayer
-local IsValid = IsValid
---
-
 if SERVER then
 	bgNPC.PointsExist = false
 

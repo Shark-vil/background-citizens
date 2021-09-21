@@ -1,15 +1,3 @@
-local hook = hook
-local SERVER = SERVER
-local snet = slib.Components.Network
-local concommand = concommand
-local file = file
-local IsValid = IsValid
-local ipairs = ipairs
-local ClientsideModel = ClientsideModel
-local table = table
-local LocalPlayer = LocalPlayer
---
-
 if SERVER then
 	hook.Add('InitPostEntity', 'BGN_InitializeAllSeats', function()
 		BGN_SEAT:Initialize()

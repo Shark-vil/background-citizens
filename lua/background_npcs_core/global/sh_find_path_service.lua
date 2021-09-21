@@ -1,22 +1,23 @@
 local bgNPC = bgNPC
-local table = table
-local util = util
 local isstring = isstring
-local IsNotWorld = IsNotWorld
+local util_TraceLine = util.TraceLine
+local table_remove = table.remove
+local table_insert = table.insert
+local table_Reverse = table.Reverse
 --
 
 local function CalculatePath(node, endPos)
 	local foundPath = {}
-	table.insert(foundPath, endPos)
+	table_insert(foundPath, endPos)
 	local currentNode = node
 
 	while (currentNode.pastNode ~= nil) do
-		table.insert(foundPath, currentNode.position)
+		table_insert(foundPath, currentNode.position)
 		currentNode = currentNode.pastNode
 	end
 
-	table.insert(foundPath, currentNode.position)
-	foundPath = table.Reverse(foundPath)
+	table_insert(foundPath, currentNode.position)
+	foundPath = table_Reverse(foundPath)
 
 	return foundPath
 end
@@ -54,7 +55,7 @@ local function NodeIsChecked(checkedNodes, node)
 end
 
 local function IsNotWorld(startPos, endPos)
-	local tr = util.TraceLine({
+	local tr = util_TraceLine({
 		start = startPos,
 		endpos = endPos,
 		filter = function(ent)
@@ -73,6 +74,7 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 	end
 
 	if BGN_NODE:CountNodesOnMap() == 0 then return {} end
+
 	limitIteration = limitIteration or 300
 	local currentIteration = 0
 	local checkedNodes = {}
@@ -94,7 +96,7 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 	end
 
 	closetNode.pastNode = startNode
-	table.insert(waitingNodes, startNode)
+	table_insert(waitingNodes, startNode)
 
 	while (#waitingNodes > 0) do
 		local nextNode, nodeIndex = GetNearNodeFromPos(waitingNodes)
@@ -102,10 +104,10 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 		if nextNode.position:DistToSqr(endPos) <= 250000 and IsNotWorld(nextNode.position, endPos) then
 			return CalculatePath(nextNode, endPos)
 		else
-			table.remove(waitingNodes, nodeIndex)
+			table_remove(waitingNodes, nodeIndex)
 
 			if not NodeIsChecked(checkedNodes, nextNode) then
-				table.insert(checkedNodes, nextNode)
+				table_insert(checkedNodes, nextNode)
 				local nodes = {}
 
 				if pathType and isstring(pathType) then
@@ -122,7 +124,7 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 					parentNode.pastNode = nextNode
 					parentNode.H = parentNode.position:DistToSqr(endPos)
 					parentNode.F = G + parentNode.H
-					table.insert(waitingNodes, parentNode)
+					table_insert(waitingNodes, parentNode)
 				end
 			end
 		end

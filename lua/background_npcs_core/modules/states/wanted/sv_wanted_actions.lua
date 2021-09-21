@@ -1,7 +1,7 @@
 local asset = bgNPC:GetModule('wanted')
 local TeamParentModule = bgNPC:GetModule('team_parent')
 
-hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttacker", function(attacker, target)
+hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker', function(attacker, target)
 	if asset:HasWanted(attacker) then
 		asset:GetWanted(attacker):UpdateWanted()
 	elseif asset:HasWanted(target) then
@@ -9,10 +9,10 @@ hook.Add("BGN_PreReactionTakeDamage", "BGN_WantedModule_UpdateWantedTimeForAttac
 	end
 end)
 
-hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", function(actor, attacker)
+hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', function(actor, attacker)
 	local AttackerActor = bgNPC:GetActor(attacker)
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
-	
+
 	if asset:HasWanted(attacker) then
 		local c_Wanted = asset:GetWanted(attacker)
 		c_Wanted:UpdateWanted()
@@ -34,7 +34,7 @@ hook.Add("BGN_OnKilledActor", "BGN_WantedModule_UpdateWantedOnKilledActor", func
 	end
 end)
 
-hook.Add("BGN_AddWantedTarget", "BGN_AddWantedTargetFromResidents", function(target)
+hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(target)
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
 			actor:AddEnemy(target)
@@ -46,7 +46,7 @@ hook.Add("BGN_AddWantedTarget", "BGN_AddWantedTargetFromResidents", function(tar
 	end
 end)
 
-hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", function(target)
+hook.Add('BGN_RemoveWantedTarget', 'BGN_RemoveWantedTargetFromResidents', function(target)
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
 			actor:RemoveEnemy(target)
@@ -57,7 +57,7 @@ hook.Add("BGN_RemoveWantedTarget", "BGN_RemoveWantedTargetFromResidents", functi
 	bgNPC:ResetWantedKillingStatistic(target)
 end)
 
-hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
+hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 	local wanted_list = asset:GetAllWanted()
 
 	if table.Count(wanted_list) == 0 then return end
@@ -74,7 +74,7 @@ hook.Add("BGN_InitActor", "BGN_AddWantedTargetsForNewNPCs", function(actor)
 	end
 end)
 
-hook.Add("PlayerDeath", "BGN_ResetWantedModeForDeceasedPlayer", function(victim, inflictor, attacker)
+hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim, inflictor, attacker)
 	if asset:HasWanted(victim) then
 		asset:RemoveWanted(victim)
 	end
@@ -88,7 +88,7 @@ local function UpdateWantedAndSetReaction(actor, enemy)
 		end
 		actor:SetState(reaction)
 	end
-	
+
 	actor:AddEnemy(enemy)
 end
 
@@ -98,7 +98,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	if table.Count(wanted_list) == 0 then return end
 
 	local residents = bgNPC:GetAllByTeam('residents')
-	
+
 	for enemy, WantedClass in pairs(wanted_list) do
 		local is_update = false
 
@@ -106,7 +106,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
 			WantedClass:UpdateWaitTime(math.Round(wait_time))
-			
+
 			for _, actor in ipairs(residents) do
 				if actor:IsAlive() then
 					local npc = actor:GetNPC()
@@ -119,9 +119,9 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 					end
 				end
 			end
-			
+
 			if is_update then WantedClass:UpdateWanted() end
-			
+
 			if WantedClass.time_reset < CurTime() then
 				asset:RemoveWanted(enemy); is_update = false
 			end

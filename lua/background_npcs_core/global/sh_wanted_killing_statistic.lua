@@ -1,7 +1,6 @@
 local bgNPC = bgNPC
 local CLIENT = CLIENT
 local SERVER = SERVER
-local snet = slib.Components.Network
 local ipairs = ipairs
 local pairs = pairs
 local player = player

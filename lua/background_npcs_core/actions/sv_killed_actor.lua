@@ -1,10 +1,8 @@
-local bgNPC = bgNPC
-local hook = hook
---
-
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 	local actor = bgNPC:GetActor(npc)
 	if actor then
+		bgNPC:Log(tostring(attacker) .. ' killed ' .. actor:GetName(), 'OnNPCKilled')
+
 		bgNPC:AddKillingStatistic(attacker, actor)
 		bgNPC:AddWantedKillingStatistic(attacker, actor)
 

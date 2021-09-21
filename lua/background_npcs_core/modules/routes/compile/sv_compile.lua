@@ -1,9 +1,3 @@
-local snet = slib.Components.Network
-local game = game
-local file = file
-local util = util
---
-
 snet.Callback('sv_start_bgn_compile', function(ply)
 	local map_name = game.GetMap()
 	local nodes = ''

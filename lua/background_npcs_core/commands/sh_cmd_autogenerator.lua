@@ -1,4 +1,3 @@
-local snet = slib.Components.Network
 local ipairs = ipairs
 local table = table
 local LerpVector = LerpVector

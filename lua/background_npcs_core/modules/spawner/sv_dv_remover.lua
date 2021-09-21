@@ -1,11 +1,11 @@
 local bgNPC = bgNPC
 local timer = timer
 local hook = hook
+local player = player
+local table = table
+local IsValid = IsValid
 local ipairs = ipairs
 local GetConVar = GetConVar
-local player = player
-local IsValid = IsValid
-local table = table
 --
 
 hook.Add('PostCleanupMap', 'BGN_CleanDvCarsCache', function()

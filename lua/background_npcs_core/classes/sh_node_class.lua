@@ -1,3 +1,15 @@
+local Vector = Vector
+local pairs = pairs
+local ipairs = ipairs
+local math_floor = math.floor
+local table_insert = table.insert
+local table_remove = table.remove
+local table_Count = table.Count
+local table_HasValueBySeq = table.HasValueBySeq
+local util_TraceLine = util.TraceLine
+local util_TableToJSON = util.TableToJSON
+local util_JSONToTable = util.JSONToTable
+--
 BGN_NODE = {}
 BGN_NODE.Map = {}
 BGN_NODE.Chunks = {}
@@ -21,14 +33,14 @@ function BGN_NODE:Instance(position_value)
 		netobj.links = {}
 
 		for i = 1, #obj.parents do
-			table.insert(netobj.parents, obj.parents[i].index)
+			table_insert(netobj.parents, obj.parents[i].index)
 		end
 
 		for linkType, nodes in pairs(obj.links) do
 			netobj.links[linkType] = netobj.links[linkType] or {}
 
 			for i = 1, #nodes do
-				table.insert(netobj.links[linkType], nodes[i].index)
+				table_insert(netobj.links[linkType], nodes[i].index)
 			end
 		end
 
@@ -36,8 +48,8 @@ function BGN_NODE:Instance(position_value)
 	end
 
 	function obj:AddParentNode(node)
-		if self == node or table.HasValueBySeq(self.parents, node) then return end
-		table.insert(self.parents, node)
+		if self == node or table_HasValueBySeq(self.parents, node) then return end
+		table_insert(self.parents, node)
 
 		if not node:HasParent(self) then
 			node:AddParentNode(self)
@@ -52,7 +64,7 @@ function BGN_NODE:Instance(position_value)
 
 			if parentNode == node then
 				self:RemoveLink(parentNode)
-				table.remove(self.parents, i)
+				table_remove(self.parents, i)
 				break
 			end
 		end
@@ -75,20 +87,20 @@ function BGN_NODE:Instance(position_value)
 	end
 
 	function obj:HasParent(node)
-		return table.HasValueBySeq(self.parents, node)
+		return table_HasValueBySeq(self.parents, node)
 	end
 
 	function obj:AddLink(node, linkType)
 		if self == node then return end
 		if not linkType then return end
 		self.links[linkType] = self.links[linkType] or {}
-		if table.HasValueBySeq(self.links[linkType], node) then return end
+		if table_HasValueBySeq(self.links[linkType], node) then return end
 
 		if not node:HasParent(self) then
 			node:AddParentNode(self)
 		end
 
-		table.insert(self.links[linkType], node)
+		table_insert(self.links[linkType], node)
 
 		if not node:HasLink(self) then
 			node:AddLink(self, linkType)
@@ -107,7 +119,7 @@ function BGN_NODE:Instance(position_value)
 				local parentNode = self.links[linkType][i]
 
 				if parentNode == node then
-					table.remove(self.links[linkType], i)
+					table_remove(self.links[linkType], i)
 					break
 				end
 			end
@@ -135,7 +147,7 @@ function BGN_NODE:Instance(position_value)
 	function obj:HasLink(node, linkType)
 		if not self.links[linkType] then return false end
 
-		return table.HasValueBySeq(self.links[linkType], node)
+		return table_HasValueBySeq(self.links[linkType], node)
 	end
 
 	function obj:GetLinks(linkType)
@@ -164,7 +176,7 @@ function BGN_NODE:Instance(position_value)
 		local nodePos = self.position
 		local anotherPosition = position
 
-		local tr = util.TraceLine({
+		local tr = util_TraceLine({
 			start = nodePos + Vector(0, 0, 10),
 			endpos = anotherPosition + Vector(0, 0, 10),
 			filter = function(ent)
@@ -188,11 +200,11 @@ function BGN_NODE:Instance(position_value)
 
 		local chunkId = self:GetChunkID()
 
-		if BGN_NODE.Chunks[chunkId] and table.HasValueBySeq(BGN_NODE.Chunks[chunkId], self.index) then
-			table.remove(BGN_NODE.Chunks[chunkId], self.index)
+		if BGN_NODE.Chunks[chunkId] and table_HasValueBySeq(BGN_NODE.Chunks[chunkId], self.index) then
+			table_remove(BGN_NODE.Chunks[chunkId], self.index)
 		end
 
-		table.remove(BGN_NODE.Map, self.index)
+		table_remove(BGN_NODE.Map, self.index)
 
 		for i = 1, #BGN_NODE.Map do
 			BGN_NODE.Map[i].index = i
@@ -209,8 +221,8 @@ end
 function BGN_NODE:GetChunkID(pos)
 	local x = ChunkSizeMax - pos.x
 	local y = ChunkSizeMax - pos.y
-	local xid = math.floor(x / OneChunkSize)
-	local yid = math.floor(y / OneChunkSize)
+	local xid = math_floor(x / OneChunkSize)
+	local yid = math_floor(y / OneChunkSize)
 
 	return xid .. yid
 end
@@ -225,7 +237,7 @@ function BGN_NODE:GetChunkNodes(pos)
 		local node = self.Map[chunk[i]]
 
 		if node then
-			table.insert(nodes, node)
+			table_insert(nodes, node)
 		end
 	end
 
@@ -239,15 +251,15 @@ function BGN_NODE:AddNodeToMap(node)
 		index = node.index
 		self.Map[index] = node
 	else
-		index = table.insert(self.Map, node)
+		index = table_insert(self.Map, node)
 		node.index = index
 	end
 
 	local chunkId = node:GetChunkID()
 	self.Chunks[chunkId] = self.Chunks[chunkId] or {}
 
-	if not table.HasValueBySeq(self.Chunks[chunkId], index) then
-		table.insert(self.Chunks[chunkId], index)
+	if not table_HasValueBySeq(self.Chunks[chunkId], index) then
+		table_insert(self.Chunks[chunkId], index)
 	end
 end
 
@@ -294,18 +306,18 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
 		if #node.parents ~= 0 then
 			for _, parentNode in ipairs(node.parents) do
 				if parentNode.index ~= -1 then
-					table.insert(JsonNode.parents, parentNode.index)
+					table_insert(JsonNode.parents, parentNode.index)
 				end
 			end
 		end
 
-		if table.Count(node.links) ~= 0 then
+		if table_Count(node.links) ~= 0 then
 			for linkType, links in pairs(node.links) do
 				if #links ~= 0 then
 					JsonNode.links[linkType] = JsonNode.links[linkType] or {}
 
 					for _, node_value in ipairs(links) do
-						table.insert(JsonNode.links[linkType], node_value.index)
+						table_insert(JsonNode.links[linkType], node_value.index)
 					end
 				end
 			end
@@ -316,14 +328,14 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
 
 	version = version or '1.2'
 
-	return util.TableToJSON({
+	return util_TableToJSON({
 		version = version,
 		nodes = JsonData
 	}, prettyPrint)
 end
 
 function BGN_NODE:JsonToMap(json_string)
-	local mapData = util.JSONToTable(json_string)
+	local mapData = util_JSONToTable(json_string)
 	if not mapData.version then return {} end
 	local map = {}
 

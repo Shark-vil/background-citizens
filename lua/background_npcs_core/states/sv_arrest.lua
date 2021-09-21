@@ -50,7 +50,7 @@ end
 hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, attacker, target, reaction)
 	local ArrestComponent = ArrestModule:GetPlayer(attacker)
 
-	if ( ArrestComponent and not ArrestComponent.arrested ) or 
+	if ( ArrestComponent and not ArrestComponent.arrested ) or
 		reaction ~= 'arrest' or not GetConVar('bgn_arrest_mode'):GetBool()
 	then
 		ActorOverrideReaction(actor)

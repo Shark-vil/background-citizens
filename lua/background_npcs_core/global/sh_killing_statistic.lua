@@ -1,13 +1,3 @@
-local bgNPC = bgNPC
-local snet = slib.Components.Network
-local CLIENT = CLIENT
-local SERVER = SERVER
-local ipairs = ipairs
-local player = player
-local pairs = pairs
-local hook = hook
---
-
 if CLIENT then
 	snet.RegisterCallback('bgn_sync_killing_statistic', function(ply, data)
 		bgNPC.killing_statistic = data

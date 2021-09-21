@@ -1,5 +1,4 @@
 local bgNPC = bgNPC
-local snet = slib.Components.Network
 --
 local asset = bgNPC:GetModule('wanted')
 

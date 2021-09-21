@@ -1,11 +1,9 @@
-local bgNPC = bgNPC
-local snet = slib.Components.Network
---
-
 snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
 	local actor = bgNPC:GetActorByUid(uid)
 	if not actor then return end
 
+	actor:SetName(data.name)
+	actor:SetGender(data.gender)
 	actor:SetState(data.state)
 	actor.enemies = data.enemies
 	actor.targets = data.targets

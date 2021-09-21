@@ -1,10 +1,9 @@
 local BaseClass = include('sh_actor_base.lua')
 local slib = slib
+local bgNPC = bgNPC
 local table = table
 local math = math
 local SERVER = SERVER
-local snet = slib.Components.Network
-local bgNPC = bgNPC
 local setmetatable = setmetatable
 --
 BGN_ACTOR = {}
@@ -16,9 +15,22 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	not_sync_actor_on_client = not_sync_actor_on_client or false
 	not_auto_added_to_list = not_auto_added_to_list or false
 
+	local default_name = 'Unknown citizen'
+	if npc_data.nicks and istable(npc_data.nicks) then
+		default_name = table.RandomBySeq(npc_data.nicks)
+	end
+
+	local default_gender = 'unknown'
+	if npc_data.gender and isstring(npc_data.gender) then
+		default_gender = npc_data.gender
+	end
+
 	local data = table.Copy(npc_data)
 	local obj = {}
-
+	obj.info = {
+		name = default_name,
+		gender = default_gender,
+	}
 	obj.uid = custom_uid or slib.GetUid()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
@@ -80,6 +92,16 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	setmetatable(obj, BaseClass)
 
+	local gender = obj:GetGenderByModel()
+	if gender and bgNPC.cfg.npc_names[gender] then
+		obj.info.name = table.RandomBySeq( bgNPC.cfg.npc_names[gender] )
+		obj.info.gender = gender
+	else
+		gender = table.RandomBySeq( { 'male', 'female' } )
+		obj.info.name = table.RandomBySeq( bgNPC.cfg.npc_names[gender] )
+		obj.info.gender = gender
+	end
+
 	function npc:GetActor()
 		return obj
 	end
@@ -87,7 +109,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	npc.isBgnActor = true
 
 	if SERVER and not not_sync_actor_on_client then
-		snet.Request('bgn_add_actor_from_client', npc, npc_type, obj.uid).InvokeAll()
+		snet.Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
 	end
 
 	if not not_auto_added_to_list then

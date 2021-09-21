@@ -1,19 +1,15 @@
 local bgNPC = bgNPC
-local GetConVar = GetConVar
-local cvars = cvars
-local tonumber = tonumber
-local async = async
-local player = player
+local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 local IsValid = IsValid
 local CurTime = CurTime
-local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
+local player_GetAll = player.GetAll
 --
 local bgn_enable = GetConVar('bgn_enable'):GetBool()
 local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat() ^ 2
 
 cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 	if tonumber(new_value) > 0 then return end
-	local actors = bgNPC:GetAll()
+	local actors = bbgNPC:GetAlll()
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -37,8 +33,9 @@ local max_pass = 5
 async.Add('bgn_server_logic_optimization', function(yield)
 	if not bgn_enable or bgn_disable_logic_radius <= 0 then return end
 	local actors = bgNPC:GetAll()
-	local players = player.GetAll()
+	local players = player_GetAll()
 	local pass = 0
+
 	yield()
 
 	for i = 1, #actors do

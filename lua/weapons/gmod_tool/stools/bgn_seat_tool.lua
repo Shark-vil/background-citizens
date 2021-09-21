@@ -1,4 +1,3 @@
-local snet = slib.Components.Network
 local util = util
 local game = game
 local GetConVar = GetConVar

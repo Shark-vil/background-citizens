@@ -2,7 +2,6 @@ local hook = hook
 local bgNPC = bgNPC
 local timer = timer
 local IsValid = IsValid
-local snet = slib.Components.Network
 --
 
 hook.Add('SlibPlayerFirstSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)

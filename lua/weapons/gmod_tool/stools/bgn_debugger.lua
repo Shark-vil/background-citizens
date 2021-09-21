@@ -1,11 +1,5 @@
-local snet = slib.Components.Network
-local util = util
-local bgNPC = bgNPC
-local MsgN = MsgN
 local surface = surface
 local LocalPlayer = LocalPlayer
-local GetConVar = GetConVar
-local language = language
 --
 
 TOOL.Category = 'Background NPCs'

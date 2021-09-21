@@ -1,8 +1,3 @@
-local hook = hook
-local bgNPC = bgNPC
-local timer = timer
---
-
 hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', function(actor)
 	if not actor:IsAlive() then return end
 

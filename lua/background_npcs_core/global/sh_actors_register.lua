@@ -1,6 +1,5 @@
 local bgNPC = bgNPC
 local CLIENT = CLIENT
-local snet = slib.Components.Network
 local table = table
 local pairs = pairs
 local IsValid = IsValid
@@ -12,9 +11,10 @@ if CLIENT then
 		bgNPC:ClearRemovedNPCs()
 	end).Register()
 
-	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npc_type, uid)
+	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npc_type, uid, info)
 		if bgNPC:GetActor(npc) ~= nil then return end
-		BGN_ACTOR:Instance(npc, npc_type, uid)
+		local actor = BGN_ACTOR:Instance(npc, npc_type, uid)
+		actor.info = info
 	end).Validator(SNET_ENTITY_VALIDATOR).Register()
 end
 

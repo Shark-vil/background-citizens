@@ -1,12 +1,12 @@
 local bgNPC = bgNPC
 local hook = hook
 local timer = timer
-local IsValid = IsValid
 local player = player
-local ipairs = ipairs
-local GetConVar = GetConVar
 local ents = ents
+local IsValid = IsValid
+local ipairs = ipairs
 local pairs = pairs
+local GetConVar = GetConVar
 local CurTime = CurTime
 local isbool = isbool
 --

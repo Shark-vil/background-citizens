@@ -25,7 +25,6 @@ In this example, the code is executed on the server and client. The synchronizat
 			})
 		end)
 	else
-		local snet = slib.Components.Network
 		snet.RegisterCallback('actor_get_new_state_time_set', function(ply, uid, data)
 			local actor = bgNPC:GetActorByUid(uid)
 			if not actor then return end

@@ -1,4 +1,3 @@
-local snet = slib.Components.Network
 local concommand = concommand
 local bgNPC = bgNPC
 --

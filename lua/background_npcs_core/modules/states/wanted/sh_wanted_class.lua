@@ -3,7 +3,6 @@ local SERVER = SERVER
 local IsValid = IsValid
 local GetConVar = GetConVar
 local CurTime = CurTime
-local snet = slib.Components.Network
 local isnumber = isnumber
 local hook = hook
 local table = table

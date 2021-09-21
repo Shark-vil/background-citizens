@@ -1,6 +1,7 @@
 local bgNPC = bgNPC
-local hook = hook
+local hook_Run = hook.Run
 --
+
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
 	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
 	for i = 1, #actors do
@@ -15,7 +16,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if npc == target then continue end
 		if not bgNPC:IsTargetRay(npc, attacker) and not bgNPC:IsTargetRay(npc, target) then continue end
 
-		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
+		local hook_result = hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
 		if hook_result then continue end
 
 		if actor:EqualStateGroup('calm') then
@@ -31,6 +32,6 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			actor:AddEnemy(enemy, reaction)
 		end
 
-		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
+		hook_Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
 	end
 end)

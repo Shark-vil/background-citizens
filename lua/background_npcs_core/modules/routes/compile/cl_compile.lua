@@ -1,12 +1,3 @@
-local bgNPC = bgNPC
-local concommand = concommand
-local string = string
-local snet = slib.Components.Network
-local file = file
-local notification = notification
-local LocalPlayer = LocalPlayer
---
-
 concommand.Add('bgn_compile', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	bgNPC:Log('Wait for all points to load...', 'Route')

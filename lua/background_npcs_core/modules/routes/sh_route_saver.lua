@@ -1,13 +1,3 @@
-local bgNPC = bgNPC
-local snet = slib.Components.Network
-local file = file
-local notification = notification
-local NOTIFY_GENERIC = NOTIFY_GENERIC
-local game = game
-local MsgN = MsgN
-local vgui = vgui
---
-
 if SERVER then
 	snet.Callback('bgn_movement_mesh_remove_datafile', function(ply, map_name)
 		map_name = map_name or ''

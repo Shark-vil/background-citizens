@@ -1,10 +1,3 @@
-local timer = timer
-local snet = slib.Components.Network
-local GetConVar = GetConVar
-local bgNPC = bgNPC
-local player = player
---
-
 timer.Create('BGN_Debug_MovementPathRender', 1, 0, function()
 	if not GetConVar('bgn_debug'):GetBool() then return end
 

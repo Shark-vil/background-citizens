@@ -1,11 +1,3 @@
-local timer = timer
-local bgNPC = bgNPC
-local CreateSound = CreateSound
-local GetConVar = GetConVar
-local ents = ents
-local LocalPlayer = LocalPlayer
-local game = game
---
 local oldLevel
 local currentLevel
 local currentSound

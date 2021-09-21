@@ -1,4 +1,3 @@
-local snet = slib.Components.Network
 local IsValid = IsValid
 local util = util
 local CurTime = CurTime

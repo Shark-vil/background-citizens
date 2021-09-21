@@ -2,8 +2,9 @@ local bgNPC = bgNPC
 local IsValid = IsValid
 local GetConVar = GetConVar
 local CurTime = CurTime
-local coroutine = coroutine
-local hook = hook
+local coroutine_resume = coroutine.resume
+local coroutine_create = coroutine.create
+local coroutine_yield = coroutine.yield
 --
 
 local function MovementProcess()
@@ -40,7 +41,7 @@ local function MovementProcess()
 
 		if max_pass == current_pass then
 			current_pass = 0
-			coroutine.yield()
+			coroutine_yield()
 		end
 	end
 end
@@ -48,8 +49,8 @@ end
 local thread
 
 hook.Add('Think', 'BGN_MovementService', function()
-	if not thread or not coroutine.resume(thread) then
-		thread = coroutine.create(MovementProcess)
-		coroutine.resume(thread)
+	if not thread or not coroutine_resume(thread) then
+		thread = coroutine_create(MovementProcess)
+		coroutine_resume(thread)
 	end
 end)

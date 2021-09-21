@@ -1,25 +1,25 @@
-local CurTime = CurTime
-local IsValid = IsValid
-local snet = slib.Components.Network
+local snet = snet
+local bgNPC = bgNPC
+local string = string
+local SERVER = SERVER
+local CLIENT = CLIENT
 local hook = hook
 local math = math
 local table = table
+local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
+local SCHED_FORCED_GO = SCHED_FORCED_GO
+local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
+local CurTime = CurTime
+local IsValid = IsValid
 local pairs = pairs
 local ipairs = ipairs
-local bgNPC = bgNPC
 local istable = istable
 local isentity = isentity
 local isnumber = isnumber
 local isstring = isstring
 local type = type
-local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
-local SCHED_FORCED_GO = SCHED_FORCED_GO
-local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
 local GetConVar = GetConVar
 local tobool = tobool
-local string = string
-local SERVER = SERVER
-local CLIENT = CLIENT
 --
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
@@ -77,6 +77,36 @@ function BaseClass:SyncFunction(name, ply, data)
 	else
 		snet.InvokeAll(name, self.uid, data)
 	end
+end
+
+function BaseClass:SetName(name)
+	self.info.name = name
+end
+
+function BaseClass:GetName()
+	return self.info.name
+end
+
+function BaseClass:SetGender(gender_name)
+	gender_name = gender_name or 'unknown'
+	self.info.gender = gender_name
+end
+
+function BaseClass:GetGender()
+	return self.info.gender ~= nil and self.info.gender or 'unknown'
+end
+
+function BaseClass:GetGenderByModel()
+	local model = self:GetNPC():GetModel()
+	local gender = 'unknown'
+
+	if tobool(string.find(model, 'female_*')) then
+		return 'female'
+	elseif tobool(string.find(model, 'male_*')) then
+		return 'male'
+	end
+
+	return gender
 end
 
 -- Sets the random state of the NPC from the "at_random" table.
@@ -200,7 +230,7 @@ end
 -- ? The target doesn't have to be the enemy. This is used in state calculations.
 -- @param ent entity any entity other than the actor himself
 function BaseClass:AddTarget(ent)
-	if not IsValid(ent) or not isentity(ent) then return end
+	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 
 	if self:GetNPC() ~= ent and not table.HasValueBySeq(self.targets, ent) then
 		table.insert(self.targets, ent)
@@ -307,7 +337,7 @@ function BaseClass:GetLastTarget()
 end
 
 function BaseClass:AddEnemy(ent, reaction)
-	if not IsValid(ent) or not isentity(ent) then return end
+	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
 

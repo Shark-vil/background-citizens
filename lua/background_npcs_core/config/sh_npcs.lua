@@ -187,6 +187,7 @@ bgNPC.cfg.npcs_template = {
 		class = 'npc_metropolice',
 		name = 'Police',
 		fullness = 6,
+		gender = 'male',
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_pistol' },
 		money = { 0, 170 },

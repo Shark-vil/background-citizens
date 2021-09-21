@@ -1,19 +1,9 @@
-local snet = slib.Components.Network
-local game = game
-local util = util
-local table = table
-local bgNPC = bgNPC
-local IsFirstTimePredicted = IsFirstTimePredicted
-local istable = istable
 local surface = surface
-local hook = hook
-local LocalPlayer = LocalPlayer
 local render = render
 local cam = cam
 local draw = draw
 local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local GetConVar = GetConVar
-local language = language
+local LocalPlayer = LocalPlayer
 --
 TOOL.Category = 'Background NPCs'
 TOOL.Name = '#tool.bgn_path_finder.name'
