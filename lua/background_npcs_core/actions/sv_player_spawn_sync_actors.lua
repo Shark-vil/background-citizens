@@ -18,7 +18,7 @@ hook.Add('SlibPlayerFirstSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 
 			timer.Simple(delay, function()
 				if not IsValid(ply) or not IsValid(npc) then return end
-				snet.Request('bgn_add_actor_from_client', npc, npc_type, actor.uid).Invoke(ply)
+				snet.Request('bgn_add_actor_from_client', npc, npc_type, actor.uid, actor.info).Invoke(ply)
 			end)
 
 			delay = delay + 0.1

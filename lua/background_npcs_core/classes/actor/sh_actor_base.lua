@@ -53,6 +53,7 @@ local schedule_white_list = {
 }
 
 local BaseClass = {}
+BaseClass.info = {}
 
 function BaseClass:SetStateDelay(time)
 	self.state_delay = CurTime() + time
