@@ -7,6 +7,8 @@ if SERVER then
 		local jsonString = ''
 		local map_name = game.GetMap()
 
+		hook.Run('BGN_PreLoadRoutes', map_name)
+
 		if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
 			local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
 			jsonString = util.Decompress(file_data)
@@ -46,7 +48,6 @@ if SERVER then
 	end).Protect()
 
 	hook.Add('InitPostEntity', 'BGN_FirstInitializeRoutesOnMap', function()
-		hook.Run('BGN_PreLoadRoutes', game.GetMap())
 		bgNPC.LoadRoutes()
 	end)
 else
