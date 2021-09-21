@@ -5,12 +5,13 @@ if SERVER then
 		bgNPC.PointsExist = false
 
 		local jsonString = ''
+		local map_name = game.GetMap()
 
-		if file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA') then
-			local file_data = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA')
+		if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
+			local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
 			jsonString = util.Decompress(file_data)
-		elseif file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA') then
-			jsonString = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA')
+		elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
+			jsonString = file.Read('background_npcs/nodes/' .. map_name .. '.json', 'DATA')
 		end
 
 		BGN_NODE:ClearNodeMap()
