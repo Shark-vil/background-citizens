@@ -44,13 +44,13 @@ bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
 
-function bgNPC:IsActiveNPCType(type)
-	return GetConVar('bgn_npc_type_' .. type):GetBool()
+function bgNPC:IsActiveNPCType(npc_type)
+	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
 end
 
-function bgNPC:GetFullness(type)
-	local data = bgNPC.cfg.npcs_template[type]
-	if data == nil or not bgNPC:IsActiveNPCType(type) then
+function bgNPC:GetFullness(npc_type)
+	local data = bgNPC.cfg.npcs_template[npc_type]
+	if data == nil or not bgNPC:IsActiveNPCType(npc_type) then
 		return 0
 	end
 
@@ -64,8 +64,8 @@ function bgNPC:GetFullness(type)
 	return 0
 end
 
-function bgNPC:GetLimitActors(type)
-	return GetConVar('bgn_npc_type_max_' .. type):GetInt()
+function bgNPC:GetLimitActors(npc_type)
+	return GetConVar('bgn_npc_type_max_' .. npc_type):GetInt()
 end
 
 CreateConVar('bgn_installed', 1, {
