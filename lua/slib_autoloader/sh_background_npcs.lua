@@ -43,6 +43,7 @@ script:using('config/sh_shot_sound.lua')
 script:using('config/sh_player.lua')
 script:using('config/sh_darkrp.lua')
 script:using('config/sh_weapons.lua')
+script:using('config/sh_ambient.lua')
 
 hook.Add('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule', function()
 	include(root_directory .. '/config/sh_player.lua')
