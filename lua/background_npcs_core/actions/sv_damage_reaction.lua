@@ -9,7 +9,6 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if actor:HasTeam(target) and actor:HasTeam(attacker) then continue end
 
 		local reaction = actor:GetReactionForProtect()
-
 		actor:SetReaction(reaction)
 
 		local npc = actor:GetNPC()
@@ -19,12 +18,12 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		local hook_result = hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
 		if hook_result then continue end
 
-		if actor:EqualStateGroup('calm') then
-			local last_reaction = actor:GetLastReaction()
-			if last_reaction == 'ignore' then continue end
+		reaction = actor:GetLastReaction()
 
+		if actor:EqualStateGroup('calm') then
+			if reaction == 'ignore' then continue end
 			actor:RemoveAllTargets()
-			actor:SetState(last_reaction, nil, true)
+			actor:SetState(reaction, nil, true)
 		end
 
 		local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
