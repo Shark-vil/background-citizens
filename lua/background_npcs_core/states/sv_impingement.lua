@@ -1,6 +1,6 @@
-hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
+hook.Add('BGN_SetNPCState', 'BGN_SetImpingementState', function(actor, state)
 	if state ~= 'impingement' or not actor:IsAlive() then return end
-	
+
 	local npc = actor:GetNPC()
 
 	local target_from_zone = ents.FindInSphere(npc:GetPos(), 500)
@@ -30,7 +30,7 @@ hook.Add("BGN_SetNPCState", "BGN_SetImpingementState", function(actor, state)
 end)
 
 local asset = bgNPC:GetModule('wanted')
-hook.Add("PreRandomState", "BGN_ChangeImpingementToRetreat", function(actor)
+hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
 	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
 		actor:SetState('retreat')
 		return true
@@ -41,7 +41,7 @@ bgNPC:SetStateAction('impingement', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
-		
+
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 

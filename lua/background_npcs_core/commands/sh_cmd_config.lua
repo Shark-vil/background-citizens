@@ -1,4 +1,3 @@
-local function cmd_config_reload()
+scommand.Register('bgn_config_reload').OnShared(function()
    bgNPC:ClearActorsConfig()
-end
-slib.RegisterGlobalCommand('bgn_config_reload', cmd_config_reload, cmd_config_reload)
+end).Access( { isAdmin = true } )

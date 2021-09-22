@@ -1,3 +1,5 @@
+local bgNPC = bgNPC
+--
 local asset = bgNPC:GetModule('wanted')
 
 snet.Callback('bgn_module_wanted_AddWanted', function(_, ent)

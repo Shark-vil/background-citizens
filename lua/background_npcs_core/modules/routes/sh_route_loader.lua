@@ -5,16 +5,19 @@ if SERVER then
 		bgNPC.PointsExist = false
 
 		local jsonString = ''
+		local map_name = game.GetMap()
 
-		if file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA') then
-			local file_data = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.dat', 'DATA')
+		hook.Run('BGN_PreLoadRoutes', map_name)
+
+		if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
+			local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
 			jsonString = util.Decompress(file_data)
-		elseif file.Exists('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA') then
-			jsonString = file.Read('background_npcs/nodes/' .. game.GetMap() .. '.json', 'DATA')
+		elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
+			jsonString = file.Read('background_npcs/nodes/' .. map_name .. '.json', 'DATA')
 		end
 
 		BGN_NODE:ClearNodeMap()
-		
+
 		if jsonString ~= '' then
 			BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 		end
@@ -26,11 +29,13 @@ if SERVER then
 
 		bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
 
+		hook.Run('BGN_PostLoadRoutes', map_name)
+
 		return BGN_NODE:GetMap()
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.Create('bgn_movement_mesh_load_from_client_cl')
+		snet.Request('bgn_movement_mesh_load_from_client_cl')
 			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
 			.Invoke(ply)
 	end
@@ -44,8 +49,7 @@ if SERVER then
 		bgNPC.SendRoutesFromClient(ply)
 	end).Protect()
 
-	hook.Add("InitPostEntity", "BGN_FirstInitializeRoutesOnMap", function()
-		hook.Run('BGN_PreLoadRoutes', game.GetMap())
+	hook.Add('InitPostEntity', 'BGN_FirstInitializeRoutesOnMap', function()
 		bgNPC.LoadRoutes()
 	end)
 else
@@ -67,7 +71,7 @@ else
 	concommand.Add('cl_citizens_load_route', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load')
 
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
@@ -75,7 +79,7 @@ else
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-		notification.AddProgress("BGN_LoadingNodesFromServer", "The server is preparing files, please wait...")
+		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
 
 	end, nil, 'Technical command. Used to get an array of points from the server.')
@@ -87,9 +91,9 @@ else
 		bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
 		if (LocalPlayer():IsAdmin() or LocalPlayer():IsSuperAdmin()) then
 			if count == 0 then
-				notification.AddLegacy("[For admin] Mesh file not found. Background NPCs will not spawn.", NOTIFY_ERROR, 4)
+				notification.AddLegacy('[For admin] Mesh file not found. Background NPCs will not spawn.', NOTIFY_ERROR, 4)
 			else
-				notification.AddLegacy("[For admin] Loaded " .. count .. " mesh points to move and spawn Background NPCs.", NOTIFY_GENERIC, 4)
+				notification.AddLegacy('[For admin] Loaded ' .. count .. ' mesh points to move and spawn Background NPCs.', NOTIFY_GENERIC, 4)
 			end
 		end
 

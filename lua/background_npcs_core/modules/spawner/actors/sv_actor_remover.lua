@@ -1,3 +1,13 @@
+local bgNPC = bgNPC
+local timer = timer
+local hook = hook
+local player = player
+local GetConVar = GetConVar
+local IsValid = IsValid
+local ipairs = ipairs
+local pairs = pairs
+--
+
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
 	bgNPC:RemoveNPC(actor:GetNPC())
 end)
@@ -45,17 +55,18 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
-	local player_count = player.GetCount()
+	local player_list = player.GetHumans()
+	local player_count = #player_list
 
 	for i = 1, #actors do
 		local actor = actors[i]
 
 		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger then
-			goto skip
+			continue
 		end
 
 		local npc = actor:GetNPC()
-		
+
 		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
 			if not hook.Run('BGN_PreRemoveNPC', npc) then
 				bgNPC:RemoveNPC(npc)
@@ -65,7 +76,8 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 			local isRemove = true
 			local npc_pos = npc:GetPos()
 
-			for _, ply in ipairs(player.GetAll()) do
+			for player_index = 1, #player_list do
+				local ply = player_list[player_index]
 				if IsValid(ply) then
 					local ply_pos = ply:GetPos()
 					local dist = npc_pos:DistToSqr(ply_pos)
@@ -83,11 +95,10 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 						npc:Remove()
 					end
 				else
-					local npc = actor:GetNPC()
 					local data = actor:GetData()
 
 					if data.wanted_level == nil then
-						if max_teleporter == current_teleport then goto skip end
+						if max_teleporter == current_teleport then continue end
 						current_teleport = current_teleport + 1
 
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
@@ -111,7 +122,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 								npc:Remove()
 							end
 						else
-							if max_teleporter == current_teleport then goto skip end
+							if max_teleporter == current_teleport then continue end
 							current_teleport = current_teleport + 1
 
 							local is_entered_vehicle = FindExistCarAndEnterThis(actor)
@@ -125,12 +136,10 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 				end
 			end
 		end
-
-		::skip::
 	end
 end)
 
-hook.Add("BGN_ResetEnemiesForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
+hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 	if not actor:HasTeam('police') then return end
 	if actor.eternal then return end
 
@@ -155,14 +164,12 @@ hook.Add("BGN_ResetEnemiesForActor", "BGN_ClearLevelOnlyNPCs", function(actor)
 	end
 end)
 
-hook.Add("BGN_WantedLevelDown", "BGN_ClearCurrentlyLevelOnlyNPCs", function(ent, level)
+hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent, level)
 	for _, actor in ipairs(bgNPC:GetAllByTeam('police')) do
 		local wanted_level = actor:GetData().wanted_level
 
-		if wanted_level ~= nil then
-			if level < wanted_level then
-				actor:RemoveTarget(ent)
-			end
+		if wanted_level ~= nil and level < wanted_level then
+			actor:RemoveTarget(ent)
 		end
 	end
 end)

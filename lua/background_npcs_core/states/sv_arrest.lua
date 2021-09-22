@@ -49,8 +49,8 @@ end
 
 hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, attacker, target, reaction)
 	local ArrestComponent = ArrestModule:GetPlayer(attacker)
-	
-	if ( ArrestComponent and not ArrestComponent.arrested ) or 
+
+	if ( ArrestComponent and not ArrestComponent.arrested ) or
 		reaction ~= 'arrest' or not GetConVar('bgn_arrest_mode'):GetBool()
 	then
 		ActorOverrideReaction(actor)
@@ -190,11 +190,16 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 
 				if time <= 0 then
 					ArrestModule:RemovePlayer(target)
-					hook.Run('BGN_PlayerArrest', target, actor)
 
-					for _, actor in ipairs(bgNPC:GetAll()) do
-						actor:RemoveTarget(target)
-						actor:RemoveEnemy(target)
+					if not hook.Run('BGN_PlayerArrest', target, actor) then
+						target:EmitSound('background_npcs/handcuffs_sound1.mp3')
+						target:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 3)
+						target:KillSilent()
+					end
+
+					for _, selectActor in ipairs(bgNPC:GetAll()) do
+						selectActor:RemoveTarget(target)
+						selectActor:RemoveEnemy(target)
 					end
 				else
 					if ArrestComponent.notify_arrest_time < CurTime() then

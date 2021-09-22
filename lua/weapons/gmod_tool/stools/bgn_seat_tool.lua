@@ -1,5 +1,19 @@
-TOOL.Category = "Background NPCs"
-TOOL.Name = "#tool.bgn_seat_tool.name"
+local util = util
+local game = game
+local GetConVar = GetConVar
+local ipairs = ipairs
+local table = table
+local Vector = Vector
+local Angle = Angle
+local IsFirstTimePredicted = IsFirstTimePredicted
+local ClientsideModel = ClientsideModel
+local hook = hook
+local render = render
+local LocalPlayer = LocalPlayer
+local bgNPC = bgNPC
+--
+TOOL.Category = 'Background NPCs'
+TOOL.Name = '#tool.bgn_seat_tool.name'
 TOOL.Trace = nil
 TOOL.Distance = 10000
 TOOL.VectorOffset = Vector(0, 0, 0)
@@ -40,8 +54,9 @@ if SERVER then
 	end
 else
 	function TOOL:IsLookingVector(vec)
-		local diff = vec - self.Owner:GetShootPos()
-		return self.Owner:GetAimVector():Dot(diff) / diff:Length() >= 0.99
+		local owner = self:GetOwner()
+		local diff = vec - owner:GetShootPos()
+		return owner:GetAimVector():Dot(diff) / diff:Length() >= 0.99
 	end
 
 	function TOOL:Think()
@@ -101,7 +116,7 @@ else
 
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
-		
+
 		local tr = self:GetTraceInfo()
 		if not tr.Hit then return end
 
@@ -128,72 +143,72 @@ else
 
 	function TOOL:UpdateControlPanel()
 		if self.PanelIsInit then return end
-		local Panel = controlpanel.Get("bgn_seat_tool")
+		local Panel = controlpanel.Get('bgn_seat_tool')
 
 		if not Panel then
-			bgNPC:Log("Couldn't find bgn_seat_tool panel!", 'Tool')
+			bgNPC:Log('Couldn\'t find bgn_seat_tool panel!', 'Tool')
 			return
 		end
 
 		self.PanelIsInit = true
 		Panel:ClearControls()
 
-		Panel:AddControl("Button", {
-			["Label"] = "Save",
-			["Command"] = "bgn_tool_seat_save",
+		Panel:AddControl('Button', {
+			['Label'] = 'Save',
+			['Command'] = 'bgn_tool_seat_save',
 		})
 
-		Panel:AddControl("Button", {
-			["Label"] = "Load",
-			["Command"] = "bgn_tool_seat_load",
+		Panel:AddControl('Button', {
+			['Label'] = 'Load',
+			['Command'] = 'bgn_tool_seat_load',
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Pos X",
-			["Command"] = "bgn_tool_seat_offset_pos_x",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Pos X',
+			['Command'] = 'bgn_tool_seat_offset_pos_x',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Pos Y",
-			["Command"] = "bgn_tool_seat_offset_pos_y",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Pos Y',
+			['Command'] = 'bgn_tool_seat_offset_pos_y',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Pos Z",
-			["Command"] = "bgn_tool_seat_offset_pos_z",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Pos Z',
+			['Command'] = 'bgn_tool_seat_offset_pos_z',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Ang X",
-			["Command"] = "bgn_tool_seat_offset_angle_x",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Ang X',
+			['Command'] = 'bgn_tool_seat_offset_angle_x',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Ang Y",
-			["Command"] = "bgn_tool_seat_offset_angle_y",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Ang Y',
+			['Command'] = 'bgn_tool_seat_offset_angle_y',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 
-		Panel:AddControl("Slider", {
-			["Label"] = "Ang Z",
-			["Command"] = "bgn_tool_seat_offset_angle_Z",
-			["Type"] = "Integer",
-			["Min"] = "-180",
-			["Max"] = "180"
+		Panel:AddControl('Slider', {
+			['Label'] = 'Ang Z',
+			['Command'] = 'bgn_tool_seat_offset_angle_Z',
+			['Type'] = 'Integer',
+			['Min'] = '-180',
+			['Max'] = '180'
 		})
 	end
 

@@ -1,3 +1,17 @@
+local bgNPC = bgNPC
+local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
+local ipairs = ipairs
+local LocalToWorld = LocalToWorld
+local Angle = Angle
+local IsValid = IsValid
+local GetConVar = GetConVar
+local draw_SimpleTextOutlined = draw.SimpleTextOutlined
+local render_DrawLine = render.DrawLine
+local render_SetColorMaterial = render.SetColorMaterial
+local cam_Start3D2D = cam.Start3D2D
+local cam_End3D2D = cam.End3D2D
+--
+local text_font_name = 'BGN_Debug_UpperStateText'
 local default_color_target = Color(255, 0, 0)
 local police_color_target = Color(0, 0, 255)
 local residents_color_target = Color(0, 255, 0)
@@ -5,8 +19,8 @@ local state_text_color = Color(255, 255, 255)
 local text_border_color = Color(0, 0, 0)
 local target_color = Color(100, 255, 255)
 
-surface.CreateFont("BGN_Debug_UpperStateText", {
-	font = "Arial",
+surface.CreateFont(text_font_name, {
+	font = 'Arial',
 	extended = false,
 	size = 24,
 	weight = 500,
@@ -24,53 +38,53 @@ surface.CreateFont("BGN_Debug_UpperStateText", {
 })
 
 local function GetCenterEntityPos(ent)
-   return LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
+	return LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
 end
 
 local function GetColorByTeam(actor)
-   if actor:HasTeam('police') then
-      return police_color_target
-   elseif actor:HasTeam('residents') then
-      return residents_color_target
-   end
-   return default_color_target
+	if actor:HasTeam('police') then
+		return police_color_target
+	elseif actor:HasTeam('residents') then
+		return residents_color_target
+	end
+
+	return default_color_target
 end
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
-   if not GetConVar('bgn_debug'):GetBool() then return end
+	if not GetConVar('bgn_debug'):GetBool() then return end
+	local ply = LocalPlayer()
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-   local ply = LocalPlayer()
-   if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	local upper_text_angle = ply:EyeAngles()
+	upper_text_angle:RotateAroundAxis(upper_text_angle:Forward(), 90)
+	upper_text_angle:RotateAroundAxis(upper_text_angle:Right(), 90)
 
-   local upper_text_angle = ply:EyeAngles()
-   upper_text_angle:RotateAroundAxis(upper_text_angle:Forward(), 90)
-   upper_text_angle:RotateAroundAxis(upper_text_angle:Right(), 90)
-   
-   render.SetColorMaterial()
+	render_SetColorMaterial()
 
-   for _, actor in ipairs(bgNPC:GetAll()) do
-      if actor:IsAlive() then
-         local npc = actor:GetNPC()
-         local npc_pos = npc:GetPos()
+	for _, actor in ipairs(bgNPC:GetAll()) do
+		if actor:IsAlive() then
+			local npc = actor:GetNPC()
+			local npc_pos = npc:GetPos()
 
-         if npc_pos:DistToSqr(ply:GetPos()) < 640000 then         
-            cam.Start3D2D(npc_pos + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
-               draw.SimpleTextOutlined('State - ' .. actor:GetState(), "BGN_Debug_UpperStateText", 0, -15, state_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, text_border_color)
-            cam.End3D2D()
-         end
+			if npc_pos:DistToSqr(ply:GetPos()) < 640000 then
+				cam_Start3D2D(npc_pos + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
+					draw_SimpleTextOutlined('State - ' .. actor:GetState(), text_font_name, 0, -15, state_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, text_border_color)
+				cam_End3D2D()
+			end
 
-         for _, enemy in ipairs(actor.enemies) do
-            if IsValid(enemy) then
-               local color = GetColorByTeam(actor)
-               render.DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
-            end
-         end
+			for _, enemy in ipairs(actor.enemies) do
+				if IsValid(enemy) then
+					local color = GetColorByTeam(actor)
+					render_DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
+				end
+			end
 
-         for _, target in ipairs(actor.targets) do
-            if IsValid(target) then
-               render.DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
-            end
-         end
-      end
-   end
+			for _, target in ipairs(actor.targets) do
+				if IsValid(target) then
+					render_DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
+				end
+			end
+		end
+	end
 end)

@@ -1,3 +1,13 @@
+local ipairs = ipairs
+local table = table
+local LerpVector = LerpVector
+local math = math
+local util = util
+local Vector = Vector
+local scommand = slib.Components.GlobalCommand
+local CLIENT = CLIENT
+--
+
 local function AutoCreatePoints(startPos, endPos)
 	local points = {}
 	local dist = startPos:Distance(endPos)
@@ -36,9 +46,7 @@ local function ConstructParent(node, set_max_pass, yield)
 					end
 				})
 
-				if not tr.Hit then
-					goto skip
-				end
+				if not tr.Hit then continue end
 			end
 
 			if not anotherNode:HasParent(node) and node:CheckDistanceLimitToNode(pos) 
@@ -49,8 +57,6 @@ local function ConstructParent(node, set_max_pass, yield)
 			end
 		end
 
-		::skip::
-
 		current_pass = current_pass + 1
 		if current_pass == max_pass then
 			current_pass = 0
@@ -59,14 +65,14 @@ local function ConstructParent(node, set_max_pass, yield)
 	end
 end
 
-slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
+scommand.Register('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 	local old_progress = -1
 
 	if not navmesh.IsLoaded() then
 		snet.Invoke('bgn_generate_navmesh_not_exists', ply)
 		return
 	end
-	
+
 	async.Add('bgn_generate_navmesh', function(yield)
 		BGN_NODE:ClearNodeMap()
 
@@ -98,11 +104,9 @@ slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 				snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress)
 				old_progress = new_progress
 			end
-
-			::skip::
 		end
 
-		snet.Create('bgn_movement_mesh_load_from_client_cl')
+		snet.Request('bgn_movement_mesh_load_from_client_cl')
 			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
 			.Invoke(ply)
 
@@ -110,7 +114,7 @@ slib.RegisterGlobalCommand('bgn_generate_navmesh', nil, function(ply, cmd, args)
 
 		return yield('stop')
 	end)
-end)
+end).Access( { isAdmin = true } )
 
 if CLIENT then
 	snet.RegisterCallback('bgn_generate_navmesh_progress', function(ply, percent)

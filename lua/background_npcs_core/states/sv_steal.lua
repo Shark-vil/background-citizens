@@ -12,7 +12,7 @@ hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, stat
 
 	for _, ent in ipairs(entities) do
 		if not IsValid(ent) or not ent:IsPlayer() then
-			goto skip
+			continue
 		end
 
 		local distToPlayer = npc_pos:DistToSqr(ent:GetPos())
@@ -24,8 +24,6 @@ hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, stat
 			dist = distToPlayer
 			target = ent
 		end
-
-		::skip::
 	end
 
 	if not IsValid(target) then
@@ -114,7 +112,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 						actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
 							data.isPlayAnim = false
 							data.isWanted = true
-							
+
 							hook.Run('BGN_StealFinish', actor, target, true)
 							actor:SetState('retreat')
 						end)

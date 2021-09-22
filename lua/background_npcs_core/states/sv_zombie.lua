@@ -2,10 +2,10 @@ bgNPC:SetStateAction('zombie', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
-		
+
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
-		
+
 		data.delay = data.delay or 0
 
 		if enemy:IsPlayer() and enemy:InVehicle() then

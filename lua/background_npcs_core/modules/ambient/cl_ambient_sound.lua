@@ -1,79 +1,108 @@
-local oldLevel
-local currentLevel
+local currentAmbient
 local currentSound
 
-local function SetAmbient(level)
-   if level == currentLevel then return end
-   oldLevel = currentLevel
-   currentLevel = level
+local function SetAmbient(ambient_value)
+	if not ambient_value then
+		if currentSound and currentAmbient and currentSound:IsPlaying() then
+			if timer.Exists('BGN_SetNewAmbientSoundAfterFade') then
+				timer.Remove('BGN_SetNewAmbientSoundAfterFade')
+			end
 
-   if currentLevel == 0 then      
-      if currentSound ~= nil and currentSound:IsPlaying() then
-         timer.Remove('BGN_SetNewAmbientSoundAfterFade')
-         currentSound:Stop()
-         bgNPC:Log('Stop ambient - ' .. 'background_npcs/ambient/bgn_ambient_'.. oldLevel .. '.wav')
-         currentSound = nil
-      end
-      return
-   end
+			if timer.Exists('BGN_SetNewAmbientSoundAfterFadeChangeVolume') then
+				timer.Remove('BGN_SetNewAmbientSoundAfterFadeChangeVolume')
+			end
 
-   local sound_name = 'background_npcs/ambient/bgn_ambient_'.. level .. '.wav'
-   local fade_time = 2
-   if currentSound ~= nil and currentSound:IsPlaying() then
-      currentSound:FadeOut(fade_time)
-   else
-      fade_time = 0
-   end
+			currentSound:FadeOut(2)
 
-   timer.Create('BGN_SetNewAmbientSoundAfterFade', fade_time + 0.1, 1, function()
-      if currentSound ~= nil then
-         currentSound:Stop()
-         bgNPC:Log('Stop ambient - ' .. 'background_npcs/ambient/bgn_ambient_'.. oldLevel .. '.wav')
-      end
+			timer.Create('BGN_AmbientSoundStopFade', 2.1, 1, function()
+				if not currentSound then return end
+				currentSound:Stop()
+				currentSound = nil
+			end)
 
-      local volume = 1
-      if level == 1 then volume = 0.4 end
+			bgNPC:Log('Stop ambient - ' .. currentAmbient)
+		end
 
-      currentSound = CreateSound(game.GetWorld(), sound_name)
-      currentSound:SetSoundLevel(0)
-      currentSound:PlayEx(volume, 100)
+		currentAmbient = nil
+		return
+	end
 
-      bgNPC:Log('Play ambient - ' .. sound_name)
-   end)
+	if ambient_value.sound == currentAmbient then return end
+	currentAmbient = ambient_value.sound
+
+	local sound_name = currentAmbient
+	local sound_volume = ambient_value.volume ~= nil and ambient_value.volume or 1
+	local fade_time = 2
+
+	if currentSound ~= nil and currentSound:IsPlaying() then
+		currentSound:FadeOut(fade_time)
+	else
+		fade_time = 0
+	end
+
+	timer.Create('BGN_SetNewAmbientSoundAfterFade', fade_time + 0.1, 1, function()
+		if currentSound ~= nil then
+			currentSound:Stop()
+			bgNPC:Log('Stop ambient - ' .. tostring(currentAmbient))
+		end
+
+		currentSound = CreateSound(game.GetWorld(), sound_name)
+		currentSound:SetSoundLevel(0)
+		currentSound:PlayEx(0, 100)
+		timer.Create('BGN_SetNewAmbientSoundAfterFadeChangeVolume', 0.01, 0, function()
+			local current_volume = currentSound:GetVolume()
+
+			if not currentSound or current_volume == sound_volume then
+				timer.Remove('BGN_SetNewAmbientSoundAfterFadeChangeVolume')
+				return
+			end
+
+			current_volume = current_volume + 0.1
+			if current_volume > sound_volume then
+				current_volume = sound_volume
+			end
+
+			bgNPC:Log('Ambient volume - ' .. current_volume)
+
+			currentSound:ChangeVolume(current_volume)
+		end)
+		bgNPC:Log('Play ambient - ' .. sound_name)
+	end)
 end
 
-local min_ambient_1 = 6
-local min_ambient_2 = 3
--- 3 automatically
-
 timer.Create('BGN_SetAmbientSound', 2, 0, function()
-   if not GetConVar('bgn_cl_ambient_sound'):GetBool() then
-      SetAmbient(0)
-      return
-   end
-   if not LocalPlayer().snet_ready then return end
+	if not GetConVar('bgn_cl_ambient_sound'):GetBool() then
+		SetAmbient()
+		return
+	end
 
-   local ply = LocalPlayer()
-   local entities = ents.FindInSphere(ply:GetPos(), 1000)
-   
-   local count = 0
-   for i = 1, #entities do
-      local npc = entities[i]
-      if bgNPC:GetActor(npc) ~= nil and bgNPC:IsTargetRay(ply, npc) then
-         count = count + 1
-      end
-   end
+	if not LocalPlayer().snet_ready then return end
 
-   if count == 0 then
-      SetAmbient(0)
-      return
-   end
+	local ply = LocalPlayer()
+	local entities = ents.FindInSphere(ply:GetPos(), 1000)
+	local count = 0
 
-   if count >= min_ambient_1 then
-      SetAmbient(1)
-   elseif count >= min_ambient_2 then
-      SetAmbient(2)
-   else
-      SetAmbient(3)
-   end
+	for i = 1, #entities do
+		local npc = entities[i]
+
+		if bgNPC:GetActor(npc) ~= nil and bgNPC:IsTargetRay(ply, npc) then
+			count = count + 1
+		end
+	end
+
+	if count == 0 then
+		SetAmbient()
+		return
+	end
+
+	table.sort(bgNPC.cfg.ambient, function(a, b)
+		return a.count > b.count
+	end)
+
+	for _, v in ipairs(bgNPC.cfg.ambient) do
+		if count >= v.count then
+			SetAmbient(v)
+			break
+		end
+	end
 end)

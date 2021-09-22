@@ -7,11 +7,11 @@ bgNPC:SetStateAction('dialogue', 'calm', {
 		local npc = actor:GetNPC()
 		local actors = bgNPC:GetAllByRadius(npc:GetPos(), 300)
 		local ActorTarget = table.RandomBySeq(actors)
-	
+
 		if ActorTarget ~= actor and ActorTarget:IsAlive() then
 			if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return end
 			if not asset:SetDialogue(actor, ActorTarget) then return end
-	
+
 			ActorTarget:SetState('dialogue', { isIgnore = true }, true)
 
 			return true

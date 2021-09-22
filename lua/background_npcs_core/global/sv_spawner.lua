@@ -1,10 +1,11 @@
 local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass)
+	limit_pass = limit_pass or 10
+
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius, 'walk')
-	local limit_pass = limit_pass or 10
 	local current_pass = 0
 	local nodePosition
 	coroutine.yield()
@@ -14,7 +15,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	for i = 1, #points do
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
-		
+
 		local entities = ents.FindInSphere(nodePosition, 150)
 		for e = 1, #entities do
 			local ent = entities[e]
@@ -79,7 +80,7 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	if hooks_active[hook_name] then return end
 	if not action and not isfunction(action) then return end
 	hooks_active[hook_name] = true
-	local all_players = player.GetAll()
+	local all_players = player.GetHumans()
 
 	if not desiredPosition then
 		local ply = table.RandomBySeq(all_players)
@@ -91,9 +92,9 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	local thread = coroutine.create(FindSpawnLocationProcess)
 	local isDead = false
 
-	hook.Add("Think", hook_name, function()
+	hook.Add('Think', hook_name, function()
 		if isDead or coroutine.status(thread) == 'dead' then
-			hook.Remove("Think", hook_name)
+			hook.Remove('Think', hook_name)
 			hooks_active[hook_name] = false
 		else
 			local _, nodePosition = coroutine.resume(thread, all_players, desiredPosition, limit_pass)
@@ -119,7 +120,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		npc_class = npcData.class
 	end
 
-	if hook.Run('BGN_OnValidSpawnActor', npcData, npc_class, desiredPosition) then return end
+	if hook.Run('BGN_OnValidSpawnActor', npcType, npcData, npc_class, desiredPosition) then return end
 
 	local newNpcData, newNpcClass = hook.Run('BGN_OverrideSpawnData', npcType, npcData, npc_class)
 

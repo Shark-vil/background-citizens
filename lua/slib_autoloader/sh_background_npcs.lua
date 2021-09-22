@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.4.19'
+bgNPC.VERSION = '1.5'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -37,11 +37,13 @@ local script = slib.CreateIncluder(root_directory, '[Background NPCs] Script loa
 
 script:using('config/sh_main.lua')
 script:using('config/sh_state_relations.lua')
+script:using('config/sh_names.lua')
 script:using('config/sh_npcs.lua')
 script:using('config/sh_shot_sound.lua')
 script:using('config/sh_player.lua')
 script:using('config/sh_darkrp.lua')
 script:using('config/sh_weapons.lua')
+script:using('config/sh_ambient.lua')
 
 hook.Add('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule', function()
 	include(root_directory .. '/config/sh_player.lua')
@@ -66,6 +68,12 @@ script:using('commands/sh_cmd_autogenerator.lua')
 slib.usingDirectory(root_directory .. '/custom_modules/preload',
 	'[Background NPCs | Custom modules] Script load - {file}')
 
+script:using('classes/actor/sh_actor_base.lua', true)
+script:using('classes/actor/sh_actor_class.lua')
+script:using('classes/sh_node_class.lua')
+script:using('classes/sh_seat_class.lua')
+script:using('classes/sh_dv_class.lua')
+
 script:using('global/sv_meta.lua')
 script:using('global/sh_meta.lua')
 script:using('global/sv_spawner.lua')
@@ -76,10 +84,11 @@ script:using('global/sh_wanted_killing_statistic.lua')
 script:using('global/sh_states.lua')
 script:using('global/sh_find_path_service.lua')
 
-script:using('classes/sh_actor_class.lua')
-script:using('classes/sh_node_class.lua')
-script:using('classes/sh_seat_class.lua')
-script:using('classes/sh_dv_class.lua')
+-- script:using('classes/actor/sh_actor_base.lua', true)
+-- script:using('classes/actor/sh_actor_class.lua')
+-- script:using('classes/sh_node_class.lua')
+-- script:using('classes/sh_seat_class.lua')
+-- script:using('classes/sh_dv_class.lua')
 
 script:using('modules/cl_updatepage.lua')
 script:using('modules/cl_render_optimization.lua')
@@ -105,11 +114,11 @@ script:using('modules/npcs/sv_random_voice.lua')
 script:using('modules/npcs/sv_bio_annihilation_two.lua')
 script:using('modules/player/sv_team_parent.lua')
 script:using('modules/darkrp/sv_darkrp_drop_money.lua')
-script:using('modules/darkrp/sv_player_arrest.lua')
 script:using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
 script:using('modules/darkrp/sv_change_team_wanted.lua')
 script:using('modules/darkrp/sv_disable_door_open.lua')
-script:using('modules/sandbox/sv_arrest.lua')
+script:using('modules/arrest/sv_police_system.lua')
+script:using('modules/arrest/sv_darkrp_arrest.lua')
 script:using('modules/routes/sh_route_saver.lua')
 script:using('modules/routes/sh_route_loader.lua')
 script:using('modules/routes/compile/sv_compile.lua')

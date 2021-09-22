@@ -79,6 +79,8 @@ en_lang['bgn.settings.states.bgn_disable_halo'] = 'Disable NPC highlighting stro
 en_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Description: disables the effect of the outline of the NPC during the call and during the wanted.'
 en_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Enable "DV" addon support'
 en_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Description: includes compatibility with the "DV" addon and forces NPCs to use vehicles.'
+en_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Enable support for the addon "Police System"'
+en_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Description: Enables compatibility with the "Police System" addon and overrides the default arrest method.'
 en_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Disable dialogues between NPCs'
 en_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Description: disables NPCs from communicating with each other.'
 
@@ -195,6 +197,8 @@ ru_lang['bgn.settings.states.bgn_disable_halo'] = 'Отключить выдел
 ru_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Описание: отключает эффект обводки NPC во время звонка и при розыске.'
 ru_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Включить поддержку аддона "DV"'
 ru_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Описание: включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт.'
+ru_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Включить поддержку аддона "Система Полиции"'
+ru_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Описание: включает совместимость с аддоном "Система Полиции" и переопределяет стандартный метод ареста.'
 ru_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Отключить диалоги между NPC'
 ru_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Описание: отключает общение NPC друг с другом.'
 

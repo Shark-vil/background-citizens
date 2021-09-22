@@ -1,3 +1,8 @@
+local bgNPC = bgNPC
+local hook = hook
+local CurTime = CurTime
+local isbool = isbool
+--
 local TeamParentModule = bgNPC:GetModule('team_parent')
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
@@ -11,9 +16,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local attacker = dmginfo:GetAttacker()
 	if not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
 	if attacker.bgNPCIgnore or attacker == target then return end
-	
+
 	local result
-	
+
 	if target:IsNPC() then
 		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target)
 	elseif target:IsPlayer() then
@@ -49,11 +54,11 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		if isbool(hook_result) then
 			return hook_result
 		end
-		
+
 		if ActorTarget:EqualStateGroup('calm') then
 			local last_reaction = ActorTarget:GetLastReaction()
 			if last_reaction == 'ignore' then return end
-			
+
 			ActorTarget:RemoveAllTargets()
 			ActorTarget:SetState(last_reaction, nil, true)
 		end
