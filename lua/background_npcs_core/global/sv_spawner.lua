@@ -120,7 +120,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		npc_class = npcData.class
 	end
 
-	if hook.Run('BGN_OnValidSpawnActor', npcData, npc_class, desiredPosition) then return end
+	if hook.Run('BGN_OnValidSpawnActor', npcType, npcData, npc_class, desiredPosition) then return end
 
 	local newNpcData, newNpcClass = hook.Run('BGN_OverrideSpawnData', npcType, npcData, npc_class)
 
