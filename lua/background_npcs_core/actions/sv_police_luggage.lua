@@ -26,7 +26,6 @@ local function TargetPlayerPush(npc, target, velocity)
 	target:SetVelocity(forward * velocity)
 end
 
-
 hook.Add('BGN_ActorVisibleAtObject', 'BGN_PolicPlayerPushDanger', function(actor, ent, distance)
 	if distance > 50 or not ent:IsPlayer() or ent:InVehicle() then return end
 	if ent:Health() <= 0 or actor:IsMeleeWeapon() then return end
