@@ -19,7 +19,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
 	local result
 
-	if target:IsNPC() then
+	if target:IsNPC() or target:IsNextBot() then
 		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target)
 	elseif target:IsPlayer() then
 		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target)
