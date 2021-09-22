@@ -19,7 +19,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
 	local result
 
-	if target:IsNPC() then
+	if target:IsNPC() or target:IsNextBot() then
 		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target)
 	elseif target:IsPlayer() then
 		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target)
@@ -31,7 +31,6 @@ end)
 hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target)
 	local ActorTarget = bgNPC:GetActor(target)
 	local ActorAttacker = bgNPC:GetActor(attacker)
-	local reaction
 
 	if ActorTarget ~= nil then
 		if attacker:IsPlayer() then
@@ -47,7 +46,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			end
 		end
 
-		reaction = ActorTarget:GetReactionForDamage()
+		local reaction = ActorTarget:GetReactionForDamage()
 		ActorTarget:SetReaction(reaction)
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction)
@@ -55,12 +54,12 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			return hook_result
 		end
 
-		if ActorTarget:EqualStateGroup('calm') then
-			local last_reaction = ActorTarget:GetLastReaction()
-			if last_reaction == 'ignore' then return end
+		reaction = ActorTarget:GetLastReaction()
 
+		if ActorTarget:EqualStateGroup('calm') then
+			if reaction == 'ignore' then return end
 			ActorTarget:RemoveAllTargets()
-			ActorTarget:SetState(last_reaction, nil, true)
+			ActorTarget:SetState(reaction, nil, true)
 		end
 
 		ActorTarget:AddEnemy(attacker, reaction)
