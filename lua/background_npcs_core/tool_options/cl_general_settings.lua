@@ -35,6 +35,11 @@ local function TOOL_MENU(Panel)
 	Panel:AddControl("Button", {
 		["Label"] = "#bgn.settings.general.bgn_reset_cvars_to_factory_settings",
 		["Command"] = "bgn_reset_cvars_to_factory_settings",
+	Panel:AddControl('Button', {
+		['Label'] = '#bgn.settings.general.bgn_remove_routes',
+		['Command'] = 'cl_citizens_remove_route yes',
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.general.bgn_remove_routes.description'
 	})
 end
 

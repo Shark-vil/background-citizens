@@ -25,6 +25,8 @@ en_lang['bgn.settings.general.cl_citizens_load_route'] = 'Load points'
 en_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Description: loads the movement mesh for NPCs. You can use this if for some reason the mesh didn\'t load or you reset it.'
 en_lang['bgn.settings.general.bgn_updateinfo'] = 'View release notes'
 en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Reset to factory settings'
+en_lang['bgn.settings.general.bgn_remove_routes'] = 'Delete movement mesh file'
+en_lang['bgn.settings.general.bgn_remove_routes.description'] = 'Description: removes the mesh file from the hard disk. You can use this if you want to update the movement mesh you downloaded from the workshop. After deleting, restart the map.'
 
 --[[-----------------------------------------
    Client settings menu
@@ -143,6 +145,8 @@ ru_lang['bgn.settings.general.cl_citizens_load_route'] = 'Загрузить т�
 ru_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Описание: загружает сетку передвижения для NPC. Вы можете использовать это, если по какой-то причине сетка не загрузилась или вы её сбросили.'
 ru_lang['bgn.settings.general.bgn_updateinfo'] = 'Посмотреть информацию о версии'
 ru_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Сбросить до заводских настроек'
+ru_lang['bgn.settings.general.bgn_remove_routes'] = 'Удалить файл сетки перемещения'
+ru_lang['bgn.settings.general.bgn_remove_routes.description'] = 'Описание: удаляет файл сетки перемещения с жёсткого диска. Вы можете использовать это, если хотите обновить сетку перемещения, скачанную из мастерской. После удаления следует перезапустить карту.'
 
 --[[-----------------------------------------
    Client settings menu
