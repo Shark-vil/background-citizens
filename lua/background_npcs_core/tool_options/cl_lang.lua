@@ -18,13 +18,17 @@ local en_lang = {}
 en_lang['bgn.settings.general.bgn_enable'] = 'Enable background NPCs'
 en_lang['bgn.settings.general.bgn_enable.description'] = 'Description: toggles the modification activity.'
 en_lang['bgn.settings.general.bgn_debug'] = 'Enable debug mode'
-en_lang['bgn.settings.general.bgn_debug.description'] = 'Turns on debug mode and prints additional information to the console.'
+en_lang['bgn.settings.general.bgn_debug.description'] = 'Description: Turns on debug mode and prints additional information to the console.'
 en_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Ignore another NPCs'
 en_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Description: if this parameter is active, then NPCs will ignore any other spawned NPCs.'
 en_lang['bgn.settings.general.cl_citizens_load_route'] = 'Load points'
 en_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Description: loads the movement mesh for NPCs. You can use this if for some reason the mesh didn\'t load or you reset it.'
 en_lang['bgn.settings.general.bgn_updateinfo'] = 'View release notes'
+en_lang['bgn.settings.general.bgn_updateinfo.description'] = 'Description: open a page with information about the last update of the addon.'
 en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Reset to factory settings'
+en_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings.description'] = 'Description: resets all settings in the options menu to default.'
+en_lang['bgn.settings.general.bgn_remove_routes'] = 'Delete movement mesh file'
+en_lang['bgn.settings.general.bgn_remove_routes.description'] = 'Description: removes the mesh file from the hard disk. You can use this if you want to update the movement mesh you downloaded from the workshop. After deleting, restart the map.'
 
 --[[-----------------------------------------
    Client settings menu
@@ -136,13 +140,17 @@ en_lang['bgn.settings.unit_tests_title'] = 'Unit Tests'
 ru_lang['bgn.settings.general.bgn_enable'] = 'Включить фоновых NPC'
 ru_lang['bgn.settings.general.bgn_enable.description'] = 'Описание: переключает активность модификации.'
 ru_lang['bgn.settings.general.bgn_debug'] = 'Включить режим отладки'
-ru_lang['bgn.settings.general.bgn_debug.description'] = 'Включает режим отладки и выводит дополнительную информацию в консоль.'
+ru_lang['bgn.settings.general.bgn_debug.description'] = 'Описание: Включает режим отладки и выводит дополнительную информацию в консоль.'
 ru_lang['bgn.settings.general.bgn_ignore_another_npc'] = 'Игнорировать других NPC'
 ru_lang['bgn.settings.general.bgn_ignore_another_npc.description'] = 'Описание: если этот параметр активен, то NPC будут игнорировать любых других созданных NPC.'
 ru_lang['bgn.settings.general.cl_citizens_load_route'] = 'Загрузить точки'
 ru_lang['bgn.settings.general.cl_citizens_load_route.description'] = 'Описание: загружает сетку передвижения для NPC. Вы можете использовать это, если по какой-то причине сетка не загрузилась или вы её сбросили.'
 ru_lang['bgn.settings.general.bgn_updateinfo'] = 'Посмотреть информацию о версии'
+ru_lang['bgn.settings.general.bgn_updateinfo.description'] = 'Описание: откроет страницу с информацией о последнем обновлении аддона.'
 ru_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Сбросить до заводских настроек'
+ru_lang['bgn.settings.general.bgn_reset_cvars_to_factory_settings.description'] = 'Описание: сбрасывает все параметры настройки в меню опций до стандартных.'
+ru_lang['bgn.settings.general.bgn_remove_routes'] = 'Удалить файл сетки перемещения'
+ru_lang['bgn.settings.general.bgn_remove_routes.description'] = 'Описание: удаляет файл сетки перемещения с жёсткого диска. Вы можете использовать это, если хотите обновить сетку перемещения, скачанную из мастерской. После удаления следует перезапустить карту.'
 
 --[[-----------------------------------------
    Client settings menu

@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.5.1'
+bgNPC.VERSION = '1.5.2'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -150,6 +150,7 @@ script:using('modules/sv_nbc_npc_remover_bypass.lua')
 script:using('modules/synchronization/cl_cync.lua')
 script:using('modules/synchronization/sv_cync.lua')
 script:using('modules/cl_version_checker.lua')
+script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 
 script:using('actions/sv_open_door.lua')
 script:using('actions/sv_police_luggage.lua')

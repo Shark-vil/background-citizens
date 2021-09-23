@@ -18,7 +18,7 @@ if SERVER then
 		end
 
 		bgNPC.LoadRoutes()
-	end).Protect().Register()
+	end).Protect()
 
 	snet.Callback('bgn_movement_mesh_save_to_file', function(ply, bigdata)
 		if bigdata.from_json then
@@ -28,12 +28,12 @@ if SERVER then
 		end
 
 		bgNPC.LoadRoutes()
-	end).Protect().Register()
+	end).Protect()
 else
 	snet.Callback('cl_citizens_remove_route_notify', function(ply, notify_text)
 		if not notify_text then return end
 		notification.AddLegacy(notify_text, NOTIFY_GENERIC, 4)
-	end).Protect().Register()
+	end).Protect()
 
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
@@ -57,7 +57,7 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Request('bgn_movement_mesh_save_to_file').BigData({ 
+			snet.Request('bgn_movement_mesh_save_to_file').BigData({
 				from_json = from_json,
 				data = jsonNodes
 			}, nil, 'Sending the mesh to the server').InvokeServer()
@@ -102,7 +102,7 @@ else
 			ButtonYes:SetSize(155, 30)
 			ButtonYes.DoClick = function()
 				snet.Request('bgn_movement_mesh_save_to_file').BigData({ 
-					from_json = from_json, 
+					from_json = from_json,
 					data = jsonNodes
 				}, nil, 'Sending the mesh to the server').InvokeServer()
 
