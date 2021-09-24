@@ -65,7 +65,7 @@ local function ConstructParent(node, set_max_pass, yield)
 	end
 end
 
-scommand.Register('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
+scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 	local old_progress = -1
 
 	if not navmesh.IsLoaded() then
@@ -115,6 +115,7 @@ scommand.Register('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 		return yield('stop')
 	end)
 end).Access( { isAdmin = true } )
+end).Access( { isAdmin = true } ).Register()
 
 if CLIENT then
 	snet.RegisterCallback('bgn_generate_navmesh_progress', function(ply, percent)
