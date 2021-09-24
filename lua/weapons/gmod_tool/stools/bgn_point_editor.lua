@@ -493,16 +493,29 @@ else
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.load_points',
 			['Command'] = 'cl_citizens_load_route_from_client',
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.load_points.desc'
 		})
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.save_points',
 			['Command'] = 'cl_citizens_save_route',
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.save_points.desc'
+		})
+
+		Panel:AddControl('Button', {
+			['Label'] = '#tool.bgn_point_editor.pnl.generate_points',
+			['Command'] = 'bgn_generate_navmesh',
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.generate_points.desc'
 		})
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.clear_points',
 			['Command'] = 'cl_bgn_clear_tool_points',
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.clear_points.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
@@ -522,6 +535,8 @@ else
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.reconstruct_parents',
 			['Command'] = 'cl_tool_point_editor_reconstruct_parents',
+		}); Panel:AddControl('Label', {
+			Text = '#tool.bgn_point_editor.pnl.reconstruct_parents.desc'
 		})
 
 		Panel:AddControl('Slider', {
@@ -557,8 +572,13 @@ else
 		['tool.bgn_point_editor.desc'] = 'Tool for editing the points of movement of background NPCs.',
 		['tool.bgn_point_editor.0'] = 'Left click - Interaction. Right click - Change tool type. Reload - Switching submodes.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Load points',
+		['tool.bgn_point_editor.pnl.load_points.desc'] = 'Description: receives movement mesh from the server.',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Save points',
+		['tool.bgn_point_editor.pnl.save_points.desc'] = 'Description: save the movement mesh on the server.',
+		['tool.bgn_point_editor.pnl.generate_points'] = 'Generate movement mesh',
+		['tool.bgn_point_editor.pnl.generate_points.desc'] = 'Description: generates movement points using the map AI navigation mesh. If the map does not have an AI navmesh, then the generator will not work.',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Re-create points links',
+		['tool.bgn_point_editor.pnl.reconstruct_parents.desc'] = 'Description: automatically recreates all connections between points, taking into account the distance and obstacles.',
 		['tool.bgn_point_editor.autoparent'] = 'Auto parent',
 		['tool.bgn_point_editor.autoparent.desc'] = 'Description: enable automatic creation of links.',
 		['tool.bgn_point_editor.autoalignment'] = 'Auto-height',
@@ -580,6 +600,7 @@ else
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents'] = 'Show global connections',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'] = 'Description: shows global (white) connections that are used by NPCs in special cases. For example - escape from the attacker.',
 		['tool.bgn_point_editor.pnl.clear_points'] = 'Clear all points (Local)',
+		['tool.bgn_point_editor.pnl.clear_points.desc'] = 'Description: removes all points from the tool in the client area. If the points are saved to a file and uploaded to the server, they will not disappear anywhere.',
 	}
 
 	local ru_lang = {
@@ -587,8 +608,13 @@ else
 		['tool.bgn_point_editor.desc'] = 'Инструмент для редактирования точек перемещения фоновых НПС.',
 		['tool.bgn_point_editor.0'] = 'Левый клик - Взаимодействие. Правый клик - Сменить тип инструмента. Перезарядка - Переключение подрежимов.',
 		['tool.bgn_point_editor.pnl.load_points'] = 'Загрузить точки',
+		['tool.bgn_point_editor.pnl.load_points.desc'] = 'Описание: получает сетку перемещения с сервера.',
 		['tool.bgn_point_editor.pnl.save_points'] = 'Сохранить точки',
+		['tool.bgn_point_editor.pnl.save_points.desc'] = 'Описание: сохраняет сетку перемещения на сервере.',
+		['tool.bgn_point_editor.pnl.generate_points'] = 'Сгенерировать точки перемещения',
+		['tool.bgn_point_editor.pnl.generate_points.desc'] = 'Описание: генерирует точки перемещения, использую сетку навигации карты. Если карта не имеет AI сетку навигации, то генератор не будет работать.',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Пересоздать связи точек',
+		['tool.bgn_point_editor.pnl.reconstruct_parents.desc'] = 'Описание: автоматически пересоздаёт все связи между точками, с учётом дистанции и препятствий.',
 		['tool.bgn_point_editor.autoparent'] = 'Авто-связка',
 		['tool.bgn_point_editor.autoparent.desc'] = 'Описание: включить автоматическое создание связей.',
 		['tool.bgn_point_editor.autoalignment'] = 'Авто-высота',
@@ -610,6 +636,7 @@ else
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents'] = 'Показать глобальные связи',
 		['tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'] = 'Описание: показывает глобальные (белые) соединения, которые используются НПС в особых случаях. Например - побег от нападавшего.',
 		['tool.bgn_point_editor.pnl.clear_points'] = 'Очистить все точки (Локально)',
+		['tool.bgn_point_editor.pnl.clear_points.desc'] = 'Описание: удаляет все точки из инструмента в области клиента. Если точки сохранены в файл и загружена на сервер, они никуда не исчезнут.',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
