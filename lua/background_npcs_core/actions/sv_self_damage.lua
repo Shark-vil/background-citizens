@@ -1,16 +1,10 @@
 local bgNPC = bgNPC
 local hook = hook
-local CurTime = CurTime
 local isbool = isbool
 --
 local TeamParentModule = bgNPC:GetModule('team_parent')
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
-	target.__BGN_DelayTakeDamageTime = target.__BGN_DelayTakeDamageTime or 0
-
-	if target.__BGN_DelayTakeDamageTime > CurTime() then return end
-	target.__BGN_DelayTakeDamageTime = CurTime() + 1
-
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
 	local attacker = dmginfo:GetAttacker()
@@ -20,15 +14,15 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local result
 
 	if target:IsNPC() or target:IsNextBot() then
-		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target)
+		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
 	elseif target:IsPlayer() then
-		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target)
+		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
 	end
 
 	if isbool(result) then return result end
 end)
 
-hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target)
+hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target, dmginfo)
 	local ActorTarget = bgNPC:GetActor(target)
 	local ActorAttacker = bgNPC:GetActor(attacker)
 
@@ -49,7 +43,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		local reaction = ActorTarget:GetReactionForDamage()
 		ActorTarget:SetReaction(reaction)
 
-		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction)
+		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
 		if isbool(hook_result) then
 			return hook_result
 		end
@@ -65,10 +59,10 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		ActorTarget:AddEnemy(attacker, reaction)
 	end
 
-	hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
 end)
 
-hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target)
+hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
 	local ActorAttacker = bgNPC:GetActor(attacker)
 	if ActorAttacker ~= nil then
 		if TeamParentModule:HasParent(target, ActorAttacker) or ActorAttacker:HasTeam('player') then
@@ -80,10 +74,10 @@ hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attack
 		end
 	end
 
-	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target)
+	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
 	if isbool(hook_result) then
 		return hook_result
 	end
 
-	hook.Run('BGN_PostReactionTakeDamage', attacker, target)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
 end)
