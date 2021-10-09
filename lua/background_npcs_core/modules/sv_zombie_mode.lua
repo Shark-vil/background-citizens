@@ -27,10 +27,10 @@ timer.Create('BGN_ZombieModeAutoEnableDefense', 1, 0, function()
 						actor:AddEnemy(npc)
 					end
 
-					if actor:HasState(bgNPC.cfg.npcs_states['calmly']) then
+					if actor:EqualStateGroup('calm') then
 						local reaction = actor:GetReactionForDamage()
 
-						if reaction and table.HasValueBySeq(bgNPC.cfg.npcs_states['danger'], reaction) then
+						if reaction and actor:HasStateGroup(reaction, 'danger') then
 							actor:SetState(reaction)
 						else
 							actor:SetState('fear')

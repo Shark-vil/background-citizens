@@ -56,6 +56,15 @@ bgNPC.cfg.npcs_template = {
 		fullness = 64,
 		team = { 'residents' },
 		weapons = { 'weapon_pistol', 'weapon_357', 'weapon_crowbar' },
+		replics = {
+			state_groups = {
+				['calm'] = bgNPC.cfg.replics['calm'],
+			},
+			state_names = {
+				['fear'] = bgNPC.cfg.replics['fear'],
+				['run_from_danger'] = bgNPC.cfg.replics['fear'],
+			}
+		},
 		getting_weapon_chance = 10,
 		money = { 0, 100 },
 		health = 30,

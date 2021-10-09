@@ -98,8 +98,13 @@ function BaseClass:GetGender()
 end
 
 function BaseClass:GetGenderByModel()
-	local model = self:GetNPC():GetModel()
 	local gender = 'unknown'
+
+	local npc = self:GetNPC()
+	if not IsValid(npc) then return gender end
+
+	local model = npc:GetModel()
+	if not model then return gender end
 
 	if tobool(string.find(model, 'female_*')) then
 		return 'female'
@@ -344,7 +349,9 @@ function BaseClass:AddEnemy(ent, reaction)
 
 	local npc = self:GetNPC()
 
-	if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+	if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and
+		not hook.Run('BGN_AddActorEnemy', self, ent)
+	then
 		if npc:IsNPC() then
 			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
@@ -537,6 +544,8 @@ function BaseClass:CallStateAction(current_state, func_name, ...)
 end
 
 function BaseClass:SetState(state, data, forced)
+	if not self:IsAlive() then return end
+
 	forced = forced or false
 
 	if not forced then
@@ -1117,11 +1126,19 @@ function BaseClass:CallForHelp(enemy)
 end
 
 function BaseClass:EqualStateGroup(group_name)
-	return bgNPC:GetStateGroupName(self:GetState()) == group_name
+	return self:HasStateGroup(self:GetState(), group_name)
 end
 
 function BaseClass:HasStateGroup(state_name, group_name)
-	return bgNPC:GetStateGroupName(state_name) == group_name
+	if isstring(group_name) then
+		return bgNPC:GetStateGroupName(state_name) == group_name
+	elseif istable(group_name) then
+		for i = 1, #group_name do
+			local result = bgNPC:GetStateGroupName(state_name) == group_name[i]
+			if result then return true end
+		end
+	end
+	return false
 end
 
 function BaseClass:IsMeleeWeapon()
@@ -1131,17 +1148,7 @@ function BaseClass:IsMeleeWeapon()
 	local wep = npc:GetActiveWeapon()
 	if not IsValid(wep) then return false end
 
-	return table.HasValueBySeq(bgNPC.cfg.weapons['melee'], wep:GetClass())
-end
-
-function BaseClass:IsFirearmsWeapon()
-	if not self:IsAlive() then return false end
-
-	local npc = self:GetNPC()
-	local wep = npc:GetActiveWeapon()
-	if not IsValid(wep) then return false end
-
-	return not table.HasValueBySeq(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+	return table.HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
 end
 
 function BaseClass:EnterVehicle(vehicle)
@@ -1301,6 +1308,35 @@ function BaseClass:FoldWeapon()
 	local npc = self:GetNPC()
 	local weapon  = npc:GetActiveWeapon()
 	if IsValid(weapon) then weapon:Remove() end
+end
+
+function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+	if not self:IsAlive() then return end
+
+	soundLevel = soundLevel or 75
+	pitchPercent = pitchPercent or 100
+	volume = volume or 1
+	channel = channel or CHAN_AUTO
+	soundFlags = soundFlags or 0
+	dsp = dsp or 0
+
+	self:GetNPC():EmitSound(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+end
+
+function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
+	say_time = say_time or 5
+
+	if say_text then
+		snet.InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time)
+	end
+
+	if voice_sound then
+		self:VoiceSay(voice_sound)
+	end
+
+	if animation_sequence then
+		self:PlayStaticSequence(animation_sequence)
+	end
 end
 
 BaseClass.__index = BaseClass
