@@ -98,8 +98,13 @@ function BaseClass:GetGender()
 end
 
 function BaseClass:GetGenderByModel()
-	local model = self:GetNPC():GetModel()
 	local gender = 'unknown'
+
+	local npc = self:GetNPC()
+	if not IsValid(npc) then return gender end
+
+	local model = npc:GetModel()
+	if not model then return gender end
 
 	if tobool(string.find(model, 'female_*')) then
 		return 'female'
