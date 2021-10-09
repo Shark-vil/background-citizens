@@ -15,3 +15,7 @@ bgNPC.cfg.RandomStateAssignmentPeriod = 3
 -- Allow killing friendly NPCs
 -- If enabled, the player can kill allies
 bgNPC.cfg.EnablePlayerKilledTeamActors = true
+
+-- A weapon that belongs to the "melee" category.
+-- Necessary for some states to work correctly.
+bgNPC.cfg.melee_weapons = {'weapon_crowbar', 'weapon_stunstick'}
