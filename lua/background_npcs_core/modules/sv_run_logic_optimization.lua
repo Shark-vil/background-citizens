@@ -9,7 +9,7 @@ local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat(
 
 cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 	if tonumber(new_value) > 0 then return end
-	local actors = bbgNPC:GetAlll()
+	local actors = bgNPC:GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]
