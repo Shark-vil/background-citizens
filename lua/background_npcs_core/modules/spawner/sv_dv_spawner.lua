@@ -61,7 +61,12 @@ local function FindSpawnLocation(center)
 						start = ply:EyePos(),
 						endpos = spawn_position,
 						filter = function(ent)
-							if IsValid(ent) and (ent ~= ply or (IsValid(vehicle) and ent ~= vehicle)) then return true end
+							if IsValid(ent) and ent ~= ply then
+								if IsValid(vehicle) and ( ent == vehicle or ent == vehicle:GetParent() ) then
+									return false
+								end
+								return true
+							end
 						end
 					})
 
@@ -79,7 +84,9 @@ local function FindSpawnLocation(center)
 				local entities = ents.FindInSphere(spawn_position, 300)
 
 				for _, ent in ipairs(entities) do
-					if IsValid(ent) and (ent:IsVehicle() or ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() or ent:GetClass():StartWith('prop_')) then
+					if IsValid(ent) and (ent:IsVehicle() or ent:IsPlayer() or ent:IsNPC()
+						or ent:IsNextBot() or ent:GetClass():StartWith('prop_'))
+					then
 						goto skip
 					end
 				end
@@ -88,17 +95,21 @@ local function FindSpawnLocation(center)
 					local direction_point = dvd.Waypoints[point.Neighbors[1]]
 
 					if direction_point then
+						-- local vector_1 = spawn_position
+						-- local vector_2 = direction_point.Target
+						-- local vector_1_normalize = vector_1:GetNormalized()
+						-- local vector_2_normalize = vector_2:GetNormalized()
+						-- local dot = math.deg(math.acos(vector_1_normalize:Dot(vector_2_normalize)))
+
+						-- if dot <= 1 then
+						-- 	spawn_angle = (vector_1 - vector_2):Angle()
+						-- else
+						-- 	spawn_angle = (vector_1 + vector_2):Angle()
+						-- end
+
 						local vector_1 = spawn_position
 						local vector_2 = direction_point.Target
-						local vector_1_normalize = vector_1:GetNormalized()
-						local vector_2_normalize = vector_2:GetNormalized()
-						local dot = math.deg(math.acos(vector_1_normalize:Dot(vector_2_normalize)))
-
-						if dot <= 1 then
-							spawn_angle = (vector_1 - vector_2):Angle()
-						else
-							spawn_angle = (vector_1 + vector_2):Angle()
-						end
+						spawn_angle = (vector_1 + vector_2):Angle()
 					end
 				end
 
@@ -109,11 +120,12 @@ local function FindSpawnLocation(center)
 			spawn_position = nil
 	end
 
-	if not spawn_position then return end
-	spawn_position = spawn_position + Vector(0, 30, 0)
-	spawn_angle = spawn_angle or Angle(0, 0, 0)
+	if not spawn_position or not spawn_angle then return end
 
-	return {spawn_position, Angle(0, spawn_angle.y, 0)}
+	spawn_position = spawn_position + Vector(0, 30, 0)
+	spawn_angle = spawn_angle
+
+	return { pos = spawn_position, ang = Angle(0, spawn_angle.y, 0) }
 end
 
 function bgNPC:CheckVehicleLimitFromActors(actor_type)
@@ -200,8 +212,8 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 
 	local npc = actor:GetNPC()
 	local car_class = table.RandomBySeq(car_classes)
-	local spawn_pos = data[1] + Vector(0, 0, 50)
-	local spawn_ang = data[2]
+	local spawn_pos = data.pos + Vector(0, 0, 50)
+	local spawn_ang = data.ang
 	local car
 	local simfphys_list = list.Get('simfphys_vehicles')
 	local vehicles_list = list.Get('Vehicles')
@@ -221,7 +233,7 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 
 		vehicle.VehicleTable = vehicle_data
 		vehicle:SetPos(spawn_pos)
-		vehicle:SetAngles(spawn_ang)
+		vehicle:SetAngles(spawn_ang - vehicle:GetAngles())
 		vehicle:Spawn()
 		vehicle:Activate()
 		car = vehicle
