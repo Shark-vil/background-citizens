@@ -1124,11 +1124,19 @@ function BaseClass:CallForHelp(enemy)
 end
 
 function BaseClass:EqualStateGroup(group_name)
-	return bgNPC:GetStateGroupName(self:GetState()) == group_name
+	return self:HasStateGroup(self:GetState(), group_name)
 end
 
 function BaseClass:HasStateGroup(state_name, group_name)
-	return bgNPC:GetStateGroupName(state_name) == group_name
+	if isstring(group_name) then
+		return bgNPC:GetStateGroupName(state_name) == group_name
+	elseif istable(group_name) then
+		for i = 1, #group_name do
+			local result = bgNPC:GetStateGroupName(state_name) == group_name[i]
+			if result then return true end
+		end
+	end
+	return false
 end
 
 function BaseClass:IsMeleeWeapon()
