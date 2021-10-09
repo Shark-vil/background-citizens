@@ -542,6 +542,8 @@ function BaseClass:CallStateAction(current_state, func_name, ...)
 end
 
 function BaseClass:SetState(state, data, forced)
+	if not self:IsAlive() then return end
+
 	forced = forced or false
 
 	if not forced then
