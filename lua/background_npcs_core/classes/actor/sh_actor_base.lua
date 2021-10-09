@@ -1146,17 +1146,7 @@ function BaseClass:IsMeleeWeapon()
 	local wep = npc:GetActiveWeapon()
 	if not IsValid(wep) then return false end
 
-	return table.HasValueBySeq(bgNPC.cfg.weapons['melee'], wep:GetClass())
-end
-
-function BaseClass:IsFirearmsWeapon()
-	if not self:IsAlive() then return false end
-
-	local npc = self:GetNPC()
-	local wep = npc:GetActiveWeapon()
-	if not IsValid(wep) then return false end
-
-	return not table.HasValueBySeq(bgNPC.cfg.weapons['not_firearms'], wep:GetClass())
+	return table.HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
 end
 
 function BaseClass:EnterVehicle(vehicle)
