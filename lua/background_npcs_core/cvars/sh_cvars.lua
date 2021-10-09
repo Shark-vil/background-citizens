@@ -43,6 +43,8 @@ bgNPC.cvar.bgn_cl_draw_npc_path = 0
 bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
+bgNPC.cvar.bgn_module_replics_enable = 1
+bgNPC.cvar.bgn_module_replics_language = 'en'
 
 function bgNPC:IsActiveNPCType(npc_type)
 	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
@@ -50,7 +52,7 @@ end
 
 function bgNPC:GetFullness(npc_type)
 	local data = bgNPC.cfg.npcs_template[npc_type]
-	if data == nil or not bgNPC:IsActiveNPCType(npc_type) then
+	if data == nil then
 		return 0
 	end
 
@@ -191,6 +193,13 @@ scvar.Register('bgn_actors_max_teleports', bgNPC.cvar.bgn_actors_max_teleports,
 	FCVAR_ARCHIVE, 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.')
 	.Access(DefaultAccess)
 
+scvar.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_language,
+	FCVAR_ARCHIVE, 'Sets the language of the NPC replicas. The default is - en.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable,
+	FCVAR_ARCHIVE, 'Enables or disables NPC text replics.')
+	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 	local enabled = 0

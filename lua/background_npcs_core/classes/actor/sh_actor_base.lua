@@ -1310,6 +1310,35 @@ function BaseClass:FoldWeapon()
 	if IsValid(weapon) then weapon:Remove() end
 end
 
+function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+	if not self:IsAlive() then return end
+
+	soundLevel = soundLevel or 75
+	pitchPercent = pitchPercent or 100
+	volume = volume or 1
+	channel = channel or CHAN_AUTO
+	soundFlags = soundFlags or 0
+	dsp = dsp or 0
+
+	self:GetNPC():EmitSound(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+end
+
+function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
+	say_time = say_time or 5
+
+	if say_text then
+		snet.InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time)
+	end
+
+	if voice_sound then
+		self:VoiceSay(voice_sound)
+	end
+
+	if animation_sequence then
+		self:PlayStaticSequence(animation_sequence)
+	end
+end
+
 BaseClass.__index = BaseClass
 
 return BaseClass

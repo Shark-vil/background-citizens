@@ -87,6 +87,8 @@ en_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Enable suppor
 en_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Description: Enables compatibility with the "Police System" addon and overrides the default arrest method.'
 en_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Disable dialogues between NPCs'
 en_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Description: disables NPCs from communicating with each other.'
+en_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Enable text replics'
+en_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Description: enable text cues over the heads of NPCs.'
 
 
 --[[-----------------------------------------
@@ -209,6 +211,8 @@ ru_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Включи�
 ru_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Описание: включает совместимость с аддоном "Система Полиции" и переопределяет стандартный метод ареста.'
 ru_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Отключить диалоги между NPC'
 ru_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Описание: отключает общение NPC друг с другом.'
+ru_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Включить текстовые реплики'
+ru_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Описание: включает текстовые реплики над головами NPC.'
 
 --[[-----------------------------------------
    Active npc group settings menu

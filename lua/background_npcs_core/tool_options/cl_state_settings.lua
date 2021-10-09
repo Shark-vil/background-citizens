@@ -53,6 +53,13 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		Text = '#bgn.settings.states.bgn_disable_dialogues.description'
 	})
+
+	Panel:AddControl('CheckBox', {
+		Label = '#bgn.settings.states.bgn_module_replics_enable',
+		Command = 'bgn_module_replics_enable'
+	}); Panel:AddControl('Label', {
+		Text = '#bgn.settings.states.bgn_module_replics_enable.description'
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_StateSettings', function()
