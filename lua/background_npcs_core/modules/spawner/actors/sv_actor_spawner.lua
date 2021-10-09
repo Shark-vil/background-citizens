@@ -44,52 +44,49 @@ hook.Add('BGN_InitActor', 'BGN_RemoveActorTargetFixer', function(actor)
 	end
 end)
 
-local function _SetNPCRelationship(actor_npc, npc)
-	if GetConVar('bgn_ignore_another_npc'):GetBool() then
+local function _SetNPCRelationship(actor, npc)
+	if not actor:IsAlive() then return end
+
+	local actor_npc = actor:GetNPC()
+	local is_ignore_another_npc = GetConVar('bgn_ignore_another_npc'):GetBool()
+
+	local ply = player.GetAll()[1]
+	if is_ignore_another_npc or ( ply and npc:Disposition(ply) ~= D_HT ) then
 		actor_npc:AddEntityRelationship(npc, D_NU, 99)
 		npc:AddEntityRelationship(actor_npc, D_NU, 99)
-	else
-		local ply = player.GetAll()[1]
-		if ply and npc:Disposition(ply) ~= D_HT then
-			actor_npc:AddEntityRelationship(npc, D_NU, 99)
-			npc:AddEntityRelationship(actor_npc, D_NU, 99)
+		actor:RemoveEnemy(npc)
+	elseif not is_ignore_another_npc then
+		local reaction = actor:GetReactionForProtect()
+		if actor:HasStateGroup(reaction, 'danger') then
+			actor:SetState(reaction, nil, true)
+			actor:AddEnemy(npc)
 		end
 	end
 end
 
 hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', function(actor)
-	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
-
-	local actor_npc = actor:GetNPC()
-	if not IsValid(actor_npc) or not actor_npc:IsNPC() then return end
+	if not actor:IsAlive() or not actor:GetNPC():IsNPC() then return end
 
 	local entities = ents.GetAll()
 	for i = 1, #entities do
 		local npc = entities[i]
 		if npc and npc:IsNPC() and not npc.isBgnActor then
-			_SetNPCRelationship(actor_npc, npc)
+			_SetNPCRelationship(actor, npc)
 		end
 	end
 end)
 
 hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(ent)
 	if not ent:IsNPC() then return end
-	if not GetConVar('bgn_ignore_another_npc'):GetBool() then return end
 
 	timer.Simple(0.5, function()
-		if not IsValid(ent) then return end
-		if ent.isBgnActor then return end
+		if not IsValid(ent) or ent.isBgnActor then return end
 
 		local actors = bgNPC:GetAll()
 		for i = 1, #actors do
 			local actor = actors[i]
-			if actor then
-				local npc = actor:GetNPC()
-				if IsValid(npc) and npc:IsNPC() then
-					_SetNPCRelationship(npc, ent)
-					actor:RemoveTarget(ent)
-					actor:RemoveEnemy(ent)
-				end
+			if actor and actor:IsAlive() and actor:GetNPC():IsNPC() then
+				_SetNPCRelationship(actor, ent)
 			end
 		end
 	end)
