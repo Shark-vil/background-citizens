@@ -349,7 +349,9 @@ function BaseClass:AddEnemy(ent, reaction)
 
 	local npc = self:GetNPC()
 
-	if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and not hook.Run('BGN_AddActorEnemy', self, ent) then
+	if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and
+		not hook.Run('BGN_AddActorEnemy', self, ent)
+	then
 		if npc:IsNPC() then
 			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
