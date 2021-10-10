@@ -9,16 +9,22 @@ local replics = {
 	'npc/metropolice/vo/level3civilprivacyviolator.wav'
 }
 
+local function RandomPlay(actor)
+	if not actor or not actor:IsAlive() or not actor:HasTeam('police') or math.random(0, 100) > 50  then return end
+	actor:GetNPC():EmitSound( table.RandomBySeq(replics) )
+end
+
 hook.Add('BGN_SetNPCState', 'BGN_PoliceVoiceOnDefenseState', function(actor, state)
-	if state == 'defense' and actor:HasTeam('police') and math.random(0, 100) < 50 then
-		actor:GetNPC():EmitSound( table.RandomBySeq(replics) )
-	end
+	if state ~= 'defense' then return end
+	RandomPlay(actor)
 end)
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_PoliceVoiceOnDefenseState', function(_, target, reaction)
-	if reaction == 'defense' then
-		local actor = bgNPC:GetActor(target)
-		if not actor or not actor:HasTeam('police') or math.random(0, 100) > 50 then return end
-		target:EmitSound( table.RandomBySeq(replics) )
-	end
+	if reaction ~= 'defense' then return end
+	RandomPlay( bgNPC:GetActor(target) )
+end)
+
+hook.Add('BGN_StartReplic', 'BGN_PoliceVoice', function(actor)
+	if not actor:EqualStateGroup('danger') then return end
+	RandomPlay(actor)
 end)

@@ -98,7 +98,7 @@ function bgNPC:NPCIsViewVector(ent, pos, radius)
 	radius = radius or 90
 	local directionAngCos = math.pi / radius
 	local aimVector = ent:GetAimVector()
-	local entVector = pos - ent:GetShootPos() 
+	local entVector = pos - ent:GetShootPos()
 	local angCos = aimVector:Dot(entVector) / entVector:Length()
 	return angCos >= directionAngCos
 end

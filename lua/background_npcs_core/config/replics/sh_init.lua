@@ -1,31 +1,47 @@
 bgNPC.cfg.replics = {}
 
-if SERVER then
-	AddCSLuaFile('language/sh_en.lua')
-	AddCSLuaFile('language/sh_ru.lua')
+local function GetFilePath(name)
+	return 'background_npcs_core/config/replics/language/sh_' .. name .. '.lua'
 end
 
-include('language/sh_en.lua')
+local function GetGameLanguage()
+	local lnaguage_path = GetFilePath( GetConVar('cl_language'):GetString() )
+	if file.Exists(lnaguage_path, 'LUA') then
+		return lnaguage_path
+	end
+end
+
+local function GetCustomLanguage()
+	local lnaguage_path = GetFilePath( GetConVar('bgn_module_replics_language'):GetString() )
+	if file.Exists(lnaguage_path, 'LUA') then
+		return lnaguage_path
+	end
+end
+
+if SERVER then
+	AddCSLuaFile( GetFilePath('english') )
+	AddCSLuaFile( GetFilePath('russian') )
+end
+
+include( GetFilePath('english') )
 
 hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', function()
-	bgNPC:ClearActorsConfig()
+	do
+		local lnaguage_path = GetGameLanguage()
 
-	local full_path_to_language_dir = 'background_npcs_core/config/replics/'
-	local default_file_path = 'language/sh_' .. GetConVar('bgn_module_replics_language'):GetString() .. '.lua'
-
-	if not file.Exists(full_path_to_language_dir .. default_file_path, 'LUA') then
-		default_file_path = 'language/sh_' .. GetConVar('cl_language'):GetString() .. '.lua'
-	end
-
-	if not file.Exists(full_path_to_language_dir .. default_file_path, 'LUA') then
-		default_file_path = 'language/sh_en.lua'
-	end
-
-	cvars.AddChangeCallback('bgn_module_replics_language', function(_, _, lang)
-		if file.Exists(full_path_to_language_dir .. 'language/sh_' .. lang .. '.lua', 'LUA') then
-			include('language/sh_' .. lang .. '.lua')
+		if not lnaguage_path then
+			lnaguage_path = GetCustomLanguage()
 		end
-	end)
 
-	include(default_file_path)
+		if lnaguage_path then
+			include(lnaguage_path)
+		end
+	end
+end)
+
+cvars.AddChangeCallback('bgn_module_replics_language', function(_, _, lang)
+	local lnaguage_path = GetFilePath(lang)
+
+	if not file.Exists(lnaguage_path, 'LUA') then return end
+	include(lnaguage_path)
 end)
