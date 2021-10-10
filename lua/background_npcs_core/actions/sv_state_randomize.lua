@@ -23,18 +23,20 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 			if not data or not data.replics then continue end
 
 			if data.replics.state_names then
-				for state_name, replics in pairs(data.replics.state_names) do
-					if actor:HasState(state_name) then
-						actor:Say(table.RandomBySeq(replics))
+				for state_name, replics_id in pairs(data.replics.state_names) do
+					if bgNPC.cfg.replics[replics_id] and actor:HasState(state_name) then
+						actor:Say(table.RandomBySeq(bgNPC.cfg.replics[replics_id]))
+						hook.Run('BGN_StartReplic', actor, replics_id)
 						continue
 					end
 				end
 			end
 
 			if data.replics.state_groups then
-				for group_name, replics in pairs(data.replics.state_groups) do
-					if actor:EqualStateGroup(group_name) then
-						actor:Say(table.RandomBySeq(replics))
+				for group_name, replics_id in pairs(data.replics.state_groups) do
+					if bgNPC.cfg.replics[replics_id] and actor:EqualStateGroup(group_name) then
+						actor:Say(table.RandomBySeq(bgNPC.cfg.replics[replics_id]))
+						hook.Run('BGN_StartReplic', actor, replics_id)
 						continue
 					end
 				end

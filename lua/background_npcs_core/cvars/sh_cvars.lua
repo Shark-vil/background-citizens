@@ -44,7 +44,7 @@ bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
-bgNPC.cvar.bgn_module_replics_language = 'en'
+bgNPC.cvar.bgn_module_replics_language = 'english'
 
 function bgNPC:IsActiveNPCType(npc_type)
 	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()

@@ -104,7 +104,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
 		if startPos then
 			startPos = startPos + npc:GetForward() + npc:GetUp() * upperVectorPos.z
 		else
-			startPos = npc:GetPos() + npc:GetForward() + npc:GetUp() * (npc:OBBMaxs() + upperVectorPos.z)
+			startPos = npc:GetPos() + npc:GetForward() + npc:GetUp() * (npc:OBBMaxs().z + upperVectorPos.z)
 		end
 
 		cam_Start3D2D(startPos, eyeAngles, 0.25)

@@ -16,3 +16,13 @@ bgNPC.cfg.replics['fear'] = {
 	'Aaaaaaaaaaaaa!',
 	'Aaaaaaaa!',
 }
+
+bgNPC.cfg.replics['defense_police'] = {
+	'Give up!',
+	'Resistance is futile!',
+	'Drop your weapon!',
+	'Suspect in line of sight.',
+	'I proceed to arrest.',
+	'Help wanted!',
+	'Need reinforcements!'
+}
