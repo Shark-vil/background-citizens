@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.6'
+bgNPC.VERSION = '1.6.1'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -43,11 +43,6 @@ script:using('config/sh_shot_sound.lua')
 script:using('config/sh_player.lua')
 script:using('config/gamemodes/sh_darkrp.lua')
 script:using('config/sh_ambient.lua')
-
-hook.Add('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule', function()
-	include(root_directory .. '/config/sh_player.lua')
-	hook.Remove('PostGamemodeLoaded', 'BGN_LoadAllowTeamsFromTeamParentModule')
-end)
 
 script:using('config/states/sh_wanted.lua')
 script:using('config/states/sh_arrest.lua')
@@ -200,3 +195,12 @@ script:using('tests/unit/sv_unit_dv_points_exists.lua')
 
 slib.usingDirectory(root_directory .. '/custom_modules/postload',
 	'[Background NPCs | Custom modules] Script load - {file}')
+
+hook.Add('PostGamemodeLoaded', 'BGN_PostGamemodeLoaded', function()
+	hook.Run('BGN_PostGamemodeLoaded')
+	hook.Remove('PostGamemodeLoaded', 'BGN_PostGamemodeLoaded')
+end)
+
+hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_SH_Player', function()
+	include(root_directory .. '/config/sh_player.lua')
+end)
