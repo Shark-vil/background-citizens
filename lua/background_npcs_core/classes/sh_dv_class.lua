@@ -170,11 +170,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 			if provider then
 				local actor = provider:GetDriver()
 				if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
-					self.Waypoint.SpeedLimit = limit * 10
-				end
-
-				if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
-					return self.BaseClass.GetCurrentMaxSpeed(self)
+					return limit * 10
 				end
 			end
 		end
