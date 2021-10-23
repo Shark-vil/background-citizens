@@ -22,6 +22,32 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	if isbool(result) then return result end
 end)
 
+local function CheckDamageIgnore(attacker, target)
+	target.LastDamageHistory = target.LastDamageHistory or {}
+	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v) return v.enemy == attacker end)
+	if value then
+		if value.time + 1 > CurTime() then
+			value.count = value.count + 1
+			value.time = CurTime()
+		else
+			value.count = 0
+		end
+	else
+		table.insert(target.LastDamageHistory, {
+			enemy = attacker,
+			count = 1,
+			time = CurTime()
+		})
+	end
+end
+
+local function GetLastDamageCount(attacker, target)
+	target.LastDamageHistory = target.LastDamageHistory or {}
+	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v) return v.enemy == attacker end)
+	if value then return value.count end
+	return 0
+end
+
 hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target, dmginfo)
 	local ActorTarget = bgNPC:GetActor(target)
 	local ActorAttacker = bgNPC:GetActor(attacker)
@@ -56,7 +82,11 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			ActorTarget:SetState(reaction, nil, true)
 		end
 
-		ActorTarget:AddEnemy(attacker, reaction)
+		CheckDamageIgnore(attacker, target)
+
+		if ActorTarget:EnemiesCount() == 0 or GetLastDamageCount(attacker, target) >= 3 then
+			ActorTarget:AddEnemy(attacker, reaction)
+		end
 	end
 
 	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
