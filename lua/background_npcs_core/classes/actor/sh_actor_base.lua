@@ -1156,12 +1156,20 @@ function BaseClass:EnterVehicle(vehicle)
 
 	local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
 	if not vehicle_provider then
-		if self:HasTeam('police') then
-			vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'police')
-		elseif self:HasTeam('taxi') then
-			vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'taxi')
+		local actor_type = self:GetType()
+		local data = self:GetData()
+		local vehicle_group = data.vehicle_group
+
+		if vehicle_group then
+			vehicle_provider = BGN_VEHICLE:Instance(vehicle, vehicle_group, actor_type)
 		else
-			vehicle_provider = BGN_VEHICLE:Instance(vehicle)
+			if self:HasTeam('police') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'police', actor_type)
+			elseif self:HasTeam('taxi') then
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, 'taxi', actor_type)
+			else
+				vehicle_provider = BGN_VEHICLE:Instance(vehicle, nil, actor_type)
+			end
 		end
 
 		if not vehicle_provider then return end

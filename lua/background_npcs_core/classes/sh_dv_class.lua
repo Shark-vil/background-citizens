@@ -2,6 +2,7 @@ BGN_VEHICLE = {}
 
 function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	if not DecentVehicleDestination then return nil end
+
 	local obj = {}
 	obj.uid = slib.GetUid()
 	obj.vehicle = vehicle_entity
@@ -18,9 +19,28 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 		obj.ai_type = 'taxi'
 		obj.passengers_limit = 1
 	else
-		obj.ai_class = 'npc_decentvehicle'
-		obj.ai_type = 'default'
-		obj.passengers_limit = math.random(1, 4)
+		local vehicle_type_args = string.Explode('|', vehicle_type)
+
+		if (#vehicle_type_args > 1) then
+			obj.type = vehicle_type_args[1] or 'residents'
+			obj.ai_class = vehicle_type_args[2] or 'npc_decentvehicle'
+			obj.ai_type = vehicle_type_args[3] or 'default'
+
+			if vehicle_type_args[4] then
+				local passengers_limit = string.Explode('-', vehicle_type_args[4])
+				if passengers_limit[1] and passengers_limit[2] then
+					obj.passengers_limit = math.random(tonumber(passengers_limit[1]), tonumber(passengers_limit[2]))
+				else
+					obj.passengers_limit = tonumber(vehicle_type_args[4])
+				end
+			else
+				obj.passengers_limit = math.random(1, 4)
+			end
+		else
+			obj.ai_class = 'npc_decentvehicle'
+			obj.ai_type = 'default'
+			obj.passengers_limit = math.random(1, 4)
+		end
 	end
 
 	function obj:Initialize()
@@ -170,11 +190,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 			if provider then
 				local actor = provider:GetDriver()
 				if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
-					self.Waypoint.SpeedLimit = limit * 10
-				end
-
-				if self.BaseClass and self.BaseClass.GetCurrentMaxSpeed then
-					return self.BaseClass.GetCurrentMaxSpeed(self)
+					return limit * 10
 				end
 			end
 		end
