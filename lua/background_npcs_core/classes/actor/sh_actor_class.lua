@@ -86,6 +86,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.isBgnClass = true
 	obj.targets = {}
 	obj.enemies = {}
+	obj.enemies_always_visible = {}
 
 	obj.npc_schedule = -1
 	obj.npc_state = -1

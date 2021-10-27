@@ -342,7 +342,7 @@ function BaseClass:GetLastTarget()
 	return NULL
 end
 
-function BaseClass:AddEnemy(ent, reaction)
+function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
@@ -358,6 +358,9 @@ function BaseClass:AddEnemy(ent, reaction)
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
 		table.insert(self.enemies, ent)
+		if always_visible then
+			table.insert(self.enemies_always_visible, ent)
+		end
 		self:EnemiesRecalculate()
 	end
 end
@@ -380,9 +383,14 @@ function BaseClass:RemoveEnemy(ent, index)
 		end
 
 		if isnumber(index) then
+			ent = self.enemies[index]
 			table.remove(self.enemies, index)
 		elseif isentity(ent) then
 			table.RemoveValueBySeq(self.enemies, ent)
+		end
+
+		if ent and IsValid(ent) then
+			table.RemoveValueBySeq(self.enemies_always_visible, ent)
 		end
 
 		if old_count > 0 and #self.enemies == 0 then
@@ -440,7 +448,9 @@ function BaseClass:EnemiesRecalculate()
 				npc:SetEnemy(enemy)
 				npc:SetTarget(enemy)
 				npc:UpdateEnemyMemory(enemy, enemy:GetPos())
-			elseif not WantedModule:HasWanted(enemy) then
+			elseif not WantedModule:HasWanted(enemy) and
+				not table.HasValueBySeq(self.enemies_always_visible, enemy)
+			then
 				local time = npc:GetEnemyLastTimeSeen(enemy)
 				if time + 20 < CurTime() then
 					self:RemoveEnemy(enemy)
