@@ -1330,7 +1330,7 @@ function BaseClass:PrepareWeapon(weapon_class, switching)
 end
 
 function BaseClass:FoldWeapon()
-	if not self:IsAlive() then return end
+	if not self:IsAlive() or self.disable_fold_weapon then return end
 	local npc = self:GetNPC()
 	local weapon  = npc:GetActiveWeapon()
 	if IsValid(weapon) then weapon:Remove() end
