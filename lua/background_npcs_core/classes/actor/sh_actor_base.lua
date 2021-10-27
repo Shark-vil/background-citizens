@@ -760,19 +760,14 @@ function BaseClass:UpdateMovement()
 			hasNext = true
 		end
 
-		local current_schedule = npc:GetCurrentSchedule()
-
-		-- if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or
-		-- 	(self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO)
-		-- then
-		-- 	npc:SetSchedule(self.walkType)
-		-- end
-
 		if not hasNext then
 			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 			if npc:IsMoving() then return end
+			if self.waitUpdateMovementDelay > CurTime() then return end
+			self.waitUpdateMovementDelay = CurTime() + .5
 		end
 
+		local current_schedule = npc:GetCurrentSchedule()
 		for i = 1, #schedule_white_list do
 			if schedule_white_list[i] == current_schedule then return end
 		end
