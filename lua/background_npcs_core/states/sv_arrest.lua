@@ -50,23 +50,16 @@ end
 hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, attacker, target, reaction)
 	local ArrestComponent = ArrestModule:GetPlayer(attacker)
 
-	if ( ArrestComponent and not ArrestComponent.arrested ) or
-		reaction ~= 'arrest' or not GetConVar('bgn_arrest_mode'):GetBool()
+	if not ArrestComponent or not ArrestComponent.arrested
+		or reaction ~= 'arrest' or not GetConVar('bgn_arrest_mode'):GetBool()
 	then
 		ActorOverrideReaction(actor)
 		return
 	end
 
-	local _target = target
-	local _attacker = attacker
-
-	if bgNPC:GetEnemyFromActorByTarget(actor, target, attacker) == target then
-		_attacker = target
-		_target = attacker
-	end
-
-	if not GetConVar('bgn_arrest_mode'):GetBool() or _target:IsPlayer() or not _attacker:IsPlayer() then
-		_SetEnemyDefense(actor, _attacker, 'defense')
+	local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
+	if not GetConVar('bgn_arrest_mode'):GetBool() or not enemy:IsPlayer() then
+		_SetEnemyDefense(actor, enemy, 'defense')
 	end
 end)
 

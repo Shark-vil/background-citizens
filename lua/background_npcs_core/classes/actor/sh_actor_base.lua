@@ -49,7 +49,10 @@ local schedule_white_list = {
 	SCHED_SPECIAL_ATTACK1,
 	SCHED_SPECIAL_ATTACK2,
 	SCHED_MELEE_ATTACK1,
-	SCHED_MELEE_ATTACK2
+	SCHED_MELEE_ATTACK2,
+	SCHED_FAIL,
+	SCHED_FAIL_ESTABLISH_LINE_OF_FIRE,
+	SCHED_SLEEP,
 }
 
 local BaseClass = {}
@@ -342,7 +345,7 @@ function BaseClass:GetLastTarget()
 	return NULL
 end
 
-function BaseClass:AddEnemy(ent, reaction)
+function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
@@ -358,6 +361,9 @@ function BaseClass:AddEnemy(ent, reaction)
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
 		table.insert(self.enemies, ent)
+		if always_visible then
+			table.insert(self.enemies_always_visible, ent)
+		end
 		self:EnemiesRecalculate()
 	end
 end
@@ -380,9 +386,14 @@ function BaseClass:RemoveEnemy(ent, index)
 		end
 
 		if isnumber(index) then
+			ent = self.enemies[index]
 			table.remove(self.enemies, index)
 		elseif isentity(ent) then
 			table.RemoveValueBySeq(self.enemies, ent)
+		end
+
+		if ent and IsValid(ent) then
+			table.RemoveValueBySeq(self.enemies_always_visible, ent)
 		end
 
 		if old_count > 0 and #self.enemies == 0 then
@@ -440,7 +451,9 @@ function BaseClass:EnemiesRecalculate()
 				npc:SetEnemy(enemy)
 				npc:SetTarget(enemy)
 				npc:UpdateEnemyMemory(enemy, enemy:GetPos())
-			elseif not WantedModule:HasWanted(enemy) then
+			elseif not WantedModule:HasWanted(enemy) and
+				not table.HasValueBySeq(self.enemies_always_visible, enemy)
+			then
 				local time = npc:GetEnemyLastTimeSeen(enemy)
 				if time + 20 < CurTime() then
 					self:RemoveEnemy(enemy)
@@ -749,9 +762,11 @@ function BaseClass:UpdateMovement()
 
 		local current_schedule = npc:GetCurrentSchedule()
 
-		if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or (self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO) then
-			npc:SetSchedule(self.walkType)
-		end
+		-- if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or
+		-- 	(self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO)
+		-- then
+		-- 	npc:SetSchedule(self.walkType)
+		-- end
 
 		if not hasNext then
 			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
@@ -895,17 +910,21 @@ function BaseClass:GetClosestPointInRadius(radius)
 end
 
 function BaseClass:GetReactionForDamage()
-	local probability = math.random(1, self.data.at_damage_range or 100)
-	local percent, reaction = table.Random(self.data.at_damage)
+	local percent, reaction
 
-	if probability > percent then
-		local last_percent = 0
+	if self.data.at_damage then
+		local probability = math.random(1, self.data.at_damage_range or 100)
+		percent, reaction = table.Random(self.data.at_damage)
 
-		for _reaction, _percent in pairs(self.data.at_damage) do
-			if _percent > last_percent then
-				percent = _percent
-				reaction = _reaction
-				last_percent = _percent
+		if probability > percent then
+			local last_percent = 0
+
+			for _reaction, _percent in pairs(self.data.at_damage) do
+				if _percent > last_percent then
+					percent = _percent
+					reaction = _reaction
+					last_percent = _percent
+				end
 			end
 		end
 	end
@@ -922,17 +941,21 @@ function BaseClass:GetReactionForDamage()
 end
 
 function BaseClass:GetReactionForProtect()
-	local probability = math.random(1, self.data.at_protect_range or 100)
-	local percent, reaction = table.Random(self.data.at_protect)
+	local percent, reaction
 
-	if probability > percent then
-		local last_percent = 0
+	if self.data.at_protect then
+		local probability = math.random(1, self.data.at_protect_range or 100)
+		percent, reaction = table.Random(self.data.at_protect)
 
-		for _reaction, _percent in pairs(self.data.at_protect) do
-			if _percent > last_percent then
-				percent = _percent
-				reaction = _reaction
-				last_percent = _percent
+		if probability > percent then
+			local last_percent = 0
+
+			for _reaction, _percent in pairs(self.data.at_protect) do
+				if _percent > last_percent then
+					percent = _percent
+					reaction = _reaction
+					last_percent = _percent
+				end
 			end
 		end
 	end
@@ -1312,7 +1335,7 @@ function BaseClass:PrepareWeapon(weapon_class, switching)
 end
 
 function BaseClass:FoldWeapon()
-	if not self:IsAlive() then return end
+	if not self:IsAlive() or self.disable_fold_weapon then return end
 	local npc = self:GetNPC()
 	local weapon  = npc:GetActiveWeapon()
 	if IsValid(weapon) then weapon:Remove() end

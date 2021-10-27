@@ -51,17 +51,20 @@ function bgNPC:IsEnemyTeam(target_actor, attacker)
 	if not IsValid(attacker) or attacker:Health() <= 0 then return false end
 
 	local actors = self:GetAll()
-	local asset = bgNPC:GetModule('first_attacker')
 	local AttackerActor = bgNPC:GetActor(attacker)
+	if AttackerActor and AttackerActor:HasEnemy(target_actor) then return true end
+
+	local FirstAttackerModule = bgNPC:GetModule('first_attacker')
+	if FirstAttackerModule:IsFirstAttacker(attacker, target_actor) then return true end
 
 	for i = #actors, 1, -1 do
 		local actor = actors[i]
-		if actor and actor:IsAlive() and actor:HasTeam(target_actor) then
+		if actor and actor:IsAlive() and actor ~= target_actor and actor:HasTeam(target_actor) then
 			if AttackerActor and not actor:HasTeam(AttackerActor) and AttackerActor:HasEnemy(actor) then
 				return true
 			end
 
-			if actor:HasEnemy(attacker) or asset:IsFirstAttacker(attacker, actor:GetNPC()) then
+			if actor:HasEnemy(attacker) or FirstAttackerModule:IsFirstAttacker(attacker, actor:GetNPC()) then
 				return true
 			end
 		end
@@ -126,7 +129,7 @@ function bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
 	-- If the target has an enemy attacker
 	if ActorTarget and not ActorTarget:HasEnemy(attacker) then return attacker end
 
-	if target:IsPlayer() or attacker:IsPlayer() then 
+	if target:IsPlayer() or attacker:IsPlayer() then
 		-- If the player is attacked by the actor who was the first victim
 		if TargetIsFirstAttacker then return target end
 		-- If the player is attacked by the actor who first started the fight

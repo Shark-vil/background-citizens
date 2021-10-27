@@ -61,7 +61,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	for i = 1, #actors do
 		local actor = actors[i]
 
-		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger then
+		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor:GetData().hidden then
 			continue
 		end
 

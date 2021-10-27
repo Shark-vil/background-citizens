@@ -47,8 +47,12 @@ local function MovementProcess()
 end
 
 local thread
+local is_second_tick = false
 
 hook.Add('Think', 'BGN_MovementService', function()
+	is_second_tick = not is_second_tick
+	if not is_second_tick then return end
+
 	if not thread or not coroutine_resume(thread) then
 		thread = coroutine_create(MovementProcess)
 		coroutine_resume(thread)
