@@ -43,7 +43,9 @@ end
 
 local function GetLastDamageCount(attacker, target)
 	target.LastDamageHistory = target.LastDamageHistory or {}
-	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v) return v.enemy == attacker end)
+	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v)
+		return v.enemy == attacker
+	end)
 	if value then return value.count end
 	return 0
 end
