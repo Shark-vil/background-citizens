@@ -99,7 +99,7 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 	bgNPC:ClearRemovedNPCs()
 
 	for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
-		if not bgNPC:IsActiveNPCType(npcType) then continue end
+		if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then continue end
 
 		local max_limit = bgNPC:GetLimitActors(npcType)
 		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then continue end
