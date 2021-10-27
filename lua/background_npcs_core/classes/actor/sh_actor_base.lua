@@ -905,17 +905,21 @@ function BaseClass:GetClosestPointInRadius(radius)
 end
 
 function BaseClass:GetReactionForDamage()
-	local probability = math.random(1, self.data.at_damage_range or 100)
-	local percent, reaction = table.Random(self.data.at_damage)
+	local percent, reaction
 
-	if probability > percent then
-		local last_percent = 0
+	if self.data.at_damage then
+		local probability = math.random(1, self.data.at_damage_range or 100)
+		percent, reaction = table.Random(self.data.at_damage)
 
-		for _reaction, _percent in pairs(self.data.at_damage) do
-			if _percent > last_percent then
-				percent = _percent
-				reaction = _reaction
-				last_percent = _percent
+		if probability > percent then
+			local last_percent = 0
+
+			for _reaction, _percent in pairs(self.data.at_damage) do
+				if _percent > last_percent then
+					percent = _percent
+					reaction = _reaction
+					last_percent = _percent
+				end
 			end
 		end
 	end
@@ -932,17 +936,21 @@ function BaseClass:GetReactionForDamage()
 end
 
 function BaseClass:GetReactionForProtect()
-	local probability = math.random(1, self.data.at_protect_range or 100)
-	local percent, reaction = table.Random(self.data.at_protect)
+	local percent, reaction
 
-	if probability > percent then
-		local last_percent = 0
+	if self.data.at_protect then
+		local probability = math.random(1, self.data.at_protect_range or 100)
+		percent, reaction = table.Random(self.data.at_protect)
 
-		for _reaction, _percent in pairs(self.data.at_protect) do
-			if _percent > last_percent then
-				percent = _percent
-				reaction = _reaction
-				last_percent = _percent
+		if probability > percent then
+			local last_percent = 0
+
+			for _reaction, _percent in pairs(self.data.at_protect) do
+				if _percent > last_percent then
+					percent = _percent
+					reaction = _reaction
+					last_percent = _percent
+				end
 			end
 		end
 	end
