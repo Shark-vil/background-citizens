@@ -759,9 +759,11 @@ function BaseClass:UpdateMovement()
 
 		local current_schedule = npc:GetCurrentSchedule()
 
-		if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or (self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO) then
-			npc:SetSchedule(self.walkType)
-		end
+		-- if (self.walkType == SCHED_FORCED_GO and current_schedule == SCHED_FORCED_GO_RUN) or
+		-- 	(self.walkType == SCHED_FORCED_GO_RUN and current_schedule == SCHED_FORCED_GO)
+		-- then
+		-- 	npc:SetSchedule(self.walkType)
+		-- end
 
 		if not hasNext then
 			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
