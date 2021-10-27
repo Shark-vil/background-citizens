@@ -80,6 +80,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.walkTarget = NULL
 	obj.walkType = SCHED_FORCED_GO
 	obj.walkUpdatePathDelay = 0
+	obj.waitUpdateMovementDelay = 0
 	obj.pathType = nil
 	obj.isChase = false
 
