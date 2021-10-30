@@ -14,7 +14,7 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 				if active_weapon:GetClass() ~= weapon_class then return end
 			end
 		end
-		
+
 		local weapon = npc:GetWeapon(weapon_class)
 		if not IsValid(weapon) then
 			weapon = npc:Give(weapon_class)
@@ -22,20 +22,20 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 
 		npc:SelectWeapon(weapon_class)
 	else
-		local weapon_class = actor.weapon
-		if weapon_class then
+		local _weapon_class = actor.weapon
+		if _weapon_class and #_weapon_class ~= 0 then
 			local active_weapon = npc:GetActiveWeapon()
 
-			if IsValid(active_weapon) and active_weapon:GetClass() == weapon_class then
+			if IsValid(active_weapon) and active_weapon:GetClass() == _weapon_class then
 				return
 			end
 
-			local weapon = npc:GetWeapon(weapon_class)
+			local weapon = npc:GetWeapon(_weapon_class)
 			if not IsValid(weapon) then
-				weapon = npc:Give(weapon_class)
+				weapon = npc:Give(_weapon_class)
 			end
 
-			npc:SelectWeapon(weapon_class)
+			npc:SelectWeapon(_weapon_class)
 		end
 	end
 

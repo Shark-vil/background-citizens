@@ -18,4 +18,4 @@ bgNPC.cfg.EnablePlayerKilledTeamActors = true
 
 -- A weapon that belongs to the "melee" category.
 -- Necessary for some states to work correctly.
-bgNPC.cfg.melee_weapons = {'weapon_crowbar', 'weapon_stunstick'}
+bgNPC.cfg.melee_weapons = {'weapon_crowbar', 'weapon_stunstick', 'none'}
