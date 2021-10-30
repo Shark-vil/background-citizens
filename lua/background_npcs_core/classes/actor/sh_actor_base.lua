@@ -1164,7 +1164,7 @@ function BaseClass:IsMeleeWeapon()
 
 	local npc = self:GetNPC()
 	local wep = npc:GetActiveWeapon()
-	if not IsValid(wep) then return false end
+	if not IsValid(wep) then return true end
 
 	return table.HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
 end
