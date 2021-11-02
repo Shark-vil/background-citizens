@@ -1146,6 +1146,10 @@ function BaseClass:EqualStateGroup(group_name)
 	return self:HasStateGroup(self:GetState(), group_name)
 end
 
+function BaseClass:GetStateGroupName()
+	return bgNPC:GetStateGroupName(self:GetState())
+end
+
 function BaseClass:HasStateGroup(state_name, group_name)
 	if isstring(group_name) then
 		return bgNPC:GetStateGroupName(state_name) == group_name
