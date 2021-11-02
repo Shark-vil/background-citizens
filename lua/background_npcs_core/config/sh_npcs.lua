@@ -210,6 +210,13 @@ bgNPC.cfg.npcs_template = {
 		health = 55,
 		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
 		max_vehicle = 1,
+		-- vehicle_speed = {
+		-- 	['calm'] = 10,
+		-- 	['danger'] = 10,
+		-- },
+		vehicle_multiply_speed = {
+			['danger'] = 2,
+		},
 		vehicle_group = 'police',
 		enter_to_exist_vehicle_chance = 30,
 		vehicles = {
@@ -347,7 +354,7 @@ bgNPC.cfg.npcs_template = {
 		health = { 35, 150 },
 		random_skin = true,
 		random_bodygroups = true,
-		at_random = { 
+		at_random = {
 			['walk'] = 70,
 			['idle'] = 30,
 		},

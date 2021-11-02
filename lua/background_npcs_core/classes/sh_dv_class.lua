@@ -168,7 +168,12 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 		end
 
 		if IsValid(vehicle) then
-			vehicle:Remove()
+			local child_entity = vehicle:GetChildren()
+			local parent_entity = vehicle:GetParent()
+
+			if IsValid(child_entity) then child_entity:Remove() end
+			if IsValid(parent_entity) then parent_entity:Remove() end
+			if IsValid(vehicle) then vehicle:Remove() end
 		end
 
 		if IsValid(decentvehicle) then
@@ -189,8 +194,20 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 
 			if provider then
 				local actor = provider:GetDriver()
-				if actor and actor:IsAlive() and actor:EnemiesCount() ~= 0 then
-					return limit * 10
+				if actor and actor:IsAlive() then
+					local state_group = actor:GetStateGroupName()
+					if isstring(state_group) then
+						local new_limit = limit
+						if actor.vehicle_speed and actor.vehicle_speed[state_group] then
+							new_limit = actor.vehicle_speed[state_group]
+						end
+
+						if actor.vehicle_multiply_speed and actor.vehicle_multiply_speed[state_group] then
+							new_limit = new_limit * actor.vehicle_multiply_speed[state_group]
+						end
+
+						if new_limit ~= limit then return new_limit end
+					end
 				end
 			end
 		end

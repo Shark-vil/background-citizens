@@ -14,12 +14,12 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
 
 	if asset:HasWanted(attacker) then
-		local c_Wanted = asset:GetWanted(attacker)
-		c_Wanted:UpdateWanted()
+		local WantedClass = asset:GetWanted(attacker)
+		WantedClass:UpdateWanted()
 
 		local kills = bgNPC:GetWantedKillingStatisticSumm(attacker)
-		if c_Wanted.next_kill_update <= kills then
-			c_Wanted:LevelUp()
+		if WantedClass.next_kill_update <= kills then
+			WantedClass:LevelUp()
 		end
 	else
 		if attacker:IsPlayer() then
@@ -59,12 +59,15 @@ end)
 
 hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 	local wanted_list = asset:GetAllWanted()
+	local wanted_count = #wanted_list
 
-	if table.Count(wanted_list) == 0 then return end
+	if wanted_count == 0 then return end
 
 	if actor:HasTeam('residents') then
-		for enemy, c_Wanted in pairs(wanted_list) do
+		for i = 1, wanted_count do
+			local enemy = wanted_list[i].target
 			actor:AddEnemy(enemy)
+
 			if actor:HasTeam('police') then
 				actor:SetState('defense')
 			elseif actor:HasTeam('residents') then
@@ -75,9 +78,8 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 end)
 
 hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim, inflictor, attacker)
-	if asset:HasWanted(victim) then
-		asset:RemoveWanted(victim)
-	end
+	if not asset:HasWanted(victim) then return end
+	asset:RemoveWanted(victim)
 end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
@@ -94,12 +96,15 @@ end
 
 timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	local wanted_list = asset:GetAllWanted()
+	local wanted_count = #wanted_list
 
-	if table.Count(wanted_list) == 0 then return end
+	if wanted_count == 0 then return end
 
 	local residents = bgNPC:GetAllByTeam('residents')
 
-	for enemy, WantedClass in pairs(wanted_list) do
+	for i = wanted_count, 1, -1 do
+		local WantedClass = wanted_list[i]
+		local enemy = WantedClass.target
 		local is_update = false
 
 		if IsValid(enemy) then

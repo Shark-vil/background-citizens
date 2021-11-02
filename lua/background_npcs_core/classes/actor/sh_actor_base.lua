@@ -1146,6 +1146,10 @@ function BaseClass:EqualStateGroup(group_name)
 	return self:HasStateGroup(self:GetState(), group_name)
 end
 
+function BaseClass:GetStateGroupName()
+	return bgNPC:GetStateGroupName(self:GetState())
+end
+
 function BaseClass:HasStateGroup(state_name, group_name)
 	if isstring(group_name) then
 		return bgNPC:GetStateGroupName(state_name) == group_name
@@ -1232,7 +1236,7 @@ function BaseClass:EnterVehicle(vehicle)
 
 		self.walkUpdatePathDelay = 0
 
-		hook.Run('BGN_OnEnterVehicle', actor, vehicle_provider)
+		hook.Run('BGN_OnEnterVehicle', self, vehicle_provider)
 	end)
 end
 
@@ -1241,7 +1245,7 @@ function BaseClass:ExitVehicle()
 
 	local vehicle_provider = self.vehicle
 	if vehicle_provider and IsValid(vehicle_provider) then
-		hook.Run('BGN_OnExitVehicle', actor, vehicle_provider)
+		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
 
 		local vehicle = vehicle_provider:GetVehicle()
 		local min, max = vehicle:GetModelBounds()

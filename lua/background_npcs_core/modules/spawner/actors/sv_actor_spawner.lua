@@ -109,8 +109,13 @@ timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0
 		if npc_data.wanted_level ~= nil then
 			local asset = bgNPC:GetModule('wanted')
 			local success = false
-			for target, c_Wanted in pairs(asset:GetAllWanted()) do
-				if IsValid(target) and c_Wanted.level >= npc_data.wanted_level then
+			local wanted_list = asset:GetAllWanted()
+
+			for i = 1, #wanted_list do
+				local WantedClass = wanted_list[i]
+				local target = WantedClass.target
+
+				if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
 					pos = target:GetPos()
 					success = true
 					break
@@ -152,10 +157,12 @@ hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
 	local data = actor:GetData()
 	if data.wanted_level ~= nil then
 		local asset = bgNPC:GetModule('wanted')
+		local wanted_list = asset:GetAllWanted()
 
-		for target, c_Wanted in pairs(asset:GetAllWanted()) do
-			if c_Wanted.level >= data.wanted_level then
-				actor:AddEnemy(target)
+		for i = 1, #wanted_list do
+			local WantedClass = wanted_list[i]
+			if WantedClass.level >= data.wanted_level then
+				actor:AddEnemy(WantedClass.target)
 				if actor:GetState() ~= 'defense' then
 					actor:SetState('defense')
 					bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
