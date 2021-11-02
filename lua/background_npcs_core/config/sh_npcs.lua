@@ -354,7 +354,7 @@ bgNPC.cfg.npcs_template = {
 		health = { 35, 150 },
 		random_skin = true,
 		random_bodygroups = true,
-		at_random = { 
+		at_random = {
 			['walk'] = 70,
 			['idle'] = 30,
 		},
