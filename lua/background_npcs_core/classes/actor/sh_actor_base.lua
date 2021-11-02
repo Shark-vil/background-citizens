@@ -1232,7 +1232,7 @@ function BaseClass:EnterVehicle(vehicle)
 
 		self.walkUpdatePathDelay = 0
 
-		hook.Run('BGN_OnEnterVehicle', actor, vehicle_provider)
+		hook.Run('BGN_OnEnterVehicle', self, vehicle_provider)
 	end)
 end
 
@@ -1241,7 +1241,7 @@ function BaseClass:ExitVehicle()
 
 	local vehicle_provider = self.vehicle
 	if vehicle_provider and IsValid(vehicle_provider) then
-		hook.Run('BGN_OnExitVehicle', actor, vehicle_provider)
+		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
 
 		local vehicle = vehicle_provider:GetVehicle()
 		local min, max = vehicle:GetModelBounds()
