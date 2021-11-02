@@ -1,6 +1,5 @@
 local bgNPC = bgNPC
 local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local pairs = pairs
 local ipairs = ipairs
 local IsValid = IsValid
 local GetConVar = GetConVar
@@ -10,7 +9,6 @@ local cam_End3D2D = cam.End3D2D
 local draw_SimpleTextOutlined = draw.SimpleTextOutlined
 local halo_Add = halo.Add
 local table_insert = table.insert
-local table_Count = table.Count
 local surface_SetFont = surface.SetFont
 local surface_SetTextColor = surface.SetTextColor
 local surface_SetTextPos = surface.SetTextPos
@@ -30,11 +28,14 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
 	if GetConVar('bgn_disable_halo'):GetBool() then return end
 
 	local wanted_list = asset:GetAllWanted()
-
-	if table_Count(wanted_list) == 0 then return end
+	local wanted_count = #wanted_list
+	if wanted_count == 0 then return end
 
 	local targets = {}
-	for ent, _ in pairs(wanted_list) do
+	for i = 1, wanted_count do
+		local WantedClass = wanted_list[i]
+		local ent = WantedClass.target
+
 		if IsValid(ent) then
 			table_insert(targets, ent)
 		end
@@ -58,14 +59,10 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 		is_draw_stars = false
 	end
 
-	local wanted_list = asset:GetAllWanted()
-
-	if table_Count(wanted_list) == 0 then return end
-
 	if not IsValid(localPlayer) then return end
-	if not asset:HasWanted(localPlayer) then return end
 
-	local c_Wanted = asset:GetWanted(localPlayer)
+	local WantedClass = asset:GetWanted(localPlayer)
+	if not WantedClass then return end
 
 	if is_draw_text then
 		surface_SetFont(text_wanted_font_name)
@@ -73,7 +70,7 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 		surface_SetTextPos(30, 30)
 
 		local wanted_text
-		local time = c_Wanted.wait_time
+		local time = WantedClass.wait_time
 		if time > 60 then
 			time = math_Round(time / 60)
 			wanted_text = string_Replace(bgNPC.cfg.wanted.language['wanted_text_m'], '%time%', time)
@@ -88,7 +85,7 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 		local x = 35
 		local x_update = x
 
-		for i = 1, c_Wanted.level do
+		for i = 1, WantedClass.level do
 			surface_SetDrawColor(255, 255, 255, 255)
 			surface_SetMaterial(bgNPC.cfg.wanted.texture['wanted_star'])
 			surface_DrawTexturedRect(x_update, 60, 30, 30)

@@ -5,7 +5,6 @@ local player = player
 local GetConVar = GetConVar
 local IsValid = IsValid
 local ipairs = ipairs
-local pairs = pairs
 --
 
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
@@ -109,7 +108,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 						end
 					else
 						local desiredPosition
-						for Target, WantedComponent in pairs(WantedModule:GetAllWanted()) do
+						local wanted_list = WantedModule:GetAllWanted()
+
+						for k = 1, #wanted_list do
+							local WantedComponent = wanted_list[k]
+							local Target = WantedComponent.target
+
 							if IsValid(Target) and WantedComponent.level >= data.wanted_level then
 								desiredPosition = Target:GetPos()
 								break
@@ -148,9 +152,13 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 		local npc = actor:GetNPC()
 
 		local asset = bgNPC:GetModule('wanted')
+		local wanted_list = asset:GetAllWanted()
 		local success = false
-		for target, c_Wanted in pairs(asset:GetAllWanted()) do
-			if IsValid(target) and c_Wanted.level >= data.wanted_level then
+
+		for i = 1, #wanted_list do
+			local WantedClass = wanted_list[i]
+			local target = WantedClass.target
+			if IsValid(target) and WantedClass.level >= data.wanted_level then
 				success = true
 				break
 			end
