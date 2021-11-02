@@ -680,14 +680,13 @@ end
 function BaseClass:WalkToPos(pos, moveType, pathType)
 	if self:GetNPC():IsNextBot() then return end
 
-	if pos == nil then
+	if not pos then
 		self:StopWalk()
 		return
 	end
 
-	if self.walkPos == pos then
-		return
-	end
+	if self.walkPos == pos then return end
+	if hook.Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
 
 	local npc = self.npc
 	if npc:GetPos():DistToSqr(pos) <= 2500 then
