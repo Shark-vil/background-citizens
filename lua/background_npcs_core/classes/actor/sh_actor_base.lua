@@ -680,14 +680,13 @@ end
 function BaseClass:WalkToPos(pos, moveType, pathType)
 	if self:GetNPC():IsNextBot() then return end
 
-	if pos == nil then
+	if not pos then
 		self:StopWalk()
 		return
 	end
 
-	if self.walkPos == pos then
-		return
-	end
+	if self.walkPos == pos then return end
+	if hook.Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
 
 	local npc = self.npc
 	if npc:GetPos():DistToSqr(pos) <= 2500 then
@@ -1232,6 +1231,8 @@ function BaseClass:EnterVehicle(vehicle)
 		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 		self.walkUpdatePathDelay = 0
+
+		hook.Run('BGN_OnEnterVehicle', actor, vehicle_provider)
 	end)
 end
 
@@ -1240,6 +1241,8 @@ function BaseClass:ExitVehicle()
 
 	local vehicle_provider = self.vehicle
 	if vehicle_provider and IsValid(vehicle_provider) then
+		hook.Run('BGN_OnExitVehicle', actor, vehicle_provider)
+
 		local vehicle = vehicle_provider:GetVehicle()
 		local min, max = vehicle:GetModelBounds()
 		local dist = min:Distance(max) / 2
