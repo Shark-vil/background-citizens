@@ -168,7 +168,12 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 		end
 
 		if IsValid(vehicle) then
-			vehicle:Remove()
+			local child_entity = vehicle:GetChildren()
+			local parent_entity = vehicle:GetParent()
+
+			if IsValid(child_entity) then child_entity:Remove() end
+			if IsValid(parent_entity) then parent_entity:Remove() end
+			if IsValid(vehicle) then vehicle:Remove() end
 		end
 
 		if IsValid(decentvehicle) then
