@@ -217,7 +217,9 @@ end
 function BGN_VEHICLE:GetVehicleProvider(vehicle)
 	for i = 1, #bgNPC.DVCars do
 		local vehicle_provider = bgNPC.DVCars[i]
-		if vehicle_provider:GetVehicle() == vehicle or vehicle_provider:GetVehicleAI() == vehicle then return vehicle_provider end
+		if vehicle_provider:GetVehicle() == vehicle or vehicle_provider:GetVehicleAI() == vehicle then
+			return vehicle_provider
+		end
 	end
 
 	return nil
