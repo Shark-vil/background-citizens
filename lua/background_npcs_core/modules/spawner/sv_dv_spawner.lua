@@ -52,7 +52,7 @@ local function FindSpawnLocation(center)
 					goto skip
 				end
 
-				if distance <= radius_visibility and bgNPC:PlayerIsViewVector(ply, spawn_position) then
+				if distance <= radius_visibility or ply:slibIsViewVector(spawn_position) then
 					if radius_raytracing == 0 then
 						goto skip
 					end
@@ -62,19 +62,20 @@ local function FindSpawnLocation(center)
 						endpos = spawn_position,
 						filter = function(ent)
 							if IsValid(ent) and ent ~= ply then
-								if IsValid(vehicle) and ( ent == vehicle or ent == vehicle:GetParent() ) then
-									return false
+								if IsValid(vehicle) then
+									if ent ~= vehicle and ent ~= vehicle:GetParent() then
+										return false
+									end
+								else
+									return true
 								end
-								return true
 							end
 						end
 					})
 
 					if not tr.Hit then
 						goto skip
-					end
-
-					if spawn_position:DistToSqr(tr.HitPos) <= 90000 then
+					elseif tr.Entity:GetClass() ~= 'worldspawn' or spawn_position:DistToSqr(tr.HitPos) <= 250000 then
 						goto skip
 					end
 				end
@@ -95,21 +96,9 @@ local function FindSpawnLocation(center)
 					local direction_point = dvd.Waypoints[point.Neighbors[1]]
 
 					if direction_point then
-						-- local vector_1 = spawn_position
-						-- local vector_2 = direction_point.Target
-						-- local vector_1_normalize = vector_1:GetNormalized()
-						-- local vector_2_normalize = vector_2:GetNormalized()
-						-- local dot = math.deg(math.acos(vector_1_normalize:Dot(vector_2_normalize)))
-
-						-- if dot <= 1 then
-						-- 	spawn_angle = (vector_1 - vector_2):Angle()
-						-- else
-						-- 	spawn_angle = (vector_1 + vector_2):Angle()
-						-- end
-
-						local vector_1 = spawn_position
-						local vector_2 = direction_point.Target
-						spawn_angle = (vector_1 + vector_2):Angle()
+						local start_vector_position = spawn_position
+						local target_vector_position = direction_point.Target
+						spawn_angle = (target_vector_position - start_vector_position):Angle()
 					end
 				end
 
@@ -146,7 +135,8 @@ end
 function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	local actor_data = actor:GetData()
 	local chance = actor_data.enter_to_exist_vehicle_chance
-	if not bypass and chance and math.random(0, 100) > chance then return false end
+	if not bypass and chance and not slib.chance(chance) then return false end
+
 	local all_players = player.GetAll()
 
 	for i = 1, #bgNPC.DVCars do
@@ -250,15 +240,42 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	end
 
 	if actor_data.vehicles_random_color then
-		car:SetColor(ColorRand())
+		local vehicles_strict_color_chance = actor_data.vehicles_strict_color_chance or 0
+		if not slib.chance(vehicles_strict_color_chance) then
+			car:SetColor(ColorRand())
+		else
+			local r, g, b = math.random(50, 190), math.random(50, 190), math.random(50, 190)
+			car:SetColor(Color(r, g, b))
+		end
 	end
 
-	car:slibCreateTimer('spawn_dv_ai', 1, 1, function(ent)
+	if actor_data.vehicles_random_skin then
+		local skin_count = car:SkinCount()
+		if skin_count ~= 0 then
+			car:SetSkin(math.random(1, skin_count))
+		end
+	end
+
+	if actor_data.vehicles_random_bodygroups then
+		local bodygroups = car:GetBodyGroups()
+		for i = 1, #bodygroups do
+			local bodygroup = bodygroups[i]
+			local values_count = car:GetBodygroupCount(bodygroup.id)
+			local new_value = math.random(0, values_count)
+			car:SetBodygroup(bodygroup.id, new_value)
+		end
+	end
+
+	local original_color = car:GetColor()
+	car:SetColor(ColorAlpha(original_color, 0))
+
+	car:slibCreateTimer('spawn_dv_ai', .1, 1, function(ent)
 		if not IsValid(npc) then
 			ent:Remove()
 			return
 		end
 
+		car:SetColor(ColorAlpha(original_color, 255))
 		npc:SetPos(ent:GetPos())
 		actor:EnterVehicle(ent)
 	end)

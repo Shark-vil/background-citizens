@@ -72,7 +72,10 @@ bgNPC.cfg.npcs_template = {
 		weapon_skill = WEAPON_PROFICIENCY_POOR,
 		max_vehicle = 2,
 		enter_to_exist_vehicle_chance = 10,
+		vehicles_strict_color_chance = 0,
 		vehicles_random_color = false,
+		vehicles_random_skin = true,
+		vehicles_random_bodygroups = true,
 		vehicle_group = 'residents',
 		vehicles = {
 			'sim_fphys_pwavia',
