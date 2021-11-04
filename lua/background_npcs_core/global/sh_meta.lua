@@ -1,7 +1,7 @@
 local actors_config_cache = {}
 
 function bgNPC:ClearActorsConfig()
-	table.Empty(actors_config_cache)
+	actors_config_cache = {}
 end
 
 function bgNPC:GetActorConfig(actor_type)
@@ -12,25 +12,30 @@ function bgNPC:GetActorConfig(actor_type)
 		local data = table.Copy(bgNPC.cfg.npcs_template[actor_type])
 
 		if data.inherit and data.inherit ~= actor_type then
-			local inherit_data = bgNPC.cfg.npcs_template[data.inherit]
+			local inherit_data = bgNPC:GetActorConfig(data.inherit)
 			if inherit_data then
-				if inherit_data.inherit then
-					inherit_data = bgNPC:GetActorConfig(inherit_data.inherit)
-				end
+				bgNPC:Log('Data Inherit - ' .. data.inherit, 'GetActorConfig')
 
-				for ik, iv in pairs(inherit_data) do
-					if ik ~= 'inherit' then
-						local exist = false
+				for inherit_key, inherit_value in pairs(inherit_data) do
+					if inherit_key ~= 'inherit' then
+						local exists_data_key = false
 
-						for k, _ in pairs(data) do
-							if k == ik then
-								exist = true
+						for data_key, _ in pairs(data) do
+							if data_key == inherit_key then
+								exists_data_key = true
 								break
 							end
 						end
 
-						if not exist then
-							data[ik] = iv
+						if not exists_data_key then
+							data[inherit_key] = inherit_value
+							if istable(inherit_value) then
+								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
+									inherit_key .. ' : ' .. table.ToString(inherit_value), 'GetActorConfig')
+							else
+								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
+									inherit_key .. ' : ' .. tostring(inherit_value), 'GetActorConfig')
+							end
 						end
 					end
 				end

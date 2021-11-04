@@ -155,7 +155,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	npc:PhysWake()
 	hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
 
-	if npcData.models then
+	if npcData.models and istable(npcData.models) then
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
@@ -168,7 +168,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 			-- Backward compatibility with the old version of the config
 			npcData.default_models = npcData.default_models or npcData.defaultModels
 
-			if (not npcData.default_models or (npcData.default_models and math.random(0, 10) <= 5))
+			if (not npcData.default_models or (npcData.default_models and slib.chance(20)))
 				and not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData)
 			then
 				npc:SetModel(model)
@@ -179,7 +179,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	-- Backward compatibility with the old version of the config
 	npcData.random_skin = npcData.random_skin or npcData.randomSkin
 
-	if npcData.random_skin then
+	if npcData.random_skin and isbool(npcData.random_skin) then
 		local skin = math.random(0, npc:SkinCount())
 
 		if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
@@ -190,7 +190,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	-- Backward compatibility with the old version of the config
 	npcData.random_bodygroups = npcData.random_bodygroups or npcData.randomBodygroups
 
-	if npcData.random_bodygroups then
+	if npcData.random_bodygroups and isbool(npcData.random_bodygroups) then
 		for _, bodygroup in ipairs(npc:GetBodyGroups()) do
 			local id = bodygroup.id
 			local value = math.random(0, npc:GetBodygroupCount(id))
