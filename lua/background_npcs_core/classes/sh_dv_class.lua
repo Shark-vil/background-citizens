@@ -51,6 +51,8 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 		decentvehicle.DontUseSpawnEffect = true
 		decentvehicle.bgn_type = self.ai_type
 		BGN_VEHICLE:OverrideVehicle(decentvehicle)
+		function decentvehicle:GetActor() return obj:GetDriver() end
+		decentvehicle.isBgnActor = true
 		decentvehicle:Spawn()
 		decentvehicle:Activate()
 		self.ai = decentvehicle

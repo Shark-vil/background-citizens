@@ -184,6 +184,38 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	return false
 end
 
+function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, offset_ang)
+	local simfphys_list = list.Get('simfphys_vehicles')
+	local vehicles_list = list.Get('Vehicles')
+
+	spawn_pos = spawn_pos or Vector(0, 0, 0)
+	spawn_ang = spawn_ang or Angle(0, 0, 0)
+	offset_pos = offset_pos or Vector(0, 0, 0)
+	offset_ang = offset_ang or Angle(0, 0, 0)
+
+	if simfphys_list[vehicle_class] then
+		return simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos, spawn_ang)
+	elseif vehicles_list[vehicle_class] then
+		local vehicle_data = vehicles_list[vehicle_class]
+		local vehicle = ents.Create(vehicle_data.Class)
+		vehicle:SetModel(vehicle_data.Model)
+
+		if vehicle_data.KeyValues then
+			for k, v in pairs(vehicle_data.KeyValues) do
+				vehicle:SetKeyValue(k, v)
+			end
+		end
+
+		vehicle.VehicleTable = vehicle_data
+		vehicle:SetPos(spawn_pos + offset_pos)
+		-- vehicle:SetAngles(spawn_ang - vehicle:GetAngles())
+		vehicle:SetAngles(spawn_ang + offset_ang)
+		vehicle:Spawn()
+		vehicle:Activate()
+		return vehicle
+	end
+end
+
 function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	if not GetConVar('bgn_enable_dv_support'):GetBool() then return false end
 	local dvd = DecentVehicleDestination
@@ -204,32 +236,29 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local car_class = table.RandomBySeq(car_classes)
 	local spawn_pos = data.pos + Vector(0, 0, 50)
 	local spawn_ang = data.ang
-	local car
-	local simfphys_list = list.Get('simfphys_vehicles')
-	local vehicles_list = list.Get('Vehicles')
+	local spawn_pos_offest = Vector(0, 0, 0)
+	local spawn_ang_offest = Angle(0, 0, 0)
 
-	if simfphys_list[car_class] then
-		car = simfphys.SpawnVehicleSimple(car_class, spawn_pos, spawn_ang)
-	elseif vehicles_list[car_class] then
-		local vehicle_data = vehicles_list[car_class]
-		local vehicle = ents.Create(vehicle_data.Class)
-		vehicle:SetModel(vehicle_data.Model)
-
-		if vehicle_data.KeyValues then
-			for k, v in pairs(vehicle_data.KeyValues) do
-				vehicle:SetKeyValue(k, v)
-			end
+	if actor_data.vehicles_offset_position then
+		if istable(actor_data.vehicles_offset_position) then
+			local vector =  actor_data.vehicles_offset_position[car_class]
+			if vector and isvector(vector) then spawn_pos_offest = vector end
+		elseif isvector(actor_data.vehicles_offset_position) then
+			spawn_pos_offest = actor_data.vehicles_offset_position
 		end
-
-		vehicle.VehicleTable = vehicle_data
-		vehicle:SetPos(spawn_pos)
-		vehicle:SetAngles(spawn_ang - vehicle:GetAngles())
-		vehicle:Spawn()
-		vehicle:Activate()
-		car = vehicle
-	else
-		return false
 	end
+
+	if actor_data.vehicles_offset_angles then
+		if istable(actor_data.vehicles_offset_angles) then
+			local angle =  actor_data.vehicles_offset_angles[car_class]
+			if angle and isangle(angle) then spawn_ang_offest = angle end
+		elseif isangle(actor_data.vehicles_offset_angles) then
+			spawn_ang_offest = actor_data.vehicles_offset_angles
+		end
+	end
+
+	local car = self:SpawnVehicle(car_class, spawn_pos, spawn_ang, spawn_pos_offest, spawn_ang_offest)
+	if not IsValid(car) then return false end
 
 	local vehicle_provider = BGN_VEHICLE:Instance(car, actor_data.vehicle_group, actor_type)
 	local index = BGN_VEHICLE:AddToList(vehicle_provider)

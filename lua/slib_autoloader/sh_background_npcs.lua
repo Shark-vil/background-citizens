@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.6.9'
+bgNPC.VERSION = '1.6.10'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -78,6 +78,7 @@ script:using('global/sh_killing_statistic.lua')
 script:using('global/sh_wanted_killing_statistic.lua')
 script:using('global/sh_states.lua')
 script:using('global/sh_find_path_service.lua')
+script:using('global/sv_pre_spawn_cache.lua')
 
 -- script:using('classes/actor/sh_actor_base.lua', true)
 -- script:using('classes/actor/sh_actor_class.lua')

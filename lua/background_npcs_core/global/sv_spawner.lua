@@ -168,7 +168,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 			-- Backward compatibility with the old version of the config
 			npcData.default_models = npcData.default_models or npcData.defaultModels
 
-			if (not npcData.default_models or (npcData.default_models and slib.chance(20)))
+			if (not npcData.default_models or (npcData.default_models and slib.chance(80)))
 				and not hook.Run('BGN_PreSetActorModel', model, npc, npcType, npcData)
 			then
 				npc:SetModel(model)
