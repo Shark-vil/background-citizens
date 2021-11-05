@@ -26,21 +26,21 @@ bgNPC:SetStateAction('defense', 'danger', {
 			local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
 
 			if not data.disableWeapon then
-				data.notGun = data.notGun or true
-				data.notGunDelay = data.notGunDelay or CurTime() + 15
+				data.not_gun = data.not_gun or true
+				data.not_gun_delay = data.not_gun_delay or CurTime() + 15
 
 				local EnemyActor = bgNPC:GetActor(enemy)
-				if EnemyActor and EnemyActor:HasTeam('zombie') then
-					data.notGun = false
+				if EnemyActor and EnemyActor:HasTeam('zombie') then data.not_gun = false end
+
+				if data.not_gun and (data.not_gun_delay < CurTime()
+					or killingSumm > 0
+					or enemy:IsNextBot()
+					or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
+				) then
+					data.not_gun = false
 				end
 
-				if data.notGun and ( data.notGunDelay < CurTime() or killingSumm > 0 or enemy:IsNextBot()
-					or ( enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()) ) )
-				then
-					data.notGun = false
-				end
-
-				if data.notGun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
+				if data.not_gun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
 					if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
 						actor:PrepareWeapon('weapon_stunstick', true)
 					else
