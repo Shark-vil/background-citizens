@@ -34,7 +34,9 @@ function bgNPC:AddNPC(actor)
 end
 
 function bgNPC:RemoveNPC(npc)
-	snet.Request('bgm_update_death_actors_on_client', npc).InvokeAll()
+	if SERVER then
+		snet.Request('bgm_update_death_actors_on_client', npc).InvokeAll()
+	end
 
 	for i = #self.actors, 1, -1 do
 		if self.actors[i]:GetNPC() == npc then

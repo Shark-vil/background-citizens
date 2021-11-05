@@ -119,7 +119,25 @@ bgNPC.cfg.npcs_template = {
 		vehicle_group = 'taxi',
 		vehicles = { 'sim_fphys_dukes' },
 		validator = function(self, npc_type)
-			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+			if not GetConVar('bgn_enable_dv_support'):GetBool() or not DecentVehicleDestination then
+				return false
+			end
+		end,
+	},
+	['racer_driver'] = {
+		enabled = true,
+		inherit = 'citizen',
+		class = 'npc_citizen',
+		name = 'Racer driver',
+		team = { 'bandits' },
+		limit = 1,
+		max_vehicle = 1,
+		vehicle_group = 'bandits',
+		vehicle_speed = { ['calm'] = 40, ['danger'] = 60 },
+		enter_to_exist_vehicle_chance = 100,
+		vehicles = { 'sim_fphys_dukes' },
+		validator = function(self, npc_type)
+			if not GetConVar('bgn_enable_dv_support'):GetBool() or not DecentVehicleDestination then
 				return false
 			end
 		end,
@@ -191,6 +209,7 @@ bgNPC.cfg.npcs_template = {
 		gender = 'male',
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_pistol' },
+		getting_weapon_chance = false, -- Overrides an inherited setting
 		replics = {
 			state_names = {
 				['defense'] = 'defense_police'
@@ -200,9 +219,8 @@ bgNPC.cfg.npcs_template = {
 		health = 55,
 		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
 		max_vehicle = 1,
-		-- vehicle_speed = { ['calm'] = 10, ['danger'] = 10 },
 		vehicle_multiply_speed = { ['danger'] = 2 },
-		models = false,
+		models = false, -- Overrides an inherited setting
 		vehicle_group = 'police',
 		enter_to_exist_vehicle_chance = 30,
 		vehicles = { 'sim_fphys_combineapc' },
