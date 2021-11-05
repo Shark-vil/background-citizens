@@ -191,6 +191,7 @@ bgNPC.cfg.npcs_template = {
 		gender = 'male',
 		team = { 'residents', 'police' },
 		weapons = { 'weapon_pistol' },
+		getting_weapon_chance = false, -- Overrides an inherited setting
 		replics = {
 			state_names = {
 				['defense'] = 'defense_police'
@@ -202,7 +203,7 @@ bgNPC.cfg.npcs_template = {
 		max_vehicle = 1,
 		-- vehicle_speed = { ['calm'] = 10, ['danger'] = 10 },
 		vehicle_multiply_speed = { ['danger'] = 2 },
-		models = false,
+		models = false, -- Overrides an inherited setting
 		vehicle_group = 'police',
 		enter_to_exist_vehicle_chance = 30,
 		vehicles = { 'sim_fphys_combineapc' },
