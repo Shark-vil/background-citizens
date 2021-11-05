@@ -124,6 +124,24 @@ bgNPC.cfg.npcs_template = {
 			end
 		end,
 	},
+	['racer_driver'] = {
+		enabled = true,
+		inherit = 'citizen',
+		class = 'npc_citizen',
+		name = 'Racer driver',
+		team = { 'bandits' },
+		limit = 1,
+		max_vehicle = 1,
+		vehicle_group = 'bandits',
+		vehicle_speed = { ['calm'] = 40, ['danger'] = 60 },
+		enter_to_exist_vehicle_chance = 100,
+		vehicles = { 'sim_fphys_dukes' },
+		validator = function(self, npc_type)
+			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+				return false
+			end
+		end,
+	},
 	['thief'] = {
 		enabled = true,
 		inherit = 'citizen',
@@ -201,7 +219,6 @@ bgNPC.cfg.npcs_template = {
 		health = 55,
 		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
 		max_vehicle = 1,
-		-- vehicle_speed = { ['calm'] = 10, ['danger'] = 10 },
 		vehicle_multiply_speed = { ['danger'] = 2 },
 		models = false, -- Overrides an inherited setting
 		vehicle_group = 'police',
