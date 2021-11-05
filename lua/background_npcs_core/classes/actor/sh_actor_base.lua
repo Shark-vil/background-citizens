@@ -436,9 +436,36 @@ end
 
 function BaseClass:EnemiesRecalculate()
 	local npc = self:GetNPC()
-	local active_enemy = npc:GetEnemy()
-	if IsValid(active_enemy) and active_enemy:IsVehicle() then
-		npc:AddEntityRelationship(active_enemy, D_NU, 99)
+
+	if npc:IsNPC() then
+		local enemy = self:GetNearEnemy()
+		local active_enemy = npc:GetEnemy()
+		local is_valid_enemy = IsValid(enemy)
+		local is_valid_active_enemy = IsValid(active_enemy)
+
+		if is_valid_enemy and is_valid_active_enemy
+			and active_enemy:IsVehicle()
+			and (not enemy:IsPlayer() or enemy:GetVehicle() ~= active_enemy)
+		then
+			npc:AddEntityRelationship(active_enemy, D_NU, 99)
+		end
+
+		if is_valid_enemy and enemy:IsPlayer() and enemy:InVehicle() then
+			local vehicle = enemy:GetVehicle()
+			local vehicle_parent = vehicle:GetParent()
+			local new_enemy
+
+			if IsValid(vehicle_parent) then
+				new_enemy = vehicle_parent
+			else
+				new_enemy = vehicle
+			end
+
+			npc:SetEnemy(new_enemy)
+			npc:SetTarget(new_enemy)
+			npc:UpdateEnemyMemory(new_enemy, enemy:GetPos())
+			return
+		end
 	end
 
 	if #self.enemies == 0 then return end
@@ -464,7 +491,6 @@ function BaseClass:EnemiesRecalculate()
 				local time = npc:GetEnemyLastTimeSeen(enemy)
 				if time + 20 < CurTime() then
 					self:RemoveEnemy(enemy)
-					-- print(self.uid, 'remove enemy - ', enemy)
 				end
 			end
 		end
