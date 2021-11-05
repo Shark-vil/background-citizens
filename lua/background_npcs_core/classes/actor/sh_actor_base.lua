@@ -161,7 +161,10 @@ if SERVER then
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function BaseClass:IsAlive()
 		local npc = self.npc
-		if not IsValid(npc) or npc:Health() <= 0 or (npc:IsNPC() and npc:IsCurrentSchedule(SCHED_DIE)) then
+		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) or (npc:IsNPC()
+			and npc.IsCurrentSchedule
+			and npc:IsCurrentSchedule(SCHED_DIE)
+		) then
 			bgNPC:RemoveNPC(npc)
 			return false
 		end
@@ -173,7 +176,11 @@ else
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function BaseClass:IsAlive()
 		local npc = self.npc
-		return IsValid(npc) and npc:Health() > 0
+		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) then
+			bgNPC:RemoveNPC(npc)
+			return false
+		end
+		return true
 	end
 end
 
