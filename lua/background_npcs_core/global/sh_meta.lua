@@ -97,7 +97,7 @@ function bgNPC:PlayerIsViewVector(ply, pos, radius)
 end
 
 function bgNPC:NPCIsViewVector(ent, pos, radius)
-	if ent:IsNextBot() then return true end
+	if not ent:IsNPC() or ent:IsNextBot() then return true end
 	if not IsValid(ent) or ent:Health() <= 0 then return false end
 
 	radius = radius or 90
