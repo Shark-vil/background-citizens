@@ -4,7 +4,7 @@ bgNPC:SetStateAction('defense', 'danger', {
 	pre_start = function(actor)
 		if not actor.weapon then return 'fear' end
 	end,
-	state = function(actor)
+	start = function(actor)
 		if actor:HasTeam('police') then
 			local enemy = actor:GetNearEnemy()
 			local npc = actor:GetNPC()
