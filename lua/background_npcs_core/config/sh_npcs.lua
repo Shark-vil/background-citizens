@@ -119,7 +119,7 @@ bgNPC.cfg.npcs_template = {
 		vehicle_group = 'taxi',
 		vehicles = { 'sim_fphys_dukes' },
 		validator = function(self, npc_type)
-			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+			if not GetConVar('bgn_enable_dv_support'):GetBool() or not DecentVehicleDestination then
 				return false
 			end
 		end,
@@ -137,7 +137,7 @@ bgNPC.cfg.npcs_template = {
 		enter_to_exist_vehicle_chance = 100,
 		vehicles = { 'sim_fphys_dukes' },
 		validator = function(self, npc_type)
-			if not GetConVar('bgn_enable_dv_support'):GetBool() then
+			if not GetConVar('bgn_enable_dv_support'):GetBool() or not DecentVehicleDestination then
 				return false
 			end
 		end,
