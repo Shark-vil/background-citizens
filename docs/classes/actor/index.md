@@ -3,6 +3,10 @@
 ## Description
 The main object of the actor. This object is an intermediary between the NPC entity. It does not directly change the entities of the NPC, but is a shell for performing operations.
 
+## Instantiation
+Used to initialize the actor object.
+- [Instance](./Instance.md)
+
 ## Functions
 - [GetLastReaction](./functions/GetLastReaction.md)
 - [GetNPC](./functions/GetNPC.md)
