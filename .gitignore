@@ -41,14 +41,3 @@ luac.out
 
 workspace.code-workspace
 .vscode/
-
-wiki/*.html
-wiki/*/*.html
-wiki/*/*.css
-wiki/*/*.js
-wiki/*/*.xml
-wiki/*/*.gz
-wiki/*/*.png
-wiki/*/*.jpg
-wiki/*/*.jpeg
-wiki/*/*.map
