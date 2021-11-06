@@ -6,7 +6,4 @@ This documentation is for "*Background NPCs*". General information on setting up
 - [Change basic configuration](./tutorials/ChangeBasicConfiguration.md)
 
 ### Classes
-- [BGN_ACTOR](./classes/BGN_ACTOR/index.md)
-
-### Class objects
-- [ACTOR](./class-objects/actor/index.md)
+- [ACTOR](./classes/actor/index.md)
