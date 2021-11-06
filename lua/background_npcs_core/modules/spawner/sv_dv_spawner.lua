@@ -129,7 +129,7 @@ function bgNPC:CheckVehicleLimitFromActors(actor_type)
 		end
 	end
 
-	return count < limit
+	return count <= limit
 end
 
 function bgNPC:EnterActorInExistVehicle(actor, bypass)
