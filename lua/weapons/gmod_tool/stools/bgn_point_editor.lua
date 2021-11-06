@@ -331,7 +331,6 @@ else
 				previewNode = self.CreateSelectedNode
 				countPoints = #points
 				for i = 1, countPoints do
-
 					if i == countPoints and endNode and previewNode then
 						endNode:AddLink(previewNode, 'walk')
 					else
@@ -494,49 +493,58 @@ else
 			['Label'] = '#tool.bgn_point_editor.pnl.load_points',
 			['Command'] = 'cl_citizens_load_route_from_client',
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.load_points.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.load_points.desc'
 		})
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.save_points',
 			['Command'] = 'cl_citizens_save_route',
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.save_points.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.save_points.desc'
 		})
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.generate_points',
 			['Command'] = 'bgn_generate_navmesh',
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.generate_points.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.generate_points.desc'
 		})
+
+		if debug.getregistry().Nodegraph then
+			Panel:AddControl('Button', {
+				['Label'] = '#tool.bgn_point_editor.pnl.generate_points_nodegraph',
+				['Command'] = 'bgn_generate_navmesh "usenodegraph"',
+			}); Panel:AddControl('Label', {
+				['Text'] = '#tool.bgn_point_editor.pnl.generate_points_nodegraph.desc'
+			})
+		end
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.clear_points',
 			['Command'] = 'cl_bgn_clear_tool_points',
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.clear_points.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.clear_points.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
-			Label = '#tool.bgn_point_editor.autoparent',
-			Command = 'bgn_tool_point_editor_autoparent'
+			['Label'] = '#tool.bgn_point_editor.autoparent',
+			['Command'] = 'bgn_tool_point_editor_autoparent'
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.autoparent.desc'
+			['Text'] = '#tool.bgn_point_editor.autoparent.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
-			Label = '#tool.bgn_point_editor.autoalignment',
-			Command = 'bgn_tool_point_editor_autoalignment'
+			['Label'] = '#tool.bgn_point_editor.autoalignment',
+			['Command'] = 'bgn_tool_point_editor_autoalignment'
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.autoalignment.desc'
+			['Text'] = '#tool.bgn_point_editor.autoalignment.desc'
 		})
 
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.reconstruct_parents',
 			['Command'] = 'cl_tool_point_editor_reconstruct_parents',
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.reconstruct_parents.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.reconstruct_parents.desc'
 		})
 
 		Panel:AddControl('Slider', {
@@ -546,7 +554,7 @@ else
 			['Min'] = '0',
 			['Max'] = '500'
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.z_limit.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.z_limit.desc'
 		})
 
 		Panel:AddControl('Slider', {
@@ -556,14 +564,14 @@ else
 			['Min'] = '0',
 			['Max'] = '2000'
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.bgn_tool_draw_distance.desc'
 		})
 
 		Panel:AddControl('CheckBox', {
-			Label = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents',
-			Command = 'bgn_tool_point_editor_show_parents'
+			['Label'] = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents',
+			['Command'] = 'bgn_tool_point_editor_show_parents'
 		}); Panel:AddControl('Label', {
-			Text = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'
+			['Text'] = '#tool.bgn_point_editor.pnl.bgn_tool_point_editor_show_parents.desc'
 		})
 	end
 
@@ -577,6 +585,8 @@ else
 		['tool.bgn_point_editor.pnl.save_points.desc'] = 'Description: save the movement mesh on the server.',
 		['tool.bgn_point_editor.pnl.generate_points'] = 'Generate movement mesh',
 		['tool.bgn_point_editor.pnl.generate_points.desc'] = 'Description: generates movement points using the map AI navigation mesh. If the map does not have an AI navmesh, then the generator will not work.',
+		['tool.bgn_point_editor.pnl.generate_points_nodegraph'] = 'Generate movement mesh through a Nodegraph Editor',
+		['tool.bgn_point_editor.pnl.generate_points_nodegraph.desc'] = 'Description: generates movement points using the Nodegraph Editor addon functions.',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Re-create points links',
 		['tool.bgn_point_editor.pnl.reconstruct_parents.desc'] = 'Description: automatically recreates all connections between points, taking into account the distance and obstacles.',
 		['tool.bgn_point_editor.autoparent'] = 'Auto parent',
@@ -613,6 +623,8 @@ else
 		['tool.bgn_point_editor.pnl.save_points.desc'] = 'Описание: сохраняет сетку перемещения на сервере.',
 		['tool.bgn_point_editor.pnl.generate_points'] = 'Сгенерировать точки перемещения',
 		['tool.bgn_point_editor.pnl.generate_points.desc'] = 'Описание: генерирует точки перемещения, использую сетку навигации карты. Если карта не имеет AI сетку навигации, то генератор не будет работать.',
+		['tool.bgn_point_editor.pnl.generate_points_nodegraph'] = 'Сгенерировать точки перемещения через Nodegraph Editor',
+		['tool.bgn_point_editor.pnl.generate_points_nodegraph.desc'] = 'Описание: генерирует точки перемещения, используя функции аддона Nodegraph Editor.',
 		['tool.bgn_point_editor.pnl.reconstruct_parents'] = 'Пересоздать связи точек',
 		['tool.bgn_point_editor.pnl.reconstruct_parents.desc'] = 'Описание: автоматически пересоздаёт все связи между точками, с учётом дистанции и препятствий.',
 		['tool.bgn_point_editor.autoparent'] = 'Авто-связка',

@@ -1,15 +1,26 @@
-local scommand = slib.Components.GlobalCommand
-local snet = slib.Components.Network
-local BGN_NODE = BGN_NODE
 local math = math
 local CLIENT = CLIENT
 local Vector = Vector
+local CurTime = CurTime
 local math_Round = math.Round
 --
 local LagTriggerDefault = 0.001
 local LagTrigger = LagTriggerDefault
+local LagSkipCount = 5
+local CurrentLagCount = 0
 local FirstTickTime = SysTime()
 local EndTickTime = SysTime()
+local old_progress = -1
+local notify_progress_delay = 0
+
+local function ProgressNotify(ply, i, max)
+	local new_progress = math_Round((i / max) * 100)
+	if new_progress ~= old_progress and notify_progress_delay < CurTime() then
+		snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress)
+		old_progress = new_progress
+		notify_progress_delay = CurTime() + 1
+	end
+end
 
 local function LagFixationStart()
 	FirstTickTime = SysTime()
@@ -21,8 +32,12 @@ local function LagFixationEnd(yield)
 	if LagTrigger < LagTriggerDefault then LagTrigger = LagTriggerDefault end
 
 	if EndTickTime - FirstTickTime > LagTrigger then
-		LagTrigger = 0
-		yield()
+		CurrentLagCount = CurrentLagCount + 1
+		if CurrentLagCount > LagSkipCount then
+			LagTrigger = 0
+			CurrentLagCount = 0
+			yield()
+		end
 	else
 		if LagTrigger + LagTriggerDefault <= 0.004 then
 			LagTrigger = LagTrigger + LagTriggerDefault
@@ -30,9 +45,8 @@ local function LagFixationEnd(yield)
 	end
 end
 
-local function ConstructParent(node, max_pass, yield)
-	local current_pass = 0
-	local nodes = BGN_NODE:GetNodeMap()
+local function ConstructParent(node, yield)
+	local nodes = BGN_NODE:GetNodesInRadius(node:GetPos(), 1000)
 
 	for i = #nodes, 1, -1 do
 		local anotherNode = nodes[i]
@@ -46,18 +60,10 @@ local function ConstructParent(node, max_pass, yield)
 				anotherNode:AddLink(node, 'walk')
 			end
 		end
-
-		current_pass = current_pass + 1
-		if current_pass == max_pass then
-			current_pass = 0
-			yield()
-		end
 	end
 end
 
 scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
-	local old_progress = -1
-
 	if async.Exists('bgn_generate_navmesh') then
 		async.Remove('bgn_generate_navmesh')
 		snet.Invoke('bgn_generate_navmesh_progress_kill', ply)
@@ -65,14 +71,38 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 		return
 	end
 
-	if not navmesh.IsLoaded() then return end
+	if not navmesh.IsLoaded() and not debug.getregistry().Nodegraph then
+		snet.Invoke('bgn_generate_navmesh_msg', ply, 'AI nodes not found')
+		return
+	end
 
 	async.Add('bgn_generate_navmesh', function(yield, wait)
+		local BGN_NODE = BGN_NODE
+
 		BGN_NODE:ClearNodeMap()
 
 		do
-			local navmesh_map = navmesh.GetAllNavAreas()
+			local _R = debug.getregistry()
+			local add_upper_vector =  Vector(0, 0, 10)
+			local is_nodegraph = false
+			local nodegraph
+
+			if args[1] == 'usenodegraph' and _R.Nodegraph then nodegraph = _R.Nodegraph.Read() end
+			if nodegraph then is_nodegraph = true end
+
+			local navmesh_map = is_nodegraph and nodegraph:GetNodes() or navmesh.GetAllNavAreas()
 			local max = #navmesh_map
+
+			if is_nodegraph and max == 0 then
+				navmesh_map = navmesh.GetAllNavAreas()
+				max = #navmesh_map
+				snet.Invoke('bgn_generate_navmesh_msg', ply, 'WARNING: Nodegraph editor was unable to read the data')
+			end
+
+			if max == 0 then
+				snet.Invoke('bgn_generate_navmesh_msg', ply, 'Movement mesh generator stopped. AI nodes not found.')
+				return yield('stop')
+			end
 
 			snet.Invoke('bgn_generate_navmesh_msg', ply, 'Creating nodes')
 
@@ -80,17 +110,13 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 				LagFixationStart()
 
 				local area = navmesh_map[i]
-				local pos = area:GetCenter()
-
-				BGN_NODE:AddNodeToMap( BGN_NODE:Instance( pos + Vector(0, 0, 10) ) )
+				local pos = is_nodegraph and area.pos or area:GetCenter()
+				local node = BGN_NODE:Instance(pos + add_upper_vector)
+				if is_nodegraph then node.parent_distance = 490000 end
+				BGN_NODE:AddNodeToMap(node)
 
 				LagFixationEnd(yield)
-
-				local new_progress = math_Round((i / max) * 100)
-				if new_progress ~= old_progress then
-					snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress)
-					old_progress = new_progress
-				end
+				ProgressNotify(ply, i, max)
 			end
 		end
 
@@ -105,16 +131,9 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 
 			for i = 1, max do
 				LagFixationStart()
-
-				ConstructParent(nodes[i], max_pass, yield)
-
+				ConstructParent(nodes[i], yield)
 				LagFixationEnd(yield)
-
-				local new_progress = math_Round((i / max) * 100)
-				if new_progress ~= old_progress then
-					snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress)
-					old_progress = new_progress
-				end
+				ProgressNotify(ply, i, max)
 			end
 		end
 
@@ -131,17 +150,10 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 				LagFixationStart()
 
 				local node = nodes[i]
-				if #node.parents == 0 then
-					node:RemoveFromMap()
-				end
+				if #node.parents == 0 then node:RemoveFromMap() end
 
 				LagFixationEnd(yield)
-
-				local new_progress = math_Round( ( 1 - (i / max) ) * 100)
-				if new_progress ~= old_progress then
-					snet.Invoke('bgn_generate_navmesh_progress', ply, new_progress, 'Removing blank nodes')
-					old_progress = new_progress
-				end
+				ProgressNotify(ply, i, max)
 			end
 		end
 
@@ -153,6 +165,14 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 
 		return yield('stop')
 	end)
+end).AutoComplete(function(cmd, strargs)
+	local tbl = { cmd }
+
+	if debug.getregistry().Nodegraph then
+		table.insert(tbl, cmd .. ' "usenodegraph"')
+	end
+
+	return tbl
 end).Access( { isAdmin = true } ).Register()
 
 if CLIENT then

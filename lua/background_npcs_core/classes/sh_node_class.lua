@@ -2,6 +2,7 @@ local Vector = Vector
 local pairs = pairs
 local ipairs = ipairs
 local math_floor = math.floor
+local math_modf = math.modf
 local table_insert = table.insert
 local table_remove = table.remove
 local table_Count = table.Count
@@ -10,19 +11,32 @@ local util_TraceLine = util.TraceLine
 local util_TableToJSON = util.TableToJSON
 local util_JSONToTable = util.JSONToTable
 --
+local SingleChunkSize = 500
+local LimitPointAxisZ = GetConVar('bgn_point_z_limit'):GetInt()
+local CheckTraceSuccessToNodeUpperVector = Vector(0, 0, 10)
+local CheckTraceSuccessToNodeFilter = function(ent)
+	if ent:IsWorld() then return true end
+end
+
 BGN_NODE = {}
 BGN_NODE.Map = {}
 BGN_NODE.Chunks = {}
-local ChunkSizeMax = 32768
-local OneChunkSize = 500
+
+cvars.AddChangeCallback('bgn_point_z_limit', function(convar_name, value_old, value_new)
+	LimitPointAxisZ = value_new
+end)
 
 function BGN_NODE:Instance(position_value)
 	local obj = {}
+	obj.x = math_floor(position_value.x)
+	obj.y = math_floor(position_value.y)
+	obj.z = math_floor(position_value.z)
 	obj.index = -1
 	obj.isNode = true
-	obj.position = position_value
+	obj.position = Vector(obj.x, obj.y, obj.z)
 	obj.parents = {}
 	obj.links = {}
+	obj.parent_distance = 250000
 
 	function obj:_snet_getdata()
 		local netobj = {}
@@ -51,9 +65,7 @@ function BGN_NODE:Instance(position_value)
 		if self == node or table_HasValueBySeq(self.parents, node) then return end
 		table_insert(self.parents, node)
 
-		if not node:HasParent(self) then
-			node:AddParentNode(self)
-		end
+		if not node:HasParent(self) then node:AddParentNode(self) end
 	end
 
 	function obj:RemoveParentNode(node)
@@ -159,29 +171,23 @@ function BGN_NODE:Instance(position_value)
 	end
 
 	function obj:CheckDistanceLimitToNode(position)
-		-- local dist = GetConVar('bgn_ptp_distance_limit'):GetFloat() ^ 2
-		-- return self.position:DistToSqr(position) <= dist
-		return self.position:DistToSqr(position) <= 250000
+		return self.position:DistToSqr(position) <= self.parent_distance
 	end
 
 	function obj:CheckHeightLimitToNode(position)
-		local z_limit = GetConVar('bgn_point_z_limit'):GetInt()
 		local nodePos = self.position
 		local anotherPosition = position
-
-		return nodePos.z >= anotherPosition.z - z_limit and nodePos.z <= anotherPosition.z + z_limit
+		return nodePos.z >= anotherPosition.z - LimitPointAxisZ and nodePos.z <= anotherPosition.z + LimitPointAxisZ
 	end
 
 	function obj:CheckTraceSuccessToNode(position)
-		local nodePos = self.position
-		local anotherPosition = position
+		local nodePos = self.position + CheckTraceSuccessToNodeUpperVector
+		local anotherPosition = position + CheckTraceSuccessToNodeUpperVector
 
 		local tr = util_TraceLine({
-			start = nodePos + Vector(0, 0, 10),
-			endpos = anotherPosition + Vector(0, 0, 10),
-			filter = function(ent)
-				if ent:IsWorld() then return true end
-			end
+			start = nodePos,
+			endpos = anotherPosition,
+			filter = CheckTraceSuccessToNodeFilter
 		})
 
 		return not tr.Hit
@@ -219,11 +225,10 @@ function BGN_NODE:Instance(position_value)
 end
 
 function BGN_NODE:GetChunkID(pos)
-	local x = ChunkSizeMax - pos.x
-	local y = ChunkSizeMax - pos.y
-	local xid = math_floor(x / OneChunkSize)
-	local yid = math_floor(y / OneChunkSize)
-
+	local x = pos.x
+	local y = pos.y
+	local xid = math_modf(x / SingleChunkSize)
+	local yid = math_modf(y / SingleChunkSize)
 	return xid .. yid
 end
 
@@ -267,6 +272,26 @@ function BGN_NODE:GetNodeByIndex(index)
 	return self.Map[index]
 end
 
+function BGN_NODE:GetNodeByPos(pos)
+	for i = 1, #self.Map do
+		if self.Map[i]:GetPos() == pos then return self.Map[i] end
+	end
+end
+
+function BGN_NODE:GetNodesInRadius(pos, radius)
+	local nodes_in_radius = {}
+	radius = radius * radius
+
+	for i = 1, #self.Map do
+		local node = self.Map[i]
+		if node:GetPos():DistToSqr(pos) <= radius then
+			table_insert(nodes_in_radius, node)
+		end
+	end
+
+	return nodes_in_radius
+end
+
 function BGN_NODE:ClearNodeMap()
 	table.Empty(self.Map)
 	table.Empty(self.Chunks)
@@ -286,10 +311,30 @@ function BGN_NODE:SetMap(map)
 	for i = 1, #map do
 		self:AddNodeToMap(map[i])
 	end
+
+	self:FixOutsideMapNodes()
 end
 
 function BGN_NODE:GetMap()
 	return self.Map
+end
+
+function BGN_NODE:FixOutsideMapNodes()
+	if CLIENT then return end
+
+	local remove_count = 0
+
+	for i = #self.Map, 1, -1 do
+		local node = self.Map[i]
+		if not util.IsInWorld(node:GetPos()) then
+			remove_count = remove_count + 1
+			node:RemoveFromMap()
+		end
+	end
+
+	if remove_count ~= 0 then
+		MsgN('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
+	end
 end
 
 function BGN_NODE:MapToJson(map, prettyPrint, version)

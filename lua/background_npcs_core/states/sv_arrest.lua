@@ -58,7 +58,7 @@ hook.Add('BGN_PreDamageToAnotherActor', 'BGN_PlayerArrest', function(actor, atta
 	end
 
 	local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
-	if not GetConVar('bgn_arrest_mode'):GetBool() or not enemy:IsPlayer() then
+	if IsValid(enemy) and not GetConVar('bgn_arrest_mode'):GetBool() or not enemy:IsPlayer() then
 		_SetEnemyDefense(actor, enemy, 'defense')
 	end
 end)

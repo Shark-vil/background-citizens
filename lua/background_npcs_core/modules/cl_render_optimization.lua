@@ -48,22 +48,27 @@ async.Add('bgn_client_render_optimization', function(yield)
 				local pos = npc:GetPos()
 				local weapon = npc:GetActiveWeapon()
 				local in_vehicle = actor:InVehicle()
+				local past_set_no_draw = npc:slibGetLocalVar('bgn_render_optimization', false)
 
 				if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)) then
-					npc:SetNoDraw(true)
+					if not past_set_no_draw and not npc:GetNoDraw() then
+						npc:SetNoDraw(true)
+						npc:slibSetLocalVar('bgn_render_optimization', true)
 
-					if IsValid(weapon) then
-						weapon:SetNoDraw(true)
+						if IsValid(weapon) then
+							weapon:SetNoDraw(true)
+						end
 					end
-
 					pass = pass + 1
 				else
-					npc:SetNoDraw(false)
+					if past_set_no_draw and npc:GetNoDraw() then
+						npc:SetNoDraw(false)
+						npc:slibSetLocalVar('bgn_render_optimization', false)
 
-					if IsValid(weapon) then
-						weapon:SetNoDraw(false)
+						if IsValid(weapon) then
+							weapon:SetNoDraw(false)
+						end
 					end
-
 					pass = pass + 1
 				end
 
