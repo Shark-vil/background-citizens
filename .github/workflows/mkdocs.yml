@@ -18,4 +18,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN_REPO }}
           CONFIG_FILE: wiki/mkdocs.yml
           EXTRA_PACKAGES: build-base
-          REQUIREMENTS: wiki/requirements.txt
