@@ -126,14 +126,14 @@ bgNPC.cfg.npcs_template = {
 	},
 	['racer_driver'] = {
 		enabled = true,
-		inherit = 'citizen',
+		inherit = 'gangster',
 		class = 'npc_citizen',
 		name = 'Racer driver',
-		team = { 'bandits' },
+		weapons = { 'weapon_pistol' },
+		getting_weapon_chance = 10,
 		limit = 1,
 		max_vehicle = 1,
-		vehicle_group = 'bandits',
-		vehicle_speed = { ['calm'] = 40, ['danger'] = 60 },
+		vehicle_speed = { ['calm'] = 25, ['danger'] = 40 },
 		enter_to_exist_vehicle_chance = 100,
 		vehicles = { 'sim_fphys_dukes' },
 		validator = function(self, npc_type)
@@ -149,9 +149,9 @@ bgNPC.cfg.npcs_template = {
 		name = 'Thief',
 		fullness = 8,
 		team = { 'bandits' },
+		getting_weapon_chance = 10,
 		money = { 0, 100 },
 		health = 35,
-		weapon_skill = WEAPON_PROFICIENCY_POOR,
 		enter_to_exist_vehicle_chance = 10,
 		at_random_range = 110,
 		at_random = {
@@ -177,6 +177,7 @@ bgNPC.cfg.npcs_template = {
 		fullness = 10,
 		team = { 'bandits' },
 		weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },
+		getting_weapon_chance = false, -- Overrides an inherited setting
 		money = { 0, 150 },
 		health = 50,
 		weapon_skill = WEAPON_PROFICIENCY_AVERAGE,
