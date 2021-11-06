@@ -27,6 +27,4 @@ This addon can rather be considered a base for development. There is basic funct
 ### **Warning**
 The wiki is currently under development and some methods may not be described. When the wiki is complete, this warning will be removed.
 
-**[Outside documentation](https://background-npcs.itpony.ru)**
-
-**[Inside documentation](https://shark-vil.github.io/background-citizens)**
+**[Documentation](https://shark-vil.github.io/background-citizens)**
