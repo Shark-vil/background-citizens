@@ -286,10 +286,30 @@ function BGN_NODE:SetMap(map)
 	for i = 1, #map do
 		self:AddNodeToMap(map[i])
 	end
+
+	self:FixOutsideMapNodes()
 end
 
 function BGN_NODE:GetMap()
 	return self.Map
+end
+
+function BGN_NODE:FixOutsideMapNodes()
+	if CLIENT then return end
+
+	local remove_count = 0
+
+	for i = #self.Map, 1, -1 do
+		local node = self.Map[i]
+		if not util.IsInWorld(node:GetPos()) then
+			remove_count = remove_count + 1
+			node:RemoveFromMap()
+		end
+	end
+
+	if remove_count ~= 0 then
+		MsgN('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
+	end
 end
 
 function BGN_NODE:MapToJson(map, prettyPrint, version)
