@@ -15,6 +15,7 @@
         ".git*",
         ".vscode*",
         "docs",
-        "version.txt"
+        "version.txt",
+        "*.yml"
     ] 
 } 
