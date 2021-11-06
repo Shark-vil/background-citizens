@@ -9,7 +9,6 @@ theme:
     - navigation.expand
     - navigation.tracking
     - navigation.sections
-    - navigation.indexes
 use_directory_urls: false
 plugins:
   - search
