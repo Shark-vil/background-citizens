@@ -16,7 +16,6 @@ jobs:
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_REPO }}
-          CUSTOM_DOMAIN: https://shark-vil.github.io/background-citizens
           CONFIG_FILE: wiki/mkdocs.yml
           EXTRA_PACKAGES: build-base
           REQUIREMENTS: wiki/requirements.txt
