@@ -133,9 +133,6 @@ scvar.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period,
 	FCVAR_ARCHIVE, 'The period between the spawn of the NPC. Changes require a server restart.')
 	.Access(DefaultAccess)
 
--- scvar.Register('bgn_ptp_distance_limit', bgNPC.cvar.bgn_ptp_distance_limit, 
--- FCVAR_ARCHIVE, 'You can change the point-to-point limit for the instrument if you have a navigation mesh on your map.')
-
 scvar.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit,
 	FCVAR_ARCHIVE, 'Height limit between points. Used to correctly define child points.')
 	.Access(DefaultAccess)
