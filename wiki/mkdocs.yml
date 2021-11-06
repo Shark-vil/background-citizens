@@ -1,0 +1,31 @@
+site_name: Background NPCs
+repo_url: https://github.com/Shark-vil/background-citizens
+site_author: Shark_vil
+site_url: https://shark-vil.github.io/background-citizens
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.expand
+    - navigation.tracking
+    - navigation.sections
+    - navigation.indexes
+use_directory_urls: false
+plugins:
+  - search
+markdown_extensions:
+  - meta
+  - pymdownx.highlight
+  - pymdownx.superfences
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Shark-vil/
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/wZwtQTU
+    - icon: fontawesome/brands/steam
+      link: https://steamcommunity.com/id/shark_vil/
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/channel/UCceZ68lbnrBGBPXgMPBOfoA
+copyright: Copyright &copy; 2020 - 2021 Shark_vil
