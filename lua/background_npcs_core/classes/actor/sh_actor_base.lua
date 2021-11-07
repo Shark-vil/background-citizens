@@ -635,13 +635,13 @@ function BaseClass:SetState(state, data, forced)
 	state = new_state or state
 	data = new_data or data
 
-	self:CallStateAction(nil, 'stop', current_state, current_data)
-
 	if SERVER then
 		self:StopWalk()
 		self.anim_action = nil
 		self:ResetSequence()
 	end
+
+	self:CallStateAction(nil, 'stop', current_state, current_data)
 
 	state = new_state or state
 	data = new_data or data
