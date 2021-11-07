@@ -305,7 +305,16 @@ end
 -- Returns the number of existing targets for the actor.
 -- @return number targets_number number of targets
 function BaseClass:TargetsCount()
-	return table.Count(self.targets)
+	self:TargetsRecalculate()
+	return #self.targets
+end
+
+function BaseClass:TargetsRecalculate()
+	for i = #self.targets, 1, -1 do
+		if not IsValid(self.targets[i]) then
+			table.remove(self.targets, i)
+		end
+	end
 end
 
 -- Returns the closest target to the actor.
