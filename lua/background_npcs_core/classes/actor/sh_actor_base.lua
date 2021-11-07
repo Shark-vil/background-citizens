@@ -1096,6 +1096,8 @@ end
 function BaseClass:IsSequenceFinished()
 	if self.anim_time_normal > 0 then
 		self.anim_time_normal = self.anim_time - RealTime()
+	else
+		self.anim_time_normal = 0
 	end
 
 	return self.anim_time <= RealTime()
