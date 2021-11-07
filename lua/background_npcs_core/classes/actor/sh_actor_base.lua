@@ -1121,6 +1121,7 @@ end
 function BaseClass:ResetSequence()
 	if self.anim_action ~= nil and not self.anim_action(self) then return end
 
+	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
