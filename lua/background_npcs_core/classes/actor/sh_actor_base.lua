@@ -431,7 +431,7 @@ function BaseClass:HasEnemy(ent)
 end
 
 function BaseClass:EnemiesCount()
-	return table.Count(self.enemies)
+	return #self.enemies
 end
 
 function BaseClass:EnemiesRecalculate()
