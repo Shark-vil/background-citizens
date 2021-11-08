@@ -186,9 +186,9 @@ bgNPC.cfg.npcs_template = {
 		enter_to_exist_vehicle_chance = 10,
 		at_random_range = 150,
 		at_random = {
-			['walk'] = 100,
+			['walk'] = 90,
 			['idle'] = 25,
-			['impingement'] = 5,
+			['impingement'] = 15,
 			['sit_to_chair'] = 10,
 		},
 		at_damage_range = 100,
