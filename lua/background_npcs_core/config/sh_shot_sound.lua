@@ -6,20 +6,20 @@ bgNPC.cfg.shotsound = {}
 
 -- A list of weapons to ignore when playing sound effects.
 bgNPC.cfg.shotsound.whitelist_weapons = {
-   'weapon_physcannon',
-   'gmod_tool',
-   'gmod_cinematic_camera',
-   'weapon_medkit',
-   'remotecontroller',
+	'weapon_physcannon',
+	'gmod_tool',
+	'gmod_cinematic_camera',
+	'weapon_medkit',
+	'remotecontroller',
 }
 
 -- Keywords in the name of the sound files being played
 bgNPC.cfg.shotsound.sound_name_found = {
-   'gun',
-   'weapon',
-   'shot',
-   'shoot',
-   'bullet',
-   'arccw',
-   'tfa',
+	'gun',
+	'weapon',
+	'shot',
+	'shoot',
+	'bullet',
+	'arccw',
+	'tfa',
 }
