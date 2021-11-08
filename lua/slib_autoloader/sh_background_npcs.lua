@@ -80,12 +80,6 @@ script:using('global/sh_states.lua')
 script:using('global/sh_find_path_service.lua')
 script:using('global/sv_pre_spawn_cache.lua')
 
--- script:using('classes/actor/sh_actor_base.lua', true)
--- script:using('classes/actor/sh_actor_class.lua')
--- script:using('classes/sh_node_class.lua')
--- script:using('classes/sh_seat_class.lua')
--- script:using('classes/sh_dv_class.lua')
-
 script:using('modules/cl_updatepage.lua')
 script:using('modules/cl_render_optimization.lua')
 script:using('modules/sv_run_logic_optimization.lua')
