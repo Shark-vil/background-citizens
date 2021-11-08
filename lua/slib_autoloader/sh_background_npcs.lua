@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.6.12'
+bgNPC.VERSION = '1.7'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -79,12 +79,6 @@ script:using('global/sh_wanted_killing_statistic.lua')
 script:using('global/sh_states.lua')
 script:using('global/sh_find_path_service.lua')
 script:using('global/sv_pre_spawn_cache.lua')
-
--- script:using('classes/actor/sh_actor_base.lua', true)
--- script:using('classes/actor/sh_actor_class.lua')
--- script:using('classes/sh_node_class.lua')
--- script:using('classes/sh_seat_class.lua')
--- script:using('classes/sh_dv_class.lua')
 
 script:using('modules/cl_updatepage.lua')
 script:using('modules/cl_render_optimization.lua')
@@ -176,6 +170,7 @@ script:using('states/sv_zombie.lua')
 script:using('states/sv_killer.lua')
 script:using('states/sv_dyspnea.lua')
 script:using('states/sv_run_from_danger.lua')
+script:using('states/sv_arrest_surrender.lua')
 
 script:using('tool_options/cl_bgn_settings_menu.lua')
 script:using('tool_options/cl_lang.lua')

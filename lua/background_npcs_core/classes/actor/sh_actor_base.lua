@@ -156,6 +156,11 @@ function BaseClass:GetRandomState()
 	return state
 end
 
+function BaseClass:Health()
+	if IsValid(self.npc) and self.npc.Health then return self.npc:Health() end
+	return 0
+end
+
 if SERVER then
 	-- Checks if the actor is alive or not.
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
@@ -305,7 +310,16 @@ end
 -- Returns the number of existing targets for the actor.
 -- @return number targets_number number of targets
 function BaseClass:TargetsCount()
-	return table.Count(self.targets)
+	self:TargetsRecalculate()
+	return #self.targets
+end
+
+function BaseClass:TargetsRecalculate()
+	for i = #self.targets, 1, -1 do
+		if not IsValid(self.targets[i]) then
+			table.remove(self.targets, i)
+		end
+	end
 end
 
 -- Returns the closest target to the actor.
@@ -431,7 +445,7 @@ function BaseClass:HasEnemy(ent)
 end
 
 function BaseClass:EnemiesCount()
-	return table.Count(self.enemies)
+	return #self.enemies
 end
 
 function BaseClass:EnemiesRecalculate()
@@ -635,13 +649,13 @@ function BaseClass:SetState(state, data, forced)
 	state = new_state or state
 	data = new_data or data
 
-	self:CallStateAction(nil, 'stop', current_state, current_data)
-
 	if SERVER then
 		self:StopWalk()
 		self.anim_action = nil
 		self:ResetSequence()
 	end
+
+	self:CallStateAction(nil, 'stop', current_state, current_data)
 
 	state = new_state or state
 	data = new_data or data
@@ -1096,6 +1110,8 @@ end
 function BaseClass:IsSequenceFinished()
 	if self.anim_time_normal > 0 then
 		self.anim_time_normal = self.anim_time - RealTime()
+	else
+		self.anim_time_normal = 0
 	end
 
 	return self.anim_time <= RealTime()
@@ -1121,6 +1137,7 @@ end
 function BaseClass:ResetSequence()
 	if self.anim_action ~= nil and not self.anim_action(self) then return end
 
+	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
