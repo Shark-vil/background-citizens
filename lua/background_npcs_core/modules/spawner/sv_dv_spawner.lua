@@ -119,6 +119,8 @@ end
 
 function bgNPC:CheckVehicleLimitFromActors(actor_type)
 	local limit = GetConVar('bgn_npc_vehicle_max_' .. actor_type):GetInt()
+	if limit <= 0 then return false end
+
 	local count = 0
 
 	for i = 1, #bgNPC.DVCars do

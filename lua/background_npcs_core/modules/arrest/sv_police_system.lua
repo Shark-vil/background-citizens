@@ -32,46 +32,30 @@ hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', functio
 	local police_system_hook = hook.Get('PlayerButtonDown', 'PoliceSysButton')
 	if not police_system_hook then return end
 
-	local target_is_player = target:IsPlayer()
 	local target_pos = target:GetPos()
 	actor:GetStateData().ps_arrest_target_pos = target_pos
 
 	local fakePlayer = MakeFakePlayer(target_pos, target)
-
-	function fakePlayer:GetEyeTrace() return { Entity = target } end
-
-	target:SetNWBool('surrender', true)
-
-	if target_is_player then
-		police_system_hook(target, KEY_G)
-	else
-		police_system_hook(fakePlayer, KEY_G)
+	local arrestEntity = HPZ_PoliceSystem:CreateArrestEntity(target)
+	function fakePlayer:GetEyeTrace() return { Entity = arrestEntity } end
+	function fakePlayer:GetActiveWeapon()
+		local Weapon = {}
+		function Weapon:GetClass() end
+		return Weapon
 	end
 
+	if target:IsPlayer() then target:KillSilent() end
+
 	timer.Create('police_system_stage_2_' .. slib.GetUid(), 1.5, 1, function()
-		if not actor or not actor:IsAlive() then return end
-		if not fakePlayer or not IsValid(fakePlayer) then
-			fakePlayer = MakeFakePlayer(target_pos)
+		if not actor or not actor:IsAlive() or not IsValid(fakePlayer) or not IsValid(arrestEntity) then
+			return
 		end
 
-		for _, ent in ipairs(ents.FindByClass('arrested_entity')) do
-			if (target_is_player and ent.plyent == target) or target_pos:DistToSqr(ent:GetPos()) <= 250000 then
-				function fakePlayer:GetEyeTrace() return { Entity = ent } end
-				police_system_hook(fakePlayer, KEY_G)
+		HPZ_PoliceSystem:DownArrestEntity(arrestEntity)
 
-				fakePlayer:slibCreateTimer('police_system_stage_3', 2, 1, function()
-					function fakePlayer:GetActiveWeapon()
-						local Weapon = {}
-						function Weapon:GetClass() end
-						return Weapon
-					end
-
-					ent:Use(fakePlayer)
-				end)
-
-				break
-			end
-		end
+		fakePlayer:slibCreateTimer('police_system_stage_3', 2, 1, function()
+			arrestEntity:Use(fakePlayer)
+		end)
 	end)
 
 	fakePlayer:slibAutoDestroy(5)

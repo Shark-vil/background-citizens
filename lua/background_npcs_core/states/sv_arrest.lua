@@ -122,10 +122,12 @@ local function OnSetDefense(actor)
 		or not ArrestComponent
 		or not ArrestComponent.arrested
 		or ArrestComponent.damege_count > 5
+		or (target:IsPlayer() and not ArrestComponent.detention and ArrestComponent.warningTime < CurTime())
 		or (target:IsPlayer() and WantedModule:HasWanted(target))
 		or not GetConVar('bgn_arrest_mode'):GetBool()
 		or (TargetActor and not TargetActor:HasState('arrest_surrender'))
 	then
+		actor:RemoveAllTargets()
 		if IsValid(target) then actor:AddEnemy(target) end
 		return 'defense'
 	end
@@ -149,14 +151,6 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 		local defense = OnSetDefense(actor)
 		if defense then
 			actor:SetState(defense, nil, true)
-			return
-		end
-
-		if not ArrestComponent.arrested or (
-			not ArrestComponent.detention and ArrestComponent.warningTime < CurTime()
-		) then
-			actor:AddEnemy(target)
-			actor:SetState('defense')
 			return
 		end
 
