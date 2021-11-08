@@ -176,6 +176,7 @@ script:using('states/sv_zombie.lua')
 script:using('states/sv_killer.lua')
 script:using('states/sv_dyspnea.lua')
 script:using('states/sv_run_from_danger.lua')
+script:using('states/sv_arrest_surrender.lua')
 
 script:using('tool_options/cl_bgn_settings_menu.lua')
 script:using('tool_options/cl_lang.lua')
