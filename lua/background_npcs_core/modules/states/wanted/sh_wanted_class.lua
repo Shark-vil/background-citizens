@@ -102,10 +102,7 @@ function ASSET:AddWanted(ent)
 	if self:HasWanted(ent) then return end
 
 	if SERVER and not ent:IsPlayer() then
-		local ArrestComponent = bgNPC:GetModule('player_arrest')
-		if ArrestComponent then
-			ArrestComponent:RemovePlayer(ent)
-		end
+		bgNPC:GetModule('player_arrest'):RemoveTarget(ent)
 	end
 
 	local WantedClass = self:Instance(ent)
