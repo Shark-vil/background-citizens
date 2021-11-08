@@ -9,7 +9,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 				actor:AddEnemy(target)
 				actor:RemoveTarget(target)
 			end
-			return 'defense'
+			return 'retreat'
 		end
 	end,
 	start = function(actor, state, data)
@@ -32,6 +32,8 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 				local TargetActor = bgNPC:GetActor(target)
 				if not TargetActor or not TargetActor:HasState('arrest') then
 					actor:RemoveTarget(target)
+					actor:AddEnemy(target)
+					actor:SetState('retreat')
 				end
 				data.check_target_time = CurTime() + 2
 			end
