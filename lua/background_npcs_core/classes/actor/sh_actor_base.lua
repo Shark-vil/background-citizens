@@ -156,6 +156,11 @@ function BaseClass:GetRandomState()
 	return state
 end
 
+function BaseClass:Health()
+	if IsValid(self.npc) and self.npc.Health then return self.npc:Health() end
+	return 0
+end
+
 if SERVER then
 	-- Checks if the actor is alive or not.
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
