@@ -1,6 +1,8 @@
 local EntityRemovedLock = false
 
 local function Call_BGN_OnKilledActor(actor, npc, attacker)
+	actor.OnNPCKilled = true
+
 	bgNPC:Log(tostring(attacker) .. ' killed ' .. actor:GetName(), 'OnNPCKilled')
 
 	bgNPC:AddKillingStatistic(attacker, actor)
@@ -11,19 +13,18 @@ end
 
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker)
 	local actor = bgNPC:GetActor(npc)
-	if not actor then return end
+	if not actor or actor.OnNPCKilled or EntityRemovedLock then return end
 
-	actor.OnNPCKilled = true
 	Call_BGN_OnKilledActor(actor, npc, attacker)
 end)
 
 hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)
 	local actor = bgNPC:GetActor(npc)
-	if not actor or actor.OnNPCKilled or not actor.EntityTakeDamageInfo or EntityRemovedLock then
+	if not actor or actor.OnNPCKilled or not actor._onKilledActorLastDamageAttacker or EntityRemovedLock then
 		return
 	end
 
-	local attacker = actor.EntityTakeDamageInfo.dmginfo:GetAttacker()
+	local attacker = actor._onKilledActorLastDamageAttacker
 	if not IsValid(attacker) then return end
 
 	Call_BGN_OnKilledActor(actor, npc, attacker)
@@ -32,10 +33,9 @@ end)
 hook.Add('EntityTakeDamage', 'BGN_OnKilledActorByRemoved', function(target, dmginfo)
 	local actor = bgNPC:GetActor(target)
 	if not actor then return end
-
-	actor.EntityTakeDamageInfo = actor.EntityTakeDamageInfo or {}
-	actor.EntityTakeDamageInfo.target = target
-	actor.EntityTakeDamageInfo.dmginfo = dmginfo
+	local attacker = dmginfo:GetAttacker()
+	if not IsValid(attacker) or attacker == target then return end
+	actor._onKilledActorLastDamageAttacker = attacker
 end)
 
 hook.Add('PreCleanupMap', 'BGN_OnKilledActorLock', function(npc)

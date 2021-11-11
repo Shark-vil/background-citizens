@@ -1,0 +1,1 @@
+slib.Animator.RegisterAnimation('bgn_check_phone', 'idle', 'models/animations/bgn/npc_phone.mdl')

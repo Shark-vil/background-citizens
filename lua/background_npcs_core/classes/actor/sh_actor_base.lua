@@ -1307,24 +1307,30 @@ function BaseClass:ExitVehicle()
 		local npc = self:GetNPC()
 		local add_forward = math.random(-100, 100)
 		local add_right = dist
-		if math.random(0, 100) > 50 then
-			add_right = -dist
-		end
+		local exit_pos
+		if slib.chance(50) then add_right = -dist end
 
 		npc:slibSetVar('bgn_vehicle_entered', false)
 		npc:SetParent(nil)
 
-		local exit_pos = pos + (right * add_right) + (forward * add_forward) + (up * 50)
-		local tr = util.TraceLine({
-			start = exit_pos,
-			endpos = exit_pos - Vector(0, 0, 500),
-			filter = function(ent)
-				if ent ~= npc then return true end
-			end
-		})
+		for i = 1, 4 do
+			exit_pos = pos + (right * add_right) + (forward * add_forward) + (up * 50)
 
-		if tr.Hit then
-			exit_pos = tr.HitPos + Vector(0, 0, 15)
+			local tr = util.TraceLine({
+				start = exit_pos,
+				endpos = exit_pos - Vector(0, 0, 500),
+				filter = function(ent)
+					if ent ~= npc then return true end
+				end
+			})
+
+			if tr.Hit then
+				exit_pos = tr.HitPos + Vector(0, 0, 15)
+			end
+
+			if exit_pos and util.IsInWorld(exit_pos) and #ents.FindInSphere(exit_pos, 15) <= 2 then
+				break
+			end
 		end
 
 		npc:SetPos(exit_pos)

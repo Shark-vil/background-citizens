@@ -131,7 +131,7 @@ function bgNPC:CheckVehicleLimitFromActors(actor_type)
 		end
 	end
 
-	return count <= limit
+	return count < limit
 end
 
 function bgNPC:EnterActorInExistVehicle(actor, bypass)
@@ -140,6 +140,9 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	if not bypass and chance and not slib.chance(chance) then return false end
 
 	local all_players = player.GetAll()
+	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
+	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
+	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 	for i = 1, #bgNPC.DVCars do
 		local vehicle_provider = bgNPC.DVCars[i]
@@ -169,10 +172,41 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 
 			for k = 1, #all_players do
 				local ply = all_players[k]
+				if not IsValid(ply) then goto skip end
 
-				if IsValid(ply) and bgNPC:PlayerIsViewVector(ply, vehiclePosition) then
+				local distance = vehiclePosition:DistToSqr(ply:GetPos())
+
+				if distance <= block_radius then
 					isVisible = true
 					break
+				end
+
+				if IsValid(ply) and distance <= radius_visibility and ply:slibIsViewVector(vehiclePosition, 70) then
+					if radius_raytracing == 0 then
+						isVisible = true
+						break
+					end
+
+					local tr = util.TraceLine({
+						start = ply:EyePos(),
+						endpos = vehiclePosition,
+						filter = function(ent)
+							if IsValid(ent) and ent ~= ply then
+								if IsValid(vehicle) then
+									if ent ~= vehicle and ent ~= vehicle:GetParent() then
+										return false
+									end
+								else
+									return true
+								end
+							end
+						end
+					})
+
+					if tr.Hit and (tr.Entity == vehicle or tr.Entity == vehicle:GetParent()) then
+						isVisible = true
+						break
+					end
 				end
 			end
 
@@ -180,6 +214,8 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 				actor:EnterVehicle(vehicle)
 				return true
 			end
+
+			::skip::
 		end
 	end
 
