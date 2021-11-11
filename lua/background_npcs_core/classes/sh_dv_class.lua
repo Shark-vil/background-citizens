@@ -22,11 +22,11 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 		local vehicle_type_args = string.Explode('|', vehicle_type)
 
 		if (#vehicle_type_args > 1) then
-			obj.type = vehicle_type_args[1] or 'residents'
-			obj.ai_class = vehicle_type_args[2] or 'npc_decentvehicle'
-			obj.ai_type = vehicle_type_args[3] or 'default'
+			obj.type = vehicle_type_args[1] ~= 'nil' and vehicle_type_args[1] or 'residents'
+			obj.ai_class = vehicle_type_args[2] ~= 'nil' and vehicle_type_args[2] or 'npc_decentvehicle'
+			obj.ai_type = vehicle_type_args[3] ~= 'nil' and vehicle_type_args[3] or 'default'
 
-			if vehicle_type_args[4] then
+			if vehicle_type_args[4] and vehicle_type_args[4] ~= 'nil' then
 				local passengers_limit = string.Explode('-', vehicle_type_args[4])
 				if passengers_limit[1] and passengers_limit[2] then
 					obj.passengers_limit = math.random(tonumber(passengers_limit[1]), tonumber(passengers_limit[2]))
