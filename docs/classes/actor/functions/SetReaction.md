@@ -2,7 +2,7 @@
 
 ## SERVER
 ```lua
-	ACTOR:SetReaction(reaction)
+	ACTOR:SetReaction(string reaction)
 ```
 
 ## Description
