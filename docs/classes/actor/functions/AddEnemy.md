@@ -2,7 +2,7 @@
 
 ## SERVER
 ```lua
-	ACTOR:AddEnemy(Entity enemy, string reaction, false always_visible)
+	ACTOR:AddEnemy(Entity enemy, string reaction:nil, boolean always_visible:false)
 ```
 
 ## Description
