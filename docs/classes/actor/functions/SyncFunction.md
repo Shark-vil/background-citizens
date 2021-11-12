@@ -2,7 +2,7 @@
 
 ## SERVER
 ```lua
-	ACTOR:SyncFunction(name, ply, data)
+	ACTOR:SyncFunction(string name, Player ply, table data)
 ```
 
 ## Description

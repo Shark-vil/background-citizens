@@ -2,7 +2,7 @@
 
 ## SERVER
 ```lua
-	ACTOR:SetStateDelay(time)
+	ACTOR:SetStateDelay(number time)
 ```
 
 ## Description
