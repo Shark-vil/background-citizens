@@ -28,3 +28,11 @@ This addon can rather be considered a base for development. There is basic funct
 The wiki is currently under development and some methods may not be described. When the wiki is complete, this warning will be removed.
 
 **[Documentation](https://shark-vil.github.io/background-citizens)**
+
+## Community
+<a href="https://www.patreon.com/shark_vil">
+	<img src="https://i.imgur.com/gy40FXn.png" width="532" height="169">
+</a>
+<a href="https://discord.gg/wZwtQTU">
+	<img src="https://i.imgur.com/H7T9J3N.png" width="532" height="169">
+</a>
