@@ -166,10 +166,9 @@ if SERVER then
 	function BaseClass:IsAlive()
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) or (npc:IsNPC()
-			and npc.IsCurrentSchedule
-			and npc:IsCurrentSchedule(SCHED_DIE)
+			and npc.IsCurrentSchedule and npc:IsCurrentSchedule(SCHED_DIE)
 		) then
-			bgNPC:RemoveNPC(npc)
+			self:RemoveActor()
 			return false
 		end
 		return true
@@ -181,7 +180,7 @@ else
 	function BaseClass:IsAlive()
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) then
-			bgNPC:RemoveNPC(npc)
+			self:RemoveActor()
 			return false
 		end
 		return true
@@ -255,8 +254,7 @@ end
 
 -- Clears NPC schedule data and synchronizes changes for clients.
 function BaseClass:ClearSchedule()
-	if not IsValid(self.npc) then return end
-	if not self.npc:IsNPC() then return end
+	if not self:IsNPC() then return end
 
 	self.npc:SetNPCState(NPC_STATE_IDLE)
 	self.npc:ClearSchedule()
@@ -689,14 +687,14 @@ end
 
 function BaseClass:SetWalkType(moveType)
 	moveType = moveType or 'walk'
-	local schedule = SCHED_FORCED_GO
 
-	if isnumber(moveType) then
+	local schedule = SCHED_FORCED_GO
+	local valueType =  type(moveType)
+
+	if valueType == 'number' then
 		schedule = moveType
-	elseif isstring(moveType) then
-		if moveType == 'run' then
-			schedule = SCHED_FORCED_GO_RUN
-		end
+	elseif valueType == 'string' and moveType == 'run' then
+		schedule = SCHED_FORCED_GO_RUN
 	end
 
 	self.walkType = schedule
