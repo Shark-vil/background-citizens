@@ -189,6 +189,15 @@ else
 	end
 end
 
+function BaseClass:RemoveActor()
+	bgNPC:RemoveNPC(self.npc)
+end
+
+function BaseClass:Remove()
+	bgNPC:RemoveNPC(self.npc)
+	if self:IsValid() then self.npc:Remove() end
+end
+
 -- Sets the reaction to the event.
 -- ? Used in system computing, and does nothing by itself.
 -- @param reaction string reaction to event
