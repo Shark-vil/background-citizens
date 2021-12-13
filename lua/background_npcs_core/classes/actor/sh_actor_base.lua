@@ -202,6 +202,16 @@ function BaseClass:GetLastReaction()
 	return self.reaction
 end
 
+function BaseClass:IsNPC()
+	if not self:IsValid() then return false end
+	return self.npc:IsNPC()
+end
+
+function BaseClass:IsNextBot()
+	if not self:IsValid() then return false end
+	return self.npc:IsNextBot()
+end
+
 -- Returns the entity of the actor's NPC.
 -- ! Under certain circumstances, it can return NULL, it is recommended to use the IsAlive method before receiving the NPC.
 -- @return entity npc npc entity
