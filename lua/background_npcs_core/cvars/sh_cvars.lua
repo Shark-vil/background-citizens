@@ -29,7 +29,6 @@ bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
-bgNPC.cvar.bgn_movement_checking_parts = 5
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 bgNPC.cvar.bgn_actors_teleporter = 0
 bgNPC.cvar.bgn_actors_max_teleports = 3
@@ -177,10 +176,6 @@ scvar.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_
 
 scvar.Register('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues,
 	FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
-	.Access(DefaultAccess)
-
-scvar.Register('bgn_movement_checking_parts', bgNPC.cvar.bgn_movement_checking_parts,
-	FCVAR_ARCHIVE, 'The number of NPCs whose movement can be checked at one time. The higher the number, the less frames you get, but NPCs will stop less often, waiting for the command to move to the next point. Recommended for weak PCs - 1, for medium - 5, for powerful - 10.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporter,
