@@ -1428,6 +1428,16 @@ function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
 	end
 end
 
+function BaseClass:GetPos()
+	if not self:IsValid() then return Vector(0, 0, 0) end
+	return self.npc:GetPos()
+end
+
+function BaseClass:GetAngles()
+	if not self:IsValid() then return Angle(0, 0, 0) end
+	return self.npc:GetAngles()
+end
+
 BaseClass.__index = BaseClass
 
 return BaseClass
