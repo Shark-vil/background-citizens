@@ -39,4 +39,6 @@ async.Add('BGN_StateMachine', function(yield, wait)
 
 		yield()
 	end
+
+	yield()
 end)
