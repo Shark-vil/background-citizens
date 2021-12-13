@@ -45,6 +45,7 @@ bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'english'
+bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
 
 function bgNPC:IsActiveNPCType(npc_type)
 	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
@@ -196,6 +197,11 @@ scvar.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_lang
 
 scvar.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable,
 	FCVAR_ARCHIVE, 'Enables or disables NPC text replics.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_bio_annihilation_two_replacement',
+	bgNPC.cvar.bgn_module_bio_annihilation_two_replacement,
+	FCVAR_ARCHIVE, '')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
