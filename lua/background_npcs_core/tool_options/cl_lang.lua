@@ -89,6 +89,8 @@ en_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Disable dialogues betwee
 en_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Description: disables NPCs from communicating with each other.'
 en_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Enable text replics'
 en_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Description: enable text cues over the heads of NPCs.'
+en_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement'] = 'Enable support Bio-Annihilation II'
+en_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'] = 'Description: enabled automatic replacement of zombies with NPCs from Bio-Annihilation II.'
 
 
 --[[-----------------------------------------
@@ -211,6 +213,8 @@ ru_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Отключить ди�
 ru_lang['bgn.settings.states.bgn_disable_dialogues.description'] = 'Описание: отключает общение NPC друг с другом.'
 ru_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Включить текстовые реплики'
 ru_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Описание: включает текстовые реплики над головами NPC.'
+ru_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement'] = 'Включить поддержку Bio-Annihilation II'
+ru_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'] = 'Описание: включает автоматическую замену зомби на NPC из Bio-Annihilation II.'
 
 --[[-----------------------------------------
    Active npc group settings menu
