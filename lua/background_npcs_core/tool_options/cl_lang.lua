@@ -110,8 +110,6 @@ en_lang['bgn.settings.workshop.cl_citizens_compile_route'] = 'Compile point mesh
 --]]
 en_lang['bgn.settings.optimization.bgn_disable_logic_radius'] = 'Disable npc logic'
 en_lang['bgn.settings.optimization.bgn_disable_logic_radius.description'] = 'Description: Disables the logic of NPCs beyond the specified radius, reducing the load on the game. 0 - disable setting'
-en_lang['bgn.settings.optimization.bgn_movement_checking_parts'] = 'Number of motion checks at a time'
-en_lang['bgn.settings.optimization.bgn_movement_checking_parts.description'] = 'Description: the number of NPCs whose movement can be checked at one time. The higher the number, the less frames you get, but NPCs will stop less often, waiting for the command to move to the next point. Recommended for weak PCs - 1, for medium - 5, for powerful - 10.'
 
 --[[-----------------------------------------
    Options header menu
@@ -233,8 +231,6 @@ ru_lang['bgn.settings.workshop.cl_citizens_compile_route'] = 'Скомпилир
 --]]
 ru_lang['bgn.settings.optimization.bgn_disable_logic_radius'] = 'Отключить логику NPC'
 ru_lang['bgn.settings.optimization.bgn_disable_logic_radius.description'] = 'Описание: отключает логику НПС дальше заданного радиуса, уменьшая нагрузку на игру. 0 - отключить настройку'
-ru_lang['bgn.settings.optimization.bgn_movement_checking_parts'] = 'Количество проверок движения за раз'
-ru_lang['bgn.settings.optimization.bgn_movement_checking_parts.description'] = 'Описание: количество NPC, передвижение которых можно проверить за один раз. Чем больше число, тем меньше кадров вы получите, но NPC будут реже останавливаться, ожидая команды двигаться к следующей точке. Рекомендуется для слабых ПК - 1, для средних - 5, для мощных - 10.'
 
 --[[-----------------------------------------
    Options header menu
