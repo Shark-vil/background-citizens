@@ -1,5 +1,3 @@
-local WantedModule = bgNPC:GetModule('wanted')
-
 bgNPC:SetStateAction('defense', 'danger', {
 	pre_start = function(actor)
 		if not actor.weapon then return 'fear' end
@@ -23,36 +21,9 @@ bgNPC:SetStateAction('defense', 'danger', {
 		data.delay = data.delay or 0
 
 		if data.delay < CurTime() or enemy:IsNPC() or enemy:IsPlayer() then
-			local killingSumm = bgNPC:GetKillingStatisticSumm(enemy)
-
-			if not data.disableWeapon then
-				data.not_gun = data.not_gun or true
-				data.not_gun_delay = data.not_gun_delay or CurTime() + 15
-
-				local EnemyActor = bgNPC:GetActor(enemy)
-				if EnemyActor and EnemyActor:HasTeam('zombie') then data.not_gun = false end
-
-				if data.not_gun and (data.not_gun_delay < CurTime()
-					or killingSumm > 0
-					or enemy:IsNextBot()
-					or (enemy:IsNPC() and IsValid(enemy:GetActiveWeapon()))
-				) then
-					data.not_gun = false
-				end
-
-				if data.not_gun and actor:HasTeam('police') and not WantedModule:HasWanted(enemy) then
-					if enemy:GetPos():DistToSqr(npc:GetPos()) <= 160000 then
-						actor:PrepareWeapon('weapon_stunstick', true)
-					else
-						actor:PrepareWeapon()
-					end
-				else
-					actor:PrepareWeapon()
-				end
-			end
+			if not data.disableWeapon then actor:PrepareWeapon() end
 
 			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
-
 			if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
 				if actor:IsMeleeWeapon() then
 					actor:WalkToTarget(enemy, 'run')
