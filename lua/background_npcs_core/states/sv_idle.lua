@@ -8,8 +8,15 @@ bgNPC:SetStateAction('idle', 'calm', {
 		data.time = delay
 		data.delay = CurTime() + delay
 
-		local id = tostring(math.random(1, 4))
-		actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
+		if slib.chance(15) then
+			local anim_info = slib.Animator.Play('bgn_check_phone', 'idle', actor:GetNPC())
+			if anim_info then
+				data.delay = CurTime() + anim_info.time + 1
+			end
+		else
+			local id = tostring(math.random(1, 4))
+			actor:PlayStaticSequence('LineIdle0' .. id, true, data.time)
+		end
 	end,
 	update = function(actor, state, data)
 		if idle_is_finish(actor, data) then actor:RandomState() end
