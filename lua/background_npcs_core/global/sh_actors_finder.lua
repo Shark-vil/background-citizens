@@ -256,6 +256,10 @@ function bgNPC:GetAll()
 	return self.actors
 end
 
+function bgNPC:Count()
+	return #self.actors
+end
+
 function bgNPC:GetAllByType(npc_type)
 	return self.factors[npc_type] or {}
 end
