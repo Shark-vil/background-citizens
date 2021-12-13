@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.7.2'
+bgNPC.VERSION = '1.7.3'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -91,9 +91,7 @@ local function ExecutableScripts()
 	script:using('modules/sv_npc_look_at_object.lua')
 	script:using('modules/sv_player_look_at_object.lua')
 	script:using('modules/sv_static_animation_controller.lua')
-	script:using('modules/sv_friend_fixed.lua')
 	script:using('modules/sv_first_attacker_found.lua')
-	script:using('modules/sv_autoregen.lua')
 	script:using('modules/sv_zombie_mode.lua')
 	script:using('modules/sv_dropmoney.lua')
 	script:using('modules/sv_n2money_drop.lua')
@@ -138,8 +136,8 @@ local function ExecutableScripts()
 	script:using('modules/dv/sv_move_to_target.lua')
 	script:using('modules/dv/sv_car_damage_reaction.lua')
 	script:using('modules/sv_nbc_npc_remover_bypass.lua')
-	script:using('modules/synchronization/cl_cync.lua')
-	script:using('modules/synchronization/sv_cync.lua')
+	script:using('modules/synchronization/cl_sync.lua')
+	script:using('modules/synchronization/sv_sync.lua')
 	script:using('modules/cl_version_checker.lua')
 	script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')

@@ -4,7 +4,7 @@ local SCHED_SLEEP = SCHED_SLEEP
 local hook_Run = hook.Run
 --
 
-timer.Create('BGN_ActorAnimationController', 0.1, 0, function()
+timer.Create('BGN_ActorAnimationController', .1, 0, function()
 	local actors = bgNPC:GetAll()
 	for i = 1, #actors do
 		local actor = actors[i]

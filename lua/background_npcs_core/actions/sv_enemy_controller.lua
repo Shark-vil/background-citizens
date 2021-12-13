@@ -8,7 +8,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', functi
 	actor:RandomState()
 end)
 
-timer.Create('BGN_ActorEnemyController', 1, 0, function()
+async.Add('BGN_ActorEnemyController', function(yield, wait)
 	local actors = bgNPC:GetAll()
 
 	for i = 1, #actors do
@@ -16,8 +16,11 @@ timer.Create('BGN_ActorEnemyController', 1, 0, function()
 
 		if actor and actor:IsAlive() then
 			actor:EnemiesRecalculate()
+			yield()
 		end
 	end
+
+	wait(1)
 end)
 
 hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)

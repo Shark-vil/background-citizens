@@ -8,7 +8,7 @@ local ipairs = ipairs
 --
 
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
-	bgNPC:RemoveNPC(actor:GetNPC())
+	actor:RemoveActor()
 end)
 
 hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
@@ -43,21 +43,21 @@ end
 
 timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local actors = bgNPC:GetAll()
+	local actors_count = #actors
 
-	if #actors == 0 then return end
+	if actors_count == 0 then return end
 
 	local WantedModule = bgNPC:GetModule('wanted')
 
 	local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
 	local bgn_enable = GetConVar('bgn_enable'):GetBool()
 	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
-
 	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
 	local player_list = player.GetHumans()
 	local player_count = #player_list
 
-	for i = 1, #actors do
+	for i = 1, actors_count do
 		local actor = actors[i]
 
 		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor:GetData().hidden then
@@ -68,8 +68,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
 			if not hook.Run('BGN_PreRemoveNPC', npc) then
-				bgNPC:RemoveNPC(npc)
-				npc:Remove()
+				actor:Remove()
 			end
 		else
 			local isRemove = true
@@ -90,8 +89,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 			if isRemove then
 				if not bgn_actors_teleporter then
 					if not hook.Run('BGN_PreRemoveNPC', npc) then
-						bgNPC:RemoveNPC(npc)
-						npc:Remove()
+						actor:Remove()
 					end
 				else
 					local data = actor:GetData()
@@ -122,8 +120,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 
 						if not desiredPosition then
 							if not hook.Run('BGN_PreRemoveNPC', npc) then
-								bgNPC:RemoveNPC(npc)
-								npc:Remove()
+								actor:Remove()
 							end
 						else
 							if max_teleporter == current_teleport then continue end
@@ -166,8 +163,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 
 		if not success and not hook.Run('BGN_PreRemoveNPC', npc) then
 			bgNPC:Log('Remove wanted npc (reset targets)', 'Wanted NPC')
-			bgNPC:RemoveNPC(npc)
-			npc:Remove()
+			actor:Remove()
 		end
 	end
 end)

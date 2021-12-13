@@ -54,13 +54,15 @@ local function NodeIsChecked(checkedNodes, node)
 	return false
 end
 
+local function IsNotWorld_Filter(ent)
+	if not ent:IsNPC() and ent:IsWorld() then return true end
+end
+
 local function IsNotWorld(startPos, endPos)
 	local tr = util_TraceLine({
 		start = startPos,
 		endpos = endPos,
-		filter = function(ent)
-			if not ent:IsNPC() and ent:IsWorld() then return true end
-		end
+		filter = IsNotWorld_Filter
 	})
 
 	return not tr.Hit

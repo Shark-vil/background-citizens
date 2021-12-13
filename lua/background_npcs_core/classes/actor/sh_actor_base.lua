@@ -56,7 +56,6 @@ local schedule_white_list = {
 }
 
 local BaseClass = {}
-BaseClass.info = {}
 
 function BaseClass:SetStateDelay(time)
 	self.state_delay = CurTime() + time
@@ -167,10 +166,9 @@ if SERVER then
 	function BaseClass:IsAlive()
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) or (npc:IsNPC()
-			and npc.IsCurrentSchedule
-			and npc:IsCurrentSchedule(SCHED_DIE)
+			and npc.IsCurrentSchedule and npc:IsCurrentSchedule(SCHED_DIE)
 		) then
-			bgNPC:RemoveNPC(npc)
+			self:RemoveActor()
 			return false
 		end
 		return true
@@ -182,11 +180,20 @@ else
 	function BaseClass:IsAlive()
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) then
-			bgNPC:RemoveNPC(npc)
+			self:RemoveActor()
 			return false
 		end
 		return true
 	end
+end
+
+function BaseClass:RemoveActor()
+	bgNPC:RemoveNPC(self.npc)
+end
+
+function BaseClass:Remove()
+	bgNPC:RemoveNPC(self.npc)
+	if self:IsValid() then self.npc:Remove() end
 end
 
 -- Sets the reaction to the event.
@@ -200,6 +207,16 @@ end
 -- @return string reaction last set reaction
 function BaseClass:GetLastReaction()
 	return self.reaction
+end
+
+function BaseClass:IsNPC()
+	if not self:IsValid() then return false end
+	return self.npc:IsNPC()
+end
+
+function BaseClass:IsNextBot()
+	if not self:IsValid() then return false end
+	return self.npc:IsNextBot()
 end
 
 -- Returns the entity of the actor's NPC.
@@ -237,8 +254,7 @@ end
 
 -- Clears NPC schedule data and synchronizes changes for clients.
 function BaseClass:ClearSchedule()
-	if not IsValid(self.npc) then return end
-	if not self.npc:IsNPC() then return end
+	if not self:IsNPC() then return end
 
 	self.npc:SetNPCState(NPC_STATE_IDLE)
 	self.npc:ClearSchedule()
@@ -671,14 +687,14 @@ end
 
 function BaseClass:SetWalkType(moveType)
 	moveType = moveType or 'walk'
-	local schedule = SCHED_FORCED_GO
 
-	if isnumber(moveType) then
+	local schedule = SCHED_FORCED_GO
+	local valueType =  type(moveType)
+
+	if valueType == 'number' then
 		schedule = moveType
-	elseif isstring(moveType) then
-		if moveType == 'run' then
-			schedule = SCHED_FORCED_GO_RUN
-		end
+	elseif valueType == 'string' and moveType == 'run' then
+		schedule = SCHED_FORCED_GO_RUN
 	end
 
 	self.walkType = schedule
@@ -1426,6 +1442,16 @@ function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
 	if animation_sequence then
 		self:PlayStaticSequence(animation_sequence)
 	end
+end
+
+function BaseClass:GetPos()
+	if not self:IsValid() then return Vector(0, 0, 0) end
+	return self.npc:GetPos()
+end
+
+function BaseClass:GetAngles()
+	if not self:IsValid() then return Angle(0, 0, 0) end
+	return self.npc:GetAngles()
 end
 
 BaseClass.__index = BaseClass

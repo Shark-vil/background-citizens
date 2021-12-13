@@ -1,20 +1,16 @@
 local bgNPC = bgNPC
 local IsValid = IsValid
-local GetConVar = GetConVar
 local CurTime = CurTime
-local coroutine_resume = coroutine.resume
-local coroutine_create = coroutine.create
-local coroutine_yield = coroutine.yield
 --
 
-local function MovementProcess()
-	local max_pass = GetConVar('bgn_movement_checking_parts'):GetInt()
-	local current_pass = 0
+async.Add('MovementProcess', function(yield, wait)
 	local actors = bgNPC:GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
+
+		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then continue end
 
 		if actor:InVehicle() then
 			if actor.walkUpdatePathDelay < CurTime() then
@@ -33,28 +29,11 @@ local function MovementProcess()
 				end
 
 				actor.walkUpdatePathDelay = CurTime() + 10
+				yield()
 			end
 		end
 
 		actor:UpdateMovement()
-		current_pass = current_pass + 1
-
-		if max_pass == current_pass then
-			current_pass = 0
-			coroutine_yield()
-		end
-	end
-end
-
-local thread
-local is_second_tick = false
-
-hook.Add('Think', 'BGN_MovementService', function()
-	is_second_tick = not is_second_tick
-	if not is_second_tick then return end
-
-	if not thread or not coroutine_resume(thread) then
-		thread = coroutine_create(MovementProcess)
-		coroutine_resume(thread)
+		yield()
 	end
 end)

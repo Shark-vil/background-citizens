@@ -36,15 +36,13 @@ async.Add('bgn_client_render_optimization', function(yield)
 	local actors = bgNPC:GetAll()
 	local pass = 0
 
-	yield()
-
 	for i = 1, #actors do
 		local actor = actors[i]
 
-		if actor then
+		if actor and actor:IsAlive() then
 			local npc = actor:GetNPC()
 
-			if IsValid(npc) then
+			if not IsValid(npc.slib_animator) then
 				local pos = npc:GetPos()
 				local weapon = npc:GetActiveWeapon()
 				local in_vehicle = actor:InVehicle()

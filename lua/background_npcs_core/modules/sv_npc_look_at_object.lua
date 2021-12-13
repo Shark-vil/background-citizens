@@ -5,49 +5,57 @@ local hook_Run = hook.Run
 local math_abs = math.abs
 --
 
-timer.Create('BGN_Timer_ActorLookAtObject', 0.5, 0, function()
+async.Add('BGN_Timer_ActorLookAtObject', function(yield, wait)
 	local actors = bgNPC:GetAll()
+
 	for i = 1, #actors do
 		local actor = actors[i]
-		if actor:IsAlive() then
-			local npc = actor:GetNPC()
-			local npc_pos = npc:GetPos()
-			local entities = ents_FindInSphere(npc_pos, 1000)
+		if not actor:IsAlive() then continue end
 
-			for k = 1, #entities do
-				local ent = entities[k]
-				local ent_pos = ent:GetPos()
-				if bgNPC:NPCIsViewVector(npc, ent_pos, 70) then
-					local diff = (ent_pos - npc_pos):Angle().y - npc:GetAngles().y
+		local npc = actor:GetNPC()
+		local npc_pos = npc:GetPos()
+		local entities = ents_FindInSphere(npc_pos, 1000)
 
-					if diff < -180 then
-						diff = diff + 360
+		for k = 1, #entities do
+			local ent = entities[k]
+			local ent_pos = ent:GetPos()
+
+			if not bgNPC:NPCIsViewVector(npc, ent_pos, 70) then goto skip end
+
+			local diff = (ent_pos - npc_pos):Angle().y - npc:GetAngles().y
+
+			if diff < -180 then
+				diff = diff + 360
+			end
+
+			if diff > 180 then
+				diff = diff - 360
+			end
+
+			diff = math_abs(diff)
+
+			local dist = npc_pos:Distance(ent_pos)
+			hook_Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
+
+			if npc:IsNPC() then
+				local tr = util_TraceLine({
+					start = npc:GetShootPos(),
+					endpos = npc:GetShootPos() + npc:GetForward() * 1000,
+					filter = function(trace_entity)
+						if trace_entity ~= npc then return true end
 					end
+				})
 
-					if diff > 180 then
-						diff = diff - 360
-					end
-
-					diff = math_abs(diff)
-					local dist = npc_pos:Distance(ent_pos)
-
-					hook_Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
-
-					if npc:IsNPC() then
-						local tr = util_TraceLine({
-							start = npc:GetShootPos(),
-							endpos = npc:GetShootPos() + npc:GetForward() * 1000,
-							filter = function(ent)
-								if ent ~= npc then return true end
-							end
-						})
-
-						if tr.Hit then
-							hook_Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
-						end
-					end
+				if tr.Hit then
+					hook_Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
 				end
 			end
+
+			yield()
 		end
+
+		::skip::
+
+		yield()
 	end
 end)

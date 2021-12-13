@@ -323,7 +323,6 @@ bgNPC.cfg.npcs_template = {
 			'npc_poisonzombie',
 		},
 		name = 'Zombie',
-		bio_annihilation_two_replacement = true,
 		zombie_mode = true,
 		respawn_delay = 10,
 		limit = 10,

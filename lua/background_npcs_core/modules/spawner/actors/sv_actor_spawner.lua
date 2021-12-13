@@ -92,63 +92,71 @@ hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(ent)
 	end)
 end)
 
-timer.Create('BGN_Timer_NPCSpawner', GetConVar('bgn_spawn_period'):GetFloat(), 0, function()
-	local bgn_enable = GetConVar('bgn_enable'):GetBool()
-	if not bgn_enable or player.GetCount() == 0 then return end
+local function InitActorsSpawner(delay)
+	timer.Create('BGN_Timer_NPCSpawner', delay, 0, function()
+		local bgn_enable = GetConVar('bgn_enable'):GetBool()
+		if not bgn_enable or player.GetCount() == 0 then return end
 
-	bgNPC:ClearRemovedNPCs()
+		bgNPC:ClearRemovedNPCs()
 
-	for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
-		if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then continue end
+		for npcType, npc_data in pairs(bgNPC.cfg.npcs_template) do
+			if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then continue end
 
-		local max_limit = bgNPC:GetLimitActors(npcType)
-		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then continue end
+			local max_limit = bgNPC:GetLimitActors(npcType)
+			if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then continue end
 
-		local pos
+			local pos
 
-		if npc_data.wanted_level ~= nil then
-			local asset = bgNPC:GetModule('wanted')
-			local success = false
-			local wanted_list = asset:GetAllWanted()
+			if npc_data.wanted_level ~= nil then
+				local asset = bgNPC:GetModule('wanted')
+				local success = false
+				local wanted_list = asset:GetAllWanted()
 
-			for i = 1, #wanted_list do
-				local WantedClass = wanted_list[i]
-				local target = WantedClass.target
+				for i = 1, #wanted_list do
+					local WantedClass = wanted_list[i]
+					local target = WantedClass.target
 
-				if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
-					pos = target:GetPos()
-					success = true
-					break
+					if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
+						pos = target:GetPos()
+						success = true
+						break
+					end
+				end
+
+				if not success then continue end
+			end
+
+			if npc_data.validator then
+				local result = npc_data.validator(npc_data, npcType)
+				if isbool(result) and not result then
+					continue
 				end
 			end
 
-			if not success then continue end
-		end
-
-		if npc_data.validator then
-			local result = npc_data.validator(npc_data, npcType)
-			if isbool(result) and not result then
-				continue
+			local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
+			if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
+				if spawn_delayer.time < CurTime() then
+					bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
+					bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
+				else
+					continue
+				end
 			end
-		end
 
-		local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
-		if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
-			if spawn_delayer.time < CurTime() then
-				bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
-				bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
-			else
-				continue
-			end
+			bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
+				local actor = bgNPC:SpawnActor(npcType, nodePosition)
+				if actor and not bgNPC:EnterActorInExistVehicle(actor) then
+					bgNPC:SpawnVehicleWithActor(actor)
+				end
+			end)
 		end
+	end)
+end
 
-		bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
-			local actor = bgNPC:SpawnActor(npcType, nodePosition)
-			if actor and not bgNPC:EnterActorInExistVehicle(actor) then
-				bgNPC:SpawnVehicleWithActor(actor)
-			end
-		end)
-	end
+InitActorsSpawner(GetConVar('bgn_spawn_period'):GetFloat())
+
+cvars.AddChangeCallback('bgn_spawn_period', function(_, _, new_value)
+	InitActorsSpawner(tonumber(new_value))
 end)
 
 hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
