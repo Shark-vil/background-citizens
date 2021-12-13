@@ -18,7 +18,7 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 	for i = 1, #actors do
 		local actor = actors[i]
 
-		if actor and actor:IsAlive() and not actor:InVehicle() and slib.chance(30) then
+		if actor and actor:IsAlive() and not actor:InVehicle() and slib.chance(15) then
 			local data = actor:GetData()
 			if not data or not data.replics then continue end
 
