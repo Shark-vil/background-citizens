@@ -6,6 +6,7 @@ local player_GetAll = player.GetAll
 --
 local bgn_enable = GetConVar('bgn_enable'):GetBool()
 local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat() ^ 2
+local max_pass = 5
 
 cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 	if tonumber(new_value) > 0 then return end
@@ -28,15 +29,11 @@ cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 	bgn_disable_logic_radius = tonumber(new_value) ^ 2
 end)
 
-local max_pass = 5
-
 async.Add('bgn_server_logic_optimization', function(yield)
 	if not bgn_enable or bgn_disable_logic_radius <= 0 then return end
 	local actors = bgNPC:GetAll()
 	local players = player_GetAll()
 	local pass = 0
-
-	yield()
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -54,10 +51,7 @@ async.Add('bgn_server_logic_optimization', function(yield)
 
 					if IsValid(ply) then
 						local dist = npc_pos:DistToSqr(ply:GetPos())
-
-						if not max_dist or dist < max_dist then
-							max_dist = dist
-						end
+						if not max_dist or dist < max_dist then max_dist = dist end
 
 						if dist <= bgn_disable_logic_radius or ply:slibIsViewVector(npc_pos) then
 							is_adding_no_think_flag = false
@@ -81,9 +75,9 @@ async.Add('bgn_server_logic_optimization', function(yield)
 						else
 							delay = time + 1
 						end
-					end
 
-					npc:slibSetLocalVar('bgn_optimize_no_think_delay', delay)
+						npc:slibSetLocalVar('bgn_optimize_no_think_delay', delay)
+					end
 				elseif no_think_enable then
 					no_think_enable = false
 				end
@@ -99,7 +93,6 @@ async.Add('bgn_server_logic_optimization', function(yield)
 				end
 
 				pass = pass + 1
-
 				if pass == max_pass then
 					pass = 0
 					yield()
