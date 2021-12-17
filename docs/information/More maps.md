@@ -24,5 +24,6 @@
 - [gm_goldencity_v2](https://steamcommunity.com/sharedfiles/filedetails/?id=2515486219)
 - [rp_ACSRG2](https://steamcommunity.com/sharedfiles/filedetails/?id=2417210266)
 - [Random Background NPC Nodes pack](https://steamcommunity.com/sharedfiles/filedetails/?id=2399118195)
+- [rp_sheep_v3](https://steamcommunity.com/sharedfiles/filedetails/?id=2684330081)
 
 **Do you want your work to be listed, or do you want to suggest a map? You can do this on a discord server.**
