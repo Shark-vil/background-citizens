@@ -66,7 +66,7 @@ bgNPC.cfg.npcs_template = {
 			}
 		},
 		vehicle_multiply_speed = { ['danger'] = 4 },
-		getting_weapon_chance = 10,
+		getting_weapon_chance = 30,
 		money = { 0, 100 },
 		health = 30,
 		weapon_skill = WEAPON_PROFICIENCY_POOR,
