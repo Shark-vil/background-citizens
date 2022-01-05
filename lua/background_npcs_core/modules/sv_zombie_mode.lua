@@ -1,7 +1,7 @@
 timer.Create('BGN_ZombieModeAutoEnableDefense', 1, 0, function()
 	local WantedModule = bgNPC:GetModule('wanted')
 	local zombies = bgNPC:GetAll()
-	local enemies = table.Merge(player.GetAll(), bgNPC:GetAllNPCs())
+	local enemies = table.Combine(player.GetAll(), bgNPC:GetAllNPCs())
 
 	for i = 1, #zombies do
 		local zombie = zombies[i]
