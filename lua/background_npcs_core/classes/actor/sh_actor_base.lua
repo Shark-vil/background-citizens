@@ -268,6 +268,7 @@ end
 -- @param ent entity any entity other than the actor himself
 function BaseClass:AddTarget(ent)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
+	if ent.BGN_HasBuildMode then return end
 
 	if self:GetNPC() ~= ent and not table.HasValueBySeq(self.targets, ent) then
 		table.insert(self.targets, ent)
@@ -386,6 +387,7 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
+	if ent.BGN_HasBuildMode then return end
 
 	local npc = self:GetNPC()
 
