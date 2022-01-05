@@ -4,36 +4,41 @@ local CurTime = CurTime
 --
 
 async.Add('MovementProcess', function(yield, wait)
-	local actors = bgNPC:GetAll()
+	while true do
+		local actors = bgNPC:GetAll()
 
-	for i = 1, #actors do
-		local actor = actors[i]
-		local npc = actor:GetNPC()
+		for i = 1, #actors do
+			local actor = actors[i]
+			if not actor then continue end
 
-		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then continue end
+			local npc = actor:GetNPC()
+			if not IsValid(npc) or npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then continue end
 
-		if actor:InVehicle() then
-			if actor.walkUpdatePathDelay < CurTime() then
-				if IsValid(actor.walkTarget) then
-					actor:WalkToTarget(actor.walkTarget)
+			if actor:InVehicle() then
+				if actor.walkUpdatePathDelay < CurTime() then
+					if IsValid(actor.walkTarget) then
+						actor:WalkToTarget(actor.walkTarget)
+					end
+
+					actor.walkUpdatePathDelay = CurTime() + 5
 				end
+			else
+				if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < CurTime() then
+					local walkPath = bgNPC:FindWalkPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
 
-				actor.walkUpdatePathDelay = CurTime() + 5
-			end
-		else
-			if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < CurTime() then
-				local walkPath = bgNPC:FindWalkPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
+					if #walkPath ~= 0 then
+						actor.walkPath = walkPath
+					end
 
-				if #walkPath ~= 0 then
-					actor.walkPath = walkPath
+					actor.walkUpdatePathDelay = CurTime() + 10
+					yield()
 				end
-
-				actor.walkUpdatePathDelay = CurTime() + 10
-				yield()
 			end
+
+			actor:UpdateMovement()
+			yield()
 		end
 
-		actor:UpdateMovement()
 		yield()
 	end
 end)
