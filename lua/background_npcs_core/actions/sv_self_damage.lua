@@ -9,7 +9,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 
 	local attacker = dmginfo:GetAttacker()
 	if not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
-	if attacker.bgNPCIgnore or attacker == target then return end
+	if attacker.BGN_HasBuildMode or attacker.bgNPCIgnore or attacker == target then return end
 
 	local result
 

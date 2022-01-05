@@ -208,8 +208,8 @@ for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 end
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
-	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType),
-		FCVAR_ARCHIVE).Access(DefaultAccess)
+	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType), FCVAR_ARCHIVE)
+		.Access(DefaultAccess)
 end
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
