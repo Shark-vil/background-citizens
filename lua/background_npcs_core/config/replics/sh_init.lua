@@ -25,19 +25,21 @@ end
 
 include( GetFilePath('english') )
 
-hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', function()
-	do
-		local lnaguage_path = GetGameLanguage()
+if CLIENT then
+	hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', function()
+		do
+			local lnaguage_path = GetGameLanguage()
 
-		if not lnaguage_path then
-			lnaguage_path = GetCustomLanguage()
-		end
+			if not lnaguage_path then
+				lnaguage_path = GetCustomLanguage()
+			end
 
-		if lnaguage_path then
-			include(lnaguage_path)
+			if lnaguage_path then
+				include(lnaguage_path)
+			end
 		end
-	end
-end)
+	end)
+end
 
 cvars.AddChangeCallback('bgn_module_replics_language', function(_, _, lang)
 	local lnaguage_path = GetFilePath(lang)
