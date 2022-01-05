@@ -30,51 +30,59 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_
 	min_range = new_value
 end)
 
-async.Add('bgn_client_render_optimization', function(yield)
-	if not is_active then return end
-	local ply = LocalPlayer()
-	local actors = bgNPC:GetAll()
-	local pass = 0
+async.Add('bgn_client_render_optimization', function(yield, wait)
+	while true do
+		if not is_active then
+			wait(1)
+			return
+		end
 
-	for i = 1, #actors do
-		local actor = actors[i]
+		local ply = LocalPlayer()
+		local actors = bgNPC:GetAll()
+		local pass = 0
 
-		if actor and actor:IsAlive() then
-			local npc = actor:GetNPC()
+		for i = 1, #actors do
+			local actor = actors[i]
 
-			if not IsValid(npc.slib_animator) then
-				local pos = npc:GetPos()
-				local weapon = npc:GetActiveWeapon()
-				local in_vehicle = actor:InVehicle()
-				local past_set_no_draw = npc:slibGetLocalVar('bgn_render_optimization', false)
+			if actor and actor:IsAlive() then
+				local npc = actor:GetNPC()
 
-				if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)) then
-					if not past_set_no_draw and not npc:GetNoDraw() then
-						npc:SetNoDraw(true)
-						npc:slibSetLocalVar('bgn_render_optimization', true)
+				if not IsValid(npc.slib_animator) then
+					local pos = npc:GetPos()
+					local weapon = npc:GetActiveWeapon()
+					local in_vehicle = actor:InVehicle()
+					local past_set_no_draw = npc:slibGetLocalVar('bgn_render_optimization', false)
 
-						if IsValid(weapon) then
-							weapon:SetNoDraw(true)
+					if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)) then
+						if not past_set_no_draw and not npc:GetNoDraw() then
+							npc:SetNoDraw(true)
+							npc:slibSetLocalVar('bgn_render_optimization', true)
+
+							if IsValid(weapon) then
+								weapon:SetNoDraw(true)
+							end
 						end
-					end
-					pass = pass + 1
-				else
-					if past_set_no_draw and npc:GetNoDraw() then
-						npc:SetNoDraw(false)
-						npc:slibSetLocalVar('bgn_render_optimization', false)
+						pass = pass + 1
+					else
+						if past_set_no_draw and npc:GetNoDraw() then
+							npc:SetNoDraw(false)
+							npc:slibSetLocalVar('bgn_render_optimization', false)
 
-						if IsValid(weapon) then
-							weapon:SetNoDraw(false)
+							if IsValid(weapon) then
+								weapon:SetNoDraw(false)
+							end
 						end
+						pass = pass + 1
 					end
-					pass = pass + 1
-				end
 
-				if pass == max_pass then
-					pass = 0
-					yield()
+					if pass == max_pass then
+						pass = 0
+						yield()
+					end
 				end
 			end
 		end
+
+		yield()
 	end
 end)

@@ -26,19 +26,21 @@ function bgNPC:StateActionExists(state_name, func_name)
 end
 
 async.Add('BGN_StateMachine', function(yield, wait)
-	local actors = bgNPC:GetAll()
+	while true do
+		local actors = bgNPC:GetAll()
 
-	for i = 1, #actors do
-		local actor = actors[i]
+		for i = 1, #actors do
+			local actor = actors[i]
 
-		if actor and actor:IsAlive() and not actor:GetNPC():IsEFlagSet(EFL_NO_THINK_FUNCTION) then
-			local state_name = actor:GetState()
-			local state_data = actor:GetStateData()
-			bgNPC:CallStateAction(state_name, 'update', actor, state_name, state_data)
+			if actor and actor:IsAlive() and not actor:GetNPC():IsEFlagSet(EFL_NO_THINK_FUNCTION) then
+				local state_name = actor:GetState()
+				local state_data = actor:GetStateData()
+				bgNPC:CallStateAction(state_name, 'update', actor, state_name, state_data)
+			end
+
+			yield()
 		end
 
 		yield()
 	end
-
-	yield()
 end)
