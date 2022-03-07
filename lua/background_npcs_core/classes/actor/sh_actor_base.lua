@@ -1,17 +1,14 @@
-local snet = snet
 local bgNPC = bgNPC
 local string = string
 local SERVER = SERVER
 local CLIENT = CLIENT
 local hook = hook
-local math = math
 local table = table
 local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 local SCHED_FORCED_GO = SCHED_FORCED_GO
 local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
 local CurTime = CurTime
 local IsValid = IsValid
-local pairs = pairs
 local ipairs = ipairs
 local istable = istable
 local isentity = isentity
@@ -20,6 +17,15 @@ local isstring = isstring
 local type = type
 local GetConVar = GetConVar
 local tobool = tobool
+local table_remove = table.remove
+local table_RandomOpt = table.RandomOpt
+local table_RandomBySeq = table.RandomBySeq
+local table_HasValueBySeq = table.HasValueBySeq
+local string_find = string.find
+local hook_Run = hook.Run
+local snet_Invoke = snet.Invoke
+local snet_InvokeAll = snet.InvokeAll
+local math_random = math.random
 --
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
@@ -75,10 +81,10 @@ function BaseClass:SyncFunction(name, ply, data)
 
 	if ply then
 		if IsValid(ply) then
-			snet.Invoke(name, ply, self.uid, data)
+			snet_Invoke(name, ply, self.uid, data)
 		end
 	else
-		snet.InvokeAll(name, self.uid, data)
+		snet_InvokeAll(name, self.uid, data)
 	end
 end
 
@@ -108,9 +114,9 @@ function BaseClass:GetGenderByModel()
 	local model = npc:GetModel()
 	if not model then return gender end
 
-	if tobool(string.find(model, 'female_*')) then
+	if tobool(string_find(model, 'female_*')) then
 		return 'female'
-	elseif tobool(string.find(model, 'male_*')) then
+	elseif tobool(string_find(model, 'male_*')) then
 		return 'male'
 	end
 
@@ -119,7 +125,7 @@ end
 
 -- Sets the random state of the NPC from the "at_random" table.
 function BaseClass:RandomState()
-	if not hook.Run('PreRandomState', self) then
+	if not hook_Run('PreRandomState', self) then
 		local state = self:GetRandomState()
 		if state ~= 'none' and self:GetState() ~= state then
 			self:SetState(state)
@@ -135,13 +141,13 @@ function BaseClass:GetRandomState()
 		return 'none'
 	end
 
-	local probability = math.random(1, self.data.at_random_range or 100)
-	local percent, state = table.Random(self.data.at_random)
+	local probability = math_random(1, self.data.at_random_range or 100)
+	local percent, state = table_RandomOpt(self.data.at_random)
 
 	if probability > percent then
 		local last_percent = 0
 
-		for _state, _percent in pairs(self.data.at_random) do
+		for _state, _percent in next, self.data.at_random do
 			if _percent > last_percent then
 				percent = _percent
 				state = _state
@@ -270,8 +276,8 @@ function BaseClass:AddTarget(ent)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if ent.BGN_HasBuildMode then return end
 
-	if self:GetNPC() ~= ent and not table.HasValueBySeq(self.targets, ent) then
-		table.insert(self.targets, ent)
+	if self:GetNPC() ~= ent and not table_HasValueBySeq(self.targets, ent) then
+		self.targets[#self.targets + 1] = ent
 	end
 end
 
@@ -285,17 +291,17 @@ function BaseClass:RemoveTarget(ent, index)
 
 	local old_count = #self.targets
 
-	if not hook.Run('BGN_RemoveActorTarget', self, ent) then
+	if not hook_Run('BGN_RemoveActorTarget', self, ent) then
 		if isentity(ent) and ent == self.walkTarget then self.walkTarget = NULL end
 
 		if isnumber(index) then
-			table.remove(self.targets, index)
+			table_remove(self.targets, index)
 		elseif isentity(ent) then
-			table.RemoveValueBySeq(self.targets, ent)
+			table.RemoveByValue(self.targets, ent)
 		end
 
 		if old_count > 0 and #self.targets == 0 then
-			hook.Run('BGN_ResetTargetsForActor', self)
+			hook_Run('BGN_ResetTargetsForActor', self)
 		end
 	end
 
@@ -312,8 +318,8 @@ function BaseClass:RemoveAllTargets()
 
 	-- Safety bag. It may be removed in the future.
 	if last_count > 0 then
-		hook.Run('BGN_ResetTargetsForActor', self)
 		self.targets = {}
+		hook_Run('BGN_ResetTargetsForActor', self)
 	end
 end
 
@@ -321,7 +327,7 @@ end
 -- @param ent entity any entity
 -- @return boolean is_exist will return true if the entity is the target, otherwise false
 function BaseClass:HasTarget(ent)
-	return table.HasValueBySeq(self.targets, ent)
+	return table_HasValueBySeq(self.targets, ent)
 end
 
 -- Returns the number of existing targets for the actor.
@@ -334,7 +340,7 @@ end
 function BaseClass:TargetsRecalculate()
 	for i = #self.targets, 1, -1 do
 		if not IsValid(self.targets[i]) then
-			table.remove(self.targets, i)
+			table_remove(self.targets, i)
 		end
 	end
 end
@@ -391,17 +397,17 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 
 	local npc = self:GetNPC()
 
-	if npc ~= ent and not table.HasValueBySeq(self.enemies, ent) and
-		not hook.Run('BGN_AddActorEnemy', self, ent)
+	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and
+		not hook_Run('BGN_AddActorEnemy', self, ent)
 	then
 		if npc:IsNPC() then
 			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
-		table.insert(self.enemies, ent)
+		self.enemies[#self.enemies + 1] = ent
 		if always_visible then
-			table.insert(self.enemies_always_visible, ent)
+			self.enemies_always_visible[#self.enemies_always_visible + 1] = ent
 		end
 		self:EnemiesRecalculate()
 	end
@@ -412,7 +418,7 @@ function BaseClass:RemoveEnemy(ent, index)
 
 	local old_count = #self.enemies
 
-	if not hook.Run('BGN_RemoveActorEnemy', self, ent) then
+	if not hook_Run('BGN_RemoveActorEnemy', self, ent) then
 		local npc = self:GetNPC()
 
 		if isentity(ent) then
@@ -426,17 +432,17 @@ function BaseClass:RemoveEnemy(ent, index)
 
 		if isnumber(index) then
 			ent = self.enemies[index]
-			table.remove(self.enemies, index)
+			table_remove(self.enemies, index)
 		elseif isentity(ent) then
-			table.RemoveValueBySeq(self.enemies, ent)
+			table.RemoveByValue(self.enemies, ent)
 		end
 
 		if ent and IsValid(ent) then
-			table.RemoveValueBySeq(self.enemies_always_visible, ent)
+			table.RemoveByValue(self.enemies_always_visible, ent)
 		end
 
 		if old_count > 0 and #self.enemies == 0 then
-			hook.Run('BGN_ResetEnemiesForActor', self)
+			hook_Run('BGN_ResetEnemiesForActor', self)
 		end
 	end
 
@@ -451,15 +457,15 @@ function BaseClass:RemoveAllEnemies()
 
 	-- Safety bag. It may be removed in the future.
 	if last_count > 0 then
-		hook.Run('BGN_ResetEnemiesForActor', self)
 		self.enemies = {}
+		hook_Run('BGN_ResetEnemiesForActor', self)
 	end
 end
 
 function BaseClass:HasEnemy(ent)
 	if ent.isBgnClass then ent = ent:GetNPC() end
 	if IsValid(ent) and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
-	return table.HasValueBySeq(self.enemies, ent)
+	return table_HasValueBySeq(self.enemies, ent)
 end
 
 function BaseClass:EnemiesCount()
@@ -518,7 +524,7 @@ function BaseClass:EnemiesRecalculate()
 				npc:SetTarget(enemy)
 				npc:UpdateEnemyMemory(enemy, enemy:GetPos())
 			elseif not WantedModule:HasWanted(enemy) and
-				not table.HasValueBySeq(self.enemies_always_visible, enemy)
+				not table_HasValueBySeq(self.enemies_always_visible, enemy)
 			then
 				local time = npc:GetEnemyLastTimeSeen(enemy)
 				if time + 20 < CurTime() then
@@ -643,7 +649,7 @@ function BaseClass:SetState(state, data, forced)
 	local is_locked = self:CallStateAction(nil, 'not_stop', current_state, current_data, state, data)
 	if not forced and is_locked then return end
 
-	-- local hook_result = hook.Run('BGN_PreSetNPCState', self, state, data)
+	-- local hook_result = hook_Run('BGN_PreSetNPCState', self, state, data)
 	-- if hook_result then
 	-- 	if isbool(hook_result) then
 	-- 		return
@@ -682,7 +688,7 @@ function BaseClass:SetState(state, data, forced)
 	self.state_data = { state = state, data = data }
 
 	self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
-	hook.Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
+	hook_Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
 
 	return self.state_data
 end
@@ -721,7 +727,7 @@ function BaseClass:WalkToTarget(target, moveType, pathType)
 		local npc = self.npc
 		if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then
 			local walk_type = moveType or 'walk'
-			hook.Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)
+			hook_Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)
 			return
 		end
 
@@ -751,12 +757,12 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 	end
 
 	if self.walkPos == pos then return end
-	if hook.Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
+	if hook_Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
 
 	local npc = self.npc
 	if npc:GetPos():DistToSqr(pos) <= 2500 then
 		local walk_type = moveType or 'walk'
-		hook.Run('BGN_ActorFinishedWalk', self, pos, walk_type)
+		hook_Run('BGN_ActorFinishedWalk', self, pos, walk_type)
 		return
 	end
 
@@ -780,8 +786,8 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 			decentvehicle.Waypoint = nil
 			decentvehicle.NextWaypoint = nil
 
-			for _, v in ipairs(route) do
-				table.insert(walkPath, v.Target)
+			for index = 1, #route do
+				walkPath[index] = route[index].Target
 			end
 		else
 			bgNPC:Log('Trying to build a path for a vehicle that doesn\'t exist', 'sh_actor_class:WalkToPos')
@@ -801,8 +807,8 @@ function BaseClass:UpdateMovement()
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
-		if vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
-			hook.Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
+		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
+			hook_Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
 		end
 	else
 		if #self.walkPath == 0 then return end
@@ -812,10 +818,10 @@ function BaseClass:UpdateMovement()
 		local targetPosition = self.walkPath[1]
 
 		if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
-			table.remove(self.walkPath, 1)
+			table_remove(self.walkPath, 1)
 
 			if #self.walkPath == 0 then
-				if not hook.Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
+				if not hook_Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
 					self:WalkToPos(nil)
 				end
 				return
@@ -849,12 +855,12 @@ function BaseClass:HasTeam(value)
 	local value = value
 	if self.data.team ~= nil and value ~= nil then
 		if isstring(value) then
-			return table.HasValueBySeq(self.data.team, value)
+			return table_HasValueBySeq(self.data.team, value)
 		end
 
 		if isentity(value) then
 			if value:IsPlayer() then
-				if table.HasValueBySeq(self.data.team, 'player') then
+				if table_HasValueBySeq(self.data.team, 'player') then
 					return true
 				else
 					return bgNPC:GetModule('team_parent'):HasParent(value, self)
@@ -972,13 +978,13 @@ function BaseClass:GetReactionForDamage()
 	local percent, reaction
 
 	if self.data.at_damage then
-		local probability = math.random(1, self.data.at_damage_range or 100)
-		percent, reaction = table.Random(self.data.at_damage)
+		local probability = math_random(1, self.data.at_damage_range or 100)
+		percent, reaction = table_RandomOpt(self.data.at_damage)
 
 		if probability > percent then
 			local last_percent = 0
 
-			for _reaction, _percent in pairs(self.data.at_damage) do
+			for _reaction, _percent in next, self.data.at_damage do
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
@@ -1003,13 +1009,13 @@ function BaseClass:GetReactionForProtect()
 	local percent, reaction
 
 	if self.data.at_protect then
-		local probability = math.random(1, self.data.at_protect_range or 100)
-		percent, reaction = table.Random(self.data.at_protect)
+		local probability = math_random(1, self.data.at_protect_range or 100)
+		percent, reaction = table_RandomOpt(self.data.at_protect)
 
 		if probability > percent then
 			local last_percent = 0
 
-			for _reaction, _percent in pairs(self.data.at_protect) do
+			for _reaction, _percent in next, self.data.at_protect do
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
@@ -1054,7 +1060,7 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 		end
 	end
 
-	local hook_result = hook.Run('BGN_PreNPCStartAnimation', self, sequence_name, loop, loop_time)
+	local hook_result = hook_Run('BGN_PreNPCStartAnimation', self, sequence_name, loop, loop_time)
 	if hook_result ~= nil and isbool(hook_result) and not hook_result then
 		return false
 	end
@@ -1086,7 +1092,7 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 
 	self.npc:PhysWake()
 
-	hook.Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
+	hook_Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
 	return true
 end
@@ -1169,14 +1175,14 @@ function BaseClass:FearScream()
 	local npc = self.npc
 	local npc_model = npc:GetModel()
 	local scream_sound = nil
-	if tobool(string.find(npc_model, 'female_*')) then
-		scream_sound = table.RandomBySeq(female_scream)
-	elseif tobool(string.find(npc_model, 'male_*')) then
-		scream_sound = table.RandomBySeq(male_scream)
+	if tobool(string_find(npc_model, 'female_*')) then
+		scream_sound = table_RandomBySeq(female_scream)
+	elseif tobool(string_find(npc_model, 'male_*')) then
+		scream_sound = table_RandomBySeq(male_scream)
 	else
 		local concatenated_table = table.Copy(male_scream)
 		table.Add(concatenated_table, female_scream)
-		scream_sound = table.RandomBySeq(concatenated_table)
+		scream_sound = table_RandomBySeq(concatenated_table)
 	end
 
 	if scream_sound ~= nil and isstring(scream_sound) then
@@ -1186,7 +1192,7 @@ end
 
 function BaseClass:CallForHelp(enemy)
 	if not IsValid(enemy) then return end
-	if hook.Run('BGN_PreCallForHelp', self, enemy) then return end
+	if hook_Run('BGN_PreCallForHelp', self, enemy) then return end
 
 	self:FearScream()
 
@@ -1237,7 +1243,7 @@ function BaseClass:IsMeleeWeapon()
 	local wep = npc:GetActiveWeapon()
 	if not IsValid(wep) then return true end
 
-	return table.HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
+	return table_HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
 end
 
 function BaseClass:EnterVehicle(vehicle)
@@ -1304,7 +1310,7 @@ function BaseClass:EnterVehicle(vehicle)
 
 		self.walkUpdatePathDelay = 0
 
-		hook.Run('BGN_OnEnterVehicle', self, vehicle_provider)
+		hook_Run('BGN_OnEnterVehicle', self, vehicle_provider)
 	end)
 end
 
@@ -1313,7 +1319,7 @@ function BaseClass:ExitVehicle()
 
 	local vehicle_provider = self.vehicle
 	if vehicle_provider and IsValid(vehicle_provider) then
-		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
+		hook_Run('BGN_OnExitVehicle', self, vehicle_provider)
 
 		local vehicle = vehicle_provider:GetVehicle()
 		local min, max = vehicle:GetModelBounds()
@@ -1323,7 +1329,7 @@ function BaseClass:ExitVehicle()
 		local right = vehicle:GetRight()
 		local up = vehicle:GetUp()
 		local npc = self:GetNPC()
-		local add_forward = math.random(-100, 100)
+		local add_forward = math_random(-100, 100)
 		local add_right = dist
 		local exit_pos
 		if slib.chance(50) then add_right = -dist end
@@ -1434,7 +1440,7 @@ function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
 	say_time = say_time or 5
 
 	if say_text then
-		snet.InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time)
+		snet_InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time)
 	end
 
 	if voice_sound then

@@ -1,9 +1,14 @@
 local BaseClass = include('sh_actor_base.lua')
-local slib = slib
 local bgNPC = bgNPC
-local table = table
 local SERVER = SERVER
+local SCHED_FORCED_GO = SCHED_FORCED_GO
 local setmetatable = setmetatable
+local table_RandomBySeq = table.RandomBySeq
+local table_Copy = table.Copy
+local isstring = isstring
+local slib_GetUid = slib.GetUid
+local slib_chance = slib.chance
+local snet_Request = snet.Request
 --
 BGN_ACTOR = {}
 
@@ -16,7 +21,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	local default_name = 'Unknown citizen'
 	if npc_data.nicks and istable(npc_data.nicks) then
-		default_name = table.RandomBySeq(npc_data.nicks)
+		default_name = table_RandomBySeq(npc_data.nicks)
 	end
 
 	local default_gender = 'unknown'
@@ -24,13 +29,13 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		default_gender = npc_data.gender
 	end
 
-	local data = table.Copy(npc_data)
+	local data = table_Copy(npc_data)
 	local obj = {}
 	obj.info = {
 		name = default_name,
 		gender = default_gender,
 	}
-	obj.uid = custom_uid or slib.GetUid()
+	obj.uid = custom_uid or slib_GetUid()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
@@ -41,8 +46,8 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.sync_players_hash = {}
 	obj.state_delay = -1
 
-	if data.weapons and (not data.getting_weapon_chance or slib.chance(data.getting_weapon_chance)) then
-		obj.weapon = table.RandomBySeq(data.weapons)
+	if data.weapons and (not data.getting_weapon_chance or slib_chance(data.getting_weapon_chance)) then
+		obj.weapon = table_RandomBySeq(data.weapons)
 	end
 
 	obj.type = npc_type
@@ -95,11 +100,11 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	local gender = obj:GetGenderByModel()
 	if gender and bgNPC.cfg.npc_names[gender] then
-		obj.info.name = table.RandomBySeq( bgNPC.cfg.npc_names[gender] )
+		obj.info.name = table_RandomBySeq( bgNPC.cfg.npc_names[gender] )
 		obj.info.gender = gender
 	else
-		gender = table.RandomBySeq( { 'male', 'female' } )
-		obj.info.name = table.RandomBySeq( bgNPC.cfg.npc_names[gender] )
+		gender = table_RandomBySeq( { 'male', 'female' } )
+		obj.info.name = table_RandomBySeq( bgNPC.cfg.npc_names[gender] )
 		obj.info.gender = gender
 	end
 
@@ -110,7 +115,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	npc.isBgnActor = true
 
 	if SERVER and not not_sync_actor_on_client then
-		snet.Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
+		snet_Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
 	end
 
 	if not not_auto_added_to_list then
