@@ -38,6 +38,10 @@ function bgNPC:RemoveNPC(npc)
 		snet.Request('bgm_update_death_actors_on_client', npc).InvokeAll()
 	end
 
+	if IsValid(npc) then
+		npc.isBgnActor = false
+	end
+
 	for i = #self.actors, 1, -1 do
 		if self.actors[i]:GetNPC() == npc then
 			table.remove(self.actors, i)
