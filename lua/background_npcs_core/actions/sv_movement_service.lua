@@ -1,9 +1,12 @@
 local bgNPC = bgNPC
 local IsValid = IsValid
 local CurTime = CurTime
+local FrameTime = FrameTime
 --
+local current_pass = 0
+local max_pass = 0
 
-async.Add('MovementProcess', function(yield, wait)
+async.Add('BGN_MovementProcess', function(yield, wait)
 	while true do
 		local actors = bgNPC:GetAll()
 
@@ -36,7 +39,14 @@ async.Add('MovementProcess', function(yield, wait)
 			end
 
 			actor:UpdateMovement()
-			yield()
+
+			if current_pass >= max_pass then
+				current_pass = 0
+				max_pass = FrameTime() / 2
+				yield()
+			else
+				current_pass = current_pass + 1
+			end
 		end
 
 		yield()
