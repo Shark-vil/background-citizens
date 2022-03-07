@@ -213,12 +213,14 @@ else
 		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
 		if not tool then return end
 
-		for _, node in ipairs(BGN_NODE:GetMap()) do
-			table.Empty(node.parents)
+		local nodes = BGN_NODE:GetMap()
+
+		for index = 1, #nodes do
+			nodes[index].parents = {}
 		end
 
-		for _, node in ipairs(BGN_NODE:GetMap()) do
-			tool:ConstructParent(node)
+		for index = 1, #nodes do
+			tool:ConstructParent(nodes[index])
 		end
 	end)
 
