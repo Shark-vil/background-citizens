@@ -4,6 +4,8 @@ bgNPC.cvar = bgNPC.cvar or {}
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_max_npc = 35
+bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
+bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -196,7 +198,16 @@ scvar.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable
 
 scvar.Register('bgn_module_bio_annihilation_two_replacement',
 	bgNPC.cvar.bgn_module_bio_annihilation_two_replacement,
-	FCVAR_ARCHIVE, '')
+	FCVAR_ARCHIVE, '1 - Enable "BA2" addon support. 0 - disable.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
+	bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists,
+	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh restriction. 0 - disable.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes,
+	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh. 0 - disable.')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do
