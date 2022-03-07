@@ -235,14 +235,18 @@ end
 function BGN_NODE:GetChunkNodes(pos)
 	local chunkId = self:GetChunkID(pos)
 	local chunk = self.Chunks[chunkId]
+
 	if not chunk then return {} end
+
 	local nodes = {}
+	local nodes_count = 0
 
 	for i = 1, #chunk do
 		local node = self.Map[chunk[i]]
 
 		if node then
-			table_insert(nodes, node)
+			nodes_count = nodes_count + 1
+			nodes[nodes_count] = node
 		end
 	end
 
@@ -280,12 +284,14 @@ end
 
 function BGN_NODE:GetNodesInRadius(pos, radius)
 	local nodes_in_radius = {}
+	local nodes_count = 0
 	radius = radius * radius
 
 	for i = 1, #self.Map do
 		local node = self.Map[i]
 		if node:GetPos():DistToSqr(pos) <= radius then
-			table_insert(nodes_in_radius, node)
+			nodes_count = nodes_count + 1
+			nodes_in_radius[nodes_count] = node
 		end
 	end
 
@@ -323,10 +329,11 @@ function BGN_NODE:FixOutsideMapNodes()
 	if CLIENT then return end
 
 	local remove_count = 0
+	local util_IsInWorld = util.IsInWorld
 
 	for i = #self.Map, 1, -1 do
 		local node = self.Map[i]
-		if not util.IsInWorld(node:GetPos()) then
+		if not util_IsInWorld(node:GetPos()) then
 			remove_count = remove_count + 1
 			node:RemoveFromMap()
 		end
