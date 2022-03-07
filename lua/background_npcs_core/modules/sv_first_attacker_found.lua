@@ -79,7 +79,7 @@ function ASSET:GetData()
 end
 
 hook.Add('PostCleanupMap', 'BGN_FirstAttackerModule_ClearAttackersList', function()
-	table.Empty(first_attackers)
+	first_attackers = {}
 end)
 
 hook.Add('PlayerDeath', 'BGN_FirstAttackerModule_ClearAttackersList', function(ply)

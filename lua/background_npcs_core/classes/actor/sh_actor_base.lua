@@ -312,8 +312,8 @@ function BaseClass:RemoveAllTargets()
 
 	-- Safety bag. It may be removed in the future.
 	if last_count > 0 then
-		table.Empty(self.targets)
 		hook.Run('BGN_ResetTargetsForActor', self)
+		self.targets = {}
 	end
 end
 
@@ -451,8 +451,8 @@ function BaseClass:RemoveAllEnemies()
 
 	-- Safety bag. It may be removed in the future.
 	if last_count > 0 then
-		table.Empty(self.enemies)
 		hook.Run('BGN_ResetEnemiesForActor', self)
+		self.enemies = {}
 	end
 end
 

@@ -95,7 +95,7 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		table.Empty(self.parents)
+		self.parents ={}
 	end
 
 	function obj:HasParent(node)
@@ -153,7 +153,7 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		table.Empty(self.links[linkType])
+		self.links[linkType] = {}
 	end
 
 	function obj:HasLink(node, linkType)
@@ -293,8 +293,8 @@ function BGN_NODE:GetNodesInRadius(pos, radius)
 end
 
 function BGN_NODE:ClearNodeMap()
-	table.Empty(self.Map)
-	table.Empty(self.Chunks)
+	self.Map = {}
+	self.Chunks = {}
 end
 
 function BGN_NODE:GetNodeMap()

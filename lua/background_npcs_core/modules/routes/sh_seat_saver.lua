@@ -45,7 +45,7 @@ else
 			end
 		end
 
-		table.Empty(tool.SeatPoints)
+		tool.SeatPoints = {}
 
 		for _, t in ipairs(points) do
 			local m_citizen = ClientsideModel('models/Humans/Group01/male_02.mdl')

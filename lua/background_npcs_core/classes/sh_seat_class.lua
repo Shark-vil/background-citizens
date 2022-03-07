@@ -64,7 +64,7 @@ function BGN_SEAT:AddSeatToMap(seat)
 end
 
 function BGN_SEAT:ClearSeats()
-	table.Empty(self.Map)
+	self.Map = {}
 end
 
 function BGN_SEAT:GetAllSeats()

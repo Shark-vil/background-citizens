@@ -9,7 +9,7 @@ local GetConVar = GetConVar
 --
 
 hook.Add('PostCleanupMap', 'BGN_CleanDvCarsCache', function()
-	table.Empty(bgNPC.DVCars)
+	bgNPC.DVCars = {}
 end)
 
 hook.Add('BGN_DvCarRemoved', 'BGN_DVCars_OnRemoved', function(vehicle_provider)

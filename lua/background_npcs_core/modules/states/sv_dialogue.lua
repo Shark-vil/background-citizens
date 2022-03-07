@@ -187,7 +187,7 @@ function ASSET:SwitchDialogue(actor)
 end
 
 function ASSET:ClearAll()
-	table.Empty(dialogue_actors)
+	dialogue_actors = {}
 end
 
 function ASSET:RemoveBadValues()

@@ -50,7 +50,7 @@ else
 	function TOOL:ClearPoints()
 		self.StartPos = nil
 		self.EndPos = nil
-		table.Empty(self.Path)
+		self.Path = {}
 	end
 
 	function TOOL:Think()
