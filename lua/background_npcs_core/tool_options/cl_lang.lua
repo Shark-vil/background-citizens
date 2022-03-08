@@ -47,6 +47,10 @@ en_lang['bgn.settings.spawn.bgn_dynamic_nodes'] = 'Dynamic movement mesh'
 en_lang['bgn.settings.spawn.bgn_dynamic_nodes.description'] = 'Description: allows you to generate a movement mesh automatically around the players. This is useful when the map does not have a movement mesh file. Keep in mind that this is a resource intensive process. It is recommended to create a movement mesh yourself, or generate one if the map has AI NavMesh.'
 en_lang['bgn.settings.spawn.bgn_dynamic_nodes_restict'] = 'Dynamic movement mesh constraint'
 en_lang['bgn.settings.spawn.bgn_dynamic_nodes_restict.description'] = 'Description: if enabled, the mesh will be generated only when there is no movement mesh file on the map. Otherwise, automatic generation will always be used.'
+ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_type'] = 'Tim dynamic mesh'
+ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_type.description'] = 'Description:\n' ..
+'random - the mesh will be generated randomly. Increases variety, but accuracy is much lower. May not work at all in narrow spaces.\n' ..
+'grid - the grid is generated in a staggered uniform pattern over the entire area around the player. Less random, but more likely to fill the area with move points. (Recommended)'
 en_lang['bgn.settings.spawn.bgn_spawn_radius'] = 'NPC spawn radius'
 en_lang['bgn.settings.spawn.bgn_spawn_radius.description'] = 'Description: NPC spawn radius relative to the player.'
 en_lang['bgn.settings.spawn.bgn_spawn_radius_visibility'] = 'Radius of activation of the point visibility check'
@@ -175,6 +179,10 @@ ru_lang['bgn.settings.spawn.bgn_dynamic_nodes'] = 'Динамическая се
 ru_lang['bgn.settings.spawn.bgn_dynamic_nodes.description'] = 'Описание: позволяет генерировать сетку передвижения автоматически вокруг игроков. Это полезно, когда у карты нету файла сетки передвижения. Обратите внимание, что это ресурсозатратный процесс. Рекомендуется создать сетку передвижения самому, или сгенерировать, если на карте есть AI NavMesh.'
 ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_restict'] = 'Ограничение динамической сетки передвижения'
 ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_restict.description'] = 'Описание: если включено, то сетка будет генерироваться только тогда, когда на карте нету файла сетки передвижения. В противном случае всегда будет использоваться автоматическая генерация.'
+ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_type'] = 'Тим динамической сетки'
+ru_lang['bgn.settings.spawn.bgn_dynamic_nodes_type.description'] = 'Описание:\n' ..
+'random - сетка будет генерироваться рандомно. Повышает разнообразие, но точность значительно ниже. В узких коридорах может вообще не работать.\n' ..
+'grid - сетка генерируется в шахматном равномерном порядке по всей площади вокруг игрока. Меньше рандома, но больше шансов заполнить область точками перемещения. (Рекомендуется)'
 ru_lang['bgn.settings.spawn.bgn_spawn_radius'] = 'Радиус спавна НПС'
 ru_lang['bgn.settings.spawn.bgn_spawn_radius.description'] = 'Описание: радиус появления NPC относительно игрока.'
 ru_lang['bgn.settings.spawn.bgn_spawn_radius_visibility'] = 'Радиус активации проверки видимости точки'

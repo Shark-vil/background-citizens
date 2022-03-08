@@ -1,4 +1,5 @@
 async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+	local table_Combine = table.Combine
 	local GetConVar = GetConVar
 	local map_name = game.GetMap()
 	local math_random = math.random
@@ -14,6 +15,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local cell_size = 250
 	local generator_iterations = 10
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
+	local chunks = {}
 	local chunk_size = 500
 	local current_pass = 0
 	local trace_filter = function(ent)
@@ -22,16 +24,17 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		end
 	end
 
-	local function pass_yield(max_pass)
+	local function PassYield(max_pass)
 		current_pass = current_pass + 1
-		max_pass = max_pass or math_floor(1 / FrameTime())
+		-- max_pass = max_pass or math_floor(1 / FrameTime())
+		max_pass = math_floor(1 / slib.deltaTime)
 		if current_pass >= max_pass then
 			current_pass = 0
 			yield()
 		end
 	end
 
-	local function get_chunk_id(pos)
+	local function GetChunkId(pos)
 		local x = pos.x
 		local y = pos.y
 		local xid = math_modf(x / chunk_size)
@@ -39,7 +42,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		return xid .. yid
 	end
 
-	local function movement_mesh_exists()
+	local function MovementMeshExists()
 		if file_Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
 			return true
 		elseif file_Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
@@ -48,11 +51,25 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		return false
 	end
 
+	local function ChunkHasFull(point_position)
+		local point_chunk_id = GetChunkId(point_position)
+		if chunks[point_chunk_id] and chunks[point_chunk_id] >= 10 then
+			return true
+		end
+		return false
+	end
+
+	local function UpdateChunkPointsCount(point_position)
+		local point_chunk_id = GetChunkId(point_position)
+		chunks[point_chunk_id] = chunks[point_chunk_id] or 0
+		chunks[point_chunk_id] = chunks[point_chunk_id] + 1
+	end
+
 	while true do
 		local restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists'):GetBool()
 		local enabled = GetConVar('bgn_dynamic_nodes'):GetBool()
 
-		if not enabled or (restict and movement_mesh_exists()) then
+		if not enabled or (restict and MovementMeshExists()) then
 			if restict and BGN_NODE:CountNodesOnMap() ~= 0 then
 				BGN_NODE:ClearNodeMap()
 			end
@@ -60,19 +77,33 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		else
 			local map_points = {}
 			local points_count = 0
-			local expensive_generator = true
-			local players = table.shuffle(player.GetHumans())
+			local expensive_generator = GetConVar('bgn_dynamic_nodes_type'):GetString() == 'grid'
 			local radius = GetConVar('bgn_spawn_radius'):GetFloat()
-			local chunks = {}
+			local players = table.shuffle(player.GetAll())
+			local table_remove = table.remove
+			chunks = {}
 			current_pass = 0
 
+			for i = #players, 1, -1 do
+				local ply = players[i]
+				if not ply or not ply:Alive() then
+					table_remove(players, i)
+				end
+				PassYield()
+			end
+
+			yield()
+
 			if not expensive_generator then
-				for player_index = 1, math_Clamp(#players, 0, 4) do
+				-- for player_index = 1, math_Clamp(#players, 0, 4) do
+				for player_index = 1, #players do
 					local ply = players[player_index]
+					if not ply then continue end
+
 					local center = ply:LocalToWorld(ply:OBBCenter())
 					local z = center.z + 50
 
-					for i = 1, math_random(100, 250) do
+					for i = 1, 500 do
 						local x = center.x + math_random(-radius, radius)
 						local y = center.y + math_random(-radius, radius)
 						local start_point_vector = Vector(x, y, z)
@@ -83,22 +114,33 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						})
 
 						if not tr.Hit then
-							pass_yield()
+							PassYield()
+							continue
+						end
+
+						local new_point_position = tr.HitPos + add_z_axis
+
+						if not util_IsInWorld(new_point_position) or ChunkHasFull(new_point_position) then
+							PassYield()
 							continue
 						end
 
 						points_count = points_count + 1
-						map_points[points_count] = BGN_NODE:Instance(tr.HitPos + add_z_axis)
+						map_points[points_count] = BGN_NODE:Instance(new_point_position)
 
-						pass_yield()
+						UpdateChunkPointsCount(new_point_position)
+
+						PassYield()
 					end
 
-					pass_yield()
+					PassYield()
 				end
 			else
 
 				for player_index = 1, #players do
 					local ply = players[player_index]
+					if not ply then continue end
+
 					local center = ply:LocalToWorld(ply:OBBCenter())
 					local x_offset = cell_size
 					local y = center.y
@@ -116,7 +158,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							end
 
 							if not util_IsInWorld(different_start_point) then
-								pass_yield()
+								PassYield()
 								continue
 							end
 
@@ -127,31 +169,29 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							})
 
 							if not tr.Hit then
-								pass_yield()
+								PassYield()
 								continue
 							end
 
 							points_count = points_count + 1
 
 							local new_point_position = tr.HitPos + add_z_axis
-							local point_chunk_id = get_chunk_id(new_point_position)
-							if chunks[point_chunk_id] and chunks[point_chunk_id] >= 10 then
-								pass_yield()
+							if ChunkHasFull(new_point_position) then
+								PassYield()
 								continue
 							end
 
 							map_points[points_count] = BGN_NODE:Instance(new_point_position)
 
-							chunks[point_chunk_id] = chunks[point_chunk_id] or 0
-							chunks[point_chunk_id] = chunks[point_chunk_id] + 1
+							UpdateChunkPointsCount(new_point_position)
 
-							pass_yield()
+							PassYield()
 						end
 
 						x_offset = x_offset + cell_size
 					end
 
-					pass_yield()
+					PassYield()
 				end
 
 				local y_axis_points = {}
@@ -175,7 +215,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							end
 
 							if not util_IsInWorld(different_start_point) then
-								pass_yield()
+								PassYield()
 								continue
 							end
 
@@ -186,58 +226,60 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							})
 
 							if not tr.Hit then
-								pass_yield()
+								PassYield()
 								continue
 							end
 
 							y_points_count = y_points_count + 1
 
 							local new_point_position = tr.HitPos + add_z_axis
-							local point_chunk_id = get_chunk_id(new_point_position)
-							if chunks[point_chunk_id] and chunks[point_chunk_id] >= 10 then
-								pass_yield()
+							if ChunkHasFull(new_point_position) then
+								PassYield()
 								continue
 							end
 
 							y_axis_points[y_points_count] = BGN_NODE:Instance(new_point_position)
 
-							chunks[point_chunk_id] = chunks[point_chunk_id] or 0
-							chunks[point_chunk_id] = chunks[point_chunk_id] + 1
+							UpdateChunkPointsCount(new_point_position)
 
-							pass_yield()
+							PassYield()
 						end
 
 						y_offset = y_offset + cell_size
 					end
 				end
 
-				map_points = table.Combine(map_points, y_axis_points)
+				map_points = table_Combine(map_points, y_axis_points)
 				points_count = #map_points
 			end
 
 			for point_index = 1, points_count do
 				local node = map_points[point_index]
+				if not node then continue end
 
 				for another_point_index = 1, points_count do
 					local anotherNode = map_points[another_point_index]
+					if not anotherNode then continue end
 
 					if anotherNode ~= node then
 						local pos = anotherNode:GetPos()
 
-						if node:CheckDistanceLimitToNode(pos) and not anotherNode:HasParent(node) then
-							if node:CheckHeightLimitToNode(pos) and node:CheckTraceSuccessToNode(pos) then
-								anotherNode:AddParentNode(node)
-								anotherNode:AddLink(node, 'walk')
-							end
+						if node:CheckDistanceLimitToNode(pos)
+							and not anotherNode:HasParent(node)
+							and node:CheckHeightLimitToNode(pos)
+							and node:CheckTraceSuccessToNode(pos)
+						then
+							anotherNode:AddParentNode(node)
+							anotherNode:AddLink(node, 'walk')
 						end
 
-						pass_yield(500)
+						PassYield(500)
 					end
 				end
 
 				-- print(point_index, ' / ', points_count)
 
-				pass_yield()
+				PassYield()
 			end
 
 			-- MsgN('New mesh generated')

@@ -6,6 +6,7 @@ bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
 bgNPC.cvar.bgn_dynamic_nodes = 1
+bgNPC.cvar.bgn_dynamic_nodes_type = 'grid'
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -208,6 +209,10 @@ scvar.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
 
 scvar.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes,
 	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh. 0 - disable.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type,
+	FCVAR_ARCHIVE, 'Types - grid, random')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do

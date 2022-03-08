@@ -1,18 +1,4 @@
 local function TOOL_MENU(Panel)
-	Panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes',
-		['Command'] = 'bgn_dynamic_nodes'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes.description'
-	})
-
-	Panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict',
-		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict.description'
-	})
-
 	Panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius',
 		['Command'] = 'bgn_spawn_radius',
@@ -61,6 +47,31 @@ local function TOOL_MENU(Panel)
 		['Max'] = '50'
 	}); Panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.spawn.bgn_spawn_period.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes',
+		['Command'] = 'bgn_dynamic_nodes'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict',
+		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict.description'
+	})
+
+	Panel:AddControl('ListBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type',
+		['Command'] = 'bgn_dynamic_nodes_type',
+		['Options'] = {
+			['grid'] = { ['bgn_dynamic_nodes_type'] = 'grid' },
+			['random'] = { ['bgn_dynamic_nodes_type'] = 'random' },
+		}
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type.description'
 	})
 
 	Panel:AddControl('CheckBox', {
