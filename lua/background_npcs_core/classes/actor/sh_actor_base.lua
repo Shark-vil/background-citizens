@@ -1050,7 +1050,7 @@ function BaseClass:IsValidSequence(sequence_name)
 end
 
 function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
-	if not self:IsValidSequence(sequence_name) then return false end
+	if not sequence_name or not self:IsValidSequence(sequence_name) then return false end
 
 	if self:HasSequence(sequence_name) then
 		if self.anim_is_loop and not self:IsSequenceLoopFinished() then
@@ -1424,7 +1424,7 @@ function BaseClass:FoldWeapon()
 end
 
 function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
-	if not self:IsAlive() then return end
+	if not sound_path or not self:IsAlive() then return end
 
 	soundLevel = soundLevel or 75
 	pitchPercent = pitchPercent or 100
@@ -1437,19 +1437,20 @@ function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channe
 end
 
 function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
-	say_time = say_time or 5
-
 	if say_text then
-		snet_InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time)
+		snet_InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time or 5)
 	end
 
-	if voice_sound then
-		self:VoiceSay(voice_sound)
-	end
+	self:VoiceSay(voice_sound)
+	self:PlayStaticSequence(animation_sequence)
+end
 
-	if animation_sequence then
-		self:PlayStaticSequence(animation_sequence)
-	end
+function BaseClass:SayReplic(replic_id, replic_index, say_time, voice_sound, animation_sequence)
+	if not bgNPC.cfg.replics[replic_id] or not bgNPC.cfg.replics[replic_id][replic_index] then return end
+
+	snet_InvokeAll('bgn_actor_text_say_replic', self.uid, replic_id, replic_index, say_time or 5)
+	self:VoiceSay(voice_sound)
+	self:PlayStaticSequence(animation_sequence)
 end
 
 function BaseClass:GetPos()
