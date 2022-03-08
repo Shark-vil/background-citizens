@@ -5,12 +5,12 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local math_random = math.random
 	local util_IsInWorld = util.IsInWorld
 	local util_TraceLine = util.TraceLine
-	local math_Clamp = math.Clamp
+	-- local math_Clamp = math.Clamp
 	local file_Exists = file.Exists
 	local Vector = Vector
 	local math_floor = math.floor
 	local math_modf = math.modf
-	local FrameTime = FrameTime
+	-- local FrameTime = FrameTime
 	local add_z_axis = Vector(0, 0, 20)
 	local cell_size = 250
 	local generator_iterations = 10
@@ -70,9 +70,6 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		local enabled = GetConVar('bgn_dynamic_nodes'):GetBool()
 
 		if not enabled or (restict and MovementMeshExists()) then
-			if restict and BGN_NODE:CountNodesOnMap() ~= 0 then
-				BGN_NODE:ClearNodeMap()
-			end
 			wait(1)
 		else
 			local map_points = {}
