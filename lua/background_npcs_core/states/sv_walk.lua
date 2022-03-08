@@ -38,11 +38,11 @@ bgNPC:SetStateAction('walk', 'calm', {
 })
 
 hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
-	if not bgNPC.PointsExist then return end
+	-- if not bgNPC.PointsExist then return end
 	if actor:GetState() ~= 'walk' then return end
-	bgNPC:Log('NPC has reached the desired point', 'sv_walk')
 	local data = actor:GetStateData()
 	local node = GetNextNode(actor)
+	if not node then return end
 	actor:WalkToPos(node.position, data.schedule, 'walk')
 	data.updatePoint = CurTime() + math.random(15, 30)
 end)
