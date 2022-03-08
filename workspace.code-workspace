@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "..\\background_npcs_example_module"
 		}
 	],
 	"settings": {}
