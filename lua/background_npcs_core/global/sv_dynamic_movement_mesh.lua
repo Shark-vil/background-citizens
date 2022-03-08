@@ -142,7 +142,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					if not ply then continue end
 
 					local center = ply:LocalToWorld(ply:OBBCenter())
-					local x_offset = cell_size
+					local x_offset = 0
 					local y = center.y
 					local z = center.z + 50
 					local start_point_vector = Vector(0, y, z)
@@ -152,7 +152,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							local x = k == 1 and center.x + x_offset or center.x - x_offset
 							start_point_vector.x = x
 
-							local different_start_point = start_point_vector + Vector(0, 0, math_random(-250, 250))
+							local different_start_point = start_point_vector + Vector(0, 0, math_random(0, 100))
 							if not util_IsInWorld(different_start_point) then
 								different_start_point = start_point_vector
 							end
@@ -199,7 +199,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 				for node_index = 1, points_count do
 					local center = map_points[node_index]:GetPos()
-					local y_offset = cell_size
+					local y_offset = 0
 					local x = center.x
 					local z = center.z + 50
 					local start_point_vector = Vector(x, 0, z)
@@ -209,7 +209,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							local y = k == 1 and center.y + y_offset or center.y - y_offset
 							start_point_vector.y = y
 
-							local different_start_point = start_point_vector + Vector(0, 0, math_random(-250, 250))
+							local different_start_point = start_point_vector + Vector(0, 0, math_random(0, 100))
 							if not util_IsInWorld(different_start_point) then
 								different_start_point = start_point_vector
 							end
