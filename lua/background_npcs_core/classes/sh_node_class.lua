@@ -254,8 +254,9 @@ function BGN_NODE:GetChunkNodes(pos)
 end
 
 function BGN_NODE:AddNodeToMap(node)
-	local index
+	if not node then return end
 
+	local index
 	if node.index ~= -1 then
 		index = node.index
 		self.Map[index] = node
@@ -340,7 +341,7 @@ function BGN_NODE:FixOutsideMapNodes()
 	end
 
 	if remove_count ~= 0 then
-		MsgN('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
+		bgNPC:Log('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
 	end
 end
 
