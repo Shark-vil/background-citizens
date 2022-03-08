@@ -95,7 +95,7 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		self.parents ={}
+		self.parents = {}
 	end
 
 	function obj:HasParent(node)
