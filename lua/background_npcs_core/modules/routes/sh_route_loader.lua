@@ -1,8 +1,8 @@
 if SERVER then
-	bgNPC.PointsExist = false
+	-- bgNPC.PointsExist = false
 
 	bgNPC.LoadRoutes = function()
-		bgNPC.PointsExist = false
+		-- bgNPC.PointsExist = false
 
 		local jsonString = ''
 		local map_name = game.GetMap()
@@ -23,9 +23,9 @@ if SERVER then
 		end
 
 		local count = BGN_NODE:CountNodesOnMap()
-		if count > 0 then
-			bgNPC.PointsExist = true
-		end
+		-- if count > 0 then
+		-- 	bgNPC.PointsExist = true
+		-- end
 
 		bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
 
