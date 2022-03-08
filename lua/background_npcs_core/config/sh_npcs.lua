@@ -188,8 +188,8 @@ bgNPC.cfg.npcs_template = {
 		at_random = {
 			['walk'] = 90,
 			['idle'] = 25,
-			['impingement'] = 15,
-			['sit_to_chair'] = 10,
+			['sit_to_chair'] = 15,
+			['impingement'] = 10,
 		},
 		at_damage_range = 100,
 		at_damage = {
