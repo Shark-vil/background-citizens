@@ -4,7 +4,7 @@ end
 
 bgNPC:SetStateAction('walk', 'calm', {
 	update = function(actor)
-		if not bgNPC.PointsExist then return end
+		-- if not bgNPC.PointsExist then return end
 		local data = actor:GetStateData()
 		data.schedule = data.schedule or 'walk'
 		data.runReset = data.runReset or 0

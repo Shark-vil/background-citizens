@@ -3,11 +3,11 @@ bgNPC.cfg.wanted = { levels = {}, texture = {}, color = {}, language = {} }
 -- Stars to kills ratio
 -- After getting a new star, the statistics are updated again!
 bgNPC.cfg.wanted.levels = {
-	[1] = 10,
-	[2] = 10,
-	[3] = 15,
-	[4] = 20,
-	[5] = 25,
+	[1] = 5,
+	[2] = 5,
+	[3] = 10,
+	[4] = 10,
+	[5] = 15,
 }
 
 -- TEXTURE --

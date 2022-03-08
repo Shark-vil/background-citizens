@@ -1,3 +1,8 @@
+local hook_Run = hook.Run
+local type = type
+local IsValid = IsValid
+local table_remove = table.remove
+--
 local ASSET = {}
 local first_attackers = {}
 
@@ -25,7 +30,7 @@ hook.Add('EntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, dmginfo)
 		end
 	end
 
-	local a, t = hook.Run('BGN_Module_FirstAttackerValidator', attacker, target)
+	local a, t = hook_Run('BGN_Module_FirstAttackerValidator', attacker, target)
 
 	if a and type(a) == 'Entity' then
 		attacker = a
@@ -35,10 +40,10 @@ hook.Add('EntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, dmginfo)
 		target = t
 	end
 
-	table.insert(first_attackers, {
+	first_attackers[#first_attackers + 1] = {
 		attacker = attacker,
 		victim = target,
-	})
+	}
 end)
 
 function ASSET:IsFirstAttacker(attacker, victim)
@@ -56,9 +61,9 @@ function ASSET:ClearDeath()
 
 		if data then
 			if not IsValid(data.attacker) or data.attacker:Health() <= 0 then
-				table.remove(first_attackers, i)
+				table_remove(first_attackers, i)
 			elseif not IsValid(data.victim) or data.victim:Health() <= 0 then
-				table.remove(first_attackers, i)
+				table_remove(first_attackers, i)
 			end
 		end
 	end
@@ -69,7 +74,7 @@ function ASSET:RemoveAttacker(attacker)
 		local data = first_attackers[i]
 
 		if data and data.attacker == attacker then
-			table.remove(first_attackers, i)
+			table_remove(first_attackers, i)
 		end
 	end
 end
@@ -79,7 +84,7 @@ function ASSET:GetData()
 end
 
 hook.Add('PostCleanupMap', 'BGN_FirstAttackerModule_ClearAttackersList', function()
-	table.Empty(first_attackers)
+	first_attackers = {}
 end)
 
 hook.Add('PlayerDeath', 'BGN_FirstAttackerModule_ClearAttackersList', function(ply)

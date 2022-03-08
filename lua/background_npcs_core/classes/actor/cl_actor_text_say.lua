@@ -37,7 +37,7 @@ local function RemoveSpeakByUid(uid)
 	end
 end
 
-snet.Callback('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
+local function DrawActorText(actor_uid, say_text, say_time)
 	local actor = bgNPC:GetActorByUid(actor_uid)
 	if not actor then return end
 
@@ -81,6 +81,15 @@ snet.Callback('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
 	timer.Create(timer_name, say_time, 1, function()
 		RemoveSpeakByUid(actor_uid)
 	end)
+end
+
+snet.Callback('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
+	DrawActorText(actor_uid, say_text, say_time)
+end)
+
+snet.Callback('bgn_actor_text_say_replic', function(_, actor_uid, replic_id, replic_index, say_time)
+	if not bgNPC.cfg.replics[replic_id] or not bgNPC.cfg.replics[replic_id][replic_index] then return end
+	DrawActorText(actor_uid, bgNPC.cfg.replics[replic_id][replic_index], say_time)
 end)
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()

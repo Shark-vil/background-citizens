@@ -208,5 +208,23 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	-- actor:RemoveAllTargets()
 	-- hook.Run('BGN_PostInitActor', actor)
 
+	npc:slibCreateTimer('bgn_check_water_level', 1, 0, function()
+		if npc:WaterLevel() == 3 then
+			for _, node in ipairs(BGN_NODE:GetChunkNodes(npc:GetPos())) do
+				node:RemoveFromMap()
+			end
+
+			bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(teleport_position)
+				for _, ply in ipairs(player.GetHumans()) do
+					if bgNPC:PlayerIsViewVector(ply, teleport_position) then return end
+				end
+
+				npc:SetPos(teleport_position)
+			end)
+		else
+			npc:slibRemoveTimer('bgn_check_water_level')
+		end
+	end)
+
 	return actor
 end

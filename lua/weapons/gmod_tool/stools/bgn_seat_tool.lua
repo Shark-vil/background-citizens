@@ -96,7 +96,7 @@ else
 			end
 		end
 
-		table.Empty(self.SeatPoints)
+		self.SeatPoints = {}
 		self.SelectedPointId = -1
 		self.LastIndex = -1
 		self.SetStartPos = true

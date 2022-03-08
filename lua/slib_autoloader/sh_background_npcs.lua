@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.7.6'
+bgNPC.VERSION = '1.8'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -81,6 +81,7 @@ local function ExecutableScripts()
 	script:using('global/sh_states.lua')
 	script:using('global/sh_find_path_service.lua')
 	script:using('global/sv_pre_spawn_cache.lua')
+	script:using('global/sv_dynamic_movement_mesh.lua')
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')

@@ -95,7 +95,7 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		table.Empty(self.parents)
+		self.parents ={}
 	end
 
 	function obj:HasParent(node)
@@ -153,7 +153,7 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		table.Empty(self.links[linkType])
+		self.links[linkType] = {}
 	end
 
 	function obj:HasLink(node, linkType)
@@ -235,14 +235,18 @@ end
 function BGN_NODE:GetChunkNodes(pos)
 	local chunkId = self:GetChunkID(pos)
 	local chunk = self.Chunks[chunkId]
+
 	if not chunk then return {} end
+
 	local nodes = {}
+	local nodes_count = 0
 
 	for i = 1, #chunk do
 		local node = self.Map[chunk[i]]
 
 		if node then
-			table_insert(nodes, node)
+			nodes_count = nodes_count + 1
+			nodes[nodes_count] = node
 		end
 	end
 
@@ -250,8 +254,9 @@ function BGN_NODE:GetChunkNodes(pos)
 end
 
 function BGN_NODE:AddNodeToMap(node)
-	local index
+	if not node then return end
 
+	local index
 	if node.index ~= -1 then
 		index = node.index
 		self.Map[index] = node
@@ -280,12 +285,14 @@ end
 
 function BGN_NODE:GetNodesInRadius(pos, radius)
 	local nodes_in_radius = {}
+	local nodes_count = 0
 	radius = radius * radius
 
 	for i = 1, #self.Map do
 		local node = self.Map[i]
 		if node:GetPos():DistToSqr(pos) <= radius then
-			table_insert(nodes_in_radius, node)
+			nodes_count = nodes_count + 1
+			nodes_in_radius[nodes_count] = node
 		end
 	end
 
@@ -293,8 +300,8 @@ function BGN_NODE:GetNodesInRadius(pos, radius)
 end
 
 function BGN_NODE:ClearNodeMap()
-	table.Empty(self.Map)
-	table.Empty(self.Chunks)
+	self.Map = {}
+	self.Chunks = {}
 end
 
 function BGN_NODE:GetNodeMap()
@@ -323,17 +330,18 @@ function BGN_NODE:FixOutsideMapNodes()
 	if CLIENT then return end
 
 	local remove_count = 0
+	local util_IsInWorld = util.IsInWorld
 
 	for i = #self.Map, 1, -1 do
 		local node = self.Map[i]
-		if not util.IsInWorld(node:GetPos()) then
+		if not util_IsInWorld(node:GetPos()) then
 			remove_count = remove_count + 1
 			node:RemoveFromMap()
 		end
 	end
 
 	if remove_count ~= 0 then
-		MsgN('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
+		bgNPC:Log('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
 	end
 end
 

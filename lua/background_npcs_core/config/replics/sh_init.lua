@@ -27,16 +27,14 @@ include( GetFilePath('english') )
 
 if CLIENT then
 	hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', function()
-		do
-			local lnaguage_path = GetGameLanguage()
+		local lnaguage_path = GetGameLanguage()
 
-			if not lnaguage_path then
-				lnaguage_path = GetCustomLanguage()
-			end
+		if not lnaguage_path then
+			lnaguage_path = GetCustomLanguage()
+		end
 
-			if lnaguage_path then
-				include(lnaguage_path)
-			end
+		if lnaguage_path then
+			include(lnaguage_path)
 		end
 	end)
 end

@@ -1,73 +1,98 @@
 local function TOOL_MENU(Panel)
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_spawn_radius",
-		["Command"] = "bgn_spawn_radius",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "5000"
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius',
+		['Command'] = 'bgn_spawn_radius',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Max'] = '5000'
 	}); Panel:AddControl('Label', {
-		Text = '##bgn.settings.spawn.bgn_spawn_radius.description'
+		['Text'] = '##bgn.settings.spawn.bgn_spawn_radius.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_spawn_radius_visibility",
-		["Command"] = "bgn_spawn_radius_visibility",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "5000"
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius_visibility',
+		['Command'] = 'bgn_spawn_radius_visibility',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Max'] = '5000'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_spawn_radius_visibility.description'
+		['Text'] = '#bgn.settings.spawn.bgn_spawn_radius_visibility.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_spawn_radius_raytracing",
-		["Command"] = "bgn_spawn_radius_raytracing",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "5000"
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius_raytracing',
+		['Command'] = 'bgn_spawn_radius_raytracing',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Max'] = '5000'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_spawn_radius_raytracing.description'
+		['Text'] = '#bgn.settings.spawn.bgn_spawn_radius_raytracing.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_spawn_block_radius",
-		["Command"] = "bgn_spawn_block_radius",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "5000"
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_spawn_block_radius',
+		['Command'] = 'bgn_spawn_block_radius',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Max'] = '5000'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_spawn_block_radius.description'
+		['Text'] = '#bgn.settings.spawn.bgn_spawn_block_radius.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_spawn_period",
-		["Command"] = "bgn_spawn_period",
-		["Type"] = "Float",
-		["Min"] = "0",
-		["Max"] = "50"
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_spawn_period',
+		['Command'] = 'bgn_spawn_period',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Max'] = '50'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_spawn_period.description'
+		['Text'] = '#bgn.settings.spawn.bgn_spawn_period.description'
 	})
 
 	Panel:AddControl('CheckBox', {
-		Label = '#bgn.settings.spawn.bgn_actors_teleporter',
-		Command = 'bgn_actors_teleporter' 
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes',
+		['Command'] = 'bgn_dynamic_nodes'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_actors_teleporter.description'
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes.description'
 	})
 
-	Panel:AddControl("Slider", {
-		["Label"] = "#bgn.settings.spawn.bgn_actors_max_teleports",
-		["Command"] = "bgn_actors_max_teleports",
-		["Type"] = "Integer",
-		["Min"] = "1",
-		["Max"] = "10"
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict',
+		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.spawn.bgn_actors_max_teleports.description'
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict.description'
+	})
+
+	Panel:AddControl('ListBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type',
+		['Command'] = 'bgn_dynamic_nodes_type',
+		['Options'] = {
+			['grid'] = { ['bgn_dynamic_nodes_type'] = 'grid' },
+			['random'] = { ['bgn_dynamic_nodes_type'] = 'random' },
+		}
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_actors_teleporter',
+		['Command'] = 'bgn_actors_teleporter'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_actors_teleporter.description'
+	})
+
+	Panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_actors_max_teleports',
+		['Command'] = 'bgn_actors_max_teleports',
+		['Type'] = 'Integer',
+		['Min'] = '1',
+		['Max'] = '10'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_actors_max_teleports.description'
 	})
 end
 
-hook.Add("PopulateToolMenu", "BGN_TOOL_CreateMenu_SpawnSettings", function()
-	spawnmenu.AddToolMenuOption("Options", "Background NPCs", "BGN_Spawn_Settings", 
-		"#bgn.settings.spawn_title", "", "", TOOL_MENU)
+hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_SpawnSettings', function()
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Spawn_Settings', 
+		'#bgn.settings.spawn_title', '', '', TOOL_MENU)
 end)

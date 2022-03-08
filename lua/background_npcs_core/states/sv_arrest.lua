@@ -55,7 +55,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		PoliceActor:AddTarget(attacker)
 		PoliceActor:SetState('arrest')
 
-		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(50) then
+		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(30) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
