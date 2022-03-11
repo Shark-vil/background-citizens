@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.1'
+bgNPC.VERSION = '1.8.2'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -148,7 +148,6 @@ local function ExecutableScripts()
 	script:using('actions/sv_police_luggage.lua')
 	script:using('actions/sv_damage_reaction.lua')
 	script:using('actions/sv_killed_actor.lua')
-	script:using('actions/sv_reset_targets.lua')
 	script:using('actions/sv_self_damage.lua')
 	script:using('actions/sv_player_spawn_sync_actors.lua')
 	script:using('actions/sv_reaction_to_a_shot.lua')
@@ -173,6 +172,7 @@ local function ExecutableScripts()
 	script:using('states/sv_dyspnea.lua')
 	script:using('states/sv_run_from_danger.lua')
 	script:using('states/sv_arrest_surrender.lua')
+	script:using('states/sv_random_gesture.lua')
 
 	script:using('tool_options/cl_bgn_settings_menu.lua')
 	script:using('tool_options/cl_lang.lua')
