@@ -12,10 +12,11 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local math_modf = math.modf
 	-- local FrameTime = FrameTime
 	local add_z_axis = Vector(0, 0, 20)
-	local cell_size = 250
+	local cell_size = 200
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
 	local chunks = {}
 	local chunk_size = 500
+	local max_points_in_chunk = 10
 	local current_pass = 0
 	local trace_filter = function(ent)
 		if ent:IsWorld() then
@@ -32,11 +33,10 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	local function GetChunkId(pos)
-		local x = pos.x
-		local y = pos.y
-		local xid = math_modf(x / chunk_size)
-		local yid = math_modf(y / chunk_size)
-		return xid .. yid
+		local xid = math_modf(pos.x / chunk_size)
+		local yid = math_modf(pos.y / chunk_size)
+		local zid = math_modf(pos.z / chunk_size)
+		return xid .. yid .. zid
 	end
 
 	local function MovementMeshExists()
@@ -50,7 +50,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	local function ChunkHasFull(point_position)
 		local point_chunk_id = GetChunkId(point_position)
-		if chunks[point_chunk_id] and chunks[point_chunk_id] >= 10 then
+		if chunks[point_chunk_id] and chunks[point_chunk_id] >= max_points_in_chunk then
 			return true
 		end
 		return false
