@@ -803,7 +803,7 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 end
 
 function BaseClass:UpdateMovement()
-	if self.is_animated or not self:IsAlive() then return end
+	if self.is_animated or not self:IsAlive() or not self.walkPos or not self.walkPath then return end
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
