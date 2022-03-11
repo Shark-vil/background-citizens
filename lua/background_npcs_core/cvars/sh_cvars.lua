@@ -48,6 +48,7 @@ bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'english'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
+bgNPC.cvar.bgn_module_arccw_weapon_replacement = 1
 
 function bgNPC:IsActiveNPCType(npc_type)
 	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
@@ -213,6 +214,10 @@ scvar.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes,
 
 scvar.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type,
 	FCVAR_ARCHIVE, 'Types - grid, random')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement,
+	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do

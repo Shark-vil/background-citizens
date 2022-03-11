@@ -38,8 +38,10 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 			npc:SelectWeapon(_weapon_class)
 		end
 
-		local arcw_replacement = hook.Get('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
-		if arcw_replacement then arcw_replacement(npc) end
+		if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
+			local arcw_replacement = hook.Get('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
+			if arcw_replacement then arcw_replacement(npc) end
+		end
 	end
 
 	-- Backward compatibility with the old version of the config
