@@ -93,6 +93,6 @@ local function TOOL_MENU(Panel)
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_SpawnSettings', function()
-	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Spawn_Settings', 
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Spawn_Settings',
 		'#bgn.settings.spawn_title', '', '', TOOL_MENU)
 end)

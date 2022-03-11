@@ -1,12 +1,37 @@
-local function TOOL_MENU(Panel)
-	Panel:AddControl('Slider', {
+local function TOOL_MENU(panel)
+	panel:AddControl('Header', {
+		['Description'] = '==[ Client ]==',
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.client.bgn_cl_field_view_optimization',
+		['Command'] = 'bgn_cl_field_view_optimization'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.client.bgn_cl_field_view_optimization.description'
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.client.bgn_cl_field_view_optimization_range',
+		['Command'] = 'bgn_cl_field_view_optimization_range',
+		['Type'] = 'Integer',
+		['Min'] = '0',
+		['Max'] = '2000'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.client.bgn_cl_field_view_optimization_range.description'
+	})
+
+	panel:AddControl('Header', {
+		['Description'] = '==[ Server ]==',
+	})
+
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.optimization.bgn_disable_logic_radius',
 		['Command'] = 'bgn_disable_logic_radius',
 		['Type'] = 'Float',
 		['Min'] = '0',
 		['Max'] = '1000'
-	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.optimization.bgn_disable_logic_radius.description'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.optimization.bgn_disable_logic_radius.description'
 	})
 end
 

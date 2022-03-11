@@ -67,6 +67,13 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'
 	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_arccw_weapon_replacement',
+		['Command'] = 'bgn_module_arccw_weapon_replacement'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.states.bgn_module_arccw_weapon_replacement.description'
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_StateSettings', function()

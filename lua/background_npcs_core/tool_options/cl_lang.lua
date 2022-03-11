@@ -90,7 +90,7 @@ en_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Description: N
 en_lang['bgn.settings.states.bgn_disable_halo'] = 'Disable NPC highlighting stroke.'
 en_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Description: disables the effect of the outline of the NPC during the call and during the wanted.'
 en_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Enable "DV" addon support'
-en_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Description: includes compatibility with the "DV" addon and forces NPCs to use vehicles.'
+en_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Description: includes compatibility with the "DV" addon and forces NPCs to use vehicles. Requires DV to have automatic loading of travel paths enabled!'
 en_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Enable support for the addon "Police System"'
 en_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Description: Enables compatibility with the "Police System" addon and overrides the default arrest method.'
 en_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Disable dialogues between NPCs'
@@ -99,7 +99,8 @@ en_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Enable text replics'
 en_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Description: enable text cues over the heads of NPCs.'
 en_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement'] = 'Enable support Bio-Annihilation II'
 en_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'] = 'Description: enabled automatic replacement of zombies with NPCs from Bio-Annihilation II.'
-
+en_lang['bgn.settings.states.bgn_module_arccw_weapon_replacement'] = 'Enable ArcCW support'
+en_lang['bgn.settings.states.bgn_module_arccw_weapon_replacement.description'] = 'Description: enables automatic swapping for weapons from the ArcCW addon. Requires NPC weapon swapping to be enabled in ArcCW too!'
 
 --[[-----------------------------------------
    Active npc group settings menu
@@ -124,16 +125,15 @@ en_lang['bgn.settings.optimization.bgn_disable_logic_radius.description'] = 'Des
 --[[-----------------------------------------
    Options header menu
 --]]
-en_lang['bgn.settings.general_title'] = 'General Settings'
-en_lang['bgn.settings.client_title'] = 'Client Settings'
-en_lang['bgn.settings.spawn_title'] = 'Spawn Settings'
-en_lang['bgn.settings.states_title'] = 'States Settings'
-en_lang['bgn.settings.wanted_title'] = 'Wanted Settings'
-en_lang['bgn.settings.active_title'] = 'Active NPC Groups'
-en_lang['bgn.settings.workshop_title'] = 'Workshop Services'
-en_lang['bgn.settings.optimization_title'] = 'Optimization settings'
-en_lang['bgn.settings.unit_tests_title'] = 'Unit Tests'
-
+en_lang['bgn.settings.general_title'] = 'General'
+en_lang['bgn.settings.client_title'] = 'Client'
+en_lang['bgn.settings.spawn_title'] = 'Spawner'
+en_lang['bgn.settings.states_title'] = 'Modules'
+en_lang['bgn.settings.wanted_title'] = 'Wanted mode'
+en_lang['bgn.settings.active_title'] = 'Actors'
+en_lang['bgn.settings.workshop_title'] = 'Workshop'
+en_lang['bgn.settings.optimization_title'] = 'Optimization'
+en_lang['bgn.settings.unit_tests_title'] = 'Unit tests'
 
 --[[
   _____               _             
@@ -222,7 +222,7 @@ ru_lang['bgn.settings.states.bgn_shot_sound_mode.description'] = 'Описани
 ru_lang['bgn.settings.states.bgn_disable_halo'] = 'Отключить выделение контура NPC'
 ru_lang['bgn.settings.states.bgn_disable_halo.description'] = 'Описание: отключает эффект обводки NPC во время звонка и при розыске.'
 ru_lang['bgn.settings.states.bgn_enable_dv_support'] = 'Включить поддержку аддона "DV"'
-ru_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Описание: включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт.'
+ru_lang['bgn.settings.states.bgn_enable_dv_support.description'] = 'Описание: включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт. Требуется чтобы в DV была включена автоматическая загрузка путей передвижения!'
 ru_lang['bgn.settings.states.bgn_enable_police_system_support'] = 'Включить поддержку аддона "Система Полиции"'
 ru_lang['bgn.settings.states.bgn_enable_police_system_support.description'] = 'Описание: включает совместимость с аддоном "Система Полиции" и переопределяет стандартный метод ареста.'
 ru_lang['bgn.settings.states.bgn_disable_dialogues'] = 'Отключить диалоги между NPC'
@@ -231,6 +231,8 @@ ru_lang['bgn.settings.states.bgn_module_replics_enable'] = 'Включить т�
 ru_lang['bgn.settings.states.bgn_module_replics_enable.description'] = 'Описание: включает текстовые реплики над головами NPC.'
 ru_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement'] = 'Включить поддержку Bio-Annihilation II'
 ru_lang['bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'] = 'Описание: включает автоматическую замену зомби на NPC из Bio-Annihilation II.'
+ru_lang['bgn.settings.states.bgn_module_arccw_weapon_replacement'] = 'Включить поддержку ArcCW'
+ru_lang['bgn.settings.states.bgn_module_arccw_weapon_replacement.description'] = 'Описание: включает автоматическую замену на оружие из аддона ArcCW. Требуется чтобы в ArcCW тоже была включена замена оружия у NPC!'
 
 --[[-----------------------------------------
    Active npc group settings menu
@@ -255,16 +257,15 @@ ru_lang['bgn.settings.optimization.bgn_disable_logic_radius.description'] = 'О�
 --[[-----------------------------------------
    Options header menu
 --]]
-ru_lang['bgn.settings.general_title'] = 'Главные Настройки'
-ru_lang['bgn.settings.client_title'] = 'Настройки клиента'
-ru_lang['bgn.settings.spawn_title'] = 'Настройки Спавна'
-ru_lang['bgn.settings.states_title'] = 'Настройки Состояний'
-ru_lang['bgn.settings.wanted_title'] = 'Настройки Розыска'
-ru_lang['bgn.settings.active_title'] = 'Активные Группы NPC'
-ru_lang['bgn.settings.workshop_title'] = 'Сервис Мастерской'
-ru_lang['bgn.settings.optimization_title'] = 'Настройки оптимизации'
-ru_lang['bgn.settings.unit_tests_title'] = 'Unit Tests'
-
+ru_lang['bgn.settings.general_title'] = 'Общее'
+ru_lang['bgn.settings.client_title'] = 'Клиент'
+ru_lang['bgn.settings.spawn_title'] = 'Спавнер'
+ru_lang['bgn.settings.states_title'] = 'Модули'
+ru_lang['bgn.settings.wanted_title'] = 'Режим розыска'
+ru_lang['bgn.settings.active_title'] = 'Актёры'
+ru_lang['bgn.settings.workshop_title'] = 'Мастерская'
+ru_lang['bgn.settings.optimization_title'] = 'Оптимизация'
+ru_lang['bgn.settings.unit_tests_title'] = 'Юнит тесты'
 
 ---------------------------------------------
 ---------- SET LANGUAGE FOR SYSTEM ----------
