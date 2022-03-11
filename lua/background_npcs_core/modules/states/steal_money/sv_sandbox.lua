@@ -4,6 +4,10 @@ local weapon_ignore = {
    'weapon_medkit',
    'gmod_tool',
    'hands_obs',
+   'hand',
+   'hands',
+   'blank',
+   'weaponholster',
    'weapon_physgun',
    'weapon_physcannon',
 }
@@ -38,7 +42,7 @@ end)
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_Sandbox_DropStealMoney', function(attacker, target)
    if engine.ActiveGamemode() ~= 'sandbox' then return end
    if not target:slibGetVar('is_stealer') then return end
-   
+
    if attacker:IsNPC() then
       local actor = bgNPC:GetActor(attacker)
       if actor == nil or not actor:HasTeam('police') then return end
