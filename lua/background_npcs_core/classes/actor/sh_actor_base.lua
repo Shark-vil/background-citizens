@@ -749,7 +749,7 @@ function BaseClass:WalkToTarget(target, moveType, pathType)
 end
 
 function BaseClass:WalkToPos(pos, moveType, pathType)
-	if self:GetNPC():IsNextBot() then return end
+	if self:GetNPC():IsNextBot() or not isvector(pos) then return end
 
 	if not pos then
 		self:StopWalk()
