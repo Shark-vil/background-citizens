@@ -1,7 +1,6 @@
 local bgNPC = bgNPC
 local IsValid = IsValid
 local CurTime = CurTime
-local FrameTime = FrameTime
 --
 async.Add('BGN_MovementProcess', function(yield, wait)
 	local current_pass = 0
