@@ -17,7 +17,7 @@ bgNPC:SetStateAction('walk', 'calm', {
 					runReset = 0
 				})
 			end
-		elseif math.random(0, 100) == 0 then
+		elseif slib.chance(5) then
 			actor:UpdateStateData({
 				schedule = 'run',
 				runReset = CurTime() + 20
