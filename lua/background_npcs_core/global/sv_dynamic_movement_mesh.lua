@@ -8,7 +8,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	-- local math_Clamp = math.Clamp
 	local file_Exists = file.Exists
 	local Vector = Vector
-	local math_floor = math.floor
+	-- local math_floor = math.floor
 	local math_modf = math.modf
 	-- local FrameTime = FrameTime
 	local add_z_axis = Vector(0, 0, 20)
