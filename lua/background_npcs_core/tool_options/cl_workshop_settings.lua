@@ -1,7 +1,12 @@
-local function TOOL_MENU(Panel)
-	Panel:AddControl('Button', {
+local function TOOL_MENU(panel)
+	panel:AddControl('Button', {
 		['Label'] = '#bgn.settings.workshop.cl_citizens_compile_route',
 		['Command'] = 'bgn_compile',
+	})
+
+	panel:AddControl('Button', {
+		['Label'] = '#bgn.settings.workshop.bgn_save_map',
+		['Command'] = 'bgn_save_map',
 	})
 end
 
