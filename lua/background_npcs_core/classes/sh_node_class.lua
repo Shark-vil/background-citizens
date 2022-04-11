@@ -382,14 +382,25 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
 	version = version or '1.2'
 
 	return util_TableToJSON({
+		bgn_wid_2341497926 = true,
 		version = version,
 		nodes = JsonData
 	}, prettyPrint)
 end
 
 function BGN_NODE:JsonToMap(json_string)
-	local mapData = util_JSONToTable(json_string)
+	local mapData
+
+	if isstring(json_string) then
+		mapData = util_JSONToTable(json_string)
+	elseif istable(json_string) then
+		mapData = json_string
+	else
+		return {}
+	end
+
 	if not mapData.version then return {} end
+
 	local map = {}
 
 	for index, nodeData in ipairs(mapData.nodes) do
