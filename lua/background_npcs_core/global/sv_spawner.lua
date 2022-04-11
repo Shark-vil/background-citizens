@@ -76,6 +76,21 @@ end
 local hooks_active = {}
 local random_models_storage = {}
 
+function bgNPC:ActorIsStuck(actor)
+	if not actor or not actor:IsAlive() or actor:InVehicle() then return false end
+	local npc = actor:GetNPC()
+	local min_vector = npc:LocalToWorld(npc:OBBMins())
+	local max_vector = npc:LocalToWorld(npc:OBBMaxs())
+	local entities = ents.FindInBox(min_vector, max_vector)
+	for i = 1, #entities do
+		local ent = entities[i]
+		if IsValid(ent) and ent ~= npc then
+			return true
+		end
+	end
+	return false
+end
+
 function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
 	local hook_name = 'BGN_SpawnerThread_' .. spawner_id
 	if hooks_active[hook_name] then return end
