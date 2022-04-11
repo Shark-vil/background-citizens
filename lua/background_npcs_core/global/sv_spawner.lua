@@ -8,8 +8,11 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius, 'walk')
 	local current_pass = 0
 	local nodePosition
+
 	coroutine.yield()
+
 	points = table.shuffle(points)
+
 	coroutine.yield()
 
 	for i = 1, #points do
@@ -22,6 +25,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 			if IsValid(ent) and ent:IsNPC() then
 				goto skip_walk_nodes
 			end
+			coroutine.yield()
 		end
 
 		for p = 1, #all_players do
@@ -52,6 +56,8 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 				if not tr.Hit then
 					goto skip_walk_nodes
 				end
+
+				ActorInWorld(nodePosition)
 			end
 		end
 
