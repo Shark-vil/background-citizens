@@ -11,6 +11,35 @@ local CurTime = CurTime
 local isbool = isbool
 --
 
+function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
+	for _, area in pairs(bgNPC.SpawnArea) do
+		if spawnPosition:WithinAABox(area.startPoint, area.endPoint) then
+			for areaActorType, isValidSpawn in pairs(area.actors) do
+				if areaActorType == actorType and not isValidSpawn then
+					return false
+				end
+			end
+		end
+	end
+	return true
+end
+
+function bgNPC:RespawnActor(actor)
+	if not actor or not actor:IsAlive() then return end
+
+	bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
+		if not actor or not actor:IsAlive() then return end
+		if not bgNPC:IsValidSpawnArea(actor:GetType(), nodePosition) then return end
+
+		if not bgNPC:EnterActorInExistVehicle(actor)
+			and not bgNPC:SpawnVehicleWithActor(actor)
+			and bgNPC:ActorIsStuck(actor)
+		then
+			bgNPC:RespawnActor(actor)
+		end
+	end)
+end
+
 -- Еб*ный костыль.
 hook.Add('BGN_InitActor', 'BGN_RemoveActorTargetFixer', function(actor)
 	local npc = actor:GetNPC()
@@ -144,9 +173,16 @@ local function InitActorsSpawner(delay)
 			end
 
 			bgNPC:FindSpawnLocation(npcType, pos, nil, function(nodePosition)
+				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
+
 				local actor = bgNPC:SpawnActor(npcType, nodePosition)
-				if actor and not bgNPC:EnterActorInExistVehicle(actor) then
-					bgNPC:SpawnVehicleWithActor(actor)
+				if not actor then return end
+
+				if not bgNPC:EnterActorInExistVehicle(actor)
+					and not bgNPC:SpawnVehicleWithActor(actor)
+					and bgNPC:ActorIsStuck(actor)
+				then
+					bgNPC:RespawnActor(actor)
 				end
 			end)
 		end

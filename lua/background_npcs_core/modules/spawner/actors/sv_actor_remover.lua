@@ -25,6 +25,7 @@ end
 
 local function TeleportActor(actor, npc, pos)
 	if not actor or not IsValid(npc) then return end
+	if not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then return end
 
 	local current_state = actor:GetState()
 	local current_data = actor:GetStateData()
@@ -101,6 +102,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 						if not is_entered_vehicle then
 							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
+								if bgNPC:ActorIsStuck(actor) then return end
 								TeleportActor(actor, npc, nodePosition)
 							end)
 						end
@@ -129,6 +131,7 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 							local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 							if not is_entered_vehicle then
 								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
+									if bgNPC:ActorIsStuck(actor) then return end
 									TeleportActor(actor, npc, nodePosition)
 								end)
 							end
