@@ -56,6 +56,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
 	local ply = LocalPlayer()
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
+	local plyPosition = ply:GetPos()
 	local upper_text_angle = ply:EyeAngles()
 	upper_text_angle:RotateAroundAxis(upper_text_angle:Forward(), 90)
 	upper_text_angle:RotateAroundAxis(upper_text_angle:Right(), 90)
@@ -65,24 +66,26 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
 	for _, actor in ipairs(bgNPC:GetAll()) do
 		if actor:IsAlive() then
 			local npc = actor:GetNPC()
-			local npc_pos = npc:GetPos()
+			local npcPosition = npc:GetPos()
 
-			if npc_pos:DistToSqr(ply:GetPos()) < 640000 then
-				cam_Start3D2D(npc_pos + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
+			if npcPosition:DistToSqr(plyPosition) < 640000 then
+				cam_Start3D2D(npcPosition + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
 					draw_SimpleTextOutlined('State - ' .. actor:GetState(), text_font_name, 0, -15, state_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, text_border_color)
 				cam_End3D2D()
 			end
 
-			for _, enemy in ipairs(actor.enemies) do
-				if IsValid(enemy) then
-					local color = GetColorByTeam(actor)
-					render_DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
+			if npcPosition:DistToSqr(plyPosition) <= 250000 then
+				for _, enemy in ipairs(actor.enemies) do
+					if IsValid(enemy) then
+						local color = GetColorByTeam(actor)
+						render_DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
+					end
 				end
-			end
 
-			for _, target in ipairs(actor.targets) do
-				if IsValid(target) then
-					render_DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
+				for _, target in ipairs(actor.targets) do
+					if IsValid(target) then
+						render_DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
+					end
 				end
 			end
 		end

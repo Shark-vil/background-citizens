@@ -41,7 +41,9 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 	render_SetColorMaterial()
 
 	local actors = bgNPC:GetAll()
-	local cam_angle = LocalPlayer():EyeAngles()
+	local ply = LocalPlayer()
+	local plyPosition = ply:GetPos()
+	local cam_angle = ply:EyeAngles()
 	cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
 	cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 
@@ -50,11 +52,14 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 
 		if actor and actor.walkPath and actor:IsAlive() then
 			local count = #actor.walkPath
+			local npc = actor:GetNPC()
+			local npcPosition = npc:GetPos()
+
+			if npcPosition:DistToSqr(plyPosition) > 250000 then continue end
 
 			if count ~= 0 then
 				local pos = actor.walkPath[1]
-				local ent = actor:GetNPC()
-				local center_pos = LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
+				local center_pos = LocalToWorld(npc:OBBCenter(), Angle(), npc:GetPos(), Angle())
 				render_DrawLine(pos, center_pos, clr_line_to_npc)
 			end
 
@@ -65,7 +70,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 					render_DrawLine(pos, actor.walkPath[k - 1], clr_line)
 				end
 
-				render_DrawSphere(pos, 10, 30, 30, clr_green)
+				render_DrawSphere(pos, 10, 5, 5, clr_green)
 
 				cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
 					draw_SimpleTextOutlined(tostring(i),
