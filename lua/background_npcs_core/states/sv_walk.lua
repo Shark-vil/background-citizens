@@ -1,48 +1,60 @@
-local function GetNextNode(actor)
-	return table.RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
+local bgNPC = bgNPC
+local math_random = math.random
+local CurTime = CurTime
+local slib_chance = slib.chance
+local table_RandomBySeq = table.RandomBySeq
+
+local function GetNextTargetNode(actor)
+	return table_RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
+end
+
+local function UpdateActorMovementType(actor, data)
+	if data.updateMovementTypeDelay > CurTime() then return end
+
+	if data.schedule == 'run' then
+		if data.timeToResetRunMovementType < CurTime() then
+			data.schedule = 'walk'
+		end
+	elseif slib_chance(5) then
+		data.timeToResetRunMovementType = CurTime() + math_random(5, 30)
+		data.schedule = 'run'
+	end
+
+	data.updateMovementTypeDelay = CurTime() + 1
+end
+
+local function UpdateActorTargetPoint(actor, data)
+	if data.updateTargetPointDelay > CurTime() then return end
+
+	local node = GetNextTargetNode(actor)
+	if not node then return end
+
+	actor:WalkToPos(node.position, data.schedule, 'walk')
+
+	if not actor.walkPath or #actor.walkPath == 0 then return end
+	data.updateTargetPointDelay = CurTime() + math_random(15, 30)
 end
 
 bgNPC:SetStateAction('walk', 'calm', {
 	update = function(actor)
-		-- if not bgNPC.PointsExist then return end
 		local data = actor:GetStateData()
 		data.schedule = data.schedule or 'walk'
-		data.runReset = data.runReset or 0
-		data.updatePoint = data.updatePoint or 0
+		data.timeToResetRunMovementType = data.timeToResetRunMovementType or 0
+		data.updateTargetPointDelay = data.updateTargetPointDelay or 0
+		data.updateMovementTypeDelay = data.updateMovementTypeDelay or 0
 
-		if data.schedule == 'run' then
-			if data.runReset < CurTime() then
-				actor:UpdateStateData({
-					schedule = 'walk',
-					runReset = 0
-				})
-			end
-		elseif slib.chance(5) then
-			actor:UpdateStateData({
-				schedule = 'run',
-				runReset = CurTime() + 20
-			})
-		end
-
-		if data.updatePoint < CurTime() then
-			local node = GetNextNode(actor)
-			if node then
-				actor:WalkToPos(node.position, data.schedule, 'walk')
-				if #actor.walkPath == 0 then return end
-				data.updatePoint = CurTime() + math.random(15, 30)
-			else
-				bgNPC:Log('NPC cannot find a point nearby', 'sv_walk')
-			end
-		end
+		UpdateActorMovementType(actor, data)
+		UpdateActorTargetPoint(actor, data)
 	end
 })
 
 hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
-	-- if not bgNPC.PointsExist then return end
 	if actor:GetState() ~= 'walk' then return end
+
 	local data = actor:GetStateData()
-	local node = GetNextNode(actor)
+	local node = GetNextTargetNode(actor)
 	if not node then return end
+
 	actor:WalkToPos(node.position, data.schedule, 'walk')
-	data.updatePoint = CurTime() + math.random(15, 30)
+	data.updateTargetPointDelay = CurTime() + math_random(15, 30)
 end)
