@@ -30,6 +30,12 @@ bgNPC.respawn_actors_delay = {}
 bgNPC.DVCars = {}
 bgNPC.state_actions = {}
 bgNPC.state_actions_groups = {}
+bgNPC.SpawnArea = bgNPC.SpawnArea or {}
+bgNPC.SpawnMenu = bgNPC.SpawnMenu or {}
+bgNPC.SpawnMenu.Creator = bgNPC.SpawnMenu.Creator or {
+	['NPC'] = {},
+	['Default'] = {}
+}
 -- ---------------------------
 
 local root_directory = 'background_npcs_core'
@@ -103,6 +109,7 @@ local function ExecutableScripts()
 	script:using('modules/npcs/sv_police_voice.lua')
 	script:using('modules/npcs/sv_random_voice.lua')
 	script:using('modules/npcs/sv_bio_annihilation_two.lua')
+	script:using('modules/npcs/sv_regeneration.lua')
 	script:using('modules/player/sv_team_parent.lua')
 	script:using('modules/darkrp/sv_darkrp_drop_money.lua')
 	script:using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
@@ -114,6 +121,7 @@ local function ExecutableScripts()
 	script:using('modules/routes/sh_route_loader.lua')
 	script:using('modules/routes/compile/sv_compile.lua')
 	script:using('modules/routes/compile/cl_compile.lua')
+	script:using('modules/routes/compile/sh_save_map.lua')
 	script:using('modules/routes/sv_oldroute_convert.lua')
 	script:using('modules/routes/sh_seat_saver.lua')
 	script:using('modules/spawner/actors/sh_actor_remover.lua')
@@ -174,8 +182,11 @@ local function ExecutableScripts()
 	script:using('states/sv_arrest_surrender.lua')
 	script:using('states/sv_random_gesture.lua')
 
-	script:using('tool_options/cl_bgn_settings_menu.lua')
+	script:using('tool_options/lang/cl_en.lua')
+	script:using('tool_options/lang/cl_ru.lua')
 	script:using('tool_options/cl_lang.lua')
+
+	script:using('tool_options/cl_bgn_settings_menu.lua')
 	script:using('tool_options/cl_general_settings.lua')
 	script:using('tool_options/cl_spawn_settings.lua')
 	script:using('tool_options/cl_state_settings.lua')
@@ -183,13 +194,20 @@ local function ExecutableScripts()
 	script:using('tool_options/cl_optimization_settings.lua')
 	script:using('tool_options/cl_client_settings.lua')
 	script:using('tool_options/cl_workshop_settings.lua')
-	script:using('tool_options/cl_unit_testing.lua')
 	script:using('tool_options/cl_wanted_settings.lua')
+	script:using('tool_options/cl_generation_settings.lua')
+	script:using('tool_options/cl_addons_settings.lua')
+
+	script:using('modules/spawnmenu/cl_spawnmenu.lua')
+	script:using('modules/spawnmenu/sv_spawnmenu.lua')
+	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
 	script:using('tests/cl_test_start.lua')
 	script:using('tests/unit/sv_unit_mod_enabled.lua')
 	script:using('tests/unit/sv_unit_test_exist_nodes.lua')
 	script:using('tests/unit/sv_unit_dv_points_exists.lua')
+
+	script:using('sh_group.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload',
 		'[Background NPCs | Custom modules] Script load - {file}')
