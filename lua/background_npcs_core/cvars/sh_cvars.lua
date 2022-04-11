@@ -49,6 +49,7 @@ bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'english'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
 bgNPC.cvar.bgn_module_arccw_weapon_replacement = 1
+bgNPC.cvar.bgn_all_models_random = 0
 
 function bgNPC:IsActiveNPCType(npc_type)
 	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
@@ -218,6 +219,10 @@ scvar.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type,
 
 scvar.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement,
 	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,
+	FCVAR_ARCHIVE, '1 - makes any NPCs with random models from the list. 0 - disables.')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.npcs_template) do

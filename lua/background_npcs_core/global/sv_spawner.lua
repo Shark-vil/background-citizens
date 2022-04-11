@@ -74,6 +74,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 end
 
 local hooks_active = {}
+local random_models_storage = {}
 
 function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
 	local hook_name = 'BGN_SpawnerThread_' .. spawner_id
@@ -156,6 +157,22 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
 
 	if npcData.models and istable(npcData.models) then
+	if npcData.random_model or GetConVar('bgn_all_models_random'):GetBool() then
+		if not random_models_storage[npc_class] then
+			random_models_storage[npc_class] = {}
+			local table_insert = table.insert
+			local isstring = isstring
+			for k, v in pairs(list.Get('NPC')) do
+				if v.Model and isstring(v.Model) and v.Class == npc_class then
+					table_insert(random_models_storage[npc_class], v.Model)
+				end
+			end
+		end
+
+		local models = random_models_storage[npc_class]
+		if models and #models ~= 0 then
+			npc:SetModel(table.RandomBySeq(models))
+		end
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
