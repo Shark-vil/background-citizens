@@ -107,6 +107,15 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	if not desiredPosition then
 		local ply = table.RandomBySeq(all_players)
 		desiredPosition = ply:GetPos()
+
+		for _, area in pairs(bgNPC.SpawnArea) do
+			local center = (area.startPoint + area.endPoint) / 2
+			local radius = center:DistToSqr(area.startPoint) + 1000000
+			if desiredPosition:DistToSqr(center) <= radius and slib.chance(80) then
+				desiredPosition = center
+				break
+			end
+		end
 	end
 
 	if not desiredPosition then return end
@@ -211,6 +220,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 		if models and #models ~= 0 then
 			npc:SetModel(table.RandomBySeq(models))
 		end
+	elseif not skipSetModel and npcData.models and istable(npcData.models) then
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
@@ -235,9 +245,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	npcData.random_skin = npcData.random_skin or npcData.randomSkin
 
 	if npcData.random_skin and isbool(npcData.random_skin) then
-		local skin = math.random(0, npc:SkinCount())
+		local skinNumber = math.random(0, npc:SkinCount())
 
-		if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
+		if not hook.Run('BGN_PreSetActorSkin', skinNumber, npc, npcType, npcData) then
 			npc:SetSkin(math.random(0, npc:SkinCount()))
 		end
 	end
@@ -258,18 +268,16 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 
 	local actor = BGN_ACTOR:Instance(npc, npcType)
 	actor:RandomState()
-	hook.Run('BGN_InitActor', actor)
+	-- hook.Run('BGN_InitActor', actor)
 	-- actor:RemoveAllEnemies()
 	-- actor:RemoveAllTargets()
 	-- hook.Run('BGN_PostInitActor', actor)
 
 	npc:slibCreateTimer('bgn_check_water_level', 1, 0, function()
 		if npc:WaterLevel() == 3 then
-			for _, node in ipairs(BGN_NODE:GetChunkNodes(npc:GetPos())) do
-				node:RemoveFromMap()
-			end
-
 			bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(teleport_position)
+				if not bgNPC:IsValidSpawnArea(actor:GetType(), teleport_position) then return end
+
 				for _, ply in ipairs(player.GetHumans()) do
 					if bgNPC:PlayerIsViewVector(ply, teleport_position) then return end
 				end

@@ -148,10 +148,15 @@ function bgNPC:GetActivePlayerTool(tool_name, ply)
 end
 
 local npcs_template_copy = table.Copy(bgNPC.cfg.npcs_template)
+
+function bgNPC:ResetConfiguration()
+	bgNPC.cfg.npcs_template = table.Copy(npcs_template_copy)
+end
+
 timer.Create('BGN_FixedNpcsTemplateConfig', .1, 0, function()
 	local npcs_template = bgNPC.cfg.npcs_template
 	if not npcs_template or not istable(npcs_template) or table.Count(npcs_template) == 0 then
 		ErrorNoHalt('[Background NPCs] Something broke the NPC templates configuration. The table has been restored.')
-		bgNPC.cfg.npcs_template = table.Copy(npcs_template_copy)
+		bgNPC:ResetConfiguration()
 	end
 end)
