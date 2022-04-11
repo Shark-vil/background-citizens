@@ -36,7 +36,11 @@ hook.Add('BGN_StealFinish', 'BGN_Sandbox_StealMoney', function(actor, target, su
       clip2 = stealWeapon:Clip2()
    })
 
-   target:StripWeapon(weapon_class)
+   if target:IsPlayer() then
+      target:StripWeapon(weapon_class)
+   elseif IsValid(stealWeapon) and target:IsNPC() then
+      stealWeapon:Remove()
+   end
 end)
 
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_Sandbox_DropStealMoney', function(attacker, target)
