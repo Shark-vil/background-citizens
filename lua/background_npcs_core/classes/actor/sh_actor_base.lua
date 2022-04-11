@@ -757,7 +757,10 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 	end
 
 	if self.walkPos == pos then return end
-	if hook_Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
+
+	local pre_set_result = hook_Run('BGN_PreSetWalkPos', self, pos, moveType, pathType)
+	if isbool(pre_set_result) and not pre_set_result then return end
+	if isvector(pre_set_result) then pos = pre_set_result end
 
 	local npc = self.npc
 	if npc:GetPos():DistToSqr(pos) <= 2500 then
@@ -804,6 +807,7 @@ end
 
 function BaseClass:UpdateMovement()
 	if self.is_animated or not self:IsAlive() or not self.walkPos or not self.walkPath then return end
+	if self:IsAnimationPlayed() then return end
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
@@ -1158,6 +1162,15 @@ function BaseClass:PlayNextStaticSequence()
 	return false
 end
 
+function BaseClass:StopStaticSequence()
+	self.anim_name = ''
+	self.is_animated = false
+	self.next_anim = nil
+	self.anim_action = nil
+
+	self:ClearSchedule()
+end
+
 function BaseClass:ResetSequence()
 	if self.anim_action ~= nil and not self.anim_action(self) then return end
 
@@ -1411,7 +1424,7 @@ end
 function BaseClass:PrepareWeapon(weapon_class, switching)
 	if weapon_class then
 		bgNPC:SetActorWeapon(self, weapon_class, switching)
-	elseif self.weapon then
+	else
 		bgNPC:SetActorWeapon(self)
 	end
 end
@@ -1421,6 +1434,18 @@ function BaseClass:FoldWeapon()
 	local npc = self:GetNPC()
 	local weapon  = npc:GetActiveWeapon()
 	if IsValid(weapon) then weapon:Remove() end
+end
+
+function BaseClass:GiveWeapon(weapon_class)
+	self.weapon = weapon_class
+end
+
+function BaseClass:SetTeam(team_data)
+	self.data.team = team_data
+end
+
+function BaseClass:AddTeam(team_name)
+	table.insert(self.data.team, team_name)
 end
 
 function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)

@@ -175,9 +175,26 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	npc:SetOwner(game.GetWorld())
 	npc:Activate()
 	npc:PhysWake()
+	if npc.DropToFloor then npc:DropToFloor() end
 	hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
 
-	if npcData.models and istable(npcData.models) then
+	local skipSetModel = false
+	do
+		local actorData = bgNPC.cfg.npcs_template[npcType]
+		local npcList = list.Get('NPC')
+		for npcClass, actorTypesList in pairs(bgNPC.SpawnMenu.Creator['NPC']) do
+			for _, actorType in ipairs(actorTypesList) do
+				if actorType == npcType and table.HasValueBySeq(actorData.class, npcClass) then
+					local listData = npcList[npcClass]
+					if not listData or not listData.Model then
+						skipSetModel = true
+						break
+					end
+				end
+			end
+		end
+	end
+
 	if npcData.random_model or GetConVar('bgn_all_models_random'):GetBool() then
 		if not random_models_storage[npc_class] then
 			random_models_storage[npc_class] = {}
