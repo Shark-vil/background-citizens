@@ -4,6 +4,16 @@ bgNPC:SetStateAction('fear', 'danger', {
 		if not IsValid(enemy) then return end
 
 		local npc = actor:GetNPC()
+
+		if npc.GetActiveWeapon then
+			local active_weapon = npc:GetActiveWeapon()
+			if IsValid(active_weapon) then
+				actor.weapon = active_weapon:GetClass()
+				actor:SetState('defense', nil, true)
+				return
+			end
+		end
+
 		local dist = enemy:GetPos():DistToSqr(npc:GetPos())
 		if dist <= 490000 and math.random(0, 10) > 5 then
 			actor:FearScream()
