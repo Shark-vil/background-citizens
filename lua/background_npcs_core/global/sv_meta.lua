@@ -1,8 +1,15 @@
+local function ArcCWWeaponReplacement(npc)
+	if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
+		local arcw_replacement = hook.Get('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
+		if arcw_replacement then arcw_replacement(npc) end
+	end
+end
+
 function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()
 
-	if weapon_class ~= nil then
+	if weapon_class then
 		local active_weapon = npc:GetActiveWeapon()
 
 		switching = switching or false
@@ -21,26 +28,27 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 		end
 
 		npc:SelectWeapon(weapon_class)
+		ArcCWWeaponReplacement(npc)
 	else
 		local _weapon_class = actor.weapon
 		if _weapon_class and #_weapon_class ~= 0 then
 			local active_weapon = npc:GetActiveWeapon()
+			if not IsValid(active_weapon) then
+				local npcList = list.Get('VJBASE_SPAWNABLE_NPC')
+				local npcClass = npc:GetClass()
 
-			if IsValid(active_weapon) and active_weapon:GetClass() == _weapon_class then
-				return
+				if npcList and npcList[npcClass] and npcList[npcClass].Weapons then
+					_weapon_class = table.RandomBySeq(npcList[npcClass].Weapons)
+				end
+
+				local weapon = npc:GetWeapon(_weapon_class)
+				if not IsValid(weapon) then
+					weapon = npc:Give(_weapon_class)
+				end
+
+				npc:SelectWeapon(_weapon_class)
+				ArcCWWeaponReplacement(npc)
 			end
-
-			local weapon = npc:GetWeapon(_weapon_class)
-			if not IsValid(weapon) then
-				weapon = npc:Give(_weapon_class)
-			end
-
-			npc:SelectWeapon(_weapon_class)
-		end
-
-		if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
-			local arcw_replacement = hook.Get('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
-			if arcw_replacement then arcw_replacement(npc) end
 		end
 	end
 
