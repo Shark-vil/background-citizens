@@ -57,10 +57,9 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Request('bgn_movement_mesh_save_to_file').BigData({
-				from_json = from_json,
-				data = jsonNodes
-			}, nil, 'Sending the mesh to the server').InvokeServer()
+			snet.Request('bgn_movement_mesh_save_to_file', { from_json = from_json, data = jsonNodes })
+			.ProgressText('Sending the mesh to the server')
+			.InvokeServer()
 		else
 			local MainMenu = vgui.Create('DFrame')
 			MainMenu:SetPos(ScrW() / 2 - 500 / 2, ScrH() / 2 - 230 / 2)

@@ -35,8 +35,8 @@ if SERVER then
 	end
 
 	bgNPC.SendRoutesFromClient = function(ply)
-		snet.Request('bgn_movement_mesh_load_from_client_cl')
-			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
+		snet.Request('bgn_movement_mesh_load_from_client_cl', BGN_NODE:MapToJson())
+			.ProgressText('Loading mesh from server')
 			.Invoke(ply)
 	end
 
@@ -63,25 +63,14 @@ else
 		tool:ClearPoints()
 	end)
 
-	hook.Add('SnetBigDataStartSending', 'BGN_LoadingNodesFromServer', function(ply, name)
-		if name ~= 'bgn_movement_mesh_load_from_client_cl' then return end
-		notification.Kill('BGN_LoadingNodesFromServer')
-	end)
-
 	concommand.Add('cl_citizens_load_route', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load')
-
 	end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
 	concommand.Add('cl_citizens_load_route_from_client', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-
-		notification.AddProgress('BGN_LoadingNodesFromServer', 'The server is preparing files, please wait...')
 		snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
-
 	end, nil, 'Technical command. Used to get an array of points from the server.')
 
 	snet.Callback('bgn_movement_mesh_load_from_client_cl', function(ply, data_table)
