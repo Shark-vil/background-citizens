@@ -254,6 +254,8 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				points_count = #map_points
 			end
 
+			local custom_current_pass = 0
+
 			for point_index = 1, points_count do
 				local node = map_points[point_index]
 				if not node then continue end
@@ -271,6 +273,12 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						anotherNode:AddParentNode(node)
 						anotherNode:AddLink(node, 'walk')
 						PassYield()
+					end
+
+					custom_current_pass = custom_current_pass + 1
+					if custom_current_pass >= 2500 then
+						custom_current_pass = 0
+						yield()
 					end
 				end
 
