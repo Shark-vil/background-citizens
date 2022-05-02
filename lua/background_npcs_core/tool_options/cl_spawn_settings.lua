@@ -20,16 +20,6 @@ local function TOOL_MENU(Panel)
 	})
 
 	Panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius_raytracing',
-		['Command'] = 'bgn_spawn_radius_raytracing',
-		['Type'] = 'Float',
-		['Min'] = '0',
-		['Max'] = '5000'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_spawn_radius_raytracing.description'
-	})
-
-	Panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_block_radius',
 		['Command'] = 'bgn_spawn_block_radius',
 		['Type'] = 'Float',

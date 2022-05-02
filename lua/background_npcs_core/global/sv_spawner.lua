@@ -2,8 +2,6 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	limit_pass = limit_pass or 10
 
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
-	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
-	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius, 'walk')
 	local current_pass = 0
@@ -36,11 +34,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 				goto skip_walk_nodes
 			end
 
-			if distance <= radius_visibility and bgNPC:PlayerIsViewVector(ply, nodePosition) then
-				if radius_raytracing == 0 then
-					goto skip_walk_nodes
-				end
-
+			if bgNPC:PlayerIsViewVector(ply, nodePosition) then
 				local tr = util.TraceLine({
 					start = ply:EyePos(),
 					endpos = nodePosition,
@@ -48,7 +42,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 						if IsValid(ent) and ent ~= ply and not ent:IsVehicle() and ent:IsWorld()
 							and not string.StartWith(ent:GetClass(), 'prop_')
 						then
-								return true
+							return true
 						end
 					end
 				})

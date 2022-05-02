@@ -54,7 +54,6 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 	local bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
 	local bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
-	local bgn_spawn_radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 	local bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 	local max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	local current_teleport = 0
@@ -86,18 +85,13 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 				local dist = npc_pos:DistToSqr(ply_pos)
 
 				if dist <= bgn_spawn_radius then
-					local isRayTracing = false
-					if bgn_spawn_radius_raytracing ~= 0 and dist <= bgn_spawn_radius_raytracing then
-						isRayTracing = true
+					if dist <= bgn_spawn_block_radius or dist <= bgn_spawn_radius_visibility then
+						isRemove = false
+					elseif not actor.toRemove and slib.chance(90) then
+						isRemove = false
 					end
 
-					if dist <= bgn_spawn_block_radius then
-						isRemove = false
-					elseif dist <= bgn_spawn_radius_visibility and not actor.toRemove and slib.chance(90) then
-						isRemove = false
-					elseif isRayTracing and ply:slibIsTraceEntity(npc, dist, true) then
-						isRemove = false
-					elseif ply:slibIsViewVector(npc_pos) then
+					if isRemove and ply:slibIsTraceEntity(npc, dist, true) then
 						isRemove = false
 					end
 				end
@@ -114,13 +108,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 					local data = actor:GetData()
 
 					if data.wanted_level == nil then
-						if max_teleporter == current_teleport then continue end
+						if max_teleporter == current_teleport then break end
 						current_teleport = current_teleport + 1
 
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 						if not is_entered_vehicle then
 							bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
-								-- if bgNPC:ActorIsStuck(actor) then return end
 								TeleportActor(actor, npc, nodePosition)
 							end)
 						end
@@ -143,13 +136,12 @@ timer.Create('BGN_Timer_NPCRemover', 1, 0, function()
 								actor:Remove()
 							end
 						else
-							if max_teleporter == current_teleport then continue end
+							if max_teleporter == current_teleport then break end
 							current_teleport = current_teleport + 1
 
 							local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 							if not is_entered_vehicle then
 								bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
-									-- if bgNPC:ActorIsStuck(actor) then return end
 									TeleportActor(actor, npc, nodePosition)
 								end)
 							end
