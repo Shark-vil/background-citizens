@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.3'
+bgNPC.VERSION = '1.8.4'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -62,6 +62,8 @@ local function ExecutableScripts()
 	script:using('config/states/sh_sit_chair.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/config', load_modules_text)
+
+	script:using('global/sh_oldconfig.lua')
 
 	script:using('cvars/sh_cvars.lua')
 	script:using('cvars/sv_cvars.lua')
@@ -211,10 +213,7 @@ local function ExecutableScripts()
 	script:using('modules/spawnmenu/sv_spawnmenu.lua')
 	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
-	script:using('tests/cl_test_start.lua')
-	script:using('tests/unit/sv_unit_mod_enabled.lua')
-	script:using('tests/unit/sv_unit_test_exist_nodes.lua')
-	script:using('tests/unit/sv_unit_dv_points_exists.lua')
+	script:using('modules/sh_poll.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
 end

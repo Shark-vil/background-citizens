@@ -32,8 +32,6 @@ local function FindSpawnLocation(center)
 
 	points = table.shuffle(points)
 	local dvd = DecentVehicleDestination
-	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
-	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local all_players = player.GetAll()
 	local spawn_position = nil
@@ -52,11 +50,7 @@ local function FindSpawnLocation(center)
 					goto skip
 				end
 
-				if distance <= radius_visibility or ply:slibIsViewVector(spawn_position) then
-					if radius_raytracing == 0 then
-						goto skip
-					end
-
+				if ply:slibIsViewVector(spawn_position) then
 					local tr = util.TraceLine({
 						start = ply:EyePos(),
 						endpos = spawn_position,
@@ -140,8 +134,6 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	if not bypass and chance and not slib.chance(chance) then return false end
 
 	local all_players = player.GetAll()
-	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
-	local radius_raytracing = GetConVar('bgn_spawn_radius_raytracing'):GetFloat() ^ 2
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 
 	for i = 1, #bgNPC.DVCars do
@@ -181,12 +173,7 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 					break
 				end
 
-				if IsValid(ply) and distance <= radius_visibility and ply:slibIsViewVector(vehiclePosition, 70) then
-					if radius_raytracing == 0 then
-						isVisible = true
-						break
-					end
-
+				if IsValid(ply) and ply:slibIsViewVector(vehiclePosition, 70) then
 					local tr = util.TraceLine({
 						start = ply:EyePos(),
 						endpos = vehiclePosition,
