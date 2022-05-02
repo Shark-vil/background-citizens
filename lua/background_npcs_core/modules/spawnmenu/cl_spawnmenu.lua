@@ -16,7 +16,7 @@ hook.Add('PopulateNPCs', 'BackgroundNPCs', function(pnlContent, tree)
 		self.PropPanel:SetVisible(false)
 		self.PropPanel:SetTriggerSpawnlistChange(false)
 
-		for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+		for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 			local entity_class = ''
 
 			if istable(actorData.class) then
@@ -107,7 +107,7 @@ hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ico
 
 			subMenu:AddSpacer()
 
-			for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				subMenu:AddOption('Spawn - ' .. (actorData.name or actorType), function()
 					snet.InvokeServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass, actorType)
 				end):SetIcon('icon16/monkey.png')
@@ -124,7 +124,7 @@ hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ico
 
 			subMenu:AddSpacer()
 
-			for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				subMenu:AddOption('Reset spawn - ' .. (actorData.name or actorType), function()
 					snet.InvokeServer('BGN_ActorSpawnmenuResetSpawner', actorType)
 				end):SetIcon('icon16/monkey.png')
@@ -141,7 +141,7 @@ hook.Add('PopulateMenuBar', 'BackgroundNPCs_MenuBar', function(menubar)
 	actorsPanel:AddCVar('Not spawn', 'bgn_spawnmenu_default_spawner', '')
 	actorsPanel:AddSpacer()
 
-	for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+	for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 		actorsPanel:AddCVar(actorData.name or actorType, 'bgn_spawnmenu_default_spawner', actorType)
 	end
 end)

@@ -6,6 +6,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		if IsValid(npc) and not ArrestModule:HasTarget(npc) then
 			local target = actor:GetFirstTarget()
 			if IsValid(target) then
+				npc:AddEntityRelationship(target, D_FR, 50)
 				actor:AddEnemy(target)
 				actor:RemoveTarget(target)
 			end
@@ -14,6 +15,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 	end,
 	start = function(actor, state, data)
 		data.check_target_time = CurTime() + 2
+		data.arrest_limit_time = CurTime() + 30
 
 		for _, police in ipairs(bgNPC:GetAll()) do
 			if police and police:IsAlive() and police:HasTeam('police') then
@@ -27,10 +29,11 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		end
 
 		local target = actor:GetFirstTarget()
-		if IsValid(target) then
+		local npc = actor:GetNPC()
+		if IsValid(target) and IsValid(npc) then
 			if data.check_target_time < CurTime() then
 				local TargetActor = bgNPC:GetActor(target)
-				if not TargetActor or not TargetActor:HasState('arrest') then
+				if not TargetActor or not TargetActor:HasState('arrest') or data.arrest_limit_time < CurTime() then
 					actor:RemoveTarget(target)
 					actor:AddEnemy(target)
 					actor:SetState('retreat')
@@ -42,6 +45,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
+		actor:TargetsRecalculate()
 		return actor:TargetsCount() > 0
 	end
 })

@@ -53,6 +53,13 @@ local function TOOL_MENU(panel)
 	}); panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.states.bgn_all_models_random.description'
 	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_custom_gestures',
+		['Command'] = 'bgn_module_custom_gestures'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.states.bgn_module_custom_gestures.description'
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_StateSettings', function()

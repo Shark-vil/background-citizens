@@ -11,6 +11,10 @@ local gestures = {
 
 bgNPC:SetStateAction('random_gesture', 'calm', {
 	pre_start = function(actor, state)
+		if not GetConVar('bgn_module_custom_gestures'):GetBool() then
+			return 'walk'
+		end
+
 		local data = {}
 		data.dancing_time = 0
 

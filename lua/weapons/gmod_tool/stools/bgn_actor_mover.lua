@@ -48,13 +48,15 @@ if SERVER then
 		})
 
 		if not tr.Hit then return end
-		local actor
 
 		local ent = tr.Entity
-		if ent:IsVehicle() and ent.bgn_driver then
-			actor = ent.bgn_driver
-		else
-			actor = bgNPC:GetActor(ent)
+		local actor = bgNPC:GetActor(ent)
+
+		if ent:IsVehicle() then
+			local provider = BGN_VEHICLE:GetVehicleProvider(ent)
+			if provider then
+				actor = provider:GetDriver()
+			end
 		end
 
 		if not actor then

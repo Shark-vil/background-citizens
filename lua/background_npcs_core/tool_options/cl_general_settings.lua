@@ -6,18 +6,25 @@ local function TOOL_MENU(Panel)
 		['Text'] = '#bgn.settings.general.bgn_enable.description'
 	})
 
-	Panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.general.bgn_ignore_another_npc',
-		['Command'] = 'bgn_ignore_another_npc'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.general.bgn_ignore_another_npc.description'
-	})
-
 	Panel:AddControl('Button', {
 		['Label'] = '#bgn.settings.general.cl_citizens_load_route',
 		['Command'] = 'cl_citizens_load_route ',
 	}); Panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.general.cl_citizens_load_route.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.general.peaceful_mode',
+		['Command'] = 'bgn_peaceful_mode'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.general.peaceful_mode.description'
+	})
+
+	Panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.general.bgn_ignore_another_npc',
+		['Command'] = 'bgn_ignore_another_npc'
+	}); Panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.general.bgn_ignore_another_npc.description'
 	})
 
 	Panel:AddControl('CheckBox', {

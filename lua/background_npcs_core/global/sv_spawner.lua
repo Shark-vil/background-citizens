@@ -189,7 +189,7 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 
 	local skipSetModel = false
 	do
-		local actorData = bgNPC.cfg.npcs_template[npcType]
+		local actorData = bgNPC.cfg.actors[npcType]
 		local npcList = list.Get('NPC')
 		for npcClass, actorTypesList in pairs(bgNPC.SpawnMenu.Creator['NPC']) do
 			for _, actorType in ipairs(actorTypesList) do

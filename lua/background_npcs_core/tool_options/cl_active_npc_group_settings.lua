@@ -11,7 +11,7 @@ local function TOOL_MENU(Panel)
 
 	Panel:AddControl('Label', { Text = '===========' });
 
-	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+	for npcType, v in pairs(bgNPC.cfg.actors) do
 		local name = v.name or npcType
 		if v.hidden then continue end
 

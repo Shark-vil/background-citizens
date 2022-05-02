@@ -25,7 +25,7 @@ You can just put the file in the "config" folder, but then it is recommended to 
 
 ```lua
 	-- Gets the config of the actor with the ID Key "citizen"
-	local citizen = bgNPC.cfg.npcs_template['citizen']
+	local citizen = bgNPC.cfg.actors['citizen']
 	-- Change or add parameters:
 	citizen.random_skin = true
 	citizen.random_bodygroups = true

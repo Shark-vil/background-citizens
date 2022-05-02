@@ -3,8 +3,8 @@ local function UpdateServerConfig()
 
 	for npcClass, actorTypesList in pairs(bgNPC.SpawnMenu.Creator['NPC']) do
 		for _, actorType in ipairs(actorTypesList) do
-			local data = bgNPC.cfg.npcs_template[actorType]
-			if data then
+			local data = bgNPC.cfg.actors[actorType]
+			if data and npcList[npcClass] then
 				local listData = npcList[npcClass]
 				local class = listData.Class or npcClass
 				local model = listData.Model
@@ -42,8 +42,8 @@ end
 
 local function IsValidActosConfig(actorType)
 	if not actorType then return false end
-	if not bgNPC or not bgNPC.cfg or not bgNPC.cfg.npcs_template then return false end
-	if not bgNPC.cfg.npcs_template[actorType] then return false end
+	if not bgNPC or not bgNPC.cfg or not bgNPC.cfg.actors then return false end
+	if not bgNPC.cfg.actors[actorType] then return false end
 	return true
 end
 
@@ -136,17 +136,17 @@ hook.Add('PlayerSpawnedNPC', 'BGN_SpawnMenuChecker', function(ply, npc)
 		local actorType = defaultTable[ply]
 
 		if not actorType or not isstring(actorType) then return end
-		if not bgNPC.cfg.npcs_template[actorType] then return end
+		if not bgNPC.cfg.actors[actorType] then return end
 
 		local actor = BGN_ACTOR:Instance(npc, actorType)
 		if actor then actor.eternal = true end
 	end)
 end)
 
-do
+hook.Add('OnEntityCreated', 'BGN_InitServerSPawnmenu', function()
 	local readData = ReadDataFile()
 	if readData then
 		bgNPC.SpawnMenu.Creator['NPC'] = readData
 		UpdateServerConfig()
 	end
-end
+end)

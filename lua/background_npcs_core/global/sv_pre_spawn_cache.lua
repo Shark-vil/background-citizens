@@ -32,7 +32,7 @@ hook.Add('PlayerSpawn', 'BGN_PreSpawnEntities_CacheService',  function()
 	local spawn_position = Vector(0, 0, 0)
 	local spawn_angle = Angle(0, 0, 0)
 
-	for k, v in pairs(bgNPC.cfg.npcs_template) do
+	for k, v in pairs(bgNPC.cfg.actors) do
 		if v.class then
 			if istable(v.class) then
 				for _, npc_class in ipairs(v.class) do

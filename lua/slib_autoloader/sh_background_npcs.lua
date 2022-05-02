@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.2'
+bgNPC.VERSION = '1.8.3'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -38,14 +38,19 @@ bgNPC.SpawnMenu.Creator = bgNPC.SpawnMenu.Creator or {
 }
 -- ---------------------------
 
+local load_file_text = '[Background NPCs] Script load - {file}'
+local load_modules_text = '[Background NPCs | Custom modules] Script load - {file}'
 local root_directory = 'background_npcs_core'
-local script = slib.CreateIncluder(root_directory, '[Background NPCs] Script load - {file}')
+local script = slib.CreateIncluder(root_directory, load_file_text)
 
 local function ExecutableScripts()
 	script:using('config/sh_main.lua')
+	script:using('config/sh_config.lua')
+
+	slib.usingDirectory(root_directory .. '/config/actors', load_file_text)
+
 	script:using('config/replics/sh_init.lua')
 	script:using('config/sh_names.lua')
-	script:using('config/sh_npcs.lua')
 	script:using('config/sh_shot_sound.lua')
 	script:using('config/sh_player.lua')
 	script:using('config/gamemodes/sh_darkrp.lua')
@@ -56,8 +61,7 @@ local function ExecutableScripts()
 	script:using('config/states/sh_dialogue.lua')
 	script:using('config/states/sh_sit_chair.lua')
 
-	slib.usingDirectory(root_directory .. '/custom_modules/config',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/config', load_modules_text)
 
 	script:using('cvars/sh_cvars.lua')
 	script:using('cvars/sv_cvars.lua')
@@ -66,8 +70,7 @@ local function ExecutableScripts()
 	script:using('commands/sh_cmd_config.lua')
 	script:using('commands/sh_cmd_autogenerator.lua')
 
-	slib.usingDirectory(root_directory .. '/custom_modules/preload',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/preload', load_modules_text)
 
 	script:using('classes/actor/sh_actor_base.lua', true)
 	script:using('classes/actor/cl_actor_text_say.lua')
@@ -88,6 +91,8 @@ local function ExecutableScripts()
 	script:using('global/sh_find_path_service.lua')
 	script:using('global/sv_pre_spawn_cache.lua')
 	script:using('global/sv_dynamic_movement_mesh.lua')
+	script:using('global/sv_peaceful_mode.lua')
+	script:using('global/sv_relationship.lua')
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
@@ -118,7 +123,8 @@ local function ExecutableScripts()
 	script:using('modules/arrest/sv_police_system.lua')
 	script:using('modules/arrest/sv_darkrp_arrest.lua')
 	script:using('modules/routes/sh_route_saver.lua')
-	script:using('modules/routes/sh_route_loader.lua')
+	script:using('modules/routes/loader/sv_loader.lua')
+	script:using('modules/routes/loader/cl_loader.lua')
 	script:using('modules/routes/compile/sv_compile.lua')
 	script:using('modules/routes/compile/cl_compile.lua')
 	script:using('modules/routes/compile/sh_save_map.lua')
@@ -151,6 +157,9 @@ local function ExecutableScripts()
 	script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
+	script:using('modules/stormfox/sv_stormfox_limits.lua')
+
+	-- script:using('modules/tactical_groups/sv_group.lua')
 
 	script:using('actions/sv_open_door.lua')
 	script:using('actions/sv_police_luggage.lua')
@@ -207,10 +216,7 @@ local function ExecutableScripts()
 	script:using('tests/unit/sv_unit_test_exist_nodes.lua')
 	script:using('tests/unit/sv_unit_dv_points_exists.lua')
 
-	script:using('sh_group.lua')
-
-	slib.usingDirectory(root_directory .. '/custom_modules/postload',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
 end
 
 ExecutableScripts()

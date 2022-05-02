@@ -10,7 +10,7 @@ function ulx.bgnselectteam(calling_ply, target_ply, actor_type)
       target.bgn_team = nil
     end, target_ply)
   else
-    local npcData = bgNPC.cfg.npcs_template[actor_type]
+    local npcData = bgNPC.cfg.actors[actor_type]
 
     if npcData and npcData.team then
       local npcName = npcData.name or actor_type
@@ -32,7 +32,7 @@ bgn_select_team:addParam{
 local function getAllTypes()
   local teams = {'not team'}
 
-  for t, _ in pairs(bgNPC.cfg.npcs_template) do
+  for t, _ in pairs(bgNPC.cfg.actors) do
     table.insert(teams, t)
   end
 

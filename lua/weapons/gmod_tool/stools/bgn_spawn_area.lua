@@ -12,6 +12,35 @@ end
 local filePath = 'background_npcs/spawn_area/' .. game.GetMap() .. '.dat'
 
 if SERVER then
+	do
+		hook.Add('PlayerButtonDown', 'BGN_StartKeyPadDivide', function(ply, button)
+			if (button ~= 60 and button ~= 47) or not IsFirstTimePredicted() then return end
+			snet.Invoke('BGN_ClientOpenCommandChat', ply)
+		end)
+	end
+
+	hook.Add('PlayerSay', 'BGN_Tool_SpawnArea', function(ply, text)
+		local tool = ply:slibGetActiveTool('bgn_spawn_area')
+		if not tool then return end
+
+		local isPosOne = string.StartWith(text, '//pos1')
+		local isPosTwo = string.StartWith(text, '//pos2')
+
+		if not isPosOne and not isPosTwo then return end
+
+		local toolData = ply:GetTool('bgn_spawn_area')
+
+		if isPosOne then
+			toolData.StartPoint = ply:GetPos()
+		elseif isPosTwo then
+			toolData.EndPoint = ply:GetPos()
+		end
+
+		snet.Invoke('cl_tool_bgn_spawn_area_update_points', tool:GetOwner(), tool.StartPoint, tool.EndPoint)
+
+		return false
+	end)
+
 	if not file.Exists('background_npcs/spawn_area', 'DATA') then
 		file.CreateDir('background_npcs/spawn_area')
 	end
@@ -114,7 +143,11 @@ end
 if CLIENT then
 	CreateClientConVar('cl_bgn_tool_bgn_spawn_area_tag_name', '', false)
 
-	for actorType in SortedPairs(bgNPC.cfg.npcs_template) do
+	snet.Callback('BGN_ClientOpenCommandChat', function()
+		chat.Open(1)
+	end)
+
+	for actorType in SortedPairs(bgNPC.cfg.actors) do
 		CreateClientConVar('cl_bgn_tool_bgn_spawn_area_actor_' .. actorType, '0', false)
 	end
 
@@ -160,7 +193,7 @@ if CLIENT then
 		actorsSpawnWhiteList:Dock(TOP)
 		actorsSpawnWhiteList:DockMargin(10, 0, 10, 0)
 
-		for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+		for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 			local cvarName = 'cl_bgn_tool_bgn_spawn_area_actor_' .. actorType
 			local actorCheckBox = actorsSpawnWhiteList:Add('DCheckBoxLabel')
 			actorCheckBox:Dock(TOP)
@@ -203,7 +236,7 @@ if CLIENT then
 
 			local actors = {}
 
-			for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				local cvarName = 'cl_bgn_tool_bgn_spawn_area_actor_' .. actorType
 				actors[actorType] = GetConVar(cvarName):GetBool()
 			end
@@ -255,7 +288,7 @@ if CLIENT then
 				cvarAreaTagName:SetString(areaName)
 			end
 
-			for actorType, actorData in SortedPairs(bgNPC.cfg.npcs_template) do
+			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				local cvarName = 'cl_bgn_tool_bgn_spawn_area_actor_' .. actorType
 
 				if actors then

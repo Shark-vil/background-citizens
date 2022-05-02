@@ -1,5 +1,5 @@
 --[[-----------------------------------------
-   General settings menu
+	 General settings menu
 --]]
 return {
 	['bgn.settings.general.bgn_enable'] = 'Включить фоновых NPC',
@@ -15,5 +15,7 @@ return {
 	['bgn.settings.general.bgn_reset_cvars_to_factory_settings'] = 'Сбросить до заводских настроек',
 	['bgn.settings.general.bgn_reset_cvars_to_factory_settings.description'] = 'Описание: сбрасывает все параметры настройки в меню опций до стандартных.',
 	['bgn.settings.general.bgn_remove_routes'] = 'Удалить файл сетки перемещения',
-	['bgn.settings.general.bgn_remove_routes.description'] = 'Описание: удаляет файл сетки перемещения с жёсткого диска. Вы можете использовать это, если хотите обновить сетку перемещения, скачанную из мастерской. После удаления следует перезапустить карту.'
+	['bgn.settings.general.bgn_remove_routes.description'] = 'Описание: удаляет файл сетки перемещения с жёсткого диска. Вы можете использовать это, если хотите обновить сетку перемещения, скачанную из мастерской. После удаления следует перезапустить карту.',
+	['bgn.settings.general.peaceful_mode'] = 'Мирный режим',
+	['bgn.settings.general.peaceful_mode.description'] = 'Описание: отключает любые стычки между NPC. Они просто будут гулять и заниматься мирными вещами, вас не будут беспокоить перестрелки.',
 }

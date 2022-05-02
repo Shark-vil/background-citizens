@@ -6,8 +6,8 @@ function TOOL:LeftClick(tr)
 	local actorType = self.actorType
 
 	if not actorType then return false end
-	if not bgNPC or not bgNPC.cfg or not bgNPC.cfg.npcs_template then return false end
-	if not bgNPC.cfg.npcs_template[actorType] then return false end
+	if not bgNPC or not bgNPC.cfg or not bgNPC.cfg.actors then return false end
+	if not bgNPC.cfg.actors[actorType] then return false end
 
 	if SERVER then
 		local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10))

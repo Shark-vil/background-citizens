@@ -55,13 +55,13 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 		RunConsoleCommand(cvar_name, cvar_value)
 	end
 
-	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+	for npcType, v in pairs(bgNPC.cfg.actors) do
 		local enabled = 0
 		if v.enabled then enabled = 1 end
 		RunConsoleCommand('bgn_npc_type_' .. npcType, enabled)
 	end
 
-	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+	for npcType, v in pairs(bgNPC.cfg.actors) do
 		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
 	end
 end)

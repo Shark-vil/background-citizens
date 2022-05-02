@@ -10,6 +10,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttac
 end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', function(actor, attacker)
+	if bgNPC:IsPeacefulMode() then return end
+
 	local AttackerActor = bgNPC:GetActor(attacker)
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
 

@@ -1,5 +1,12 @@
 local function TOOL_MENU(panel)
 	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_stormfox2',
+		['Command'] = 'bgn_module_stormfox2'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.states.bgn_module_stormfox2.description'
+	})
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_dv_support',
 		['Command'] = 'bgn_enable_dv_support'
 	}); panel:AddControl('Label', {

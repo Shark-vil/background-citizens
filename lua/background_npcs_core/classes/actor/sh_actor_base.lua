@@ -390,6 +390,7 @@ function BaseClass:GetLastTarget()
 end
 
 function BaseClass:AddEnemy(ent, reaction, always_visible)
+	if bgNPC:IsPeacefulMode() then return end
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
@@ -649,17 +650,17 @@ function BaseClass:SetState(state, data, forced)
 	local is_locked = self:CallStateAction(nil, 'not_stop', current_state, current_data, state, data)
 	if not forced and is_locked then return end
 
-	-- local hook_result = hook_Run('BGN_PreSetNPCState', self, state, data)
-	-- if hook_result then
-	-- 	if isbool(hook_result) then
-	-- 		return
-	-- 	elseif isstring(hook_result) then
-	-- 		state = hook_result
-	-- 	elseif istable(hook_result) then
-	-- 		state = hook_result.state or state
-	-- 		data = hook_result.data or {}
-	-- 	end
-	-- end
+	local hook_result = hook_Run('BGN_PreSetState', self, state, data)
+	if hook_result then
+		if isbool(hook_result) then
+			return
+		elseif isstring(hook_result) then
+			state = hook_result
+		elseif istable(hook_result) then
+			state = hook_result.state or state
+			data = hook_result.data or data
+		end
+	end
 
 	if not forced and bgNPC:StateActionExists(state, 'validator')
 		and not self:CallStateAction(state, 'validator', state, data)
@@ -688,7 +689,7 @@ function BaseClass:SetState(state, data, forced)
 	self.state_data = { state = state, data = data }
 
 	self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
-	hook_Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
+	hook_Run('BGN_SetState', self, self.state_data.state, self.state_data.data)
 
 	return self.state_data
 end
@@ -806,13 +807,22 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 end
 
 function BaseClass:UpdateMovement()
-	if self.is_animated or not self:IsAlive() or not self.walkPos or not self.walkPath then return end
+	if self.is_animated or not self:IsAlive() then return end
+
+	local walkPos = self.walkPos
+
+	if self.walkTarget and IsValid(self.walkTarget) then
+		walkPos = self.walkTarget:GetPos()
+	end
+
+	if not walkPos or not self.walkPath then return end
+
 	if self:IsAnimationPlayed() then return end
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
-		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
-			hook_Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
+		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(walkPos) <= 2500 then
+			hook_Run('BGN_ActorFinishedWalk', self, walkPos, self.walkType)
 		end
 	else
 		if #self.walkPath == 0 then return end
@@ -1115,7 +1125,10 @@ function BaseClass:HasSequence(sequence_name)
 end
 
 function BaseClass:IsAnimationPlayed()
-	return self.is_animated
+	if self.is_animated then
+		return true
+	end
+	return slib.Animator.InAnimation(self.npc)
 end
 
 function BaseClass:IsSequenceLoopFinished()

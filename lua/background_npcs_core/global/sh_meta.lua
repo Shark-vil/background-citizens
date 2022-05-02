@@ -8,8 +8,8 @@ function bgNPC:GetActorConfig(actor_type)
 	if actors_config_cache[actor_type] then
 		return actors_config_cache[actor_type]
 	else
-		if not bgNPC.cfg.npcs_template[actor_type] then return end
-		local data = table.Copy(bgNPC.cfg.npcs_template[actor_type])
+		if not bgNPC.cfg.actors[actor_type] then return end
+		local data = table.Copy(bgNPC.cfg.actors[actor_type])
 
 		if data.inherit and data.inherit ~= actor_type then
 			local inherit_data = bgNPC:GetActorConfig(data.inherit)
@@ -48,7 +48,7 @@ function bgNPC:GetActorConfig(actor_type)
 
 				for _, inherit_actor_type in ipairs(inherit_groups) do
 					if #inherit_actor_type ~= 0 and inherit_actor_type ~= actor_type then
-						local inherit_data = bgNPC.cfg.npcs_template[inherit_actor_type]
+						local inherit_data = bgNPC.cfg.actors[inherit_actor_type]
 
 						if inherit_data and inherit_data.inherit then
 							inherit_data = bgNPC:GetActorConfig(data.inherit)
@@ -147,16 +147,8 @@ function bgNPC:GetActivePlayerTool(tool_name, ply)
 	return tool
 end
 
-local npcs_template_copy = table.Copy(bgNPC.cfg.npcs_template)
+local npcs_template_copy = table.Copy(bgNPC.cfg.actors)
 
 function bgNPC:ResetConfiguration()
-	bgNPC.cfg.npcs_template = table.Copy(npcs_template_copy)
+	bgNPC.cfg.actors = table.Copy(npcs_template_copy)
 end
-
-timer.Create('BGN_FixedNpcsTemplateConfig', .1, 0, function()
-	local npcs_template = bgNPC.cfg.npcs_template
-	if not npcs_template or not istable(npcs_template) or table.Count(npcs_template) == 0 then
-		ErrorNoHalt('[Background NPCs] Something broke the NPC templates configuration. The table has been restored.')
-		bgNPC:ResetConfiguration()
-	end
-end)
