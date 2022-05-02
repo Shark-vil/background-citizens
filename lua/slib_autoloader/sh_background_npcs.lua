@@ -211,10 +211,6 @@ local function ExecutableScripts()
 	script:using('modules/spawnmenu/sv_spawnmenu.lua')
 	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
-	script:using('tests/cl_test_start.lua')
-	script:using('tests/unit/sv_unit_mod_enabled.lua')
-	script:using('tests/unit/sv_unit_test_exist_nodes.lua')
-	script:using('tests/unit/sv_unit_dv_points_exists.lua')
 	script:using('modules/sh_poll.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
