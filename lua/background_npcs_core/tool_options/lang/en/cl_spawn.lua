@@ -17,7 +17,7 @@ return {
   ['bgn.settings.spawn.bgn_spawn_period'] = 'The period between spawning NPCs (Change requires restart)',
   ['bgn.settings.spawn.bgn_spawn_period.description'] = 'Description: sets the delay between spawning of each NPC.',
   ['bgn.settings.spawn.bgn_actors_teleporter'] = 'NPC teleportation',
-  ['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Description: instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.',
+  ['bgn.settings.spawn.bgn_actors_teleporter.description'] = 'Description: instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This method is more preferable for optimization because the server does not need to constantly create new entities.',
   ['bgn.settings.spawn.bgn_actors_max_teleports'] = 'Maximum NPCs to teleport',
   ['bgn.settings.spawn.bgn_actors_max_teleports.description'] = 'Description: how many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.'
 }

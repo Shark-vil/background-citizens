@@ -38,23 +38,6 @@ local function TOOL_MENU(Panel)
 	}); Panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.spawn.bgn_spawn_period.description'
 	})
-
-	Panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.spawn.bgn_actors_teleporter',
-		['Command'] = 'bgn_actors_teleporter'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_actors_teleporter.description'
-	})
-
-	Panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.spawn.bgn_actors_max_teleports',
-		['Command'] = 'bgn_actors_max_teleports',
-		['Type'] = 'Integer',
-		['Min'] = '1',
-		['Max'] = '10'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_actors_max_teleports.description'
-	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_SpawnSettings', function()
