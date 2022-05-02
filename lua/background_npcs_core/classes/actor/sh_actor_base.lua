@@ -390,6 +390,7 @@ function BaseClass:GetLastTarget()
 end
 
 function BaseClass:AddEnemy(ent, reaction, always_visible)
+	if bgNPC:IsPeacefulMode() then return end
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if self:HasTeam(ent) then return end
@@ -649,17 +650,17 @@ function BaseClass:SetState(state, data, forced)
 	local is_locked = self:CallStateAction(nil, 'not_stop', current_state, current_data, state, data)
 	if not forced and is_locked then return end
 
-	-- local hook_result = hook_Run('BGN_PreSetNPCState', self, state, data)
-	-- if hook_result then
-	-- 	if isbool(hook_result) then
-	-- 		return
-	-- 	elseif isstring(hook_result) then
-	-- 		state = hook_result
-	-- 	elseif istable(hook_result) then
-	-- 		state = hook_result.state or state
-	-- 		data = hook_result.data or {}
-	-- 	end
-	-- end
+	local hook_result = hook_Run('BGN_PreSetState', self, state, data)
+	if hook_result then
+		if isbool(hook_result) then
+			return
+		elseif isstring(hook_result) then
+			state = hook_result
+		elseif istable(hook_result) then
+			state = hook_result.state or state
+			data = hook_result.data or data
+		end
+	end
 
 	if not forced and bgNPC:StateActionExists(state, 'validator')
 		and not self:CallStateAction(state, 'validator', state, data)
@@ -688,7 +689,7 @@ function BaseClass:SetState(state, data, forced)
 	self.state_data = { state = state, data = data }
 
 	self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
-	hook_Run('BGN_SetNPCState', self, self.state_data.state, self.state_data.data)
+	hook_Run('BGN_SetState', self, self.state_data.state, self.state_data.data)
 
 	return self.state_data
 end
@@ -749,7 +750,7 @@ function BaseClass:WalkToTarget(target, moveType, pathType)
 end
 
 function BaseClass:WalkToPos(pos, moveType, pathType)
-	if self:GetNPC():IsNextBot() then return end
+	if self:GetNPC():IsNextBot() or not isvector(pos) then return end
 
 	if not pos then
 		self:StopWalk()
@@ -757,7 +758,10 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 	end
 
 	if self.walkPos == pos then return end
-	if hook_Run('BGN_PreSetWalkPos', self, pos, moveType, pathType) then return end
+
+	local pre_set_result = hook_Run('BGN_PreSetWalkPos', self, pos, moveType, pathType)
+	if isbool(pre_set_result) and not pre_set_result then return end
+	if isvector(pre_set_result) then pos = pre_set_result end
 
 	local npc = self.npc
 	if npc:GetPos():DistToSqr(pos) <= 2500 then
@@ -805,10 +809,20 @@ end
 function BaseClass:UpdateMovement()
 	if self.is_animated or not self:IsAlive() then return end
 
+	local walkPos = self.walkPos
+
+	if self.walkTarget and IsValid(self.walkTarget) then
+		walkPos = self.walkTarget:GetPos()
+	end
+
+	if not walkPos or not self.walkPath then return end
+
+	if self:IsAnimationPlayed() then return end
+
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
-		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(self.walkPos) <= 2500 then
-			hook_Run('BGN_ActorFinishedWalk', self, self.walkPos, self.walkType)
+		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(walkPos) <= 2500 then
+			hook_Run('BGN_ActorFinishedWalk', self, walkPos, self.walkType)
 		end
 	else
 		if #self.walkPath == 0 then return end
@@ -1111,7 +1125,10 @@ function BaseClass:HasSequence(sequence_name)
 end
 
 function BaseClass:IsAnimationPlayed()
-	return self.is_animated
+	if self.is_animated then
+		return true
+	end
+	return slib.Animator.InAnimation(self.npc)
 end
 
 function BaseClass:IsSequenceLoopFinished()
@@ -1156,6 +1173,15 @@ function BaseClass:PlayNextStaticSequence()
 	end
 
 	return false
+end
+
+function BaseClass:StopStaticSequence()
+	self.anim_name = ''
+	self.is_animated = false
+	self.next_anim = nil
+	self.anim_action = nil
+
+	self:ClearSchedule()
 end
 
 function BaseClass:ResetSequence()
@@ -1411,7 +1437,7 @@ end
 function BaseClass:PrepareWeapon(weapon_class, switching)
 	if weapon_class then
 		bgNPC:SetActorWeapon(self, weapon_class, switching)
-	elseif self.weapon then
+	else
 		bgNPC:SetActorWeapon(self)
 	end
 end
@@ -1421,6 +1447,18 @@ function BaseClass:FoldWeapon()
 	local npc = self:GetNPC()
 	local weapon  = npc:GetActiveWeapon()
 	if IsValid(weapon) then weapon:Remove() end
+end
+
+function BaseClass:GiveWeapon(weapon_class)
+	self.weapon = weapon_class
+end
+
+function BaseClass:SetTeam(team_data)
+	self.data.team = team_data
+end
+
+function BaseClass:AddTeam(team_name)
+	table.insert(self.data.team, team_name)
 end
 
 function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)

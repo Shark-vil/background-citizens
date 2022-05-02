@@ -32,7 +32,7 @@ snet.Callback('sv_start_bgn_compile', function(ply)
 		dv_nodes = dv_nodes
 	}
 
-	snet.Request('cl_start_bgn_compile')
-		.BigData(send_data, nil, 'Loading data from the server')
+	snet.Request('cl_start_bgn_compile', send_data)
+		.ProgressText('Loading data from the server')
 		.Invoke(ply)
 end).Protect()

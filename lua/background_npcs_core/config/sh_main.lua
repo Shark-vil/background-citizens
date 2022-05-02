@@ -1,3 +1,9 @@
+-- Actors (NPC) data table
+bgNPC.cfg.actors = bgNPC.cfg.actors or {}
+
+-- Actors (NPC) data table (Outdated)
+bgNPC.cfg.npcs_template = bgNPC.cfg.npcs_template or {}
+
 -- Optional parameter to synchronize animation timing with clients.
 -- Requires a lot of network bandwidth.
 -- Use this only when necessary.

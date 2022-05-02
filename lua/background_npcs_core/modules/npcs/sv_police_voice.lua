@@ -14,7 +14,7 @@ local function RandomPlay(actor)
 	actor:GetNPC():EmitSound( table.RandomBySeq(replics) )
 end
 
-hook.Add('BGN_SetNPCState', 'BGN_PoliceVoiceOnDefenseState', function(actor, state)
+hook.Add('BGN_SetState', 'BGN_PoliceVoiceOnDefenseState', function(actor, state)
 	if state ~= 'defense' then return end
 	RandomPlay(actor)
 end)

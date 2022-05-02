@@ -9,7 +9,7 @@
         "*.svn*",
         "*.git*",
         "*LICENSE*",
-        "*.md*",
+        "*.md",
         "*.code-workspace*",
         "README.md",
         ".git*",

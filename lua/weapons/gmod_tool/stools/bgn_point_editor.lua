@@ -707,12 +707,12 @@ else
 				end
 
 				if index == tool.SelectedPointId and tool.CreateSelectedNode then
-					render_DrawSphere(node.position, 10, 20, 20, clr_green)
+					render_DrawSphere(node.position, 10, 5, 5, clr_green)
 				else
 					if #node:GetLinks('walk') == 0 then
-						render_DrawSphere(pos, 10, 30, 30, clr_point_notlinks)
+						render_DrawSphere(pos, 10, 5, 5, clr_point_notlinks)
 					else
-						render_DrawSphere(pos, 10, 30, 30, clr_point)
+						render_DrawSphere(pos, 10, 5, 5, clr_point)
 					end
 				end
 
@@ -765,7 +765,7 @@ else
 				local cam_angle = GetCameraAngle()
 
 				render_SetColorMaterial()
-				render_DrawSphere(tracePos, 10, 20, 20, clr)
+				render_DrawSphere(tracePos, 10, 5, 5, clr)
 				cam_Start3D2D(tracePos + vec_20, cam_angle, 0.9)
 					draw_SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos',
 						default_text_font_name, 0, 0, color_white,
@@ -776,7 +776,7 @@ else
 					local cam_angle = GetCameraAngle()
 
 					render_SetColorMaterial()
-					render_DrawSphere(tracePos, 10, 20, 20, clr_green)
+					render_DrawSphere(tracePos, 10, 5, 5, clr_green)
 					cam_Start3D2D(tracePos + vec_20, cam_angle, 0.9)
 						draw_SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place',
 							default_text_font_name, 0, 0, color_white,
@@ -798,17 +798,17 @@ else
 		if not tool or not tool.LinkerNode then return end
 
 		render_SetColorMaterial()
-		render_DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_green)
+		render_DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_green)
 
 		local tr = tool:GetTraceInfo()
 		if tr.Hit then
 			if tool.SelectedPointId ~= -1 and tool.LinkerNode.position:DistToSqr(tr.HitPos) <= 250000 then
 				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-				render_DrawSphere(node.position, 10, 30, 30, clr_good)
+				render_DrawSphere(node.position, 10, 5, 5, clr_good)
 				render_DrawLine(tool.LinkerNode.position, node.position, clr_good)
 			else
 				render_DrawLine(tool.LinkerNode.position, tr.HitPos, clr_bad)
-				render_DrawSphere(tool.LinkerNode.position, 10, 30, 30, clr_bad)
+				render_DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_bad)
 			end
 		end
 	end)
@@ -835,7 +835,7 @@ else
 		end
 
 		render_SetColorMaterial()
-		render_DrawSphere(startPos, 10, 30, 30, clr_good)
+		render_DrawSphere(startPos, 10, 5, 5, clr_good)
 
 		local points = tool:AutoCreatePoints(startPos, endPos)
 		if #points == 0 and endNode then
@@ -851,7 +851,7 @@ else
 					render_DrawLine(startPos, pos, clr_good)
 
 					if i ~= countPoints then
-						render_DrawSphere(pos, 10, 30, 30, clr_good)
+						render_DrawSphere(pos, 10, 5, 5, clr_good)
 
 						if is_autoparent then
 							for _, value in ipairs(tool.RangePoints) do

@@ -33,7 +33,7 @@ bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
-bgNPC.cvar.bgn_actors_teleporter = 0
+bgNPC.cvar.bgn_actors_teleporter = 1
 bgNPC.cvar.bgn_actors_max_teleports = 3
 bgNPC.cvar.bgn_tool_seat_offset_pos_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_y = 0
@@ -48,13 +48,20 @@ bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'english'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
+bgNPC.cvar.bgn_module_arccw_weapon_replacement = 1
+bgNPC.cvar.bgn_all_models_random = 0
+bgNPC.cvar.bgn_peaceful_mode = 0
+bgNPC.cvar.bgn_module_stormfox2 = 0
+bgNPC.cvar.bgn_module_custom_gestures = 0
 
 function bgNPC:IsActiveNPCType(npc_type)
-	return GetConVar('bgn_npc_type_' .. npc_type):GetBool()
+	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
+	if not cvar then return false end
+	return cvar:GetBool()
 end
 
 function bgNPC:GetFullness(npc_type)
-	local data = bgNPC.cfg.npcs_template[npc_type]
+	local data = bgNPC.cfg.actors[npc_type]
 	if data == nil then
 		return 0
 	end
@@ -86,6 +93,14 @@ scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
 
 scvar.Register('bgn_debug', bgNPC.cvar.bgn_debug,
 	FCVAR_ARCHIVE, 'Turns on debug mode and prints additional information to the console.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode,
+	FCVAR_ARCHIVE, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2,
+	FCVAR_ARCHIVE, 'Includes support for the "StormFox2" addon. 1 - enabled, 0 - disabled.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode,
@@ -215,7 +230,19 @@ scvar.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type,
 	FCVAR_ARCHIVE, 'Types - grid, random')
 	.Access(DefaultAccess)
 
-for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+scvar.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement,
+	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestures,
+	FCVAR_ARCHIVE, '1 - Enabel custom gestures animations. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,
+	FCVAR_ARCHIVE, '1 - makes any NPCs with random models from the list. 0 - disables.')
+	.Access(DefaultAccess)
+
+for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0
 	if v.enabled then enabled = 1 end
 
@@ -223,12 +250,12 @@ for npcType, v in pairs(bgNPC.cfg.npcs_template) do
 		.Access(DefaultAccess)
 end
 
-for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+for npcType, v in pairs(bgNPC.cfg.actors) do
 	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType), FCVAR_ARCHIVE)
 		.Access(DefaultAccess)
 end
 
-for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+for npcType, v in pairs(bgNPC.cfg.actors) do
 	local max_vehicle = v.max_vehicle or 0
 	scvar.Register('bgn_npc_vehicle_max_' .. npcType, max_vehicle, FCVAR_ARCHIVE)
 		.Access(DefaultAccess)

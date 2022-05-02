@@ -31,7 +31,7 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 
 		if data.calling_time == nil then
 			data.calling_time = CurTime() + 15
-			npc:EmitSound('buttons/button19.wav', 200, 100, 1, CHAN_AUTO)
+			npc:EmitSound('background_npcs/phone_dialing_and_bepp_01.mp3', 200, 100, 1, CHAN_AUTO)
 		else
 			if data.calling_time < CurTime() then
 				local asset = bgNPC:GetModule('wanted')

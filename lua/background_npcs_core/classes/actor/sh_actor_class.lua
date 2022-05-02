@@ -122,6 +122,8 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		bgNPC:AddNPC(obj)
 	end
 
+	hook.Run('BGN_InitActor', obj)
+
 	return obj
 end
 

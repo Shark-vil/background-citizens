@@ -1,4 +1,4 @@
-hook.Add('BGN_SetNPCState', 'BGN_SetImpingementState', function(actor, state)
+hook.Add('BGN_SetState', 'BGN_SetImpingementState', function(actor, state)
 	if state ~= 'impingement' or not actor:IsAlive() then return end
 
 	local npc = actor:GetNPC()

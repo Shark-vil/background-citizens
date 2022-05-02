@@ -18,7 +18,7 @@ In this example, the code is executed on the server and client. The synchronizat
 
 ```lua
 	if SERVER then
-		hook.Add('BGN_SetNPCState', 'SendForClientNewStateSetTimeInfo', function(actor, state_name)
+		hook.Add('BGN_SetState', 'SendForClientNewStateSetTimeInfo', function(actor, state_name)
 			actor:SyncFunction('actor_get_new_state_time_set', nil, {
 				state_name = state_name,
 				time_set = RealTime()

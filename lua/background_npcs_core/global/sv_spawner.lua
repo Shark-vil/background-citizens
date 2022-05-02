@@ -8,8 +8,11 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 	local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius, 'walk')
 	local current_pass = 0
 	local nodePosition
+
 	coroutine.yield()
+
 	points = table.shuffle(points)
+
 	coroutine.yield()
 
 	for i = 1, #points do
@@ -22,6 +25,7 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 			if IsValid(ent) and ent:IsNPC() then
 				goto skip_walk_nodes
 			end
+			coroutine.yield()
 		end
 
 		for p = 1, #all_players do
@@ -52,6 +56,8 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 				if not tr.Hit then
 					goto skip_walk_nodes
 				end
+
+				ActorInWorld(nodePosition)
 			end
 		end
 
@@ -74,6 +80,22 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 end
 
 local hooks_active = {}
+local random_models_storage = {}
+
+function bgNPC:ActorIsStuck(actor)
+	if not actor or not actor:IsAlive() or actor:InVehicle() then return false end
+	local npc = actor:GetNPC()
+	local min_vector = npc:LocalToWorld(npc:OBBMins())
+	local max_vector = npc:LocalToWorld(npc:OBBMaxs())
+	local entities = ents.FindInBox(min_vector, max_vector)
+	for i = 1, #entities do
+		local ent = entities[i]
+		if IsValid(ent) and ent ~= npc then
+			return true
+		end
+	end
+	return false
+end
 
 function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
 	local hook_name = 'BGN_SpawnerThread_' .. spawner_id
@@ -85,6 +107,15 @@ function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action
 	if not desiredPosition then
 		local ply = table.RandomBySeq(all_players)
 		desiredPosition = ply:GetPos()
+
+		for _, area in pairs(bgNPC.SpawnArea) do
+			local center = (area.startPoint + area.endPoint) / 2
+			local radius = center:DistToSqr(area.startPoint) + 1000000
+			if desiredPosition:DistToSqr(center) <= radius and slib.chance(80) then
+				desiredPosition = center
+				break
+			end
+		end
 	end
 
 	if not desiredPosition then return end
@@ -153,9 +184,43 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	npc:SetOwner(game.GetWorld())
 	npc:Activate()
 	npc:PhysWake()
+	if npc.DropToFloor then npc:DropToFloor() end
 	hook.Run('BGN_PostSpawnActor', npc, npcType, npcData)
 
-	if npcData.models and istable(npcData.models) then
+	local skipSetModel = false
+	do
+		local actorData = bgNPC.cfg.actors[npcType]
+		local npcList = list.Get('NPC')
+		for npcClass, actorTypesList in pairs(bgNPC.SpawnMenu.Creator['NPC']) do
+			for _, actorType in ipairs(actorTypesList) do
+				if actorType == npcType and table.HasValueBySeq(actorData.class, npcClass) then
+					local listData = npcList[npcClass]
+					if not listData or not listData.Model then
+						skipSetModel = true
+						break
+					end
+				end
+			end
+		end
+	end
+
+	if npcData.random_model or GetConVar('bgn_all_models_random'):GetBool() then
+		if not random_models_storage[npc_class] then
+			random_models_storage[npc_class] = {}
+			local table_insert = table.insert
+			local isstring = isstring
+			for k, v in pairs(list.Get('NPC')) do
+				if v.Model and isstring(v.Model) and v.Class == npc_class then
+					table_insert(random_models_storage[npc_class], v.Model)
+				end
+			end
+		end
+
+		local models = random_models_storage[npc_class]
+		if models and #models ~= 0 then
+			npc:SetModel(table.RandomBySeq(models))
+		end
+	elseif not skipSetModel and npcData.models and istable(npcData.models) then
 		local model
 
 		if is_many_classes and npcData.models[npc_class] then
@@ -180,9 +245,9 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 	npcData.random_skin = npcData.random_skin or npcData.randomSkin
 
 	if npcData.random_skin and isbool(npcData.random_skin) then
-		local skin = math.random(0, npc:SkinCount())
+		local skinNumber = math.random(0, npc:SkinCount())
 
-		if not hook.Run('BGN_PreSetActorSkin', skin, npc, npcType, npcData) then
+		if not hook.Run('BGN_PreSetActorSkin', skinNumber, npc, npcType, npcData) then
 			npc:SetSkin(math.random(0, npc:SkinCount()))
 		end
 	end
@@ -203,18 +268,16 @@ function bgNPC:SpawnActor(npcType, desiredPosition, enableSpawnEffect)
 
 	local actor = BGN_ACTOR:Instance(npc, npcType)
 	actor:RandomState()
-	hook.Run('BGN_InitActor', actor)
+	-- hook.Run('BGN_InitActor', actor)
 	-- actor:RemoveAllEnemies()
 	-- actor:RemoveAllTargets()
 	-- hook.Run('BGN_PostInitActor', actor)
 
 	npc:slibCreateTimer('bgn_check_water_level', 1, 0, function()
 		if npc:WaterLevel() == 3 then
-			for _, node in ipairs(BGN_NODE:GetChunkNodes(npc:GetPos())) do
-				node:RemoveFromMap()
-			end
-
 			bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(teleport_position)
+				if not bgNPC:IsValidSpawnArea(actor:GetType(), teleport_position) then return end
+
 				for _, ply in ipairs(player.GetHumans()) do
 					if bgNPC:PlayerIsViewVector(ply, teleport_position) then return end
 				end

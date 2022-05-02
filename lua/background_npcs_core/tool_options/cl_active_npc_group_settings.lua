@@ -6,31 +6,31 @@ local function TOOL_MENU(Panel)
 		['Min'] = '0',
 		['Max'] = '200'
 	}); Panel:AddControl('Label', {
-		Text = '#bgn.settings.general.bgn_max_npc.description'
+		['Text'] = '#bgn.settings.general.bgn_max_npc.description'
 	})
 
 	Panel:AddControl('Label', { Text = '===========' });
 
-	for npcType, v in pairs(bgNPC.cfg.npcs_template) do
+	for npcType, v in pairs(bgNPC.cfg.actors) do
 		local name = v.name or npcType
 		if v.hidden then continue end
 
 		Panel:AddControl('CheckBox', {
-			Label = name,
-			Command = 'bgn_npc_type_' .. npcType
+			['Label'] = name,
+			['Command'] = 'bgn_npc_type_' .. npcType
 		})
 
 		if npcType == 'citizen' then
 			Panel:AddControl('CheckBox', {
-				Label = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons',
-				Command = 'bgn_disable_citizens_weapons'
+				['Label'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons',
+				['Command'] = 'bgn_disable_citizens_weapons'
 			}); Panel:AddControl('Label', {
-				Text = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
+				['Text'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
 			})
 		end
 
 		Panel:AddControl('Label', {
-			Text = 'Max "' .. name .. '" npc on the map'
+			['Text'] = 'Max "' .. name .. '" npc on the map'
 		}); Panel:AddControl('Slider', {
 			['Label'] = 'Max ' .. name,
 			['Command'] = 'bgn_npc_type_max_' .. npcType,
@@ -41,7 +41,7 @@ local function TOOL_MENU(Panel)
 
 		if DecentVehicleDestination then
 			Panel:AddControl('Label', {
-				Text = 'Max "' .. name .. '" vehicle on the map'
+				['Text'] = 'Max "' .. name .. '" vehicle on the map'
 			}); Panel:AddControl('Slider', {
 				['Label'] = 'Max ' .. name .. ' vehicle',
 				['Command'] = 'bgn_npc_vehicle_max_' .. npcType,
@@ -55,11 +55,11 @@ local function TOOL_MENU(Panel)
 	end
 
 	Panel:AddControl('Label', {
-		Text = '#bgn.settings.active_npcs.description'
+		['Text'] = '#bgn.settings.active_npcs.description'
 	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_ActiveNPCGroups', function()
-	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Active_NPC_Groups', 
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Active_NPC_Groups',
 		'#bgn.settings.active_title', '', '', TOOL_MENU)
 end)

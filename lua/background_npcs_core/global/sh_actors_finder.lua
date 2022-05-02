@@ -1,5 +1,6 @@
 local bgNPC = bgNPC
-local table = table
+local table_insert = table.insert
+local table_HasValueBySeq = table.HasValueBySeq
 local IsValid = IsValid
 --
 
@@ -45,7 +46,7 @@ function bgNPC:GetAllPoints(linkType)
 				continue
 			end
 
-			table.insert(points, v)
+			table_insert(points, v)
 		end
 
 		return points
@@ -68,7 +69,7 @@ function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 				end
 			end
 
-			table.insert(radius_positions, v)
+			table_insert(radius_positions, v)
 		end
 	end
 
@@ -91,7 +92,7 @@ function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 		end
 
 		if v.position:DistToSqr(center) <= radius then
-			table.insert(radius_positions, i)
+			table_insert(radius_positions, i)
 		end
 	end
 
@@ -256,8 +257,12 @@ function bgNPC:GetAll()
 	return self.actors
 end
 
-function bgNPC:Count()
-	return #self.actors
+function bgNPC:Count(npc_type)
+	if not npc_type or not self.factors[npc_type] then
+		return #self.actors
+	else
+		return #self.factors[npc_type]
+	end
 end
 
 function bgNPC:GetAllByType(npc_type)
@@ -270,7 +275,7 @@ function bgNPC:GetAllByTeam(team_data)
 	for i = 1, #self.actors do
 		local actor = self.actors[i]
 		if actor:HasTeam(team_data) then
-			table.insert(actors, actor)
+			table_insert(actors, actor)
 		end
 	end
 
@@ -283,7 +288,7 @@ function bgNPC:GetAllByState(state_name)
 	for i = 1, #self.actors do
 		local actor = self.actors[i]
 		if actor:HasState(state_name) then
-			table.insert(actors, actor)
+			table_insert(actors, actor)
 		end
 	end
 
@@ -351,7 +356,7 @@ function bgNPC:GetAllByRadius(center, radius)
 		local actor = actors[i]
 		local npc = actor:GetNPC()
 		if IsValid(npc) and npc:GetPos():DistToSqr(center) <= radius then
-			table.insert(npcs, actor)
+			table_insert(npcs, actor)
 		end
 	end
 
@@ -359,7 +364,7 @@ function bgNPC:GetAllByRadius(center, radius)
 end
 
 function bgNPC:HasNPC(npc)
-	return table.HasValueBySeq(bgNPC:GetAllNPCs(), npc)
+	return table_HasValueBySeq(bgNPC:GetAllNPCs(), npc)
 end
 
 function bgNPC:IsTeamOnce(npc1, npc2)

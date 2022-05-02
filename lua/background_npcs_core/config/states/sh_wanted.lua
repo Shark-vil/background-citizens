@@ -20,6 +20,19 @@ bgNPC.cfg.wanted.color['calling_police_halo'] = Color(0, 60, 255)
 bgNPC.cfg.wanted.color['wanted_halo'] = Color(240, 34, 34)
 
 -- LANGUAGE --
-bgNPC.cfg.wanted.language['wanted_text_s'] = 'YOU ARE WANTED! The search will end in %time% seconds...'
-bgNPC.cfg.wanted.language['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% minutes...'
-bgNPC.cfg.wanted.language['calling_police'] = 'Calling police...'
+local text = slib.language({
+	['default'] = {
+		['wanted_text_s'] = 'YOU ARE WANTED! The search will end in %time% seconds...',
+		['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% minutes...',
+		['calling_police'] = 'Calling police...'
+	},
+	['russian'] = {
+		['wanted_text_s'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% секунд...',
+		['wanted_text_m'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% минут...',
+		['calling_police'] = 'Звонит в полицию...'
+	}
+})
+
+bgNPC.cfg.wanted.language['wanted_text_s'] = text['wanted_text_s']
+bgNPC.cfg.wanted.language['wanted_text_m'] = text['wanted_text_m']
+bgNPC.cfg.wanted.language['calling_police'] = text['calling_police']

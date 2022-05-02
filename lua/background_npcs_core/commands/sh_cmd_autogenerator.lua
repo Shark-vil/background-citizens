@@ -157,8 +157,8 @@ scommand.Create('bgn_generate_navmesh').OnServer(function(ply, cmd, args)
 			end
 		end
 
-		snet.Request('bgn_movement_mesh_load_from_client_cl')
-			.BigData(BGN_NODE:MapToJson(), nil, 'Loading mesh from server')
+		snet.Request('bgn_movement_mesh_load_from_client_cl', BGN_NODE:MapToJson())
+			.ProgressText('Loading mesh from server')
 			.Invoke(ply)
 
 		snet.Invoke('bgn_generate_navmesh_progress_kill', ply)

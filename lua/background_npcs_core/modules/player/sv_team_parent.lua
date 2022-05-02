@@ -32,6 +32,13 @@ function ASSET:HasParent(ply, actor)
 	if ply.bgn_team and actor:HasTeam(ply.bgn_team) then return true end
 	if self:HasTeam(ply, actor) or self:HasUserGroup(ply, actor) then return true end
 
+	local steamid = ply:SteamID()
+	local steamid64 = ply:SteamID64()
+	for i = 1, #actor.data.team do
+		local team_name = actor.data.team[i]
+		if team_name == steamid or team_name == steamid64 then return true end
+	end
+
 	return false
 end
 

@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.1'
+bgNPC.VERSION = '1.8.3'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -30,16 +30,27 @@ bgNPC.respawn_actors_delay = {}
 bgNPC.DVCars = {}
 bgNPC.state_actions = {}
 bgNPC.state_actions_groups = {}
+bgNPC.SpawnArea = bgNPC.SpawnArea or {}
+bgNPC.SpawnMenu = bgNPC.SpawnMenu or {}
+bgNPC.SpawnMenu.Creator = bgNPC.SpawnMenu.Creator or {
+	['NPC'] = {},
+	['Default'] = {}
+}
 -- ---------------------------
 
+local load_file_text = '[Background NPCs] Script load - {file}'
+local load_modules_text = '[Background NPCs | Custom modules] Script load - {file}'
 local root_directory = 'background_npcs_core'
-local script = slib.CreateIncluder(root_directory, '[Background NPCs] Script load - {file}')
+local script = slib.CreateIncluder(root_directory, load_file_text)
 
 local function ExecutableScripts()
 	script:using('config/sh_main.lua')
+	script:using('config/sh_config.lua')
+
+	slib.usingDirectory(root_directory .. '/config/actors', load_file_text)
+
 	script:using('config/replics/sh_init.lua')
 	script:using('config/sh_names.lua')
-	script:using('config/sh_npcs.lua')
 	script:using('config/sh_shot_sound.lua')
 	script:using('config/sh_player.lua')
 	script:using('config/gamemodes/sh_darkrp.lua')
@@ -50,8 +61,7 @@ local function ExecutableScripts()
 	script:using('config/states/sh_dialogue.lua')
 	script:using('config/states/sh_sit_chair.lua')
 
-	slib.usingDirectory(root_directory .. '/custom_modules/config',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/config', load_modules_text)
 
 	script:using('cvars/sh_cvars.lua')
 	script:using('cvars/sv_cvars.lua')
@@ -60,8 +70,7 @@ local function ExecutableScripts()
 	script:using('commands/sh_cmd_config.lua')
 	script:using('commands/sh_cmd_autogenerator.lua')
 
-	slib.usingDirectory(root_directory .. '/custom_modules/preload',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/preload', load_modules_text)
 
 	script:using('classes/actor/sh_actor_base.lua', true)
 	script:using('classes/actor/cl_actor_text_say.lua')
@@ -82,6 +91,8 @@ local function ExecutableScripts()
 	script:using('global/sh_find_path_service.lua')
 	script:using('global/sv_pre_spawn_cache.lua')
 	script:using('global/sv_dynamic_movement_mesh.lua')
+	script:using('global/sv_peaceful_mode.lua')
+	script:using('global/sv_relationship.lua')
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
@@ -103,6 +114,7 @@ local function ExecutableScripts()
 	script:using('modules/npcs/sv_police_voice.lua')
 	script:using('modules/npcs/sv_random_voice.lua')
 	script:using('modules/npcs/sv_bio_annihilation_two.lua')
+	script:using('modules/npcs/sv_regeneration.lua')
 	script:using('modules/player/sv_team_parent.lua')
 	script:using('modules/darkrp/sv_darkrp_drop_money.lua')
 	script:using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
@@ -111,9 +123,11 @@ local function ExecutableScripts()
 	script:using('modules/arrest/sv_police_system.lua')
 	script:using('modules/arrest/sv_darkrp_arrest.lua')
 	script:using('modules/routes/sh_route_saver.lua')
-	script:using('modules/routes/sh_route_loader.lua')
+	script:using('modules/routes/loader/sv_loader.lua')
+	script:using('modules/routes/loader/cl_loader.lua')
 	script:using('modules/routes/compile/sv_compile.lua')
 	script:using('modules/routes/compile/cl_compile.lua')
+	script:using('modules/routes/compile/sh_save_map.lua')
 	script:using('modules/routes/sv_oldroute_convert.lua')
 	script:using('modules/routes/sh_seat_saver.lua')
 	script:using('modules/spawner/actors/sh_actor_remover.lua')
@@ -143,12 +157,14 @@ local function ExecutableScripts()
 	script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
+	script:using('modules/stormfox/sv_stormfox_limits.lua')
+
+	-- script:using('modules/tactical_groups/sv_group.lua')
 
 	script:using('actions/sv_open_door.lua')
 	script:using('actions/sv_police_luggage.lua')
 	script:using('actions/sv_damage_reaction.lua')
 	script:using('actions/sv_killed_actor.lua')
-	script:using('actions/sv_reset_targets.lua')
 	script:using('actions/sv_self_damage.lua')
 	script:using('actions/sv_player_spawn_sync_actors.lua')
 	script:using('actions/sv_reaction_to_a_shot.lua')
@@ -173,9 +189,13 @@ local function ExecutableScripts()
 	script:using('states/sv_dyspnea.lua')
 	script:using('states/sv_run_from_danger.lua')
 	script:using('states/sv_arrest_surrender.lua')
+	script:using('states/sv_random_gesture.lua')
+
+	script:using('tool_options/lang/cl_en.lua')
+	script:using('tool_options/lang/cl_ru.lua')
+	script:using('tool_options/cl_lang.lua')
 
 	script:using('tool_options/cl_bgn_settings_menu.lua')
-	script:using('tool_options/cl_lang.lua')
 	script:using('tool_options/cl_general_settings.lua')
 	script:using('tool_options/cl_spawn_settings.lua')
 	script:using('tool_options/cl_state_settings.lua')
@@ -183,16 +203,20 @@ local function ExecutableScripts()
 	script:using('tool_options/cl_optimization_settings.lua')
 	script:using('tool_options/cl_client_settings.lua')
 	script:using('tool_options/cl_workshop_settings.lua')
-	script:using('tool_options/cl_unit_testing.lua')
 	script:using('tool_options/cl_wanted_settings.lua')
+	script:using('tool_options/cl_generation_settings.lua')
+	script:using('tool_options/cl_addons_settings.lua')
+
+	script:using('modules/spawnmenu/cl_spawnmenu.lua')
+	script:using('modules/spawnmenu/sv_spawnmenu.lua')
+	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
 	script:using('tests/cl_test_start.lua')
 	script:using('tests/unit/sv_unit_mod_enabled.lua')
 	script:using('tests/unit/sv_unit_test_exist_nodes.lua')
 	script:using('tests/unit/sv_unit_dv_points_exists.lua')
 
-	slib.usingDirectory(root_directory .. '/custom_modules/postload',
-		'[Background NPCs | Custom modules] Script load - {file}')
+	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
 end
 
 ExecutableScripts()

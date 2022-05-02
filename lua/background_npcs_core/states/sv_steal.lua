@@ -2,50 +2,60 @@ hook.Add('BGN_Module_FirstAttackerValidator', 'BGN_StealTargetSet', function(att
 	if target:slibGetVar('is_stealer') then return target, attacker end
 end)
 
-hook.Add('BGN_PreSetNPCState', 'BGN_ActorStealPlayerItems', function(actor, state)
-	if state ~= 'steal' or not actor:IsAlive() then return end
-	local npc = actor:GetNPC()
-	local npc_pos = npc:GetPos()
-	local entities = ents.FindInSphere(npc_pos, 500)
-	local dist = nil
-	local target = NULL
-
-	for _, ent in ipairs(entities) do
-		if not IsValid(ent) or not ent:IsPlayer() then
-			continue
-		end
-
-		local distToPlayer = npc_pos:DistToSqr(ent:GetPos())
-
-		if dist == nil then
-			dist = distToPlayer
-			target = ent
-		elseif distToPlayer < dist then
-			dist = distToPlayer
-			target = ent
+hook.Add('BGN_StealFinish', 'BGN_StealFinishedCallForHelp', function(actor, target, success)
+	if not success or slib.chance(30) then
+		local anotherActor = bgNPC:GetActor(target)
+		if anotherActor then
+			if not anotherActor:HasTeam('police') then
+				anotherActor:CallForHelp(actor:GetNPC())
+			end
+			anotherActor:SetState('defense', nil, true)
 		end
 	end
+end)
 
-	if not IsValid(target) then
-		return {
-			state = 'walk'
-		}
-	end
+bgNPC:SetStateAction('steal', 'wary', {
+	pre_start = function(actor, state, data)
+		local npc = actor:GetNPC()
+		local npc_pos = npc:GetPos()
+		local entities = ents.FindInSphere(npc_pos, 500)
+		local dist = nil
+		local target = NULL
 
-	actor:AddTarget(target)
+		for _, ent in ipairs(entities) do
+			if not IsValid(ent) or (not ent:IsPlayer() and not ent:IsNPC() and not ent:IsNextBot()) then
+				continue
+			end
 
-	return {
-		data = {
+			local distToPlayer = npc_pos:DistToSqr(ent:GetPos())
+			local anotherActor = bgNPC:GetActor(ent)
+			if anotherActor and anotherActor:GetType() == 'thief' then
+				continue
+			end
+
+			if dist == nil then
+				dist = distToPlayer
+				target = ent
+			elseif distToPlayer < dist then
+				dist = distToPlayer
+				target = ent
+			end
+		end
+
+		if not IsValid(target) then
+			return 'walk'
+		end
+
+		actor:AddTarget(target)
+
+		return state, {
 			isSteal = false,
 			stealDelay = 0,
 			walkUpdate = 0,
 			isPlayAnim = false,
 			isWanted = false,
 		}
-	}
-end)
-
-bgNPC:SetStateAction('steal', 'wary', {
+	end,
 	update = function(actor)
 		local polices = bgNPC:GetAllByTeam('police')
 		local npc = actor:GetNPC()
@@ -82,15 +92,14 @@ bgNPC:SetStateAction('steal', 'wary', {
 			end
 		end
 
-		if bgNPC:PlayerIsViewVector(target, npc_pos, 80) then
+		if target:slibIsViewVector(npc_pos, 80) then
 			if data.isSteal then
 				if not data.isWanted then
 					data.isWanted = true
-
 					actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
 						hook.Run('BGN_StealFinish', actor, target, false)
-						actor:SetState('retreat')
 						actor:AddEnemy(target)
+						actor:SetState('retreat', nil, true)
 					end)
 				end
 			else
@@ -114,9 +123,15 @@ bgNPC:SetStateAction('steal', 'wary', {
 							data.isWanted = true
 
 							hook.Run('BGN_StealFinish', actor, target, true)
-							actor:SetState('retreat')
+							actor:AddEnemy(target)
+							actor:SetState('retreat', nil, true)
 						end)
 					end)
+				end
+
+				if npc_pos:DistToSqr(target_pos) > 10000 and actor:HasSequence('Crouch_IdleD') then
+					data.isSteal = false
+					actor:PlayStaticSequence('Crouch_To_Stand', false)
 				end
 			else
 				if data.isPlayAnim then
@@ -129,11 +144,14 @@ bgNPC:SetStateAction('steal', 'wary', {
 					data.walkUpdate = CurTime() + 3
 				end
 
-				if npc_pos:Distance(target_pos) <= 100 then
+				if npc_pos:DistToSqr(target_pos) <= 10000 then
 					data.isSteal = true
 				end
 			end
 		end
+	end,
+	stop = function(actor)
+		actor:RemoveAllTargets()
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
 		return not data.isWanted and IsValid(actor:GetFirstTarget())

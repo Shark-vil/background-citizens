@@ -8,15 +8,15 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	-- local math_Clamp = math.Clamp
 	local file_Exists = file.Exists
 	local Vector = Vector
-	local math_floor = math.floor
+	-- local math_floor = math.floor
 	local math_modf = math.modf
 	-- local FrameTime = FrameTime
 	local add_z_axis = Vector(0, 0, 20)
-	local cell_size = 250
-	local generator_iterations = 10
+	local cell_size = 200
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
 	local chunks = {}
 	local chunk_size = 500
+	local max_points_in_chunk = 10
 	local current_pass = 0
 	local trace_filter = function(ent)
 		if ent:IsWorld() then
@@ -24,22 +24,19 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		end
 	end
 
-	local function PassYield(max_pass)
+	local function PassYield()
 		current_pass = current_pass + 1
-		-- max_pass = max_pass or math_floor(1 / FrameTime())
-		max_pass = math_floor(1 / slib.deltaTime)
-		if current_pass >= max_pass then
+		if current_pass >= 1 / slib.deltaTime then
 			current_pass = 0
 			yield()
 		end
 	end
 
 	local function GetChunkId(pos)
-		local x = pos.x
-		local y = pos.y
-		local xid = math_modf(x / chunk_size)
-		local yid = math_modf(y / chunk_size)
-		return xid .. yid
+		local xid = math_modf(pos.x / chunk_size)
+		local yid = math_modf(pos.y / chunk_size)
+		local zid = math_modf(pos.z / chunk_size)
+		return xid .. yid .. zid
 	end
 
 	local function MovementMeshExists()
@@ -53,7 +50,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	local function ChunkHasFull(point_position)
 		local point_chunk_id = GetChunkId(point_position)
-		if chunks[point_chunk_id] and chunks[point_chunk_id] >= 10 then
+		if chunks[point_chunk_id] and chunks[point_chunk_id] >= max_points_in_chunk then
 			return true
 		end
 		return false
@@ -126,13 +123,15 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						map_points[points_count] = BGN_NODE:Instance(new_point_position)
 
 						UpdateChunkPointsCount(new_point_position)
-
 						PassYield()
 					end
 
 					PassYield()
 				end
 			else
+				local generator_iterations = 0
+				local calc_iterations = true
+				local sqr_radius = radius ^ 2
 
 				for player_index = 1, #players do
 					local ply = players[player_index]
@@ -142,9 +141,13 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					local x_offset = 0
 					local y = center.y
 					local z = center.z + 50
-					local start_point_vector = Vector(0, y, z)
+					local start_point_vector = Vector(center.x, y, z)
 
-					for i = 1, generator_iterations do
+					while start_point_vector:DistToSqr(center) <= sqr_radius do
+						if calc_iterations then
+							generator_iterations = generator_iterations + 1
+						end
+
 						for k = 1, 2 do
 							local x = k == 1 and center.x + x_offset or center.x - x_offset
 							start_point_vector.x = x
@@ -188,6 +191,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						x_offset = x_offset + cell_size
 					end
 
+					calc_iterations = false
 					PassYield()
 				end
 
@@ -250,27 +254,31 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				points_count = #map_points
 			end
 
+			local custom_current_pass = 0
+
 			for point_index = 1, points_count do
 				local node = map_points[point_index]
 				if not node then continue end
 
 				for another_point_index = 1, points_count do
 					local anotherNode = map_points[another_point_index]
-					if not anotherNode then continue end
+					if not anotherNode or anotherNode == node then continue end
 
-					if anotherNode ~= node then
-						local pos = anotherNode:GetPos()
+					local pos = anotherNode:GetPos()
+					if node:CheckDistanceLimitToNode(pos)
+						and not anotherNode:HasParent(node)
+						and node:CheckHeightLimitToNode(pos)
+						and node:CheckTraceSuccessToNode(pos)
+					then
+						anotherNode:AddParentNode(node)
+						anotherNode:AddLink(node, 'walk')
+						PassYield()
+					end
 
-						if node:CheckDistanceLimitToNode(pos)
-							and not anotherNode:HasParent(node)
-							and node:CheckHeightLimitToNode(pos)
-							and node:CheckTraceSuccessToNode(pos)
-						then
-							anotherNode:AddParentNode(node)
-							anotherNode:AddLink(node, 'walk')
-						end
-
-						PassYield(500)
+					custom_current_pass = custom_current_pass + 1
+					if custom_current_pass >= 2500 then
+						custom_current_pass = 0
+						yield()
 					end
 				end
 

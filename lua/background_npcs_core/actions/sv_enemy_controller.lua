@@ -1,10 +1,6 @@
 hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', function(actor)
 	if not actor:IsAlive() then return end
-
-	if not actor:GetData().wanted_level then
-		actor:FoldWeapon()
-	end
-
+	actor:FoldWeapon()
 	actor:RandomState()
 end)
 

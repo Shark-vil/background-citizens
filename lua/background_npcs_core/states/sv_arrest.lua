@@ -55,7 +55,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		PoliceActor:AddTarget(attacker)
 		PoliceActor:SetState('arrest')
 
-		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(30) then
+		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(10) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
@@ -154,10 +154,10 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 			return
 		end
 
-		if npc:GetPos():DistToSqr(target:GetPos()) > 10000 then
+		if npc:GetPos():DistToSqr(target:GetPos()) > 40000 then
+			if actor:IsAnimationPlayed() then actor:ResetSequence() end
 			actor:WalkToTarget(target, 'run')
 			ArrestComponent.detention = false
-			if actor:IsAnimationPlayed() then actor:ResetSequence() end
 		else
 			local addArrestTime = GetConVar('bgn_arrest_time'):GetFloat()
 			local eyeAngles = target:EyeAngles()
