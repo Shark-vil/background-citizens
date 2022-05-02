@@ -214,6 +214,8 @@ local function ExecutableScripts()
 	script:using('modules/sh_poll.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
+
+	script:using('global/sh_oldconfig.lua')
 end
 
 ExecutableScripts()
