@@ -47,7 +47,12 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.sync_players_hash = {}
 	obj.state_delay = -1
 
-	if data.weapons and (not data.getting_weapon_chance or slib_chance(data.getting_weapon_chance)) then
+	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. npc_type)
+
+	if data.weapons
+		and (not cvar_disable_weapon or not cvar_disable_weapon:GetBool())
+		and (not data.getting_weapon_chance or slib_chance(data.getting_weapon_chance))
+	then
 		obj.weapon = table_RandomBySeq(data.weapons)
 	end
 

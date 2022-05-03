@@ -15,7 +15,6 @@ local isentity = isentity
 local isnumber = isnumber
 local isstring = isstring
 local type = type
-local GetConVar = GetConVar
 local tobool = tobool
 local table_remove = table.remove
 local table_RandomOpt = table.RandomOpt
@@ -1045,12 +1044,6 @@ function BaseClass:GetReactionForDamage()
 
 	reaction = reaction or 'ignore'
 
-	if reaction == 'defense' and self.type == 'citizen'
-		and GetConVar('bgn_disable_citizens_weapons'):GetBool()
-	then
-		reaction = 'fear'
-	end
-
 	return reaction
 end
 
@@ -1075,12 +1068,6 @@ function BaseClass:GetReactionForProtect()
 	end
 
 	reaction = reaction or 'ignore'
-
-	if reaction == 'defense' and self.type == 'citizen'
-		and GetConVar('bgn_disable_citizens_weapons'):GetBool()
-	then
-		reaction = 'fear'
-	end
 
 	return reaction
 end
