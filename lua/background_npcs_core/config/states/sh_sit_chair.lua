@@ -1,6 +1,17 @@
 bgNPC.cfg.sit_chairs = {
 	{
 		models = {
+			'models/fortluccene/nitwfort_chair.mdl',
+		},
+		offsetPosition = function(npc, chair, default_offset)
+			return default_offset + (chair:GetUp() * -17) + (chair:GetForward() * -35) + (chair:GetRight() * 17)
+		end,
+		offsetAngle = function(npc, chair, default_offset)
+			return default_offset + Angle(0, -90, 0)
+		end,
+	},
+	{
+		models = {
 			'models/props_c17/chair02a.mdl',
 			'models/nseven/chair02a.mdl',
 		},
