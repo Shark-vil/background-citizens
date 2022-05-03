@@ -1,7 +1,12 @@
+local name = slib.language({
+	['default'] = 'Civilian',
+	['russian'] = 'Житель'
+})
+
 bgNPC.cfg:SetActor('citizen', {
 	enabled = true,
 	class = 'npc_citizen',
-	name = 'Civilian',
+	name = name,
 	fullness = 64,
 	team = { 'residents' },
 	weapons = { 'weapon_pistol', 'weapon_357', 'weapon_crowbar' },

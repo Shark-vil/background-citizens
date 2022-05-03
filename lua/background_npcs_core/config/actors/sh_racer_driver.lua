@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Racer driver',
+	['russian'] = 'Уличный гонщик'
+})
+
 bgNPC.cfg:SetActor('racer_driver', {
 	enabled = true,
 	inherit = 'gangster',
 	class = 'npc_citizen',
-	name = 'Racer driver',
+	name = name,
 	weapons = { 'weapon_pistol' },
 	getting_weapon_chance = 10,
 	limit = 1,

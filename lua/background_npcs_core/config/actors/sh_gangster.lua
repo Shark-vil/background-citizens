@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Gangster',
+	['russian'] = 'Бандит'
+})
+
 bgNPC.cfg:SetActor('gangster', {
 	enabled = true,
 	inherit = 'citizen',
 	class = 'npc_citizen',
-	name = 'Gangster',
+	name = name,
 	fullness = 10,
 	team = { 'bandits' },
 	weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },

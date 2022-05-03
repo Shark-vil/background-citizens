@@ -1,3 +1,8 @@
+local name = slib.language({
+	['default'] = 'Zombie',
+	['russian'] = 'Зомби'
+})
+
 bgNPC.cfg:SetActor('zombie', {
 	enabled = false,
 	class = {
@@ -6,7 +11,7 @@ bgNPC.cfg:SetActor('zombie', {
 		'npc_fastzombie',
 		'npc_poisonzombie',
 	},
-	name = 'Zombie',
+	name = name,
 	zombie_mode = true,
 	respawn_delay = 10,
 	limit = 10,

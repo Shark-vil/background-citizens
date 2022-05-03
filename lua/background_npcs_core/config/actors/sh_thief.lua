@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Thief',
+	['russian'] = 'Воришка'
+})
+
 bgNPC.cfg:SetActor('thief', {
 	enabled = true,
 	inherit = 'citizen',
 	class = 'npc_citizen',
-	name = 'Thief',
+	name = name,
 	fullness = 8,
 	team = { 'bandits' },
 	getting_weapon_chance = 10,

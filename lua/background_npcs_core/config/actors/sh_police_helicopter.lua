@@ -1,7 +1,12 @@
+local name = slib.language({
+	['default'] = 'Assault Helicopter',
+	['russian'] = 'Штурмовой вертолет'
+})
+
 bgNPC.cfg:SetActor('police_helicopter', {
 	enabled = true,
 	class = 'npc_apache_scp_sb',
-	name = 'Assault Helicopter',
+	name = name,
 	disable_states = true,
 	respawn_delay = 15,
 	limit = 1,
