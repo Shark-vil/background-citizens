@@ -4,8 +4,17 @@ local CurTime = CurTime
 local slib_chance = slib.chance
 local table_RandomBySeq = table.RandomBySeq
 
+local function GetRandomFoundPointDistance()
+	return math_random(1500, 3000)
+end
+
+local function GetRandomDelayForUpdateWalkTarget()
+	return CurTime() + math_random(15, 120)
+end
+
 local function GetNextTargetNode(actor)
-	return table_RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), 1500, 'walk'))
+	local dist = GetRandomFoundPointDistance()
+	return table_RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), dist, 'walk'))
 end
 
 local function UpdateActorMovementType(actor, data)
@@ -32,7 +41,7 @@ local function UpdateActorTargetPoint(actor, data)
 	actor:WalkToPos(node.position, data.schedule, 'walk')
 
 	if not actor.walkPath or #actor.walkPath == 0 then return end
-	data.updateTargetPointDelay = CurTime() + math_random(15, 30)
+	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
 end
 
 bgNPC:SetStateAction('walk', 'calm', {
@@ -56,5 +65,5 @@ hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
 	if not node then return end
 
 	actor:WalkToPos(node.position, data.schedule, 'walk')
-	data.updateTargetPointDelay = CurTime() + math_random(15, 30)
+	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
 end)
