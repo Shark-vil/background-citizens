@@ -4,9 +4,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_max_npc',
 		['Type'] = 'Integer',
 		['Min'] = '0',
-		['Max'] = '200'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.general.bgn_max_npc.description'
+		['Max'] = '200',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Label', { Text = '===========' });
@@ -20,34 +19,29 @@ local function TOOL_MENU(Panel)
 			['Command'] = 'bgn_npc_type_' .. npcType
 		})
 
-		if npcType == 'citizen' then
-			Panel:AddControl('CheckBox', {
-				['Label'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons',
-				['Command'] = 'bgn_disable_citizens_weapons'
-			}); Panel:AddControl('Label', {
-				['Text'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
-			})
-		end
+		Panel:AddControl('CheckBox', {
+			['Label'] = '#bgn.settings.active_npcs.bgn_disable_weapon_' .. npcType,
+			['Command'] = 'bgn_disable_weapon_' .. npcType,
+			['Help'] = true,
+		})
 
-		Panel:AddControl('Label', {
-			['Text'] = 'Max "' .. name .. '" npc on the map'
-		}); Panel:AddControl('Slider', {
-			['Label'] = 'Max ' .. name,
+		Panel:AddControl('Slider', {
+			['Label'] = '#bgn.settings.active_npcs.max_npc_' .. npcType,
 			['Command'] = 'bgn_npc_type_max_' .. npcType,
 			['Type'] = 'Integer',
 			['Min'] = '0',
-			['Max'] = '200'
+			['Max'] = '200',
+			['Help'] = true,
 		});
 
 		if DecentVehicleDestination then
-			Panel:AddControl('Label', {
-				['Text'] = 'Max "' .. name .. '" vehicle on the map'
-			}); Panel:AddControl('Slider', {
-				['Label'] = 'Max ' .. name .. ' vehicle',
+			Panel:AddControl('Slider', {
+				['Label'] = '#bgn.settings.active_npcs.max_npc_vehicle_' .. npcType,
 				['Command'] = 'bgn_npc_vehicle_max_' .. npcType,
 				['Type'] = 'Integer',
 				['Min'] = '0',
-				['Max'] = '200'
+				['Max'] = '200',
+				['Help'] = true,
 			});
 		end
 
@@ -55,7 +49,7 @@ local function TOOL_MENU(Panel)
 	end
 
 	Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.active_npcs.description'
+		['Text'] = '#bgn.settings.active_npcs.help'
 	})
 end
 

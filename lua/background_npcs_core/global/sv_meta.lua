@@ -9,6 +9,9 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()
 
+	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor.type)
+	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end
+
 	if weapon_class then
 		local active_weapon = npc:GetActiveWeapon()
 

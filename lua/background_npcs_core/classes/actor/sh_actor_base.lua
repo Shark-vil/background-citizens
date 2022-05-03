@@ -15,7 +15,6 @@ local isentity = isentity
 local isnumber = isnumber
 local isstring = isstring
 local type = type
-local GetConVar = GetConVar
 local tobool = tobool
 local table_remove = table.remove
 local table_RandomOpt = table.RandomOpt
@@ -865,6 +864,41 @@ function BaseClass:Walking()
 	return self.npc:IsMoving()
 end
 
+function BaseClass:GetRelationship(value, default)
+	local isEntity = IsValid(value) and isentity(value)
+	local actor
+
+	if istable(value) and value.isBgnClass then
+		actor = value
+	elseif isEntity then
+		actor = bgNPC:GetActor(value)
+	end
+
+	if actor then
+		if self:HasTeam(actor) then
+			return self.relationship['@team'] or default
+		else
+			return self.relationship['@actor'] or default
+		end
+	end
+
+	if isEntity then
+		local ent = value
+		local entity_class = ent:GetClass()
+		if self.relationship[entity_class] then
+			return self.relationship[entity_class]
+		end
+
+		if ent:IsNPC() or ent:IsNextBot() then
+			return self.relationship['@npc'] or default
+		elseif ent:IsPlayer() then
+			return self.relationship['@player'] or default
+		end
+	end
+
+	return default
+end
+
 function BaseClass:HasTeam(value)
 	local value = value
 	if self.data.team ~= nil and value ~= nil then
@@ -1010,12 +1044,6 @@ function BaseClass:GetReactionForDamage()
 
 	reaction = reaction or 'ignore'
 
-	if reaction == 'defense' and self.type == 'citizen'
-		and GetConVar('bgn_disable_citizens_weapons'):GetBool()
-	then
-		reaction = 'fear'
-	end
-
 	return reaction
 end
 
@@ -1040,12 +1068,6 @@ function BaseClass:GetReactionForProtect()
 	end
 
 	reaction = reaction or 'ignore'
-
-	if reaction == 'defense' and self.type == 'citizen'
-		and GetConVar('bgn_disable_citizens_weapons'):GetBool()
-	then
-		reaction = 'fear'
-	end
 
 	return reaction
 end

@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Taxi driver',
+	['russian'] = 'Таксист'
+})
+
 bgNPC.cfg:SetActor('taxi_driver', {
 	enabled = true,
 	inherit = 'citizen',
 	class = 'npc_citizen',
-	name = 'Taxi driver',
+	name = name,
 	limit = 2,
 	max_vehicle = 2,
 	enter_to_exist_vehicle_chance = 100,

@@ -12,6 +12,7 @@ bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
+bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment = 1
 bgNPC.cvar.bgn_point_z_limit = 100
@@ -25,7 +26,6 @@ bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
-bgNPC.cvar.bgn_disable_citizens_weapons = 0
 bgNPC.cvar.bgn_disable_halo = 0
 bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_enable_police_system_support = 1
@@ -170,10 +170,6 @@ scvar.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode,
 	FCVAR_ARCHIVE, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 	.Access(DefaultAccess)
 
-scvar.Register('bgn_disable_citizens_weapons', bgNPC.cvar.bgn_disable_citizens_weapons,
-	FCVAR_ARCHIVE, 'Prohibits citizens from having weapons.')
-	.Access(DefaultAccess)
-
 scvar.Register('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo,
 	FCVAR_ARCHIVE, 'Disable NPC highlighting stroke.')
 	.Access(DefaultAccess)
@@ -237,6 +233,10 @@ scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,
 	FCVAR_ARCHIVE, '1 - makes any NPCs with random models from the list. 0 - disables.')
 	.Access(DefaultAccess)
 
+scvar.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset,
+	FCVAR_ARCHIVE, 'Offset between points for grid generation')
+	.Access(DefaultAccess)
+
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0
 	if v.enabled then enabled = 1 end
@@ -247,6 +247,11 @@ end
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType), FCVAR_ARCHIVE)
+		.Access(DefaultAccess)
+end
+
+for npcType, v in pairs(bgNPC.cfg.actors) do
+	scvar.Register('bgn_disable_weapon_' .. npcType , 0, FCVAR_ARCHIVE)
 		.Access(DefaultAccess)
 end
 

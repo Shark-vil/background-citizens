@@ -1,9 +1,8 @@
 local function TOOL_MENU(panel)
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_arrest_mode',
-		['Command'] = 'bgn_arrest_mode'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_arrest_mode.description'
+		['Command'] = 'bgn_arrest_mode',
+		['Help'] = true,
 	})
 
 	panel:AddControl('Slider', {
@@ -11,9 +10,8 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_arrest_time',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '100'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_arrest_time.description'
+		['Max'] = '100',
+		['Help'] = true,
 	})
 
 	panel:AddControl('Slider', {
@@ -21,44 +19,37 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_arrest_time_limit',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '100'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_arrest_time_limit.description'
+		['Max'] = '100',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_shot_sound_mode',
-		['Command'] = 'bgn_shot_sound_mode'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_shot_sound_mode.description'
+		['Command'] = 'bgn_shot_sound_mode',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_disable_dialogues',
-		['Command'] = 'bgn_disable_dialogues'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_disable_dialogues.description'
+		['Command'] = 'bgn_disable_dialogues',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_replics_enable',
-		['Command'] = 'bgn_module_replics_enable'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_module_replics_enable.description'
+		['Command'] = 'bgn_module_replics_enable',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_all_models_random',
-		['Command'] = 'bgn_all_models_random'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_all_models_random.description'
+		['Command'] = 'bgn_all_models_random',
+		['Help'] = true,
 	})
-
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_custom_gestures',
-		['Command'] = 'bgn_module_custom_gestures'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_module_custom_gestures.description'
+		['Command'] = 'bgn_module_custom_gestures',
+		['Help'] = true,
 	})
 end
 

@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Special Forces',
+	['russian'] = 'Спецназ'
+})
+
 bgNPC.cfg:SetActor('special_forces', {
 	enabled = true,
 	inherit = 'civil_defense',
 	class = 'npc_combine_s',
-	name = 'Special Forces',
+	name = name,
 	respawn_delay = 15,
 	fullness = 5,
 	wanted_level = 3,

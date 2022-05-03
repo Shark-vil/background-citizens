@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Police',
+	['russian'] = 'Полиция'
+})
+
 bgNPC.cfg:SetActor('police', {
 	enabled = true,
 	inherit = 'citizen',
 	class = 'npc_metropolice',
-	name = 'Police',
+	name = name,
 	fullness = 6,
 	gender = 'male',
 	team = { 'residents', 'police' },

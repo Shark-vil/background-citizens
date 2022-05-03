@@ -5,9 +5,8 @@ local function TOOL_MENU(panel)
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.client.bgn_cl_field_view_optimization',
-		['Command'] = 'bgn_cl_field_view_optimization'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.client.bgn_cl_field_view_optimization.description'
+		['Command'] = 'bgn_cl_field_view_optimization',
+		['Help'] = true,
 	})
 
 	panel:AddControl('Slider', {
@@ -15,9 +14,8 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_cl_field_view_optimization_range',
 		['Type'] = 'Integer',
 		['Min'] = '0',
-		['Max'] = '2000'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.client.bgn_cl_field_view_optimization_range.description'
+		['Max'] = '2000',
+		['Help'] = true,
 	})
 
 	panel:AddControl('Header', {
@@ -29,26 +27,23 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_disable_logic_radius',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '1000'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.optimization.bgn_disable_logic_radius.description'
+		['Max'] = '1000',
+		['Help'] = true,
 	})
 
-	Panel:AddControl('CheckBox', {
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.spawn.bgn_actors_teleporter',
-		['Command'] = 'bgn_actors_teleporter'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_actors_teleporter.description'
+		['Command'] = 'bgn_actors_teleporter',
+		['Help'] = true,
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_actors_max_teleports',
 		['Command'] = 'bgn_actors_max_teleports',
 		['Type'] = 'Integer',
 		['Min'] = '1',
-		['Max'] = '10'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_actors_max_teleports.description'
+		['Max'] = '10',
+		['Help'] = true,
 	})
 end
 

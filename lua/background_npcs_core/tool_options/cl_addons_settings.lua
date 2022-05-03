@@ -1,37 +1,32 @@
 local function TOOL_MENU(panel)
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_stormfox2',
-		['Command'] = 'bgn_module_stormfox2'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_module_stormfox2.description'
+		['Command'] = 'bgn_module_stormfox2',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_dv_support',
-		['Command'] = 'bgn_enable_dv_support'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_enable_dv_support.description'
+		['Command'] = 'bgn_enable_dv_support',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_police_system_support',
-		['Command'] = 'bgn_enable_police_system_support'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_enable_police_system_support.description'
+		['Command'] = 'bgn_enable_police_system_support',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_bio_annihilation_two_replacement',
-		['Command'] = 'bgn_module_bio_annihilation_two_replacement'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_module_bio_annihilation_two_replacement.description'
+		['Command'] = 'bgn_module_bio_annihilation_two_replacement',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_arccw_weapon_replacement',
-		['Command'] = 'bgn_module_arccw_weapon_replacement'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_module_arccw_weapon_replacement.description'
+		['Command'] = 'bgn_module_arccw_weapon_replacement',
+		['Help'] = true,
 	})
 end
 

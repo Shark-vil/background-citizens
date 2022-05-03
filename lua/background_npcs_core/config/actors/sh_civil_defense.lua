@@ -1,8 +1,13 @@
+local name = slib.language({
+	['default'] = 'Сivil Defense',
+	['russian'] = 'Гражданская оборона'
+})
+
 bgNPC.cfg:SetActor('civil_defense', {
 	enabled = true,
 	inherit = 'police',
 	class = 'npc_metropolice',
-	name = 'Сivil Defense',
+	name = name,
 	respawn_delay = 5,
 	fullness = 5,
 	wanted_level = 2,

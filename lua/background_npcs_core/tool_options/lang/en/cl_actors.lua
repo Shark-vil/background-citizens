@@ -1,10 +1,35 @@
 --[[-----------------------------------------
-   Active npc group settings menu
+	 Active npc group settings menu
 --]]
-return {
-  ['bgn.settings.active_npcs.description'] = 'Description: you can disable some NPCs if you don\'t want to spawn them anymore. ATTENTION! If you disable an NPC, it will not automatically change the fullness relative to other NPCs! If you want to customize the configuration in detail, download the addon sources and change the configuration file!',
-  ['bgn.settings.active_npcs.bgn_disable_citizens_weapons'] = '> Disable weapon',
-  ['bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'] = 'Prohibits citizens from having weapons',
-  ['bgn.settings.general.bgn_max_npc'] = 'Maximum number of NPCs on the map',
-  ['bgn.settings.general.bgn_max_npc.description'] = 'Description: the maximum number of background NPCs on the map.'
+local lang = {
+	['bgn.settings.active_npcs.help'] = 'You can disable some NPCs if you don\'t want to spawn them anymore.',
+	['bgn.settings.general.bgn_max_npc'] = 'Maximum number of NPCs on the map',
+	['bgn.settings.general.bgn_max_npc.help'] = 'The maximum number of background NPCs on the map.'
 }
+
+for actor_type, actor_data in pairs(bgNPC.cfg.actors) do
+	local actor_name = actor_data.name or actor_type
+
+	do
+		local key = 'bgn.settings.active_npcs.bgn_disable_weapon_' .. actor_type
+		local help = key .. '.help'
+		lang[key] = 'Disable weapons'
+		lang[help] = 'Prevents "' .. actor_name .. '" from owning weapons'
+	end
+
+	do
+		local key = 'bgn.settings.active_npcs.max_npc_' .. actor_type
+		local help = key .. '.help'
+		lang[key] = 'Limit for "' .. actor_name .. '"'
+		lang[help] = 'Sets a limit on the maximum number of "' .. actor_name .. '" type actors on the map.'
+	end
+
+	do
+		local key = 'bgn.settings.active_npcs.max_npc_vehicle_' .. actor_type
+		local help = key .. '.help'
+		lang[key] = 'Limit for "' .. actor_name .. '"'
+		lang[help] = 'Sets a limit on the maximum number of vehicles that "' .. actor_name .. '" type actors can use on the map.'
+	end
+end
+
+return lang
