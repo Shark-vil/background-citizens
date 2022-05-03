@@ -34,20 +34,20 @@ local function TOOL_MENU(panel)
 		['Text'] = '#bgn.settings.optimization.bgn_disable_logic_radius.description'
 	})
 
-	Panel:AddControl('CheckBox', {
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.spawn.bgn_actors_teleporter',
 		['Command'] = 'bgn_actors_teleporter'
-	}); Panel:AddControl('Label', {
+	}); panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.spawn.bgn_actors_teleporter.description'
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_actors_max_teleports',
 		['Command'] = 'bgn_actors_max_teleports',
 		['Type'] = 'Integer',
 		['Min'] = '1',
 		['Max'] = '10'
-	}); Panel:AddControl('Label', {
+	}); panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.spawn.bgn_actors_max_teleports.description'
 	})
 end
