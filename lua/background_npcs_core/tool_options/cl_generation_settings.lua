@@ -1,16 +1,14 @@
 local function TOOL_MENU(panel)
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes',
-		['Command'] = 'bgn_dynamic_nodes'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes.description'
+		['Command'] = 'bgn_dynamic_nodes',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict',
-		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_restict.description'
+		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
+		['Help'] = true,
 	})
 
 	panel:AddControl('ListBox', {
@@ -21,7 +19,7 @@ local function TOOL_MENU(panel)
 			['random'] = { ['bgn_dynamic_nodes_type'] = 'random' },
 		}
 	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type.description'
+		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type.help'
 	})
 
 	panel:AddControl('Slider', {
@@ -29,9 +27,8 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_runtime_generator_grid_offset',
 		['Type'] = 'Integer',
 		['Min'] = '50',
-		['Max'] = '500'
-	}); panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_runtime_generator_grid_offset.description'
+		['Max'] = '500',
+		['Help'] = true,
 	})
 end
 

@@ -1,9 +1,8 @@
 local function TOOL_MENU(Panel)
 	Panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_wanted_mode',
-		['Command'] = 'bgn_enable_wanted_mode'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_enable_wanted_mode.description'
+		['Command'] = 'bgn_enable_wanted_mode',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Slider', {
@@ -11,37 +10,30 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_wanted_time',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '1000'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_wanted_time.description'
+		['Max'] = '1000',
+		['Help'] = true,
 	})
-
 	Panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_level',
-		['Command'] = 'bgn_wanted_level'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_wanted_level.description'
+		['Command'] = 'bgn_wanted_level',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_hud_text',
-		['Command'] = 'bgn_wanted_hud_text'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_wanted_hud_text.description'
+		['Command'] = 'bgn_wanted_hud_text',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_hud_stars',
-		['Command'] = 'bgn_wanted_hud_stars'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_wanted_hud_stars.description'
+		['Command'] = 'bgn_wanted_hud_stars',
+		['Help'] = true,
 	})
-
 	Panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_disable_halo',
-		['Command'] = 'bgn_disable_halo'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.states.bgn_disable_halo.description'
+		['Command'] = 'bgn_disable_halo',
+		['Help'] = true,
 	})
 end
 

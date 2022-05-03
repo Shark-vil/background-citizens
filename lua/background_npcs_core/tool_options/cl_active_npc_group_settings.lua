@@ -4,9 +4,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_max_npc',
 		['Type'] = 'Integer',
 		['Min'] = '0',
-		['Max'] = '200'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.general.bgn_max_npc.description'
+		['Max'] = '200',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Label', { Text = '===========' });
@@ -23,9 +22,8 @@ local function TOOL_MENU(Panel)
 		if npcType == 'citizen' then
 			Panel:AddControl('CheckBox', {
 				['Label'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons',
-				['Command'] = 'bgn_disable_citizens_weapons'
-			}); Panel:AddControl('Label', {
-				['Text'] = '#bgn.settings.active_npcs.bgn_disable_citizens_weapons.description'
+				['Command'] = 'bgn_disable_citizens_weapons',
+				['Help'] = true,
 			})
 		end
 
@@ -55,7 +53,7 @@ local function TOOL_MENU(Panel)
 	end
 
 	Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.active_npcs.description'
+		['Text'] = '#bgn.settings.active_npcs.help'
 	})
 end
 

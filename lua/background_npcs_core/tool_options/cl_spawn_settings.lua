@@ -4,9 +4,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_spawn_radius',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '5000'
-	}); Panel:AddControl('Label', {
-		['Text'] = '##bgn.settings.spawn.bgn_spawn_radius.description'
+		['Max'] = '5000',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Slider', {
@@ -14,9 +13,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_spawn_radius_visibility',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '5000'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_spawn_radius_visibility.description'
+		['Max'] = '5000',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Slider', {
@@ -24,9 +22,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_spawn_block_radius',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '5000'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_spawn_block_radius.description'
+		['Max'] = '5000',
+		['Help'] = true,
 	})
 
 	Panel:AddControl('Slider', {
@@ -34,9 +31,8 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_spawn_period',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '50'
-	}); Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.spawn.bgn_spawn_period.description'
+		['Max'] = '50',
+		['Help'] = true,
 	})
 end
 
