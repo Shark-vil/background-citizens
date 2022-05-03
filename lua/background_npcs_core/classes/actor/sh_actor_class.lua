@@ -9,6 +9,7 @@ local isstring = isstring
 local slib_GetUid = slib.GetUid
 local slib_chance = slib.chance
 local snet_Request = snet.Request
+local istable = istable
 --
 BGN_ACTOR = {}
 
@@ -95,6 +96,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	obj.npc_schedule = -1
 	obj.npc_state = -1
+	obj.relationship = npc_data.relationship or {}
 
 	setmetatable(obj, BaseClass)
 

@@ -18,4 +18,10 @@ bgNPC.cfg:SetActor('zombie', {
 	at_random = { ['walk'] = 70, ['idle'] = 30 },
 	at_damage = { ['defense'] = 100 },
 	at_protect = { ['defense'] = 100 },
+	relationship = {
+		['@player'] = D_HT,
+		['@actor'] = D_HT,
+		['@team'] = D_LI,
+		['@npc'] = D_HT,
+	}
 })

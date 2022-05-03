@@ -865,6 +865,41 @@ function BaseClass:Walking()
 	return self.npc:IsMoving()
 end
 
+function BaseClass:GetRelationship(value, default)
+	local isEntity = IsValid(value) and isentity(value)
+	local actor
+
+	if istable(value) and value.isBgnClass then
+		actor = value
+	elseif isEntity then
+		actor = bgNPC:GetActor(value)
+	end
+
+	if actor then
+		if self:HasTeam(actor) then
+			return self.relationship['@team'] or default
+		else
+			return self.relationship['@actor'] or default
+		end
+	end
+
+	if isEntity then
+		local ent = value
+		local entity_class = ent:GetClass()
+		if self.relationship[entity_class] then
+			return self.relationship[entity_class]
+		end
+
+		if ent:IsNPC() or ent:IsNextBot() then
+			return self.relationship['@npc'] or default
+		elseif ent:IsPlayer() then
+			return self.relationship['@player'] or default
+		end
+	end
+
+	return default
+end
+
 function BaseClass:HasTeam(value)
 	local value = value
 	if self.data.team ~= nil and value ~= nil then
