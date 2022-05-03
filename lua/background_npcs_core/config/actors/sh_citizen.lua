@@ -40,9 +40,9 @@ bgNPC.cfg:SetActor('citizen', {
 	},
 	at_random_range = 120,
 	at_random = {
-		['walk'] = 80,
+		['walk'] = 75,
 		['idle'] = 10,
-		['dialogue'] = 10,
+		['dialogue'] = 15,
 		['sit_to_chair'] = 10,
 		['random_gesture'] = 10,
 	},
