@@ -7,7 +7,7 @@ return {
 	['bgn.settings.spawn.bgn_dynamic_nodes_restict'] = 'Dynamic movement mesh constraint',
 	['bgn.settings.spawn.bgn_dynamic_nodes_restict.help'] = 'If enabled, the mesh will be generated only when there is no movement mesh file on the map. Otherwise, automatic generation will always be used.',
 	['bgn.settings.spawn.bgn_dynamic_nodes_type'] = 'Tim dynamic mesh',
-	['bgn.settings.spawn.bgn_dynamic_nodes_type.help'] = 'Random - the mesh will be generated randomly. Increases variety, but accuracy is much lower. May not work at all in narrow spaces.\n' .. 'grid - the grid is generated in a staggered uniform pattern over the entire area around the player. Less random, but more likely to fill the area with move points. (Recommended)',
+	['bgn.settings.spawn.bgn_dynamic_nodes_type.help'] = 'Random - the mesh will be generated randomly. Increases variety, but accuracy is much lower. May not work at all in narrow spaces.\n\n' .. 'Grid - the grid is generated in a staggered uniform pattern over the entire area around the player. Less random, but more likely to fill the area with move points. (Recommended)',
 	['bgn.settings.spawn.bgn_spawn_radius'] = 'NPC spawn radius',
 	['bgn.settings.spawn.bgn_spawn_radius.help'] = 'NPC spawn radius relative to the player.',
 	['bgn.settings.spawn.bgn_spawn_radius_visibility'] = 'Visibility radius',
