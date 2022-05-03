@@ -23,6 +23,16 @@ local function TOOL_MENU(panel)
 	}); panel:AddControl('Label', {
 		['Text'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type.description'
 	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.spawn.bgn_runtime_generator_grid_offset',
+		['Command'] = 'bgn_runtime_generator_grid_offset',
+		['Type'] = 'Integer',
+		['Min'] = '50',
+		['Max'] = '500'
+	}); panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.spawn.bgn_runtime_generator_grid_offset.description'
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_GenerationSettings', function()

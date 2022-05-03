@@ -1,6 +1,13 @@
 async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+	local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
+	local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
+	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
+	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local table_Combine = table.Combine
-	local GetConVar = GetConVar
+	local table_shuffle = table.shuffle
+	local player_GetAll = player.GetAll
+	local table_remove = table.remove
 	local map_name = game.GetMap()
 	local math_random = math.random
 	local util_IsInWorld = util.IsInWorld
@@ -15,7 +22,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local cell_size = 200
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
 	local chunks = {}
-	local chunk_size = 500
+	local chunk_size = 250
 	local max_points_in_chunk = 10
 	local current_pass = 0
 	local trace_filter = function(ent)
@@ -63,20 +70,20 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	while true do
-		local restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists'):GetBool()
-		local enabled = GetConVar('bgn_dynamic_nodes'):GetBool()
+		local restict = cvar_bgn_generator_restict:GetBool()
+		local enabled = cvar_bgn_dynamic_nodes:GetBool()
 
 		if not enabled or (restict and MovementMeshExists()) then
 			wait(1)
 		else
 			local map_points = {}
 			local points_count = 0
-			local expensive_generator = GetConVar('bgn_dynamic_nodes_type'):GetString() == 'grid'
-			local radius = GetConVar('bgn_spawn_radius'):GetFloat()
-			local players = table.shuffle(player.GetAll())
-			local table_remove = table.remove
+			local expensive_generator = cvar_bgn_dynamic_nodes_type:GetString() == 'grid'
+			local radius = cvar_bgn_spawn_radius:GetFloat()
+			local players = table_shuffle(player_GetAll())
 			chunks = {}
 			current_pass = 0
+			cell_size = cvar_bgn_runtime_generator_grid_offset:GetInt()
 
 			for i = #players, 1, -1 do
 				local ply = players[i]
@@ -97,7 +104,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					local center = ply:LocalToWorld(ply:OBBCenter())
 					local z = center.z + 50
 
-					for i = 1, 500 do
+					for i = 1, radius * 2 do
 						local x = center.x + math_random(-radius, radius)
 						local y = center.y + math_random(-radius, radius)
 						local start_point_vector = Vector(x, y, z)

@@ -12,6 +12,7 @@ bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
+bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment = 1
 bgNPC.cvar.bgn_point_z_limit = 100
@@ -235,6 +236,10 @@ scvar.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestur
 
 scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,
 	FCVAR_ARCHIVE, '1 - makes any NPCs with random models from the list. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset,
+	FCVAR_ARCHIVE, 'Offset between points for grid generation')
 	.Access(DefaultAccess)
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
