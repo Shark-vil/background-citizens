@@ -91,11 +91,11 @@ end)
 hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, icon)
 	if not icon or name ~= 'npc' then return end
 
-	local openMenuExtra = icon.OpenMenuExtra
+	local BASE = icon.OpenMenuExtra
 	local npcClass = icon:GetSpawnName()
 
 	icon.OpenMenuExtra = function(self, menu)
-		openMenuExtra(self, menu)
+		BASE(self, menu)
 
 		do
 			local subMenu, swg = menu:AddSubMenu('Background NPCs - Spawn')
