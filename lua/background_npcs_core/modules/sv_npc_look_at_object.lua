@@ -3,6 +3,7 @@ local ents_FindInSphere = ents.FindInSphere
 local util_TraceLine = util.TraceLine
 local hook_Run = hook.Run
 local math_abs = math.abs
+local IsValid = IsValid
 --
 
 async.Add('BGN_Timer_ActorLookAtObject', function(yield, wait)
@@ -18,6 +19,8 @@ async.Add('BGN_Timer_ActorLookAtObject', function(yield, wait)
 			local entities = ents_FindInSphere(npc_pos, 1000)
 
 			for k = 1, #entities do
+				if not IsValid(npc) then break end
+
 				local ent = entities[k]
 				if not ent or not IsValid(ent) then goto skip end
 
