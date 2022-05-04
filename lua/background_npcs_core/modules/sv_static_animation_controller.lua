@@ -2,6 +2,7 @@ local bgNPC = bgNPC
 local NPC_STATE_SCRIPT = NPC_STATE_SCRIPT
 local SCHED_SLEEP = SCHED_SLEEP
 local hook_Run = hook.Run
+local isfunction = isfunction
 --
 
 timer.Create('BGN_ActorAnimationController', .1, 0, function()
@@ -10,8 +11,14 @@ timer.Create('BGN_ActorAnimationController', .1, 0, function()
 		local actor = actors[i]
 		if actor and actor:IsAlive() and actor:IsAnimationPlayed() then
 			local npc = actor:GetNPC()
-			npc:SetNPCState(NPC_STATE_SCRIPT)
-			npc:SetSchedule(SCHED_SLEEP)
+
+			if isfunction(npc.SetNPCState) then
+				npc:SetNPCState(NPC_STATE_SCRIPT)
+			end
+
+			if isfunction(npc.SetSchedule) then
+				npc:SetSchedule(SCHED_SLEEP)
+			end
 
 			if actor:IsLoopSequence() then
 				if actor:IsSequenceLoopFinished() then
