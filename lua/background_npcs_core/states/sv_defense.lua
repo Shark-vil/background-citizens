@@ -20,29 +20,30 @@ bgNPC:SetStateAction('defense', 'danger', {
 
 		data.delay = data.delay or 0
 
-		if data.delay < CurTime() or enemy:IsNPC() or enemy:IsPlayer() then
+		if data.delay < CurTime() then
 			if not data.disableWeapon then actor:PrepareWeapon() end
 
 			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
-			if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
-				if actor:IsMeleeWeapon() then
-					actor:WalkToTarget(enemy, 'run')
-				else
-					if current_distance <= 22500 then
-						local node = actor:GetDistantPointInRadius(1000)
-						if node then
-							actor:WalkToPos(node:GetPos(), 'run')
-						else
-							actor:WalkToTarget()
-							npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
-						end
-					end
-				end
-			else
+			if current_distance > 490000 then
 				if enemy:IsPlayer() and enemy:InVehicle() then
 					actor:WalkToTarget(enemy:GetVehicle(), 'run')
 				else
 					actor:WalkToTarget(enemy, 'run')
+				end
+			else
+				local node
+
+				if not actor:IsMeleeWeapon() and current_distance < 202500 and bgNPC:IsTargetRay(npc, enemy) then
+					node = bgNPC:GetDistantPointInRadius(npc:GetPos() + npc:GetForward() * -1000, 500)
+					if node then
+						actor:WalkToTarget()
+						actor:WalkToPos(node:GetPos(), 'run')
+					end
+				end
+
+				if not node then
+					actor:WalkToTarget(enemy, 'run')
+					if slib.chance(50) then npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY) end
 				end
 			end
 
