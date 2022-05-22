@@ -1,4 +1,18 @@
+local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
+
+local function IsValidWantedMode()
+	if not cvar_bgn_enable_wanted_mode:GetBool() or #bgNPC:GetAllByType('police') == 0 then
+		return false
+	end
+	return true
+end
+
 bgNPC:SetStateAction('calling_police', 'danger', {
+	pre_start = function(actor)
+		if not IsValidWantedMode() then
+			return 'fear'
+		end
+	end,
 	update = function(actor)
 		local currentEnemy = actor:GetEnemy()
 		if not IsValid(currentEnemy) then return end
@@ -11,13 +25,15 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 
 		local npc = actor:GetNPC()
 
-		if not GetConVar('bgn_enable_wanted_mode'):GetBool() or #bgNPC:GetAllByType('police') == 0 then
+		if not IsValidWantedMode() then
 			actor:SetState('fear')
 			return
 		end
 
 		-- 90000 = 300 ^ 2
-		if not bgNPC:IsTargetRay(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
+		if not bgNPC:IsTargetRay(npc, currentEnemy)
+			or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000
+		then
 			local rnd = math.random(0, 100)
 			if rnd > 80 then
 				actor:CallForHelp(currentEnemy)
