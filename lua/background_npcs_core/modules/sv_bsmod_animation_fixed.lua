@@ -1,7 +1,7 @@
 local original_hook_function
 
 local function init_bsmod_animations()
-	original_hook_function = hook.Get('EntityTakeDamage', 'DAModuleDamage')
+	original_hook_function = slib.Component('Hook', 'Get', 'EntityTakeDamage', 'DAModuleDamage')
 	if not original_hook_function then return end
 
 	hook.Add('EntityTakeDamage', 'DAModuleDamage', function(target, dmginfo)

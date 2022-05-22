@@ -1,6 +1,7 @@
 local function ArcCWWeaponReplacement(npc)
 	if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
-		local arcw_replacement = hook.Get('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
+		local arcw_replacement = slib.Component('Hook', 'Get',
+			'OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
 		if arcw_replacement then arcw_replacement(npc) end
 	end
 end

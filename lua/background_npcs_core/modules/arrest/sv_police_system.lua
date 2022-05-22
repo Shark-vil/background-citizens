@@ -29,7 +29,7 @@ end)
 hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', function(target, actor)
 	if not GetConVar('bgn_enable_police_system_support'):GetBool() then return end
 
-	local police_system_hook = hook.Get('PlayerButtonDown', 'PoliceSysButton')
+	local police_system_hook = slib.Component('Hook', 'Get', 'PlayerButtonDown', 'PoliceSysButton')
 	if not police_system_hook then return end
 
 	local target_pos = target:GetPos()
