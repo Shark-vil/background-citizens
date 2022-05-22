@@ -1,3 +1,6 @@
+local IsValid = IsValid
+--
+local cvar_bgn_debug = GetConVar('bgn_debug')
 local actors_config_cache = {}
 
 function bgNPC:ClearActorsConfig()
@@ -84,7 +87,7 @@ function bgNPC:GetActorConfig(actor_type)
 end
 
 function bgNPC:Log(message, tag)
-	if not GetConVar('bgn_debug'):GetBool() then return end
+	if not cvar_bgn_debug:GetBool() then return end
 	if tag ~= nil then
 		MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
 	else
@@ -106,6 +109,23 @@ function bgNPC:NPCIsViewVector(ent, pos, radius)
 	local entVector = pos - ent:GetShootPos()
 	local angCos = aimVector:Dot(entVector) / entVector:Length()
 	return angCos >= directionAngCos
+end
+
+function bgNPC:CanActorsSeeEntity(ent)
+	if not IsValid(ent) or not isentity(ent) then return false end
+
+	local actors = bgNPC:GetAll()
+	for i = 1, #actors do
+		local actor = actors[i]
+		if actor and actor:IsAlive() then
+			local npc = actor:GetNPC()
+			if IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true) then
+				return true, actor
+			end
+		end
+	end
+
+	return false
 end
 
 function bgNPC:GetModule(module_name)
