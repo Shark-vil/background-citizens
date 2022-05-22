@@ -46,9 +46,16 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_all_models_random',
 		['Help'] = true,
 	})
+
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_custom_gestures',
 		['Command'] = 'bgn_module_custom_gestures',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_tactical_groups',
+		['Command'] = 'bgn_module_tactical_groups',
 		['Help'] = true,
 	})
 end

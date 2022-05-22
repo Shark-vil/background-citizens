@@ -1,6 +1,5 @@
 local bgNPC = bgNPC
 local hook = hook
-local timer = timer
 local player = player
 local IsValid = IsValid
 local pairs = pairs
@@ -39,13 +38,17 @@ function bgNPC:RespawnActor(actor)
 end
 
 local function InitActorsSpawner(delay)
-	timer.Create('BGN_Timer_NPCSpawner', delay, 0, function()
+	async.Add('bgn_actors_spawner_process', function(yield, wait)
+		wait(delay)
+
 		local bgn_enable = GetConVar('bgn_enable'):GetBool()
 		if not bgn_enable or player.GetCount() == 0 then return end
 
 		bgNPC:ClearRemovedNPCs()
 
 		for npcType, npc_data in pairs(bgNPC.cfg.actors) do
+			yield()
+
 			if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then continue end
 
 			local max_limit = bgNPC:GetLimitActors(npcType)
@@ -103,6 +106,8 @@ local function InitActorsSpawner(delay)
 				end
 			end)
 		end
+
+		yield()
 	end)
 end
 

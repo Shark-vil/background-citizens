@@ -52,6 +52,7 @@ bgNPC.cvar.bgn_all_models_random = 0
 bgNPC.cvar.bgn_peaceful_mode = 0
 bgNPC.cvar.bgn_module_stormfox2 = 0
 bgNPC.cvar.bgn_module_custom_gestures = 0
+bgNPC.cvar.bgn_module_tactical_groups = 0
 
 function bgNPC:IsActiveNPCType(npc_type)
 	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
@@ -226,7 +227,11 @@ scvar.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arcc
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestures,
-	FCVAR_ARCHIVE, '1 - Enabel custom gestures animations. 0 - disables.')
+	FCVAR_ARCHIVE, '1 - Enable custom gestures animations. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_tactical_groups', bgNPC.cvar.bgn_module_tactical_groups,
+	FCVAR_ARCHIVE, '1 - Enable tactical groups. 0 - disables.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,

@@ -40,4 +40,6 @@ return {
 	['bgn.settings.states.bgn_module_stormfox2.help'] = 'Если на улице ночь или идёт дождь, то на карте будет в два раза меньше NPC.',
 	['bgn.settings.states.bgn_module_custom_gestures'] = 'Расширенные анимации (ЭКСПЕРИМЕНТАЛЬНО)',
 	['bgn.settings.states.bgn_module_custom_gestures.help'] = 'Включает поддержку расширенных анимаций. NPC будут танцевать, и делать больше различных действий. Отключите это, если оно создаёт проблемы.',
+	['bgn.settings.states.bgn_module_tactical_groups'] = 'Тактические группы (ЭКСПЕРИМЕНТАЛЬНО)',
+	['bgn.settings.states.bgn_module_tactical_groups.help'] = 'Включает тактические группы. В данный момент работает только с актёрами, которые состоят в группах "police" и "bandits". В перестрелках NPC будут пытаться собираться в тактические группы, чтобы стараться минимизировать урон по команде.',
 }

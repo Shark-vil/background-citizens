@@ -67,7 +67,7 @@ local function version_check()
 end
 concommand.Add('bgn_version_check', version_check)
 
-hook.Add('SlibPlayerFirstSpawn', 'BGN_CheckAddonVersion', function(ply)
+hook.Add('slib.FirstPlayerSpawn', 'BGN_CheckAddonVersion', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	version_check()
 end)

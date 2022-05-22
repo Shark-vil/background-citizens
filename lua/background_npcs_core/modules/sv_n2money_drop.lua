@@ -1,12 +1,19 @@
-local n2MoneyExist = nil
-hook.Add('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney', function(actor, pos, money)
-	if n2MoneyExist == nil then
-		n2MoneyExist = scripted_ents.GetList()['ent_money'] ~= nil
-	end
+local n2_money_exists = nil
+local money_model = 'models/props/cs_assault/money.mdl'
 
-	if not n2MoneyExist then
-		hook.Remove('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney')
-		return
+hook.Add('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney', function(actor, pos, money)
+	if not n2_money_exists then
+		n2_money_exists = scripted_ents.GetList()['ent_money'] ~= nil
+
+		if not util.IsValidModel(money_model) then
+			n2_money_exists = false
+			slib.Warning('"nMoney2" will not work without CSS content!')
+		end
+
+		if not n2_money_exists then
+			hook.Remove('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney')
+			return
+		end
 	end
 
 	local dropped_ent = ents.Create('ent_money')

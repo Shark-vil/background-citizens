@@ -30,7 +30,7 @@ if CLIENT then
 		end
 	end)
 
-	hook.Add('Slib_PlayAnimation', 'BGN_Animation_CheckPhone', function(anim_info)
+	hook.Add('slib.AnimationPlaying', 'BGN_Animation_CheckPhone', function(anim_info)
 		if anim_info.name ~= 'bgn_check_phone' then return end
 
 		local animator = anim_info.animator

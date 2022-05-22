@@ -1,7 +1,9 @@
 local asset = bgNPC:GetModule('wanted')
 local TeamParentModule = bgNPC:GetModule('team_parent')
+local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
 
-hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker', function(attacker, target)
+hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker',
+function(attacker, target)
 	if asset:HasWanted(attacker) then
 		asset:GetWanted(attacker):UpdateWanted()
 	elseif asset:HasWanted(target) then
@@ -10,7 +12,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttac
 end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', function(actor, attacker)
-	if bgNPC:IsPeacefulMode() then return end
+	if bgNPC:IsPeacefulMode() or not cvar_bgn_enable_wanted_mode:GetBool() then return end
 
 	local AttackerActor = bgNPC:GetActor(attacker)
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
@@ -24,6 +26,9 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 			WantedClass:LevelUp()
 		end
 	else
+		local can_see, see_actor = bgNPC:CanActorsSeeEntity(attacker)
+		if not can_see or see_actor == actor then return end
+
 		if attacker:IsPlayer() then
 			if not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
 				asset:AddWanted(attacker)

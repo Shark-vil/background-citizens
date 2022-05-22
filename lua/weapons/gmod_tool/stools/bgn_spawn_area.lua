@@ -164,7 +164,9 @@ if CLIENT then
 		AddLanguage('left', 'Press the first time to set the start point, and the second time to set the end point.')
 	end
 
-	local function InitPanel()
+	function TOOL.BuildCPanel(CPanel)
+		InitLanguage()
+
 		local cvarAreaTagName = GetConVar('cl_bgn_tool_bgn_spawn_area_tag_name')
 
 		local panel = controlpanel.Get('bgn_spawn_area')
@@ -344,7 +346,5 @@ if CLIENT then
 		end)
 	end
 
-	InitLanguage()
-	InitPanel()
 	InitDrawArea()
 end

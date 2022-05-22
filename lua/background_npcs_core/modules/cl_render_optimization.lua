@@ -4,7 +4,6 @@ local LocalPlayer = LocalPlayer
 --
 local is_active = GetConVar('bgn_cl_field_view_optimization'):GetBool()
 local min_range = GetConVar('bgn_cl_field_view_optimization_range'):GetFloat() ^ 2
-local max_pass = 5
 
 cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, value_old, value_new)
 	local new_value = tobool(value_new)
@@ -22,15 +21,17 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 			end
 		end
 	end
-end)
+end, 'ro_bgn_cl_field_view_optimization')
 
-cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(convar_name, value_old, value_new)
+cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(_, _, value_new)
 	local new_value = tonumber(value_new) ^ 2
 	if min_range == new_value then return end
 	min_range = new_value
-end)
+end, 'ro_bgn_cl_field_view_optimization_range')
 
 async.Add('bgn_client_render_optimization', function(yield, wait)
+	local current_pass = 0
+
 	while true do
 		if not is_active then
 			wait(1)
@@ -39,7 +40,6 @@ async.Add('bgn_client_render_optimization', function(yield, wait)
 
 		local ply = LocalPlayer()
 		local actors = bgNPC:GetAll()
-		local pass = 0
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -53,7 +53,9 @@ async.Add('bgn_client_render_optimization', function(yield, wait)
 					local in_vehicle = actor:InVehicle()
 					local past_set_no_draw = npc:slibGetLocalVar('bgn_render_optimization', false)
 
-					if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)) then
+					if in_vehicle or (
+						ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)
+					) then
 						if not past_set_no_draw and not npc:GetNoDraw() then
 							npc:SetNoDraw(true)
 							npc:slibSetLocalVar('bgn_render_optimization', true)
@@ -62,7 +64,6 @@ async.Add('bgn_client_render_optimization', function(yield, wait)
 								weapon:SetNoDraw(true)
 							end
 						end
-						pass = pass + 1
 					else
 						if past_set_no_draw and npc:GetNoDraw() then
 							npc:SetNoDraw(false)
@@ -72,12 +73,13 @@ async.Add('bgn_client_render_optimization', function(yield, wait)
 								weapon:SetNoDraw(false)
 							end
 						end
-						pass = pass + 1
 					end
 
-					if pass == max_pass then
-						pass = 0
+					if current_pass >= 1 / slib.deltaTime then
+						current_pass = 0
 						yield()
+					else
+						current_pass = current_pass + 1
 					end
 				end
 			end

@@ -57,7 +57,7 @@ if SERVER then
 		snet.ClientRPC(self, 'ResetActor')
 	end
 else
-	function TOOL:SetActor(uid)	
+	function TOOL:SetActor(uid)
 		local actor = bgNPC:GetActorByUid(uid)
 		if actor == nil then
 			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
