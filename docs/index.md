@@ -6,7 +6,9 @@ This documentation is for "*Background NPCs*". General information on setting up
 - [More maps](./information/More%20maps.md)
 
 ### Tutorials
-- [Change basic configuration](./tutorials/Change%20basic%20configuration.md)
+- [Change basic configuration](./tutorials/Change%20basic%20configuration.md) (**Deprecated, will be removed in the future**)
+- [Creating Custom NPCs](./tutorials/Creating-Custom-NPCs.md)
+- [Modification of Existing NPCs](./tutorials/Modification-of-Existing-NPCs.md)
 
 ### Classes
 - [ACTOR](./classes/actor/index.md)
