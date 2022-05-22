@@ -40,4 +40,6 @@ return {
 	['bgn.settings.states.bgn_module_stormfox2.help'] = 'If it\'s night or it\'s raining outside, then there will be half as many NPCs on the map.',
 	['bgn.settings.states.bgn_module_custom_gestures'] = 'Advanced Animations (EXPERIMENTAL)',
 	['bgn.settings.states.bgn_module_custom_gestures.help'] = 'Enables support for advanced animations. NPCs will dance and do more different activities. Disable it if it causes problems',
+	['bgn.settings.states.bgn_module_tactical_groups'] = 'Tactical groups (EXPERIMENTAL)',
+	['bgn.settings.states.bgn_module_tactical_groups.help'] = 'Includes tactical groups. Currently only works with actors who are members of the "police" and "bandits" groups. In firefights, NPCs will try to form tactical groups to try to minimize team damage.',
 }
