@@ -4,7 +4,7 @@ local timer = timer
 local IsValid = IsValid
 --
 
-hook.Add('SlibPlayerFirstSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
+hook.Add('slib.FirstPlayerSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 	local delay = 0
 	local actors = bgNPC:GetAll()
 
