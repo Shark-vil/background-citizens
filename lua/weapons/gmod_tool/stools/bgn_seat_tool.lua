@@ -10,7 +10,6 @@ local ClientsideModel = ClientsideModel
 local hook = hook
 local render = render
 local LocalPlayer = LocalPlayer
-local bgNPC = bgNPC
 --
 TOOL.Category = 'Background NPCs'
 TOOL.Name = '#tool.bgn_seat_tool.name'
@@ -84,7 +83,6 @@ else
 		end
 
 		self.SelectedPointId = NewSelectedPointId
-		self:UpdateControlPanel()
 	end
 
 	function TOOL:Reload()
@@ -141,18 +139,7 @@ else
 		self.SetStartPos = not self.SetStartPos
 	end
 
-	function TOOL:UpdateControlPanel()
-		if self.PanelIsInit then return end
-		local Panel = controlpanel.Get('bgn_seat_tool')
-
-		if not Panel then
-			bgNPC:Log('Couldn\'t find bgn_seat_tool panel!', 'Tool')
-			return
-		end
-
-		self.PanelIsInit = true
-		Panel:ClearControls()
-
+	function TOOL.BuildCPanel(Panel)
 		Panel:AddControl('Button', {
 			['Label'] = 'Save',
 			['Command'] = 'bgn_tool_seat_save',

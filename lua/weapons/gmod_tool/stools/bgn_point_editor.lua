@@ -300,8 +300,6 @@ else
 				tool.RangePoints = NewRangePoints
 			end)
 		end
-
-		self:UpdateControlPanel()
 	end
 
 	function TOOL:AddNode()
@@ -481,16 +479,7 @@ else
 		end
 	end
 
-	function TOOL:UpdateControlPanel()
-		if self.PanelIsInit then return end
-
-		local Panel = controlpanel.Get( 'bgn_point_editor' )
-		if not Panel then bgNPC:Log('Couldn\'t find bgn_point_editor panel!', 'Tool') return end
-
-		self.PanelIsInit = true
-
-		Panel:ClearControls()
-
+	function TOOL.BuildCPanel(Panel)
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_point_editor.pnl.load_points',
 			['Command'] = 'cl_citizens_load_route_from_client',

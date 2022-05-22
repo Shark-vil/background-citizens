@@ -49,22 +49,7 @@ else
 		self.Path = {}
 	end
 
-	function TOOL:Think()
-		self:UpdateControlPanel()
-	end
-
-	function TOOL:UpdateControlPanel()
-		if self.PanelIsInit then return end
-		local Panel = controlpanel.Get('bgn_path_finder')
-
-		if not Panel then
-			bgNPC:Log('Couldn\'t find bgn_path_finder panel!', 'Tool')
-			return
-		end
-
-		self.PanelIsInit = true
-		Panel:ClearControls()
-
+	function TOOL.BuildCPanel(Panel)
 		Panel:AddControl('Button', {
 			['Label'] = '#tool.bgn_path_finder.pnl.load_points',
 			['Command'] = 'cl_citizens_load_route_from_client',
