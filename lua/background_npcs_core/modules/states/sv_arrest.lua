@@ -39,7 +39,10 @@ function ASSET:FoundPoliceInRadius(target, radius)
 	local policeActor
 
 	for _, actor in ipairs(bgNPC:GetAllByRadius(target:GetPos(), 700)) do
-		if actor:IsAlive() and actor:HasTeam('police') then
+		if actor:IsAlive()
+			and actor:HasTeam('police')
+			and actor:GetNPC():slibIsTraceEntity(target, 700)
+		then
 			if not policeActor then
 				policeActor = actor
 			else
