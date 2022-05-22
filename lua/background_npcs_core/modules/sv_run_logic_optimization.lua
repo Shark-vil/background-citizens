@@ -6,30 +6,13 @@ local player_GetAll = player.GetAll
 --
 local bgn_enable = GetConVar('bgn_enable'):GetBool()
 local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat() ^ 2
-local max_pass = 5
 
-cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
-	if tonumber(new_value) > 0 then return end
-	local actors = bgNPC:GetAll()
+--[[
+	Async process
+--]]
+local function process(yield, wait)
+	local current_pass = 0
 
-	for i = 1, #actors do
-		local actor = actors[i]
-
-		if actor and actor:IsAlive() and not actor:InVehicle() then
-			actor:GetNPC():RemoveEFlags(EFL_NO_THINK_FUNCTION)
-		end
-	end
-end)
-
-cvars.AddChangeCallback('bgn_enable', function(_, _, new_value)
-	bgn_enable = tobool(new_value)
-end)
-
-cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
-	bgn_disable_logic_radius = tonumber(new_value) ^ 2
-end)
-
-async.Add('bgn_server_logic_optimization', function(yield, wait)
 	while true do
 		if not bgn_enable or bgn_disable_logic_radius <= 0 then
 			wait(1)
@@ -38,7 +21,6 @@ async.Add('bgn_server_logic_optimization', function(yield, wait)
 
 		local actors = bgNPC:GetAll()
 		local players = player_GetAll()
-		local pass = 0
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -96,16 +78,48 @@ async.Add('bgn_server_logic_optimization', function(yield, wait)
 
 						npc:slibSetLocalVar('bgn_optimize_no_think_enable', no_think_enable)
 					end
-
-					pass = pass + 1
-					if pass == max_pass then
-						pass = 0
-						yield()
-					end
 				end
+			end
+
+			if current_pass >= 1 / slib.deltaTime then
+				current_pass = 0
+				yield()
+			else
+				current_pass = current_pass + 1
 			end
 		end
 
 		yield()
 	end
-end)
+end
+async.Add('bgn_server_logic_optimization', process)
+
+--[[
+	Cvars
+--]]
+cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
+	bgn_disable_logic_radius = tonumber(new_value) ^ 2
+
+	if bgn_disable_logic_radius > 0 then
+		if not async.Exists('bgn_server_logic_optimization') then
+			async.Add('bgn_server_logic_optimization', process)
+		end
+	else
+		async.Remove('bgn_server_logic_optimization')
+
+		timer.Simple(1, function()
+			local actors = bgNPC:GetAll()
+
+			for i = 1, #actors do
+				local actor = actors[i]
+				if actor and actor:IsAlive() and not actor:InVehicle() then
+					actor:GetNPC():RemoveEFlags(EFL_NO_THINK_FUNCTION)
+				end
+			end
+		end)
+	end
+end, 'rlo_bgn_disable_logic_radius')
+
+cvars.AddChangeCallback('bgn_enable', function(_, _, new_value)
+	bgn_enable = tobool(new_value)
+end, 'rlo_bgn_enable')
