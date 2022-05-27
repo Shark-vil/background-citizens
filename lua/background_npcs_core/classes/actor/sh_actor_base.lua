@@ -1,12 +1,10 @@
 local bgNPC = bgNPC
-local string = string
 local SERVER = SERVER
 local CLIENT = CLIENT
-local hook = hook
-local table = table
 local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 local SCHED_FORCED_GO = SCHED_FORCED_GO
 local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
+local SOLID_BBOX = SOLID_BBOX
 local CurTime = CurTime
 local IsValid = IsValid
 local ipairs = ipairs
@@ -20,7 +18,12 @@ local table_remove = table.remove
 local table_RandomOpt = table.RandomOpt
 local table_RandomBySeq = table.RandomBySeq
 local table_HasValueBySeq = table.HasValueBySeq
+local table_RemoveByValue = table.RemoveByValue
+local table_Copy = table.Copy
+local table_Add = table.Add
+local table_insert = table.insert
 local string_find = string.find
+local string_lower = string.lower
 local hook_Run = hook.Run
 local snet_Invoke = snet.Invoke
 local snet_InvokeAll = snet.InvokeAll
@@ -59,6 +62,11 @@ local schedule_white_list = {
 	SCHED_FAIL_ESTABLISH_LINE_OF_FIRE,
 	SCHED_SLEEP,
 }
+
+-- local _movement_finished_distance = 250
+local _movement_finished_distance = 10000
+local _collision_min_bounds = Vector(13, 13, 72)
+local _collision_max_bounds = Vector(min_bounds.x * -1, min_bounds.y * -1, 0)
 
 local BaseClass = {}
 
@@ -272,6 +280,7 @@ end
 -- ? The target doesn't have to be the enemy. This is used in state calculations.
 -- @param ent entity any entity other than the actor himself
 function BaseClass:AddTarget(ent)
+	if not self.mechanics.targets_controller then return end
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if ent.BGN_HasBuildMode then return end
 
@@ -286,6 +295,7 @@ end
 -- @param index number|nil target id in table
 -- ? If there is no entity, use an index. If there is no index, use entity.
 function BaseClass:RemoveTarget(ent, index)
+	if not self.mechanics.targets_controller then return end
 	if isnumber(index) then ent = self.targets[index] end
 
 	local old_count = #self.targets
@@ -296,7 +306,7 @@ function BaseClass:RemoveTarget(ent, index)
 		if isnumber(index) then
 			table_remove(self.targets, index)
 		elseif isentity(ent) then
-			table.RemoveByValue(self.targets, ent)
+			table_RemoveByValue(self.targets, ent)
 		end
 
 		if old_count > 0 and #self.targets == 0 then
@@ -310,6 +320,8 @@ end
 -- Removes all targets from the list.
 -- ? Actually calls method "RemoveTarget" for all targets in the list.
 function BaseClass:RemoveAllTargets()
+	if not self.mechanics.targets_controller then return end
+
 	local last_count = 0
 	for i = #self.targets, 1, -1 do
 		last_count = self:RemoveTarget(nil, i)
@@ -322,6 +334,23 @@ function BaseClass:RemoveAllTargets()
 	end
 end
 
+-- Recalculates targets, and removes them if they are dead or no longer exist on the map.
+-- @return table new_targets new target list
+function BaseClass:RecalculationTargets()
+	if not self.mechanics.targets_controller then return end
+
+	for i = #self.targets, 1, -1 do
+		local target = self.targets[i]
+		if not IsValid(target) then
+			self:RemoveTarget(nil, i)
+		elseif target:IsPlayer() and target:Health() <= 0 then
+			self:RemoveTarget(nil, i)
+		end
+	end
+
+	return self.targets
+end
+
 -- Checks for the existence of an entity in the target list.
 -- @param ent entity any entity
 -- @return boolean is_exist will return true if the entity is the target, otherwise false
@@ -332,17 +361,18 @@ end
 -- Returns the number of existing targets for the actor.
 -- @return number targets_number number of targets
 function BaseClass:TargetsCount()
-	self:TargetsRecalculate()
+	-- self:TargetsRecalculate()
+	self:RecalculationTargets()
 	return #self.targets
 end
 
-function BaseClass:TargetsRecalculate()
-	for i = #self.targets, 1, -1 do
-		if not IsValid(self.targets[i]) then
-			table_remove(self.targets, i)
-		end
-	end
-end
+-- function BaseClass:TargetsRecalculate()
+-- 	for i = #self.targets, 1, -1 do
+-- 		if not IsValid(self.targets[i]) then
+-- 			table_remove(self.targets, i)
+-- 		end
+-- 	end
+-- end
 
 -- Returns the closest target to the actor.
 -- @return entity|NULL target_entity nearest target which is entity
@@ -389,6 +419,7 @@ function BaseClass:GetLastTarget()
 end
 
 function BaseClass:AddEnemy(ent, reaction, always_visible)
+	if not self.mechanics.enemies_controller then return end
 	if bgNPC:IsPeacefulMode() then return end
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
@@ -414,6 +445,7 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 end
 
 function BaseClass:RemoveEnemy(ent, index)
+	if not self.mechanics.enemies_controller then return end
 	if isnumber(index) then ent = self.enemies[index] end
 
 	local old_count = #self.enemies
@@ -434,11 +466,11 @@ function BaseClass:RemoveEnemy(ent, index)
 			ent = self.enemies[index]
 			table_remove(self.enemies, index)
 		elseif isentity(ent) then
-			table.RemoveByValue(self.enemies, ent)
+			table_RemoveByValue(self.enemies, ent)
 		end
 
 		if ent and IsValid(ent) then
-			table.RemoveByValue(self.enemies_always_visible, ent)
+			table_RemoveByValue(self.enemies_always_visible, ent)
 		end
 
 		if old_count > 0 and #self.enemies == 0 then
@@ -450,6 +482,8 @@ function BaseClass:RemoveEnemy(ent, index)
 end
 
 function BaseClass:RemoveAllEnemies()
+	if not self.mechanics.enemies_controller then return end
+
 	local last_count = 0
 	for i = #self.enemies, 1, -1 do
 		last_count = self:RemoveEnemy(nil, i)
@@ -473,6 +507,8 @@ function BaseClass:EnemiesCount()
 end
 
 function BaseClass:EnemiesRecalculate()
+	if not self.mechanics.enemies_controller then return end
+
 	local npc = self:GetNPC()
 
 	if npc:IsNPC() then
@@ -537,18 +573,16 @@ end
 
 function BaseClass:GetNearEnemy()
 	local enemy = NULL
-	local dist = 0
+	local dist = nil
 	local self_npc = self:GetNPC()
 
 	for i = 1, #self.enemies do
 		local ent = self.enemies[i]
 		if IsValid(ent) then
-			if not IsValid(enemy) then
+			local distance_to_enemy = ent:GetPos():DistToSqr(self_npc:GetPos())
+			if not IsValid(enemy) or not dist or distance_to_enemy < dist then
 				enemy = ent
-				dist = ent:GetPos():DistToSqr(self_npc:GetPos())
-			elseif ent:GetPos():DistToSqr(self_npc:GetPos()) < dist then
-				enemy = ent
-				dist = ent:GetPos():DistToSqr(self_npc:GetPos())
+				dist = distance_to_enemy
 			end
 		end
 	end
@@ -598,19 +632,25 @@ function BaseClass:GetLastEnemy()
 	return NULL
 end
 
--- Recalculates targets, and removes them if they are dead or no longer exist on the map.
--- @return table new_targets new target list
-function BaseClass:RecalculationTargets()
-	for i = #self.targets, 1, -1 do
-		local target = self.targets[i]
-		if not IsValid(target) then
-			self:RemoveTarget(nil, i)
-		elseif target:IsPlayer() and target:Health() <= 0 then
-			self:RemoveTarget(nil, i)
-		end
+function BaseClass:DropToFloor()
+	local npc = self.npc
+	if not IsValid(npc) then return end
+
+	if npc.SetSolid and npc.GetHullType and npc.SetHullType and npc.SetHullSizeNormal then
+		local hull = npc:GetHullType()
+		npc:SetSolid(SOLID_BBOX)
+		npc:SetPos(npc:GetPos() + npc:GetUp() * 6)
+		npc:SetHullType(hull)
+		npc:SetHullSizeNormal()
 	end
 
-	return self.targets
+	if npc.SetCollisionBounds then
+		npc:SetCollisionBounds(_collision_min_bounds, _collision_max_bounds)
+	end
+
+	if npc.DropToFloor then
+		npc:DropToFloor()
+	end
 end
 
 function BaseClass:StateLock(lock)
@@ -628,6 +668,7 @@ function BaseClass:CallStateAction(current_state, func_name, ...)
 end
 
 function BaseClass:SetState(state, data, forced)
+	if not self.mechanics.states_controller then return end
 	if not self:IsAlive() then return end
 
 	forced = forced or false
@@ -709,6 +750,10 @@ function BaseClass:SetWalkType(moveType)
 end
 
 function BaseClass:StopWalk()
+	if self.walkPos then
+		self:ClearSchedule()
+	end
+
 	self.walkTarget = NULL
 	self.walkPath = {}
 	self.walkPos = nil
@@ -718,14 +763,19 @@ function BaseClass:StopWalk()
 	self:SetWalkType()
 end
 
+function BaseClass:WalkDestinationExists()
+	return self.walkPos ~= nil
+end
+
 function BaseClass:WalkToTarget(target, moveType, pathType)
+	if not self.mechanics.movement_controller then return end
 	if self:GetNPC():IsNextBot() then return end
 
 	if target == nil or not IsValid(target) then
 		self:StopWalk()
 	else
 		local npc = self.npc
-		if npc:GetPos():DistToSqr(target:GetPos()) <= 2500 then
+		if npc:GetPos():DistToSqr(target:GetPos()) <= _movement_finished_distance then
 			local walk_type = moveType or 'walk'
 			hook_Run('BGN_ActorFinishedWalk', self, target:GetPos(), walk_type)
 			return
@@ -749,6 +799,7 @@ function BaseClass:WalkToTarget(target, moveType, pathType)
 end
 
 function BaseClass:WalkToPos(pos, moveType, pathType)
+	if not self.mechanics.movement_controller then return end
 	if self:GetNPC():IsNextBot() or not isvector(pos) then return end
 
 	if not pos then
@@ -763,7 +814,7 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 	if isvector(pre_set_result) then pos = pre_set_result end
 
 	local npc = self.npc
-	if npc:GetPos():DistToSqr(pos) <= 2500 then
+	if npc:GetPos():DistToSqr(pos) <= _movement_finished_distance then
 		local walk_type = moveType or 'walk'
 		hook_Run('BGN_ActorFinishedWalk', self, pos, walk_type)
 		return
@@ -806,6 +857,7 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 end
 
 function BaseClass:UpdateMovement()
+	if not self.mechanics.movement_controller then return end
 	if self.is_animated or not self:IsAlive() then return end
 
 	local walkPos = self.walkPos
@@ -814,14 +866,15 @@ function BaseClass:UpdateMovement()
 		walkPos = self.walkTarget:GetPos()
 	end
 
-	if not walkPos or not self.walkPath then return end
-
-	if self:IsAnimationPlayed() then return end
+	if not walkPos or not self.walkPath or self:IsAnimationPlayed() then return end
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
-		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(walkPos) <= 2500 then
-			hook_Run('BGN_ActorFinishedWalk', self, walkPos, self.walkType)
+		if IsValid(vehicle)
+			and vehicle:GetPos():DistToSqr(walkPos) <= _movement_finished_distance
+			and not hook_Run('BGN_ActorFinishedWalk', self, walkPos, self.walkType)
+		then
+			self:WalkToPos(nil)
 		end
 	else
 		if #self.walkPath == 0 then return end
@@ -830,13 +883,14 @@ function BaseClass:UpdateMovement()
 		local hasNext = false
 		local targetPosition = self.walkPath[1]
 
-		if npc:GetPos():DistToSqr(targetPosition) <= 2500 then
+		if npc:GetPos():DistToSqr(targetPosition) <= _movement_finished_distance then
 			table_remove(self.walkPath, 1)
 
 			if #self.walkPath == 0 then
 				if not hook_Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
 					self:WalkToPos(nil)
 				end
+
 				return
 			end
 
@@ -1086,6 +1140,7 @@ function BaseClass:IsValidSequence(sequence_name)
 end
 
 function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
+	if not self.mechanics.animator_controller then return end
 	if not sequence_name or not self:IsValidSequence(sequence_name) then return false end
 
 	if self:HasSequence(sequence_name) then
@@ -1102,7 +1157,7 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 	end
 
 	self.anim_is_loop = loop or false
-	self.anim_name = string.lower(sequence_name)
+	self.anim_name = string_lower(sequence_name)
 	if loop_time ~= nil and loop_time ~= 0 then
 		self.loop_time = RealTime() + loop_time
 		self.loop_time_normal = self.loop_time - RealTime()
@@ -1134,6 +1189,8 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 end
 
 function BaseClass:SetNextSequence(sequence_name, loop, loop_time, action)
+	if not self.mechanics.animator_controller then return end
+
 	self.next_anim = {
 		sequence_name = sequence_name,
 		loop = loop,
@@ -1143,7 +1200,7 @@ function BaseClass:SetNextSequence(sequence_name, loop, loop_time, action)
 end
 
 function BaseClass:HasSequence(sequence_name)
-	return self.anim_name == string.lower(sequence_name)
+	return self.anim_name == string_lower(sequence_name)
 end
 
 function BaseClass:IsAnimationPlayed()
@@ -1181,6 +1238,7 @@ function BaseClass:IsSequenceFinished()
 end
 
 function BaseClass:PlayNextStaticSequence()
+	if not self.mechanics.animator_controller then return end
 	if self.next_anim ~= nil and self.next_anim.sequence_name ~= self.anim_name then
 
 		self:PlayStaticSequence(self.next_anim.sequence_name,
@@ -1218,6 +1276,7 @@ function BaseClass:ResetSequence()
 end
 
 function BaseClass:FearScream()
+	if not self.mechanics.fear_scream then return end
 	if not self:IsAlive() then return end
 
 	local npc = self.npc
@@ -1228,8 +1287,8 @@ function BaseClass:FearScream()
 	elseif tobool(string_find(npc_model, 'male_*')) then
 		scream_sound = table_RandomBySeq(male_scream)
 	else
-		local concatenated_table = table.Copy(male_scream)
-		table.Add(concatenated_table, female_scream)
+		local concatenated_table = table_Copy(male_scream)
+		table_Add(concatenated_table, female_scream)
 		scream_sound = table_RandomBySeq(concatenated_table)
 	end
 
@@ -1239,6 +1298,7 @@ function BaseClass:FearScream()
 end
 
 function BaseClass:CallForHelp(enemy)
+	if not self.mechanics.call_for_help then return end
 	if not IsValid(enemy) then return end
 	if hook_Run('BGN_PreCallForHelp', self, enemy) then return end
 
@@ -1295,6 +1355,7 @@ function BaseClass:IsMeleeWeapon()
 end
 
 function BaseClass:EnterVehicle(vehicle)
+	if not self.mechanics.use_vehicle then return end
 	if not DecentVehicleDestination or not vehicle:IsVehicle() then return end
 
 	local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
@@ -1363,6 +1424,7 @@ function BaseClass:EnterVehicle(vehicle)
 end
 
 function BaseClass:ExitVehicle()
+	if not self.mechanics.use_vehicle then return end
 	if not DecentVehicleDestination then return end
 
 	local vehicle_provider = self.vehicle
@@ -1480,7 +1542,7 @@ function BaseClass:SetTeam(team_data)
 end
 
 function BaseClass:AddTeam(team_name)
-	table.insert(self.data.team, team_name)
+	table_insert(self.data.team, team_name)
 end
 
 function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
