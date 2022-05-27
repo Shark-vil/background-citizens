@@ -192,6 +192,7 @@ local function ExecutableScripts()
 	script:using('states/sv_run_from_danger.lua')
 	script:using('states/sv_arrest_surrender.lua')
 	script:using('states/sv_random_gesture.lua')
+	script:using('states/sh_dance.lua')
 
 	script:using('tool_options/lang/cl_en.lua')
 	script:using('tool_options/lang/cl_ru.lua')
