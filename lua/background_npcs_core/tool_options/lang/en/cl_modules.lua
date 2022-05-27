@@ -42,4 +42,6 @@ return {
 	['bgn.settings.states.bgn_module_custom_gestures.help'] = 'Enables support for advanced animations. NPCs will dance and do more different activities. Disable it if it causes problems',
 	['bgn.settings.states.bgn_module_tactical_groups'] = 'Tactical groups (EXPERIMENTAL)',
 	['bgn.settings.states.bgn_module_tactical_groups.help'] = 'Includes tactical groups. Currently only works with actors who are members of the "police" and "bandits" groups. In firefights, NPCs will try to form tactical groups to try to minimize team damage.',
+	['bgn.settings.states.bgn_module_followers_mod_addon'] = 'Enable support Followers Mod',
+	['bgn.settings.states.bgn_module_followers_mod_addon.help'] = 'Enables support for the "Followers Mod" addon, and makes it possible to make actors follow you.',
 }

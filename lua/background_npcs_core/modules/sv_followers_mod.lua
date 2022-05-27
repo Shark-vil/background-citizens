@@ -1,8 +1,10 @@
 local IsValid = IsValid
 local timer_Simple = timer.Simple
+local cvar_bgn_module_followers_mod_addon = GetConVar('bgn_module_followers_mod_addon')
 --
 
 local function movement_handler(actor)
+	if not cvar_bgn_module_followers_mod_addon:GetBool() then return end
 	if not actor or not actor:IsAlive() then return end
 
 	local npc = actor:GetNPC()

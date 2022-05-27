@@ -42,4 +42,6 @@ return {
 	['bgn.settings.states.bgn_module_custom_gestures.help'] = 'Включает поддержку расширенных анимаций. NPC будут танцевать, и делать больше различных действий. Отключите это, если оно создаёт проблемы.',
 	['bgn.settings.states.bgn_module_tactical_groups'] = 'Тактические группы (ЭКСПЕРИМЕНТАЛЬНО)',
 	['bgn.settings.states.bgn_module_tactical_groups.help'] = 'Включает тактические группы. В данный момент работает только с актёрами, которые состоят в группах "police" и "bandits". В перестрелках NPC будут пытаться собираться в тактические группы, чтобы стараться минимизировать урон по команде.',
+	['bgn.settings.states.bgn_module_followers_mod_addon'] = 'Включить поддержку Followers Mod',
+	['bgn.settings.states.bgn_module_followers_mod_addon.help'] = 'Включает поддержку аддона "Followers Mod", и даёт возможность заставить актёров следовать за вами.',
 }
