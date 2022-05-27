@@ -159,6 +159,7 @@ local function ExecutableScripts()
 	-- script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
+	script:using('modules/sv_followers_mod.lua')
 	script:using('modules/stormfox/sv_stormfox_limits.lua')
 
 	script:using('modules/tactical_groups/sv_group.lua')
