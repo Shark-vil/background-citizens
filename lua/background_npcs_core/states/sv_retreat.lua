@@ -5,7 +5,7 @@ bgNPC:SetStateAction('retreat', 'danger', {
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 		data.delay = data.delay or 0
-		data.updatePoint = data.updatePoint or CurTime() + 5
+		data.update_point_delay = data.update_point_delay or CurTime() + 5
 		data.cooldown = data.cooldown or CurTime() + 20
 		local enemy = actor:GetNearEnemy()
 
@@ -18,10 +18,16 @@ bgNPC:SetStateAction('retreat', 'danger', {
 			return
 		end
 
-		if data.updatePoint < CurTime() then
+		if data.update_point_delay < CurTime() then
 			local position
 
 			if IsValid(enemy) then
+				local dist = enemy:GetPos():DistToSqr(npc:GetPos())
+				if dist <= 36000 and actor.weapon then
+					actor:SetState('defense')
+					return
+				end
+
 				position = actor:GetDistantPointToPoint(enemy:GetPos(), 1000)
 			else
 				position = actor:GetDistantPointInRadius(1000)
@@ -29,9 +35,7 @@ bgNPC:SetStateAction('retreat', 'danger', {
 
 			if position then
 				actor:WalkToPos(position, 'run')
-				data.updatePoint = CurTime() + 5
-			else
-				bgNPC:Log('NPC cannot find a point nearby', 'sv_retreat')
+				data.update_point_delay = CurTime() + 5
 			end
 		end
 	end,
