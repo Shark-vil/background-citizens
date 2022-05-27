@@ -28,6 +28,12 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_module_arccw_weapon_replacement',
 		['Help'] = true,
 	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_followers_mod_addon',
+		['Command'] = 'bgn_module_followers_mod_addon',
+		['Help'] = true,
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_AddonsSettings', function()

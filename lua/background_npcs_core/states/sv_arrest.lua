@@ -55,7 +55,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		PoliceActor:AddTarget(attacker)
 		PoliceActor:SetState('arrest')
 
-		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(10) then
+		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(5) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
@@ -75,7 +75,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		if not ArrestComponent then return end
 
 		if AttackerActor and not AttackerActor:HasState('arrest_surrender')
-			and slib.chance(30)
+			and slib.chance(10)
 			and AttackerActor:Health() <= 50
 		then
 			ArrestModule:UpdatePolice(attacker)

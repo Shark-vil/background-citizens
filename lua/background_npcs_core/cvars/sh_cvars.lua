@@ -53,6 +53,7 @@ bgNPC.cvar.bgn_peaceful_mode = 0
 bgNPC.cvar.bgn_module_stormfox2 = 0
 bgNPC.cvar.bgn_module_custom_gestures = 0
 bgNPC.cvar.bgn_module_tactical_groups = 0
+bgNPC.cvar.bgn_module_followers_mod_addon = 1
 
 function bgNPC:IsActiveNPCType(npc_type)
 	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
@@ -232,6 +233,10 @@ scvar.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestur
 
 scvar.Register('bgn_module_tactical_groups', bgNPC.cvar.bgn_module_tactical_groups,
 	FCVAR_ARCHIVE, '1 - Enable tactical groups. 0 - disables.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_followers_mod_addon', bgNPC.cvar.bgn_module_followers_mod_addon,
+	FCVAR_ARCHIVE, '1 - Enable sopport addon "Followers Mod". 0 - disables.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,

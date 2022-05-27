@@ -5,7 +5,7 @@ local slib_chance = slib.chance
 local table_RandomBySeq = table.RandomBySeq
 
 local function GetRandomFoundPointDistance()
-	return math_random(100, 2000)
+	return math_random(100, 2500)
 end
 
 local function GetRandomDelayForUpdateWalkTarget()

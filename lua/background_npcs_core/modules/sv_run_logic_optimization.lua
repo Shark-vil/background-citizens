@@ -92,7 +92,7 @@ local function process(yield, wait)
 		yield()
 	end
 end
-async.Add('bgn_server_logic_optimization', process)
+async.AddDedic('bgn_server_logic_optimization', process)
 
 --[[
 	Cvars

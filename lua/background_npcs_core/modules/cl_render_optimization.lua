@@ -29,7 +29,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(_, _, v
 	min_range = new_value
 end, 'ro_bgn_cl_field_view_optimization_range')
 
-async.Add('bgn_client_render_optimization', function(yield, wait)
+async.AddDedic('bgn_client_render_optimization', function(yield, wait)
 	local current_pass = 0
 
 	while true do

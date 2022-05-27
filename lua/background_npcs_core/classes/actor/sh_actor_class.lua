@@ -1,4 +1,4 @@
-local BaseClass = include('sh_actor_base.lua')
+local BaseClass = include('background_npcs_core/classes/actor/sh_actor_base.lua')
 local bgNPC = bgNPC
 local SERVER = SERVER
 local SCHED_FORCED_GO = SCHED_FORCED_GO
@@ -46,6 +46,16 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.weapon = nil
 	obj.sync_players_hash = {}
 	obj.state_delay = -1
+	obj.mechanics = {
+		movement_controller = true,
+		use_vehicle = true,
+		call_for_help = true,
+		fear_scream = true,
+		enemies_controller = true,
+		targets_controller = true,
+		states_controller = true,
+		animator_controller = true,
+	}
 
 	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. npc_type)
 
@@ -130,6 +140,11 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 
 	hook.Run('BGN_InitActor', obj)
+
+	timer.Simple(0, function()
+		if not IsValid(npc) then return end
+		obj:DropToFloor()
+	end)
 
 	return obj
 end

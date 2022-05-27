@@ -45,7 +45,10 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
-		actor:TargetsRecalculate()
+		-- actor:TargetsRecalculate()
+
+		actor:RecalculationTargets()
+
 		return actor:TargetsCount() > 0
 	end
 })

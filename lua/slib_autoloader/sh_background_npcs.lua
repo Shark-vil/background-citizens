@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.7'
+bgNPC.VERSION = '1.8.8'
 
 -- Do not change -------------
 bgNPC.cfg = {}
@@ -159,6 +159,7 @@ local function ExecutableScripts()
 	-- script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
+	script:using('modules/sv_followers_mod.lua')
 	script:using('modules/stormfox/sv_stormfox_limits.lua')
 
 	script:using('modules/tactical_groups/sv_group.lua')
@@ -192,6 +193,7 @@ local function ExecutableScripts()
 	script:using('states/sv_run_from_danger.lua')
 	script:using('states/sv_arrest_surrender.lua')
 	script:using('states/sv_random_gesture.lua')
+	script:using('states/sh_dance.lua')
 
 	script:using('tool_options/lang/cl_en.lua')
 	script:using('tool_options/lang/cl_ru.lua')
