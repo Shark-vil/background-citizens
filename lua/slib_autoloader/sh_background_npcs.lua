@@ -14,9 +14,10 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.8.8'
+bgNPC.VERSION = '1.8.9'
 
 -- Do not change -------------
+bgNPC.LANGUAGES = {}
 bgNPC.cfg = {}
 bgNPC.actors = {}
 bgNPC.factors = {}
@@ -195,8 +196,8 @@ local function ExecutableScripts()
 	script:using('states/sv_random_gesture.lua')
 	script:using('states/sh_dance.lua')
 
-	script:using('tool_options/lang/cl_en.lua')
-	script:using('tool_options/lang/cl_ru.lua')
+	script:using('tool_options/lang/sh_en.lua')
+	script:using('tool_options/lang/sh_ru.lua')
 	script:using('tool_options/cl_lang.lua')
 
 	script:using('tool_options/cl_bgn_settings_menu.lua')

@@ -1,4 +1,4 @@
-async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
 	local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
@@ -294,7 +294,7 @@ async.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				PassYield()
 			end
 
-			-- MsgN('New mesh generated')
+			-- player.GetAll()[1]:ChatPrint('New mesh generated' .. ' ' .. tostring(CurTime()))
 
 			BGN_NODE:SetMap(map_points)
 
