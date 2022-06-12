@@ -12,7 +12,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local math_random = math.random
 	local util_IsInWorld = util.IsInWorld
 	local util_TraceLine = util.TraceLine
-	-- local math_Clamp = math.Clamp
+	local math_Clamp = math.Clamp
 	local file_Exists = file.Exists
 	local Vector = Vector
 	-- local math_floor = math.floor
@@ -23,7 +23,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
 	local chunks = {}
 	local chunk_size = 250
-	local max_points_in_chunk = 10
+	local max_points_in_chunk = 5
 	local current_pass = 0
 	local trace_filter = function(ent)
 		if ent:IsWorld() then
@@ -57,7 +57,13 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	local function ChunkHasFull(point_position)
 		local point_chunk_id = GetChunkId(point_position)
-		if chunks[point_chunk_id] and chunks[point_chunk_id] >= max_points_in_chunk then
+		local max_points = max_points_in_chunk
+
+		if cvar_bgn_dynamic_nodes_type:GetString() ~= 'grid' then
+			max_points = 2
+		end
+
+		if chunks[point_chunk_id] and chunks[point_chunk_id] >= max_points then
 			return true
 		end
 		return false
@@ -102,9 +108,12 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					if not ply then continue end
 
 					local center = ply:LocalToWorld(ply:OBBCenter())
+					local current_radius_randomize = cell_size
 					local z = center.z + 50
 
-					for i = 1, radius * 2 do
+					for i = 1, radius do
+						current_radius_randomize = math_Clamp(current_radius_randomize, 0, radius)
+
 						local x = center.x + math_random(-radius, radius)
 						local y = center.y + math_random(-radius, radius)
 						local start_point_vector = Vector(x, y, z)
@@ -131,6 +140,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 						UpdateChunkPointsCount(new_point_position)
 						PassYield()
+
+						current_radius_randomize = current_radius_randomize + cell_size
 					end
 
 					PassYield()
@@ -291,7 +302,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 				-- print(point_index, ' / ', points_count)
 
-				PassYield()
+				-- PassYield()
 			end
 
 			-- player.GetAll()[1]:ChatPrint('New mesh generated' .. ' ' .. tostring(CurTime()))
