@@ -158,15 +158,11 @@ if CLIENT then
 		language.Add('tool.bgn_spawn_area.' .. name, text)
 	end
 
-	local function InitLanguage()
-		AddLanguage('name', 'Spawn Area')
-		AddLanguage('desc', 'Creates a spawn area for NPCs')
-		AddLanguage('left', 'Press the first time to set the start point, and the second time to set the end point.')
-	end
+	AddLanguage('name', 'Spawn Area')
+	AddLanguage('desc', 'Creates a spawn area for NPCs')
+	AddLanguage('left', 'Press the first time to set the start point, and the second time to set the end point.')
 
 	function TOOL.BuildCPanel(CPanel)
-		InitLanguage()
-
 		local cvarAreaTagName = GetConVar('cl_bgn_tool_bgn_spawn_area_tag_name')
 
 		local panel = controlpanel.Get('bgn_spawn_area')
