@@ -19,8 +19,15 @@ local function process(yield, wait)
 			return
 		end
 
-		local actors = bgNPC:GetAll()
 		local players = player_GetAll()
+		local players_count = #players
+
+		if players_count == 0 then
+			wait(1)
+			return
+		end
+
+		local actors = bgNPC:GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -33,7 +40,7 @@ local function process(yield, wait)
 					local max_dist = nil
 					local is_adding_no_think_flag = true
 
-					for k = 1, #players do
+					for k = 1, players_count do
 						local ply = players[k]
 
 						if IsValid(ply) then
@@ -57,7 +64,7 @@ local function process(yield, wait)
 						if delay < time then
 							no_think_enable = not no_think_enable
 
-							if no_think_enable and max_dist >= 1000000 then
+							if no_think_enable and max_dist and max_dist >= 1000000 then
 								delay = time + 3
 							else
 								delay = time + 1
