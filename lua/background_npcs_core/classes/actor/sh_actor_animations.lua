@@ -13,6 +13,7 @@ if CLIENT then
 
 			local model = value.model
 			local pos, ang = animator:GetBonePosition(anim_info.l_hand_bone_index)
+			if not pos or not ang then continue end
 
 			ang:RotateAroundAxis(ang:Up(), 280)
 			ang:RotateAroundAxis(ang:Right(), -40)

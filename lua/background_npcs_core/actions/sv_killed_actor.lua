@@ -11,11 +11,22 @@ local function Call_BGN_OnKilledActor(actor, npc, attacker)
 	hook.Run('BGN_OnKilledActor', actor, attacker)
 end
 
-hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker)
+hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 	local actor = bgNPC:GetActor(npc)
 	if not actor or actor.OnNPCKilled or EntityRemovedLock then return end
 
 	Call_BGN_OnKilledActor(actor, npc, attacker)
+
+	-- local default_team = TEAM_UNASSIGNED
+	local killed_data = {
+		attacker = attacker:GetName(),
+		team = attacker:IsPlayer() and attacker:Team() or -1,
+		inflictor = inflictor:GetClass(),
+		victim = actor:GetName(),
+		victimTeam = (attacker:IsPlayer() and actor:HasTeam(attacker)) and attacker:Team() or -1,
+	}
+
+	snet.InvokeAll('bgn_base_on_npc_killed', killed_data)
 end)
 
 hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)

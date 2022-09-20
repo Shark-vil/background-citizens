@@ -14,6 +14,7 @@ local isnumber = isnumber
 local isstring = isstring
 local type = type
 local tobool = tobool
+local isfunction = isfunction
 local table_remove = table.remove
 local table_RandomOpt = table.RandomOpt
 local table_RandomBySeq = table.RandomBySeq
@@ -115,7 +116,7 @@ end
 function BaseClass:GetGenderByModel()
 	local gender = 'unknown'
 
-	local npc = self:GetNPC()
+	local npc = self.npc
 	if not IsValid(npc) then return gender end
 
 	local model = npc:GetModel()
@@ -284,7 +285,7 @@ function BaseClass:AddTarget(ent)
 	if not self:IsAlive() or not IsValid(ent) or not isentity(ent) then return end
 	if ent.BGN_HasBuildMode then return end
 
-	if self:GetNPC() ~= ent and not table_HasValueBySeq(self.targets, ent) then
+	if self.npc ~= ent and not table_HasValueBySeq(self.targets, ent) then
 		self.targets[#self.targets + 1] = ent
 	end
 end
@@ -379,7 +380,7 @@ end
 function BaseClass:GetNearTarget()
 	local target = NULL
 	local dist = 0
-	local self_npc = self:GetNPC()
+	local self_npc = self.npc
 
 	for i = 1, #self.targets do
 		local ent = self.targets[i]
@@ -426,7 +427,7 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if self:HasTeam(ent) then return end
 	if ent.BGN_HasBuildMode then return end
 
-	local npc = self:GetNPC()
+	local npc = self.npc
 
 	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and
 		not hook_Run('BGN_AddActorEnemy', self, ent)
@@ -451,7 +452,7 @@ function BaseClass:RemoveEnemy(ent, index)
 	local old_count = #self.enemies
 
 	if not hook_Run('BGN_RemoveActorEnemy', self, ent) then
-		local npc = self:GetNPC()
+		local npc = self.npc
 
 		if isentity(ent) then
 			if ent == self.walkTarget then self.walkTarget = NULL end
@@ -497,8 +498,15 @@ function BaseClass:RemoveAllEnemies()
 end
 
 function BaseClass:HasEnemy(ent)
-	if ent.isBgnClass then ent = ent:GetNPC() end
-	if IsValid(ent) and ent:IsNPC() and ent:Disposition(self:GetNPC()) == D_HT then return true end
+	if ent.isBgnClass then ent = ent.npc end
+
+	if IsValid(ent) and ent:IsNPC()
+		and isfunction(ent.Disposition)
+		and ent:Disposition(self.npc) == D_HT
+	then
+		return true
+	end
+
 	return table_HasValueBySeq(self.enemies, ent)
 end
 
@@ -509,7 +517,7 @@ end
 function BaseClass:EnemiesRecalculate()
 	if not self.mechanics.enemies_controller then return end
 
-	local npc = self:GetNPC()
+	local npc = self.npc
 
 	if npc:IsNPC() then
 		local enemy = self:GetNearEnemy()
@@ -574,7 +582,7 @@ end
 function BaseClass:GetNearEnemy()
 	local enemy = NULL
 	local dist = nil
-	local self_npc = self:GetNPC()
+	local self_npc = self.npc
 
 	for i = 1, #self.enemies do
 		local ent = self.enemies[i]
@@ -605,7 +613,7 @@ end
 function BaseClass:GetNearEnemy()
 	local enemy = NULL
 	local dist = nil
-	local npcPos = self:GetNPC():GetPos()
+	local npcPos = self.npc:GetPos()
 
 	for i = 1, #self.enemies do
 		local ent = self.enemies[i]
@@ -769,7 +777,7 @@ end
 
 function BaseClass:WalkToTarget(target, moveType, pathType)
 	if not self.mechanics.movement_controller then return end
-	if self:GetNPC():IsNextBot() then return end
+	if self.npc:IsNextBot() then return end
 
 	if target == nil or not IsValid(target) then
 		self:StopWalk()
@@ -800,7 +808,7 @@ end
 
 function BaseClass:WalkToPos(pos, moveType, pathType)
 	if not self.mechanics.movement_controller then return end
-	if self:GetNPC():IsNextBot() or not isvector(pos) then return end
+	if self.npc:IsNextBot() or not isvector(pos) then return end
 
 	if not pos then
 		self:StopWalk()
@@ -898,19 +906,24 @@ function BaseClass:UpdateMovement()
 		end
 
 		if not hasNext then
-			if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-			if npc:IsMoving() then return end
+			if isfunction(npc.IsEFlagSet) and npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
+			if isfunction(npc.IsMoving) and npc:IsMoving() then return end
 			if self.waitUpdateMovementDelay > CurTime() then return end
 			self.waitUpdateMovementDelay = CurTime() + .5
 		end
 
-		local current_schedule = npc:GetCurrentSchedule()
-		for i = 1, #schedule_white_list do
-			if schedule_white_list[i] == current_schedule then return end
+		if isfunction(npc.GetCurrentSchedule) then
+			local current_schedule = npc:GetCurrentSchedule()
+			for i = 1, #schedule_white_list do
+				if schedule_white_list[i] == current_schedule then return end
+			end
 		end
 
-		npc:SetLastPosition(targetPosition)
-		npc:SetSchedule(self.walkType)
+		if isfunction(npc.SetLastPosition) then
+			npc:SetLastPosition(targetPosition)
+		end
+
+		self:SetSchedule(self.walkType)
 	end
 end
 
@@ -1026,7 +1039,7 @@ function BaseClass:GetDistantPointToPoint(pos, radius)
 
 	local get_position = nil
 	local dist = 0
-	local npc = self:GetNPC()
+	local npc = self.npc
 	local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
 	for i = 1, #points do
@@ -1049,7 +1062,7 @@ function BaseClass:GetClosestPointToPoint(pos, radius)
 
 	local get_position = nil
 	local dist = 0
-	local npc = self:GetNPC()
+	local npc = self.npc
 	local points = bgNPC:GetAllPointsInRadius(npc:GetPos(), radius)
 
 	for i = 1, #points do
@@ -1127,16 +1140,19 @@ function BaseClass:GetReactionForProtect()
 end
 
 function BaseClass:SetSchedule(schedule)
-	if self:IsSequenceFinished() then
-		self.npc:SetSchedule(schedule)
+	if not self:IsAlive() then return end
 
-		self.npc_schedule = self.npc:GetCurrentSchedule()
-		self.npc_state = self.npc:GetNPCState()
+	local npc = self.npc
+	if isfunction(npc.SetSchedule) and self:IsSequenceFinished() then
+		npc:SetSchedule(schedule)
+
+		self.npc_schedule = npc:GetCurrentSchedule()
+		self.npc_state = npc:GetNPCState()
 	end
 end
 
 function BaseClass:IsValidSequence(sequence_name)
-	return self.npc:LookupSequence(sequence_name) ~= -1
+	return IsValid(self.npc) and self.npc:LookupSequence(sequence_name) ~= -1
 end
 
 function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
@@ -1308,7 +1324,7 @@ function BaseClass:CallForHelp(enemy)
 	local near_actors = bgNPC:GetAllByRadius(npc:GetPos(), 1000)
 	for i = 1, #near_actors do
 		local NearActor = near_actors[i]
-		local NearNPC = NearActor:GetNPC()
+		local NearNPC = NearActor.npc
 		if NearActor:IsAlive() and NearActor:HasTeam(self) and bgNPC:IsTargetRay(NearNPC, enemy) then
 			NearActor:SetState(NearActor:GetReactionForProtect())
 			NearActor:AddEnemy(enemy)
@@ -1347,7 +1363,7 @@ end
 function BaseClass:IsMeleeWeapon()
 	if not self:IsAlive() then return false end
 
-	local npc = self:GetNPC()
+	local npc = self.npc
 	local wep = npc:GetActiveWeapon()
 	if not IsValid(wep) then return true end
 
@@ -1391,7 +1407,7 @@ function BaseClass:EnterVehicle(vehicle)
 		if all_seats_are_taken then return end
 	end
 
-	local npc = self:GetNPC()
+	local npc = self.npc
 	vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
 		if not vehicle_provider or not IsValid(self_vehicle) then return end
 		if not self or not self:IsAlive() then return end
@@ -1438,7 +1454,7 @@ function BaseClass:ExitVehicle()
 		local forward = vehicle:GetForward()
 		local right = vehicle:GetRight()
 		local up = vehicle:GetUp()
-		local npc = self:GetNPC()
+		local npc = self.npc
 		local add_forward = math_random(-100, 100)
 		local add_right = dist
 		local exit_pos
@@ -1491,7 +1507,7 @@ function BaseClass:InVehicle()
 	if SERVER then
 		return ( self.vehicle and IsValid(self.vehicle) ) == true
 	else
-		return self:GetNPC():slibGetVar('bgn_vehicle_entered', false)
+		return self.npc:slibGetVar('bgn_vehicle_entered', false)
 	end
 end
 
@@ -1511,9 +1527,11 @@ end
 
 function BaseClass:GetActiveWeapon()
 	if self:IsAlive() then
-		local npc = self:GetNPC()
-		local weapon  = npc:GetActiveWeapon()
-		if IsValid(weapon) then return weapon end
+		local npc = self.npc
+		if isfunction(npc.GetActiveWeapon) then
+			local weapon  = npc:GetActiveWeapon()
+			if weapon and IsValid(weapon) then return weapon end
+		end
 	end
 	return NULL
 end
@@ -1528,9 +1546,8 @@ end
 
 function BaseClass:FoldWeapon()
 	if not self:IsAlive() or self.disable_fold_weapon then return end
-	local npc = self:GetNPC()
-	local weapon  = npc:GetActiveWeapon()
-	if IsValid(weapon) then weapon:Remove() end
+	local weapon  = self:GetActiveWeapon()
+	if weapon and IsValid(weapon) and isfunction(weapon.Remove) then weapon:Remove() end
 end
 
 function BaseClass:GiveWeapon(weapon_class)
@@ -1555,7 +1572,7 @@ function BaseClass:VoiceSay(sound_path, soundLevel, pitchPercent, volume, channe
 	soundFlags = soundFlags or 0
 	dsp = dsp or 0
 
-	self:GetNPC():EmitSound(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+	self.npc:EmitSound(sound_path, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
 end
 
 function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
