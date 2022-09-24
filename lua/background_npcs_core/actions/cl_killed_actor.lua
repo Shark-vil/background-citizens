@@ -20,4 +20,14 @@ hook.Add('OnGamemodeLoaded', 'BGN_Override_AddDeathNotice', function()
 			if is_ignore then is_ignore = false end
 		end)
 	end)
+
+	snet.RegisterCallback('bgn_base_on_npc_killed_player', function(_, data)
+		GAMEMODE:AddDeathNotice(data.attacker, data.team, data.inflictor, data.victim, data.victimTeam)
+
+		is_ignore = true
+
+		timer.Simple(.1, function()
+			if is_ignore then is_ignore = false end
+		end)
+	end)
 end)
