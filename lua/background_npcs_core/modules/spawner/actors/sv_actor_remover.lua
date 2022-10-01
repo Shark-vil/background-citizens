@@ -4,6 +4,7 @@ local player = player
 local GetConVar = GetConVar
 local IsValid = IsValid
 local ipairs = ipairs
+local StopAnimator = slib.Animator.Stop
 --
 
 hook.Add('BGN_OnKilledActor', 'BGN_ActorRemoveFromData', function(actor)
@@ -29,6 +30,7 @@ local function TeleportActor(actor, npc, pos)
 	local current_state = actor:GetState()
 	local current_data = actor:GetStateData()
 
+	StopAnimator(npc)
 	actor:CallStateAction(nil, 'stop', current_state, current_data)
 	actor.anim_action = nil
 	actor:ResetSequence()
@@ -42,6 +44,8 @@ local function TeleportActor(actor, npc, pos)
 end
 
 async.Add('bgn_actors_remover_process', function(yield, wait)
+	local fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
+
 	wait(1)
 
 	local actors = bgNPC:GetAll()
@@ -64,19 +68,28 @@ async.Add('bgn_actors_remover_process', function(yield, wait)
 	for i = 1, actors_count do
 		local actor = actors[i]
 
-		yield()
+		if not fasted_teleport then
+			yield()
+		end
 
 		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor:GetData().hidden then
 			continue
 		end
 
 		local npc = actor:GetNPC()
+		local npc_type = actor:GetType()
 
-		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(actor:GetType()) then
+		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(npc_type) then
 			if not hook.Run('BGN_PreRemoveNPC', npc) then
 				actor:Remove()
 			end
 		else
+			local max_limit = bgNPC:GetLimitActors(npc_type)
+			if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
+				actor:Remove()
+				continue
+			end
+
 			local isRemove = true
 			local npc_pos = npc:GetPos()
 
@@ -87,7 +100,11 @@ async.Add('bgn_actors_remover_process', function(yield, wait)
 				local ply_pos = ply:GetPos()
 				local dist = npc_pos:DistToSqr(ply_pos)
 
-				if dist <= bgn_spawn_radius then
+				if dist > bgn_spawn_radius then
+					if ply:slibIsTraceEntity(npc, dist, true) then
+						isRemove = false
+					end
+				else
 					if dist <= bgn_spawn_block_radius or dist <= bgn_spawn_radius_visibility then
 						isRemove = false
 					elseif not actor.toRemove and slib.chance(90) then
@@ -104,11 +121,11 @@ async.Add('bgn_actors_remover_process', function(yield, wait)
 
 			if not isRemove then continue end
 
-			if actor.toRemove or not bgn_actors_teleporter then
+			if actor.toRemove or (not bgn_actors_teleporter and isRemove) then
 				if not hook.Run('BGN_PreRemoveNPC', npc) then
 					actor:Remove()
 				end
-			else
+			elseif isRemove then
 				local data = actor:GetData()
 
 				if data.wanted_level == nil then
@@ -117,9 +134,9 @@ async.Add('bgn_actors_remover_process', function(yield, wait)
 
 					local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 					if not is_entered_vehicle then
-						bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
+						bgNPC:FindSpawnLocation(actor.uid, nil, nil, nil, function(nodePosition)
 							TeleportActor(actor, npc, nodePosition)
-						end)
+						end, npc)
 					end
 				else
 					local desiredPosition
@@ -145,9 +162,9 @@ async.Add('bgn_actors_remover_process', function(yield, wait)
 
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 						if not is_entered_vehicle then
-							bgNPC:FindSpawnLocation(actor.uid, desiredPosition, nil, function(nodePosition)
+							bgNPC:FindSpawnLocation(actor.uid, desiredPosition, bgn_spawn_radius_visibility, nil, function(nodePosition)
 								TeleportActor(actor, npc, nodePosition)
-							end)
+							end, npc)
 						end
 					end
 				end

@@ -17,12 +17,19 @@ local ipairs = ipairs
 local slib_chance = slib.chance
 --
 
-local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass)
+local function FindSpawnLocationProcess(all_players, desired_position, teleport_radius, limit_pass, target_entity)
 	limit_pass = limit_pass or 10
 
+	local fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
+	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
-	local points = bgNPC:GetAllPointsInRadius(desiredPosition, spawn_radius, 'walk')
+
+	if teleport_radius and teleport_radius <= block_radius then
+		teleport_radius = radius_visibility
+	end
+
+	local points = bgNPC:GetAllPointsInRadius(desired_position, teleport_radius or spawn_radius, 'walk')
 	local current_pass = 0
 	local nodePosition
 
@@ -54,6 +61,10 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 				goto skip_walk_nodes
 			end
 
+			if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
+				goto skip_walk_nodes
+			end
+
 			if bgNPC:PlayerIsViewVector(ply, nodePosition) then
 				local tr = util_TraceLine({
 					start = ply:EyePos(),
@@ -81,11 +92,14 @@ local function FindSpawnLocationProcess(all_players, desiredPosition, limit_pass
 		::skip_walk_nodes::
 
 		nodePosition = nil
-		current_pass = current_pass + 1
 
-		if current_pass == limit_pass then
-			coroutine_yield()
-			current_pass = 0
+		if not fasted_teleport then
+			current_pass = current_pass + 1
+
+			if current_pass == limit_pass then
+				coroutine_yield()
+				current_pass = 0
+			end
 		end
 	end
 
@@ -113,28 +127,28 @@ do
 	local hooks_active = {}
 	local isfunction = isfunction
 
-	function bgNPC:FindSpawnLocation(spawner_id, desiredPosition, limit_pass, action)
+	function bgNPC:FindSpawnLocation(spawner_id, desired_position, teleport_radius, limit_pass, action, target_entity)
 		local hook_name = 'BGN_SpawnerThread_' .. spawner_id
 		if hooks_active[hook_name] then return end
 		if not action and not isfunction(action) then return end
 		hooks_active[hook_name] = true
 		local all_players = player_GetHumans()
 
-		if not desiredPosition then
+		if not desired_position then
 			local ply = table_RandomBySeq(all_players)
-			desiredPosition = ply:GetPos()
+			desired_position = ply:GetPos()
 
 			for _, area in pairs(bgNPC.SpawnArea) do
 				local center = (area.startPoint + area.endPoint) / 2
 				local radius = center:DistToSqr(area.startPoint) + 1000000
-				if desiredPosition:DistToSqr(center) <= radius and slib_chance(80) then
-					desiredPosition = center
+				if desired_position:DistToSqr(center) <= radius and slib_chance(80) then
+					desired_position = center
 					break
 				end
 			end
 		end
 
-		if not desiredPosition then return end
+		if not desired_position then return end
 
 		local thread = coroutine.create(FindSpawnLocationProcess)
 		local coroutine_status = coroutine.status
@@ -147,7 +161,14 @@ do
 				hook.Remove('Think', hook_name)
 				hooks_active[hook_name] = false
 			else
-				local _, nodePosition = coroutine_resume(thread, all_players, desiredPosition, limit_pass)
+				local _, nodePosition = coroutine_resume(
+					thread,
+					all_players,
+					desired_position,
+					teleport_radius,
+					limit_pass,
+					target_entity
+				)
 
 				if nodePosition and isvector(nodePosition) then
 					action(nodePosition)
@@ -310,7 +331,7 @@ do
 
 		npc:slibCreateTimer('bgn_check_water_level', 1, 0, function()
 			if npc:WaterLevel() == 3 then
-				bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(teleport_position)
+				bgNPC:FindSpawnLocation(actor.uid, nil, nil, nil, function(teleport_position)
 					if not bgNPC:IsValidSpawnArea(actor:GetType(), teleport_position) then return end
 
 					for _, ply in ipairs(player_GetHumans()) do

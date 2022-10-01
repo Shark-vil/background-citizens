@@ -1,5 +1,5 @@
-local function TOOL_MENU(Panel)
-	Panel:AddControl('Slider', {
+local function TOOL_MENU(panel)
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius',
 		['Command'] = 'bgn_spawn_radius',
 		['Type'] = 'Float',
@@ -8,7 +8,7 @@ local function TOOL_MENU(Panel)
 		['Help'] = true,
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_radius_visibility',
 		['Command'] = 'bgn_spawn_radius_visibility',
 		['Type'] = 'Float',
@@ -17,7 +17,7 @@ local function TOOL_MENU(Panel)
 		['Help'] = true,
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_block_radius',
 		['Command'] = 'bgn_spawn_block_radius',
 		['Type'] = 'Float',
@@ -26,12 +26,18 @@ local function TOOL_MENU(Panel)
 		['Help'] = true,
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.spawn.bgn_spawn_period',
 		['Command'] = 'bgn_spawn_period',
 		['Type'] = 'Float',
 		['Min'] = '0',
 		['Max'] = '50',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_fasted_teleport',
+		['Command'] = 'bgn_fasted_teleport',
 		['Help'] = true,
 	})
 end
