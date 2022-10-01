@@ -1,4 +1,37 @@
 local EntityRemovedLock = false
+local isfunction = isfunction
+local IsValid = IsValid
+--
+
+local function GetEntityName(ent)
+	local name = ent:GetName()
+	local actor = bgNPC:GetActor(ent)
+
+	if actor then
+		name = actor:GetName()
+	elseif name == '' then
+		name = ent:GetClass()
+	end
+
+	return name
+end
+
+local function GetEntityInflictorName(ent)
+	local class
+
+	if ent.GetActiveWeapon and isfunction(ent.GetActiveWeapon) then
+		local weapon = ent:GetActiveWeapon()
+		if IsValid(weapon) and weapon:IsWeapon() then
+			class = weapon:GetClass()
+		end
+	end
+
+	if not class then
+		class = ent:GetClass()
+	end
+
+	return class
+end
 
 local function Call_BGN_OnKilledActor(actor, npc, attacker)
 	actor.OnNPCKilled = true
@@ -17,10 +50,10 @@ hook.Add('PlayerDeath', 'BGN_OnPlayerDeath', function(victim, inflictor, attacke
 	if not actor then return end
 
 	local killed_data = {
-		attacker = actor:GetName(),
+		attacker = GetEntityName(attacker),
 		team = -1,
-		inflictor = inflictor:GetClass(),
-		victim = victim:GetName(),
+		inflictor = GetEntityInflictorName(inflictor),
+		victim = GetEntityName(victim),
 		victimTeam = victim:Team(),
 	}
 
@@ -29,19 +62,25 @@ end)
 
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 	local actor = bgNPC:GetActor(npc)
-	if not actor or actor.OnNPCKilled or EntityRemovedLock then return end
+	local killed_data
 
-	Call_BGN_OnKilledActor(actor, npc, attacker)
+	if not actor and not bgNPC:GetActor(attacker) then return end
 
-	local killed_data = {
-		attacker = attacker:GetName(),
+	killed_data = {
+		attacker = GetEntityName(attacker),
 		team = attacker:IsPlayer() and attacker:Team() or -1,
-		inflictor = inflictor:GetClass(),
-		victim = actor:GetName(),
-		victimTeam = (attacker:IsPlayer() and actor:HasTeam(attacker)) and attacker:Team() or -1,
+		inflictor = GetEntityInflictorName(inflictor),
+		victim = GetEntityName(npc),
+		victimTeam = -1,
 	}
 
-	snet.InvokeAll('bgn_base_on_npc_killed', killed_data)
+	if killed_data then
+		snet.InvokeAll('bgn_base_on_npc_killed', killed_data)
+	end
+
+	if actor and not actor.OnNPCKilled and not EntityRemovedLock then
+		Call_BGN_OnKilledActor(actor, npc, attacker)
+	end
 end)
 
 hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)
