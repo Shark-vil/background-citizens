@@ -3,6 +3,7 @@ local DefaultAccess = { isAdmin = true }
 bgNPC.cvar = bgNPC.cvar or {}
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
+bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
 bgNPC.cvar.bgn_dynamic_nodes = 1
@@ -94,6 +95,10 @@ scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
 
 scvar.Register('bgn_debug', bgNPC.cvar.bgn_debug,
 	FCVAR_ARCHIVE, 'Turns on debug mode and prints additional information to the console.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport,
+	FCVAR_ARCHIVE, 'Enables fast teleportation of NPCs. Disable this if you experience performance issues. 1 - enabled, 0 - disabled.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode,

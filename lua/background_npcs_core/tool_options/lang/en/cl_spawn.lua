@@ -22,4 +22,6 @@ return {
 	['bgn.settings.spawn.bgn_actors_max_teleports.help'] = 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.',
 	['bgn.settings.spawn.bgn_runtime_generator_grid_offset'] = 'Distance between points',
 	['bgn.settings.spawn.bgn_runtime_generator_grid_offset.help'] = 'Sets the distance between points in the "Grid" mode of the generator. The higher the value, the greater the distance between the points.',
+	['bgn.settings.spawn.bgn_fasted_teleport'] = 'Fast teleportation',
+	['bgn.settings.spawn.bgn_fasted_teleport.help'] = 'Enables fast teleportation of NPCs. The map will appear more populated. Disable this if you experience performance issues. (Teleportation mode must be enabled for correct work! See the optimization tab!)',
 }
