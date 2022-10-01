@@ -6,8 +6,39 @@
 
 CreateClientConVar('bgn_spawnmenu_default_spawner', '', false)
 
+local lang = slib.language({
+	['default'] = {
+		['sm_modname'] = 'Background NPCs',
+
+		['sm_spawn_title'] = 'Background NPCs - Spawner',
+		['sm_spawn_stop'] = 'Don\'t spawn',
+		['sm_spawn_selector'] = 'Spawn NPC as',
+
+		['sm_reset_title'] = 'Background NPCs - Reset spawn',
+		['sm_reset_everyone'] = 'Reset spawn of all NPCs in the game',
+		['sm_reset_selector'] = 'Stop NPC spawning as',
+
+		['sm_main_spawner_title'] = 'Spawn NPC as an actor',
+		['sm_main_override'] = 'Do not override NPC spawn',
+	},
+	['russian'] = {
+		['sm_modname'] = 'Фоновые NPC',
+
+		['sm_spawn_title'] = 'Фоновые NPC - Спавнер',
+		['sm_spawn_stop'] = 'Не спавнить',
+		['sm_spawn_selector'] = 'Спавнить NPC как',
+
+		['sm_reset_title'] = 'Background NPCs - Сброс спавна',
+		['sm_reset_everyone'] = 'Сбросить спавн всех NPC в игре',
+		['sm_reset_selector'] = 'Прекратить спавн NPC как',
+
+		['sm_main_spawner_title'] = 'Спавн NPC в качестве актёра',
+		['sm_main_override'] = 'Не переопределять спавн NPC',
+	}
+})
+
 hook.Add('PopulateNPCs', 'BackgroundNPCs', function(pnlContent, tree)
-	local node = tree:AddNode('Background NPCs', 'icon16/monkey.png')
+	local node = tree:AddNode(lang['sm_modname'], 'icon16/monkey.png')
 
 	node.DoPopulate = function(self)
 		if self.PropPanel then return end
@@ -46,7 +77,7 @@ spawnmenu.AddContentType('BackgroundNPCs', function(container, obj)
 	obj.admin = obj.admin or false
 
 	local icon = vgui.Create('ContentIcon', container)
-	icon:SetContentType('BackgroundNPCs')
+	icon:SetContentType(lang['sm_modname'])
 	icon:SetSpawnName(obj.spawnname)
 	icon:SetName(obj.nicename)
 	icon:SetMaterial(obj.material)
@@ -88,7 +119,7 @@ spawnmenu.AddContentType('BackgroundNPCs', function(container, obj)
 	return icon
 end)
 
-hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, icon)
+hook.Add('slib.PostSpawnmenuAddContentType', 'BackgroundNPCs', function(name, icon)
 	if not icon or name ~= 'npc' then return end
 
 	local BASE = icon.OpenMenuExtra
@@ -98,34 +129,34 @@ hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ico
 		BASE(self, menu)
 
 		do
-			local subMenu, swg = menu:AddSubMenu('Background NPCs - Spawn')
-			swg:SetIcon('icon16/monkey.png')
+			local sub_menu, panel = menu:AddSubMenu(lang['sm_spawn_title'])
+			panel:SetIcon('icon16/monkey.png')
 
-			subMenu:AddOption('No actor', function()
+			sub_menu:AddOption(lang['sm_spawn_stop'], function()
 				snet.InvokeServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass)
 			end):SetIcon('icon16/cross.png')
 
-			subMenu:AddSpacer()
+			sub_menu:AddSpacer()
 
 			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
-				subMenu:AddOption('Spawn - ' .. (actorData.name or actorType), function()
+				sub_menu:AddOption(lang['sm_spawn_selector'] .. ' - ' .. (actorData.name or actorType), function()
 					snet.InvokeServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass, actorType)
 				end):SetIcon('icon16/monkey.png')
 			end
 		end
 
 		do
-			local subMenu, swg = menu:AddSubMenu('Background NPCs - Spawn Reset')
-			swg:SetIcon('icon16/cross.png')
+			local sub_menu, panel = menu:AddSubMenu(lang['sm_reset_title'])
+			panel:SetIcon('icon16/cross.png')
 
-			subMenu:AddOption('Everyone', function()
+			sub_menu:AddOption(lang['sm_reset_everyone'], function()
 				snet.InvokeServer('BGN_ActorSpawnmenuResetSpawner', true)
 			end):SetIcon('icon16/cross.png')
 
-			subMenu:AddSpacer()
+			sub_menu:AddSpacer()
 
 			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
-				subMenu:AddOption('Reset spawn - ' .. (actorData.name or actorType), function()
+				sub_menu:AddOption(lang['sm_reset_selector'] .. ' - ' .. (actorData.name or actorType), function()
 					snet.InvokeServer('BGN_ActorSpawnmenuResetSpawner', actorType)
 				end):SetIcon('icon16/monkey.png')
 			end
@@ -134,11 +165,11 @@ hook.Add('PostSlibSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ico
 end)
 
 hook.Add('PopulateMenuBar', 'BackgroundNPCs_MenuBar', function(menubar)
-	local m = menubar:AddOrGetMenu('Background NPCs')
+	local m = menubar:AddOrGetMenu(lang['sm_modname'])
 
-	local actorsPanel = m:AddSubMenu('Spawner')
+	local actorsPanel = m:AddSubMenu(lang['sm_main_spawner_title'])
 	actorsPanel:SetDeleteSelf(false)
-	actorsPanel:AddCVar('Not spawn', 'bgn_spawnmenu_default_spawner', '')
+	actorsPanel:AddCVar(lang['sm_main_override'], 'bgn_spawnmenu_default_spawner', '')
 	actorsPanel:AddSpacer()
 
 	for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do

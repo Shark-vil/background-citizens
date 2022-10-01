@@ -54,6 +54,16 @@ snet.Callback('BGN_ActorSpawnmenu', function(ply, actorType)
 	if not tr or not tr.Hit then return end
 
 	local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10))
+	if not actor then
+		local error_message = ply:slibLanguage({
+			['default'] = 'Failed to create actor',
+			['russian'] = 'Не удалось создать актёра'
+		})
+
+		ply:slibNotify(error_message, 'error')
+		return
+	end
+
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 
