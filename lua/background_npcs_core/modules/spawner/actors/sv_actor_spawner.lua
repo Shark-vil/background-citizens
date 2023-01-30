@@ -23,11 +23,9 @@ function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
 end
 
 function bgNPC:RespawnActor(actor, spawn_position)
-	if not actor then return end
+	if not actor or not actor:IsAlive() then return false end
 
 	local npc = actor:GetNPC()
-
-	if not IsValid(npc) then return end
 
 	StopAnimator(npc)
 	actor:CallStateAction(nil, 'stop', actor:GetState(), actor:GetStateData())
@@ -37,29 +35,25 @@ function bgNPC:RespawnActor(actor, spawn_position)
 	npc:SetPos(spawn_position)
 	npc:PhysWake()
 
+	local state_data = actor:GetStateData()
+
+	if state_data.updateMovementTypeDelay then
+		state_data.updateMovementTypeDelay = 0
+	end
+
+	if state_data.updateTargetPointDelay then
+		state_data.updateTargetPointDelay = 0
+	end
+
 	actor:RandomState()
 
 	hook.Run('BGN_RespawnActor', actor, spawn_position)
+
+	return true
 end
 
--- function bgNPC:RespawnActor(actor)
--- 	if not actor or not actor:IsAlive() then return end
-
--- 	bgNPC:FindSpawnLocation(actor.uid, nil, nil, function(nodePosition)
--- 		if not actor or not actor:IsAlive() then return end
--- 		if not bgNPC:IsValidSpawnArea(actor:GetType(), nodePosition) then return end
-
--- 		if not bgNPC:EnterActorInExistVehicle(actor)
--- 			and not bgNPC:SpawnVehicleWithActor(actor)
--- 			and bgNPC:ActorIsStuck(actor)
--- 		then
--- 			bgNPC:RespawnActor(actor)
--- 		end
--- 	end, actor:GetNPC())
--- end
-
 local function InitActorsSpawner(delay)
-	async.Add('bgn_actors_spawner_process', function(yield, wait)
+	async.AddDedic('bgn_actors_spawner_process', function(yield, wait)
 		wait(delay)
 
 		local bgn_enable = GetConVar('bgn_enable'):GetBool()
@@ -113,7 +107,7 @@ local function InitActorsSpawner(delay)
 				end
 			end
 
-			bgNPC:FindSpawnLocation(npcType, pos, nil, nil, function(nodePosition)
+			bgNPC:FindSpawnLocation(npcType, { position = pos }, function(nodePosition)
 				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
 
 				local actor = bgNPC:SpawnActor(npcType, nodePosition)

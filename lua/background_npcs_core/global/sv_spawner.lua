@@ -15,21 +15,26 @@ local isstring = isstring
 local pairs = pairs
 local ipairs = ipairs
 local slib_chance = slib.chance
+local CurTime = CurTime
 --
+local spawn_points_locked_delay = {}
 
-local function FindSpawnLocationProcess(all_players, desired_position, teleport_radius, limit_pass, target_entity)
-	limit_pass = limit_pass or 10
-
+local function FindSpawnLocationProcess(all_players, settings)
 	local fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
+	local radius_visibility_sqrt = radius_visibility ^ 2
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
+	local desired_position = settings.position
+	local teleport_radius = settings.radius  or spawn_radius
+	local limit_pass = settings.pass_limit or 10
+	local target_entity = settings.target
 
 	if teleport_radius and teleport_radius <= block_radius then
 		teleport_radius = radius_visibility
 	end
 
-	local points = bgNPC:GetAllPointsInRadius(desired_position, teleport_radius or spawn_radius, 'walk')
+	local points = bgNPC:GetAllPointsInRadius(desired_position, teleport_radius, 'walk')
 	local current_pass = 0
 	local nodePosition
 
@@ -46,7 +51,7 @@ local function FindSpawnLocationProcess(all_players, desired_position, teleport_
 		local entities = ents_FindInSphere(nodePosition, 150)
 		for e = 1, #entities do
 			local ent = entities[e]
-			if IsValid(ent) and ent:IsNPC() then
+			if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
 				goto skip_walk_nodes
 			end
 
@@ -87,7 +92,31 @@ local function FindSpawnLocationProcess(all_players, desired_position, teleport_
 			end
 		end
 
-		if nodePosition then break end
+		if nodePosition then
+			local nodePositionText = tostring(nodePosition)
+			local nodePositionDelay = spawn_points_locked_delay[nodePositionText]
+			if not nodePositionDelay or nodePositionDelay > CurTime() then
+				local reset_node = false
+
+				if spawn_radius > radius_visibility then
+					for _, ply_check in ipairs(player.GetAll()) do
+						if IsValid(ply_check) and ply_check:Alive() and ply_check:GetPos():DistToSqr(nodePosition) <= radius_visibility_sqrt then
+							local actors_in_radious = bgNPC:GetAllByRadius(nodePosition, radius_visibility)
+							local actors_count = bgNPC:Count()
+							if #actors_in_radious / 2 >= actors_count or slib_chance(50) then
+								reset_node = true
+								break
+							end
+						end
+					end
+				end
+
+				if not reset_node then
+					spawn_points_locked_delay[nodePositionText] = CurTime() + 10
+					break
+				end
+			end
+		end
 
 		::skip_walk_nodes::
 
@@ -127,12 +156,18 @@ do
 	local hooks_active = {}
 	local isfunction = isfunction
 
-	function bgNPC:FindSpawnLocation(spawner_id, desired_position, teleport_radius, limit_pass, action, target_entity)
+	function bgNPC:FindSpawnLocation(spawner_id, settings, action)
+		if not spawner_id then return end
+		if not action and not isfunction(action) then return end
+
 		local hook_name = 'BGN_SpawnerThread_' .. spawner_id
 		if hooks_active[hook_name] then return end
-		if not action and not isfunction(action) then return end
 		hooks_active[hook_name] = true
+
+		settings = settingso or {}
+
 		local all_players = player_GetHumans()
+		local desired_position = settings.position
 
 		if not desired_position then
 			local ply = table_RandomBySeq(all_players)
@@ -148,7 +183,8 @@ do
 			end
 		end
 
-		if not desired_position then return end
+		settings.position = desired_position
+		if not settings.position then return end
 
 		local thread = coroutine.create(FindSpawnLocationProcess)
 		local coroutine_status = coroutine.status
@@ -161,14 +197,7 @@ do
 				hook.Remove('Think', hook_name)
 				hooks_active[hook_name] = false
 			else
-				local _, nodePosition = coroutine_resume(
-					thread,
-					all_players,
-					desired_position,
-					teleport_radius,
-					limit_pass,
-					target_entity
-				)
+				local _, nodePosition = coroutine_resume(thread, all_players, settings)
 
 				if nodePosition and isvector(nodePosition) then
 					action(nodePosition)
