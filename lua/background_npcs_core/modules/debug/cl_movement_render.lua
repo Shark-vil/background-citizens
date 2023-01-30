@@ -73,7 +73,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 				render_DrawSphere(pos, 10, 5, 5, clr_green)
 
 				cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
-					draw_SimpleTextOutlined(tostring(i),
+					draw_SimpleTextOutlined(tostring(count - k + 1),
 						text_font_name, 0, 0, color_white,
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 				cam_End3D2D()
