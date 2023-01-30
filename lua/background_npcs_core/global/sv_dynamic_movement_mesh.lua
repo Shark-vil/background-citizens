@@ -26,7 +26,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local max_points_in_chunk = 5
 	local current_pass = 0
 	local trace_filter = function(ent)
-		if ent:IsWorld() then
+		if ent:IsWorld() or ent:GetClass() == 'infmap_terrain_collider' then
 			return true
 		end
 	end
