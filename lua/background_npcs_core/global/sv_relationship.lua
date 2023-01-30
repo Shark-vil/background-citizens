@@ -123,10 +123,14 @@ local function SetNPCRelationship(actor, another_npc)
 	if cvar_bgn_debug:GetBool() and actor_npc:IsNPC() then
 		bgNPC:Log(
 			string.format('Actor NPC: [%s] %q > [%s] %q : %s',
-			actor:GetType(), actor_npc,
-			another_actor and another_actor:GetType() or 'NPC', another_npc,
-			log_disposition[another_npc:Disposition(actor_npc)]
-		), 'Relationship')
+				tostring(actor:GetType()),
+				tostring(actor_npc),
+				tostring(another_actor and another_actor:GetType() or 'NPC'),
+				tostring(another_npc),
+				tostring(log_disposition[another_npc:Disposition(actor_npc)])
+			),
+			'Relationship'
+		)
 	end
 end
 
@@ -180,8 +184,12 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 			if cvar_bgn_debug:GetBool() then
 				bgNPC:Log(
 					string.format('Player relationship: %q > %q : %s',
-					npc, ply, log_disposition[npc:Disposition(ply)]
-				), 'Relationship')
+						tostring(npc),
+						tostring(ply),
+						tostring(log_disposition[npc:Disposition(ply)])
+					),
+					'Relationship'
+				)
 			end
 		end
 	end

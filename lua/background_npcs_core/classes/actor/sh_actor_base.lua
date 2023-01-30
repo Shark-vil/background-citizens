@@ -652,9 +652,9 @@ function BaseClass:DropToFloor()
 		npc:SetHullSizeNormal()
 	end
 
-	if npc.SetCollisionBounds then
-		npc:SetCollisionBounds(_collision_min_bounds, _collision_max_bounds)
-	end
+	-- if npc.SetCollisionBounds then
+	-- 	npc:SetCollisionBounds(_collision_min_bounds, _collision_max_bounds)
+	-- end
 
 	if npc.DropToFloor then
 		npc:DropToFloor()
