@@ -5,7 +5,11 @@ local slib_chance = slib.chance
 local table_RandomBySeq = table.RandomBySeq
 
 local function GetRandomFoundPointDistance()
-	return math_random(100, 2500)
+	if slib_chance(30) then
+		return math_random(slib_chance(30) and 100 or 500, 2500)
+	else
+		return math_random(slib_chance(30) and 500 or 1000, 2500)
+	end
 end
 
 local function GetRandomDelayForUpdateWalkTarget()
@@ -14,7 +18,21 @@ end
 
 local function GetNextTargetNode(actor)
 	local dist = GetRandomFoundPointDistance()
-	return table_RandomBySeq(bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), dist, 'walk'))
+	local points = bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), dist, 'walk')
+
+	if not point or #points == 0 then
+		points = bgNPC:GetAllPoints('walk')
+	end
+
+	if not points or #points == 0 then
+		points = bgNPC:GetAllPoints()
+	end
+
+	if not points or #points == 0 then
+		return
+	end
+
+	return table_RandomBySeq(points)
 end
 
 local function UpdateActorMovementType(actor, data)
