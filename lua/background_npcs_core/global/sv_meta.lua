@@ -6,6 +6,16 @@ local function ArcCWWeaponReplacement(npc)
 	end
 end
 
+do
+	local bit_band = bit.band
+	local util_PointContents = util.PointContents
+	local CONTENTS_WATER = CONTENTS_WATER
+
+	function bgNPC:VectorInWater(position)
+		return bit_band(util_PointContents(position), CONTENTS_WATER) == CONTENTS_WATER
+	end
+end
+
 function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()

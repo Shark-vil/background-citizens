@@ -24,6 +24,7 @@ end
 
 function bgNPC:RespawnActor(actor, spawn_position)
 	if not actor or not actor:IsAlive() then return false end
+	if bgNPC:VectorInWater(spawn_position) then return false end
 
 	local npc = actor:GetNPC()
 
@@ -107,19 +108,19 @@ local function InitActorsSpawner(delay)
 				end
 			end
 
-			bgNPC:FindSpawnLocation(npcType, { position = pos }, function(nodePosition)
+			local nodePosition = bgNPC:FindSpawnPosition({ position = pos })
+			if nodePosition then
 				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
 
 				local actor = bgNPC:SpawnActor(npcType, nodePosition)
 				if not actor then return end
 
-				if not bgNPC:EnterActorInExistVehicle(actor)
-					and not bgNPC:SpawnVehicleWithActor(actor)
-					and bgNPC:ActorIsStuck(actor)
-				then
-					bgNPC:RespawnActor(actor, nodePosition)
+				if bgNPC:ActorIsStuck(actor) then
+					actor:RemoveActor()
+				elseif not bgNPC:EnterActorInExistVehicle(actor) then
+					bgNPC:SpawnVehicleWithActor(actor)
 				end
-			end)
+			end
 		end
 
 		yield()

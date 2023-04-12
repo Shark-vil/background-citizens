@@ -69,13 +69,13 @@ end
 
 async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 	local fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
-
-	wait(1)
-
 	local actors = bgNPC:GetAll()
 	local actors_count = #actors
 
-	if actors_count == 0 then return end
+	if actors_count == 0 then
+		wait(1)
+		return
+	end
 
 	local WantedModule = bgNPC:GetModule('wanted')
 
@@ -90,6 +90,8 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 	player_count = #player_list
 
 	for i = 1, actors_count do
+		yield()
+
 		local actor = actors[i]
 
 		if not fasted_teleport then
@@ -129,9 +131,11 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 
 					local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 					if not is_entered_vehicle then
-						bgNPC:FindSpawnLocation(actor.uid, { target = npc }, function(nodePosition)
+						local nodePosition = bgNPC:FindSpawnPosition({ target = npc })
+						if nodePosition then
 							TeleportActor(actor, nodePosition)
-						end)
+						end
+						yield()
 					end
 				else
 					local desiredPosition
@@ -157,13 +161,11 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 
 						local is_entered_vehicle = FindExistCarAndEnterThis(actor)
 						if not is_entered_vehicle then
-							bgNPC:FindSpawnLocation(actor.uid, {
-								position = desiredPosition,
-								-- radius = bgn_spawn_radius_visibility,
-								target = npc
-							}, function(nodePosition)
+							local nodePosition = bgNPC:FindSpawnPosition({ position = desiredPosition, target = npc })
+							if nodePosition then
 								TeleportActor(actor, nodePosition)
-							end)
+							end
+							yield()
 						end
 					end
 				end
