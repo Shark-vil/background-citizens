@@ -2,15 +2,24 @@ local EntityRemovedLock = false
 local isfunction = isfunction
 local IsValid = IsValid
 --
+local none_name = 'Gabe Newell'
 
 local function GetEntityName(ent)
+	if not IsValid(ent) or not isfunction(ent.GetName) then
+		return none_name
+	end
+
 	local name = ent:GetName()
 	local actor = bgNPC:GetActor(ent)
 
 	if actor then
 		name = actor:GetName()
-	elseif name == '' then
+	elseif name == '' and isfunction(ent.GetClass) then
 		name = ent:GetClass()
+	end
+
+	if not name or name == '' then
+		name = none_name
 	end
 
 	return name
@@ -19,15 +28,19 @@ end
 local function GetEntityInflictorName(ent)
 	local class
 
-	if ent.GetActiveWeapon and isfunction(ent.GetActiveWeapon) then
+	if IsValid(ent) and isfunction(ent.GetActiveWeapon) then
 		local weapon = ent:GetActiveWeapon()
-		if IsValid(weapon) and weapon:IsWeapon() then
+		if IsValid(weapon) and isfunction(weapon.IsWeapon) and weapon:IsWeapon() and isfunction(weapon.GetClass) then
 			class = weapon:GetClass()
 		end
 	end
 
-	if not class then
+	if not class and IsValid(ent) and isfunction(ent.GetClass) then
 		class = ent:GetClass()
+	end
+
+	if not class or class == '' then
+		class = none_name
 	end
 
 	return class
