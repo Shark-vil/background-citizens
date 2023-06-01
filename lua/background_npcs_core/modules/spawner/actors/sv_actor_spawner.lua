@@ -108,6 +108,25 @@ local function InitActorsSpawner(delay)
 				end
 			end
 
+			--[[]
+			bgNPC:FindSpawnPositionAsync(npcType, { position = pos }, function(nodePosition)
+				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
+
+				local actor = bgNPC:SpawnActor(npcType, nodePosition)
+				if not actor then return end
+
+				if not bgNPC:EnterActorInExistVehicle(actor) then
+					bgNPC:SpawnVehicleWithActor(actor)
+				end
+
+				-- if bgNPC:ActorIsStuck(actor) then
+				-- 	actor:Remove()
+				-- elseif not bgNPC:EnterActorInExistVehicle(actor) then
+				-- 	bgNPC:SpawnVehicleWithActor(actor)
+				-- end
+			end)
+			--]]
+
 			local nodePosition = bgNPC:FindSpawnPosition({ position = pos })
 			if nodePosition then
 				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
@@ -115,11 +134,15 @@ local function InitActorsSpawner(delay)
 				local actor = bgNPC:SpawnActor(npcType, nodePosition)
 				if not actor then return end
 
-				if bgNPC:ActorIsStuck(actor) then
-					actor:RemoveActor()
-				elseif not bgNPC:EnterActorInExistVehicle(actor) then
+				if not bgNPC:EnterActorInExistVehicle(actor) then
 					bgNPC:SpawnVehicleWithActor(actor)
 				end
+
+				-- if bgNPC:ActorIsStuck(actor) then
+				-- 	actor:Remove()
+				-- elseif not bgNPC:EnterActorInExistVehicle(actor) then
+				-- 	bgNPC:SpawnVehicleWithActor(actor)
+				-- end
 			end
 		end
 

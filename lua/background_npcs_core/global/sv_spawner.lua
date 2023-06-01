@@ -15,15 +15,76 @@ local isstring = isstring
 local pairs = pairs
 local ipairs = ipairs
 local slib_chance = slib.chance
+local CONTENTS_WATER = CONTENTS_WATER
+local bit_band = bit.band
+local util_PointContents = util.PointContents
+local assert = assert
+local FrameTime = FrameTime
+local type = type
 --
 
-local function FindSpawnLocationProcess(all_players, settings)
+local function HasBlockFoundSpawnPosition(node_position, all_players, spawn_radius, block_radius, target_entity)
+	local entities = ents_FindInSphere(node_position, 150)
+	for e = 1, #entities do
+		local ent = entities[e]
+		if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
+			return false
+		end
+	end
+
+	for p = 1, #all_players do
+		local ply = all_players[p]
+		local distance = node_position:DistToSqr(ply:GetPos())
+
+		if distance <= block_radius then
+			return false
+		end
+
+		if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
+			return false
+		end
+
+		if bgNPC:PlayerIsViewVector(ply, node_position) then
+			local tr = util_TraceLine({
+				start = ply:EyePos(),
+				endpos = node_position,
+				filter = function(ent)
+					if IsValid(ent)
+						and ent ~= ply
+						and not ent:IsVehicle()
+						and ent:IsWorld()
+						and not string_StartWith(ent:GetClass(), 'prop_')
+					then
+						return true
+					end
+				end
+			})
+
+			if not tr.Hit or not util_IsInWorld(node_position) then
+				return false
+			end
+		end
+	end
+
+	return true
+end
+
+local function FindSpawnLocationProcess(all_players, settings, yield)
+	local is_async = yield ~= nil
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local desired_position = settings.position
-	local teleport_radius = settings.radius  or spawn_radius
+	local teleport_radius = settings.radius or spawn_radius
 	local target_entity = settings.target
+	local pass_current = 0
+	local AsyncYield = function()
+		pass_current = pass_current + 1
+		if pass_current >= FrameTime() then
+			pass_current = 0
+			yield()
+		end
+	end
 
 	if teleport_radius and teleport_radius <= block_radius then
 		teleport_radius = radius_visibility
@@ -32,64 +93,32 @@ local function FindSpawnLocationProcess(all_players, settings)
 	local points = bgNPC:GetAllPointsInRadius(desired_position, teleport_radius, 'walk')
 	local nodePosition
 
+	if is_async then AsyncYield() end
+
 	points = table_shuffle(points)
+
+	if is_async then AsyncYield() end
 
 	for i = 1, #points do
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
 
-		local entities = ents_FindInSphere(nodePosition, 150)
-		for e = 1, #entities do
-			local ent = entities[e]
-			if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
-				goto skip_walk_nodes
-			end
+		if bit_band(util_PointContents(nodePosition), CONTENTS_WATER) == CONTENTS_WATER then
+			nodePosition = nil
+			continue
 		end
 
-		for p = 1, #all_players do
-			local ply = all_players[p]
-			local distance = nodePosition:DistToSqr(ply:GetPos())
+		if is_async then AsyncYield() end
 
-			if distance <= block_radius then
-				goto skip_walk_nodes
-			end
-
-			if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
-				goto skip_walk_nodes
-			end
-
-			if bgNPC:PlayerIsViewVector(ply, nodePosition) then
-				local tr = util_TraceLine({
-					start = ply:EyePos(),
-					endpos = nodePosition,
-					filter = function(ent)
-						if IsValid(ent)
-							and ent ~= ply
-							and not ent:IsVehicle()
-							and ent:IsWorld()
-							and not string_StartWith(ent:GetClass(), 'prop_')
-						then
-							return true
-						end
-					end
-				})
-
-				if not tr.Hit or not util_IsInWorld(nodePosition) then
-					goto skip_walk_nodes
-				end
-			end
+		if not HasBlockFoundSpawnPosition(nodePosition, all_players, spawn_radius, block_radius, target_entity, yield) then
+			nodePosition = nil
+			continue
 		end
 
 		if nodePosition then
-			break
+			return nodePosition
 		end
-
-		::skip_walk_nodes::
-
-		nodePosition = nil
 	end
-
-	return nodePosition
 end
 
 function bgNPC:ActorIsStuck(actor)
@@ -131,10 +160,51 @@ function bgNPC:FindSpawnPosition(settings)
 	if not settings.position then return end
 
 	local isvector = isvector
-	local nodePosition = FindSpawnLocationProcess(all_players, settings)
+	local nodePosition = FindSpawnLocationProcess(all_players, settings, nil)
 	if nodePosition and isvector(nodePosition) then
 		return nodePosition
 	end
+end
+
+function bgNPC:FindSpawnPositionAsync(process_name, settings, action)
+	assert(isfunction(action), 'The variable type is not a function')
+
+	local async_spawner_name = 'bgn_async_spawner_' .. process_name
+	if async.Exists(async_spawner_name) then return end
+
+	settings = settings or {}
+
+	local all_players = player_GetHumans()
+	local desired_position = settings.position
+
+	if not desired_position then
+		local ply = table_RandomBySeq(all_players)
+		desired_position = ply:GetPos()
+
+		for _, area in pairs(bgNPC.SpawnArea) do
+			local center = (area.startPoint + area.endPoint) / 2
+			local radius = center:DistToSqr(area.startPoint) + 1000000
+			if desired_position:DistToSqr(center) <= radius and slib_chance(80) then
+				desired_position = center
+				break
+			end
+		end
+	end
+
+	settings.position = desired_position
+	if not settings.position then return end
+
+	async.Add(async_spawner_name, function(yield, wait)
+		slib.def({
+			try = function()
+				local nodePosition = FindSpawnLocationProcess(all_players, settings, yield)
+				if nodePosition and isvector(nodePosition) then
+					action(nodePosition)
+				end
+			end
+		})
+		return 'stop'
+	end)
 end
 
 do
