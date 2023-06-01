@@ -1,6 +1,7 @@
 local bgNPC = bgNPC
 local player_GetAll = player.GetAll
 local slib_GetHashSumm = slib.GetHashSumm
+local isfunction = isfunction
 --
 local sync_radius = 700
 local sync_distance = sync_radius ^ 2
@@ -18,7 +19,7 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 			local sync_players = {}
 			local sync_players_count = 0
 
-			if actor:IsAlive() then
+			if actor and isfunction(actor.IsAlive) and actor:IsAlive() then
 				local npc = actor:GetNPC()
 				local pos = npc:GetPos()
 				for k = 1, #players do
@@ -44,7 +45,7 @@ timer.Create('BGN_SynchronizationService', 1.5, 0, function()
 		local sync_list_value = sync_list[i]
 		local actor = sync_list_value.actor
 
-		if actor and actor:IsAlive() then
+		if actor and isfunction(actor.IsAlive) and actor:IsAlive() then
 			local players = sync_list_value.players
 			local sync_data = {
 				name = actor:GetName(),
