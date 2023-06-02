@@ -22,6 +22,9 @@ bgNPC.cvar.bgn_wanted_time = 30
 bgNPC.cvar.bgn_wanted_level = 1
 bgNPC.cvar.bgn_wanted_hud_text = 1
 bgNPC.cvar.bgn_wanted_hud_stars = 1
+bgNPC.cvar.bgn_wanted_impunity_limit = 5
+bgNPC.cvar.bgn_wanted_impunity_reduction_period = 10
+bgNPC.cvar.bgn_wanted_police_instantly = 1
 bgNPC.cvar.bgn_arrest_mode = 1
 bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
@@ -127,6 +130,18 @@ scvar.Register('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text,
 
 scvar.Register('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars,
 	FCVAR_ARCHIVE, 'Enables or disables drawing of stars in wanted mode.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_wanted_impunity_limit', bgNPC.cvar.bgn_wanted_impunity_limit,
+	FCVAR_ARCHIVE, 'Sets the number of kills, on reaching which you are guaranteed to get a wanted level. The value "0" disables the option.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_wanted_impunity_reduction_period', bgNPC.cvar.bgn_wanted_impunity_reduction_period,
+	FCVAR_ARCHIVE, 'Sets the wanted in seconds after which players have their kill limit reduced by 1 number. The value "0" disables the option.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_wanted_police_instantly', bgNPC.cvar.bgn_wanted_police_instantly,
+	FCVAR_ARCHIVE, 'If enabled, you instantly get a wanted level when killing actors from the "police" team.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_max_npc', bgNPC.cvar.bgn_max_npc,

@@ -12,6 +12,14 @@ return {
 	['bgn.settings.states.bgn_wanted_hud_text.help'] = 'Display text about the remaining wanted time.',
 	['bgn.settings.states.bgn_wanted_hud_stars'] = 'Wanted stars',
 	['bgn.settings.states.bgn_wanted_hud_stars.help'] = 'Display the wanted level as a star.',
+	['bgn.settings.states.bgn_wanted_impunity_limit'] = 'Impunity limit',
+	['bgn.settings.states.bgn_wanted_impunity_limit.help'] = 'Sets the number of kills, on reaching which you are guaranteed to get a wanted level. The value "0" disables the option.',
+
+	['bgn.settings.states.bgn_wanted_impunity_reduction_period'] = 'Impunity penalty reduction period',
+	['bgn.settings.states.bgn_wanted_impunity_reduction_period.help'] = 'Sets the period of time in seconds, after which the limit of extreme player kills is reduced by 1 number. The value "0" disables the option.',
+
+	['bgn.settings.states.bgn_wanted_police_instantly'] = 'Instant wanted for killing the police',
+	['bgn.settings.states.bgn_wanted_police_instantly.help'] = 'If enabled, you instantly get a wanted level when killing actors from the "police" team.',
 	['bgn.settings.states.bgn_arrest_mode'] = 'Enable arrest mode',
 	['bgn.settings.states.bgn_arrest_mode.help'] = 'Includes a player arrest module.',
 	['bgn.settings.states.bgn_arrest_time'] = 'Arrest time',

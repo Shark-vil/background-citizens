@@ -1,3 +1,9 @@
+local CurTime = CurTime
+local player_GetHumans = player.GetHumans
+local ipairs = ipairs
+local IsValid = IsValid
+local math_Round = math.Round
+--
 local asset = bgNPC:GetModule('wanted')
 local TeamParentModule = bgNPC:GetModule('team_parent')
 local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
@@ -18,6 +24,10 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
 
 	if asset:HasWanted(attacker) then
+		if attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0) > 0 then
+			attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
+		end
+
 		local WantedClass = asset:GetWanted(attacker)
 		WantedClass:UpdateWanted()
 
@@ -26,17 +36,23 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 			WantedClass:LevelUp()
 		end
 	else
-		local can_see, see_actor = bgNPC:CanActorsSeeEntity(attacker)
+		local can_see, see_actor = bgNPC:CanAnyActorSeeEntity(attacker)
 		if not can_see or see_actor == actor then return end
 
-		if attacker:IsPlayer() then
-			if not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
+		local is_player = attacker:IsPlayer()
+		local impunity_limit = GetConVar('bgn_wanted_impunity_limit'):GetInt()
+		if impunity_limit ~= 0 and is_player then
+			local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
+			if current_impunity >= impunity_limit then
 				asset:AddWanted(attacker)
+				return
+			else
+				attacker:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity + 1)
 			end
-		else
-			if actor:HasTeam('police') then
-				asset:AddWanted(attacker)
-			end
+		end
+
+		if not is_player or (GetConVar('bgn_wanted_police_instantly'):GetBool() and TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police')) then
+			asset:AddWanted(attacker)
 		end
 	end
 end)
@@ -85,6 +101,12 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 end)
 
 hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim, inflictor, attacker)
+	if not IsValid(victim) then return end
+
+	if victim:slibGetLocalVar('bgn_wanted_module_impunity', 0) > 0 then
+		victim:slibSetLocalVar('bgn_wanted_module_impunity', 0)
+	end
+
 	if not asset:HasWanted(victim) then return end
 	asset:RemoveWanted(victim)
 end)
@@ -99,6 +121,26 @@ local function UpdateWantedAndSetReaction(actor, enemy)
 	end
 
 	actor:AddEnemy(enemy)
+end
+
+do
+	local last_reduction_period = 0
+	timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
+		local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction_period'):GetFloat()
+		if impunity_limit_reduction_period == 0 then return end
+
+		if last_reduction_period > CurTime() then return end
+		last_reduction_period = CurTime() + impunity_limit_reduction_period
+
+		for _, ply in ipairs(player_GetHumans()) do
+			if IsValid(ply) then
+				local current_impunity = ply:slibGetLocalVar('bgn_wanted_module_impunity', 0)
+				if current_impunity > 0 then
+					ply:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity - 1)
+				end
+			end
+		end
+	end)
 end
 
 timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
@@ -117,7 +159,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 		if IsValid(enemy) then
 			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
-			WantedClass:UpdateWaitTime(math.Round(wait_time))
+			WantedClass:UpdateWaitTime(math_Round(wait_time))
 
 			for _, actor in ipairs(residents) do
 				if actor:IsAlive() then
@@ -125,9 +167,11 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 					local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 
 					if dist <= 360000 then -- 600 ^ 2
-						UpdateWantedAndSetReaction(actor, enemy); is_update = true
+						UpdateWantedAndSetReaction(actor, enemy)
+						is_update = true
 					elseif dist <= 2250000 and bgNPC:IsTargetRay(npc, enemy) then -- 1500 ^ 2
-						UpdateWantedAndSetReaction(actor, enemy); is_update = true
+						UpdateWantedAndSetReaction(actor, enemy)
+						is_update = true
 					end
 				end
 			end

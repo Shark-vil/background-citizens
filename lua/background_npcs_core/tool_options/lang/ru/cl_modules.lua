@@ -12,6 +12,14 @@ return {
 	['bgn.settings.states.bgn_wanted_hud_text.help'] = 'Отображать текст об оставшеся времени розыска.',
 	['bgn.settings.states.bgn_wanted_hud_stars'] = 'Звёзды розыска',
 	['bgn.settings.states.bgn_wanted_hud_stars.help'] = 'Отображать уровень розыска в виде звёзды.',
+	['bgn.settings.states.bgn_wanted_impunity_limit'] = 'Лимит безнаказанности',
+	['bgn.settings.states.bgn_wanted_impunity_limit.help'] = 'Устанавливает количество убийств, при достижении которого вы гарантированно получите уровень розыска. Значение "0" отключает опцию.',
+
+	['bgn.settings.states.bgn_wanted_impunity_reduction_period'] = 'Период снижения штрафа безнаказанности',
+	['bgn.settings.states.bgn_wanted_impunity_reduction_period.help'] = 'Устанавливает период времени в секундах, через которое лимит крайних убийств игроков уменьшается на 1 число. Значение "0" отключает опцию.',
+
+	['bgn.settings.states.bgn_wanted_police_instantly'] = 'Моментальный розыск за убийство полиции',
+	['bgn.settings.states.bgn_wanted_police_instantly.help'] = 'Если эта функция включена, то при убийстве актёров из команды "Полиция" вы мгновенно получаете уровень розыска.',
 	['bgn.settings.states.bgn_arrest_mode'] = 'Включить режим ареста',
 	['bgn.settings.states.bgn_arrest_mode.help'] = 'Включает модуль ареста игрока.',
 	['bgn.settings.states.bgn_arrest_time'] = 'Время ареста',

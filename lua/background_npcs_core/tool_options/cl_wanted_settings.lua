@@ -1,25 +1,25 @@
-local function TOOL_MENU(Panel)
-	Panel:AddControl('CheckBox', {
+local function TOOL_MENU(panel)
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_wanted_mode',
 		['Command'] = 'bgn_enable_wanted_mode',
 		['Help'] = true,
 	})
 
-	Panel:AddControl('Slider', {
+	panel:AddControl('Slider', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_time',
 		['Command'] = 'bgn_wanted_time',
 		['Type'] = 'Float',
 		['Min'] = '0',
-		['Max'] = '1000',
 		['Help'] = true,
 	})
-	Panel:AddControl('CheckBox', {
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_level',
 		['Command'] = 'bgn_wanted_level',
 		['Help'] = true,
 	})
 
-	Panel:AddControl('CheckBox', {
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_hud_text',
 		['Command'] = 'bgn_wanted_hud_text',
 		['Help'] = true,
@@ -30,9 +30,32 @@ local function TOOL_MENU(Panel)
 		['Command'] = 'bgn_wanted_hud_stars',
 		['Help'] = true,
 	})
-	Panel:AddControl('CheckBox', {
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_disable_halo',
 		['Command'] = 'bgn_disable_halo',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_limit',
+		['Command'] = 'bgn_wanted_impunity_limit',
+		['Type'] = 'Integer',
+		['Min'] = '0',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_reduction_period',
+		['Command'] = 'bgn_wanted_impunity_reduction_period',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_police_instantly',
+		['Command'] = 'bgn_wanted_police_instantly',
 		['Help'] = true,
 	})
 end
