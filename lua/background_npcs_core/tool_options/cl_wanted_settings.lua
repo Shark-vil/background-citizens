@@ -25,7 +25,7 @@ local function TOOL_MENU(panel)
 		['Help'] = true,
 	})
 
-	Panel:AddControl('CheckBox', {
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_hud_stars',
 		['Command'] = 'bgn_wanted_hud_stars',
 		['Help'] = true,
