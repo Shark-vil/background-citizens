@@ -111,7 +111,7 @@ function bgNPC:NPCIsViewVector(ent, pos, radius)
 	return angCos >= directionAngCos
 end
 
-function bgNPC:CanActorsSeeEntity(ent)
+function bgNPC:CanAnyActorSeeEntity(ent)
 	if not IsValid(ent) or not isentity(ent) then return false end
 
 	local actors = bgNPC:GetAll()
@@ -126,6 +126,27 @@ function bgNPC:CanActorsSeeEntity(ent)
 	end
 
 	return false
+end
+
+function bgNPC:CanActorsSeeEntity(ent)
+	if not IsValid(ent) or not isentity(ent) then return false end
+
+	local actors = bgNPC:GetAll()
+	local valid_actors = {}
+	local valid_actors_count = 0
+
+	for i = 1, #actors do
+		local actor = actors[i]
+		if actor and actor:IsAlive() then
+			local npc = actor:GetNPC()
+			if IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true) then
+				valid_actors_count = valid_actors_count + 1
+				valid_actors[valid_actors_count] = actor
+			end
+		end
+	end
+
+	return valid_actors_count ~= 0, valid_actors
 end
 
 function bgNPC:GetModule(module_name)
