@@ -10,7 +10,7 @@ if SERVER then
     end
   end)
 else
-  hook.Add('slib.FirstPlayerSpawn', 'BGN_CheckAddonVersion', function(ply)
+  hook.Add('slib.FirstPlayerSpawn', 'BGN_CheckAddonPulls', function(ply)
     if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
     if file.Exists('background_npcs/poll.txt', 'DATA') then
