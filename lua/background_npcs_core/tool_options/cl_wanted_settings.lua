@@ -58,6 +58,37 @@ local function TOOL_MENU(panel)
 		['Command'] = 'bgn_wanted_police_instantly',
 		['Help'] = true,
 	})
+
+	panel:AddControl('Color', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_calling_police_text_color',
+		['red'] = 'bgn_wanted_color_calling_police_text_r',
+		['green'] = 'bgn_wanted_color_calling_police_text_g',
+		['blue'] = 'bgn_wanted_color_calling_police_text_b',
+		['Help'] = true,
+	})
+
+	-- panel:AddControl('Color', {
+	-- 	['Label'] = 'CALLING POLICE TEXT OUTLINE COLOR',
+	-- 	['red'] = 'bgn_wanted_color_calling_police_text_outline_r',
+	-- 	['green'] = 'bgn_wanted_color_calling_police_text_outline_g',
+	-- 	['blue'] = 'bgn_wanted_color_calling_police_text_outline_b',
+	-- })
+
+	panel:AddControl('Color', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_calling_police_halo_color',
+		['red'] = 'bgn_wanted_color_calling_police_halo_r',
+		['green'] = 'bgn_wanted_color_calling_police_halo_g',
+		['blue'] = 'bgn_wanted_color_calling_police_halo_b',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Color', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_wanted_halo_color',
+		['red'] = 'bgn_wanted_color_wanted_halo_r',
+		['green'] = 'bgn_wanted_color_wanted_halo_g',
+		['blue'] = 'bgn_wanted_color_wanted_halo_b',
+		['Help'] = true,
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_WantedSettings', function()
