@@ -6,6 +6,12 @@ local cvars = cvars
 local tonumber = tonumber
 --
 
+CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo,
+{ FCVAR_ARCHIVE }, 'Disables the all wanted and calling police halo locally')
+
+CreateConVar('bgn_cl_disable_hud_local', bgNPC.cvar.bgn_cl_disable_hud_local,
+{ FCVAR_ARCHIVE }, 'Disables the all wanted HUD locally')
+
 CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_halo_wanted,
 { FCVAR_ARCHIVE }, 'Disable wanted halo only for your player model')
 

@@ -50,11 +50,17 @@ return {
 	['bgn.settings.states.bgn_cl_disable_self_halo_wanted'] = 'Отключить обводку локальной модели',
 	['bgn.settings.states.bgn_cl_disable_self_halo_wanted.help'] = 'Отключает эффект обводки розыска только для вашей модели игрока.',
 
+	['bgn.settings.states.bgn_cl_disable_halo'] = 'Отключить всю обводку локально',
+	['bgn.settings.states.bgn_cl_disable_halo.help'] = 'Отключает все эффекты обводки розыска локально. Полезно, если вы испытывайте проблемы с производительностью или некорректной отрисовкой.',
+
 	['bgn.settings.states.bgn_disable_halo_calling'] = 'Отключить обводку вызова полиции',
 	['bgn.settings.states.bgn_disable_halo_calling.help'] = 'Отключает эффект обводки для актёров во время звонка в полицию.',
 
 	['bgn.settings.states.bgn_disable_halo_wanted'] = 'Отключить обводку розыска',
 	['bgn.settings.states.bgn_disable_halo_wanted.help'] = 'Отключает эффект обводки сущностей, находящихся в розыске.',
+
+	['bgn.settings.states.bgn_cl_disable_hud_local'] = 'Отключить HUD розыска локально',
+	['bgn.settings.states.bgn_cl_disable_hud_local.help'] = 'Отключает весь HUD розыска для локального игрока.',
 
 	['bgn.settings.states.bgn_enable_dv_support'] = 'Включить поддержку аддона "DV"',
 	['bgn.settings.states.bgn_enable_dv_support.help'] = 'Включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт. Требуется чтобы в DV была включена автоматическая загрузка путей передвижения!',

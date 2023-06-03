@@ -12,6 +12,11 @@ local impunity_limit = GetConVar('bgn_wanted_impunity_limit'):GetInt()
 local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction_period'):GetFloat()
 local impunity_last_reduction_period = 0
 
+-- Just registered for the RPC
+-- cl_visual_wanted.lua
+slib.GlobalCvarRegisterChangeCallback('bgn_disable_halo_wanted', 'bgn_cl_wanted_module_bgn_disable_halo_wanted')
+slib.GlobalCvarRegisterChangeCallback('bgn_disable_halo_calling', 'bgn_cl_wanted_module_bgn_disable_halo_calling')
+
 cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 	enable_wanted_mode = tonumber(newValue) == 1
 
