@@ -47,8 +47,14 @@ return {
 	['bgn.settings.states.bgn_shot_sound_mode'] = 'Включить реакцию на звуки выстрела',
 	['bgn.settings.states.bgn_shot_sound_mode.help'] = 'NPC будут реагировать на звуки выстрела, как если бы кто-то стрелял по союзнику. (Предупреждение: функция эксперементальная и не рекомендуется к использованию)',
 
-	['bgn.settings.states.bgn_disable_halo'] = 'Отключить выделение контура NPC',
-	['bgn.settings.states.bgn_disable_halo.help'] = 'Отключает эффект обводки NPC во время звонка и при розыске.',
+	['bgn.settings.states.bgn_cl_disable_self_halo_wanted'] = 'Отключить обводку локальной модели',
+	['bgn.settings.states.bgn_cl_disable_self_halo_wanted.help'] = 'Отключает эффект обводки розыска только для вашей модели игрока.',
+
+	['bgn.settings.states.bgn_disable_halo_calling'] = 'Отключить обводку вызова полиции',
+	['bgn.settings.states.bgn_disable_halo_calling.help'] = 'Отключает эффект обводки для актёров во время звонка в полицию.',
+
+	['bgn.settings.states.bgn_disable_halo_wanted'] = 'Отключить обводку розыска',
+	['bgn.settings.states.bgn_disable_halo_wanted.help'] = 'Отключает эффект обводки сущностей, находящихся в розыске.',
 
 	['bgn.settings.states.bgn_enable_dv_support'] = 'Включить поддержку аддона "DV"',
 	['bgn.settings.states.bgn_enable_dv_support.help'] = 'Включает совместимость с аддоном "DV" и ззаставляет NPC использовать автотранспорт. Требуется чтобы в DV была включена автоматическая загрузка путей передвижения!',

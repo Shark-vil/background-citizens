@@ -50,6 +50,15 @@ return {
 	['bgn.settings.states.bgn_disable_halo'] = 'Disable NPC highlighting stroke.',
 	['bgn.settings.states.bgn_disable_halo.help'] = 'Disables the effect of the outline of the NPC during the call and during the wanted.',
 
+	['bgn.settings.states.bgn_cl_disable_self_halo_wanted'] = 'Disable local model halo effect',
+	['bgn.settings.states.bgn_cl_disable_self_halo_wanted.help'] = 'Disables the wanted halo effect only for your player model.',
+
+	['bgn.settings.states.bgn_disable_halo_calling'] = 'Disable police call halo effect',
+	['bgn.settings.states.bgn_disable_halo_calling.help'] = 'Disables the halo effect for actors during a call to the police.',
+
+	['bgn.settings.states.bgn_disable_halo_wanted'] = 'Disable wanted halo effect',
+	['bgn.settings.states.bgn_disable_halo_wanted.help'] = 'Disables the halo effect of wanted entities.',
+
 	['bgn.settings.states.bgn_enable_dv_support'] = 'Enable "DV" addon support',
 	['bgn.settings.states.bgn_enable_dv_support.help'] = 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles. Requires DV to have automatic loading of travel paths enabled!',
 

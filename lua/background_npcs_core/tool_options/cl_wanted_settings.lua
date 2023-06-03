@@ -1,7 +1,17 @@
 local function TOOL_MENU(panel)
+	panel:AddControl('Header', {
+		['Description'] = '==[ General ]==',
+	})
+
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_enable_wanted_mode',
 		['Command'] = 'bgn_enable_wanted_mode',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_police_instantly',
+		['Command'] = 'bgn_wanted_police_instantly',
 		['Help'] = true,
 	})
 
@@ -11,6 +21,26 @@ local function TOOL_MENU(panel)
 		['Type'] = 'Float',
 		['Min'] = '0',
 		['Help'] = true,
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_limit',
+		['Command'] = 'bgn_wanted_impunity_limit',
+		['Type'] = 'Integer',
+		['Min'] = '0',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_reduction_period',
+		['Command'] = 'bgn_wanted_impunity_reduction_period',
+		['Type'] = 'Float',
+		['Min'] = '0',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Header', {
+		['Description'] = '==[ HUD ]==',
 	})
 
 	panel:AddControl('CheckBox', {
@@ -31,32 +61,38 @@ local function TOOL_MENU(panel)
 		['Help'] = true,
 	})
 
-	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_disable_halo',
-		['Command'] = 'bgn_disable_halo',
-		['Help'] = true,
+	panel:AddControl('Header', {
+		['Description'] = '==[ Halo ]==',
 	})
 
-	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_limit',
-		['Command'] = 'bgn_wanted_impunity_limit',
-		['Type'] = 'Integer',
-		['Min'] = '0',
-		['Help'] = true,
-	})
-
-	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_reduction_period',
-		['Command'] = 'bgn_wanted_impunity_reduction_period',
-		['Type'] = 'Float',
-		['Min'] = '0',
-		['Help'] = true,
+	panel:AddControl('Header', {
+		['Description'] = '=[ Client ]=',
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_police_instantly',
-		['Command'] = 'bgn_wanted_police_instantly',
+		['Label'] = '#bgn.settings.states.bgn_cl_disable_self_halo_wanted',
+		['Command'] = 'bgn_cl_disable_self_halo_wanted',
 		['Help'] = true,
+	})
+
+	panel:AddControl('Header', {
+		['Description'] = '=[ Server ]=',
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_disable_halo_calling',
+		['Command'] = 'bgn_disable_halo_calling',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_disable_halo_wanted',
+		['Command'] = 'bgn_disable_halo_wanted',
+		['Help'] = true,
+	})
+
+	panel:AddControl('Header', {
+		['Description'] = '==[ Colors ]==',
 	})
 
 	panel:AddControl('Color', {
