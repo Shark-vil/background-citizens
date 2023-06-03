@@ -30,7 +30,9 @@ bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
-bgNPC.cvar.bgn_disable_halo = 0
+bgNPC.cvar.bgn_disable_halo_wanted = 0
+bgNPC.cvar.bgn_disable_halo_calling = 0
+bgNPC.cvar.bgn_cl_disable_self_halo_wanted = 1
 bgNPC.cvar.bgn_enable_dv_support = 1
 bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
@@ -192,8 +194,12 @@ scvar.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode,
 	FCVAR_ARCHIVE, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 	.Access(DefaultAccess)
 
-scvar.Register('bgn_disable_halo', bgNPC.cvar.bgn_disable_halo,
-	FCVAR_ARCHIVE, 'Disable NPC highlighting stroke.')
+scvar.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_calling,
+	FCVAR_ARCHIVE, 'Disable halo for actors calling the police.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted,
+	FCVAR_ARCHIVE, 'Disable halo for wanted entities.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support,

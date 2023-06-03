@@ -6,6 +6,9 @@ local cvars = cvars
 local tonumber = tonumber
 --
 
+CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_halo_wanted,
+{ FCVAR_ARCHIVE }, 'Disable wanted halo only for your player model')
+
 CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path,
 { FCVAR_ARCHIVE }, 'Draw the path of movement of the NPC.')
 

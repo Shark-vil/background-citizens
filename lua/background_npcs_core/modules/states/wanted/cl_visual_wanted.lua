@@ -21,9 +21,24 @@ local asset = bgNPC:GetModule('wanted')
 local text_wanted_font_name = 'Trebuchet24'
 local text_calling_police_font_name = 'DermaLarge'
 local wanted_config = bgNPC.cfg.wanted
+local disable_self_halo_wanted = GetConVar('bgn_cl_disable_self_halo_wanted'):GetBool()
+local disable_halo_wanted = GetConVar('bgn_disable_halo_wanted'):GetBool()
+local disable_halo_calling = GetConVar('bgn_disable_halo_calling'):GetBool()
+
+cvars.AddChangeCallback('bgn_cl_disable_self_halo_wanted', function(_, _, newValue)
+	disable_self_halo_wanted = tonumber(newValue) == 1
+end, 'bgn_cl_wanted_module_bgn_cl_disable_self_halo_wanted')
+
+slib.GlobalCvarAddChangeCallback('bgn_disable_halo_wanted', function(_, _, newValue)
+	disable_halo_wanted = tonumber(newValue) == 1
+end, 'bgn_cl_wanted_module_bgn_disable_halo_wanted')
+
+slib.GlobalCvarAddChangeCallback('bgn_disable_halo_calling', function(_, _, newValue)
+	disable_halo_calling = tonumber(newValue) == 1
+end, 'bgn_cl_wanted_module_bgn_disable_halo_calling')
 
 hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
-	if GetConVar('bgn_disable_halo'):GetBool() then return end
+	if disable_halo_wanted then return end
 
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
@@ -31,12 +46,15 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
 
 	local targets = {}
 	local targets_count = 0
+	local local_player = LocalPlayer()
 
 	for i = 1, wanted_count do
 		local WantedClass = wanted_list[i]
 		local ent = WantedClass.target
 
-		if not IsValid(ent) then continue end
+		if not IsValid(ent) or (disable_self_halo_wanted and ent == local_player) then
+			continue
+		end
 
 		targets_count = targets_count + 1
 		targets[targets_count] = ent
@@ -90,7 +108,7 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 end)
 
 hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnNPCCallingPolice', function()
-	if GetConVar('bgn_disable_halo'):GetBool() then return end
+	if disable_halo_calling then return end
 
 	local localPlayer = LocalPlayer()
 	if not IsValid(localPlayer) then return end

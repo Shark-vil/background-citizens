@@ -4,28 +4,34 @@ local IsValid = IsValid
 local GetConVar = GetConVar
 local CurTime = CurTime
 local isnumber = isnumber
+local math_Round = math.Round
 local hook = hook
 local table = table
 local list = list
 --
 local ASSET = {}
 local wanted_list = {}
+local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
+
+slib.GlobalCvarAddChangeCallback('bgn_wanted_time', function(_, _, newValue)
+	wanted_time = tonumber(newValue)
+
+	bgNPC:Log('New value for "wanted_time" - ' .. tostring(wanted_time), 'Wanted Module Class')
+end, 'bgn_wanted_module_cvar_bgn_wanted_time')
 
 function ASSET:Instance(ent)
-	local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
-	local wanted_time_reset = CurTime() + wanted_time
 	local public = {}
 	public.target = ent
-	public.time_reset =  wanted_time_reset
-	public.time = wanted_time
+	public.time_reset =  CurTime() + wanted_time
+	-- public.time = wanted_time
 	public.wait_time = wanted_time
 	public.level = 1
 	public.level_max = 5
 	public.next_kill_update = bgNPC.cfg.wanted.levels[1]
 
 	function public:UpdateWanted()
-		self.time_reset = CurTime() + self.time
-		self.wait_time = self.time
+		self.time_reset = CurTime() + wanted_time
+		self.wait_time = wanted_time
 
 		if SERVER then
 			snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
@@ -33,10 +39,18 @@ function ASSET:Instance(ent)
 	end
 
 	function public:UpdateWaitTime(time)
-		self.wait_time = time
+		self.wait_time = math_Round(time)
+
+		if self.time_reset - CurTime() > wanted_time then
+			self.time_reset = CurTime() + wanted_time
+		end
+
+		if self.wait_time > wanted_time then
+			self.wait_time = math_Round(wanted_time)
+		end
 
 		if SERVER then
-			snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, time)
+			snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, self.wait_time)
 		end
 	end
 

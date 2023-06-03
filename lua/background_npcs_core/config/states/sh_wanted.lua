@@ -64,13 +64,13 @@ end
 -- LANGUAGE --
 local text = slib.language({
 	['default'] = {
-		['wanted_text_s'] = 'YOU ARE WANTED! The search will end in %time% seconds...',
-		['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% minutes...',
+		['wanted_text_s'] = 'YOU ARE WANTED! The search will end in %time% sec.',
+		['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% min.',
 		['calling_police'] = 'Calling police...'
 	},
 	['russian'] = {
-		['wanted_text_s'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% секунд...',
-		['wanted_text_m'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% минут...',
+		['wanted_text_s'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% сек.',
+		['wanted_text_m'] = 'ВЫ В РОЗЫСКЕ! Вас перестанут искать через %time% мин.',
 		['calling_police'] = 'Звонит в полицию...'
 	}
 })
