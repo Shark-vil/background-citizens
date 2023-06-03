@@ -21,9 +21,19 @@ local asset = bgNPC:GetModule('wanted')
 local text_wanted_font_name = 'Trebuchet24'
 local text_calling_police_font_name = 'DermaLarge'
 local wanted_config = bgNPC.cfg.wanted
+local disable_halo_local = GetConVar('bgn_cl_disable_halo'):GetBool()
+local disable_hud_local = GetConVar('bgn_cl_disable_hud_local'):GetBool()
 local disable_self_halo_wanted = GetConVar('bgn_cl_disable_self_halo_wanted'):GetBool()
 local disable_halo_wanted = GetConVar('bgn_disable_halo_wanted'):GetBool()
 local disable_halo_calling = GetConVar('bgn_disable_halo_calling'):GetBool()
+
+cvars.AddChangeCallback('bgn_cl_disable_halo', function(_, _, newValue)
+	disable_halo_local = tonumber(newValue) == 1
+end, 'bgn_cl_wanted_module_bgn_cl_disable_halo')
+
+cvars.AddChangeCallback('bgn_cl_disable_hud_local', function(_, _, newValue)
+	disable_hud_local = tonumber(newValue) == 1
+end, 'bgn_cl_wanted_module_bgn_cl_disable_hud_local')
 
 cvars.AddChangeCallback('bgn_cl_disable_self_halo_wanted', function(_, _, newValue)
 	disable_self_halo_wanted = tonumber(newValue) == 1
@@ -38,7 +48,7 @@ slib.GlobalCvarAddChangeCallback('bgn_disable_halo_calling', function(_, _, newV
 end, 'bgn_cl_wanted_module_bgn_disable_halo_calling')
 
 hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
-	if disable_halo_wanted then return end
+	if disable_halo_local or disable_halo_wanted then return end
 
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
@@ -66,6 +76,8 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
 end)
 
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
+	if disable_hud_local then return end
+
 	local is_draw_text = GetConVar('bgn_wanted_hud_text'):GetBool()
 	local is_draw_stars = GetConVar('bgn_wanted_hud_stars'):GetBool()
 
@@ -108,7 +120,7 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 end)
 
 hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnNPCCallingPolice', function()
-	if disable_halo_calling then return end
+	if disable_halo_local or disable_halo_calling then return end
 
 	local localPlayer = LocalPlayer()
 	if not IsValid(localPlayer) then return end

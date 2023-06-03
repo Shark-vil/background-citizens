@@ -10,6 +10,12 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_wanted_level',
+		['Command'] = 'bgn_wanted_level',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_wanted_police_instantly',
 		['Command'] = 'bgn_wanted_police_instantly',
 		['Help'] = true,
@@ -43,10 +49,18 @@ local function TOOL_MENU(panel)
 		['Description'] = '==[ HUD ]==',
 	})
 
+	panel:AddControl('Header', {
+		['Description'] = '=[ Client ]=',
+	})
+
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_level',
-		['Command'] = 'bgn_wanted_level',
+		['Label'] = '#bgn.settings.states.bgn_cl_disable_hud_local',
+		['Command'] = 'bgn_cl_disable_hud_local',
 		['Help'] = true,
+	})
+
+	panel:AddControl('Header', {
+		['Description'] = '=[ Server ]=',
 	})
 
 	panel:AddControl('CheckBox', {
@@ -67,6 +81,12 @@ local function TOOL_MENU(panel)
 
 	panel:AddControl('Header', {
 		['Description'] = '=[ Client ]=',
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_cl_disable_halo',
+		['Command'] = 'bgn_cl_disable_halo',
+		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
