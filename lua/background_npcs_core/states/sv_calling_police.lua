@@ -1,10 +1,34 @@
+local bgNPC = bgNPC
+local table_RandomBySeq = table.RandomBySeq
+local CurTime = CurTime
+local IsValid = IsValid
+local pairs = pairs
+local hook_Run = hook.Run
+local math_random = math.random
+local CHAN_AUTO = CHAN_AUTO
+--
+local asset = bgNPC:GetModule('wanted')
 local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
+local phone_911_sounnds = {
+	Sound('background_npcs/calling_police/911/1.wav'),
+	Sound('background_npcs/calling_police/911/2.wav'),
+	Sound('background_npcs/calling_police/911/3.wav'),
+	Sound('background_npcs/calling_police/911/4.wav'),
+}
+local phone_beep_sounnds = {
+	Sound('background_npcs/calling_police/bepp/1.wav'),
+	Sound('background_npcs/calling_police/bepp/2.wav'),
+	Sound('background_npcs/calling_police/bepp/3.wav'),
+	Sound('background_npcs/calling_police/bepp/4.wav'),
+	Sound('background_npcs/calling_police/bepp/5.wav'),
+	Sound('background_npcs/calling_police/bepp/6.wav'),
+	Sound('background_npcs/calling_police/bepp/7.wav'),
+	Sound('background_npcs/calling_police/bepp/8.wav'),
+}
 
 local function IsValidWantedMode()
-	if not cvar_bgn_enable_wanted_mode:GetBool() or #bgNPC:GetAllByType('police') == 0 then
-		return false
-	end
-	return true
+	-- return cvar_bgn_enable_wanted_mode:GetBool() and #bgNPC:GetAllByType('police') ~= 0
+	return cvar_bgn_enable_wanted_mode:GetBool()
 end
 
 bgNPC:SetStateAction('calling_police', 'danger', {
@@ -15,26 +39,26 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 	end,
 	update = function(actor)
 		local currentEnemy = actor:GetEnemy()
-		if not IsValid(currentEnemy) then return end
+		local reaction = actor:GetReactionForDamage()
+		reaction = reaction == 'calling_police' and 'fear' or reaction
 
-		local TargetActor = bgNPC:GetActor(currentEnemy)
-		if TargetActor ~= nil and TargetActor:HasTeam('police') then
-			actor:SetState('fear')
+		if not IsValidWantedMode() or not IsValid(currentEnemy) or asset:HasWanted(currentEnemy) then
+			actor:SetState(reaction)
+			return
+		end
+
+		local enemyActor = bgNPC:GetActor(currentEnemy)
+		if enemyActor and enemyActor:HasTeam('police') then
+			actor:SetState(reaction)
 			return
 		end
 
 		local npc = actor:GetNPC()
-
-		if not IsValidWantedMode() then
-			actor:SetState('fear')
-			return
-		end
+		local npc_index = npc:EntIndex()
 
 		-- 90000 = 300 ^ 2
-		if not bgNPC:IsTargetRay(npc, currentEnemy)
-			or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000
-		then
-			local rnd = math.random(0, 100)
+		if not bgNPC:IsTargetRay(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
+			local rnd = math_random(0, 100)
 			if rnd > 80 then
 				actor:CallForHelp(currentEnemy)
 			end
@@ -46,26 +70,22 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 		local data = actor:GetStateData()
 
 		if data.calling_time == nil then
-			data.calling_time = CurTime() + 15
-			npc:EmitSound('background_npcs/phone_dialing_and_bepp_01.mp3', 200, 100, 1, CHAN_AUTO)
+			data.calling_time = CurTime() + math_random(7, 15)
 		else
 			if data.calling_time < CurTime() then
-				local asset = bgNPC:GetModule('wanted')
-
 				for _, enemy in pairs(actor.enemies) do
-					if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+					if IsValid(enemy) and not hook_Run('BGN_PreCallingPolice', actor, enemy) then
 						if asset:HasWanted(enemy) then
 							local WantedClass = asset:GetWanted(enemy)
 							WantedClass:UpdateWanted(enemy)
 						else
 							asset:AddWanted(enemy)
+							EmitSound(table_RandomBySeq(phone_911_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)
 						end
 					end
 				end
 
-				npc:EmitSound('buttons/combine_button1.wav', 200, 100, 1, CHAN_AUTO)
-
-				if not hook.Run('BGN_PostCallingPolice', actor) then
+				if not hook_Run('BGN_PostCallingPolice', actor) then
 					actor:SetState('fear')
 				end
 			else
@@ -76,8 +96,8 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 
 				data.btn_click_delay = data.btn_click_delay or 0
 				if data.btn_click_delay < CurTime() then
-					npc:EmitSound('buttons/button18.wav', 150, 100, 1, CHAN_AUTO)
-					data.btn_click_delay = CurTime() + 1
+					EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 120, 0, 100)
+					data.btn_click_delay = CurTime() + math_random(.3, 1.2)
 				end
 			end
 		end
