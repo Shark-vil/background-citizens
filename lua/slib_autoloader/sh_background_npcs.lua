@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.9.7'
+bgNPC.VERSION = '1.9.8'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
