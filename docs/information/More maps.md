@@ -12,6 +12,9 @@
 - [RP_Bangclaw](https://steamcommunity.com/sharedfiles/filedetails/?id=111863064)
 - [gm_bigcity_sh](https://steamcommunity.com/sharedfiles/filedetails/?id=732957261)
 - [gm_liminal_space](https://steamcommunity.com/sharedfiles/filedetails/?id=2563097753)
+- [rp_sheep_v3](https://steamcommunity.com/sharedfiles/filedetails/?id=2684330081)
+- [gm_neon_bigcity](https://steamcommunity.com/sharedfiles/filedetails/?id=2874866380)
+- [gm_stormwald](https://steamcommunity.com/sharedfiles/filedetails/?id=2985515914)
 
 ## Unofficial maps:
 - [Background Npcs | More Map Support! (unofficial)](https://steamcommunity.com/sharedfiles/filedetails/?id=2347506501)
@@ -24,6 +27,8 @@
 - [gm_goldencity_v2](https://steamcommunity.com/sharedfiles/filedetails/?id=2515486219)
 - [rp_ACSRG2](https://steamcommunity.com/sharedfiles/filedetails/?id=2417210266)
 - [Random Background NPC Nodes pack](https://steamcommunity.com/sharedfiles/filedetails/?id=2399118195)
-- [rp_sheep_v3](https://steamcommunity.com/sharedfiles/filedetails/?id=2684330081)
+- [gm_goldencity_v2_day](https://steamcommunity.com/sharedfiles/filedetails/?id=2717870246)
+- [gm_925](https://steamcommunity.com/sharedfiles/filedetails/?id=1915462897)
+- [Xanthys](https://steamcommunity.com/sharedfiles/filedetails/?id=1999903346)
 
 **Do you want your work to be listed, or do you want to suggest a map? You can do this on a discord server.**
