@@ -20,7 +20,6 @@ local bit_band = bit.band
 local util_PointContents = util.PointContents
 local assert = assert
 local FrameTime = FrameTime
-local type = type
 --
 
 local function HasBlockFoundSpawnPosition(node_position, all_players, spawn_radius, block_radius, target_entity)
@@ -80,7 +79,7 @@ local function FindSpawnLocationProcess(all_players, settings, yield)
 	local pass_current = 0
 	local AsyncYield = function()
 		pass_current = pass_current + 1
-		if pass_current >= FrameTime() then
+		if pass_current >= 1 / FrameTime() then
 			pass_current = 0
 			yield()
 		end
