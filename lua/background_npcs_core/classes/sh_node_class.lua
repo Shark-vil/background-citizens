@@ -2,7 +2,7 @@ local Vector = Vector
 local pairs = pairs
 local ipairs = ipairs
 local math_floor = math.floor
-local math_modf = math.modf
+-- local math_modf = math.modf
 local table_insert = table.insert
 local table_remove = table.remove
 local table_Count = table.Count
@@ -11,11 +11,17 @@ local util_TraceLine = util.TraceLine
 local util_TableToJSON = util.TableToJSON
 local util_JSONToTable = util.JSONToTable
 --
-local SingleChunkSize = 500
+-- local SingleChunkSize = 500
 local LimitPointAxisZ = GetConVar('bgn_point_z_limit'):GetInt()
 local CheckTraceSuccessToNodeUpperVector = Vector(0, 0, 10)
 local CheckTraceSuccessToNodeFilter = function(ent)
 	if ent:IsWorld() then return true end
+end
+local MAP_CHUNKS = slib.Instance('Chunks', { chunk_size = 1000 })
+if SERVER then
+	MsgN('[Background NPCs] Generating map chunks...')
+	MAP_CHUNKS:MakeChunks()
+	MsgN('[Background NPCs] Chunks successfully registered!')
 end
 
 BGN_NODE = {}
@@ -37,6 +43,7 @@ function BGN_NODE:Instance(position_value)
 	obj.parents = {}
 	obj.links = {}
 	obj.parent_distance = 250000
+	obj.chunk_id = -1
 
 	function obj:_snet_getdata()
 		local netobj = {}
@@ -204,10 +211,13 @@ function BGN_NODE:Instance(position_value)
 			end
 		end
 
-		local chunkId = self:GetChunkID()
-
-		if BGN_NODE.Chunks[chunkId] and table_HasValueBySeq(BGN_NODE.Chunks[chunkId], self.index) then
-			table_remove(BGN_NODE.Chunks[chunkId], self.index)
+		-- local chunkId = self:GetChunkID()
+		local chunk = MAP_CHUNKS:GetChunkByVector(self.position)
+		if chunk then
+			local chunkId = chunk.index
+			if BGN_NODE.Chunks[chunkId] and table_HasValueBySeq(BGN_NODE.Chunks[chunkId], self.index) then
+				table_remove(BGN_NODE.Chunks[chunkId], self.index)
+			end
 		end
 
 		table_remove(BGN_NODE.Map, self.index)
@@ -218,31 +228,43 @@ function BGN_NODE:Instance(position_value)
 	end
 
 	function obj:GetChunkID(chunkSize)
-		return BGN_NODE:GetChunkID(self.position, chunkSize)
+		return self.chunk_id
 	end
 
 	return obj
 end
 
-function BGN_NODE:GetChunkID(pos)
-	local x = pos.x
-	local y = pos.y
-	local xid = math_modf(x / SingleChunkSize)
-	local yid = math_modf(y / SingleChunkSize)
-	return xid .. yid
+-- function BGN_NODE:GetChunkID(pos)
+-- 	-- local x = pos.x
+-- 	-- local y = pos.y
+-- 	-- local xid = math_modf(x / SingleChunkSize)
+-- 	-- local yid = math_modf(y / SingleChunkSize)
+-- 	-- return xid .. yid
+
+-- 	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
+-- 	if not chunk then return end
+-- 	return chunk.index
+-- end
+
+function BGN_NODE:GetChunkController()
+	return MAP_CHUNKS
 end
 
 function BGN_NODE:GetChunkNodes(pos)
-	local chunkId = self:GetChunkID(pos)
-	local chunk = self.Chunks[chunkId]
+	-- local chunkId = self:GetChunkID(pos)
+	-- if not chunkId then return {} end
 
+	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
 	if not chunk then return {} end
+
+	local chunk_nodes = self.Chunks[chunk.index]
+	if not chunk_nodes then return {} end
 
 	local nodes = {}
 	local nodes_count = 0
 
-	for i = 1, #chunk do
-		local node = self.Map[chunk[i]]
+	for i = 1, #chunk_nodes do
+		local node = self.Map[chunk_nodes[i]]
 
 		if node then
 			nodes_count = nodes_count + 1
@@ -251,6 +273,24 @@ function BGN_NODE:GetChunkNodes(pos)
 	end
 
 	return nodes
+end
+
+function BGN_NODE:GetChunkNodesCount(pos)
+	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
+	if not chunk then return 0 end
+
+	local chunk_nodes = self.Chunks[chunk.index]
+	if not chunk_nodes then return 0 end
+
+	local nodes_count = 0
+
+	for i = 1, #chunk_nodes do
+		if self.Map[chunk_nodes[i]] then
+			nodes_count = nodes_count + 1
+		end
+	end
+
+	return nodes_count
 end
 
 function BGN_NODE:AddNodeToMap(node)
@@ -265,11 +305,17 @@ function BGN_NODE:AddNodeToMap(node)
 		node.index = index
 	end
 
-	local chunkId = node:GetChunkID()
-	self.Chunks[chunkId] = self.Chunks[chunkId] or {}
+	local chunk = MAP_CHUNKS:GetChunkByVector(node:GetPos())
+	if chunk then
+		local chunkId = chunk.index
+		self.Chunks[chunkId] = self.Chunks[chunkId] or {}
 
-	if not table_HasValueBySeq(self.Chunks[chunkId], index) then
-		table_insert(self.Chunks[chunkId], index)
+		if not table_HasValueBySeq(self.Chunks[chunkId], index) then
+			table_insert(self.Chunks[chunkId], index)
+		end
+
+		node.chunk_id = chunkId
+		-- print('make new node in chunk: ', node.chunk_id)
 	end
 end
 
@@ -312,14 +358,28 @@ function BGN_NODE:CountNodesOnMap()
 	return #self.Map
 end
 
-function BGN_NODE:SetMap(map)
+function BGN_NODE:SetMap(map, fix_outside_map_nodes)
 	self:ClearNodeMap()
 
 	for i = 1, #map do
 		self:AddNodeToMap(map[i])
 	end
 
-	self:FixOutsideMapNodes()
+	if fix_outside_map_nodes == nil then fix_outside_map_nodes = true end
+	if fix_outside_map_nodes then
+		self:FixOutsideMapNodes()
+	end
+end
+
+function BGN_NODE:ExpandMap(map, fix_outside_map_nodes)
+	for i = 1, #map do
+		self:AddNodeToMap(map[i])
+	end
+
+	if fix_outside_map_nodes == nil then fix_outside_map_nodes = true end
+	if fix_outside_map_nodes then
+		self:FixOutsideMapNodes()
+	end
 end
 
 function BGN_NODE:GetMap()

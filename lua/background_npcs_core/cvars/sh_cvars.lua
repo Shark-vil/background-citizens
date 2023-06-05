@@ -6,6 +6,7 @@ bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
+bgNPC.cvar.bgn_dynamic_nodes_alway_regenerate = 0
 bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_dynamic_nodes_type = 'grid'
 bgNPC.cvar.bgn_spawn_radius = 3000
@@ -109,7 +110,11 @@ scvar.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport,
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode,
-	FCVAR_ARCHIVE, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
+	FCVAR_ARCHIVE, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely. 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes_alway_regenerate', bgNPC.cvar.bgn_dynamic_nodes_alway_regenerate,
+	FCVAR_ARCHIVE, 'If enabled, the grid will be re-generated with each new iteration. If disabled, the generator will only replenish the missing areas where the players are currently located, without removing the old generation, which is more preferable from an optimization point of view. 1 - enabled, 0 - disabled.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2,

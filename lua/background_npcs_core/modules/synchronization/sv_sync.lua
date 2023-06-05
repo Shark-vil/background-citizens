@@ -1,13 +1,13 @@
 local bgNPC = bgNPC
 local player_GetHumans = player.GetHumans
 local slib_GetHashSumm = slib.GetHashSumm
-local FrameTime = FrameTime
+-- local FrameTime = FrameTime
 local IsValid = IsValid
 --
 local current_pass = 0
 local function has_yield()
 	current_pass = current_pass + 1
-	if current_pass >= FrameTime() then
+	if current_pass >= 1 / slib.deltaTime then
 		current_pass = 0
 		return true
 	end
