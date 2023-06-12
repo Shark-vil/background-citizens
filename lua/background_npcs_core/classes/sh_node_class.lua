@@ -14,22 +14,23 @@ local util_JSONToTable = util.JSONToTable
 local coroutine_yield = coroutine.yield
 --
 local is_infmap = slib.IsInfinityMap()
+if is_infmap then
+	util_TraceLine = function(...) return util.TraceLine(...) end
+end
+
 local LimitPointAxisZ = GetConVar('bgn_point_z_limit'):GetInt()
 local CheckTraceSuccessToNodeUpperVector = Vector(0, 0, 10)
 local CheckTraceSuccessToNodeFilter = function(ent)
 	if ent:IsWorld() then return true end
 end
 
-local BGN_NODE_PRIVATE = {}
-BGN_NODE_PRIVATE.AutoLinkIsAsync = false
-
 BGN_NODE = {}
 BGN_NODE.Map = {}
 BGN_NODE.MapCount = 0
 BGN_NODE.Chunks = {}
-BGN_NODE.CHUNK_SIZE_X = 2000
-BGN_NODE.CHUNK_SIZE_Y = 2000
-BGN_NODE.CHUNK_SIZE_Z = 2000
+BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or 2000
+BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or 2000
+BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or 2000
 
 local CHUNK_CLASS = slib.Component('Chunks')
 local MAP_CHUNKS = CHUNK_CLASS:Instance({
@@ -39,27 +40,12 @@ local MAP_CHUNKS = CHUNK_CLASS:Instance({
 	no_check_is_in_world = true
 })
 
--- local MAP_CHUNKS = CHUNK_CLASS:Instance({
--- 	chunk_size_x = 2000,
--- 	chunk_size_y = 2000,
--- 	chunk_size_z = CHUNK_CLASS:GetMaxMapSize(),
--- 	no_check_is_in_world = true,
--- })
-
 if SERVER then
 	hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
 		if IsValid(MAP_CHUNKS) then return end
 		-- MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
 		MAP_CHUNKS:MakeChunks()
 	end)
-
-	-- if is_infmap then
-	-- 	timer.Create('BGN_Timer_NodesClassInfMapOverride', 1, 0, function()
-	-- 		if not InfMap or not InfMap.TraceLine then return end
-	-- 		util_TraceLine = util.TraceLine
-	-- 		timer.Remove('BGN_Timer_NodesClassInfMapOverride')
-	-- 	end)
-	-- end
 end
 
 cvars.AddChangeCallback('bgn_point_z_limit', function(convar_name, value_old, value_new)
@@ -275,8 +261,6 @@ function BGN_NODE:Instance(position_value)
 	end
 
 	function obj:GetChunkID()
-		-- return BGN_NODE:GetChunkID(self.position, chunkSize)
-
 		if not self.chunk then return -1 end
 		return self.chunk.index
 	end
@@ -285,11 +269,6 @@ function BGN_NODE:Instance(position_value)
 end
 
 function BGN_NODE:GetChunkID(pos)
-	-- local x = pos.x
-	-- local y = pos.y
-	-- local xid = math_modf(x / SingleChunkSize)
-	-- local yid = math_modf(y / SingleChunkSize)
-	-- return xid .. yid
 	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
 	if not chunk then return -1 end
 	return chunk.index
@@ -466,10 +445,9 @@ function BGN_NODE:ExpandMap(map, fix_outside_map_nodes)
 	end
 end
 
-function BGN_NODE:AutoLink(settings)
+function BGN_NODE:AutoLink(settings, is_async)
 	settings = settings or {}
 
-	local is_async = BGN_NODE_PRIVATE.AutoLinkIsAsync
 	local async_current_pass = 0
 	local nodes_count = self.MapCount
 
@@ -485,7 +463,7 @@ function BGN_NODE:AutoLink(settings)
 		end
 
 		if not node or (node.single_check and node.single_check_complete) then continue end
-		-- if node.single_check then node.single_check_complete = true end
+		if node.single_check then node.single_check_complete = true end
 
 		for k = 1, nodes_count do
 			local another_node = self.Map[k]
@@ -513,9 +491,7 @@ function BGN_NODE:AutoLink(settings)
 end
 
 function BGN_NODE:AutoLinkAsync(settings)
-	BGN_NODE_PRIVATE.AutoLinkIsAsync = true
-	BGN_NODE:AutoLink(settings)
-	BGN_NODE_PRIVATE.AutoLinkIsAsync = false
+	BGN_NODE:AutoLink(settings, true)
 end
 
 function BGN_NODE:GetMap()
