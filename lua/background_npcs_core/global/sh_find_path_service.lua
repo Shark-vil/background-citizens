@@ -81,7 +81,7 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 	local currentIteration = 0
 	local checkedNodes = {}
 	local waitingNodes = {}
-	local closetNode = bgNPC:GetClosestPointToPointInChunk(startPos, endPos)
+	local closetNode = bgNPC:GetClosestPointInChunk(startPos)
 
 	if not closetNode or not IsNotWorld(startPos, closetNode.position) then
 		closetNode = bgNPC:GetClosestPointInRadius(startPos, 500)
