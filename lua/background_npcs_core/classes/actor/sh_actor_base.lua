@@ -710,10 +710,8 @@ function BaseClass:SetState(state, data, forced)
 		end
 	end
 
-	if not forced and bgNPC:StateActionExists(state, 'validator')
-		and not self:CallStateAction(state, 'validator', state, data)
-	then
-			return
+	if not forced and bgNPC:StateActionExists(state, 'validator') and not self:CallStateAction(state, 'validator', state, data) then
+		return
 	end
 
 	local new_state, new_data = self:CallStateAction(state, 'pre_start', state, data)
