@@ -4,8 +4,13 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
+	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
 	local table_Combine = table.Combine
-	local table_shuffle = table.shuffle
+	local bit_band = bit.band
+	local util_PointContents = util.PointContents
+	local CONTENTS_WATER = CONTENTS_WATER
+	-- local table_shuffle = table.shuffle
+	local IsValid = IsValid
 	local player_GetAll = player.GetAll
 	local table_remove = table.remove
 	local map_name = game.GetMap()
@@ -16,19 +21,32 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local file_Exists = file.Exists
 	local Vector = Vector
 	-- local math_floor = math.floor
-	local math_modf = math.modf
+	-- local math_modf = math.modf
 	-- local FrameTime = FrameTime
 	local add_z_axis = Vector(0, 0, 20)
 	local cell_size = 200
+	local sqrt_cell_size = cell_size ^ 2
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
-	local chunks = {}
-	local chunk_size = 250
-	local max_points_in_chunk = 5
+	local map_points = {}
+	local points_count = 0
+	-- local chunks = {}
+	-- local chunk_size = 250
+	-- local max_points_in_chunk = 20
 	local current_pass = 0
+	local is_infmap = slib.IsInfinityMap()
+	-- if is_infmap then
+	-- 	timer.Create('BGN_Timer_MovementMapDynamicGeneratorInfMapOverride', 1, 0, function()
+	-- 		if not InfMap or not InfMap.TraceLine then return end
+	-- 		util_IsInWorld = util.IsInWorld
+	-- 		util_TraceLine = util.TraceLine
+	-- 		timer.Remove('BGN_Timer_MovementMapDynamicGeneratorInfMapOverride')
+	-- 	end)
+	-- end
 	local trace_filter = function(ent)
-		if ent:IsWorld() or ent:GetClass() == 'infmap_terrain_collider' then
+		if IsValid(ent) and (ent:IsWorld() or (is_infmap and ent:GetClass() == 'infmap_terrain_collider')) then
 			return true
 		end
+		return false
 	end
 
 	local function PassYield()
@@ -37,13 +55,6 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			current_pass = 0
 			yield()
 		end
-	end
-
-	local function GetChunkId(pos)
-		local xid = math_modf(pos.x / chunk_size)
-		local yid = math_modf(pos.y / chunk_size)
-		local zid = math_modf(pos.z / chunk_size)
-		return xid .. yid .. zid
 	end
 
 	local function MovementMeshExists()
@@ -56,40 +67,57 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	local function ChunkHasFull(point_position)
-		local point_chunk_id = GetChunkId(point_position)
-		local max_points = max_points_in_chunk
+		-- if BGN_NODE:GetChunkNodesCount(point_position) >= max_points_in_chunk then return true end
 
-		if cvar_bgn_dynamic_nodes_type:GetString() ~= 'grid' then
-			max_points = 2
-		end
+		-- local can_save_progress = cvar_bgn_dynamic_nodes_save_progress:GetBool()
+		-- if can_save_progress then
+		-- 	return BGN_NODE:GetChunkNodesCountInRadius(point_position, cell_size) >= 1
+		-- end
 
-		if chunks[point_chunk_id] and chunks[point_chunk_id] >= max_points then
+		if BGN_NODE:GetChunkNodesCountInRadius(point_position, cell_size) >= 1 then
 			return true
 		end
-		return false
-	end
 
-	local function UpdateChunkPointsCount(point_position)
-		local point_chunk_id = GetChunkId(point_position)
-		chunks[point_chunk_id] = chunks[point_chunk_id] or 0
-		chunks[point_chunk_id] = chunks[point_chunk_id] + 1
+		PassYield()
+
+		-- if not can_save_progress or cvar_bgn_dynamic_nodes_type:GetString() ~= 'grid' then
+		local point_chunk_id = BGN_NODE:GetChunkID(point_position)
+		if point_chunk_id == -1 then
+			return true
+		end
+
+		PassYield()
+
+		for i = 1, points_count do
+			local node = map_points[i]
+			if node and node.chunk and node.chunk.index == point_chunk_id and node:GetPos():DistToSqr(point_position) <= sqrt_cell_size then
+				return true
+			end
+			PassYield()
+		end
+		-- end
+
+		return false
 	end
 
 	while true do
 		local restict = cvar_bgn_generator_restict:GetBool()
 		local enabled = cvar_bgn_dynamic_nodes:GetBool()
 
-		if not enabled or (restict and MovementMeshExists()) then
+		if not enabled or (restict and MovementMeshExists()) or not IsValid(BGN_NODE:GetChunkManager()) then
 			wait(1)
 		else
-			local map_points = {}
-			local points_count = 0
+			map_points = {}
+			points_count = 0
+			local is_dynamic_nodes_save = cvar_bgn_dynamic_nodes_save_progress:GetBool()
 			local expensive_generator = cvar_bgn_dynamic_nodes_type:GetString() == 'grid'
 			local radius = cvar_bgn_spawn_radius:GetFloat()
-			local players = table_shuffle(player_GetAll())
-			chunks = {}
+			local players = player_GetAll()
+			-- chunks = {}
 			current_pass = 0
 			cell_size = cvar_bgn_runtime_generator_grid_offset:GetInt()
+			sqrt_cell_size = cell_size ^ 2
+			-- max_points_in_chunk = BGN_NODE.CHUNK_SIZE_X / cell_size
 
 			for i = #players, 1, -1 do
 				local ply = players[i]
@@ -101,6 +129,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 			yield()
 
+			-- print('Start generate new nodes...')
+
 			if not expensive_generator then
 				-- for player_index = 1, math_Clamp(#players, 0, 4) do
 				for player_index = 1, #players do
@@ -109,9 +139,9 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 					local center = ply:LocalToWorld(ply:OBBCenter())
 					local current_radius_randomize = cell_size
-					local z = center.z + 50
+					local z = center.z + 100
 
-					for i = 1, radius do
+					for i = 1, 1000 do
 						current_radius_randomize = math_Clamp(current_radius_randomize, 0, radius)
 
 						local x = center.x + math_random(-radius, radius)
@@ -129,16 +159,24 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						end
 
 						local new_point_position = tr.HitPos + add_z_axis
+						if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+							PassYield()
+							continue
+						end
 
 						if not util_IsInWorld(new_point_position) or ChunkHasFull(new_point_position) then
 							PassYield()
 							continue
 						end
 
-						points_count = points_count + 1
-						map_points[points_count] = BGN_NODE:Instance(new_point_position)
+						local node = BGN_NODE:Instance(new_point_position)
+						if is_dynamic_nodes_save then
+							node.single_check = true
+						end
 
-						UpdateChunkPointsCount(new_point_position)
+						points_count = points_count + 1
+						map_points[points_count] = node
+
 						PassYield()
 
 						current_radius_randomize = current_radius_randomize + cell_size
@@ -156,10 +194,12 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					if not ply then continue end
 
 					local center = ply:LocalToWorld(ply:OBBCenter())
+					-- if is_infmap then
+					-- 	center = InfMap.localize_vector(center)
+					-- end
+
 					local x_offset = 0
-					local y = center.y
-					local z = center.z + 50
-					local start_point_vector = Vector(center.x, y, z)
+					local start_point_vector = center + Vector(0, 0, 100)
 
 					while start_point_vector:DistToSqr(center) <= sqr_radius do
 						if calc_iterations then
@@ -170,11 +210,17 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							local x = k == 1 and center.x + x_offset or center.x - x_offset
 							start_point_vector.x = x
 
-							local different_start_point = start_point_vector + Vector(0, 0, math_random(0, 100))
-							if not util_IsInWorld(different_start_point) then
-								different_start_point = start_point_vector
-							end
+							-- local different_start_point = start_point_vector + Vector(0, 0, 50)
+							-- if not util_IsInWorld(different_start_point) then
+							-- 	different_start_point = start_point_vector
+							-- end
 
+							-- if not util_IsInWorld(different_start_point) then
+							-- 	PassYield()
+							-- 	continue
+							-- end
+
+							local different_start_point = start_point_vector
 							if not util_IsInWorld(different_start_point) then
 								PassYield()
 								continue
@@ -191,17 +237,25 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								continue
 							end
 
-							points_count = points_count + 1
-
 							local new_point_position = tr.HitPos + add_z_axis
+							-- if is_infmap then
+							-- 	new_point_position = InfMap.localize_vector(new_point_position)
+							-- end
+
+							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+								PassYield()
+								continue
+							end
+
 							if ChunkHasFull(new_point_position) then
 								PassYield()
 								continue
 							end
 
-							map_points[points_count] = BGN_NODE:Instance(new_point_position)
+							points_count = points_count + 1
 
-							UpdateChunkPointsCount(new_point_position)
+							local new_node = BGN_NODE:Instance(new_point_position)
+							map_points[points_count] = new_node
 
 							PassYield()
 						end
@@ -217,22 +271,31 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				local y_points_count = 0
 
 				for node_index = 1, points_count do
-					local center = map_points[node_index]:GetPos()
+					local node = map_points[node_index]
+					if is_dynamic_nodes_save and node_index < points_count - 1 then
+						node.single_check = true
+					end
+
+					local center = node:GetPos()
 					local y_offset = 0
-					local x = center.x
-					local z = center.z + 50
-					local start_point_vector = Vector(x, 0, z)
+					local start_point_vector = Vector(center.x, 0, center.z) + Vector(0, 0, 100)
 
 					for i = 1, generator_iterations do
 						for k = 1, 2 do
 							local y = k == 1 and center.y + y_offset or center.y - y_offset
 							start_point_vector.y = y
 
-							local different_start_point = start_point_vector + Vector(0, 0, math_random(0, 100))
-							if not util_IsInWorld(different_start_point) then
-								different_start_point = start_point_vector
-							end
+							-- local different_start_point = start_point_vector + Vector(0, 0, 50)
+							-- if not util_IsInWorld(different_start_point) then
+							-- 	different_start_point = start_point_vector
+							-- end
 
+							-- if not util_IsInWorld(different_start_point) then
+							-- 	PassYield()
+							-- 	continue
+							-- end
+
+							local different_start_point = start_point_vector
 							if not util_IsInWorld(different_start_point) then
 								PassYield()
 								continue
@@ -249,17 +312,28 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								continue
 							end
 
-							y_points_count = y_points_count + 1
-
 							local new_point_position = tr.HitPos + add_z_axis
+							-- if is_infmap then
+							-- 	new_point_position = InfMap.localize_vector(new_point_position)
+							-- end
+
+							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+								PassYield()
+								continue
+							end
+
 							if ChunkHasFull(new_point_position) then
 								PassYield()
 								continue
 							end
 
-							y_axis_points[y_points_count] = BGN_NODE:Instance(new_point_position)
+							local new_node = BGN_NODE:Instance(new_point_position)
+							if is_dynamic_nodes_save and i < generator_iterations - 1 then
+								new_node.single_check = true
+							end
 
-							UpdateChunkPointsCount(new_point_position)
+							y_points_count = y_points_count + 1
+							y_axis_points[y_points_count] = new_node
 
 							PassYield()
 						end
@@ -272,8 +346,9 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				points_count = #map_points
 			end
 
-			local custom_current_pass = 0
+			-- local custom_current_pass = 0
 
+			--[[]
 			for point_index = 1, points_count do
 				local node = map_points[point_index]
 				if not node then continue end
@@ -283,8 +358,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					if not anotherNode or anotherNode == node then continue end
 
 					local pos = anotherNode:GetPos()
-					if node:CheckDistanceLimitToNode(pos)
-						and not anotherNode:HasParent(node)
+					if not anotherNode:HasParent(node)
+						and node:CheckDistanceLimitToNode(pos)
 						and node:CheckHeightLimitToNode(pos)
 						and node:CheckTraceSuccessToNode(pos)
 					then
@@ -293,23 +368,40 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						PassYield()
 					end
 
-					custom_current_pass = custom_current_pass + 1
-					if custom_current_pass >= 2500 then
-						custom_current_pass = 0
-						yield()
-					end
+					-- custom_current_pass = custom_current_pass + 1
+					-- if custom_current_pass >= 2500 then
+					-- 	custom_current_pass = 0
+					-- 	yield()
+					-- end
 				end
 
 				-- print(point_index, ' / ', points_count)
 
 				-- PassYield()
 			end
+			--]]
 
 			-- player.GetAll()[1]:ChatPrint('New mesh generated' .. ' ' .. tostring(CurTime()))
 
-			BGN_NODE:SetMap(map_points)
+			-- BGN_NODE:SetMap(map_points)
 
-			wait(5)
+			-- print('Start add new nodes: ' .. tostring(#map_points))
+
+			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
+				BGN_NODE:ExpandMap(map_points)
+			else
+				BGN_NODE:SetMap(map_points)
+			end
+
+			yield()
+
+			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
+				BGN_NODE:AutoLinkAsync()
+				wait(1)
+			else
+				BGN_NODE:AutoLink()
+				wait(5)
+			end
 		end
 	end
 end)
