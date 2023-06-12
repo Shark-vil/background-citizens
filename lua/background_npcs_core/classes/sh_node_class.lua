@@ -469,16 +469,12 @@ function BGN_NODE:AutoLink(settings, is_async)
 		if not node or (node.single_check and node.single_check_complete) then continue end
 		if node.single_check then node.single_check_complete = true end
 
-		-- if is_async then yield() end
-
 		for k = 1, nodes_count do
 			if is_async then yield() end
 
 			local another_node = self.Map[k]
 			if not another_node or node == another_node then continue end
 			if another_node.single_check and another_node.single_check_complete then continue end
-
-			-- if is_async then yield() end
 
 			local another_node_pos = another_node:GetPos()
 			if node:CheckDistanceLimitToNode(another_node_pos)
