@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.9.9'
+bgNPC.VERSION = '1.10.0'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
@@ -93,16 +93,18 @@ local function ExecutableScripts()
 	script:using('global/sh_states.lua')
 	script:using('global/sh_find_path_service.lua')
 	-- script:using('global/sv_pre_spawn_cache.lua')
-	script:using('global/sv_dynamic_movement_mesh.lua')
 	script:using('global/sv_peaceful_mode.lua')
 	script:using('global/sv_relationship.lua')
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
+	script:using('modules/dynamic_movement_mesh/sv_dynamic_movement_mesh.lua')
+	script:using('modules/dynamic_movement_mesh/cl_dynamic_movement_mesh.lua')
 	script:using('modules/sv_run_logic_optimization.lua')
 	script:using('modules/debug/cl_render_target_path.lua')
 	script:using('modules/debug/sv_movement_render.lua')
 	script:using('modules/debug/cl_movement_render.lua')
+	script:using('modules/debug/sh_draw_chunks.lua')
 	script:using('modules/sv_npc_look_at_object.lua')
 	script:using('modules/sv_player_look_at_object.lua')
 	script:using('modules/sv_static_animation_controller.lua')

@@ -11,6 +11,12 @@ local function TOOL_MENU(panel)
 		['Help'] = true,
 	})
 
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_save_progress',
+		['Command'] = 'bgn_dynamic_nodes_save_progress',
+		['Help'] = true,
+	})
+
 	panel:AddControl('ListBox', {
 		['Label'] = '#bgn.settings.spawn.bgn_dynamic_nodes_type',
 		['Command'] = 'bgn_dynamic_nodes_type',

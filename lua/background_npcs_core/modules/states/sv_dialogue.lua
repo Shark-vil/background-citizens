@@ -78,7 +78,7 @@ function ASSET:SetDialogue(actor1, actor2)
 	end
 
 	local index = table.insert(dialogue_actors, {
-		id = tostring(CurTime()) .. tostring(RealTime()) .. actor1:GetType() .. actor2:GetType(),
+		id = slib.UUID(),
 		interlocutors = {
 			[1] = actor1,
 			[2] = actor2,

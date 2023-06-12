@@ -19,6 +19,10 @@ local ipairs = ipairs
 local pairs = pairs
 local util_TraceLine = util.TraceLine
 local table_insert = table.insert
+local is_infmap = slib.IsInfinityMap()
+if is_infmap then
+	util_TraceLine = function(...) return util.TraceLine(...) end
+end
 
 local render_SetColorMaterial, render_DrawSphere, render_DrawLine, draw_SimpleTextOutlined, cam_Start3D2D, cam_End3D2D, surface_SetFont, surface_SetTextColor, surface_SetTextPos, surface_DrawText
 

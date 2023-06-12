@@ -8,6 +8,7 @@ bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
 bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_dynamic_nodes_type = 'grid'
+bgNPC.cvar.bgn_dynamic_nodes_save_progress = 0
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -49,6 +50,7 @@ bgNPC.cvar.bgn_tool_seat_offset_angle_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
 bgNPC.cvar.bgn_cl_draw_npc_path = 0
+bgNPC.cvar.bgn_cl_draw_chunks = 0
 bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
@@ -101,7 +103,11 @@ scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_debug', bgNPC.cvar.bgn_debug,
-	FCVAR_ARCHIVE, 'Turns on debug mode and prints additional information to the console.')
+	FCVAR_ARCHIVE, 'Turns on debug mode and prints additional information to the console. 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes_save_progress', bgNPC.cvar.bgn_dynamic_nodes_save_progress,
+	FCVAR_ARCHIVE, 'If enabled, the automatically-generated movement mesh will not be deleted with each new generation, 1 - enabled, 0 - disabled.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport,

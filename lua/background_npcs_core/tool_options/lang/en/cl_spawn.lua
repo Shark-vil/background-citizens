@@ -4,6 +4,8 @@
 return {
 	['bgn.settings.spawn.bgn_dynamic_nodes'] = 'Dynamic movement mesh',
 	['bgn.settings.spawn.bgn_dynamic_nodes.help'] = 'Allows you to generate a movement mesh automatically around the players. This is useful when the map does not have a movement mesh file. Keep in mind that this is a resource intensive process. It is recommended to create a movement mesh yourself, or generate one if the map has AI NavMesh.',
+	['bgn.settings.spawn.bgn_dynamic_nodes_save_progress'] = 'Save generation progress',
+	['bgn.settings.spawn.bgn_dynamic_nodes_save_progress.help'] = 'If enabled, the generator will not clear nodes with each new generation. Instead, the movement mesh will expand as players move around the map. The already generated zones will not change.',
 	['bgn.settings.spawn.bgn_dynamic_nodes_restict'] = 'Dynamic movement mesh constraint',
 	['bgn.settings.spawn.bgn_dynamic_nodes_restict.help'] = 'If enabled, the mesh will be generated only when there is no movement mesh file on the map. Otherwise, automatic generation will always be used.',
 	['bgn.settings.spawn.bgn_dynamic_nodes_type'] = 'Tim dynamic mesh',

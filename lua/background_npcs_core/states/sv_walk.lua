@@ -3,13 +3,17 @@ local math_random = math.random
 local CurTime = CurTime
 local slib_chance = slib.chance
 local table_RandomBySeq = table.RandomBySeq
+local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+local math_Clamp = math.Clamp
 
 local function GetRandomFoundPointDistance()
+	local result = 0
 	if slib_chance(30) then
-		return math_random(slib_chance(30) and 100 or 500, 2500)
+		result = math_random(slib_chance(30) and 100 or 500, 2500)
 	else
-		return math_random(slib_chance(30) and 500 or 1000, 2500)
+		result = math_random(slib_chance(30) and 500 or 1000, 2500)
 	end
+	return math_Clamp(result, 0, cvar_bgn_spawn_radius:GetInt())
 end
 
 local function GetRandomDelayForUpdateWalkTarget()
@@ -20,7 +24,7 @@ local function GetNextTargetNode(actor)
 	local dist = GetRandomFoundPointDistance()
 	local points = bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), dist, 'walk')
 
-	if not point or #points == 0 then
+	if not points or #points == 0 then
 		points = bgNPC:GetAllPoints('walk')
 	end
 
