@@ -1,6 +1,30 @@
+local map_name = game.GetMap()
+local IsValid = IsValid
+local file_Exists = file.Exists
+local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
+local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
+
+local function MovementMeshExists()
+	local d, t = 'background_npcs/nodes/', 'DATA'
+	return file_Exists(d .. map_name .. '.dat', t) or file_Exists(d .. map_name .. '.json', t)
+end
+
+local function IsEnableGenerator()
+	local restict = cvar_bgn_generator_restict:GetBool()
+	local enabled = cvar_bgn_dynamic_nodes:GetBool()
+	return enabled and IsValid(BGN_NODE:GetChunkManager()) and (not restict or not MovementMeshExists())
+end
+
+hook.Add('slib.FirstPlayerSpawn', 'BGN_MovementMeshGeneratorNotify', function(ply)
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	if not IsEnableGenerator() then return end
+	ply:slibCreateTimer('bgn_dynamic_mevement_mesh_alert_message', 2, 1, function()
+		if not IsEnableGenerator() then return end
+		snet.Invoke('bgn_dynamic_mevement_mesh_alert_message', ply)
+	end)
+end)
+
 async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
-	local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
-	local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
@@ -9,15 +33,12 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local bit_band = bit.band
 	local util_PointContents = util.PointContents
 	local CONTENTS_WATER = CONTENTS_WATER
-	local IsValid = IsValid
 	local player_GetAll = player.GetAll
 	local table_remove = table.remove
-	local map_name = game.GetMap()
 	local math_random = math.random
 	local util_IsInWorld = util.IsInWorld
 	local util_TraceLine = util.TraceLine
 	local math_Clamp = math.Clamp
-	local file_Exists = file.Exists
 	local Vector = Vector
 	local add_z_axis = Vector(0, 0, 20)
 	local cell_size = 200
@@ -27,6 +48,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local points_count = 0
 	local current_pass = 0
 	local is_infmap = slib.IsInfinityMap()
+	local infO_message_for_admins_has_send = true
 	if is_infmap then
 		util_IsInWorld = function(...) return util.IsInWorld(...) end
 		util_TraceLine = function(...) return util.TraceLine(...) end
@@ -46,32 +68,22 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 		end
 	end
 
-	local function MovementMeshExists()
-		if file_Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
-			return true
-		elseif file_Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
-			return true
-		end
-		return false
-	end
-
 	local function ChunkHasFull(point_position)
 		if BGN_NODE:GetChunkNodesCountInRadius(point_position, cell_size) >= 1 then
+			PassYield()
 			return true
 		end
-
-		PassYield()
 
 		local point_chunk_id = BGN_NODE:GetChunkID(point_position)
 		if point_chunk_id == -1 then
+			PassYield()
 			return true
 		end
-
-		PassYield()
 
 		for i = 1, points_count do
 			local node = map_points[i]
 			if node and node.chunk and node.chunk.index == point_chunk_id and node:GetPos():DistToSqr(point_position) <= sqrt_cell_size then
+				PassYield()
 				return true
 			end
 			PassYield()
@@ -81,12 +93,22 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	while true do
-		local restict = cvar_bgn_generator_restict:GetBool()
-		local enabled = cvar_bgn_dynamic_nodes:GetBool()
-
-		if not enabled or (restict and MovementMeshExists()) or not IsValid(BGN_NODE:GetChunkManager()) then
+		if not IsEnableGenerator() then
+			if infO_message_for_admins_has_send then infO_message_for_admins_has_send = false end
 			wait(1)
 		else
+			if not infO_message_for_admins_has_send then
+				infO_message_for_admins_has_send = true
+				local admins = {}
+				for _, v in ipairs(player_GetAll()) do
+					if IsValid(v) and (v:IsAdmin() or v:IsSuperAdmin()) then
+						table.insert(admins, v)
+					end
+				end
+				if #admins ~= 0 then
+					snet.Invoke('bgn_dynamic_mevement_mesh_alert_message', admins)
+				end
+			end
 			map_points = {}
 			points_count = 0
 			local is_dynamic_nodes_save = cvar_bgn_dynamic_nodes_save_progress:GetBool()
@@ -135,11 +157,15 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							continue
 						end
 
+						PassYield()
+
 						local new_point_position = tr.HitPos + add_z_axis
 						if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
 							PassYield()
 							continue
 						end
+
+						PassYield()
 
 						if not util_IsInWorld(new_point_position) or ChunkHasFull(new_point_position) then
 							PassYield()
@@ -153,13 +179,10 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 						points_count = points_count + 1
 						map_points[points_count] = node
+						current_radius_randomize = current_radius_randomize + cell_size
 
 						PassYield()
-
-						current_radius_randomize = current_radius_randomize + cell_size
 					end
-
-					PassYield()
 				end
 			else
 				local generator_iterations = 0
@@ -200,11 +223,15 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								continue
 							end
 
+							PassYield()
+
 							local new_point_position = tr.HitPos + add_z_axis
 							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
 								PassYield()
 								continue
 							end
+
+							PassYield()
 
 							if ChunkHasFull(new_point_position) then
 								PassYield()
@@ -261,11 +288,15 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								continue
 							end
 
+							PassYield()
+
 							local new_point_position = tr.HitPos + add_z_axis
 							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
 								PassYield()
 								continue
 							end
+
+							PassYield()
 
 							if ChunkHasFull(new_point_position) then
 								PassYield()
@@ -293,16 +324,10 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
 				BGN_NODE:ExpandMap(map_points)
-			else
-				BGN_NODE:SetMap(map_points)
-			end
-
-			yield()
-
-			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
 				BGN_NODE:AutoLinkAsync()
 				wait(1)
 			else
+				BGN_NODE:SetMap(map_points)
 				BGN_NODE:AutoLink()
 				wait(5)
 			end

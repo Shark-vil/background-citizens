@@ -1,6 +1,11 @@
 local text_color_info = Color(61, 206, 217)
+local text_color_red = Color(255, 0, 0)
 local text_command_color = Color(227, 209, 11)
 local text_version_color = Color(237, 153, 43)
+local text_color_mod_title = Color(85, 180, 243)
+local text_color_orange = Color(255, 196, 0)
+local text_color_green = Color(30, 255, 0)
+local text_color_version = Color(135, 196, 211)
 
 local function version_check()
 	http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
@@ -43,33 +48,36 @@ local function version_check()
 
 			if v_addon < v_github then
 
-				local text_color = Color(255, 196, 0)
-				chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-					text_color, lang.msg_outdated, text_version_color, lang.actual_version,
+				chat.AddText(text_color_red, '[ADMIN] ',
+					text_color_mod_title, 'Background NPCs:\n',
+					text_color_orange, lang.msg_outdated, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2)
+					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
 
 			elseif v_addon == v_github then
 
-				local text_color = Color(30, 255, 0)
-				chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-					text_color, lang.msg_latest, text_version_color, lang.actual_version,
+				chat.AddText(text_color_red, '[ADMIN] ',
+					text_color_mod_title, 'Background NPCs:\n',
+					text_color_green, lang.msg_latest, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2)
+					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
 
 			elseif v_addon > v_github then
 
-				local text_color = Color(30, 255, 0)
-				chat.AddText(Color(255, 0, 0), '[ADMIN] ',
-					text_color, lang.msg_dev, text_version_color, lang.actual_version,
+				chat.AddText(text_color_red, '[ADMIN] ',
+					text_color_mod_title, 'Background NPCs:\n',
+					text_color_green, lang.msg_dev, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2)
+					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
 
 			end
 
 			if v_storage ~= bgNPC.VERSION then
-				local text_color = Color(135, 196, 211)
-				chat.AddText(Color(255, 0, 0), '[ADMIN] ', text_color, lang.msg_upgrade, text_version_color, v_storage .. ' -> ' .. bgNPC.VERSION)
+				chat.AddText(text_color_red, '[ADMIN] ',
+					text_color_mod_title, 'Background NPCs:\n',
+					text_color_version, lang.msg_upgrade,
+					text_version_color, v_storage .. ' -> ' .. bgNPC.VERSION .. '\n')
+
 				file.Write('background_npcs/version.txt', bgNPC.VERSION)
 			end
 		end,
