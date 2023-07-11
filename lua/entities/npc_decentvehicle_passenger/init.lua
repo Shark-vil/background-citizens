@@ -1,5 +1,7 @@
 local dvd = DecentVehicleDestination
 if not dvd then return end
+if not file.Exists('entities/npc_decentvehicle/playermeta.lua', 'LUA') then return end
+
 AddCSLuaFile('cl_init.lua')
 AddCSLuaFile('shared.lua')
 AddCSLuaFile('entities/npc_decentvehicle/playermeta.lua')
