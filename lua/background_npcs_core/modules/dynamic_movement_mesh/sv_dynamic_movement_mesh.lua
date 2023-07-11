@@ -25,14 +25,13 @@ hook.Add('slib.FirstPlayerSpawn', 'BGN_MovementMeshGeneratorNotify', function(pl
 end)
 
 async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+	local bgNPC = bgNPC
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
-	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+	-- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+	local cvar_bgn_spawn_radius = 1000
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
 	local table_Combine = table.Combine
-	local bit_band = bit.band
-	local util_PointContents = util.PointContents
-	local CONTENTS_WATER = CONTENTS_WATER
 	local player_GetAll = player.GetAll
 	local table_remove = table.remove
 	local math_random = math.random
@@ -160,7 +159,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						PassYield()
 
 						local new_point_position = tr.HitPos + add_z_axis
-						if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+						if bgNPC:VectorInWater(new_point_position) then
 							PassYield()
 							continue
 						end
@@ -226,7 +225,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							PassYield()
 
 							local new_point_position = tr.HitPos + add_z_axis
-							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+							if bgNPC:VectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end
@@ -291,7 +290,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							PassYield()
 
 							local new_point_position = tr.HitPos + add_z_axis
-							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+							if bgNPC:VectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end

@@ -72,9 +72,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		ActorTarget:SetReaction(reaction)
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
-		if isbool(hook_result) then
-			return hook_result
-		end
+		if isbool(hook_result) then return hook_result end
 
 		reaction = ActorTarget:GetLastReaction()
 
@@ -101,15 +99,11 @@ hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attack
 			return true
 		end
 
-		if not ActorAttacker:HasEnemy(target) then
-			return
-		end
+		if not ActorAttacker:HasEnemy(target) then return end
 	end
 
 	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
-	if isbool(hook_result) then
-		return hook_result
-	end
+	if isbool(hook_result) then return hook_result end
 
 	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
 end)

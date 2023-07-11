@@ -83,6 +83,7 @@ local function ExecutableScripts()
 	script:using('classes/sh_seat_class.lua')
 	script:using('classes/sh_dv_class.lua')
 
+	script:using('global/cl_fonts.lua')
 	script:using('global/sv_meta.lua')
 	script:using('global/sh_meta.lua')
 	script:using('global/sv_spawner.lua')
@@ -226,13 +227,13 @@ end
 
 ExecutableScripts()
 
+hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_SH_Player', function()
+	include(root_directory .. '/config/sh_player.lua')
+end)
+
 hook.Add('PostGamemodeLoaded', 'BGN_PostGamemodeLoaded', function()
 	hook.Run('BGN_PostGamemodeLoaded')
 	hook.Remove('PostGamemodeLoaded', 'BGN_PostGamemodeLoaded')
-end)
-
-hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_SH_Player', function()
-	include(root_directory .. '/config/sh_player.lua')
 end)
 
 scommand.Create('bgn_scripts_reload').OnShared(function()

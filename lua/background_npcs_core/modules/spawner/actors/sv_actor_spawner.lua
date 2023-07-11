@@ -9,6 +9,17 @@ local isbool = isbool
 local StopAnimator = slib.Animator.Stop
 --
 
+local function ActorSpawnOnPosition(npc_type, position)
+	if not bgNPC:IsValidSpawnArea(npc_type, position) then return end
+
+	local actor = bgNPC:SpawnActor(npc_type, position)
+	if not actor then return end
+
+	if not bgNPC:EnterActorInExistVehicle(actor) then
+		bgNPC:SpawnVehicleWithActor(actor)
+	end
+end
+
 function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
 	for _, area in pairs(bgNPC.SpawnArea) do
 		if spawnPosition:WithinAABox(area.startPoint, area.endPoint) then
@@ -55,98 +66,83 @@ end
 
 local function InitActorsSpawner(delay)
 	async.AddDedic('bgn_actors_spawner_process', function(yield, wait)
-		wait(delay)
+		while true do
+			wait(delay)
 
-		local bgn_enable = GetConVar('bgn_enable'):GetBool()
-		if not bgn_enable or player.GetCount() == 0 then return end
+			local bgn_enable = GetConVar('bgn_enable'):GetBool()
+			if not bgn_enable or player.GetCount() == 0 then continue end
 
-		bgNPC:ClearRemovedNPCs()
+			bgNPC:ClearRemovedNPCs()
 
-		for npcType, npc_data in pairs(bgNPC.cfg.actors) do
-			yield()
+			for npcType, npc_data in pairs(bgNPC.cfg.actors) do
+				yield()
 
-			if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then continue end
+				if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then
+					yield()
+					continue
+				end
 
-			local max_limit = bgNPC:GetLimitActors(npcType)
-			if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then continue end
+				local max_limit = bgNPC:GetLimitActors(npcType)
+				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then
+					yield()
+					continue
+				end
 
-			local pos
+				local pos
 
-			if npc_data.wanted_level ~= nil then
-				local asset = bgNPC:GetModule('wanted')
-				local success = false
-				local wanted_list = asset:GetAllWanted()
+				if npc_data.wanted_level then
+					local asset = bgNPC:GetModule('wanted')
+					local success = false
+					local wanted_list = asset:GetAllWanted()
 
-				for i = 1, #wanted_list do
-					local WantedClass = wanted_list[i]
-					local target = WantedClass.target
+					for i = 1, #wanted_list do
+						local WantedClass = wanted_list[i]
+						local target = WantedClass.target
 
-					if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
-						pos = target:GetPos()
-						success = true
-						break
+						if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
+							pos = target:GetPos()
+							success = true
+							break
+						end
+
+						yield()
+					end
+
+					if not success then
+						yield()
+						continue
 					end
 				end
 
-				if not success then continue end
-			end
-
-			if npc_data.validator then
-				local result = npc_data.validator(npc_data, npcType)
-				if isbool(result) and not result then
-					continue
-				end
-			end
-
-			local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
-			if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
-				if spawn_delayer.time < CurTime() then
-					bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
-					bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
-				else
-					continue
-				end
-			end
-
-			--[[]
-			bgNPC:FindSpawnPositionAsync(npcType, { position = pos }, function(nodePosition)
-				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
-
-				local actor = bgNPC:SpawnActor(npcType, nodePosition)
-				if not actor then return end
-
-				if not bgNPC:EnterActorInExistVehicle(actor) then
-					bgNPC:SpawnVehicleWithActor(actor)
+				if npc_data.validator then
+					local result = npc_data.validator(npc_data, npcType)
+					if isbool(result) and not result then
+						yield()
+						continue
+					end
 				end
 
-				-- if bgNPC:ActorIsStuck(actor) then
-				-- 	actor:Remove()
-				-- elseif not bgNPC:EnterActorInExistVehicle(actor) then
-				-- 	bgNPC:SpawnVehicleWithActor(actor)
-				-- end
-			end)
-			--]]
-
-			local nodePosition = bgNPC:FindSpawnPosition({ position = pos })
-			if nodePosition then
-				if not bgNPC:IsValidSpawnArea(npcType, nodePosition) then return end
-
-				local actor = bgNPC:SpawnActor(npcType, nodePosition)
-				if not actor then return end
-
-				if not bgNPC:EnterActorInExistVehicle(actor) then
-					bgNPC:SpawnVehicleWithActor(actor)
+				local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
+				if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
+					if spawn_delayer.time < CurTime() then
+						bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
+						bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
+					else
+						yield()
+						continue
+					end
 				end
 
-				-- if bgNPC:ActorIsStuck(actor) then
-				-- 	actor:Remove()
-				-- elseif not bgNPC:EnterActorInExistVehicle(actor) then
-				-- 	bgNPC:SpawnVehicleWithActor(actor)
-				-- end
+				yield()
+
+				local nodePosition = bgNPC:FindSpawnPositionAsync(npcType, { position = pos })
+				if nodePosition then
+					ActorSpawnOnPosition(npcType, nodePosition)
+				end
+
+				yield()
 			end
 		end
-
-		yield()
 	end)
 end
 

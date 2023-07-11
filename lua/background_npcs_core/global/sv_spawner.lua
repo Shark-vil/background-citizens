@@ -1,3 +1,4 @@
+local bgNPC = bgNPC
 local util_IsInWorld = util.IsInWorld
 local string_StartWith = string.StartWith
 -- local coroutine_yield = coroutine.yield
@@ -15,11 +16,9 @@ local isstring = isstring
 local pairs = pairs
 local ipairs = ipairs
 local slib_chance = slib.chance
-local CONTENTS_WATER = CONTENTS_WATER
-local bit_band = bit.band
-local util_PointContents = util.PointContents
-local assert = assert
-local FrameTime = FrameTime
+-- local assert = assert
+-- local FrameTime = FrameTime
+local coroutine_yield = coroutine.yield
 --
 
 local function HasBlockFoundSpawnPosition(node_position, all_players, spawn_radius, block_radius, target_entity)
@@ -68,8 +67,7 @@ local function HasBlockFoundSpawnPosition(node_position, all_players, spawn_radi
 	return true
 end
 
-local function FindSpawnLocationProcess(all_players, settings, yield)
-	local is_async = yield ~= nil
+local function FindSpawnLocationProcess(all_players, settings, is_async)
 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
 	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
@@ -79,9 +77,9 @@ local function FindSpawnLocationProcess(all_players, settings, yield)
 	local pass_current = 0
 	local AsyncYield = function()
 		pass_current = pass_current + 1
-		if pass_current >= 1 / FrameTime() then
+		if pass_current >= 1 / slib.deltaTime then
 			pass_current = 0
-			yield()
+			coroutine_yield()
 		end
 	end
 
@@ -102,14 +100,14 @@ local function FindSpawnLocationProcess(all_players, settings, yield)
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
 
-		if bit_band(util_PointContents(nodePosition), CONTENTS_WATER) == CONTENTS_WATER then
+		if bgNPC:VectorInWater(nodePosition) then
 			nodePosition = nil
 			continue
 		end
 
 		if is_async then AsyncYield() end
 
-		if not HasBlockFoundSpawnPosition(nodePosition, all_players, spawn_radius, block_radius, target_entity, yield) then
+		if not HasBlockFoundSpawnPosition(nodePosition, all_players, spawn_radius, block_radius, target_entity) then
 			nodePosition = nil
 			continue
 		end
@@ -159,16 +157,16 @@ function bgNPC:FindSpawnPosition(settings)
 	if not settings.position then return end
 
 	local isvector = isvector
-	local nodePosition = FindSpawnLocationProcess(all_players, settings, nil)
+	local nodePosition = FindSpawnLocationProcess(all_players, settings, false)
 	if nodePosition and isvector(nodePosition) then
 		return nodePosition
 	end
 end
 
-function bgNPC:FindSpawnPositionAsync(process_name, settings, action)
-	assert(isfunction(action), 'The variable type is not a function')
+function bgNPC:FindSpawnPositionAsync(process_name, settings)
+	-- assert(isfunction(action), 'The variable type is not a function')
 
-	local async_spawner_name = 'bgn_async_spawner_' .. process_name
+	local async_spawner_name = 'bgn_async_spawner_' .. tostring(process_name)
 	if async.Exists(async_spawner_name) then return end
 
 	settings = settings or {}
@@ -193,10 +191,17 @@ function bgNPC:FindSpawnPositionAsync(process_name, settings, action)
 	settings.position = desired_position
 	if not settings.position then return end
 
+	local nodePosition = FindSpawnLocationProcess(all_players, settings, true)
+	if nodePosition and isvector(nodePosition) then
+		-- action(nodePosition)
+		return nodePosition
+	end
+
+	--[[]
 	async.Add(async_spawner_name, function(yield, wait)
 		slib.def({
 			try = function()
-				local nodePosition = FindSpawnLocationProcess(all_players, settings, yield)
+				local nodePosition = FindSpawnLocationProcess(all_players, settings, true)
 				if nodePosition and isvector(nodePosition) then
 					action(nodePosition)
 				end
@@ -204,6 +209,7 @@ function bgNPC:FindSpawnPositionAsync(process_name, settings, action)
 		})
 		return 'stop'
 	end)
+	==]]
 end
 
 do
@@ -211,7 +217,6 @@ do
 	local player_GetCount = player.GetCount
 	local table_HasValueBySeq = table.HasValueBySeq
 	local list_Get = list.Get
-	local isbool = isbool
 	local table_insert = table.insert
 	local util_IsValidModel = util.IsValidModel
 	local math_random = math.random
@@ -220,27 +225,27 @@ do
 		if player_GetCount() == 0 then return end
 		if bgNPC:VectorInWater(desiredPosition) then return end
 
-		local npcData = bgNPC:GetActorConfig(npcType)
+		local npc_data = bgNPC:GetActorConfig(npcType)
 		local is_many_classes = false
 		local npc_class
 
-		if istable(npcData.class) then
-			npc_class = table_RandomBySeq(npcData.class)
+		if istable(npc_data.class) then
+			npc_class = table_RandomBySeq(npc_data.class)
 			is_many_classes = true
 		else
-			npc_class = npcData.class
+			npc_class = npc_data.class
 		end
 
-		if hook_Run('BGN_OnValidSpawnActor', npcType, npcData, npc_class, desiredPosition) then return end
+		if hook_Run('BGN_OnValidSpawnActor', npcType, npc_data, npc_class, desiredPosition) then return end
 
-		local newNpcData, newNpcClass = hook_Run('BGN_OverrideSpawnData', npcType, npcData, npc_class)
+		local new_npc_data, new_npc_class = hook_Run('BGN_OverrideSpawnData', npcType, npc_data, npc_class)
 
-		if newNpcData then
-			npcData = newNpcData
+		if new_npc_data then
+			npc_data = new_npc_data
 		end
 
-		if newNpcClass then
-			npc_class = newNpcClass
+		if new_npc_class then
+			npc_class = new_npc_class
 		end
 
 		local npc = ents.Create(npc_class)
@@ -254,7 +259,7 @@ do
 			ATTENTION! Be careful, this hook is called before the NPC spawns. 
 			If you give out a weapon or something similar, it will crash the game!
 		--]]
-		if hook_Run('BGN_PreSpawnActor', npc, npcType, npcData) then
+		if hook_Run('BGN_PreSpawnActor', npc, npcType, npc_data) then
 			if IsValid(npc) then npc:Remove() end
 			return
 		end
@@ -267,9 +272,9 @@ do
 
 		-- if npc.DropToFloor then npc:DropToFloor() end
 
-		hook_Run('BGN_PostSpawnActor', npc, npcType, npcData)
+		hook_Run('BGN_PostSpawnActor', npc, npcType, npc_data)
 
-		local skipSetModel = false
+		local skip_set_model = false
 		local npcs_list = nil
 
 		do
@@ -281,7 +286,7 @@ do
 					if actorType == npcType and table_HasValueBySeq(actorData.class, npcClass) then
 						local listData = npcs_list[npcClass]
 						if not listData or not listData.Model then
-							skipSetModel = true
+							skip_set_model = true
 							break
 						end
 					end
@@ -289,63 +294,74 @@ do
 			end
 		end
 
-		if npcs_list and npcData.random_model or GetConVar('bgn_all_models_random'):GetBool() then
+		if npcs_list and npc_data.random_model or GetConVar('bgn_all_models_random'):GetBool() then
 			if not random_models_storage[npc_class] then
 				random_models_storage[npc_class] = {}
 
 				for k, v in pairs(npcs_list) do
 					if v.Model and isstring(v.Model) and v.Class == npc_class then
-						table_insert(random_models_storage[npc_class], v.Model)
+						table_insert(random_models_storage[npc_class], v)
 					end
 				end
 			end
 
 			local models = random_models_storage[npc_class]
 			if models and #models ~= 0 then
-				npc:SetModel(table_RandomBySeq(models))
+				local model_info = table_RandomBySeq(models)
+				if util_IsValidModel(model_info.Model) then
+					npc:SetModel(model_info.Model)
+
+					if model_info.KeyValues and istable(model_info.KeyValues) then
+						for key, value in pairs(model_info.KeyValues) do
+							npc:SetKeyValue(key, value)
+						end
+					end
+				end
 			end
-		elseif not skipSetModel and npcData.models and istable(npcData.models) then
+		elseif not skip_set_model and npc_data.models and istable(npc_data.models) then
 			local model
 
-			if is_many_classes and npcData.models[npc_class] then
-				model = table_RandomBySeq(npcData.models[npc_class])
-			elseif #npcData.models ~= 0 then
-				model = table_RandomBySeq(npcData.models)
+			if is_many_classes and npc_data.models[npc_class] then
+				model = table_RandomBySeq(npc_data.models[npc_class])
+			elseif #npc_data.models ~= 0 then
+				model = table_RandomBySeq(npc_data.models)
 			end
 
 			if model and util_IsValidModel(model) then
 				-- Backward compatibility with the old version of the config
-				npcData.default_models = npcData.default_models or npcData.defaultModels
+				local default_models = npc_data.default_models or npc_data.defaultModels
 
-				if (not npcData.default_models or (npcData.default_models and slib_chance(80)))
-					and not hook_Run('BGN_PreSetActorModel', model, npc, npcType, npcData)
-				then
+				if (not default_models or slib_chance(80)) and not hook_Run('BGN_PreSetActorModel', model, npc, npcType, npc_data) then
 					npc:SetModel(model)
 				end
 			end
 		end
 
-		-- Backward compatibility with the old version of the config
-		npcData.random_skin = npcData.random_skin or npcData.randomSkin
+		do
+			-- Backward compatibility with the old version of the config
+			local random_skin = npc_data.random_skin or npc_data.randomSkin
 
-		if npcData.random_skin and isbool(npcData.random_skin) then
-			local skinNumber = math_random(0, npc:SkinCount())
+			if random_skin then
+				local skinNumber = math_random(0, npc:SkinCount())
 
-			if not hook_Run('BGN_PreSetActorSkin', skinNumber, npc, npcType, npcData) then
-				npc:SetSkin(math_random(0, npc:SkinCount()))
+				if not hook_Run('BGN_PreSetActorSkin', skinNumber, npc, npcType, npc_data) then
+					npc:SetSkin(math_random(0, npc:SkinCount()))
+				end
 			end
 		end
 
-		-- Backward compatibility with the old version of the config
-		npcData.random_bodygroups = npcData.random_bodygroups or npcData.randomBodygroups
+		do
+			-- Backward compatibility with the old version of the config
+			local random_bodygroups = npc_data.random_bodygroups or npc_data.randomBodygroups
 
-		if npcData.random_bodygroups and isbool(npcData.random_bodygroups) then
-			for _, bodygroup in ipairs(npc:GetBodyGroups()) do
-				local id = bodygroup.id
-				local value = math_random(0, npc:GetBodygroupCount(id))
+			if random_bodygroups then
+				for _, bodygroup in ipairs(npc:GetBodyGroups()) do
+					local id = bodygroup.id
+					local value = math_random(0, npc:GetBodygroupCount(id))
 
-				if not hook_Run('BGN_PreSetActorBodygroup', id, value, npc, npcType, npcData) then
-					npc:SetBodygroup(id, value)
+					if not hook_Run('BGN_PreSetActorBodygroup', id, value, npc, npcType, npc_data) then
+						npc:SetBodygroup(id, value)
+					end
 				end
 			end
 		end

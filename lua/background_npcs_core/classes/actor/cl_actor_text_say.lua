@@ -1,21 +1,3 @@
-surface.CreateFont('BGN_SpeakingFont', {
-	font = 'background_npcs_speaking_font',
-	extended = false,
-	size = 14,
-	weight = 100,
-	blursize = 0,
-	scanlines = 0,
-	antialias = true,
-	underline = false,
-	italic = false,
-	strikeout = false,
-	symbol = false,
-	rotary = false,
-	shadow = true,
-	additive = false,
-	outline = false,
-})
---
 local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
 local LocalPlayer = LocalPlayer
 local cam_Start3D2D = cam.Start3D2D
@@ -120,8 +102,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
 			local ypos = -15
 			for k = 1, #text_lines do
 				local draw_text = text_lines[k]
-				draw_SimpleTextOutlined(draw_text, font_name, 0, ypos, clr_1,
-					TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
+				draw_SimpleTextOutlined(draw_text, font_name, 0, ypos, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
 				ypos = ypos + 15
 			end
 		cam_End3D2D()

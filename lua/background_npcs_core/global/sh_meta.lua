@@ -177,19 +177,21 @@ function bgNPC:IsTargetRay(watcher, ent)
 end
 
 function bgNPC:GetActivePlayerTool(tool_name, ply)
-	local ply = ply
-	if not ply then
+	if not tool_name or not isstring(tool_name) then return end
+
+	if not IsValid(ply) then
 		if SERVER then return end
 		ply = LocalPlayer()
 	end
 
 	local tool = ply:GetTool()
-	if not tool or not tool.GetMode or tool:GetMode() ~= tool_name then return end
+	if not tool or not isfunction(tool.GetMode) or tool:GetMode() ~= tool_name then return end
 	return tool
 end
 
-local npcs_template_copy = table.Copy(bgNPC.cfg.actors)
-
-function bgNPC:ResetConfiguration()
-	bgNPC.cfg.actors = table.Copy(npcs_template_copy)
+do
+	local npcs_template_copy = table.Copy(bgNPC.cfg.actors)
+	function bgNPC:ResetConfiguration()
+		bgNPC.cfg.actors = table.Copy(npcs_template_copy)
+	end
 end

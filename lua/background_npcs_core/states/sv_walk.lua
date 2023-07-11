@@ -8,10 +8,11 @@ local math_Clamp = math.Clamp
 
 local function GetRandomFoundPointDistance()
 	local result = 0
+	local chance = slib_chance(30)
 	if slib_chance(30) then
-		result = math_random(slib_chance(30) and 100 or 500, 2500)
+		result = math_random(chance and 100 or 500, 2500)
 	else
-		result = math_random(slib_chance(30) and 500 or 1000, 2500)
+		result = math_random(chance and 500 or 1000, 2500)
 	end
 	return math_Clamp(result, 0, cvar_bgn_spawn_radius:GetInt())
 end
@@ -54,15 +55,22 @@ local function UpdateActorMovementType(actor, data)
 	data.updateMovementTypeDelay = CurTime() + 1
 end
 
-local function UpdateActorTargetPoint(actor, data)
-	if data.updateTargetPointDelay > CurTime() then return end
+local function UpdateActorTargetPointAsync(actor, data)
+	if not data.updateTargetPointDelay or data.updateTargetPointDelay > CurTime() then
+		return
+	end
 
 	local node = GetNextTargetNode(actor)
-	if not node then return end
+	if not node then
+		return
+	end
 
 	actor:WalkToPos(node.position, data.schedule, 'walk')
 
-	if not actor.walkPath or #actor.walkPath == 0 then return end
+	if not actor.walkPath or #actor.walkPath == 0 then
+		return
+	end
+
 	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
 end
 
@@ -75,17 +83,13 @@ bgNPC:SetStateAction('walk', 'calm', {
 		data.updateMovementTypeDelay = data.updateMovementTypeDelay or 0
 
 		UpdateActorMovementType(actor, data)
-		UpdateActorTargetPoint(actor, data)
+		UpdateActorTargetPointAsync(actor, data)
 	end
 })
 
 hook.Add('BGN_ActorFinishedWalk', 'BGN_WalkStateUpdatePoint', function(actor)
-	if actor:GetState() ~= 'walk' then return end
-
+	if not actor or not actor:IsAlive() or actor:GetState() ~= 'walk' then return end
 	local data = actor:GetStateData()
-	local node = GetNextTargetNode(actor)
-	if not node then return end
-
-	actor:WalkToPos(node.position, data.schedule, 'walk')
-	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
+	data.updateMovementTypeDelay = 0
+	data.updateTargetPointDelay = 0
 end)

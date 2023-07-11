@@ -32,7 +32,7 @@ async.Add('BGN_MovementProcess', function(yield, wait)
 					end
 
 					actor.walkUpdatePathDelay = CurTime() + 10
-					yield()
+					-- yield()
 				end
 			end
 

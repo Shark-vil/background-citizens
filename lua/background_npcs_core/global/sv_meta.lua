@@ -1,7 +1,6 @@
 local function ArcCWWeaponReplacement(npc)
 	if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
-		local arcw_replacement = slib.Component('Hook', 'Get',
-			'OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
+		local arcw_replacement = slib.Component('Hook', 'Get', 'OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
 		if arcw_replacement then arcw_replacement(npc) end
 	end
 end
@@ -29,10 +28,9 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 		switching = switching or false
 
 		if IsValid(active_weapon) then
-			if switching then
-				if active_weapon:GetClass() == weapon_class then return end
-			else
-				if active_weapon:GetClass() ~= weapon_class then return end
+			local is_equal_class = active_weapon:GetClass() == weapon_class
+			if (switching and is_equal_class) or (not switching and not is_equal_class) then
+				return
 			end
 		end
 
@@ -41,36 +39,41 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 			weapon = npc:Give(weapon_class)
 		end
 
-		npc:SelectWeapon(weapon_class)
-		ArcCWWeaponReplacement(npc)
+		if IsValid(weapon) then
+			npc:SelectWeapon(weapon_class)
+			ArcCWWeaponReplacement(npc)
+		end
 	else
-		local _weapon_class = actor.weapon
-		if _weapon_class and #_weapon_class ~= 0 then
+		local actor_weapon_class = actor.weapon
+		if actor_weapon_class and #actor_weapon_class ~= 0 then
 			local active_weapon = npc:GetActiveWeapon()
 			if not IsValid(active_weapon) then
-				local npcList = list.Get('VJBASE_SPAWNABLE_NPC')
-				local npcClass = npc:GetClass()
-
-				if npcList and npcList[npcClass] and npcList[npcClass].Weapons then
-					_weapon_class = table.RandomBySeq(npcList[npcClass].Weapons)
+				local vj_base_npcs_list = list.Get('VJBASE_SPAWNABLE_NPC')
+				if vj_base_npcs_list then
+					local npc_class = npc:GetClass()
+					local vj_base_npc_data = vj_base_npcs_list[npc_class]
+					if vj_base_npc_data and vj_base_npc_data.Weapons then
+						actor_weapon_class = table.RandomBySeq(vj_base_npc_data.Weapons)
+					end
 				end
 
-				local weapon = npc:GetWeapon(_weapon_class)
+				local weapon = npc:GetWeapon(actor_weapon_class)
 				if not IsValid(weapon) then
-					weapon = npc:Give(_weapon_class)
+					weapon = npc:Give(actor_weapon_class)
 				end
 
-				npc:SelectWeapon(_weapon_class)
-				ArcCWWeaponReplacement(npc)
+				if IsValid(weapon) then
+					npc:SelectWeapon(actor_weapon_class)
+					ArcCWWeaponReplacement(npc)
+				end
 			end
 		end
 	end
 
 	-- Backward compatibility with the old version of the config
-	data.weapon_skill = data.weapon_skill or data.weaponSkill
-
-	if data.weapon_skill ~= nil and isnumber(data.weapon_skill) then
-		npc:SetCurrentWeaponProficiency(data.weapon_skill)
+	local weapon_skill = data.weapon_skill or data.weaponSkill
+	if weapon_skill and isnumber(weapon_skill) then
+		npc:SetCurrentWeaponProficiency(weapon_skill)
 	end
 end
 

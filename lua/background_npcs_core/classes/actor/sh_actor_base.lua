@@ -65,7 +65,8 @@ local schedule_white_list = {
 }
 
 -- local _movement_finished_distance = 250
-local _movement_finished_distance = 10000
+-- local _movement_finished_distance = 10000
+local _movement_finished_distance = 150 ^ 2
 local _collision_min_bounds = Vector(13, 13, 72)
 local _collision_max_bounds = Vector(_collision_min_bounds.x * -1, _collision_min_bounds.y * -1, 0)
 

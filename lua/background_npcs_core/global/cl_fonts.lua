@@ -1,0 +1,18 @@
+surface.CreateFont('BGN_SpeakingFont', {
+	-- font = 'mr_ApexMk3MediumG',
+	font = 'Museo Sans Cyrl 500',
+	extended = false,
+	size = 14,
+	weight = 100,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = true,
+	additive = false,
+	outline = false,
+})
