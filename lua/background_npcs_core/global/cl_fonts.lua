@@ -1,5 +1,4 @@
 surface.CreateFont('BGN_SpeakingFont', {
-	-- font = 'mr_ApexMk3MediumG',
 	font = 'Museo Sans Cyrl 500',
 	extended = false,
 	size = 14,
