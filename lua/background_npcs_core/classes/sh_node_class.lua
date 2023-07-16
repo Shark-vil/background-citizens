@@ -285,7 +285,7 @@ function BGN_NODE:GetChunkNodesCount(pos)
 	return #chunks
 end
 
-function BGN_NODE:GetChunkNodes(pos)
+function BGN_NODE:GetChunkNodes(pos, is_async)
 	local chunkId = self:GetChunkID(pos)
 	local chunks = self.Chunks[chunkId]
 
@@ -301,9 +301,15 @@ function BGN_NODE:GetChunkNodes(pos)
 			nodes_count = nodes_count + 1
 			nodes[nodes_count] = node
 		end
+
+		if is_async then coroutine_yield() end
 	end
 
 	return nodes
+end
+
+function BGN_NODE:GetChunkNodesAsync(pos)
+	return self:GetChunkNodes(pos, true)
 end
 
 function BGN_NODE:AddNodeToMap(node)
@@ -342,8 +348,8 @@ function BGN_NODE:GetNodeByPos(pos)
 	end
 end
 
-function BGN_NODE:GetChunkNodesInRadius(pos, radius)
-	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos)
+function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
+	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_in_radius = {}
 	local nodes_count = 0
 	radius = radius ^ 2
@@ -354,12 +360,18 @@ function BGN_NODE:GetChunkNodesInRadius(pos, radius)
 			nodes_count = nodes_count + 1
 			nodes_in_radius[nodes_count] = node
 		end
+
+		if is_async then coroutine_yield() end
 	end
 
 	return nodes_in_radius
 end
 
-function BGN_NODE:GetNodesInRadius(pos, radius)
+function BGN_NODE:GetChunkNodesInRadiusAsync(pos, radius)
+	return self:GetChunkNodesInRadius(pos, radius, true)
+end
+
+function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
 	local nodes_in_radius = {}
 	local nodes_count = 0
 	radius = radius ^ 2
@@ -370,13 +382,19 @@ function BGN_NODE:GetNodesInRadius(pos, radius)
 			nodes_count = nodes_count + 1
 			nodes_in_radius[nodes_count] = node
 		end
+
+		if is_async then coroutine_yield() end
 	end
 
 	return nodes_in_radius
 end
 
-function BGN_NODE:GetChunkNodesCountInRadius(pos, radius)
-	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos)
+function BGN_NODE:GetNodesInRadiusAsync(pos, radius)
+	return self:GetNodesInRadius(pos, radius, true)
+end
+
+function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
+	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_count = 0
 	radius = radius ^ 2
 
@@ -385,9 +403,15 @@ function BGN_NODE:GetChunkNodesCountInRadius(pos, radius)
 		if node:GetPos():DistToSqr(pos) <= radius then
 			nodes_count = nodes_count + 1
 		end
+
+		if is_async then coroutine_yield() end
 	end
 
 	return nodes_count
+end
+
+function BGN_NODE:GetChunkNodesCountInRadiusAsync(pos, radius)
+	return self:GetChunkNodesCountInRadius(pos, radius, true)
 end
 
 function BGN_NODE:GetNodesCountInRadius(pos, radius)
@@ -428,12 +452,13 @@ function BGN_NODE:SetMap(map)
 	self:FixOutsideMapNodes()
 end
 
-function BGN_NODE:ExpandMap(map, fix_outside_map_nodes)
+function BGN_NODE:ExpandMap(map, fix_outside_map_nodes, is_async)
 	for i = 1, #map do
 		local node = map[i]
 		if node.index == -1 then
 			self:AddNodeToMap(node)
 		end
+		if is_async then coroutine_yield() end
 	end
 
 	if not isbool(fix_outside_map_nodes) and fix_outside_map_nodes == nil then
@@ -443,6 +468,10 @@ function BGN_NODE:ExpandMap(map, fix_outside_map_nodes)
 	if fix_outside_map_nodes then
 		self:FixOutsideMapNodes()
 	end
+end
+
+function BGN_NODE:ExpandMapAsync(map, fix_outside_map_nodes)
+	self:ExpandMap(map, fix_outside_map_nodes, true)
 end
 
 function BGN_NODE:AutoLink(settings, is_async)
