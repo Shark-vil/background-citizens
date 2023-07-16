@@ -1,3 +1,6 @@
+local dvd = DecentVehicleDestination
+if not dvd then return end
+
 include('shared.lua')
 include('entities/npc_decentvehicle/playermeta.lua')
 
