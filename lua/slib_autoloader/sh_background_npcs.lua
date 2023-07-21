@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.10.2'
+bgNPC.VERSION = '1.10.3'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
@@ -93,7 +93,6 @@ local function ExecutableScripts()
 	script:using('global/sh_wanted_killing_statistic.lua')
 	script:using('global/sh_states.lua')
 	script:using('global/sh_find_path_service.lua')
-	-- script:using('global/sv_pre_spawn_cache.lua')
 	script:using('global/sv_peaceful_mode.lua')
 	script:using('global/sv_relationship.lua')
 
@@ -144,7 +143,7 @@ local function ExecutableScripts()
 	script:using('modules/quest_dialogue/sv_parent_dialogue.lua')
 	script:using('modules/states/sv_arrest.lua')
 	script:using('modules/states/sv_dialogue.lua')
-	script:using('modules/states/sv_walk.lua')
+	-- script:using('modules/states/sv_walk.lua')
 	script:using('modules/states/wanted/sh_wanted_class.lua')
 	script:using('modules/states/wanted/sv_wanted_actions.lua')
 	script:using('modules/states/wanted/cl_wanted_sync.lua')
@@ -160,7 +159,6 @@ local function ExecutableScripts()
 	script:using('modules/synchronization/cl_sync.lua')
 	script:using('modules/synchronization/sv_sync.lua')
 	script:using('modules/cl_version_checker.lua')
-	-- script:using('modules/sh_gm_construct_fixed_dark_room.lua')
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
 	script:using('modules/sv_followers_mod.lua')

@@ -171,16 +171,16 @@ function ASSET:SwitchDialogue(actor)
 				gender = dialogue.gender[dialogue.speaking]
 				local sound_path = NormalizeSoundPath(dialogue.replic[1], gender)
 				dialogue.switchTime = CurTime() + slib.SoundDuration('sound/' .. sound_path) + 0.5
-				local actor = dialogue.interlocutors[dialogue.speaking]
-				_EmitSound(actor, sound_path)
+				local target_actor = dialogue.interlocutors[dialogue.speaking]
+				_EmitSound(target_actor, sound_path)
 				_PlayAnimation(dialogue)
 			end
 		else
 			dialogue.soundId = dialogue.soundId + 1
 			local sound_path = NormalizeSoundPath(dialogue.replic[dialogue.soundId], gender)
 			dialogue.switchTime = CurTime() + slib.SoundDuration('sound/' .. sound_path) + 0.5
-			local actor = dialogue.interlocutors[dialogue.speaking]
-			_EmitSound(actor, sound_path)
+			local target_actor = dialogue.interlocutors[dialogue.speaking]
+			_EmitSound(target_actor, sound_path)
 			_PlayAnimation(dialogue)
 		end
 	end

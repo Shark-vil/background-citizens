@@ -28,6 +28,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local bgNPC = bgNPC
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+	local FrameTime = FrameTime
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
 	local table_Combine = table.Combine
@@ -60,7 +61,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	local function PassYield()
 		current_pass = current_pass + 1
-		if current_pass >= 1 / slib.deltaTime then
+		if current_pass >= 1 / FrameTime() then
 			current_pass = 0
 			yield()
 		end
@@ -115,8 +116,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			points_count = 0
 			local is_dynamic_nodes_save = cvar_bgn_dynamic_nodes_save_progress:GetBool()
 			local expensive_generator = cvar_bgn_dynamic_nodes_type:GetString() == 'grid'
-			-- local radius = cvar_bgn_spawn_radius:GetFloat()
-			local radius = 1000
+			local radius = cvar_bgn_spawn_radius:GetFloat()
+			radius = math_Clamp(radius, 0, 2000)
 			local players = player_GetAll()
 			current_pass = 0
 			cell_size = cvar_bgn_runtime_generator_grid_offset:GetInt()
@@ -223,8 +224,6 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								filter = trace_filter
 							})
 
-							PassYield()
-
 							if not tr.Hit then
 								PassYield()
 								continue
@@ -290,8 +289,6 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 								filter = trace_filter
 							})
 
-							PassYield()
-
 							if not tr.Hit then
 								PassYield()
 								continue
@@ -337,14 +334,15 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 				BGN_NODE:ExpandMapAsync(map_points, false)
 				yield()
 				BGN_NODE:AutoLinkAsync()
-				wait(1)
+				yield()
 			else
 				BGN_NODE:SetMap(map_points)
 				yield()
-				-- BGN_NODE:AutoLink()
-				BGN_NODE:AutoLinkAsync()
-				wait(5)
+				BGN_NODE:AutoLink()
+				yield()
 			end
+
+			wait(1)
 		end
 	end
 end)

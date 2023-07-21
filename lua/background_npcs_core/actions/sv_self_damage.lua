@@ -1,6 +1,9 @@
 local bgNPC = bgNPC
-local hook = hook
 local isbool = isbool
+local CurTime = CurTime
+local hook_Run = hook.Run
+local table_WhereFindBySeq = table.WhereFindBySeq
+local table_insert = table.insert
 --
 local TeamParentModule = bgNPC:GetModule('team_parent')
 
@@ -14,9 +17,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local result
 
 	if target:IsNPC() or target:IsNextBot() then
-		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
+		result = hook_Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
 	elseif target:IsPlayer() then
-		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
+		result = hook_Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
 	end
 
 	if isbool(result) then return result end
@@ -24,7 +27,7 @@ end)
 
 local function CheckDamageIgnore(attacker, target)
 	target.LastDamageHistory = target.LastDamageHistory or {}
-	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v) return v.enemy == attacker end)
+	local _, value = table_WhereFindBySeq(target.LastDamageHistory, function(_, v) return v.enemy == attacker end)
 	if value then
 		if value.time + 1 > CurTime() then
 			value.count = value.count + 1
@@ -33,7 +36,7 @@ local function CheckDamageIgnore(attacker, target)
 			value.count = 0
 		end
 	else
-		table.insert(target.LastDamageHistory, {
+		table_insert(target.LastDamageHistory, {
 			enemy = attacker,
 			count = 1,
 			time = CurTime()
@@ -43,7 +46,7 @@ end
 
 local function GetLastDamageCount(attacker, target)
 	target.LastDamageHistory = target.LastDamageHistory or {}
-	local _, value = table.WhereFindBySeq(target.LastDamageHistory, function(_, v)
+	local _, value = table_WhereFindBySeq(target.LastDamageHistory, function(_, v)
 		return v.enemy == attacker
 	end)
 	if value then return value.count end
@@ -71,7 +74,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		local reaction = ActorTarget:GetReactionForDamage()
 		ActorTarget:SetReaction(reaction)
 
-		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
+		local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
 		if isbool(hook_result) then return hook_result end
 
 		reaction = ActorTarget:GetLastReaction()
@@ -89,7 +92,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		end
 	end
 
-	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
+	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
 end)
 
 hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
@@ -102,8 +105,8 @@ hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attack
 		if not ActorAttacker:HasEnemy(target) then return end
 	end
 
-	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
+	local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
 	if isbool(hook_result) then return hook_result end
 
-	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
+	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
 end)

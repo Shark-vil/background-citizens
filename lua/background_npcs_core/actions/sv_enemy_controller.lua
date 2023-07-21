@@ -13,8 +13,9 @@ async.Add('BGN_ActorEnemyController', function(yield, wait)
 
 			if actor and actor:IsAlive() then
 				actor:EnemiesRecalculate()
-				yield()
 			end
+
+			yield()
 		end
 
 		wait(1)

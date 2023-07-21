@@ -2,11 +2,12 @@ local bgNPC = bgNPC
 local player_GetHumans = player.GetHumans
 local slib_GetHashSumm = slib.GetHashSumm
 local IsValid = IsValid
+local FrameTime = FrameTime
 --
 local current_pass = 0
 local function has_yield()
 	current_pass = current_pass + 1
-	if current_pass >= 1 / slib.deltaTime then
+	if current_pass >= 1 / FrameTime() then
 		current_pass = 0
 		return true
 	end
@@ -45,6 +46,8 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 					players = sync_players
 				}
 			end
+
+			yield()
 		end
 	end
 
@@ -77,12 +80,12 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 					if sync_hash ~= old_sync_hash then
 						snet.Invoke('bgn_actor_sync_data', ply, actor.uid, sync_data)
 						actor.sync_players_hash[ply] = sync_hash
-						if has_yield() then yield() end
 					end
+					if has_yield() then yield() end
 				end
 			end
 
-			if has_yield() then yield() end
+			yield()
 		end
 	end
 end)
