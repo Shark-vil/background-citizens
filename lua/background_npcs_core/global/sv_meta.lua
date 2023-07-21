@@ -77,6 +77,14 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	end
 end
 
+function bgNPC:CheckVehicleAttacker(attacker)
+	if IsValid(attacker) and attacker:IsVehicle() then
+		attacker = attacker:GetDriver()
+		if not IsValid(attacker) then return end
+	end
+	return attacker
+end
+
 function bgNPC:IsEnemyTeam(target_actor, attacker)
 	if not IsValid(attacker) or attacker:Health() <= 0 then return false end
 
