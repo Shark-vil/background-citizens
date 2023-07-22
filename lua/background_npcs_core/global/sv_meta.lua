@@ -1,10 +1,3 @@
-local function ArcCWWeaponReplacement(npc)
-	if GetConVar('bgn_module_arccw_weapon_replacement'):GetBool() then
-		local arcw_replacement = slib.Component('Hook', 'Get', 'OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
-		if arcw_replacement then arcw_replacement(npc) end
-	end
-end
-
 do
 	local bit_band = bit.band
 	local util_PointContents = util.PointContents
@@ -18,6 +11,7 @@ end
 function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	local npc = actor:GetNPC()
 	local data = actor:GetData()
+	local can_give = false
 
 	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor.type)
 	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end
@@ -35,13 +29,15 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 		end
 
 		local weapon = npc:GetWeapon(weapon_class)
-		if not IsValid(weapon) then
+		if not IsValid(weapon) and not hook.Run('BGN_PreGiveWeapon', actor, npc, weapon_class) then
 			weapon = npc:Give(weapon_class)
+			hook.Run('BGN_PostGiveWeapon', actor, npc, weapon_class)
+			can_give = true
 		end
 
-		if IsValid(weapon) then
+		if can_give and IsValid(weapon) and not hook.Run('BGN_PreSelectWeapon', actor, npc, weapon_class) then
 			npc:SelectWeapon(weapon_class)
-			ArcCWWeaponReplacement(npc)
+			hook.Run('BGN_PostSelectWeapon', actor, npc, weapon_class)
 		end
 	else
 		local actor_weapon_class = actor.weapon
@@ -58,13 +54,15 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 				end
 
 				local weapon = npc:GetWeapon(actor_weapon_class)
-				if not IsValid(weapon) then
+				if not IsValid(weapon) and not hook.Run('BGN_PreGiveWeapon', actor, npc, actor_weapon_class) then
 					weapon = npc:Give(actor_weapon_class)
+					hook.Run('BGN_PostGiveWeapon', actor, npc, actor_weapon_class)
+					can_give = true
 				end
 
-				if IsValid(weapon) then
+				if can_give and IsValid(weapon) and not hook.Run('BGN_PreSelectWeapon', actor, npc, actor_weapon_class) then
 					npc:SelectWeapon(actor_weapon_class)
-					ArcCWWeaponReplacement(npc)
+					hook.Run('BGN_PostSelectWeapon', actor, npc, actor_weapon_class)
 				end
 			end
 		end
@@ -75,6 +73,8 @@ function bgNPC:SetActorWeapon(actor, weapon_class, switching)
 	if weapon_skill and isnumber(weapon_skill) then
 		npc:SetCurrentWeaponProficiency(weapon_skill)
 	end
+
+	hook.Run('BGN_OnSetActorWeapon', actor)
 end
 
 function bgNPC:CheckVehicleAttacker(attacker)

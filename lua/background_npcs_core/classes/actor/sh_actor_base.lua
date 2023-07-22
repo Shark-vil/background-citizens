@@ -1359,6 +1359,21 @@ function BaseClass:HasStateGroup(state_name, group_name)
 	return false
 end
 
+function BaseClass:CreateFakePlayerMethodsForNPC()
+	local npc = self.npc
+	if not IsValid(npc) then return end
+
+	-- Fixes some weapon mods.
+	if not isfunction(npc.LagCompensation) then
+		function npc:LagCompensation() end
+	end
+
+	-- Fixes some weapon mods.
+	if not isfunction(npc.GetViewModel) then
+		function npc:GetViewModel() end
+	end
+end
+
 function BaseClass:IsMeleeWeapon()
 	if not self:IsAlive() then return false end
 

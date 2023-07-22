@@ -13,18 +13,20 @@ local function ParseEntitiesForActorAsync(actor)
 	local entities = ents_FindInSphere(npc_pos, 1000)
 
 	for k = 1, #entities do
-		if not IsValid(npc) then
-			break
-		end
+		local ent = entities[k]
 
 		coroutine_yield()
 
-		local ent = entities[k]
 		if not IsValid(ent) then
 			continue
 		end
 
 		local ent_pos = ent:GetPos()
+
+		coroutine_yield()
+
+		if not IsValid(npc) then break end
+
 		if not bgNPC:NPCIsViewVector(npc, ent_pos, 70) then
 			continue
 		end
@@ -53,12 +55,10 @@ local function ParseEntitiesForActorAsync(actor)
 				end
 			})
 
-			if tr.Hit then
+			if tr.Hit and IsValid(ent) and actor:IsAlive() then
 				hook_Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
 			end
 		end
-
-		coroutine_yield()
 	end
 end
 

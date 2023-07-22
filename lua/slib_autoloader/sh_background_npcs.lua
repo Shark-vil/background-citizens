@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.10.3'
+bgNPC.VERSION = '1.10.4'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
@@ -98,13 +98,17 @@ local function ExecutableScripts()
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
+
 	script:using('modules/dynamic_movement_mesh/sv_dynamic_movement_mesh.lua')
 	script:using('modules/dynamic_movement_mesh/cl_dynamic_movement_mesh.lua')
+
 	script:using('modules/sv_run_logic_optimization.lua')
+
 	script:using('modules/debug/cl_render_target_path.lua')
 	script:using('modules/debug/sv_movement_render.lua')
 	script:using('modules/debug/cl_movement_render.lua')
 	script:using('modules/debug/sh_draw_chunks.lua')
+
 	script:using('modules/sv_npc_look_at_object.lua')
 	script:using('modules/sv_player_look_at_object.lua')
 	script:using('modules/sv_static_animation_controller.lua')
@@ -112,6 +116,9 @@ local function ExecutableScripts()
 	script:using('modules/sv_zombie_mode.lua')
 	script:using('modules/sv_dropmoney.lua')
 	script:using('modules/sv_n2money_drop.lua')
+
+	script:using('modules/weapons/sv_weapon_replacment.lua')
+
 	script:using('modules/npcs/sv_police_helicopter_spawn_rules.lua')
 	script:using('modules/npcs/sv_set_citizen_model.lua')
 	script:using('modules/npcs/sv_set_gangster_model.lua')
@@ -120,13 +127,19 @@ local function ExecutableScripts()
 	script:using('modules/npcs/sv_random_voice.lua')
 	script:using('modules/npcs/sv_bio_annihilation_two.lua')
 	script:using('modules/npcs/sv_regeneration.lua')
+
+	script:using('modules/cl_updatepage.lua')
+
 	script:using('modules/player/sv_team_parent.lua')
+
 	script:using('modules/darkrp/sv_darkrp_drop_money.lua')
 	script:using('modules/darkrp/sv_remove_wanted_if_arrest.lua')
 	script:using('modules/darkrp/sv_change_team_wanted.lua')
 	script:using('modules/darkrp/sv_disable_door_open.lua')
+
 	script:using('modules/arrest/sv_police_system.lua')
 	script:using('modules/arrest/sv_darkrp_arrest.lua')
+
 	script:using('modules/routes/sh_route_saver.lua')
 	script:using('modules/routes/loader/sv_loader.lua')
 	script:using('modules/routes/loader/cl_loader.lua')
@@ -135,15 +148,17 @@ local function ExecutableScripts()
 	script:using('modules/routes/compile/sh_save_map.lua')
 	script:using('modules/routes/sv_oldroute_convert.lua')
 	script:using('modules/routes/sh_seat_saver.lua')
+
 	script:using('modules/spawner/actors/sh_actor_remover.lua')
 	script:using('modules/spawner/actors/sv_actor_remover.lua')
 	script:using('modules/spawner/actors/sv_actor_spawner.lua')
 	script:using('modules/spawner/sv_dv_spawner.lua')
 	script:using('modules/spawner/sv_dv_remover.lua')
+
 	script:using('modules/quest_dialogue/sv_parent_dialogue.lua')
+
 	script:using('modules/states/sv_arrest.lua')
 	script:using('modules/states/sv_dialogue.lua')
-	-- script:using('modules/states/sv_walk.lua')
 	script:using('modules/states/wanted/sh_wanted_class.lua')
 	script:using('modules/states/wanted/sv_wanted_actions.lua')
 	script:using('modules/states/wanted/cl_wanted_sync.lua')
@@ -151,14 +166,20 @@ local function ExecutableScripts()
 	script:using('modules/states/steal_money/sv_darkrp.lua')
 	script:using('modules/states/steal_money/sv_n2money.lua')
 	script:using('modules/states/steal_money/sv_sandbox.lua')
+
 	script:using('modules/ambient/cl_ambient_sound.lua')
+
 	script:using('modules/dv/sv_fix_autoload_routes.lua')
 	script:using('modules/dv/sv_move_to_target.lua')
 	script:using('modules/dv/sv_car_damage_reaction.lua')
+
 	script:using('modules/sv_nbc_npc_remover_bypass.lua')
+
 	script:using('modules/synchronization/cl_sync.lua')
 	script:using('modules/synchronization/sv_sync.lua')
+
 	script:using('modules/cl_version_checker.lua')
+
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
 	script:using('modules/sv_followers_mod.lua')

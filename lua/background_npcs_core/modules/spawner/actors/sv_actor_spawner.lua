@@ -95,16 +95,16 @@ local function InitActorsSpawner(delay)
 					local success = false
 					local wanted_list = asset:GetAllWanted()
 
-					for i = 1, #wanted_list do
+					for i = #wanted_list, 1, -1 do
 						local WantedClass = wanted_list[i]
-						local target = WantedClass.target
-
-						if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
-							pos = target:GetPos()
-							success = true
-							break
+						if WantedClass then
+							local target = WantedClass.target
+							if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
+								pos = target:GetPos()
+								success = true
+								break
+							end
 						end
-
 						yield()
 					end
 

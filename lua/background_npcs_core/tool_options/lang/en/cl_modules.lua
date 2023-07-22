@@ -83,6 +83,12 @@ return {
 	['bgn.settings.states.bgn_module_arccw_weapon_replacement'] = 'Enable ArcCW support',
 	['bgn.settings.states.bgn_module_arccw_weapon_replacement.help'] = 'Enables automatic swapping for weapons from the ArcCW addon. Requires NPC weapon swapping to be enabled in ArcCW too!',
 
+	['bgn.settings.states.bgn_module_arc9_weapon_replacement'] = 'Enable Arc9 support',
+	['bgn.settings.states.bgn_module_arc9_weapon_replacement.help'] = 'Enables automatic swapping for weapons from the Arc9 addon. Requires NPC weapon swapping to be enabled in Arc9 too!',
+
+	['bgn.settings.states.bgn_module_tfa_weapon_replacement'] = 'Enable TFA support',
+	['bgn.settings.states.bgn_module_tfa_weapon_replacement.help'] = 'Enables automatic swapping for weapons from the TFA addon.',
+
 	['bgn.settings.states.bgn_all_models_random'] = 'Enable random models',
 	['bgn.settings.states.bgn_all_models_random.help'] = 'All NPCs will spawn with random models, which will be taken from the general game list!',
 
