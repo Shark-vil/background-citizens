@@ -169,7 +169,7 @@ end
 
 local function TacticalGroupUpdateTimer()
 	CalcTacticalGroup('police')
-	CalcTacticalGroup('bandits')
+	-- CalcTacticalGroup('bandits')
 	MovementTacticalGroup()
 end
 

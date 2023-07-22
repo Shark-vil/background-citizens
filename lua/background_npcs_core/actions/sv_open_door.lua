@@ -1,6 +1,6 @@
 local hook = hook
 local timer = timer
-local ents = ents
+local ents_FindInSphere = ents.FindInSphere
 --
 
 local function OpenDoor(actor, door)
@@ -27,9 +27,12 @@ end
 
 hook.Add('BGN_ActorLookAtObject', 'BGN_NPCDoorOpeningEvent', function(actor, ent, distance)
 	if distance > 80 then return end
-	local entities = ents.FindInSphere(ent:GetPos(), 150)
+	local entities = ents_FindInSphere(ent:GetPos(), 150)
 	for i = 1, #entities do
 		local door = entities[i]
-		if not door:slibDoorIsLocked() then OpenDoor(actor, door) end
+		if not door:slibDoorIsLocked() then
+			OpenDoor(actor, door)
+			break
+		end
 	end
 end)

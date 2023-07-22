@@ -30,6 +30,18 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_arc9_weapon_replacement',
+		['Command'] = 'bgn_module_arc9_weapon_replacement',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.states.bgn_module_tfa_weapon_replacement',
+		['Command'] = 'bgn_module_tfa_weapon_replacement',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.states.bgn_module_followers_mod_addon',
 		['Command'] = 'bgn_module_followers_mod_addon',
 		['Help'] = true,

@@ -80,6 +80,12 @@ return {
 	['bgn.settings.states.bgn_module_arccw_weapon_replacement'] = 'Включить поддержку ArcCW',
 	['bgn.settings.states.bgn_module_arccw_weapon_replacement.help'] = 'Включает автоматическую замену на оружие из аддона ArcCW. Требуется чтобы в ArcCW тоже была включена замена оружия у NPC!',
 
+	['bgn.settings.states.bgn_module_arc9_weapon_replacement'] = 'Включить поддержку Arc9',
+	['bgn.settings.states.bgn_module_arc9_weapon_replacement.help'] = 'Включает автоматическую замену на оружие из аддона Arc9. Требуется чтобы в Arc9 тоже была включена замена оружия у NPC!',
+
+	['bgn.settings.states.bgn_module_tfa_weapon_replacement'] = 'Включить поддержку TFA',
+	['bgn.settings.states.bgn_module_tfa_weapon_replacement.help'] = 'Включает автоматическую замену на оружие из аддона TFA.',
+
 	['bgn.settings.states.bgn_all_models_random'] = 'Включить рандом моделей',
 	['bgn.settings.states.bgn_all_models_random.help'] = 'Все NPC будут появлятся со случайными моделями, которые будут взяты из общего игрового списка!',
 

@@ -70,7 +70,7 @@ bgNPC:SetStateAction('impingement', 'danger', {
 				actor:WalkToTarget(enemy, 'run')
 			end
 
-			data.delay = CurTime() + 3
+			data.delay = CurTime() + 5
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)

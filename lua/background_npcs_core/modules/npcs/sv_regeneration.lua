@@ -1,6 +1,7 @@
 async.Add('BGN_ActorsRegeneration', function(yield, wait)
 	local math_Clamp = math.Clamp
 	local CurTime = CurTime
+	local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 
 	while true do
 		local actors = bgNPC:GetAll()

@@ -25,14 +25,13 @@ hook.Add('slib.FirstPlayerSpawn', 'BGN_MovementMeshGeneratorNotify', function(pl
 end)
 
 async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+	local bgNPC = bgNPC
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+	local FrameTime = FrameTime
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
 	local table_Combine = table.Combine
-	local bit_band = bit.band
-	local util_PointContents = util.PointContents
-	local CONTENTS_WATER = CONTENTS_WATER
 	local player_GetAll = player.GetAll
 	local table_remove = table.remove
 	local math_random = math.random
@@ -62,23 +61,27 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	local function PassYield()
 		current_pass = current_pass + 1
-		if current_pass >= 1 / slib.deltaTime then
+		if current_pass >= 1 / FrameTime() then
 			current_pass = 0
 			yield()
 		end
 	end
 
 	local function ChunkHasFull(point_position)
-		if BGN_NODE:GetChunkNodesCountInRadius(point_position, cell_size) >= 1 then
+		if BGN_NODE:GetChunkNodesCountInRadiusAsync(point_position, cell_size) >= 1 then
 			PassYield()
 			return true
 		end
+
+		PassYield()
 
 		local point_chunk_id = BGN_NODE:GetChunkID(point_position)
 		if point_chunk_id == -1 then
 			PassYield()
 			return true
 		end
+
+		PassYield()
 
 		for i = 1, points_count do
 			local node = map_points[i]
@@ -114,6 +117,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			local is_dynamic_nodes_save = cvar_bgn_dynamic_nodes_save_progress:GetBool()
 			local expensive_generator = cvar_bgn_dynamic_nodes_type:GetString() == 'grid'
 			local radius = cvar_bgn_spawn_radius:GetFloat()
+			radius = math_Clamp(radius, 0, 2000)
 			local players = player_GetAll()
 			current_pass = 0
 			cell_size = cvar_bgn_runtime_generator_grid_offset:GetInt()
@@ -152,6 +156,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							filter = trace_filter
 						})
 
+						PassYield()
+
 						if not tr.Hit then
 							PassYield()
 							continue
@@ -160,7 +166,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						PassYield()
 
 						local new_point_position = tr.HitPos + add_z_axis
-						if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+						if bgNPC:VectorInWater(new_point_position) then
 							PassYield()
 							continue
 						end
@@ -226,7 +232,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							PassYield()
 
 							local new_point_position = tr.HitPos + add_z_axis
-							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+							if bgNPC:VectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end
@@ -291,7 +297,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							PassYield()
 
 							local new_point_position = tr.HitPos + add_z_axis
-							if bit_band(util_PointContents(new_point_position), CONTENTS_WATER) == CONTENTS_WATER then
+							if bgNPC:VectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end
@@ -316,6 +322,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 						y_offset = y_offset + cell_size
 					end
+
+					PassYield()
 				end
 
 				map_points = table_Combine(map_points, y_axis_points)
@@ -323,14 +331,18 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			end
 
 			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
-				BGN_NODE:ExpandMap(map_points)
+				BGN_NODE:ExpandMapAsync(map_points, false)
+				yield()
 				BGN_NODE:AutoLinkAsync()
-				wait(1)
+				yield()
 			else
 				BGN_NODE:SetMap(map_points)
+				yield()
 				BGN_NODE:AutoLink()
-				wait(5)
+				yield()
 			end
+
+			wait(1)
 		end
 	end
 end)

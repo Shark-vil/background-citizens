@@ -141,7 +141,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 
 				if data.walkUpdate < CurTime() then
 					actor:WalkToPos(target:GetPos())
-					data.walkUpdate = CurTime() + 3
+					data.walkUpdate = CurTime() + 5
 				end
 
 				if npc_pos:DistToSqr(target_pos) <= 10000 then

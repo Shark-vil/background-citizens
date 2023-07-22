@@ -11,7 +11,7 @@ local replics = {
 
 local function RandomPlay(actor)
 	if not actor or not actor:IsAlive() or not actor:HasTeam('police') or math.random(0, 100) > 50  then return end
-	actor:GetNPC():EmitSound( table.RandomBySeq(replics) )
+	actor:GetNPC():EmitSound(table.RandomBySeq(replics))
 end
 
 hook.Add('BGN_SetState', 'BGN_PoliceVoiceOnDefenseState', function(actor, state)
@@ -21,7 +21,7 @@ end)
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_PoliceVoiceOnDefenseState', function(_, target, reaction)
 	if reaction ~= 'defense' then return end
-	RandomPlay( bgNPC:GetActor(target) )
+	RandomPlay(bgNPC:GetActor(target))
 end)
 
 hook.Add('BGN_StartReplic', 'BGN_PoliceVoice', function(actor)

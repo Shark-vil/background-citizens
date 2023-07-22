@@ -20,10 +20,10 @@ bgNPC.cfg:SetActor('gangster', {
 	enter_to_exist_vehicle_chance = 10,
 	at_random_range = 160,
 	at_random = {
-		['walk'] = 90,
+		['walk'] = 95,
 		['idle'] = 25,
 		['sit_to_chair'] = 15,
-		['impingement'] = 10,
+		['impingement'] = 5,
 		['random_gesture'] = 10,
 	},
 	at_damage_range = 100,

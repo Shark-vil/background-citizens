@@ -144,6 +144,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	timer.Simple(0, function()
 		if not IsValid(npc) then return end
 		obj:DropToFloor()
+		obj:CreateFakePlayerMethodsForNPC()
 	end)
 
 	return obj
