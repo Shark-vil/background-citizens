@@ -37,13 +37,12 @@ local MAP_CHUNKS = CHUNK_CLASS:Instance({
 	chunk_size_x = BGN_NODE.CHUNK_SIZE_X,
 	chunk_size_y = BGN_NODE.CHUNK_SIZE_Y,
 	chunk_size_z = BGN_NODE.CHUNK_SIZE_Z,
-	no_check_is_in_world = true
 })
 
 if SERVER then
 	hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
 		if IsValid(MAP_CHUNKS) then return end
-		-- MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
+		MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
 		MAP_CHUNKS:MakeChunks()
 
 		MsgN('[Background NPCs] Chunks count: ' .. tostring(MAP_CHUNKS:ChunksCount()))
@@ -330,7 +329,8 @@ function BGN_NODE:AddNodeToMap(node)
 
 	local chunkId = node:GetChunkID()
 	if SERVER and chunkId == -1 then
-		slib.Warning('Node cannot exist outside of a chunk!')
+		-- slib.Warning('Node cannot exist outside of a chunk!')
+		bgNPC:Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
 		return
 	end
 
