@@ -28,23 +28,24 @@ BGN_NODE = {}
 BGN_NODE.Map = {}
 BGN_NODE.MapCount = 0
 BGN_NODE.Chunks = {}
-BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or 2000
-BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or 2000
-BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or 2000
+BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or 5000
+BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or 5000
+BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or 5000
 
 local CHUNK_CLASS = slib.Component('Chunks')
 local MAP_CHUNKS = CHUNK_CLASS:Instance({
 	chunk_size_x = BGN_NODE.CHUNK_SIZE_X,
 	chunk_size_y = BGN_NODE.CHUNK_SIZE_Y,
 	chunk_size_z = BGN_NODE.CHUNK_SIZE_Z,
-	no_check_is_in_world = true
 })
 
 if SERVER then
 	hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
 		if IsValid(MAP_CHUNKS) then return end
-		-- MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
+		MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
 		MAP_CHUNKS:MakeChunks()
+
+		MsgN('[Background NPCs] Chunks count: ' .. tostring(MAP_CHUNKS:ChunksCount()))
 	end)
 end
 
@@ -293,6 +294,11 @@ function BGN_NODE:GetChunkNodes(pos, is_async)
 
 	local nodes = {}
 	local nodes_count = 0
+	local async_pass
+
+	if is_async then
+		async_pass = 0
+	end
 
 	for i = 1, #chunks do
 		local node = self.Map[chunks[i]]
@@ -302,7 +308,13 @@ function BGN_NODE:GetChunkNodes(pos, is_async)
 			nodes[nodes_count] = node
 		end
 
-		if is_async then coroutine_yield() end
+		if is_async then
+			async_pass = async_pass + 1
+			if async_pass > 1 / slib.deltaTime then
+				async_pass = 0
+				coroutine_yield()
+			end
+		end
 	end
 
 	return nodes
@@ -317,7 +329,8 @@ function BGN_NODE:AddNodeToMap(node)
 
 	local chunkId = node:GetChunkID()
 	if SERVER and chunkId == -1 then
-		slib.Warning('Node cannot exist outside of a chunk!')
+		-- slib.Warning('Node cannot exist outside of a chunk!')
+		bgNPC:Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
 		return
 	end
 
@@ -349,10 +362,15 @@ function BGN_NODE:GetNodeByPos(pos)
 end
 
 function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
+	-- local async_pass
 	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_in_radius = {}
 	local nodes_count = 0
 	radius = radius ^ 2
+
+	-- if is_async then
+	-- 	async_pass = 0
+	-- end
 
 	for i = 1, #nodes_in_chunk do
 		local node = nodes_in_chunk[i]
@@ -361,7 +379,13 @@ function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
 			nodes_in_radius[nodes_count] = node
 		end
 
-		if is_async then coroutine_yield() end
+		-- if is_async then
+		-- 	async_pass = async_pass + 1
+		-- 	if async_pass > 1 / slib.deltaTime then
+		-- 		async_pass = 0
+		-- 		coroutine_yield()
+		-- 	end
+		-- end
 	end
 
 	return nodes_in_radius
@@ -372,9 +396,14 @@ function BGN_NODE:GetChunkNodesInRadiusAsync(pos, radius)
 end
 
 function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
+	local async_pass
 	local nodes_in_radius = {}
 	local nodes_count = 0
 	radius = radius ^ 2
+
+	if is_async then
+		async_pass = 0
+	end
 
 	for i = 1, self.MapCount do
 		local node = self.Map[i]
@@ -383,7 +412,13 @@ function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
 			nodes_in_radius[nodes_count] = node
 		end
 
-		if is_async then coroutine_yield() end
+		if is_async then
+			async_pass = async_pass + 1
+			if async_pass > 1 / slib.deltaTime then
+				async_pass = 0
+				coroutine_yield()
+			end
+		end
 	end
 
 	return nodes_in_radius
@@ -394,9 +429,14 @@ function BGN_NODE:GetNodesInRadiusAsync(pos, radius)
 end
 
 function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
+	-- local async_pass
 	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_count = 0
 	radius = radius ^ 2
+
+	-- if is_async then
+	-- 	async_pass = 0
+	-- end
 
 	for i = 1, #nodes_in_chunk do
 		local node = nodes_in_chunk[i]
@@ -404,7 +444,13 @@ function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
 			nodes_count = nodes_count + 1
 		end
 
-		if is_async then coroutine_yield() end
+		-- if is_async then
+		-- 	async_pass = async_pass + 1
+		-- 	if async_pass > 1 / slib.deltaTime then
+		-- 		async_pass = 0
+		-- 		coroutine_yield()
+		-- 	end
+		-- end
 	end
 
 	return nodes_count

@@ -1,7 +1,7 @@
 if SERVER then
 	snet.Callback('BGN_Nodes_RequestChunksFromTheServer', function(ply, data)
 		local MAP_CHUNKS = BGN_NODE:GetChunkManager()
-		snet.Request('BGN_Nodes_SendChunksDataToClient', MAP_CHUNKS:GetChunks())
+		snet.Request('BGN_Nodes_SendChunksDataToClient', { chunks = MAP_CHUNKS:GetChunks(), settings = MAP_CHUNKS:GetSettings() })
 			.ProgressText('Loading chunks from server')
 			.Invoke(ply)
 	end).Protect()
@@ -10,7 +10,9 @@ else
 	local MAP_CHUNKS = CHUNK_CLASS:Instance()
 
 	snet.RegisterCallback('BGN_Nodes_SendChunksDataToClient', function(_, data)
-		MAP_CHUNKS:SetChunks(data)
+		MAP_CHUNKS = CHUNK_CLASS:Instance()
+		MAP_CHUNKS:SetChunks(data.chunks)
+		MAP_CHUNKS:SetPrivateVariables(data.settings)
 	end)
 
 	hook.Add('slib.FirstPlayerSpawn', 'BGN_Nodes_RequestChunksFromTheServer', function()
@@ -51,6 +53,8 @@ else
 			render.SetColorMaterial()
 			render.DrawWireframeBox(center, angle_zero, mins, maxs, color_box_line)
 			render.DrawBox(center, angle_zero, mins, maxs, color_box)
+
+			-- MAP_CHUNKS:CheckChunkIsInWorld(chunk)
 		end
 	end)
 end

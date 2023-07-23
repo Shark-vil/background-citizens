@@ -41,7 +41,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local Vector = Vector
 	local add_z_axis = Vector(0, 0, 20)
 	local cell_size = 200
-	local sqrt_cell_size = cell_size ^ 2
+	-- local sqrt_cell_size = cell_size ^ 2
 	local add_endpos_trace_vector = Vector(0, 0, 1000)
 	local map_points = {}
 	local points_count = 0
@@ -68,8 +68,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	local function ChunkHasFull(point_position)
-		if BGN_NODE:GetChunkNodesCountInRadiusAsync(point_position, cell_size) >= 1 then
-			PassYield()
+		if BGN_NODE:GetChunkNodesCountInRadiusAsync(point_position, cell_size - 5) >= 1 then
 			return true
 		end
 
@@ -77,20 +76,19 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 		local point_chunk_id = BGN_NODE:GetChunkID(point_position)
 		if point_chunk_id == -1 then
-			PassYield()
 			return true
 		end
 
-		PassYield()
+		-- PassYield()
 
-		for i = 1, points_count do
-			local node = map_points[i]
-			if node and node.chunk and node.chunk.index == point_chunk_id and node:GetPos():DistToSqr(point_position) <= sqrt_cell_size then
-				PassYield()
-				return true
-			end
-			PassYield()
-		end
+		-- for i = 1, points_count do
+		-- 	local node = map_points[i]
+		-- 	if node and node.chunk and node.chunk.index == point_chunk_id and node:GetPos():DistToSqr(point_position) <= sqrt_cell_size then
+		-- 		print(3)
+		-- 		return true
+		-- 	end
+		-- 	PassYield()
+		-- end
 
 		return false
 	end
@@ -117,7 +115,11 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			local is_dynamic_nodes_save = cvar_bgn_dynamic_nodes_save_progress:GetBool()
 			local expensive_generator = cvar_bgn_dynamic_nodes_type:GetString() == 'grid'
 			local radius = cvar_bgn_spawn_radius:GetFloat()
-			radius = math_Clamp(radius, 0, 2000)
+
+			if not is_dynamic_nodes_save then
+				radius = math_Clamp(radius, 0, 1500)
+			end
+
 			local players = player_GetAll()
 			current_pass = 0
 			cell_size = cvar_bgn_runtime_generator_grid_offset:GetInt()
@@ -133,9 +135,11 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 			yield()
 
-			-- print('Start generate new nodes...')
+			bgNPC:Log('[Dynamic Nodes] Start generate new nodes...')
 
 			if not expensive_generator then
+				bgNPC:Log('[Dynamic Nodes] Generator type - Random')
+
 				for player_index = 1, #players do
 					local ply = players[player_index]
 					if not ply then continue end
@@ -191,9 +195,13 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					end
 				end
 			else
+				bgNPC:Log('[Dynamic Nodes] Generator type - Grid')
+
 				local generator_iterations = 0
 				local calc_iterations = true
 				local sqr_radius = radius ^ 2
+
+				bgNPC:Log('[Dynamic Nodes] Grid generator - make X axis nodes')
 
 				for player_index = 1, #players do
 					local ply = players[player_index]
@@ -258,6 +266,8 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					calc_iterations = false
 					PassYield()
 				end
+
+				bgNPC:Log('[Dynamic Nodes] Grid generator - make Y axis nodes')
 
 				local y_axis_points = {}
 				local y_points_count = 0
@@ -326,21 +336,29 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					PassYield()
 				end
 
+				bgNPC:Log('[Dynamic Nodes] Grid generator - combine X and Y nodes')
+
 				map_points = table_Combine(map_points, y_axis_points)
 				points_count = #map_points
 			end
 
 			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
+				bgNPC:Log('[Dynamic Nodes] Grid generator - start expand map')
 				BGN_NODE:ExpandMapAsync(map_points, false)
 				yield()
+				bgNPC:Log('[Dynamic Nodes] Grid generator - start link nodes')
 				BGN_NODE:AutoLinkAsync()
 				yield()
 			else
+				bgNPC:Log('[Dynamic Nodes] Random generator - start set map')
 				BGN_NODE:SetMap(map_points)
 				yield()
+				bgNPC:Log('[Dynamic Nodes] Random generator - start link nodes')
 				BGN_NODE:AutoLink()
 				yield()
 			end
+
+			bgNPC:Log('[Dynamic Nodes] Complete generation')
 
 			wait(1)
 		end
