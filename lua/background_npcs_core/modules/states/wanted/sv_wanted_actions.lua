@@ -128,7 +128,7 @@ hook.Add('BGN_RemoveWantedTarget', 'BGN_RemoveWantedTargetFromResidents', functi
 	end
 
 	bgNPC:ResetKillingStatistic(target)
-	bgNPC:ResetWantedKillingStatistic(target)
+	-- bgNPC:ResetWantedKillingStatistic(target)
 end)
 
 hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)

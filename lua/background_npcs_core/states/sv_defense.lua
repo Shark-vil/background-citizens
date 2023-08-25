@@ -12,7 +12,9 @@ bgNPC:SetStateAction('defense', 'danger', {
 		end
 	end,
 	update = function(actor)
-		local enemy = actor:GetNearEnemy()
+		local enemy = bgNPC:GetTacticalGroupGetNearEnemy(actor)
+
+		if not IsValid(enemy) then enemy = actor:GetNearEnemy() end
 		if not IsValid(enemy) then return end
 
 		local npc = actor:GetNPC()
@@ -32,8 +34,9 @@ bgNPC:SetStateAction('defense', 'danger', {
 				end
 			else
 				local node
+				local is_melee_weapon = actor:IsMeleeWeapon()
 
-				if not actor:IsMeleeWeapon() and current_distance < 202500 and bgNPC:IsTargetRay(npc, enemy) then
+				if not is_melee_weapon and current_distance < 250000 and bgNPC:IsTargetRay(npc, enemy) then
 					node = bgNPC:GetDistantPointInRadius(npc:GetPos() + npc:GetForward() * -1000, 500)
 					if node then
 						actor:WalkToTarget()
@@ -43,11 +46,13 @@ bgNPC:SetStateAction('defense', 'danger', {
 
 				if not node then
 					actor:WalkToTarget(enemy, 'run')
-					if slib.chance(50) then npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY) end
+					if slib.chance(50) and not is_melee_weapon then
+						npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+					end
 				end
 			end
 
-			data.delay = CurTime() + 5
+			data.delay = CurTime() + 3
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)

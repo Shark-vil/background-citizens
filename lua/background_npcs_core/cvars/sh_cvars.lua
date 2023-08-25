@@ -7,8 +7,9 @@ bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
 bgNPC.cvar.bgn_dynamic_nodes = 1
-bgNPC.cvar.bgn_dynamic_nodes_type = 'grid'
-bgNPC.cvar.bgn_dynamic_nodes_save_progress = 0
+bgNPC.cvar.bgn_dynamic_nodes_type = 'random'
+bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
+bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -57,7 +58,7 @@ bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'english'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
-bgNPC.cvar.bgn_module_arccw_weapon_replacement = 1
+bgNPC.cvar.bgn_module_arccw_weapon_replacement = 0
 bgNPC.cvar.bgn_module_arc9_weapon_replacement = 0
 -- bgNPC.cvar.bgn_module_mw_weapon_replacement = 0
 bgNPC.cvar.bgn_module_tfa_weapon_replacement = 0
@@ -67,6 +68,10 @@ bgNPC.cvar.bgn_module_stormfox2 = 0
 bgNPC.cvar.bgn_module_custom_gestures = 0
 bgNPC.cvar.bgn_module_tactical_groups = 0
 bgNPC.cvar.bgn_module_followers_mod_addon = 1
+bgNPC.cvar.bgn_drop_money = 1
+bgNPC.cvar.bgn_module_n2money = 1
+bgNPC.cvar.bgn_chunk_system = 1
+bgNPC.cvar.bgn_chunk_size = 5000
 
 function bgNPC:IsActiveNPCType(npc_type)
 	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
@@ -103,6 +108,26 @@ CreateConVar('bgn_installed', 1, {
 
 scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
 	FCVAR_ARCHIVE, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_chunk_system', bgNPC.cvar.bgn_chunk_system,
+	FCVAR_ARCHIVE, '1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_chunk_size', bgNPC.cvar.bgn_chunk_size,
+	FCVAR_ARCHIVE, '1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes_radius', bgNPC.cvar.bgn_dynamic_nodes_radius,
+	FCVAR_ARCHIVE, '')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_drop_money', bgNPC.cvar.bgn_drop_money,
+	FCVAR_ARCHIVE, 'Enables the ability to drop money from NPCs when they die. Invokes hook "BGN_DropMoney". 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_module_n2money', bgNPC.cvar.bgn_module_n2money,
+	FCVAR_ARCHIVE, 'Enables a money drop from the addon "nMoney2 - Sandbox Currency". 1 - enabled, 0 - disabled.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_debug', bgNPC.cvar.bgn_debug,

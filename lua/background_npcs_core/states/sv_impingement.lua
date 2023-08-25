@@ -29,15 +29,15 @@ hook.Add('BGN_SetState', 'BGN_SetImpingementState', function(actor, state)
 	end
 end)
 
-local asset = bgNPC:GetModule('wanted')
-hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
-	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
-		actor:SetState('retreat')
-		return true
-	end
-end)
+-- local asset = bgNPC:GetModule('wanted')
+-- hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
+-- 	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
+-- 		actor:SetState('retreat')
+-- 		return true
+-- 	end
+-- end)
 
-bgNPC:SetStateAction('impingement', 'danger', {
+bgNPC:SetStateAction('impingement', 'assault', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end
@@ -74,6 +74,6 @@ bgNPC:SetStateAction('impingement', 'danger', {
 		end
 	end,
 	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
+		return actor:EnemiesCount() > 0 and new_state ~= 'retreat' and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

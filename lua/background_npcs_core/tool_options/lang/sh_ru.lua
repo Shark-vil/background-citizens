@@ -6,12 +6,6 @@ if SERVER then return end
 local lang = {}
 
 table.Merge(lang, include(target_directory .. 'ru/cl_options.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_general.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_client.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_optimization.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_spawn.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_workshop.lua'))
 table.Merge(lang, include(target_directory .. 'ru/cl_actors.lua'))
-table.Merge(lang, include(target_directory .. 'ru/cl_modules.lua'))
 
 bgNPC.LANGUAGES['russian'] = lang

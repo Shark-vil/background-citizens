@@ -94,7 +94,9 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 					passenger.Seat = ent
 					passenger.SeatIndex = index
 					passenger.actor = actor
+					passenger.vehicle_provider = self
 					passenger.v = vehicle
+					-- passenger:SetNWString('actor_uid', actor.uid)
 					passenger:SetPos(vehicle:GetPos())
 					passenger:Spawn()
 					passenger:Activate()

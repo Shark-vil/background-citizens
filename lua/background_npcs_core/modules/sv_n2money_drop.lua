@@ -1,7 +1,10 @@
 local n2_money_exists = nil
 local money_model = 'models/props/cs_assault/money.mdl'
+local cvar_bgn_module_n2money = GetConVar('bgn_module_n2money')
 
 hook.Add('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney', function(actor, pos, money)
+	if not cvar_bgn_module_n2money:GetBool() then return end
+
 	if not n2_money_exists then
 		n2_money_exists = scripted_ents.GetList()['ent_money'] ~= nil
 

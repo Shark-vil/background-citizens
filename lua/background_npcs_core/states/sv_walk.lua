@@ -1,6 +1,7 @@
 local bgNPC = bgNPC
 local math_random = math.random
 local CurTime = CurTime
+local Vector = Vector
 local slib_chance = slib.chance
 local table_RandomBySeq = table.RandomBySeq
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
@@ -21,9 +22,10 @@ local function GetRandomDelayForUpdateWalkTarget()
 	return CurTime() + math_random(15, 60)
 end
 
-local function GetNextTargetNode(actor)
+local function GetNextMovePosition(actor)
+	local npc_pos = actor:GetPos()
 	local dist = GetRandomFoundPointDistance()
-	local points = bgNPC:GetAllPointsInRadius(actor:GetNPC():GetPos(), dist, 'walk')
+	local points = bgNPC:GetAllPointsInRadius(npc_pos, dist, 'walk')
 
 	if not points or #points == 0 then
 		points = bgNPC:GetAllPoints('walk')
@@ -34,10 +36,15 @@ local function GetNextTargetNode(actor)
 	end
 
 	if not points or #points == 0 then
-		return
+		local dist_x = math_random(250, 1000)
+		local dist_y = math_random(250, 1000)
+		if slib_chance(50) then dist_x = -dist_x end
+		if slib_chance(50) then dist_y = -dist_y end
+		return Vector(npc_pos.x + dist_x, npc_pos.y + dist_y, npc_pos.z)
 	end
 
-	return table_RandomBySeq(points)
+	local node = table_RandomBySeq(points)
+	return node.position
 end
 
 local function UpdateActorMovementType(actor, data)
@@ -60,17 +67,10 @@ local function UpdateActorTargetPointAsync(actor, data)
 		return
 	end
 
-	local node = GetNextTargetNode(actor)
-	if not node then
-		return
-	end
+	local position = GetNextMovePosition(actor)
+	if not position then return end
 
-	actor:WalkToPos(node.position, data.schedule, 'walk')
-
-	if not actor.walkPath or #actor.walkPath == 0 then
-		return
-	end
-
+	actor:WalkToPos(position, data.schedule, 'walk')
 	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
 end
 

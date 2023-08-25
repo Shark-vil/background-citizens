@@ -14,7 +14,8 @@ end)
 
 hook.Add('BGN_DvCarRemoved', 'BGN_DVCars_OnRemoved', function(vehicle_provider)
 	for _, actor in ipairs(vehicle_provider:GetPassengers()) do
-		actor:GetNPC():Remove()
+		local npc = actor:GetNPC()
+		if IsValid(npc) then npc:Remove() end
 	end
 end)
 

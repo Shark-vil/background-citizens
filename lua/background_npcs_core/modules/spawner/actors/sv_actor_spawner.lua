@@ -13,11 +13,13 @@ local function ActorSpawnOnPosition(npc_type, position)
 	if not bgNPC:IsValidSpawnArea(npc_type, position) then return end
 
 	local actor = bgNPC:SpawnActor(npc_type, position)
-	if not actor then return end
+	if not actor or not actor:IsAlive() then return end
 
 	if not bgNPC:EnterActorInExistVehicle(actor) then
 		bgNPC:SpawnVehicleWithActor(actor)
 	end
+
+	actor:RandomState()
 end
 
 function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
@@ -74,16 +76,16 @@ local function InitActorsSpawner(delay)
 
 			bgNPC:ClearRemovedNPCs()
 
-			for npcType, npc_data in pairs(bgNPC.cfg.actors) do
+			for npc_type, npc_data in pairs(bgNPC.cfg.actors) do
 				yield()
 
-				if not bgNPC:IsActiveNPCType(npcType) or npc_data.hidden then
+				if not bgNPC:IsActiveNPCType(npc_type) or npc_data.hidden then
 					yield()
 					continue
 				end
 
-				local max_limit = bgNPC:GetLimitActors(npcType)
-				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npcType) >= max_limit then
+				local max_limit = bgNPC:GetLimitActors(npc_type)
+				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) >= max_limit then
 					yield()
 					continue
 				end
@@ -115,18 +117,18 @@ local function InitActorsSpawner(delay)
 				end
 
 				if npc_data.validator then
-					local result = npc_data.validator(npc_data, npcType)
+					local result = npc_data.validator(npc_data, npc_type)
 					if isbool(result) and not result then
 						yield()
 						continue
 					end
 				end
 
-				local spawn_delayer = bgNPC.respawn_actors_delay[npcType]
+				local spawn_delayer = bgNPC.respawn_actors_delay[npc_type]
 				if npc_data.respawn_delay and spawn_delayer and spawn_delayer.count ~= 0 then
 					if spawn_delayer.time < CurTime() then
-						bgNPC.respawn_actors_delay[npcType].time = CurTime() + npc_data.respawn_delay
-						bgNPC.respawn_actors_delay[npcType].count = spawn_delayer.count - 1
+						bgNPC.respawn_actors_delay[npc_type].time = CurTime() + npc_data.respawn_delay
+						bgNPC.respawn_actors_delay[npc_type].count = spawn_delayer.count - 1
 					else
 						yield()
 						continue
@@ -135,9 +137,9 @@ local function InitActorsSpawner(delay)
 
 				yield()
 
-				local nodePosition = bgNPC:FindSpawnPositionAsync(npcType, { position = pos })
-				if nodePosition then
-					ActorSpawnOnPosition(npcType, nodePosition)
+				local node_position = bgNPC:FindSpawnPositionAsync({ position = pos })
+				if node_position then
+					ActorSpawnOnPosition(npc_type, node_position)
 				end
 
 				yield()

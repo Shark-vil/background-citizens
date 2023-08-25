@@ -1,4 +1,5 @@
 local currentAmbient
+local oldAmbient
 local currentSound
 
 local function SetAmbient(ambient_value)
@@ -34,14 +35,14 @@ local function SetAmbient(ambient_value)
 	local sound_volume = ambient_value.volume ~= nil and ambient_value.volume or 1
 	local fade_time = 2
 
-	if currentSound ~= nil and currentSound:IsPlaying() then
+	if currentSound and currentSound:IsPlaying() then
 		currentSound:FadeOut(fade_time)
 	else
 		fade_time = 0
 	end
 
 	timer.Create('BGN_SetNewAmbientSoundAfterFade', fade_time + 0.1, 1, function()
-		if currentSound ~= nil then
+		if currentSound then
 			currentSound:Stop()
 			bgNPC:Log('Stop ambient - ' .. tostring(currentAmbient))
 		end
@@ -49,7 +50,10 @@ local function SetAmbient(ambient_value)
 		currentSound = CreateSound(game.GetWorld(), sound_name)
 		currentSound:SetSoundLevel(0)
 		currentSound:PlayEx(0, 100)
+
 		timer.Create('BGN_SetNewAmbientSoundAfterFadeChangeVolume', 0.01, 0, function()
+			if not currentSound then return end
+
 			local current_volume = currentSound:GetVolume()
 
 			if not currentSound or current_volume == sound_volume then
@@ -62,12 +66,19 @@ local function SetAmbient(ambient_value)
 				current_volume = sound_volume
 			end
 
-			bgNPC:Log('Ambient volume - ' .. current_volume)
+			if current_volume ~= sound_volume then
+				bgNPC:Log('Ambient volume - ' .. current_volume)
+			end
 
 			currentSound:ChangeVolume(current_volume)
 		end)
-		bgNPC:Log('Play ambient - ' .. sound_name)
+
+		if oldAmbient ~= currentAmbient then
+			bgNPC:Log('Play ambient - ' .. sound_name)
+		end
 	end)
+
+	oldAmbient = currentAmbient
 end
 
 timer.Create('BGN_SetAmbientSound', 2, 0, function()

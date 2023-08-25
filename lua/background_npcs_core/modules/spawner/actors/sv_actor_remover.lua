@@ -127,11 +127,13 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 					actor:Remove()
 				end
 			else
-				local max_limit = bgNPC:GetLimitActors(npc_type)
-				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
-					actor:Remove()
-					yield()
-					continue
+				if not actor.mechanics.ignore_limit then
+					local max_limit = bgNPC:GetLimitActors(npc_type)
+					if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
+						actor:Remove()
+						yield()
+						continue
+					end
 				end
 
 				if not IsValidRemovePositionAsync(actor, npc) then

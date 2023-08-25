@@ -67,6 +67,7 @@ snet.Callback('BGN_ActorSpawnmenu', function(ply, actorType)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 
+	actor:RandomState()
 	actor.eternal = true
 
 	DoPropSpawnedEffect(npc)

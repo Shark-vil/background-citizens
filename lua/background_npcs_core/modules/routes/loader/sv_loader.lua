@@ -1,5 +1,5 @@
 bgNPC.LoadRoutes = function()
-	local jsonString = ''
+	local jsonString
 	local map_name = game.GetMap()
 	hook.Run('BGN_PreLoadRoutes', map_name)
 
@@ -12,7 +12,7 @@ bgNPC.LoadRoutes = function()
 
 	BGN_NODE:ClearNodeMap()
 
-	if jsonString ~= '' then
+	if jsonString and jsonString ~= '' then
 		BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 	end
 

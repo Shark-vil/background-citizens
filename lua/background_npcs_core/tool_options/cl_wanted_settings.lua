@@ -4,25 +4,25 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_enable_wanted_mode',
+		['Label'] = '#bgn.settings.wanted.enable_wanted_mode',
 		['Command'] = 'bgn_enable_wanted_mode',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_level',
+		['Label'] = '#bgn.settings.wanted.level',
 		['Command'] = 'bgn_wanted_level',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_police_instantly',
+		['Label'] = '#bgn.settings.wanted.police_instantly',
 		['Command'] = 'bgn_wanted_police_instantly',
 		['Help'] = true,
 	})
 
 	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_time',
+		['Label'] = '#bgn.settings.wanted.time',
 		['Command'] = 'bgn_wanted_time',
 		['Type'] = 'Float',
 		['Min'] = '0',
@@ -30,7 +30,7 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_limit',
+		['Label'] = '#bgn.settings.wanted.impunity_limit',
 		['Command'] = 'bgn_wanted_impunity_limit',
 		['Type'] = 'Integer',
 		['Min'] = '0',
@@ -38,7 +38,7 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_impunity_reduction_period',
+		['Label'] = '#bgn.settings.wanted.impunity_reduction_period',
 		['Command'] = 'bgn_wanted_impunity_reduction_period',
 		['Type'] = 'Float',
 		['Min'] = '0',
@@ -54,7 +54,7 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_cl_disable_hud_local',
+		['Label'] = '#bgn.settings.wanted.cl_disable_hud_local',
 		['Command'] = 'bgn_cl_disable_hud_local',
 		['Help'] = true,
 	})
@@ -64,13 +64,13 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_hud_text',
+		['Label'] = '#bgn.settings.wanted.hud_text',
 		['Command'] = 'bgn_wanted_hud_text',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_hud_stars',
+		['Label'] = '#bgn.settings.wanted.hud_stars',
 		['Command'] = 'bgn_wanted_hud_stars',
 		['Help'] = true,
 	})
@@ -84,13 +84,13 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_cl_disable_halo',
+		['Label'] = '#bgn.settings.wanted.cl_disable_halo',
 		['Command'] = 'bgn_cl_disable_halo',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_cl_disable_self_halo_wanted',
+		['Label'] = '#bgn.settings.wanted.cl_disable_self_halo_wanted',
 		['Command'] = 'bgn_cl_disable_self_halo_wanted',
 		['Help'] = true,
 	})
@@ -100,13 +100,13 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_disable_halo_calling',
+		['Label'] = '#bgn.settings.wanted.disable_halo_calling',
 		['Command'] = 'bgn_disable_halo_calling',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_disable_halo_wanted',
+		['Label'] = '#bgn.settings.wanted.disable_halo_wanted',
 		['Command'] = 'bgn_disable_halo_wanted',
 		['Help'] = true,
 	})
@@ -116,22 +116,15 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('Color', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_calling_police_text_color',
+		['Label'] = '#bgn.settings.wanted.calling_police_text_color',
 		['red'] = 'bgn_wanted_color_calling_police_text_r',
 		['green'] = 'bgn_wanted_color_calling_police_text_g',
 		['blue'] = 'bgn_wanted_color_calling_police_text_b',
 		['Help'] = true,
 	})
 
-	-- panel:AddControl('Color', {
-	-- 	['Label'] = 'CALLING POLICE TEXT OUTLINE COLOR',
-	-- 	['red'] = 'bgn_wanted_color_calling_police_text_outline_r',
-	-- 	['green'] = 'bgn_wanted_color_calling_police_text_outline_g',
-	-- 	['blue'] = 'bgn_wanted_color_calling_police_text_outline_b',
-	-- })
-
 	panel:AddControl('Color', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_calling_police_halo_color',
+		['Label'] = '#bgn.settings.wanted.calling_police_halo_color',
 		['red'] = 'bgn_wanted_color_calling_police_halo_r',
 		['green'] = 'bgn_wanted_color_calling_police_halo_g',
 		['blue'] = 'bgn_wanted_color_calling_police_halo_b',
@@ -139,7 +132,7 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('Color', {
-		['Label'] = '#bgn.settings.states.bgn_wanted_wanted_halo_color',
+		['Label'] = '#bgn.settings.wanted.wanted_halo_color',
 		['red'] = 'bgn_wanted_color_wanted_halo_r',
 		['green'] = 'bgn_wanted_color_wanted_halo_g',
 		['blue'] = 'bgn_wanted_color_wanted_halo_b',
@@ -148,6 +141,5 @@ local function TOOL_MENU(panel)
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_WantedSettings', function()
-	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Wanted_Settings',
-		'#bgn.settings.wanted_title', '', '', TOOL_MENU)
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Wanted_Settings', '#bgn.settings.wanted', '', '', TOOL_MENU)
 end)

@@ -24,9 +24,9 @@ bgNPC.factors = {}
 bgNPC.npcs = {}
 bgNPC.fnpcs = {}
 bgNPC.points = {}
-bgNPC.wanted = {}
-bgNPC.killing_statistic = {}
-bgNPC.wanted_killing_statistic = {}
+-- bgNPC.wanted = {}
+-- bgNPC.killing_statistic = {}
+-- bgNPC.wanted_killing_statistic = {}
 bgNPC.respawn_actors_delay = {}
 bgNPC.DVCars = {}
 bgNPC.state_actions = {}
@@ -180,6 +180,10 @@ local function ExecutableScripts()
 
 	script:using('modules/cl_version_checker.lua')
 
+	script:using('modules/sv_inpc.lua')
+	script:using('modules/sv_enhanced_npc.lua')
+	script:using('modules/sv_scenic_npc.lua')
+
 	script:using('modules/sv_bsmod_animation_fixed.lua')
 	script:using('modules/sv_build_x_support.lua')
 	script:using('modules/sv_followers_mod.lua')
@@ -218,6 +222,7 @@ local function ExecutableScripts()
 	script:using('states/sv_arrest_surrender.lua')
 	script:using('states/sv_random_gesture.lua')
 	script:using('states/sh_dance.lua')
+	script:using('states/sh_scenic_npc.lua')
 
 	script:using('tool_options/lang/sh_en.lua')
 	script:using('tool_options/lang/sh_ru.lua')
@@ -234,6 +239,7 @@ local function ExecutableScripts()
 	script:using('tool_options/cl_wanted_settings.lua')
 	script:using('tool_options/cl_generation_settings.lua')
 	script:using('tool_options/cl_addons_settings.lua')
+	script:using('tool_options/cl_arrest_settings.lua')
 
 	script:using('modules/spawnmenu/cl_spawnmenu.lua')
 	script:using('modules/spawnmenu/sv_spawnmenu.lua')
