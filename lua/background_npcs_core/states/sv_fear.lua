@@ -80,10 +80,11 @@ bgNPC:SetStateAction('fear', 'danger', {
 		actor:WalkToPos(nil)
 	end,
 	update = function(actor)
-		update_animation(actor)
-		update_state(actor)
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
+		if not actor:HasNoEnemies() then
+			update_animation(actor)
+			update_state(actor)
+		else
+			actor:RandomState()
+		end
 	end
 })

@@ -45,8 +45,5 @@ bgNPC:SetStateAction('retreat', 'other', {
 				data.update_point_delay = CurTime() + 5
 			end
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

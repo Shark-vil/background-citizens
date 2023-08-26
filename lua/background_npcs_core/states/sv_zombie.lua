@@ -22,7 +22,10 @@ end)
 bgNPC:SetStateAction('zombie', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
-		if not IsValid(enemy) then return end
+		if not IsValid(enemy) then
+			actor:RandomState()
+			return
+		end
 
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -39,8 +42,5 @@ bgNPC:SetStateAction('zombie', 'danger', {
 			end
 			data.delay = CurTime() + 3
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

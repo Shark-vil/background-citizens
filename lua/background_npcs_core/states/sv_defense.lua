@@ -1,3 +1,9 @@
+local Vector = Vector
+local math_random = math.random
+local IsValid = IsValid
+local CurTime = CurTime
+--
+
 bgNPC:SetStateAction('defense', 'danger', {
 	pre_start = function(actor)
 		if not actor.weapon then return 'fear' end
@@ -15,9 +21,14 @@ bgNPC:SetStateAction('defense', 'danger', {
 		local enemy = bgNPC:GetTacticalGroupGetNearEnemy(actor)
 
 		if not IsValid(enemy) then enemy = actor:GetNearEnemy() end
-		if not IsValid(enemy) then return end
+		if not IsValid(enemy) then
+			if actor:HasNoEnemies() then actor:RandomState() end
+			return
+		end
 
 		local npc = actor:GetNPC()
+		local npc_pos = npc:GetPos()
+		local enemy_pos = enemy:GetPos()
 		local data = actor:GetStateData()
 
 		data.delay = data.delay or 0
@@ -25,7 +36,7 @@ bgNPC:SetStateAction('defense', 'danger', {
 		if data.delay < CurTime() then
 			if not data.disableWeapon then actor:PrepareWeapon() end
 
-			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
+			local current_distance = npc_pos:DistToSqr(enemy_pos)
 			if current_distance > 490000 then
 				if enemy:IsPlayer() and enemy:InVehicle() then
 					actor:WalkToTarget(enemy:GetVehicle(), 'run')
@@ -37,25 +48,31 @@ bgNPC:SetStateAction('defense', 'danger', {
 				local is_melee_weapon = actor:IsMeleeWeapon()
 
 				if not is_melee_weapon and current_distance < 250000 and bgNPC:IsTargetRay(npc, enemy) then
-					node = bgNPC:GetDistantPointInRadius(npc:GetPos() + npc:GetForward() * -1000, 500)
+					node = bgNPC:GetDistantPointInRadius(npc_pos + npc:GetForward() * -500, 500)
+					actor:WalkToTarget()
 					if node then
-						actor:WalkToTarget()
 						actor:WalkToPos(node:GetPos(), 'run')
+					else
+						local fallback_enemy_position = enemy_pos + enemy:GetForward() * -200
+						local fallback_position = npc_pos + npc:GetForward() * -200
+
+						fallback_enemy_position = fallback_enemy_position + Vector(math_random(0, 200), math_random(0, 200), 0)
+						fallback_position = fallback_position + Vector(math_random(0, 200), math_random(0, 200), 0)
+
+						if enemy_pos:DistToSqr(fallback_enemy_position) > enemy_pos:DistToSqr(fallback_position) then
+							actor:WalkToPos(fallback_enemy_position, 'run')
+						else
+							actor:WalkToPos(fallback_position, 'run')
+						end
 					end
 				end
 
-				if not node then
-					actor:WalkToTarget(enemy, 'run')
-					if slib.chance(50) and not is_melee_weapon then
-						npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
-					end
+				if #actor.walkPath == 0 and not is_melee_weapon then
+					npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
 				end
 			end
 
 			data.delay = CurTime() + 3
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

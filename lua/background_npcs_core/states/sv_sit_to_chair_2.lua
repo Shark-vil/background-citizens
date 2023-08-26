@@ -88,8 +88,5 @@ bgNPC:SetStateAction('sit_to_chair_2', 'calm', {
 				seat:SetSitting(NULL)
 			end
 		end
-	end,
-	not_stop = function(actor, state, data)
-		return actor:EnemiesCount() == 0 and not data.isStand
 	end
 })

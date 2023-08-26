@@ -27,7 +27,6 @@ local phone_beep_sounnds = {
 }
 
 local function IsValidWantedMode()
-	-- return cvar_bgn_enable_wanted_mode:GetBool() and #bgNPC:GetAllByType('police') ~= 0
 	return cvar_bgn_enable_wanted_mode:GetBool()
 end
 
@@ -38,6 +37,11 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 		end
 	end,
 	update = function(actor)
+		if actor:HasNoEnemies() then
+			actor:RandomState()
+			return
+		end
+
 		local currentEnemy = actor:GetEnemy()
 		local reaction = actor:GetReactionForDamage()
 		reaction = reaction == 'calling_police' and 'fear' or reaction
@@ -101,8 +105,5 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 				end
 			end
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

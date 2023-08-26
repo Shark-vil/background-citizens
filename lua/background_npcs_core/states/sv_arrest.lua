@@ -150,7 +150,7 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 
 		local defense = OnSetDefense(actor)
 		if defense then
-			actor:SetState(defense, nil, true)
+			actor:SetState(defense)
 			return
 		end
 
@@ -251,13 +251,5 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 		if data.arrested then
 			hook.Run('BGN_PlayerArrestStop', actor, state, data)
 		end
-	end,
-	not_stop = function(actor, state, data)
-		local target = actor:GetFirstTarget()
-		if IsValid(target) then
-			local ArrestComponent = ArrestModule:GetTarget(target)
-			if ArrestComponent and ArrestComponent.arrested then return true end
-		end
-		return false
-	end,
+	end
 })

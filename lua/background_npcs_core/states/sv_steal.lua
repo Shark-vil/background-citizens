@@ -159,8 +159,5 @@ bgNPC:SetStateAction('steal', 'wary', {
 	end,
 	stop = function(actor)
 		actor:RemoveAllTargets()
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return not data.isWanted and IsValid(actor:GetFirstTarget())
 	end
 })

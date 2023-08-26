@@ -59,8 +59,5 @@ bgNPC:SetStateAction('dialogue', 'calm', {
 				npc2:PhysWake()
 			end
 		end
-	end,
-	not_stop = function(actor)
-		return asset:GetDialogue(actor) ~= nil
 	end
 })

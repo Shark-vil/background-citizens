@@ -37,8 +37,5 @@ bgNPC:SetStateAction('random_gesture', 'calm', {
 	update = function(actor, state, data)
 		if data.dancing_time > CurTime() then return end
 		actor:SetState('walk')
-	end,
-	not_stop = function(actor, state, data)
-		return data.dancing_time > CurTime()
 	end
 })

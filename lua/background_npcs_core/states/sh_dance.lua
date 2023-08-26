@@ -10,8 +10,9 @@ if SERVER then
 
 			return state, data
 		end,
-		not_stop = function(actor, state, data)
-			return IsValid(data.anim_info.animator)
+		update = function(actor)
+			if IsValid(data.anim_info.animator) then return end
+			actor:RandomState()
 		end
 	})
 end

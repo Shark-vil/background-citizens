@@ -1,18 +1,3 @@
-local function idle_is_finish(actor, data)
-	local success = data.delay < CurTime()
-	if not success then return false end
-
-	if actor.class == 'npc_metropolice' then
-		local npc = actor:GetNPC()
-		local weapon = npc:GetActiveWeapon()
-		if IsValid(weapon) then
-			weapon:Remove()
-		end
-	end
-
-	return true
-end
-
 bgNPC:SetStateAction('idle', 'calm', {
 	start = function(actor, state, data)
 		local delay = math.random(10, 30)
@@ -41,9 +26,16 @@ bgNPC:SetStateAction('idle', 'calm', {
 		end
 	end,
 	update = function(actor, state, data)
-		if idle_is_finish(actor, data) then actor:RandomState() end
-	end,
-	not_stop = function(actor, state, data)
-		return not idle_is_finish(actor, data)
+		if data.delay > CurTime() then return end
+
+		if actor.class == 'npc_metropolice' then
+			local npc = actor:GetNPC()
+			local weapon = npc:GetActiveWeapon()
+			if IsValid(weapon) then
+				weapon:Remove()
+			end
+		end
+
+		actor:RandomState()
 	end
 })
