@@ -3,6 +3,10 @@
 	https://background-npcs.itpony.ru/wik
 --]]
 
+-- F33840FA-9F5C-4BAF-A071-B50BBD37F4C6
+-- AA269740-94C6-4ED0-A13E-6B73EBB1A34B
+-- 5B7B21A2-1E1E-425C-84AD-33991CE59007
+
 file.CreateDir('background_npcs')
 file.CreateDir('citizens_points')
 file.CreateDir('background_npcs/nodes')
