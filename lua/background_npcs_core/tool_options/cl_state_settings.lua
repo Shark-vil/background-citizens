@@ -1,66 +1,47 @@
 local function TOOL_MENU(panel)
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_arrest_mode',
-		['Command'] = 'bgn_arrest_mode',
-		['Help'] = true,
-	})
-
-	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_arrest_time',
-		['Command'] = 'bgn_arrest_time',
-		['Type'] = 'Float',
-		['Min'] = '0',
-		['Max'] = '100',
-		['Help'] = true,
-	})
-
-	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.states.bgn_arrest_time_limit',
-		['Command'] = 'bgn_arrest_time_limit',
-		['Type'] = 'Float',
-		['Min'] = '0',
-		['Max'] = '100',
+		['Label'] = '#bgn.settings.extension.drop_money',
+		['Command'] = 'bgn_drop_money',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_shot_sound_mode',
+		['Label'] = '#bgn.settings.extension.shot_sound_mode',
 		['Command'] = 'bgn_shot_sound_mode',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_disable_dialogues',
+		['Label'] = '#bgn.settings.extension.disable_dialogues',
 		['Command'] = 'bgn_disable_dialogues',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_module_replics_enable',
+		['Label'] = '#bgn.settings.extension.replics_enable',
 		['Command'] = 'bgn_module_replics_enable',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_all_models_random',
+		['Label'] = '#bgn.settings.extension.all_models_random',
 		['Command'] = 'bgn_all_models_random',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_module_custom_gestures',
+		['Label'] = '#bgn.settings.extension.custom_gestures',
 		['Command'] = 'bgn_module_custom_gestures',
 		['Help'] = true,
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.states.bgn_module_tactical_groups',
+		['Label'] = '#bgn.settings.extension.tactical_groups',
 		['Command'] = 'bgn_module_tactical_groups',
 		['Help'] = true,
 	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_StateSettings', function()
-	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_States_Settings',
-		'#bgn.settings.states_title', '', '', TOOL_MENU)
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_States_Settings', '#bgn.settings.extension', '', '', TOOL_MENU)
 end)

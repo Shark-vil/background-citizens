@@ -83,7 +83,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		if ActorTarget:EqualStateGroup('calm') then
 			if reaction == 'ignore' then return end
 			ActorTarget:RemoveAllTargets()
-			ActorTarget:SetState(reaction, nil, true)
+			ActorTarget:SetState(reaction)
 		end
 
 		CheckDamageIgnore(attacker, target)

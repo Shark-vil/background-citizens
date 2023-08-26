@@ -64,7 +64,7 @@ if SERVER then
 			return
 		end
 
-		snet.IsValidForClient(ply, function(ply, success)
+		snet.IsValidForClient(ply, function(_, success)
 			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 			if not success then return end
 
@@ -112,7 +112,7 @@ if SERVER then
 				self.Actor:WalkToPos(pos, 'run')
 			end
 
-			snet.ClientRPC(self, 'UpdatePath', self.Actor.walkPath)
+			snet.ClientRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or { pos })
 		end
 	end
 

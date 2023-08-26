@@ -117,6 +117,13 @@ bgNPC:SetStateAction('steal', 'wary', {
 					npc:slibSetVar('is_stealer', true)
 					actor:ClearSchedule()
 
+					if slib.chance(50) then
+						local target_actor = bgNPC:GetActor(target)
+						if target_actor then
+							target_actor:SetState('idle')
+						end
+					end
+
 					actor:PlayStaticSequence('Crouch_IdleD', true, 5, function()
 						actor:PlayStaticSequence('Crouch_To_Stand', false, nil, function()
 							data.isPlayAnim = false
@@ -152,8 +159,5 @@ bgNPC:SetStateAction('steal', 'wary', {
 	end,
 	stop = function(actor)
 		actor:RemoveAllTargets()
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return not data.isWanted and IsValid(actor:GetFirstTarget())
 	end
 })

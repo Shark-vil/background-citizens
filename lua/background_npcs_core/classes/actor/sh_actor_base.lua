@@ -6,6 +6,7 @@ local SCHED_FORCED_GO = SCHED_FORCED_GO
 local SCHED_FORCED_GO_RUN = SCHED_FORCED_GO_RUN
 local SOLID_BBOX = SOLID_BBOX
 local CurTime = CurTime
+local Vector = Vector
 local IsValid = IsValid
 local ipairs = ipairs
 local istable = istable
@@ -30,6 +31,7 @@ local snet_Invoke = snet.Invoke
 local snet_InvokeAll = snet.InvokeAll
 local math_random = math.random
 --
+local vector_0_0_0 = Vector(0, 0, 0)
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
 	'vo/coast/bugbait/sandy_help.wav',
@@ -179,6 +181,11 @@ if SERVER then
 	-- Checks if the actor is alive or not.
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function BaseClass:IsAlive()
+		-- local vehicle_provider = self.vehicle
+		-- if vehicle_provider and not vehicle_provider:IsDestroyed() then
+		-- 	return true
+		-- end
+
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) or (npc:IsNPC()
 			and npc.IsCurrentSchedule and npc:IsCurrentSchedule(SCHED_DIE)
@@ -189,12 +196,21 @@ if SERVER then
 		return true
 	end
 else
+	-- local ents_FindByClass = ents.FindByClass
+	-- local table_WhereHasValueBySeq = table.WhereHasValueBySeq
+
 	-- Checks if the actor is alive or not.
 	--! The client has a simpler and less reliable check.
 	-- @return boolean is_alive return true if the actor is alive, otherwise false
 	function BaseClass:IsAlive()
 		local npc = self.npc
 		if not IsValid(npc) or (npc.Health and npc:Health() <= 0) then
+			-- local entities = ents_FindByClass('npc_decentvehicle_passenger')
+			-- if #entities ~= 0 and table_WhereHasValueBySeq(entities, function(_, ent)
+			-- 	return IsValid(ent) and ent:GetNWString('actor_uid') == self.uid
+			-- end) then
+			-- 	return true
+			-- end
 			self:RemoveActor()
 			return false
 		end
@@ -368,6 +384,10 @@ function BaseClass:TargetsCount()
 	return #self.targets
 end
 
+function BaseClass:HasNoTargets()
+	return #self.targets == 0
+end
+
 -- function BaseClass:TargetsRecalculate()
 -- 	for i = #self.targets, 1, -1 do
 -- 		if not IsValid(self.targets[i]) then
@@ -442,6 +462,9 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 		if always_visible then
 			self.enemies_always_visible[#self.enemies_always_visible + 1] = ent
 		end
+		if IsValid(self.npc) and self.npc:IsNPC() and isfunction(self.npc.SetNPCState) then
+			self.npc:SetNPCState(NPC_STATE_ALERT)
+		end
 		self:EnemiesRecalculate()
 	end
 end
@@ -515,6 +538,10 @@ function BaseClass:EnemiesCount()
 	return #self.enemies
 end
 
+function BaseClass:HasNoEnemies()
+	return #self.enemies == 0
+end
+
 function BaseClass:EnemiesRecalculate()
 	if not self.mechanics.enemies_controller then return end
 
@@ -580,24 +607,24 @@ function BaseClass:EnemiesRecalculate()
 	end
 end
 
-function BaseClass:GetNearEnemy()
-	local enemy = NULL
-	local dist = nil
-	local self_npc = self.npc
+-- function BaseClass:GetNearEnemy()
+-- 	local enemy = NULL
+-- 	local dist = nil
+-- 	local self_npc = self.npc
 
-	for i = 1, #self.enemies do
-		local ent = self.enemies[i]
-		if IsValid(ent) then
-			local distance_to_enemy = ent:GetPos():DistToSqr(self_npc:GetPos())
-			if not IsValid(enemy) or not dist or distance_to_enemy < dist then
-				enemy = ent
-				dist = distance_to_enemy
-			end
-		end
-	end
+-- 	for i = 1, #self.enemies do
+-- 		local ent = self.enemies[i]
+-- 		if IsValid(ent) then
+-- 			local distance_to_enemy = ent:GetPos():DistToSqr(self_npc:GetPos())
+-- 			if not IsValid(enemy) or not dist or distance_to_enemy < dist then
+-- 				enemy = ent
+-- 				dist = distance_to_enemy
+-- 			end
+-- 		end
+-- 	end
 
-	return enemy
-end
+-- 	return enemy
+-- end
 
 function BaseClass:GetEnemy()
 	return self:GetNearEnemy()
@@ -873,7 +900,7 @@ function BaseClass:UpdateMovement()
 		walkPos = self.walkTarget:GetPos()
 	end
 
-	if not walkPos or not self.walkPath or self:IsAnimationPlayed() then return end
+	if not walkPos or self:IsAnimationPlayed() then return end
 
 	if self:InVehicle() then
 		local vehicle = self:GetVehicle()
@@ -884,29 +911,33 @@ function BaseClass:UpdateMovement()
 			self:WalkToPos(nil)
 		end
 	else
-		if #self.walkPath == 0 then return end
-
 		local npc = self.npc
+		if not IsValid(npc) then return end
+
+		local npc_pos = npc:GetPos()
 		local hasNext = false
-		local targetPosition = self.walkPath[1]
+		local targetPosition
 
-		if npc:GetPos():DistToSqr(targetPosition) <= _movement_finished_distance then
-			table_remove(self.walkPath, 1)
+		if self.walkPath and #self.walkPath ~= 0 then
+			targetPosition = self.walkPath[1]
 
-			if #self.walkPath == 0 then
-				if not hook_Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
-					self:WalkToPos(nil)
+			if npc_pos:DistToSqr(targetPosition) <= _movement_finished_distance then
+				table_remove(self.walkPath, 1)
+
+				if #self.walkPath == 0 then
+					if not hook_Run('BGN_ActorFinishedWalk', self, targetPosition, self.walkType) then
+						self:WalkToPos(nil)
+					end
+					return
 				end
 
-				return
+				hasNext = true
 			end
-
-			hasNext = true
 		end
 
 		if not hasNext then
 			if isfunction(npc.IsEFlagSet) and npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
-			if isfunction(npc.IsMoving) and npc:IsMoving() then return end
+			-- if isfunction(npc.IsMoving) and npc:IsMoving() then return end
 			if self.waitUpdateMovementDelay > CurTime() then return end
 			self.waitUpdateMovementDelay = CurTime() + .5
 		end
@@ -918,7 +949,7 @@ function BaseClass:UpdateMovement()
 			end
 		end
 
-		if isfunction(npc.SetLastPosition) then
+		if targetPosition and isfunction(npc.SetLastPosition) then
 			npc:SetLastPosition(targetPosition)
 		end
 
@@ -1421,6 +1452,24 @@ function BaseClass:EnterVehicle(vehicle)
 		if all_seats_are_taken then return end
 	end
 
+	-- vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function()
+	-- 	if not vehicle_provider or not IsValid(vehicle) then return end
+
+	-- 	self.eternal = true
+	-- 	self.vehicle = vehicle_provider
+	-- 	self.keyvalues = self.npc:GetKeyValues()
+
+	-- 	if not vehicle_provider:GetDriver() then
+	-- 		vehicle_provider:SetDriver(self)
+	-- 	elseif not vehicle_provider:AddPassenger(self) then
+	-- 		return
+	-- 	end
+
+	-- 	hook_Run('BGN_OnEnterVehicle', self, vehicle_provider)
+
+	-- 	self.npc:Remove()
+	-- end)
+
 	local npc = self.npc
 	vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
 		if not vehicle_provider or not IsValid(self_vehicle) then return end
@@ -1429,22 +1478,25 @@ function BaseClass:EnterVehicle(vehicle)
 		self.eternal = true
 		self.vehicle = vehicle_provider
 
-		npc:SetNoDraw(true)
+		-- npc:SetNoDraw(true)
 
 		if not vehicle_provider:GetDriver() then
 			vehicle_provider:SetDriver(self)
 		else
 			if not vehicle_provider:AddPassenger(self) then
-				npc:SetNoDraw(false)
+				--  npc:SetNoDraw(false)
 				return
 			end
 		end
 
+		npc:SetNoDraw(true)
 		npc:slibSetVar('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
-		npc:SetModelScale(0.1)
-		npc:SetParent(self_vehicle)
+		-- npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
+		npc:SetPos(vector_0_0_0)
+		-- npc:SetModelScale(0.1)
+		npc:SetModelScale(0)
+		-- npc:SetParent(self_vehicle)
 		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 		self.walkUpdatePathDelay = 0
@@ -1475,7 +1527,21 @@ function BaseClass:ExitVehicle()
 		if slib.chance(50) then add_right = -dist end
 
 		npc:slibSetVar('bgn_vehicle_entered', false)
-		npc:SetParent(nil)
+		-- npc:SetParent(nil)
+
+		-- local npc = ents.Create(self.class)
+		-- npc:SetModel(self.model)
+		-- npc:SetSkin(self.skin)
+
+		-- for k, v in pairs(self.bodygroups) do
+		-- 		npc:SetBodygroup(k, v)
+		-- end
+
+		-- for k, v in pairs(self.keyvalues) do
+		-- 	if isstring(k) and isstring(v) then
+		-- 		npc:SetKeyValue(k, v)
+		-- 	end
+		-- end
 
 		for i = 1, 4 do
 			exit_pos = pos + (right * add_right) + (forward * add_forward) + (up * 50)
@@ -1485,6 +1551,7 @@ function BaseClass:ExitVehicle()
 				endpos = exit_pos - Vector(0, 0, 500),
 				filter = function(ent)
 					if ent ~= npc then return true end
+					-- return true
 				end
 			})
 
@@ -1504,6 +1571,16 @@ function BaseClass:ExitVehicle()
 		npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
 		npc:PhysWake()
 		npc:SetNoDraw(false)
+		-- npc:Spawn()
+		self:DropToFloor()
+
+		-- snet.Request('bgn_add_actor_from_client', npc, self.type, self.uid, self.info).InvokeAll()
+
+		-- timer.Simple(0, function()
+		-- 	if not IsValid(npc) then return end
+		-- 	self:DropToFloor()
+		-- 	self:CreateFakePlayerMethodsForNPC()
+		-- end)
 
 		if vehicle_provider:GetDriver() == self then
 			vehicle_provider:SetDriver(nil)

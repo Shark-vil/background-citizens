@@ -4,6 +4,11 @@ local util_TraceLine = util.TraceLine
 local table_remove = table.remove
 local table_insert = table.insert
 local table_Reverse = table.Reverse
+local slib_IsInWorld = slib.IsInWorld
+local math_sqrt = math.sqrt
+local math_Round = math.Round
+local vector_0_0_150 = Vector(0, 0, 150)
+local vector_0_0_1000 = Vector(0, 0, 1000)
 --
 
 local function CalculatePath(node, endPos)
@@ -68,6 +73,34 @@ local function IsNotWorld(startPos, endPos)
 	return not tr.Hit
 end
 
+local function TracePositionFixed(trace_data, position)
+	trace_data.start = position + vector_0_0_150
+	trace_data.endpos = position - vector_0_0_1000
+	return util_TraceLine(trace_data).HitPos
+end
+
+local function GetPrimitivePath(startPos, endPos, distance_point_to_point)
+	local trace_data = {}
+	local preliminary_point
+	local point_spacing = 200
+	local points_count = 1
+	local points_limit = math_Round(math_sqrt(distance_point_to_point / (point_spacing ^ 2)))
+	local add_direction = 0
+	local direction = (endPos - startPos):GetNormalized()
+	local movement_path = {}
+	table_insert(movement_path, TracePositionFixed(trace_data, startPos))
+	repeat
+		add_direction = add_direction + point_spacing
+		preliminary_point = startPos + (direction * add_direction)
+		preliminary_point = TracePositionFixed(trace_data, preliminary_point)
+		if not slib_IsInWorld(preliminary_point) then break end
+		points_count = points_count + 1
+		table_insert(movement_path, preliminary_point)
+	until points_count >= points_limit
+	table_insert(movement_path, TracePositionFixed(trace_data, endPos))
+	return movement_path
+end
+
 function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 	local G = startPos:DistToSqr(endPos)
 
@@ -75,7 +108,9 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 		return {startPos, endPos}
 	end
 
-	if BGN_NODE:CountNodesOnMap() == 0 then return {} end
+	if BGN_NODE:CountNodesOnMap() == 0 then
+		return GetPrimitivePath(startPos, endPos, G)
+	end
 
 	limitIteration = limitIteration or 300
 	local currentIteration = 0
@@ -85,7 +120,9 @@ function bgNPC:FindWalkPath(startPos, endPos, limitIteration, pathType)
 
 	if not closetNode or not IsNotWorld(startPos, closetNode.position) then
 		closetNode = bgNPC:GetClosestPointInRadius(startPos, 500)
-		if not closetNode then return {} end
+		if not closetNode then
+			return GetPrimitivePath(startPos, endPos, G)
+		end
 	end
 
 	local startNode = BGN_NODE:Instance(startPos)

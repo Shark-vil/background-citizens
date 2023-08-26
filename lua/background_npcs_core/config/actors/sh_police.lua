@@ -31,8 +31,8 @@ bgNPC.cfg:SetActor('police', {
 	random_bodygroups = true,
 	at_random_range = 100,
 	at_random = {
-		['walk'] = 85,
-		['idle'] = 10,
+		['walk'] = 70,
+		['idle'] = 25,
 		['dialogue'] = 15,
 	},
 	at_damage_range = 100,

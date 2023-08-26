@@ -1,6 +1,10 @@
-local function TOOL_MENU(Panel)
-	Panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.general.bgn_max_npc',
+local function TOOL_MENU(panel)
+	panel:AddControl('Header', {
+		['Description'] = '==[ Total NPC ]==',
+	})
+
+	panel:AddControl('Slider', {
+		['Label'] = '#bgn.settings.actor.total_max_npc',
 		['Command'] = 'bgn_max_npc',
 		['Type'] = 'Integer',
 		['Min'] = '0',
@@ -8,52 +12,51 @@ local function TOOL_MENU(Panel)
 		['Help'] = true,
 	})
 
-	Panel:AddControl('Label', { Text = '===========' });
+	panel:AddControl('Header', {
+		['Description'] = '==[ Selective setting ]==',
+	})
 
-	for npcType, v in SortedPairs(bgNPC.cfg.actors) do
-		local name = v.name or npcType
+	panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.actor.active_npcs.help'
+	})
+
+	for npc_type, v in SortedPairs(bgNPC.cfg.actors) do
+		local name = v.name or npc_type
 		if v.hidden then continue end
 
-		Panel:AddControl('CheckBox', {
-			['Label'] = name,
-			['Command'] = 'bgn_npc_type_' .. npcType
+		panel:AddControl('CheckBox', {
+			['Label'] = '---- | ' .. name,
+			['Command'] = 'bgn_npc_type_' .. npc_type
 		})
 
-		Panel:AddControl('CheckBox', {
-			['Label'] = '#bgn.settings.active_npcs.bgn_disable_weapon_' .. npcType,
-			['Command'] = 'bgn_disable_weapon_' .. npcType,
+		panel:AddControl('CheckBox', {
+			['Label'] = '#bgn.settings.actor.disable_weapon_' .. npc_type,
+			['Command'] = 'bgn_disable_weapon_' .. npc_type,
 			['Help'] = true,
 		})
 
-		Panel:AddControl('Slider', {
-			['Label'] = '#bgn.settings.active_npcs.max_npc_' .. npcType,
-			['Command'] = 'bgn_npc_type_max_' .. npcType,
+		panel:AddControl('Slider', {
+			['Label'] = '#bgn.settings.actor.max_npc_' .. npc_type,
+			['Command'] = 'bgn_npc_type_max_' .. npc_type,
 			['Type'] = 'Integer',
 			['Min'] = '0',
 			['Max'] = '200',
 			['Help'] = true,
 		});
 
-		if DecentVehicleDestination then
-			Panel:AddControl('Slider', {
-				['Label'] = '#bgn.settings.active_npcs.max_npc_vehicle_' .. npcType,
-				['Command'] = 'bgn_npc_vehicle_max_' .. npcType,
+		if DecentVehicleDestination and v.vehicles and istable(v.vehicles) and #v.vehicles ~= 0 then
+			panel:AddControl('Slider', {
+				['Label'] = '#bgn.settings.actor.max_npc_vehicle_' .. npc_type,
+				['Command'] = 'bgn_npc_vehicle_max_' .. npc_type,
 				['Type'] = 'Integer',
 				['Min'] = '0',
 				['Max'] = '200',
 				['Help'] = true,
 			});
 		end
-
-		Panel:AddControl('Label', { Text = '===========' });
 	end
-
-	Panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.active_npcs.help'
-	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_ActiveNPCGroups', function()
-	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Active_NPC_Groups',
-		'#bgn.settings.active_title', '', '', TOOL_MENU)
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Active_NPC_Groups', '#bgn.settings.actor', '', '', TOOL_MENU)
 end)

@@ -1,4 +1,14 @@
 local IsValid = IsValid
+local pairs = pairs
+local ipairs = ipairs
+local istable = istable
+local isstring = isstring
+local string_StartWith = string.StartWith
+local table_Copy = table.Copy
+local table_ToString = table.ToString
+local string_Replace = string.Replace
+local string_Explode = string.Explode
+local table_insert = table.insert
 --
 local cvar_bgn_debug = GetConVar('bgn_debug')
 local actors_config_cache = {}
@@ -12,7 +22,7 @@ function bgNPC:GetActorConfig(actor_type)
 		return actors_config_cache[actor_type]
 	else
 		if not bgNPC.cfg.actors[actor_type] then return end
-		local data = table.Copy(bgNPC.cfg.actors[actor_type])
+		local data = table_Copy(bgNPC.cfg.actors[actor_type])
 
 		if data.inherit and data.inherit ~= actor_type then
 			local inherit_data = bgNPC:GetActorConfig(data.inherit)
@@ -34,7 +44,7 @@ function bgNPC:GetActorConfig(actor_type)
 							data[inherit_key] = inherit_value
 							if istable(inherit_value) then
 								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
-									inherit_key .. ' : ' .. table.ToString(inherit_value), 'GetActorConfig')
+									inherit_key .. ' : ' .. table_ToString(inherit_value), 'GetActorConfig')
 							else
 								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
 									inherit_key .. ' : ' .. tostring(inherit_value), 'GetActorConfig')
@@ -46,8 +56,8 @@ function bgNPC:GetActorConfig(actor_type)
 		end
 
 		for k, v in pairs(data) do
-			if isstring(v) and string.StartWith(v, '@') then
-				local inherit_groups = string.Explode('@', string.Replace(v, ' ', ''))
+			if isstring(v) and string_StartWith(v, '@') then
+				local inherit_groups = string_Explode('@', string_Replace(v, ' ', ''))
 
 				for _, inherit_actor_type in ipairs(inherit_groups) do
 					if #inherit_actor_type ~= 0 and inherit_actor_type ~= actor_type then
@@ -63,14 +73,14 @@ function bgNPC:GetActorConfig(actor_type)
 							elseif data[k] ~= nil and istable(data[k]) and istable(inherit_data[k]) then
 								for another_key, another_value in pairs(inherit_data[k]) do
 									if isnumber(another_key) then
-										table.insert(data, another_value)
+										table_insert(data, another_value)
 									elseif data[another_key] == nil then
 										data[another_key] = another_value
 									end
 								end
 							end
 						elseif data[k] ~= nil and isstring(data[k]) then
-							if string.StartWith(data[k], '@') then
+							if string_StartWith(data[k], '@') then
 								data[k] = nil
 							end
 						end
@@ -190,8 +200,8 @@ function bgNPC:GetActivePlayerTool(tool_name, ply)
 end
 
 do
-	local npcs_template_copy = table.Copy(bgNPC.cfg.actors)
+	local npcs_template_copy = table_Copy(bgNPC.cfg.actors)
 	function bgNPC:ResetConfiguration()
-		bgNPC.cfg.actors = table.Copy(npcs_template_copy)
+		bgNPC.cfg.actors = table_Copy(npcs_template_copy)
 	end
 end

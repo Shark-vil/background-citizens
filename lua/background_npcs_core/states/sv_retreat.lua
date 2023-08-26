@@ -1,6 +1,13 @@
 local asset = bgNPC:GetModule('wanted')
 
-bgNPC:SetStateAction('retreat', 'danger', {
+hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
+	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
+		actor:SetState('retreat')
+		return true
+	end
+end)
+
+bgNPC:SetStateAction('retreat', 'other', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -38,8 +45,5 @@ bgNPC:SetStateAction('retreat', 'danger', {
 				data.update_point_delay = CurTime() + 5
 			end
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

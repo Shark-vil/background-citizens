@@ -23,7 +23,8 @@ async.Add('BGN_ActorEnemyController', function(yield, wait)
 end)
 
 hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)
-	bgNPC.killing_statistic[victim] = {}
+	bgNPC:ResetKillingStatistic(victim)
+
 	local actors = bgNPC:GetAll()
 
 	for i = 1, #actors do

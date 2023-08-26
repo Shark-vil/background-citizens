@@ -10,20 +10,21 @@ if SERVER then
 
 			return state, data
 		end,
-		not_stop = function(actor, state, data)
-			return IsValid(data.anim_info.animator)
+		update = function(actor)
+			if IsValid(data.anim_info.animator) then return end
+			actor:RandomState()
 		end
 	})
 end
 
 scommand.Create('bgn_fun_dance').OnServer(function()
-	async.AddDedic('bgn_fun_dance_start', function(yield)
+	async.AddDedic('bgn_fun_dance_start', function(yield, wait)
 		for _, actor in ipairs(bgNPC:GetAll()) do
 			if actor and actor:IsAlive() then
 				actor:SetState('dance', nil, true)
+				yield()
 			end
-
-			yield()
+			wait(.2)
 		end
 
 		return yield('stop')

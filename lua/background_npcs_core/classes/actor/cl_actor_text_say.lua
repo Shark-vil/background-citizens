@@ -1,13 +1,16 @@
 local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
 local LocalPlayer = LocalPlayer
+local IsValid = IsValid
 local cam_Start3D2D = cam.Start3D2D
 local cam_End3D2D = cam.End3D2D
 local draw_SimpleTextOutlined = draw.SimpleTextOutlined
 --
 local speaking_actors = {}
 local font_name = 'BGN_SpeakingFont'
+local head_bone_name = 'ValveBiped.Bip01_Head'
 local clr_1 = Color(255, 255, 255)
 local clr_2 = Color(0, 0, 0)
+local vector_0_0_5 = Vector(0, 0, 5)
 
 local function RemoveSpeakByUid(uid)
 	for i = #speaking_actors, 1, -1 do
@@ -20,38 +23,42 @@ local function RemoveSpeakByUid(uid)
 end
 
 local function DrawActorText(actor_uid, say_text, say_time)
+	RemoveSpeakByUid(actor_uid)
+
 	local actor = bgNPC:GetActorByUid(actor_uid)
 	if not actor then return end
 
-	RemoveSpeakByUid(actor_uid)
-
 	local text_lines = {}
 	local text = utf8.force(say_text)
-	local maxLineSize = 50
-	local startPos = 1
-	local endPos = maxLineSize
+	local max_line_size = 50
+	local start_pos = 1
+	local end_pos = max_line_size
 	local str_len = utf8.len(text)
+	local utf8_sub = utf8.sub
+	local string_Trim = string.Trim
+	local table_insert = table.insert
 
-	if str_len >= maxLineSize then
+	if str_len >= max_line_size then
 		for k = 1, str_len do
-			if endPos == k then
-				local line = utf8.sub(text, startPos, endPos)
-				table.insert(text_lines, string.Trim(line))
+			if end_pos == k then
+				local line = utf8_sub(text, start_pos, end_pos)
+				table_insert(text_lines, string_Trim(line))
 
-				startPos = k
-				endPos = endPos + maxLineSize
-				if endPos > str_len then
-					endPos = str_len
+				start_pos = k
+				end_pos = end_pos + max_line_size
+
+				if end_pos > str_len then
+					end_pos = str_len
 				end
 			end
 		end
 	end
 
 	if #text_lines == 0 then
-		table.insert(text_lines, text)
+		table_insert(text_lines, text)
 	end
 
-	table.insert(speaking_actors, {
+	table_insert(speaking_actors, {
 		uid = actor_uid,
 		actor = actor,
 		text_lines = text_lines,
@@ -75,10 +82,11 @@ snet.Callback('bgn_actor_text_say_replic', function(_, actor_uid, replic_id, rep
 end)
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
-	local localPos = LocalPlayer():GetPos()
-	local eyeAngles = LocalPlayer():EyeAngles()
-	eyeAngles:RotateAroundAxis(eyeAngles:Forward(), 90)
-	eyeAngles:RotateAroundAxis(eyeAngles:Right(), 90)
+	local local_player = LocalPlayer()
+	local local_player_pos = local_player:GetPos()
+	local local_player_eye_angles = local_player:EyeAngles()
+	local_player_eye_angles:RotateAroundAxis(local_player_eye_angles:Forward(), 90)
+	local_player_eye_angles:RotateAroundAxis(local_player_eye_angles:Right(), 90)
 
 	for i = #speaking_actors, 1, -1 do
 		local item = speaking_actors[i]
@@ -87,23 +95,27 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
 		if not actor or not actor:IsAlive() then continue end
 
 		local npc = actor:GetNPC()
-		if not IsValid(npc) or npc:GetPos():Distance(localPos) > 800 then continue end
+		if not IsValid(npc) then continue end
+
+		local npc_pos = npc:GetPos()
+		if npc_pos:Distance(local_player_pos) > 800 then continue end
 
 		local text_lines = item.text_lines
-		local upperVectorPos = Vector(0, 0, 5)
-		local startPos = npc:LookupBone('ValveBiped.Bip01_Head')
-		if startPos then
-			startPos = startPos + npc:GetForward() + npc:GetUp() * upperVectorPos.z
+		local upper_vector_pos = vector_0_0_5
+		local start_pos = npc:LookupBone(head_bone_name)
+		if start_pos then
+			start_pos = start_pos + npc:GetForward() + npc:GetUp() * upper_vector_pos.z
 		else
-			startPos = npc:GetPos() + npc:GetForward() + npc:GetUp() * (npc:OBBMaxs().z + upperVectorPos.z)
+			start_pos = npc_pos + npc:GetForward() + npc:GetUp() * (npc:OBBMaxs().z + upper_vector_pos.z)
 		end
 
-		cam_Start3D2D(startPos, eyeAngles, 0.25)
-			local ypos = -15
+		local text3d_y_axis = -15
+
+		cam_Start3D2D(start_pos, local_player_eye_angles, 0.25)
 			for k = 1, #text_lines do
 				local draw_text = text_lines[k]
-				draw_SimpleTextOutlined(draw_text, font_name, 0, ypos, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
-				ypos = ypos + 15
+				draw_SimpleTextOutlined(draw_text, font_name, 0, text3d_y_axis, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
+				text3d_y_axis = text3d_y_axis + 15
 			end
 		cam_End3D2D()
 	end

@@ -81,7 +81,8 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 						snet.Invoke('bgn_actor_sync_data', ply, actor.uid, sync_data)
 						actor.sync_players_hash[ply] = sync_hash
 					end
-					if has_yield() then yield() end
+					-- if has_yield() then yield() end
+					yield()
 				end
 			end
 

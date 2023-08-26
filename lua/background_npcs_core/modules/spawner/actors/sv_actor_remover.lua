@@ -4,6 +4,7 @@ local player = player
 local GetConVar = GetConVar
 local IsValid = IsValid
 local ipairs = ipairs
+local CurTime = CurTime
 local coroutine_yield = coroutine.yield
 --
 local fasted_teleport
@@ -37,6 +38,9 @@ local function TeleportActor(actor, pos)
 	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then return end
 
 	bgNPC:RespawnActor(actor, pos)
+	actor:RandomState()
+
+	-- actor.__last_player_interaction = CurTime() + 5
 end
 
 local function IsValidRemovePositionAsync(actor, npc)
@@ -56,13 +60,17 @@ local function IsValidRemovePositionAsync(actor, npc)
 				return false
 			end
 		else
-			if dist <= bgn_spawn_block_radius or dist <= bgn_spawn_radius_visibility then
+			if dist <= bgn_spawn_block_radius then
+				return false
+			end
+
+			if dist >= bgn_spawn_radius_visibility and (not actor.__last_player_interaction or actor.__last_player_interaction > CurTime()) then
 				return false
 			end
 
 			coroutine_yield()
 
-			if not actor.toRemove and slib.chance(50) then
+			if not actor.toRemove then
 				return false
 			end
 
@@ -76,6 +84,31 @@ local function IsValidRemovePositionAsync(actor, npc)
 
 	return true
 end
+
+async.AddDedic('bgn_actors_last_player_interaction', function(yield, wait)
+	local player_GetHumans = player.GetHumans
+	while true do
+		local players = player_GetHumans()
+		local actors = bgNPC:GetAll()
+		for i = 1, #actors do
+			local actor = actors[i]
+			if actor and actor:IsAlive() then
+				local npc = actor:GetNPC()
+				if not IsValid(npc) then continue end
+				for k = 1, #players do
+					local ply = players[k]
+					if IsValid(ply) and ply:slibIsTraceEntity(npc, bgn_spawn_radius_visibility, true) then
+						actor.__last_player_interaction = CurTime() + 10
+						break
+					end
+					yield()
+				end
+			end
+			yield()
+		end
+		yield()
+	end
+end)
 
 async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 	while true do
@@ -127,11 +160,13 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 					actor:Remove()
 				end
 			else
-				local max_limit = bgNPC:GetLimitActors(npc_type)
-				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
-					actor:Remove()
-					yield()
-					continue
+				if not actor.mechanics.ignore_limit then
+					local max_limit = bgNPC:GetLimitActors(npc_type)
+					if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
+						actor:Remove()
+						yield()
+						continue
+					end
 				end
 
 				if not IsValidRemovePositionAsync(actor, npc) then

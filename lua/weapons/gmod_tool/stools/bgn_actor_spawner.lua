@@ -16,6 +16,7 @@ function TOOL:LeftClick(tr)
 		local npc = actor:GetNPC()
 		if not IsValid(npc) then return false end
 
+		actor:RandomState()
 		actor.eternal = true
 
 		DoPropSpawnedEffect(npc)

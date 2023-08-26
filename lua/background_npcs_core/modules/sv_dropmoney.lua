@@ -1,4 +1,8 @@
+local cvar_bgn_drop_money = GetConVar('bgn_drop_money')
+
 hook.Add('BGN_OnKilledActor', 'BGN_Module_DropMoney', function(actor)
+	if not cvar_bgn_drop_money:GetBool() then return end
+
 	local data = actor:GetData()
 	local npc = actor:GetNPC()
 

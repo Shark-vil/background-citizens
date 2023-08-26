@@ -1,9 +1,16 @@
 hook.Add('BGN_PreSetNPCState', 'BGN_OverrideDyspneaDangerStateToCallingPolice', function(actor, state)
-	if state == 'dyspnea_danger' and math.random(0, 100) < 10 then return 'calling_police' end
+	if state == 'dyspnea_danger' and math.random(0, 100) < 10 then
+		return 'calling_police'
+	end
 end)
 
 bgNPC:SetStateAction('dyspnea_danger', 'danger', {
 	update = function(actor)
+		if actor:HasNoEnemies() then
+			actor:RandomState()
+			return
+		end
+
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 		local enemy = actor:GetNearEnemy()
@@ -33,8 +40,5 @@ bgNPC:SetStateAction('dyspnea_danger', 'danger', {
 				})
 			end
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		return actor:EnemiesCount() > 0 and not actor:HasStateGroup(new_state, 'danger')
 	end
 })

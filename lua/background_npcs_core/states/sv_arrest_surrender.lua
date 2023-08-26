@@ -24,6 +24,11 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		end
 	end,
 	update = function(actor, state, data)
+		if actor:HasNoTargets() then
+			actor:RandomState()
+			return
+		end
+
 		if not actor:IsAnimationPlayed() then
 			actor:PlayStaticSequence('Fear_Reaction', true)
 		end
@@ -43,12 +48,5 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		else
 			actor:RemoveTarget(target)
 		end
-	end,
-	not_stop = function(actor, state, data, new_state, new_data)
-		-- actor:TargetsRecalculate()
-
-		actor:RecalculationTargets()
-
-		return actor:TargetsCount() > 0
 	end
 })

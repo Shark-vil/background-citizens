@@ -1,6 +1,8 @@
 local Vector = Vector
 local pairs = pairs
 local ipairs = ipairs
+local isbool = isbool
+local assert = assert
 local math_floor = math.floor
 -- local math_modf = math.modf
 local table_insert = table.insert
@@ -12,7 +14,10 @@ local util_TraceLine = util.TraceLine
 local util_TableToJSON = util.TableToJSON
 local util_JSONToTable = util.JSONToTable
 local coroutine_yield = coroutine.yield
+local cvar_bgn_chunk_system  = GetConVar('bgn_chunk_system')
+local cvar_bgn_chunk_size = GetConVar('bgn_chunk_size')
 --
+local MAP_CHUNKS
 local is_infmap = slib.IsInfinityMap()
 if is_infmap then
 	util_TraceLine = function(...) return util.TraceLine(...) end
@@ -28,25 +33,69 @@ BGN_NODE = {}
 BGN_NODE.Map = {}
 BGN_NODE.MapCount = 0
 BGN_NODE.Chunks = {}
-BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or 5000
-BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or 5000
-BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or 5000
+BGN_NODE.CHUNK_SIZE_X = 0
+BGN_NODE.CHUNK_SIZE_Y = 0
+BGN_NODE.CHUNK_SIZE_Z = 0
 
-local CHUNK_CLASS = slib.Component('Chunks')
-local MAP_CHUNKS = CHUNK_CLASS:Instance({
-	chunk_size_x = BGN_NODE.CHUNK_SIZE_X,
-	chunk_size_y = BGN_NODE.CHUNK_SIZE_Y,
-	chunk_size_z = BGN_NODE.CHUNK_SIZE_Z,
-})
+function BGN_NODE:IsOnChunkSystem()
+	return cvar_bgn_chunk_system:GetBool()
+end
 
-if SERVER then
-	hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
-		if IsValid(MAP_CHUNKS) then return end
-		MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
-		MAP_CHUNKS:MakeChunks()
+do
+	local CHUNK_CLASS = slib.Component('Chunks')
 
-		MsgN('[Background NPCs] Chunks count: ' .. tostring(MAP_CHUNKS:ChunksCount()))
-	end)
+	local function InstanceChunks()
+		local chunk_size = cvar_bgn_chunk_size:GetInt()
+
+		BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or chunk_size
+		BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or chunk_size
+		BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or chunk_size
+
+		MAP_CHUNKS = CHUNK_CLASS:Instance({
+			chunk_size_x = BGN_NODE.CHUNK_SIZE_X,
+			chunk_size_y = BGN_NODE.CHUNK_SIZE_Y,
+			chunk_size_z = BGN_NODE.CHUNK_SIZE_Z,
+		})
+	end
+
+	InstanceChunks()
+
+	if SERVER then
+		local function GenerateChunks()
+			MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
+			MAP_CHUNKS:MakeChunks()
+
+			MsgN('[Background NPCs] The chunking system is active.')
+			MsgN('[Background NPCs] Chunks count: ' .. tostring(MAP_CHUNKS:ChunksCount()))
+		end
+
+		hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
+			if IsValid(MAP_CHUNKS) then return end
+			if not BGN_NODE:IsOnChunkSystem() then
+				MsgN('[Background NPCs] The chunking system is disabled.')
+				return
+			end
+			GenerateChunks()
+		end)
+
+		local function OnChangeChunkCvars(cvar_name, old_value, new_value)
+			if timer.Exists('BGN_Nodes_OnChangeChunkCvars') then
+				timer.Remove('BGN_Nodes_OnChangeChunkCvars')
+			end
+
+			timer.Create('BGN_Nodes_OnChangeChunkCvars', 2.5, 1, function()
+				InstanceChunks()
+				if cvar_name == 'bgn_chunk_size' or tonumber(new_value) == 1 then
+					bgNPC:LoadRoutes()
+				else
+					MsgN('[Background NPCs] The chunking system is disabled.')
+				end
+			end)
+		end
+
+		cvars.AddChangeCallback('bgn_chunk_system', OnChangeChunkCvars, 'bgn_chunk_system_changed')
+		cvars.AddChangeCallback('bgn_chunk_size', OnChangeChunkCvars, 'bgn_chunk_size_changed')
+	end
 end
 
 cvars.AddChangeCallback('bgn_point_z_limit', function(convar_name, value_old, value_new)
@@ -235,9 +284,11 @@ function BGN_NODE:Instance(position_value)
 
 		do
 			local node_chunk_id = self:GetChunkID()
-			local node_chunk = BGN_NODE.Chunks[node_chunk_id]
-			if node_chunk and table_HasValueBySeq(node_chunk, self.index) then
-				table_RemoveValueBySeq(node_chunk, self.index)
+			if node_chunk_id ~= -1 then
+				local node_chunk = BGN_NODE.Chunks[node_chunk_id]
+				if node_chunk and table_HasValueBySeq(node_chunk, self.index) then
+					table_RemoveValueBySeq(node_chunk, self.index)
+				end
 			end
 		end
 
@@ -250,7 +301,7 @@ function BGN_NODE:Instance(position_value)
 				local another_node_past_index = another_node.index
 				another_node.index = i
 
-				if another_node_past_index ~= another_node.index then
+				if another_node_chunk_id ~= -1 and another_node_past_index ~= another_node.index then
 					local another_chunk = BGN_NODE.Chunks[another_node_chunk_id]
 					if another_chunk and table_HasValueBySeq(another_chunk, another_node_past_index) then
 						table_RemoveValueBySeq(another_chunk, another_node_past_index)
@@ -280,16 +331,19 @@ function BGN_NODE:GetChunkManager()
 end
 
 function BGN_NODE:GetChunkNodesCount(pos)
-	local chunkId = self:GetChunkID(pos)
-	local chunks = self.Chunks[chunkId]
+	local chunk_id = self:GetChunkID(pos)
+	if chunk_id == -1 then return 0 end
+	local chunks = self.Chunks[chunk_id]
 	if not chunks then return 0 end
 	return #chunks
 end
 
 function BGN_NODE:GetChunkNodes(pos, is_async)
-	local chunkId = self:GetChunkID(pos)
-	local chunks = self.Chunks[chunkId]
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
 
+	local chunk_id = self:GetChunkID(pos)
+	if chunk_id == -1 then return {} end
+	local chunks = self.Chunks[chunk_id]
 	if not chunks then return {} end
 
 	local nodes = {}
@@ -327,8 +381,8 @@ end
 function BGN_NODE:AddNodeToMap(node)
 	if not node then return end
 
-	local chunkId = node:GetChunkID()
-	if SERVER and chunkId == -1 then
+	local chunk_id = node:GetChunkID()
+	if SERVER and BGN_NODE:IsOnChunkSystem() and chunk_id == -1 then
 		-- slib.Warning('Node cannot exist outside of a chunk!')
 		bgNPC:Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
 		return
@@ -344,10 +398,12 @@ function BGN_NODE:AddNodeToMap(node)
 	end
 
 	self.MapCount = self.MapCount + 1
-	self.Chunks[chunkId] = self.Chunks[chunkId] or {}
 
-	if not table_HasValueBySeq(self.Chunks[chunkId], index) then
-		table_insert(self.Chunks[chunkId], index)
+	if chunk_id ~= -1 then
+		self.Chunks[chunk_id] = self.Chunks[chunk_id] or {}
+		if not table_HasValueBySeq(self.Chunks[chunk_id], index) then
+			table_insert(self.Chunks[chunk_id], index)
+		end
 	end
 end
 
@@ -362,6 +418,8 @@ function BGN_NODE:GetNodeByPos(pos)
 end
 
 function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
 	-- local async_pass
 	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_in_radius = {}
@@ -396,6 +454,8 @@ function BGN_NODE:GetChunkNodesInRadiusAsync(pos, radius)
 end
 
 function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
 	local async_pass
 	local nodes_in_radius = {}
 	local nodes_count = 0
@@ -429,6 +489,8 @@ function BGN_NODE:GetNodesInRadiusAsync(pos, radius)
 end
 
 function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
 	-- local async_pass
 	local nodes_in_chunk = BGN_NODE:GetChunkNodes(pos, is_async)
 	local nodes_count = 0
@@ -460,18 +522,37 @@ function BGN_NODE:GetChunkNodesCountInRadiusAsync(pos, radius)
 	return self:GetChunkNodesCountInRadius(pos, radius, true)
 end
 
-function BGN_NODE:GetNodesCountInRadius(pos, radius)
+function BGN_NODE:GetNodesCountInRadius(pos, radius, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
+	local async_pass
 	local nodes_count = 0
 	radius = radius ^ 2
+
+	if is_async then
+		async_pass = 0
+	end
 
 	for i = 1, self.MapCount do
 		local node = self.Map[i]
 		if node:GetPos():DistToSqr(pos) <= radius then
 			nodes_count = nodes_count + 1
 		end
+
+		if is_async then
+			async_pass = async_pass + 1
+			if async_pass > 1 / slib.deltaTime then
+				async_pass = 0
+				coroutine_yield()
+			end
+		end
 	end
 
 	return nodes_count
+end
+
+function BGN_NODE:GetNodesCountInRadiusAsync(pos, radius)
+	return self:GetNodesCountInRadius(pos, radius, true)
 end
 
 function BGN_NODE:ClearNodeMap()
@@ -499,6 +580,8 @@ function BGN_NODE:SetMap(map)
 end
 
 function BGN_NODE:ExpandMap(map, fix_outside_map_nodes, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
 	for i = 1, #map do
 		local node = map[i]
 		if node.index == -1 then
@@ -521,14 +604,17 @@ function BGN_NODE:ExpandMapAsync(map, fix_outside_map_nodes)
 end
 
 function BGN_NODE:AutoLink(settings, is_async)
+	assert(not is_async or isbool(is_async), 'Invalid parameter for calling asynchronous method')
+
 	settings = settings or {}
 
-	local async_current_pass = 0
 	local nodes_count = self.MapCount
-	local yield
+	local AsyncYield
+	local async_current_pass
 
 	if is_async then
-		yield = function()
+		async_current_pass = 0
+		AsyncYield = function()
 			async_current_pass = async_current_pass + 1
 			if async_current_pass > 1 / slib.deltaTime then
 				async_current_pass = 0
@@ -538,18 +624,18 @@ function BGN_NODE:AutoLink(settings, is_async)
 	end
 
 	for i = 1, nodes_count do
-		if is_async then yield() end
+		if is_async then AsyncYield() end
 
 		local node = self.Map[i]
 		if not node or (node.single_check and node.single_check_complete) then continue end
 		if node.single_check then node.single_check_complete = true end
 
 		for k = 1, nodes_count do
-			if is_async then yield() end
+			if is_async then AsyncYield() end
 
 			local another_node = self.Map[k]
 			if not another_node or node == another_node then continue end
-			if another_node.single_check and another_node.single_check_complete then continue end
+			-- if another_node.single_check and another_node.single_check_complete then continue end
 
 			local another_node_pos = another_node:GetPos()
 			if node:CheckDistanceLimitToNode(another_node_pos)
@@ -582,7 +668,8 @@ function BGN_NODE:FixOutsideMapNodes()
 		local node = self.Map[i]
 		if not node or node.is_in_world then continue end
 
-		if not util_IsInWorld(node:GetPos()) then
+		local position = node:GetPos()
+		if not util_IsInWorld(position) or bgNPC:VectorInWater(position) then
 			remove_count = remove_count + 1
 			node:RemoveFromMap()
 		else

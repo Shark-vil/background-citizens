@@ -23,7 +23,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if actor:EqualStateGroup('calm') then
 			if reaction == 'ignore' then continue end
 			actor:RemoveAllTargets()
-			actor:SetState(reaction, nil, true)
+			actor:SetState(reaction)
 		end
 
 		local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)

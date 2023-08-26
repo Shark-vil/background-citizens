@@ -10,6 +10,7 @@ local debugoverlay_Line = debugoverlay.Line
 local debugoverlay_Sphere = debugoverlay.Sphere
 local CurTime = CurTime
 local ipairs = ipairs
+local isfunction = isfunction
 local _color_8_255_250 = Color(8, 222, 250)
 local _color_8_250_60 = Color(8, 250, 60)
 local _color_250_85_0 = Color(250, 85, 8)
@@ -32,6 +33,11 @@ local function Instance()
 			local actor = private.actors[i]
 			if not actor or not actor:IsAlive() then
 				table_remove(private.actors, i)
+			else
+				local npc = actor:GetNPC()
+				if not npc.GetActiveWeapon or not isfunction(npc.GetActiveWeapon) or not IsValid(npc:GetActiveWeapon()) then
+					table_remove(private.actors, i)
+				end
 			end
 		end
 
@@ -93,20 +99,25 @@ local function GetTacticalGroup(actor)
 	return _tactical_groups_storage[index]
 end
 
-local function CalcTacticalGroup(team_name)
+local function CalcTacticalGroup()
 	local max_group_size = 3
 
-	for _, police in ipairs(bgNPC:GetAllByTeam(team_name)) do
-		if not police or not police:IsAlive() then continue end
-		if not slib.chance(10) then continue end
+	for _, target_actor in ipairs(bgNPC:GetAll()) do
+		-- if not slib.chance(10) then continue end
+		if not target_actor or not target_actor:IsAlive() then continue end
+		if not target_actor:EqualStateGroup('danger') then continue end
 
-		local tactical_group = GetTacticalGroup(police)
+		local npc = target_actor:GetNPC()
+		if not npc.GetActiveWeapon or not isfunction(npc.GetActiveWeapon) or not IsValid(npc:GetActiveWeapon()) then
+			continue
+		end
+
+		local tactical_group = GetTacticalGroup(target_actor)
 		if tactical_group:Count() == max_group_size then continue end
 
-		local npc = police:GetNPC()
-		for _, actor in ipairs(bgNPC:GetAllByRadius(npc:GetPos(), 500)) do
+		for _, actor in ipairs(bgNPC:GetAllByRadius(npc:GetPos(), math_random(500, 700))) do
 			if tactical_group:Count() == max_group_size then break end
-			if not actor or not actor:IsAlive() or not actor:HasTeam(team_name) or actor == police then
+			if not actor or not actor:IsAlive() or not actor:HasTeam(target_actor) or actor == target_actor then
 				continue
 			end
 
@@ -142,7 +153,7 @@ local function MovementTacticalGroup()
 			local leftside = true
 
 			for _, actor in ipairs(actors) do
-				if actor == leader then continue end
+				if actor == leader or actor:IsMeleeWeapon() then continue end
 				if actor.movement_order_delay and actor.movement_order_delay > CurTime() then continue end
 
 				local right = leader_npc:GetRight() * (leftside and offset or -offset)
@@ -168,17 +179,46 @@ local function MovementTacticalGroup()
 end
 
 local function TacticalGroupUpdateTimer()
-	CalcTacticalGroup('police')
-	-- CalcTacticalGroup('bandits')
+	CalcTacticalGroup()
 	MovementTacticalGroup()
 end
 
 local function TacticalGroupWalkOverrideHook(actor, pos)
+	if not actor or not actor:IsAlive() or not actor:EqualStateGroup('danger') then
+		return
+	end
+
 	local tactical_group = GetTacticalGroup(actor)
 	if tactical_group and tactical_group:Count() > 1 then
 		local actors = tactical_group:GetSortedActors()
 		if actors[1] ~= actor and not actor.movement_order then
 			return false
+		end
+	end
+end
+
+function bgNPC:GetTacticalGroupGetFirstEnemy(actor)
+	if not cvar_bgn_module_tactical_groups:GetBool() then return end
+	for _, group in ipairs(_tactical_groups_storage) do
+		if group and group:Count() > 1 and group:ExistsActor(actor) then
+			local actors = group:GetSortedActors()
+			local leader = actors[1]
+			if leader and leader ~= actor and leader:IsAlive() then
+				return leader:GetFirstEnemy()
+			end
+		end
+	end
+end
+
+function bgNPC:GetTacticalGroupGetNearEnemy(actor)
+	if not cvar_bgn_module_tactical_groups:GetBool() then return end
+	for _, group in ipairs(_tactical_groups_storage) do
+		if group and group:Count() > 1 and group:ExistsActor(actor) then
+			local actors = group:GetSortedActors()
+			local leader = actors[1]
+			if leader and leader ~= actor and leader:IsAlive() then
+				return leader:GetNearEnemy()
+			end
 		end
 	end
 end

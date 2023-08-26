@@ -9,9 +9,28 @@ local isstring = isstring
 local slib_GetUid = slib.GetUid
 local slib_chance = slib.chance
 local snet_Request = snet.Request
+local isbool = isbool
 local istable = istable
+local timer_Simple = timer.Simple
+local hook_Run = hook.Run
 --
 BGN_ACTOR = {}
+
+local function set_mechanic(obj, mechanic_type, default_value)
+	local value = true
+	local npc_data = obj.data
+
+	if isbool(default_value) then
+		value = default_value
+	end
+
+	if istable(npc_data) and istable(npc_data.mechanics) and isbool(npc_data.mechanics[mechanic_type]) then
+		value = npc_data.mechanics[mechanic_type]
+	end
+
+	obj.mechanics = obj.mechanics or {}
+	obj.mechanics[mechanic_type] = value
+end
 
 function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)
 	local npc_data = bgNPC:GetActorConfig(npc_type)
@@ -40,22 +59,33 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
+	obj.bodygroups = {}
+	for _, bodygroup in ipairs(npc:GetBodyGroups()) do
+		obj.bodygroups[bodygroup.id] = npc:GetBodygroup(bodygroup.id)
+	end
+	obj.skin = npc:GetSkin()
+	obj.model = npc:GetModel()
+	if SERVER then
+		obj.keyvalues = npc:GetKeyValues()
+	end
 	obj.collision_group = npc:GetCollisionGroup()
 	obj.model_scale = npc:GetModelScale()
 	obj.data = data
 	obj.weapon = nil
 	obj.sync_players_hash = {}
 	obj.state_delay = -1
-	obj.mechanics = {
-		movement_controller = true,
-		use_vehicle = true,
-		call_for_help = true,
-		fear_scream = true,
-		enemies_controller = true,
-		targets_controller = true,
-		states_controller = true,
-		animator_controller = true,
-	}
+	obj.mechanics = {}
+
+	set_mechanic(obj, 'movement_controller', true)
+	set_mechanic(obj, 'use_vehicle', true)
+	set_mechanic(obj, 'call_for_help', true)
+	set_mechanic(obj, 'fear_scream', true)
+	set_mechanic(obj, 'enemies_controller', true)
+	set_mechanic(obj, 'targets_controller', true)
+	set_mechanic(obj, 'states_controller', true)
+	set_mechanic(obj, 'animator_controller', true)
+	set_mechanic(obj, 'enhanced_npc_ignore', true)
+	set_mechanic(obj, 'inpc_ignore', true)
 
 	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. npc_type)
 
@@ -131,6 +161,18 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	npc.isBgnActor = true
 
+	if obj.mechanics.inpc_ignore then
+		-- ------------------------------------------------------------------
+		-- Unsopported iNPC - Artifical Intelligence Module (Improved NPC AI)
+		-- https://steamcommunity.com/sharedfiles/filedetails/?id=632126111
+		npc.inpcIgnore = true
+		-- ------------------------------------------------------------------
+	end
+
+	if SERVER and npc:IsNPC() and isfunction(npc.CapabilitiesAdd) then
+		npc:CapabilitiesAdd(CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_AUTO_DOORS + CAP_OPEN_DOORS + CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN)
+	end
+
 	if SERVER and not not_sync_actor_on_client then
 		snet_Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
 	end
@@ -139,12 +181,23 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		bgNPC:AddNPC(obj)
 	end
 
-	hook.Run('BGN_InitActor', obj)
+	hook_Run('BGN_InitActor', obj)
 
-	timer.Simple(0, function()
+	timer_Simple(0, function()
 		if not IsValid(npc) then return end
 		obj:DropToFloor()
 		obj:CreateFakePlayerMethodsForNPC()
+
+		if npc_data.start_random_state or npc_data.start_state then
+			timer_Simple(1, function()
+				if not obj:IsAlive() then return end
+				if npc_data.start_random_state then
+					obj:RandomState()
+				elseif npc_data.start_state then
+					obj:SetState(npc_data.start_state)
+				end
+			end)
+		end
 	end)
 
 	return obj

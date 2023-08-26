@@ -11,6 +11,10 @@ function bgNPC:GetActor(npc)
 	return nil
 end
 
+function bgNPC:IsActor(npc)
+	return self:GetActor(npc) ~= nil
+end
+
 function bgNPC:GetFirstActorInList()
 	local actors = self:GetAll()
 	for i = 1, #actors do
@@ -54,7 +58,7 @@ function bgNPC:GetAllPoints(linkType)
 end
 
 function bgNPC:GetAllPointsInRadius(center, radius, linkType)
-	radius = (radius or 500) ^ 2
+	radius = radius ^ 2
 
 	local radius_positions = {}
 	local map = BGN_NODE:GetMap()
@@ -77,7 +81,7 @@ function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 end
 
 function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
-	radius = (radius or 500) ^ 2
+	radius = radius ^ 2
 
 	local radius_positions = {}
 	local map = BGN_NODE:GetMap()
@@ -258,11 +262,12 @@ function bgNPC:GetAll()
 end
 
 function bgNPC:Count(npc_type)
-	if not npc_type or not self.factors[npc_type] then
+	if not npc_type then
 		return #self.actors
-	else
+	elseif self.factors[npc_type] then
 		return #self.factors[npc_type]
 	end
+	return 0
 end
 
 function bgNPC:GetAllByType(npc_type)
