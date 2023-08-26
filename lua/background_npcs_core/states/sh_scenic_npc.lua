@@ -1,1 +1,1 @@
-bgNPC:SetStateAction('scenic_npc', 'other')
+bgNPC:SetStateAction('scenic_npc', 'calm')
