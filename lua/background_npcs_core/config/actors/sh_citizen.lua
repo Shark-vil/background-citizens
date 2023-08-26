@@ -43,6 +43,7 @@ bgNPC.cfg:SetActor('citizen', {
 		'sim_fphys_pwvolga',
 		'sim_fphys_pwzaz',
 	},
+	start_random_state = true,
 	at_random_range = 120,
 	at_random = {
 		['walk'] = 75,

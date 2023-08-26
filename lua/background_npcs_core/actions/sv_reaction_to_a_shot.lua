@@ -41,9 +41,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 			continue
 		end
 
-		local state = actor:GetState()
-
-		if state == 'idle' or state == 'walk' or state == 'arrest' then
+		if actor:EqualStateGroup('calm') then
 			actor:SetState(actor:GetLastReaction())
 		end
 

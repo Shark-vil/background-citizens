@@ -18,7 +18,7 @@ bgNPC.cfg:SetActor('police_helicopter', {
 	at_protect_range = 100,
 	at_protect = { ['defense'] = 100 },
 	validator = function(self, npc_type)
-		if list.Get('NPC')[self.class] == nil then
+		if not list.Get('NPC')[self.class] then
 			return false
 		end
 	end,

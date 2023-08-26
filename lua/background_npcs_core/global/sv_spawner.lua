@@ -16,39 +16,65 @@ local math_Clamp = math.Clamp
 local hook_Run = hook.Run
 local istable = istable
 local isstring = isstring
+local math_sqrt = math.sqrt
 local pairs = pairs
 local ipairs = ipairs
 local slib_chance = slib.chance
+local vector_0_0_150 = Vector(0, 0, 150)
+local vector_0_0_1000 = Vector(0, 0, 1000)
+-- local clr_bad_spawn_pos = Color(236, 14, 14)
+-- local clr_good_spawn_pos = Color(140, 236, 14)
+-- local debugoverlay_Sphere = debugoverlay.Sphere
 -- local assert = assert
 -- local FrameTime = FrameTime
 local coroutine_yield = coroutine.yield
+local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius')
+local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_radius')
+local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
+local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
+local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
+local spawn_radius_sqrt = spawn_radius ^ 2
+local radius_visibility_sqrt = radius_visibility ^ 2
+local block_radius_sqrt = block_radius ^ 2
 --
 
-local function IsNotBlockSpawnPosition(node_position, all_players, spawn_radius, block_radius, target_entity)
+local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
 	local entities = ents_FindInSphere(node_position, 150)
 	for e = 1, #entities do
 		local ent = entities[e]
 		if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
+			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 			return false
 		end
 	end
 
 	for p = 1, #all_players do
 		local ply = all_players[p]
-		local distance = node_position:DistToSqr(ply:GetPos())
+		local ply_pos = ply:GetPos()
+		local distance = node_position:DistToSqr(ply_pos)
 
-		if distance <= block_radius then
+		if distance <= block_radius_sqrt then
+			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 			return false
 		end
 
 		if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
+			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 			return false
 		end
 
 		if bgNPC:PlayerIsViewVector(ply, node_position) then
+			if ply_pos:DistToSqr(node_position) <= radius_visibility_sqrt then
+				return false
+			end
+
+			local ply_eye_pos = ply:EyePos()
+			local direction = (node_position - ply_eye_pos):GetNormalized()
+			local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
 			local tr = util_TraceLine({
-				start = ply:EyePos(),
-				endpos = node_position,
+				start = ply_eye_pos,
+				endpos = ply_eye_pos + (direction * trace_distance),
 				filter = function(ent)
 					if IsValid(ent)
 						and ent ~= ply
@@ -62,6 +88,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, spawn_radius,
 			})
 
 			if not tr.Hit or not util_IsInWorld(node_position) then
+				-- debugoverlay_Sphere(tr.HitPos, 10, 1, clr_bad_spawn_pos)
 				return false
 			end
 		end
@@ -71,9 +98,13 @@ local function IsNotBlockSpawnPosition(node_position, all_players, spawn_radius,
 end
 
 local function FindSpawnLocationProcess(all_players, settings, is_async)
-	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
-	local radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
-	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
+	spawn_radius = cvar_bgn_spawn_radius:GetFloat()
+	radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
+	block_radius = cvar_bgn_spawn_block_radius:GetFloat()
+	spawn_radius_sqrt = spawn_radius ^ 2
+	radius_visibility_sqrt = radius_visibility ^ 2
+	block_radius_sqrt = block_radius ^ 2
+
 	local desired_position = settings.position
 	local teleport_radius = settings.radius or spawn_radius
 	local target_entity = settings.target
@@ -99,16 +130,27 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
 	else
-		spawn_radius = math_Clamp(spawn_radius, 0, 1000)
-		block_radius = math_Clamp(block_radius, 0, spawn_radius)
+		spawn_radius = math_Clamp(spawn_radius, 0, 1500)
+		radius_visibility = math_Clamp(block_radius, 0, 1000)
+		block_radius = math_Clamp(block_radius, 0, 600)
+		spawn_radius_sqrt = spawn_radius ^ 2
+		radius_visibility_sqrt = radius_visibility ^ 2
+		block_radius_sqrt = block_radius ^ 2
+
 		local dist_x = math_random(block_radius, spawn_radius)
 		local dist_y = math_random(block_radius, spawn_radius)
 		if slib_chance(50) then dist_x = -dist_x end
 		if slib_chance(50) then dist_y = -dist_y end
 		local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z)
+		local tr = util_TraceLine({
+			start = new_pos + vector_0_0_150,
+			endpos = new_pos - vector_0_0_1000,
+		})
+		new_pos = tr.HitPos
 		if not util_IsInWorld(new_pos) then return end
 		if bgNPC:VectorInWater(new_pos) then return end
-		if not IsNotBlockSpawnPosition(new_pos, all_players, spawn_radius, block_radius, target_entity) then return end
+		if not IsNotBlockSpawnPosition(new_pos, all_players, target_entity) then return end
+		-- debugoverlay_Sphere(new_pos, 10, 2, clr_good_spawn_pos)
 		return new_pos
 	end
 
@@ -123,12 +165,13 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 
 		if is_async then AsyncYield() end
 
-		if not IsNotBlockSpawnPosition(nodePosition, all_players, spawn_radius, block_radius, target_entity) then
+		if not IsNotBlockSpawnPosition(nodePosition, all_players, target_entity) then
 			nodePosition = nil
 			continue
 		end
 
 		if nodePosition then
+			-- debugoverlay_Sphere(nodePosition, 10, 1, clr_good_spawn_pos)
 			return nodePosition
 		end
 	end
@@ -176,49 +219,6 @@ function bgNPC:FindSpawnPosition(settings, is_async)
 	local nodePosition = FindSpawnLocationProcess(all_players, settings, is_async)
 	if nodePosition and isvector(nodePosition) then
 		return nodePosition
-	-- elseif desired_position then
-	-- 	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
-	-- 	spawn_radius = math.Clamp(spawn_radius, 0, 1000)
-
-	-- 	local spawn_block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat()
-	-- 	spawn_block_radius = math.Clamp(spawn_block_radius, 0, spawn_radius)
-
-	-- 	local dist_x = math.random(spawn_block_radius, spawn_radius)
-	-- 	local dist_y = math.random(spawn_block_radius, spawn_radius)
-	-- 	if slib.chance(50) then dist_x = -dist_x end
-	-- 	if slib.chance(50) then dist_y = -dist_y end
-	-- 	local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z)
-	-- 	if util.IsInWorld(new_pos) then
-	-- 		local entities = ents.FindInSphere(new_pos, 250)
-	-- 		local bad_spawn = false
-	-- 		local valid_class = {
-	-- 			'func_*',
-	-- 			'env_*',
-	-- 			'keyframe_*',
-	-- 			'move_rope',
-	-- 			'trigger_*',
-	-- 		}
-	-- 		for _, ent in ipairs(entities) do
-	-- 			if not ent:IsWorld() then
-	-- 				local ent_class = ent:GetClass()
-	-- 				local has_skip = false
-	-- 				for _, class in ipairs(valid_class) do
-	-- 					if string.find(ent_class, class) then
-	-- 						has_skip = true
-	-- 						break
-	-- 					end
-	-- 				end
-	-- 				if not has_skip then
-	-- 					print(ent)
-	-- 					bad_spawn = true
-	-- 					break
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 		if not bad_spawn then
-	-- 			return new_pos
-	-- 		end
-	-- 	end
 	end
 end
 

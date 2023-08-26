@@ -83,7 +83,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		if ActorTarget:EqualStateGroup('calm') then
 			if reaction == 'ignore' then return end
 			ActorTarget:RemoveAllTargets()
-			-- ActorTarget:SetState(reaction, nil, true)
+			ActorTarget:SetState(reaction)
 		end
 
 		CheckDamageIgnore(attacker, target)
@@ -91,8 +91,6 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		if ActorTarget:EnemiesCount() == 0 or GetLastDamageCount(attacker, target) >= 3 then
 			ActorTarget:AddEnemy(attacker, reaction)
 		end
-
-		ActorTarget:SetState(reaction)
 	end
 
 	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)

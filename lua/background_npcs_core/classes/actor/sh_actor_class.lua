@@ -11,6 +11,8 @@ local slib_chance = slib.chance
 local snet_Request = snet.Request
 local isbool = isbool
 local istable = istable
+local timer_Simple = timer.Simple
+local hook_Run = hook.Run
 --
 BGN_ACTOR = {}
 
@@ -179,12 +181,23 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		bgNPC:AddNPC(obj)
 	end
 
-	hook.Run('BGN_InitActor', obj)
+	hook_Run('BGN_InitActor', obj)
 
-	timer.Simple(0, function()
+	timer_Simple(0, function()
 		if not IsValid(npc) then return end
 		obj:DropToFloor()
 		obj:CreateFakePlayerMethodsForNPC()
+
+		if npc_data.start_random_state or npc_data.start_state then
+			timer_Simple(1, function()
+				if not obj:IsAlive() then return end
+				if npc_data.start_random_state then
+					obj:RandomState()
+				elseif npc_data.start_state then
+					obj:SetState(npc_data.start_state)
+				end
+			end)
+		end
 	end)
 
 	return obj

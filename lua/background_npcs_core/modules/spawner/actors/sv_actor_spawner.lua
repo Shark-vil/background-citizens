@@ -19,7 +19,7 @@ local function ActorSpawnOnPosition(npc_type, position)
 		bgNPC:SpawnVehicleWithActor(actor)
 	end
 
-	actor:RandomState()
+	-- actor:RandomState()
 end
 
 function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
@@ -59,7 +59,7 @@ function bgNPC:RespawnActor(actor, spawn_position)
 		state_data.updateTargetPointDelay = 0
 	end
 
-	actor:RandomState()
+	-- actor:RandomState()
 
 	hook.Run('BGN_RespawnActor', actor, spawn_position)
 

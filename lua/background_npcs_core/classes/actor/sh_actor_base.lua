@@ -16,7 +16,6 @@ local isstring = isstring
 local type = type
 local tobool = tobool
 local isfunction = isfunction
-local util_IsInWorld = util.IsInWorld
 local table_remove = table.remove
 local table_RandomOpt = table.RandomOpt
 local table_RandomBySeq = table.RandomBySeq
@@ -385,6 +384,10 @@ function BaseClass:TargetsCount()
 	return #self.targets
 end
 
+function BaseClass:HasNoTargets()
+	return #self.targets == 0
+end
+
 -- function BaseClass:TargetsRecalculate()
 -- 	for i = #self.targets, 1, -1 do
 -- 		if not IsValid(self.targets[i]) then
@@ -533,6 +536,10 @@ end
 
 function BaseClass:EnemiesCount()
 	return #self.enemies
+end
+
+function BaseClass:HasNoEnemies()
+	return #self.enemies == 0
 end
 
 function BaseClass:EnemiesRecalculate()
@@ -852,7 +859,7 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 
 		walkPath = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, pathType)
-		-- if #walkPath == 0 then return end
+		if #walkPath == 0 then return end
 
 		self.pathType = pathType
 		self:SetWalkType(moveType)
@@ -924,34 +931,6 @@ function BaseClass:UpdateMovement()
 					return
 				end
 
-				hasNext = true
-			end
-		else
-			-- print(
-			-- 	'\nwalkpos', walkPos,
-			-- 	'\nnpcpos', npc_pos,
-			-- 	'\ndir normalize', (walkPos - npc_pos):GetNormalized(),
-			-- 	'\ndir', npc_pos + (walkPos - npc_pos):GetNormalized() * 250
-			-- )
-
-			local direction = (walkPos - npc_pos):GetNormalized()
-			local preliminary_point = npc_pos + (direction * 250)
-			local preliminary_point_equal_height = Vector(preliminary_point.x, preliminary_point.y, npc_pos.z)
-
-			if util_IsInWorld(preliminary_point_equal_height) then
-				targetPosition = preliminary_point_equal_height
-			elseif util_IsInWorld(preliminary_point) then
-				targetPosition = preliminary_point
-			else
-				targetPosition = walkPos
-			end
-
-			if npc_pos:DistToSqr(walkPos) <= _movement_finished_distance then
-				if not hook_Run('BGN_ActorFinishedWalk', self, walkPos, self.walkType) then
-					self:WalkToPos(nil)
-				end
-				return
-			elseif targetPosition ~= walkPos and npc_pos:DistToSqr(targetPosition) <= _movement_finished_distance then
 				hasNext = true
 			end
 		end
