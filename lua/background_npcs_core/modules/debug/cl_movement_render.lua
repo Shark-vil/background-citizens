@@ -12,10 +12,12 @@ local cam_Start3D2D = cam.Start3D2D
 local cam_End3D2D = cam.End3D2D
 local draw_SimpleTextOutlined = draw.SimpleTextOutlined
 --
+local cvar_bgn_debug = GetConVar('bgn_debug')
+local cvar_bgn_cl_draw_npc_path = GetConVar('bgn_cl_draw_npc_path')
 
 local function DebugIsEnabled()
-	if not GetConVar('bgn_debug'):GetBool() then return false end
-	if not GetConVar('bgn_cl_draw_npc_path'):GetBool() then return false end
+	if not cvar_bgn_debug:GetBool() then return false end
+	if not cvar_bgn_cl_draw_npc_path:GetBool() then return false end
 	return true
 end
 

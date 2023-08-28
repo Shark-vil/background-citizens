@@ -35,35 +35,50 @@ function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
 	return true
 end
 
-function bgNPC:RespawnActor(actor, spawn_position)
-	if not actor or not actor:IsAlive() then return false end
-	if bgNPC:VectorInWater(spawn_position) then return false end
+function bgNPC:RespawnActor(actor, spawn_position, func)
+	if not actor or not actor:IsAlive() then
+		if func and isfunction(func) then func(false) end
+		return
+	end
+
+	-- if bgNPC:VectorInWater(spawn_position) then
+	-- 	if func and isfunction(func) then func(false) end
+	-- 	return
+	-- end
 
 	local npc = actor:GetNPC()
-
-	StopAnimator(npc)
-	actor:CallStateAction(nil, 'stop', actor:GetState(), actor:GetStateData())
-	actor.anim_action = nil
-	actor:ResetSequence()
+	local old_pos = npc:GetPos()
 
 	npc:SetPos(spawn_position)
 	npc:PhysWake()
 
-	local state_data = actor:GetStateData()
+	timer.Simple(0, function()
+		if bgNPC:NPCIsStuck(npc) then
+			npc:SetPos(old_pos)
+			npc:PhysWake()
+			if func and isfunction(func) then func(false) end
+			return
+		end
 
-	if state_data.updateMovementTypeDelay then
-		state_data.updateMovementTypeDelay = 0
-	end
+		StopAnimator(npc)
+		actor:CallStateAction(nil, 'stop', actor:GetState(), actor:GetStateData())
+		actor.anim_action = nil
+		actor:ResetSequence()
 
-	if state_data.updateTargetPointDelay then
-		state_data.updateTargetPointDelay = 0
-	end
+		local state_data = actor:GetStateData()
 
-	-- actor:RandomState()
+		if state_data.updateMovementTypeDelay then
+			state_data.updateMovementTypeDelay = 0
+		end
 
-	hook.Run('BGN_RespawnActor', actor, spawn_position)
+		if state_data.updateTargetPointDelay then
+			state_data.updateTargetPointDelay = 0
+		end
 
-	return true
+		hook.Run('BGN_RespawnActor', actor, spawn_position)
+
+		if func and isfunction(func) then func(true) end
+	end)
 end
 
 local function InitActorsSpawner(delay)

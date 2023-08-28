@@ -35,12 +35,15 @@ local function FindExistCarAndEnterThis(actor)
 end
 
 local function TeleportActor(actor, pos)
-	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then return end
+	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then
+		return
+	end
 
-	bgNPC:RespawnActor(actor, pos)
-	actor:RandomState()
-
-	-- actor.__last_player_interaction = CurTime() + 5
+	bgNPC:RespawnActor(actor, pos, function(success)
+		if not success or not actor:IsAlive() then return end
+		actor:RandomState()
+		actor.__last_player_interaction = CurTime() + 5
+	end)
 end
 
 local function IsValidRemovePositionAsync(actor, npc)
