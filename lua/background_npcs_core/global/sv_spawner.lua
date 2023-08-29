@@ -38,7 +38,7 @@ local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
--- local spawn_radius_sqrt = spawn_radius ^ 2
+local spawn_radius_sqrt = spawn_radius ^ 2
 local radius_visibility_sqrt = radius_visibility ^ 2
 local block_radius_sqrt = block_radius ^ 2
 --
@@ -86,12 +86,13 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			end
 
 			local ply_eye_pos = ply:EyePos()
-			local direction = (node_position - ply_eye_pos):GetNormalized()
+			-- local direction = (node_position - ply_eye_pos):GetNormalized()
 			-- local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
 
 			local tr = util_TraceLine({
 				start = ply_eye_pos,
-				endpos = node_position + (direction * -100),
+				-- endpos = node_position + (direction * -100),
+				endpos = node_position,
 				filter = function(ent)
 					if ent ~= ply and IsValidSpawnFilter(ent) and ent:IsWorld() then
 						return true
@@ -112,7 +113,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 	radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 	block_radius = cvar_bgn_spawn_block_radius:GetFloat()
-	-- spawn_radius_sqrt = spawn_radius ^ 2
+	spawn_radius_sqrt = spawn_radius ^ 2
 	radius_visibility_sqrt = radius_visibility ^ 2
 	block_radius_sqrt = block_radius ^ 2
 
@@ -140,13 +141,14 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		if is_async then AsyncYield() end
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
-	else
+	elseif BGN_NODE:CountNodesOnMap() == 0 then
 		spawn_radius = math_Clamp(spawn_radius, 0, 1500)
 		radius_visibility = math_Clamp(block_radius, 0, 1000)
 		block_radius = math_Clamp(block_radius, 0, 600)
-		-- spawn_radius_sqrt = spawn_radius ^ 2
+		spawn_radius_sqrt = spawn_radius ^ 2
 		radius_visibility_sqrt = radius_visibility ^ 2
 		block_radius_sqrt = block_radius ^ 2
+
 		local dist_x = math_random(block_radius, spawn_radius)
 		local dist_y = math_random(block_radius, spawn_radius)
 		local dist_z = math_random(0, 100)
