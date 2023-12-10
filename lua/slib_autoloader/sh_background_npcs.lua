@@ -246,7 +246,7 @@ local function ExecutableScripts()
 	script:using('modules/spawnmenu/sv_spawnmenu.lua')
 	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
-	script:using('modules/sh_poll.lua')
+	-- script:using('modules/sh_poll.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
 end
