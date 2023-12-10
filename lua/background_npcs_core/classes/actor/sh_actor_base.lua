@@ -1596,9 +1596,9 @@ end
 
 function BaseClass:InVehicle()
 	if SERVER then
-		return ( self.vehicle and IsValid(self.vehicle) ) == true
+		return IsValid(self.vehicle)
 	else
-		return self.npc:slibGetVar('bgn_vehicle_entered', false)
+		return IsValid(self.npc) and self.npc:slibGetVar('bgn_vehicle_entered', false)
 	end
 end
 

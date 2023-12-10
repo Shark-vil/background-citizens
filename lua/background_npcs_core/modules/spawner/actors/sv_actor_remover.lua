@@ -151,7 +151,7 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 				yield()
 			end
 
-			if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden then
+			if not actor or not actor:IsAlive() or (bgn_enable and (actor.eternal or actor.debugger or actor.data.hidden)) then
 				continue
 			end
 

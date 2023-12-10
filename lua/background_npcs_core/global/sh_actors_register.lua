@@ -3,6 +3,7 @@ local CLIENT = CLIENT
 local table = table
 local pairs = pairs
 local IsValid = IsValid
+-- local ents_GetAll = ents.GetAll
 --
 
 if CLIENT then
@@ -10,6 +11,24 @@ if CLIENT then
 		if npc then bgNPC:RemoveNPC(npc) end
 		bgNPC:ClearRemovedNPCs()
 	end).Register()
+
+	-- timer.Create('bgn_client_async_actors', 1, 9, function()
+	-- 	local entities = ents_GetAll()
+
+	-- 	for i = 1, #entities do
+	-- 		local ent = entities[i]
+	-- 		if IsValid(ent) and ent:GetNWBool('IS_BGN_ACTOR', false) and not bgNPC:IsActor(ent) then
+	-- 			local npc_type = ent:GetNWString('BGB_ACTOR_TYPE', nil)
+	-- 			local uid = ent:GetNWString('BGB_ACTOR_UID', nil)
+	-- 			local info = ent:GetNWString('BGN_ACTOR_INFO', nil)
+	-- 			if not npc_type or not uid or not info then continue end
+	-- 			local actor = BGN_ACTOR:Instance(ent, npc_type, uid)
+	-- 			if info then
+	-- 				actor.info = snet.Deserialize(util.Decompress(info))
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end)
 
 	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npc_type, uid, info)
 		if bgNPC:GetActor(npc) ~= nil then return end

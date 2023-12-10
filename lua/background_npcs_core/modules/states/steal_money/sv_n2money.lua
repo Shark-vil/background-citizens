@@ -15,7 +15,7 @@ end)
 
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_nMoney2_DropStealMoney', function(attacker, target)
    if not target:slibGetVar('is_stealer') then return end
-   
+
    if attacker:IsNPC() then
       local actor = bgNPC:GetActor(attacker)
       if actor == nil or not actor:HasTeam('police') then return end
@@ -23,10 +23,10 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_nMoney2_DropStealMoney', function(att
 
    local moneySteal = target:slibGetVar('nMoney2Steal', 0)
    if moneySteal ~= 0 then
-      local dropped_ent = ents.Create("ent_money")
+      local dropped_ent = ents.Create('ent_money')
       dropped_ent:SetPos(target:GetPos() + target:GetUp() * 10 + target:GetForward() * 20)
       dropped_ent:Spawn()
-      dropped_ent:SetNWString("DroppedMoneyAmount", tostring(moneySteal))
+      dropped_ent:SetNWString('DroppedMoneyAmount', tostring(moneySteal))
       target:slibSetVar('nMoney2Steal', 0)
    end
 end)

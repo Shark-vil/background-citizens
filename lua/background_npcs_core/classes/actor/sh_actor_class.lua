@@ -160,6 +160,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 
 	npc.isBgnActor = true
+	-- npc:SetNWBool('IS_BGN_ACTOR', true)
+	-- npc:SetNWString('BGB_ACTOR_TYPE', npc_type)
+	-- npc:SetNWString('BGB_ACTOR_UID', obj.uid)
+	-- npc:SetNWString('BGN_ACTOR_INFO', util.Compress(snet.Serialize(obj.info)))
 
 	if obj.mechanics.inpc_ignore then
 		-- ------------------------------------------------------------------
@@ -173,31 +177,34 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		npc:CapabilitiesAdd(CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_AUTO_DOORS + CAP_OPEN_DOORS + CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN)
 	end
 
-	if SERVER and not not_sync_actor_on_client then
-		snet_Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
-	end
-
-	if not not_auto_added_to_list then
-		bgNPC:AddNPC(obj)
-	end
-
-	hook_Run('BGN_InitActor', obj)
-
 	timer_Simple(0, function()
 		if not IsValid(npc) then return end
-		obj:DropToFloor()
-		obj:CreateFakePlayerMethodsForNPC()
 
-		if npc_data.start_random_state or npc_data.start_state then
-			timer_Simple(1, function()
-				if not obj:IsAlive() then return end
-				if npc_data.start_random_state then
-					obj:RandomState()
-				elseif npc_data.start_state then
-					obj:SetState(npc_data.start_state)
-				end
-			end)
+		if SERVER then
+			obj:DropToFloor()
+			obj:CreateFakePlayerMethodsForNPC()
+
+			if npc_data.start_random_state or npc_data.start_state then
+				timer_Simple(1, function()
+					if not obj:IsAlive() then return end
+					if npc_data.start_random_state then
+						obj:RandomState()
+					elseif npc_data.start_state then
+						obj:SetState(npc_data.start_state)
+					end
+				end)
+			end
 		end
+
+		if SERVER and not not_sync_actor_on_client then
+			snet_Request('bgn_add_actor_from_client', npc, npc_type, obj.uid, obj.info).InvokeAll()
+		end
+
+		if not not_auto_added_to_list then
+			bgNPC:AddNPC(obj)
+		end
+
+		hook_Run('BGN_InitActor', obj)
 	end)
 
 	return obj

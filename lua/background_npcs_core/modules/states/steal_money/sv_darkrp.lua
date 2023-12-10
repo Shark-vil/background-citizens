@@ -2,7 +2,7 @@ hook.Add('BGN_StealFinish', 'BGN_DarkRp_StealMoney', function(actor, target, suc
    if not success then return end
    if engine.ActiveGamemode() ~= 'darkrp' then return end
 
-   local moneyCount = target:getDarkRPVar("money")
+   local moneyCount = target:getDarkRPVar('money')
    if moneyCount <= 0 then return end
 
    local moneySteal = math.random(10, 100)
@@ -17,7 +17,7 @@ end)
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_DarkRp_DropStealMoney', function(attacker, target)
    if engine.ActiveGamemode() ~= 'darkrp' then return end
    if not target:slibGetVar('is_stealer') then return end
-   
+
    if attacker:IsNPC() then
       local actor = bgNPC:GetActor(attacker)
       if actor == nil or not actor:HasTeam('police') then return end
