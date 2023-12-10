@@ -16,6 +16,7 @@ local function version_check()
 			end
 
 			local ru_lang = {
+				bye_text = 'Возможно это последнее обновление. Было весело. До встречи!\n',
 				msg_outdated = 'Вы используете устаревшую версию \'Background NPCs\' :(\n',
 				msg_latest = 'Вы используете последнюю версию \'Background NPCs\' :)\n',
 				msg_dev = 'Вы используете версию для разработчиков \'Background NPCs\' :o\n',
@@ -27,6 +28,7 @@ local function version_check()
 			}
 
 			local en_lang = {
+				bye_text = 'This may be the last update. It was fun. See you!\n',
 				msg_outdated = 'You are using an outdated version of \'Background NPCs\' :(\n',
 				msg_latest = 'You are using the latest version of \'Background NPCs\' :)\n',
 				msg_dev = 'You are using the dev version of \'Background NPCs\' :o\n',
@@ -52,7 +54,7 @@ local function version_check()
 					text_color_mod_title, 'Background NPCs:\n',
 					text_color_orange, lang.msg_outdated, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
+					text_command_color, lang.command, text_color_info, lang.update_page_2)
 
 			elseif v_addon == v_github then
 
@@ -60,7 +62,7 @@ local function version_check()
 					text_color_mod_title, 'Background NPCs:\n',
 					text_color_green, lang.msg_latest, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
+					text_command_color, lang.command, text_color_info, lang.update_page_2)
 
 			elseif v_addon > v_github then
 
@@ -68,9 +70,11 @@ local function version_check()
 					text_color_mod_title, 'Background NPCs:\n',
 					text_color_green, lang.msg_dev, text_version_color, lang.actual_version,
 					text_color_info, lang.update_page_1,
-					text_command_color, lang.command, text_color_info, lang.update_page_2 .. '\n')
+					text_command_color, lang.command, text_color_info, lang.update_page_2)
 
 			end
+
+			chat.AddText(lang.bye_text)
 
 			if v_storage ~= bgNPC.VERSION then
 				chat.AddText(text_color_red, '[ADMIN] ',

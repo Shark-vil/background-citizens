@@ -35,12 +35,15 @@ local function FindExistCarAndEnterThis(actor)
 end
 
 local function TeleportActor(actor, pos)
-	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then return end
+	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then
+		return
+	end
 
-	bgNPC:RespawnActor(actor, pos)
-	actor:RandomState()
-
-	-- actor.__last_player_interaction = CurTime() + 5
+	bgNPC:RespawnActor(actor, pos, function(success)
+		if not success or not actor:IsAlive() then return end
+		actor:RandomState()
+		actor.__last_player_interaction = CurTime() + 5
+	end)
 end
 
 local function IsValidRemovePositionAsync(actor, npc)
@@ -119,7 +122,7 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 
 		if actors_count == 0 then
 			wait(1)
-			return
+			continue
 		end
 
 		local WantedModule = bgNPC:GetModule('wanted')
@@ -148,7 +151,7 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 				yield()
 			end
 
-			if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden then
+			if not actor or not actor:IsAlive() or (bgn_enable and (actor.eternal or actor.debugger or actor.data.hidden)) then
 				continue
 			end
 

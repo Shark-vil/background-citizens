@@ -2,8 +2,10 @@ local bgNPC = bgNPC
 local util_IsInWorld = util.IsInWorld
 local string_StartWith = string.StartWith
 -- local coroutine_yield = coroutine.yield
-local ents_FindInSphere = ents.FindInSphere
+-- local ents_FindInSphere = ents.FindInSphere
+local util_TraceHull = util.TraceHull
 local ents_FindInBox = ents.FindInBox
+local timer_Simple = timer.Simple
 local IsValid = IsValid
 local util_TraceLine = util.TraceLine
 local table_shuffle = table.shuffle
@@ -16,21 +18,23 @@ local math_Clamp = math.Clamp
 local hook_Run = hook.Run
 local istable = istable
 local isstring = isstring
-local math_sqrt = math.sqrt
+-- local math_sqrt = math.sqrt
 local pairs = pairs
 local ipairs = ipairs
 local slib_chance = slib.chance
-local vector_0_0_150 = Vector(0, 0, 150)
+-- local angle_zero = Angle()
+local vector_0_0_50 = Vector(0, 0, 50)
 local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local clr_bad_spawn_pos = Color(236, 14, 14)
 -- local clr_good_spawn_pos = Color(140, 236, 14)
 -- local debugoverlay_Sphere = debugoverlay.Sphere
 -- local assert = assert
 -- local FrameTime = FrameTime
+-- local LocalToWorld = LocalToWorld
 local coroutine_yield = coroutine.yield
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_radius')
+local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
+local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
@@ -39,15 +43,29 @@ local radius_visibility_sqrt = radius_visibility ^ 2
 local block_radius_sqrt = block_radius ^ 2
 --
 
-local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
-	local entities = ents_FindInSphere(node_position, 150)
-	for e = 1, #entities do
-		local ent = entities[e]
-		if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
-			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
-			return false
-		end
+local function IsValidSpawnFilter(ent)
+	if not IsValid(ent) then return false end
+	local ent_class = ent:GetClass()
+	if not ent:IsPlayer()
+		and not ent:IsNPC()
+		and not ent:IsNextBot()
+		and not ent:IsVehicle()
+		and ent_class ~= 'trigger_hurt'
+		and not string_StartWith(ent_class, 'prop_') then
+			return true
 	end
+	return false
+end
+
+local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
+	-- local entities = ents_FindInSphere(node_position, 150)
+	-- for e = 1, #entities do
+	-- 	local ent = entities[e]
+	-- 	if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
+	-- 		-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
+	-- 		return false
+	-- 	end
+	-- end
 
 	for p = 1, #all_players do
 		local ply = all_players[p]
@@ -55,12 +73,10 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 		local distance = node_position:DistToSqr(ply_pos)
 
 		if distance <= block_radius_sqrt then
-			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 			return false
 		end
 
 		if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
-			-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 			return false
 		end
 
@@ -70,25 +86,21 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			end
 
 			local ply_eye_pos = ply:EyePos()
-			local direction = (node_position - ply_eye_pos):GetNormalized()
-			local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
+			-- local direction = (node_position - ply_eye_pos):GetNormalized()
+			-- local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
+
 			local tr = util_TraceLine({
 				start = ply_eye_pos,
-				endpos = ply_eye_pos + (direction * trace_distance),
+				-- endpos = node_position + (direction * -100),
+				endpos = node_position,
 				filter = function(ent)
-					if IsValid(ent)
-						and ent ~= ply
-						and not ent:IsVehicle()
-						and ent:IsWorld()
-						and not string_StartWith(ent:GetClass(), 'prop_')
-					then
+					if ent ~= ply and IsValidSpawnFilter(ent) and ent:IsWorld() then
 						return true
 					end
 				end
 			})
 
 			if not tr.Hit or not util_IsInWorld(node_position) then
-				-- debugoverlay_Sphere(tr.HitPos, 10, 1, clr_bad_spawn_pos)
 				return false
 			end
 		end
@@ -129,7 +141,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		if is_async then AsyncYield() end
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
-	else
+	elseif BGN_NODE:CountNodesOnMap() == 0 then
 		spawn_radius = math_Clamp(spawn_radius, 0, 1500)
 		radius_visibility = math_Clamp(block_radius, 0, 1000)
 		block_radius = math_Clamp(block_radius, 0, 600)
@@ -139,13 +151,18 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 
 		local dist_x = math_random(block_radius, spawn_radius)
 		local dist_y = math_random(block_radius, spawn_radius)
+		local dist_z = math_random(0, 100)
 		if slib_chance(50) then dist_x = -dist_x end
 		if slib_chance(50) then dist_y = -dist_y end
-		local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z)
+		local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z + dist_z)
 		local tr = util_TraceLine({
-			start = new_pos + vector_0_0_150,
+			start = new_pos + vector_0_0_50,
 			endpos = new_pos - vector_0_0_1000,
+			filter = function(ent)
+				if IsValid(ent) then return true end
+			end
 		})
+		if not tr.Hit then return end
 		new_pos = tr.HitPos
 		if not util_IsInWorld(new_pos) then return end
 		if bgNPC:VectorInWater(new_pos) then return end
@@ -177,18 +194,43 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	end
 end
 
-function bgNPC:ActorIsStuck(actor)
+function bgNPC:ActorIsStuck(actor, position)
 	if not actor or not actor:IsAlive() or actor:InVehicle() then return false end
-	local npc = actor:GetNPC()
-	local min_vector = npc:LocalToWorld(npc:OBBMins())
-	local max_vector = npc:LocalToWorld(npc:OBBMaxs())
+	return bgNPC:NPCIsStuck(actor:GetNPC(), position)
+end
+
+function bgNPC:NPCIsStuck(npc, position)
+	local obb_min = npc:OBBMins()
+	local obb_max = npc:OBBMaxs()
+	local origin_center = position or npc:GetPos()
+	local min_vector = LocalToWorld(obb_min, angle_zero, origin_center, angle_zero)
+	local max_vector = LocalToWorld(obb_max, angle_zero, origin_center, angle_zero)
+
+	-- debugoverlay.Box(origin_center, obb_min, obb_max, 5, Color(233, 147, 34))
+
+	local tr = util_TraceHull({
+		start = origin_center,
+		endpos = origin_center,
+		maxs = obb_max,
+		mins = obb_min,
+		mask = MASK_SOLID_BRUSHONLY,
+		collisiongroup = COLLISION_GROUP_WORLD,
+	})
+
+	-- debugoverlay.Box(tr.HitPos, obb_min, obb_max, 5, Color(34, 177, 233))
+
+	if tr and tr.Hit then
+		return true
+	end
+
 	local entities = ents_FindInBox(min_vector, max_vector)
 	for i = 1, #entities do
 		local ent = entities[i]
-		if IsValid(ent) and ent ~= npc then
+		if ent ~= npc and not IsValidSpawnFilter(ent) or ent:IsWorld() then
 			return true
 		end
 	end
+
 	return false
 end
 
@@ -267,6 +309,7 @@ do
 			MsgN('[Background NPCs] ERROR: Actor with class - ' .. npc_class .. ' cannot be created!')
 			return
 		end
+
 		npc:SetPos(desiredPosition)
 
 		--[[
@@ -274,8 +317,11 @@ do
 			If you give out a weapon or something similar, it will crash the game!
 		--]]
 		if hook_Run('BGN_PreSpawnActor', npc, npc_type, npc_data, npc_class, desiredPosition) then
-			if IsValid(npc) then npc:Remove() end
-			npc = nil
+			npc:Spawn()
+			timer_Simple(0, function()
+				if not IsValid(npc) then return end
+				npc:Remove()
+			end)
 			return
 		end
 
@@ -289,6 +335,14 @@ do
 		npc:SetOwner(game.GetWorld())
 		npc:Activate()
 		npc:PhysWake()
+
+		if bgNPC:NPCIsStuck(npc) then
+			timer_Simple(0, function()
+				if not IsValid(npc) then return end
+				npc:Remove()
+			end)
+			return
+		end
 
 		-- if npc.DropToFloor then npc:DropToFloor() end
 

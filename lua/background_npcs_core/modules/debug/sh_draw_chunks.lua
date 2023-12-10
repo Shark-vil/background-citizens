@@ -6,6 +6,8 @@ if SERVER then
 			.Invoke(ply)
 	end).Protect()
 else
+	local cvar_bgn_debug = GetConVar('bgn_debug')
+	local cvar_bgn_cl_draw_chunks = GetConVar('bgn_cl_draw_chunks')
 	local CHUNK_CLASS = slib.Component('Chunks')
 	local MAP_CHUNKS = CHUNK_CLASS:Instance()
 
@@ -16,7 +18,7 @@ else
 	end)
 
 	hook.Add('slib.FirstPlayerSpawn', 'BGN_Nodes_RequestChunksFromTheServer', function()
-		if not GetConVar('bgn_cl_draw_chunks'):GetBool() then return end
+		if not cvar_bgn_cl_draw_chunks:GetBool() then return end
 		snet.InvokeServer('BGN_Nodes_RequestChunksFromTheServer')
 	end)
 
@@ -30,7 +32,7 @@ else
 
 	concommand.Add('bgn_cl_draw_chunks_reload', function(ply)
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-		if not GetConVar('bgn_cl_draw_chunks'):GetBool() then return end
+		if not cvar_bgn_cl_draw_chunks:GetBool() then return end
 		snet.InvokeServer('BGN_Nodes_RequestChunksFromTheServer')
 	end)
 
@@ -39,6 +41,7 @@ else
 	local color_box = Color(236, 154, 243, 50)
 
 	hook.Add('PostDrawTranslucentRenderables', 'BGN_Nodes_ChunkRenderer', function()
+		if not cvar_bgn_debug:GetBool() then return end
 		if not IsValid(MAP_CHUNKS) then return end
 
 		local ply = LocalPlayer()

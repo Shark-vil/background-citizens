@@ -1,5 +1,5 @@
 local bgNPC = bgNPC
-local hook_Run = hook.Run
+-- local hook_Run = hook.Run
 --
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
@@ -15,7 +15,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if npc == target then continue end
 		if not bgNPC:IsTargetRay(npc, attacker) and not bgNPC:IsTargetRay(npc, target) then continue end
 
-		local hook_result = hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
+		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
 		if hook_result then continue end
 
 		reaction = actor:GetLastReaction()
@@ -31,6 +31,6 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			actor:AddEnemy(enemy, reaction)
 		end
 
-		hook_Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
+		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
 	end
 end)

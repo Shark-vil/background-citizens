@@ -11,6 +11,7 @@ local render_SetColorMaterial = render.SetColorMaterial
 local cam_Start3D2D = cam.Start3D2D
 local cam_End3D2D = cam.End3D2D
 --
+local cvar_bgn_debug = GetConVar('bgn_debug')
 local text_font_name = 'BGN_Debug_UpperStateText'
 local default_color_target = Color(255, 0, 0)
 local police_color_target = Color(0, 0, 255)
@@ -52,7 +53,7 @@ local function GetColorByTeam(actor)
 end
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
-	if not GetConVar('bgn_debug'):GetBool() then return end
+	if not cvar_bgn_debug:GetBool() then return end
 	local ply = LocalPlayer()
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 

@@ -2,7 +2,7 @@ local bgNPC = bgNPC
 local IsValid = IsValid
 local isbool = isbool
 local CurTime = CurTime
-local hook_Run = hook.Run
+-- local hook_Run = hook.Run
 local table_WhereFindBySeq = table.WhereFindBySeq
 local table_insert = table.insert
 --
@@ -18,9 +18,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local result
 
 	if target:IsNPC() or target:IsNextBot() then
-		result = hook_Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
+		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
 	elseif target:IsPlayer() then
-		result = hook_Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
+		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
 	end
 
 	if isbool(result) then return result end
@@ -75,7 +75,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		local reaction = ActorTarget:GetReactionForDamage()
 		ActorTarget:SetReaction(reaction)
 
-		local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
+		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
 		if isbool(hook_result) then return hook_result end
 
 		reaction = ActorTarget:GetLastReaction()
@@ -93,7 +93,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		end
 	end
 
-	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
 end)
 
 hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
@@ -106,8 +106,8 @@ hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attack
 		if not ActorAttacker:HasEnemy(target) then return end
 	end
 
-	local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, dmginfo)
+	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, nil, dmginfo)
 	if isbool(hook_result) then return hook_result end
 
-	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, dmginfo)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, nil, dmginfo)
 end)
