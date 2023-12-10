@@ -167,6 +167,23 @@ cvars.AddChangeCallback('bgn_peaceful_mode', function()
 	end)
 end, 'bgn_peaceful_mode')
 
+cvars.AddChangeCallback('bgn_friend_mode', function(_, old_value, new_value)
+	timer.Simple(.1, function()
+		local new_value_number = tonumber(new_value)
+		if new_value_number == 0 then return end
+
+		local asset = bgNPC:GetModule('wanted')
+		for _, ply in ipairs(player.GetAll()) do
+			if asset:HasWanted(ply) then
+				asset:RemoveWanted(ply)
+			end
+			for _, actor in ipairs(bgNPC:GetAll()) do
+				actor:RemoveEnemy(ply)
+			end
+		end
+	end)
+end, 'bgn_friend_mode')
+
 -- hook.Add('BGN_InitActor', 'BGN_RemoveActorTargetFixer', function(actor)
 -- 	RebuildActorsRelationship(actor)
 -- end)

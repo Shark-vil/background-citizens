@@ -95,6 +95,7 @@ local function ExecutableScripts()
 	script:using('global/sh_find_path_service.lua')
 	script:using('global/sv_peaceful_mode.lua')
 	script:using('global/sv_relationship.lua')
+	script:using('global/sv_friend_mode_and_agressive_mode.lua')
 
 	script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')

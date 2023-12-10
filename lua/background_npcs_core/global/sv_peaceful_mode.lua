@@ -1,5 +1,8 @@
+local bgNPC = bgNPC
+local cvar_peaceful_mode = GetConVar('bgn_peaceful_mode')
+
 function bgNPC:IsPeacefulMode()
-	return GetConVar('bgn_peaceful_mode'):GetBool()
+	return cvar_peaceful_mode:GetBool()
 end
 
 hook.Add('BGN_PreSetState', 'BGN_Peaceful_Mode', function(actor, state, data)

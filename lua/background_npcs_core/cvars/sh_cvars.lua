@@ -72,6 +72,8 @@ bgNPC.cvar.bgn_drop_money = 1
 bgNPC.cvar.bgn_module_n2money = 1
 bgNPC.cvar.bgn_chunk_system = 1
 bgNPC.cvar.bgn_chunk_size = 5000
+bgNPC.cvar.bgn_agressive_mode = 0
+bgNPC.cvar.bgn_friend_mode = 0
 
 function bgNPC:IsActiveNPCType(npc_type)
 	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
@@ -108,6 +110,14 @@ CreateConVar('bgn_installed', 1, {
 
 scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
 	FCVAR_ARCHIVE, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_agressive_mode', bgNPC.cvar.bgn_agressive_mode,
+	FCVAR_ARCHIVE, 'All actors will be hostile towards you.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_friend_mode', bgNPC.cvar.bgn_friend_mode,
+	FCVAR_ARCHIVE, 'All actors will be friendly towards you.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_chunk_system', bgNPC.cvar.bgn_chunk_system,

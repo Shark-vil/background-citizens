@@ -21,6 +21,18 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.general.bgn_friend_mode',
+		['Command'] = 'bgn_friend_mode',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.general.bgn_agressive_mode',
+		['Command'] = 'bgn_agressive_mode',
+		['Help'] = true,
+	})
+
+	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.general.ignore_another_npc',
 		['Command'] = 'bgn_ignore_another_npc',
 		['Help'] = true,
