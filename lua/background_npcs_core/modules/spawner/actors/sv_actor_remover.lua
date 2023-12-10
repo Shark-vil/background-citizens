@@ -122,7 +122,7 @@ async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 
 		if actors_count == 0 then
 			wait(1)
-			return
+			continue
 		end
 
 		local WantedModule = bgNPC:GetModule('wanted')
