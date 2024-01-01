@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.12.0'
+bgNPC.VERSION = '1.12.1'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
@@ -97,7 +97,7 @@ local function ExecutableScripts()
 	script:using('global/sv_relationship.lua')
 	script:using('global/sv_friend_mode_and_agressive_mode.lua')
 
-	script:using('modules/cl_updatepage.lua')
+	-- script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
 
 	script:using('modules/dynamic_movement_mesh/sv_dynamic_movement_mesh.lua')
@@ -246,7 +246,7 @@ local function ExecutableScripts()
 	script:using('modules/spawnmenu/sv_spawnmenu.lua')
 	script:using('modules/spawnmenu/sh_spawnmenu.lua')
 
-	-- script:using('modules/sh_poll.lua')
+	script:using('modules/sh_poll.lua')
 
 	slib.usingDirectory(root_directory .. '/custom_modules/postload', load_modules_text)
 end
