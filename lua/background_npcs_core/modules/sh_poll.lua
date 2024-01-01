@@ -1,4 +1,4 @@
-local CURRENT_POLL_VERSION = 'jiHTALv3NUG67L8d6'
+local CURRENT_POLL_VERSION = 'WzauVGDe4soWAJZj8'
 
 if SERVER then
   hook.Add('PlayerSay', 'BGN_Poll_OpenMenu', function(ply, text)
@@ -23,10 +23,10 @@ else
     timer.Simple(5, function()
       local text = slib.language({
         ['default'] = {
-          ['message'] = 'Hey! I suggest you take a survey on the addon "Background NPCs - Stop updates". To do this, write the command to the chat: !bgnpoll (This message will stop appearing after 7 days)',
+          ['message'] = 'I suggest you take a survey for the addon "Background NPCs". To do this, write the command to the chat: !bgnpoll (This message will stop appearing after 7 days)',
         },
         ['russian'] = {
-          ['message'] = 'Привет! Предлагаю вам пройти опрос по аддону "Background NPCs - Прекращение обновлений". Для этого напишите в чат команду: !bgnpoll (Это сообщение прекратит появляться через 7 дней)',
+          ['message'] = 'Предлагаю пройти опрос к аддону "Background NPCs". Для этого напишите в чат команду: !bgnpoll (Это сообщение прекратит появляться через 7 дней)',
         }
       })
 
@@ -53,14 +53,14 @@ else
         ['html_button_steam'] = 'Open in STEAM',
         ['html_button'] = 'Go to the link',
         ['html_button_back'] = 'Go back to the main',
-        ['link'] = 'https://forms.gle/jiHTALv3NUG67L8d6',
+        ['link'] = 'https://forms.gle/WzauVGDe4soWAJZj8',
       },
       ['russian'] = {
         ['title'] = 'Фоновые NPCs - Опрос',
         ['html_button_steam'] = 'Открыть в STEAM',
         ['html_button'] = 'Перейти по ссылке',
         ['html_button_back'] = 'Вернуться на главную',
-        ['link'] = 'https://forms.gle/jiHTALv3NUG67L8d6',
+        ['link'] = 'https://forms.gle/WzauVGDe4soWAJZj8',
       }
     })
 

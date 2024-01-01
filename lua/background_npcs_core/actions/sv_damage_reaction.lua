@@ -1,5 +1,5 @@
 local bgNPC = bgNPC
--- local hook_Run = hook.Run
+local hook_Run = hook.Run
 --
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
@@ -31,6 +31,6 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			actor:AddEnemy(enemy, reaction)
 		end
 
-		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
+		hook_Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
 	end
 end)

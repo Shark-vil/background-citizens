@@ -16,7 +16,7 @@ local function version_check()
 			end
 
 			local ru_lang = {
-				bye_text = 'Возможно это последнее обновление. Было весело. До встречи!\n',
+				-- bye_text = 'Возможно это последнее обновление. Было весело. До встречи!\n',
 				msg_outdated = 'Вы используете устаревшую версию \'Background NPCs\' :(\n',
 				msg_latest = 'Вы используете последнюю версию \'Background NPCs\' :)\n',
 				msg_dev = 'Вы используете версию для разработчиков \'Background NPCs\' :o\n',
@@ -28,7 +28,7 @@ local function version_check()
 			}
 
 			local en_lang = {
-				bye_text = 'This may be the last update. It was fun. See you!\n',
+				-- bye_text = 'This may be the last update. It was fun. See you!\n',
 				msg_outdated = 'You are using an outdated version of \'Background NPCs\' :(\n',
 				msg_latest = 'You are using the latest version of \'Background NPCs\' :)\n',
 				msg_dev = 'You are using the dev version of \'Background NPCs\' :o\n',
@@ -74,7 +74,7 @@ local function version_check()
 
 			end
 
-			chat.AddText(lang.bye_text)
+			-- chat.AddText(lang.bye_text)
 
 			if v_storage ~= bgNPC.VERSION then
 				chat.AddText(text_color_red, '[ADMIN] ',
