@@ -303,7 +303,8 @@ function BaseClass:AddTarget(ent)
 	if ent.BGN_HasBuildMode then return end
 
 	if self.npc ~= ent and not table_HasValueBySeq(self.targets, ent) then
-		self.targets[#self.targets + 1] = ent
+		self.targets_count = self.targets_count + 1
+		self.targets[self.targets_count] = ent
 	end
 end
 
@@ -313,26 +314,27 @@ end
 -- @param index number|nil target id in table
 -- ? If there is no entity, use an index. If there is no index, use entity.
 function BaseClass:RemoveTarget(ent, index)
-	if not self.mechanics.targets_controller then return end
-	if isnumber(index) then ent = self.targets[index] end
+	if not self.mechanics.targets_controller then return self.targets_count end
+	if isnumber(index) then
+		ent = self.targets[index]
+		if not ent or not IsValid(ent) then return self.targets_count end
+	end
 
-	local old_count = #self.targets
+	local old_count = self.targets_count
 
 	if not hook_Run('BGN_RemoveActorTarget', self, ent) then
-		if isentity(ent) and ent == self.walkTarget then self.walkTarget = NULL end
+		if ent == self.walkTarget then self.walkTarget = NULL end
 
-		if isnumber(index) then
-			table_remove(self.targets, index)
-		elseif isentity(ent) then
-			table_RemoveByValue(self.targets, ent)
+		if table_RemoveByValue(self.targets, ent)  then
+			self.targets_count = self.targets_count - 1
 		end
 
-		if old_count > 0 and #self.targets == 0 then
+		if old_count > 0 and self.targets_count == 0 then
 			hook_Run('BGN_ResetTargetsForActor', self)
 		end
 	end
 
-	return #self.targets
+	return self.targets_count
 end
 
 -- Removes all targets from the list.
@@ -341,7 +343,7 @@ function BaseClass:RemoveAllTargets()
 	if not self.mechanics.targets_controller then return end
 
 	local last_count = 0
-	for i = #self.targets, 1, -1 do
+	for i = self.targets_count, 1, -1 do
 		last_count = self:RemoveTarget(nil, i)
 	end
 
@@ -357,7 +359,9 @@ end
 function BaseClass:RecalculationTargets()
 	if not self.mechanics.targets_controller then return end
 
-	for i = #self.targets, 1, -1 do
+	self.targets_count = #self.targets
+
+	for i = self.targets_count, 1, -1 do
 		local target = self.targets[i]
 		if not IsValid(target) then
 			self:RemoveTarget(nil, i)
@@ -379,22 +383,13 @@ end
 -- Returns the number of existing targets for the actor.
 -- @return number targets_number number of targets
 function BaseClass:TargetsCount()
-	-- self:TargetsRecalculate()
-	self:RecalculationTargets()
-	return #self.targets
+	-- self:RecalculationTargets()
+	return self.targets_count
 end
 
 function BaseClass:HasNoTargets()
-	return #self.targets == 0
+	return self.targets_count == 0
 end
-
--- function BaseClass:TargetsRecalculate()
--- 	for i = #self.targets, 1, -1 do
--- 		if not IsValid(self.targets[i]) then
--- 			table_remove(self.targets, i)
--- 		end
--- 	end
--- end
 
 -- Returns the closest target to the actor.
 -- @return entity|NULL target_entity nearest target which is entity
@@ -403,7 +398,7 @@ function BaseClass:GetNearTarget()
 	local dist = 0
 	local self_npc = self.npc
 
-	for i = 1, #self.targets do
+	for i = 1, self.targets_count do
 		local ent = self.targets[i]
 		if IsValid(ent) then
 			if not IsValid(target) then
@@ -425,7 +420,7 @@ function BaseClass:GetTarget(id)
 end
 
 function BaseClass:GetFirstTarget()
-	for i = 1, #self.targets do
+	for i = 1, self.targets_count do
 		local ent = self.targets[i]
 		if IsValid(ent) then return ent end
 	end
@@ -433,7 +428,7 @@ function BaseClass:GetFirstTarget()
 end
 
 function BaseClass:GetLastTarget()
-	for i = #self.targets, 1, -1 do
+	for i = self.targets_count, 1, -1 do
 		local ent = self.targets[i]
 		if IsValid(ent) then return ent end
 	end
@@ -450,67 +445,66 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 
 	local npc = self.npc
 
-	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and
-		not hook_Run('BGN_AddActorEnemy', self, ent)
-	then
+	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and not hook_Run('BGN_AddActorEnemy', self, ent) then
 		if npc:IsNPC() then
 			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
-		self.enemies[#self.enemies + 1] = ent
+		self.enemies_count = self.enemies_count + 1
+		self.enemies[self.enemies_count] = ent
 		if always_visible then
-			self.enemies_always_visible[#self.enemies_always_visible + 1] = ent
+			self.enemies_always_visible_count = self.enemies_always_visible_count + 1
+			self.enemies_always_visible[self.enemies_always_visible_count] = ent
 		end
 		if IsValid(self.npc) and self.npc:IsNPC() and isfunction(self.npc.SetNPCState) then
 			self.npc:SetNPCState(NPC_STATE_ALERT)
 		end
-		self:EnemiesRecalculate()
+		-- self:EnemiesRecalculate()
 	end
 end
 
 function BaseClass:RemoveEnemy(ent, index)
-	if not self.mechanics.enemies_controller then return end
-	if isnumber(index) then ent = self.enemies[index] end
+	if not self.mechanics.enemies_controller then return self.enemies_count end
+	if not IsValid(ent) then return self.enemies_count end
+	if isnumber(index) then
+		ent = self.enemies[index]
+		if not ent or not IsValid(ent) then return self.enemies_count end
+	end
 
-	local old_count = #self.enemies
+	local old_count = self.enemies_count
 
 	if not hook_Run('BGN_RemoveActorEnemy', self, ent) then
 		local npc = self.npc
 
-		if isentity(ent) then
-			if ent == self.walkTarget then self.walkTarget = NULL end
+		if ent == self.walkTarget then self.walkTarget = NULL end
 
-			if IsValid(npc) and npc:IsNPC() then
-				if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
-				if IsValid(ent) then npc:AddEntityRelationship(ent, D_NU, 99) end
-			end
+		if IsValid(npc) and npc:IsNPC() then
+			if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
+			npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
-		if isnumber(index) then
-			ent = self.enemies[index]
-			table_remove(self.enemies, index)
-		elseif isentity(ent) then
-			table_RemoveByValue(self.enemies, ent)
+		if table_RemoveByValue(self.enemies, ent) then
+			self.enemies_count = self.enemies_count - 1
 		end
 
-		if ent and IsValid(ent) then
-			table_RemoveByValue(self.enemies_always_visible, ent)
+		if table_RemoveByValue(self.enemies_always_visible, ent) then
+			self.enemies_always_visible_count = self.enemies_always_visible_count - 1
 		end
 
-		if old_count > 0 and #self.enemies == 0 then
+		if old_count > 0 and self.enemies_count == 0 then
 			hook_Run('BGN_ResetEnemiesForActor', self)
 		end
 	end
 
-	return #self.enemies
+	return self.enemies_count
 end
 
 function BaseClass:RemoveAllEnemies()
 	if not self.mechanics.enemies_controller then return end
 
 	local last_count = 0
-	for i = #self.enemies, 1, -1 do
+	for i = self.enemies_count, 1, -1 do
 		last_count = self:RemoveEnemy(nil, i)
 	end
 
@@ -522,9 +516,14 @@ function BaseClass:RemoveAllEnemies()
 end
 
 function BaseClass:HasEnemy(ent)
-	if ent.isBgnClass then ent = ent.npc end
+	if not ent then return false end
 
-	if IsValid(ent) and ent:IsNPC()
+	if istable(ent) and ent.isBgnClass then
+		ent = ent.npc
+	end
+
+	if IsValid(ent)
+		and ent:IsNPC()
 		and isfunction(ent.Disposition)
 		and ent:Disposition(self.npc) == D_HT
 	then
@@ -535,15 +534,18 @@ function BaseClass:HasEnemy(ent)
 end
 
 function BaseClass:EnemiesCount()
-	return #self.enemies
+	return self.enemies_count
 end
 
 function BaseClass:HasNoEnemies()
-	return #self.enemies == 0
+	return self.enemies_count == 0
 end
 
 function BaseClass:EnemiesRecalculate()
 	if not self.mechanics.enemies_controller then return end
+
+	self.enemies_count = #self.enemies
+	self.enemies_always_visible_count = #self.enemies_always_visible
 
 	local npc = self.npc
 
@@ -574,13 +576,15 @@ function BaseClass:EnemiesRecalculate()
 			npc:SetEnemy(new_enemy)
 			npc:SetTarget(new_enemy)
 			npc:UpdateEnemyMemory(new_enemy, enemy:GetPos())
+			npc:AddEntityRelationship(new_enemy, D_HT, 99)
+
 			return
 		end
 	end
 
-	if #self.enemies == 0 then return end
+	if self.enemies_count == 0 then return end
 
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local enemy = self.enemies[i]
 		if not IsValid(enemy) or enemy:Health() <= 0 then
 			self:RemoveEnemy(enemy)
@@ -607,31 +611,12 @@ function BaseClass:EnemiesRecalculate()
 	end
 end
 
--- function BaseClass:GetNearEnemy()
--- 	local enemy = NULL
--- 	local dist = nil
--- 	local self_npc = self.npc
-
--- 	for i = 1, #self.enemies do
--- 		local ent = self.enemies[i]
--- 		if IsValid(ent) then
--- 			local distance_to_enemy = ent:GetPos():DistToSqr(self_npc:GetPos())
--- 			if not IsValid(enemy) or not dist or distance_to_enemy < dist then
--- 				enemy = ent
--- 				dist = distance_to_enemy
--- 			end
--- 		end
--- 	end
-
--- 	return enemy
--- end
-
 function BaseClass:GetEnemy()
 	return self:GetNearEnemy()
 end
 
 function BaseClass:GetFirstEnemy()
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local enemy = self.enemies[i]
 		if IsValid(enemy) then return enemy end
 	end
@@ -643,7 +628,7 @@ function BaseClass:GetNearEnemy()
 	local dist = nil
 	local npcPos = self.npc:GetPos()
 
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local ent = self.enemies[i]
 		if IsValid(ent) then
 			local new_dist = npcPos:DistToSqr(ent:GetPos())
@@ -661,7 +646,7 @@ function BaseClass:GetNearEnemy()
 end
 
 function BaseClass:GetLastEnemy()
-	for i = #self.enemies, 1, -1 do
+	for i = self.enemies_count, 1, -1 do
 		local enemy = self.enemies[i]
 		if IsValid(enemy) then return enemy end
 	end
@@ -888,6 +873,26 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 
 	self.walkPos = pos
 	self.walkPath = walkPath
+end
+
+function BaseClass:CheckMoveUpdate(tag, time)
+	self.checkMoveUpdateData = self.checkMoveUpdateData or {}
+	local is_update = false
+	if self.checkMoveUpdateData[tag] and self.checkMoveUpdateData[tag].state then
+		is_update = true
+	end
+	if is_update or not self.checkMoveUpdateData[tag] then
+		self.checkMoveUpdateData[tag] = { state = false,  time = CurTime() + (time or 0) }
+	end
+	return is_update
+end
+
+function BaseClass:GetWalkTarget()
+	return self.walkTarget
+end
+
+function BaseClass:GetWalkPos()
+	return self.walkPos
 end
 
 function BaseClass:UpdateMovement()
@@ -1417,6 +1422,7 @@ end
 
 function BaseClass:EnterVehicle(vehicle)
 	if not self.mechanics.use_vehicle then return end
+	if not IsValid(vehicle) then return end
 	if not DecentVehicleDestination or not vehicle:IsVehicle() then return end
 
 	local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
@@ -1492,11 +1498,11 @@ function BaseClass:EnterVehicle(vehicle)
 		npc:SetNoDraw(true)
 		npc:slibSetVar('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		-- npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
-		npc:SetPos(vector_0_0_0)
+		npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
+		-- npc:SetPos(vector_0_0_0)
 		-- npc:SetModelScale(0.1)
 		npc:SetModelScale(0)
-		-- npc:SetParent(self_vehicle)
+		npc:SetParent(self_vehicle)
 		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 		self.walkUpdatePathDelay = 0
@@ -1527,7 +1533,7 @@ function BaseClass:ExitVehicle()
 		if slib.chance(50) then add_right = -dist end
 
 		npc:slibSetVar('bgn_vehicle_entered', false)
-		-- npc:SetParent(nil)
+		npc:SetParent(nil)
 
 		-- local npc = ents.Create(self.class)
 		-- npc:SetModel(self.model)

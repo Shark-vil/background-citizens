@@ -35,15 +35,12 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 
 		local target = actor:GetFirstTarget()
 		local npc = actor:GetNPC()
-		if IsValid(target) and IsValid(npc) then
-			if data.check_target_time < CurTime() then
-				local TargetActor = bgNPC:GetActor(target)
-				if not TargetActor or not TargetActor:HasState('arrest') or data.arrest_limit_time < CurTime() then
-					actor:RemoveTarget(target)
-					actor:AddEnemy(target)
-					actor:SetState('retreat')
-				end
-				data.check_target_time = CurTime() + 2
+		if IsValid(target) and IsValid(npc) and actor:CheckMoveUpdate('state_arrest_surrender', 2) then
+			local TargetActor = bgNPC:GetActor(target)
+			if not TargetActor or not TargetActor:HasState('arrest') or data.arrest_limit_time < CurTime() then
+				actor:RemoveTarget(target)
+				actor:AddEnemy(target)
+				actor:SetState('retreat')
 			end
 		else
 			actor:RemoveTarget(target)

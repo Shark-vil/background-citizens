@@ -10,40 +10,51 @@ async.Add('BGN_MovementProcess', function(yield, wait)
 
 		for i = 1, #actors do
 			local actor = actors[i]
-			if not actor then continue end
+			if actor then
+				local npc = actor:GetNPC()
+				if IsValid(npc) then
+					if actor:InVehicle() then
+						if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < CurTime() then
+							actor:WalkToTarget(actor.walkTarget)
+							actor.walkUpdatePathDelay = CurTime() + 5
+						end
+					else
+						if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < CurTime() then
+							local walkPath = bgNPC:FindWalkPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
 
-			local npc = actor:GetNPC()
-			if not IsValid(npc) or npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then continue end
+							if #walkPath ~= 0 then
+								actor.walkPath = walkPath
+							end
 
-			if actor:InVehicle() then
-				if actor.walkUpdatePathDelay < CurTime() then
-					if IsValid(actor.walkTarget) then
-						actor:WalkToTarget(actor.walkTarget)
+							actor.walkUpdatePathDelay = CurTime() + 10
+						end
 					end
 
-					actor.walkUpdatePathDelay = CurTime() + 5
-				end
-			else
-				if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < CurTime() then
-					local walkPath = bgNPC:FindWalkPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
-
-					if #walkPath ~= 0 then
-						actor.walkPath = walkPath
+					actor.targetsUpdateDelay = actor.targetsUpdateDelay or 0
+					if actor.targetsUpdateDelay < CurTime() then
+						actor:EnemiesRecalculate()
+						actor:RecalculationTargets()
+						actor.targetsUpdateDelay = CurTime() + 5
 					end
 
-					actor.walkUpdatePathDelay = CurTime() + 10
-					-- yield()
+					actor:UpdateMovement()
+
+					if actor.checkMoveUpdateData then
+						for tag, _ in pairs(actor.checkMoveUpdateData) do
+							if actor.checkMoveUpdateData[tag].time < CurTime() then
+								actor.checkMoveUpdateData[tag].state = true
+							end
+						end
+					end
+
+					if current_pass >= 1 / slib.deltaTime then
+						current_pass = 0
+						yield()
+					end
+
+					current_pass = current_pass + 1
 				end
 			end
-
-			actor:UpdateMovement()
-
-			if current_pass >= 1 / slib.deltaTime then
-				current_pass = 0
-				yield()
-			end
-
-			current_pass = current_pass + 1
 		end
 
 		yield()

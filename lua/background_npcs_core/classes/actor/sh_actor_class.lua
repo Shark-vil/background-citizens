@@ -65,6 +65,9 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 	obj.skin = npc:GetSkin()
 	obj.model = npc:GetModel()
+	obj.enemies_always_visible_count = 0
+	obj.enemies_count = 0
+	obj.targets_count = 0
 	if SERVER then
 		obj.keyvalues = npc:GetKeyValues()
 	end

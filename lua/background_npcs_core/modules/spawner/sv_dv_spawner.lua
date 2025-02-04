@@ -218,7 +218,7 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	offset_pos = offset_pos or Vector(0, 0, 0)
 	offset_ang = offset_ang or Angle(0, 0, 0)
 
-	if simfphys_list[vehicle_class] then
+	if simfphys and simfphys_list[vehicle_class] then
 		return simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos, spawn_ang)
 	elseif vehicles_list[vehicle_class] then
 		local vehicle_data = vehicles_list[vehicle_class]

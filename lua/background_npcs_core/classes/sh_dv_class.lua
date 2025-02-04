@@ -14,7 +14,11 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	obj.driver = nil
 	obj.passengers_limit = -1
 
-	if vehicle_type == 'taxi' then
+	if vehicle_type == 'police' then
+		obj.ai_class = 'npc_dvbgn_police'
+		obj.ai_type = 'police'
+		obj.passengers_limit = math.random(1, 4)
+	elseif vehicle_type == 'taxi' then
 		obj.ai_class = 'npc_dvtaxi'
 		obj.ai_type = 'taxi'
 		obj.passengers_limit = 1
@@ -59,24 +63,25 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	end
 
 	function obj:GetDriver()
-		if not self.driver or not self.driver:IsAlive() then return nil end
+		if not IsValid(self.ai) then return end
+		if not self.driver or not self.driver:IsAlive() then return end
 		return self.driver
 	end
 
 	function obj:SetDriver(actor)
-		if actor == nil then
-			if self.driver and IsValid(self.ai) then
+		if not actor then
+			if IsValid(self.ai) then self.ai:Remove() end
+			if self.driver then
 				self:RemovePassenger(self.driver)
-				self.ai:Remove()
 			end
-		else
-			self:RemovePassengerModel(actor)
+			self.driver = nil
+		elseif not self.driver or actor ~= self.driver then
+			self:RemovePassenger(actor)
 			self.driver = actor
 			self:AddPassenger(actor)
-
-			if not self.ai then
-				self:Initialize()
-			end
+			if IsValid(self.ai) then self.ai:Remove() end
+			self.ai = nil
+			self:Initialize()
 		end
 	end
 

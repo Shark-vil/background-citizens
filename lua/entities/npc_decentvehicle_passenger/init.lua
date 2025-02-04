@@ -33,8 +33,12 @@ function ENT:AttachModel()
 		self:SetNWAngle('Ang', Angle(0, seatang.y, 0))
 		self:SetSequence(self:LookupSequence('Sit'))
 
-		for i = 1, self:GetFlexNum() do
-			self:SetFlexWeight(i, self:GetFlexBounds(i))
+		local flex_num = self:GetFlexNum()
+		if isnumber(flex_num) then
+			for i = 1, flex_num do
+				local b_min, _ = self:GetFlexBounds(i)
+				if isnumber(b_min) then self:SetFlexWeight(i, b_min) end
+			end
 		end
 	end)
 end
