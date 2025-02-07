@@ -164,7 +164,7 @@ function BaseClass:GetRandomState()
 	if probability > percent then
 		local last_percent = 0
 
-		for _state, _percent in next, self.data.at_random do
+		for _state, _percent in pairs(self.data.at_random) do
 			if _percent > last_percent then
 				percent = _percent
 				state = _state
@@ -1149,7 +1149,7 @@ function BaseClass:GetReactionForDamage()
 		if probability > percent then
 			local last_percent = 0
 
-			for _reaction, _percent in next, self.data.at_damage do
+			for _reaction, _percent in pairs(self.data.at_damage) do
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
@@ -1179,7 +1179,7 @@ function BaseClass:GetReactionForProtect()
 		if probability > percent then
 			local last_percent = 0
 
-			for _reaction, _percent in next, self.data.at_protect do
+			for _reaction, _percent in pairs(self.data.at_protect) do
 				if _percent > last_percent then
 					percent = _percent
 					reaction = _reaction
