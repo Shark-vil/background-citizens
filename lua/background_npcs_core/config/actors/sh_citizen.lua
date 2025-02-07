@@ -46,11 +46,11 @@ bgNPC.cfg:SetActor('citizen', {
 	start_random_state = true,
 	at_random_range = 120,
 	at_random = {
-		['walk'] = 75,
-		['idle'] = 10,
-		['dialogue'] = 15,
-		['sit_to_chair'] = 10,
-		['random_gesture'] = 10,
+		['walk'] = 50,
+		['idle'] = 15,
+		['dialogue'] = 20,
+		['sit_to_chair'] = 20,
+		['random_gesture'] = 15,
 	},
 	at_damage_range = 100,
 	at_damage = {
