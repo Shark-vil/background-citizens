@@ -13,9 +13,9 @@ bgNPC.cfg:SetActor('police_helicopter', {
 	wanted_level = 5,
 	team = { 'residents', 'police' },
 	money = { 0, 500 },
-	at_damage_range = 100,
+	at_damage_range = 100, -- Obsolete (not in use)
 	at_damage = { ['defense'] = 100 },
-	at_protect_range = 100,
+	at_protect_range = 100, -- Obsolete (not in use)
 	at_protect = { ['defense'] = 100 },
 	validator = function(self, npc_type)
 		if not list.Get('NPC')[self.class] then
