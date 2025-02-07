@@ -444,10 +444,10 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if ent.BGN_HasBuildMode then return end
 
 	local npc = self.npc
+	local relationship = D_HT
 
 	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and not hook_Run('BGN_AddActorEnemy', self, ent) then
 		if npc:IsNPC() then
-			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
@@ -457,8 +457,12 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 			self.enemies_always_visible_count = self.enemies_always_visible_count + 1
 			self.enemies_always_visible[self.enemies_always_visible_count] = ent
 		end
-		if IsValid(self.npc) and self.npc:IsNPC() and isfunction(self.npc.SetNPCState) then
-			self.npc:SetNPCState(NPC_STATE_ALERT)
+		if IsValid(npc) and npc:IsNPC() and isfunction(npc.SetNPCState) then
+			if relationship == D_HT then
+				npc:SetNPCState(NPC_STATE_COMBAT)
+			else
+				npc:SetNPCState(NPC_STATE_ALERT)
+			end
 		end
 		-- self:EnemiesRecalculate()
 	end
