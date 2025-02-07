@@ -31,7 +31,7 @@ local snet_Invoke = snet.Invoke
 local snet_InvokeAll = snet.InvokeAll
 local math_random = math.random
 --
-local vector_0_0_0 = Vector(0, 0, 0)
+-- local vector_0_0_0 = Vector(0, 0, 0)
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
 	'vo/coast/bugbait/sandy_help.wav',
