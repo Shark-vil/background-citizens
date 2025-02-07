@@ -1348,6 +1348,15 @@ function BaseClass:FearScream()
 	end
 end
 
+function BaseClass:Fear()
+	if not self.mechanics.fear then return end
+	if not self:IsAlive() then return end
+
+	local npc = self.npc
+	npc:SetNPCState(NPC_STATE_ALERT)
+	npc:SetSchedule(SCHED_COWER)
+end
+
 function BaseClass:CallForHelp(enemy)
 	if not self.mechanics.call_for_help then return end
 	if not IsValid(enemy) then return end
