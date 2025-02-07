@@ -5,14 +5,14 @@ local isfunction = isfunction
 local IsValid = IsValid
 --
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
-local cvar_bgn_debug = GetConVar('bgn_debug')
-local log_disposition = {
-	[D_ER] = 'Error',
-	[D_HT] = 'Hate',
-	[D_FR] = 'Frightened / Fear',
-	[D_LI] = 'Like',
-	[D_NU] = 'Neutral'
-}
+-- local cvar_bgn_debug = GetConVar('bgn_debug')
+-- local log_disposition = {
+-- 	[D_ER] = 'Error',
+-- 	[D_HT] = 'Hate',
+-- 	[D_FR] = 'Frightened / Fear',
+-- 	[D_LI] = 'Like',
+-- 	[D_NU] = 'Neutral'
+-- }
 --
 
 --[[
