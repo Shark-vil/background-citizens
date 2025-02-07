@@ -9,6 +9,7 @@ local CurTime = CurTime
 local Vector = Vector
 local IsValid = IsValid
 local ipairs = ipairs
+local pairs = pairs
 local istable = istable
 local isentity = isentity
 local isnumber = isnumber
@@ -152,7 +153,12 @@ function BaseClass:GetRandomState()
 		return 'none'
 	end
 
-	local probability = math_random(1, self.data.at_random_range or 100)
+	-- local probability = math_random(1, self.data.at_random_range or 100)
+	local probability_max = 0
+	for _, percent_value in pairs(self.data.at_random) do
+		probability_max = probability_max + percent_value
+	end
+	local probability = math_random(1, probability_max ~= 0 and probability_max or 100)
 	local percent, state = table_RandomOpt(self.data.at_random)
 
 	if probability > percent then
@@ -1132,7 +1138,12 @@ function BaseClass:GetReactionForDamage()
 	local percent, reaction
 
 	if self.data.at_damage then
-		local probability = math_random(1, self.data.at_damage_range or 100)
+		-- local probability = math_random(1, self.data.at_damage_range or 100)
+		local probability_max = 0
+		for _, percent_value in pairs(self.data.at_damage) do
+			probability_max = probability_max + percent_value
+		end
+		local probability = math_random(1, probability_max ~= 0 and probability_max or 100)	
 		percent, reaction = table_RandomOpt(self.data.at_damage)
 
 		if probability > percent then
@@ -1154,10 +1165,15 @@ function BaseClass:GetReactionForDamage()
 end
 
 function BaseClass:GetReactionForProtect()
-	local percent, reaction
+	local percent
 
 	if self.data.at_protect then
-		local probability = math_random(1, self.data.at_protect_range or 100)
+		-- local probability = math_random(1, self.data.at_protect_range or 100)
+		local probability_max = 0
+		for _, percent_value in pairs(self.data.at_protect) do
+			probability_max = probability_max + percent_value
+		end
+		local probability = math_random(1, probability_max ~= 0 and probability_max or 100)
 		percent, reaction = table_RandomOpt(self.data.at_protect)
 
 		if probability > percent then
