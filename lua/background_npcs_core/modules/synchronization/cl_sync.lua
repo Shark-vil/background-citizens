@@ -14,5 +14,5 @@ snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
 	actor.npc_schedule = data.npc_schedule
 	actor.npc_state = data.npc_state
 
-	bgNPC:Log('Actor [' .. uid .. '] success synchronization')
+	-- bgNPC:Log('Actor [' .. uid .. '] success synchronization')
 end)

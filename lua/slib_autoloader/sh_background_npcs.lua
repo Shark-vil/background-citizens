@@ -14,7 +14,7 @@ if SERVER then
 end
 
 bgNPC = {}
-bgNPC.VERSION = '1.12.1'
+bgNPC.VERSION = '1.13.1'
 
 -- Do not change -------------
 bgNPC.LANGUAGES = {}
@@ -203,6 +203,7 @@ local function ExecutableScripts()
 	script:using('actions/sv_movement_service.lua')
 	script:using('actions/sv_enemy_controller.lua')
 	script:using('actions/sv_state_randomize.lua')
+	script:using('actions/sv_actors_think.lua')
 
 	script:using('states/sv_impingement.lua')
 	script:using('states/sv_defense.lua')
@@ -224,6 +225,7 @@ local function ExecutableScripts()
 	script:using('states/sv_random_gesture.lua')
 	script:using('states/sh_dance.lua')
 	script:using('states/sh_scenic_npc.lua')
+	script:using('states/sh_go_to_police_car.lua')
 
 	script:using('tool_options/lang/sh_en.lua')
 	script:using('tool_options/lang/sh_ru.lua')

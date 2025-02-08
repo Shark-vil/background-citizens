@@ -6,7 +6,7 @@ local setmetatable = setmetatable
 local table_RandomBySeq = table.RandomBySeq
 local table_Copy = table.Copy
 local isstring = isstring
-local slib_GetUid = slib.GetUid
+local slib_GetUID = slib.GetUID
 local slib_chance = slib.chance
 local snet_Request = snet.Request
 local isbool = isbool
@@ -55,7 +55,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		name = default_name,
 		gender = default_gender,
 	}
-	obj.uid = custom_uid or slib_GetUid()
+	obj.uid = custom_uid or slib_GetUID()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()
@@ -65,6 +65,9 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	end
 	obj.skin = npc:GetSkin()
 	obj.model = npc:GetModel()
+	obj.enemies_always_visible_count = 0
+	obj.enemies_count = 0
+	obj.targets_count = 0
 	if SERVER then
 		obj.keyvalues = npc:GetKeyValues()
 	end
@@ -184,6 +187,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 			obj:DropToFloor()
 			obj:CreateFakePlayerMethodsForNPC()
 
+			if npc_data.start_random_state == nil then
+				npc_data.start_random_state = npc_data.at_random ~= nil
+			end
+
 			if npc_data.start_random_state or npc_data.start_state then
 				timer_Simple(1, function()
 					if not obj:IsAlive() then return end
@@ -205,6 +212,8 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		end
 
 		hook_Run('BGN_InitActor', obj)
+
+		obj.start_think = true
 	end)
 
 	return obj

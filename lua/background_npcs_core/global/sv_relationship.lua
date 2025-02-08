@@ -5,14 +5,14 @@ local isfunction = isfunction
 local IsValid = IsValid
 --
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
-local cvar_bgn_debug = GetConVar('bgn_debug')
-local log_disposition = {
-	[D_ER] = 'Error',
-	[D_HT] = 'Hate',
-	[D_FR] = 'Frightened / Fear',
-	[D_LI] = 'Like',
-	[D_NU] = 'Neutral'
-}
+-- local cvar_bgn_debug = GetConVar('bgn_debug')
+-- local log_disposition = {
+-- 	[D_ER] = 'Error',
+-- 	[D_HT] = 'Hate',
+-- 	[D_FR] = 'Frightened / Fear',
+-- 	[D_LI] = 'Like',
+-- 	[D_NU] = 'Neutral'
+-- }
 --
 
 --[[
@@ -120,18 +120,18 @@ local function SetNPCRelationship(actor, another_npc)
 		end
 	end
 
-	if cvar_bgn_debug:GetBool() and actor_npc:IsNPC() then
-		bgNPC:Log(
-			string.format('Actor NPC: [%s] %q > [%s] %q : %s',
-				tostring(actor:GetType()),
-				tostring(actor_npc),
-				tostring(another_actor and another_actor:GetType() or 'NPC'),
-				tostring(another_npc),
-				tostring(log_disposition[another_npc:Disposition(actor_npc)])
-			),
-			'Relationship'
-		)
-	end
+	-- if cvar_bgn_debug:GetBool() and actor_npc:IsNPC() then
+	-- 	bgNPC:Log(
+	-- 		string.format('Actor NPC: [%s] %q > [%s] %q : %s',
+	-- 			tostring(actor:GetType()),
+	-- 			tostring(actor_npc),
+	-- 			tostring(another_actor and another_actor:GetType() or 'NPC'),
+	-- 			tostring(another_npc),
+	-- 			tostring(log_disposition[another_npc:Disposition(actor_npc)])
+	-- 		),
+	-- 		'Relationship'
+	-- 	)
+	-- end
 end
 
 local function RebuildActorsRelationship(actor)
@@ -198,16 +198,16 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 		for _, ply in ipairs(player_GetAll()) do
 			npc:AddEntityRelationship(ply, actor:GetRelationship(ply) or D_NU, 99)
 
-			if cvar_bgn_debug:GetBool() then
-				bgNPC:Log(
-					string.format('Player relationship: %q > %q : %s',
-						tostring(npc),
-						tostring(ply),
-						tostring(log_disposition[npc:Disposition(ply)])
-					),
-					'Relationship'
-				)
-			end
+			-- if cvar_bgn_debug:GetBool() then
+			-- 	bgNPC:Log(
+			-- 		string.format('Player relationship: %q > %q : %s',
+			-- 			tostring(npc),
+			-- 			tostring(ply),
+			-- 			tostring(log_disposition[npc:Disposition(ply)])
+			-- 		),
+			-- 		'Relationship'
+			-- 	)
+			-- end
 		end
 	end
 end)

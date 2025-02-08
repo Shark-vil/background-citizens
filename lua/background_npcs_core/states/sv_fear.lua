@@ -75,6 +75,7 @@ bgNPC:SetStateAction('fear', 'danger', {
 		local dist = enemy:GetPos():DistToSqr(npc:GetPos())
 		if dist <= 490000 and math_random(0, 10) > 5 then
 			actor:FearScream()
+			actor:Fear()
 		end
 
 		actor:WalkToPos(nil)

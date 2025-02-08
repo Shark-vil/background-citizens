@@ -74,7 +74,7 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 					npc_state = actor.npc_state,
 				}
 
-				local sync_hash = slib_GetHashSumm(sync_data)
+				local sync_hash = slib_GetHashSumm(sync_data, 'md5')
 
 				for k = 1, #players do
 					local ply = players[k]

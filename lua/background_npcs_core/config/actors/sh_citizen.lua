@@ -43,21 +43,21 @@ bgNPC.cfg:SetActor('citizen', {
 		'sim_fphys_pwvolga',
 		'sim_fphys_pwzaz',
 	},
-	start_random_state = true,
-	at_random_range = 120,
+	start_random_state = true, -- (Optional) It works, but it's optional
+	at_random_range = 120, -- Obsolete (not in use)
 	at_random = {
-		['walk'] = 75,
-		['idle'] = 10,
-		['dialogue'] = 15,
-		['sit_to_chair'] = 10,
-		['random_gesture'] = 10,
+		['walk'] = 50,
+		['idle'] = 15,
+		['dialogue'] = 20,
+		['sit_to_chair'] = 20,
+		['random_gesture'] = 15,
 	},
-	at_damage_range = 100,
+	at_damage_range = 100, -- Obsolete (not in use)
 	at_damage = {
 		['fear'] = 90,
 		['defense'] = 10,
 	},
-	at_protect_range = 100,
+	at_protect_range = 100, -- Obsolete (not in use)
 	at_protect = {
 		['fear'] = 70,
 		['defense'] = 10,

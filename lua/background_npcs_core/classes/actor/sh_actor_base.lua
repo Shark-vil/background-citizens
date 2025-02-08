@@ -9,6 +9,7 @@ local CurTime = CurTime
 local Vector = Vector
 local IsValid = IsValid
 local ipairs = ipairs
+local pairs = pairs
 local istable = istable
 local isentity = isentity
 local isnumber = isnumber
@@ -17,7 +18,7 @@ local type = type
 local tobool = tobool
 local isfunction = isfunction
 local table_remove = table.remove
-local table_RandomOpt = table.RandomOpt
+-- local table_RandomOpt = table.RandomOpt
 local table_RandomBySeq = table.RandomBySeq
 local table_HasValueBySeq = table.HasValueBySeq
 local table_RemoveByValue = table.RemoveByValue
@@ -31,7 +32,7 @@ local snet_Invoke = snet.Invoke
 local snet_InvokeAll = snet.InvokeAll
 local math_random = math.random
 --
-local vector_0_0_0 = Vector(0, 0, 0)
+-- local vector_0_0_0 = Vector(0, 0, 0)
 local male_scream = {
 	'ambient/voices/m_scream1.wav',
 	'vo/coast/bugbait/sandy_help.wav',
@@ -142,34 +143,44 @@ function BaseClass:RandomState()
 			self:SetState(state)
 		end
 	end
+	return self:GetState()
 end
 
 -- Gets a random identifier from the "at_random" table.
 -- ? The result depends on the set weights. The higher the value, the greater the chance of falling out.
 -- @return string identifier state identifier
 function BaseClass:GetRandomState()
-	if self.data.at_random == nil then
-		return 'none'
+	local at_value = self.data.at_random
+	if not at_value then return 'none' end
+
+	local reaction
+	local probability_max = 0
+	for _, percent_value in pairs(at_value) do
+		probability_max = probability_max + percent_value
 	end
 
-	local probability = math_random(1, self.data.at_random_range or 100)
-	local percent, state = table_RandomOpt(self.data.at_random)
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
 
-	if probability > percent then
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
+		end
+	end
+
+	if not reaction then
 		local last_percent = 0
-
-		for _state, _percent in next, self.data.at_random do
-			if _percent > last_percent then
-				percent = _percent
-				state = _state
-				last_percent = _percent
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
 			end
 		end
 	end
 
-	state = state or 'none'
-
-	return state
+	return reaction
 end
 
 function BaseClass:Health()
@@ -303,7 +314,8 @@ function BaseClass:AddTarget(ent)
 	if ent.BGN_HasBuildMode then return end
 
 	if self.npc ~= ent and not table_HasValueBySeq(self.targets, ent) then
-		self.targets[#self.targets + 1] = ent
+		self.targets_count = self.targets_count + 1
+		self.targets[self.targets_count] = ent
 	end
 end
 
@@ -313,26 +325,27 @@ end
 -- @param index number|nil target id in table
 -- ? If there is no entity, use an index. If there is no index, use entity.
 function BaseClass:RemoveTarget(ent, index)
-	if not self.mechanics.targets_controller then return end
-	if isnumber(index) then ent = self.targets[index] end
+	if not self.mechanics.targets_controller then return self.targets_count end
+	if isnumber(index) then
+		ent = self.targets[index]
+		if not ent or not IsValid(ent) then return self.targets_count end
+	end
 
-	local old_count = #self.targets
+	local old_count = self.targets_count
 
 	if not hook_Run('BGN_RemoveActorTarget', self, ent) then
-		if isentity(ent) and ent == self.walkTarget then self.walkTarget = NULL end
+		if ent == self.walkTarget then self.walkTarget = NULL end
 
-		if isnumber(index) then
-			table_remove(self.targets, index)
-		elseif isentity(ent) then
-			table_RemoveByValue(self.targets, ent)
+		if table_RemoveByValue(self.targets, ent)  then
+			self.targets_count = self.targets_count - 1
 		end
 
-		if old_count > 0 and #self.targets == 0 then
+		if old_count > 0 and self.targets_count == 0 then
 			hook_Run('BGN_ResetTargetsForActor', self)
 		end
 	end
 
-	return #self.targets
+	return self.targets_count
 end
 
 -- Removes all targets from the list.
@@ -341,7 +354,7 @@ function BaseClass:RemoveAllTargets()
 	if not self.mechanics.targets_controller then return end
 
 	local last_count = 0
-	for i = #self.targets, 1, -1 do
+	for i = self.targets_count, 1, -1 do
 		last_count = self:RemoveTarget(nil, i)
 	end
 
@@ -357,7 +370,9 @@ end
 function BaseClass:RecalculationTargets()
 	if not self.mechanics.targets_controller then return end
 
-	for i = #self.targets, 1, -1 do
+	self.targets_count = #self.targets
+
+	for i = self.targets_count, 1, -1 do
 		local target = self.targets[i]
 		if not IsValid(target) then
 			self:RemoveTarget(nil, i)
@@ -379,22 +394,13 @@ end
 -- Returns the number of existing targets for the actor.
 -- @return number targets_number number of targets
 function BaseClass:TargetsCount()
-	-- self:TargetsRecalculate()
-	self:RecalculationTargets()
-	return #self.targets
+	-- self:RecalculationTargets()
+	return self.targets_count
 end
 
 function BaseClass:HasNoTargets()
-	return #self.targets == 0
+	return self.targets_count == 0
 end
-
--- function BaseClass:TargetsRecalculate()
--- 	for i = #self.targets, 1, -1 do
--- 		if not IsValid(self.targets[i]) then
--- 			table_remove(self.targets, i)
--- 		end
--- 	end
--- end
 
 -- Returns the closest target to the actor.
 -- @return entity|NULL target_entity nearest target which is entity
@@ -403,7 +409,7 @@ function BaseClass:GetNearTarget()
 	local dist = 0
 	local self_npc = self.npc
 
-	for i = 1, #self.targets do
+	for i = 1, self.targets_count do
 		local ent = self.targets[i]
 		if IsValid(ent) then
 			if not IsValid(target) then
@@ -425,7 +431,7 @@ function BaseClass:GetTarget(id)
 end
 
 function BaseClass:GetFirstTarget()
-	for i = 1, #self.targets do
+	for i = 1, self.targets_count do
 		local ent = self.targets[i]
 		if IsValid(ent) then return ent end
 	end
@@ -433,7 +439,7 @@ function BaseClass:GetFirstTarget()
 end
 
 function BaseClass:GetLastTarget()
-	for i = #self.targets, 1, -1 do
+	for i = self.targets_count, 1, -1 do
 		local ent = self.targets[i]
 		if IsValid(ent) then return ent end
 	end
@@ -449,68 +455,71 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 	if ent.BGN_HasBuildMode then return end
 
 	local npc = self.npc
+	local relationship = D_HT
 
-	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and
-		not hook_Run('BGN_AddActorEnemy', self, ent)
-	then
+	if npc ~= ent and not table_HasValueBySeq(self.enemies, ent) and not hook_Run('BGN_AddActorEnemy', self, ent) then
 		if npc:IsNPC() then
-			local relationship = D_HT
 			if reaction == 'fear' then relationship = D_FR end
 			npc:AddEntityRelationship(ent, relationship, 99)
 		end
-		self.enemies[#self.enemies + 1] = ent
+		self.enemies_count = self.enemies_count + 1
+		self.enemies[self.enemies_count] = ent
 		if always_visible then
-			self.enemies_always_visible[#self.enemies_always_visible + 1] = ent
+			self.enemies_always_visible_count = self.enemies_always_visible_count + 1
+			self.enemies_always_visible[self.enemies_always_visible_count] = ent
 		end
-		if IsValid(self.npc) and self.npc:IsNPC() and isfunction(self.npc.SetNPCState) then
-			self.npc:SetNPCState(NPC_STATE_ALERT)
+		if IsValid(npc) and npc:IsNPC() and isfunction(npc.SetNPCState) then
+			if relationship == D_HT then
+				npc:SetNPCState(NPC_STATE_COMBAT)
+			else
+				npc:SetNPCState(NPC_STATE_ALERT)
+			end
 		end
-		self:EnemiesRecalculate()
+		-- self:EnemiesRecalculate()
 	end
 end
 
 function BaseClass:RemoveEnemy(ent, index)
-	if not self.mechanics.enemies_controller then return end
-	if isnumber(index) then ent = self.enemies[index] end
+	if not self.mechanics.enemies_controller then return self.enemies_count end
+	if not IsValid(ent) then return self.enemies_count end
+	if isnumber(index) then
+		ent = self.enemies[index]
+		if not ent or not IsValid(ent) then return self.enemies_count end
+	end
 
-	local old_count = #self.enemies
+	local old_count = self.enemies_count
 
 	if not hook_Run('BGN_RemoveActorEnemy', self, ent) then
 		local npc = self.npc
 
-		if isentity(ent) then
-			if ent == self.walkTarget then self.walkTarget = NULL end
+		if ent == self.walkTarget then self.walkTarget = NULL end
 
-			if IsValid(npc) and npc:IsNPC() then
-				if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
-				if IsValid(ent) then npc:AddEntityRelationship(ent, D_NU, 99) end
-			end
+		if IsValid(npc) and npc:IsNPC() then
+			if npc:GetEnemy() == ent then npc:SetEnemy(NULL) end
+			npc:AddEntityRelationship(ent, D_NU, 99)
 		end
 
-		if isnumber(index) then
-			ent = self.enemies[index]
-			table_remove(self.enemies, index)
-		elseif isentity(ent) then
-			table_RemoveByValue(self.enemies, ent)
+		if table_RemoveByValue(self.enemies, ent) then
+			self.enemies_count = self.enemies_count - 1
 		end
 
-		if ent and IsValid(ent) then
-			table_RemoveByValue(self.enemies_always_visible, ent)
+		if table_RemoveByValue(self.enemies_always_visible, ent) then
+			self.enemies_always_visible_count = self.enemies_always_visible_count - 1
 		end
 
-		if old_count > 0 and #self.enemies == 0 then
+		if old_count > 0 and self.enemies_count == 0 then
 			hook_Run('BGN_ResetEnemiesForActor', self)
 		end
 	end
 
-	return #self.enemies
+	return self.enemies_count
 end
 
 function BaseClass:RemoveAllEnemies()
 	if not self.mechanics.enemies_controller then return end
 
 	local last_count = 0
-	for i = #self.enemies, 1, -1 do
+	for i = self.enemies_count, 1, -1 do
 		last_count = self:RemoveEnemy(nil, i)
 	end
 
@@ -522,9 +531,14 @@ function BaseClass:RemoveAllEnemies()
 end
 
 function BaseClass:HasEnemy(ent)
-	if ent.isBgnClass then ent = ent.npc end
+	if not ent then return false end
 
-	if IsValid(ent) and ent:IsNPC()
+	if istable(ent) and ent.isBgnClass then
+		ent = ent.npc
+	end
+
+	if IsValid(ent)
+		and ent:IsNPC()
 		and isfunction(ent.Disposition)
 		and ent:Disposition(self.npc) == D_HT
 	then
@@ -535,15 +549,18 @@ function BaseClass:HasEnemy(ent)
 end
 
 function BaseClass:EnemiesCount()
-	return #self.enemies
+	return self.enemies_count
 end
 
 function BaseClass:HasNoEnemies()
-	return #self.enemies == 0
+	return self.enemies_count == 0
 end
 
 function BaseClass:EnemiesRecalculate()
 	if not self.mechanics.enemies_controller then return end
+
+	self.enemies_count = #self.enemies
+	self.enemies_always_visible_count = #self.enemies_always_visible
 
 	local npc = self.npc
 
@@ -574,13 +591,15 @@ function BaseClass:EnemiesRecalculate()
 			npc:SetEnemy(new_enemy)
 			npc:SetTarget(new_enemy)
 			npc:UpdateEnemyMemory(new_enemy, enemy:GetPos())
+			npc:AddEntityRelationship(new_enemy, D_HT, 99)
+
 			return
 		end
 	end
 
-	if #self.enemies == 0 then return end
+	if self.enemies_count == 0 then return end
 
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local enemy = self.enemies[i]
 		if not IsValid(enemy) or enemy:Health() <= 0 then
 			self:RemoveEnemy(enemy)
@@ -607,31 +626,12 @@ function BaseClass:EnemiesRecalculate()
 	end
 end
 
--- function BaseClass:GetNearEnemy()
--- 	local enemy = NULL
--- 	local dist = nil
--- 	local self_npc = self.npc
-
--- 	for i = 1, #self.enemies do
--- 		local ent = self.enemies[i]
--- 		if IsValid(ent) then
--- 			local distance_to_enemy = ent:GetPos():DistToSqr(self_npc:GetPos())
--- 			if not IsValid(enemy) or not dist or distance_to_enemy < dist then
--- 				enemy = ent
--- 				dist = distance_to_enemy
--- 			end
--- 		end
--- 	end
-
--- 	return enemy
--- end
-
 function BaseClass:GetEnemy()
 	return self:GetNearEnemy()
 end
 
 function BaseClass:GetFirstEnemy()
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local enemy = self.enemies[i]
 		if IsValid(enemy) then return enemy end
 	end
@@ -643,7 +643,7 @@ function BaseClass:GetNearEnemy()
 	local dist = nil
 	local npcPos = self.npc:GetPos()
 
-	for i = 1, #self.enemies do
+	for i = 1, self.enemies_count do
 		local ent = self.enemies[i]
 		if IsValid(ent) then
 			local new_dist = npcPos:DistToSqr(ent:GetPos())
@@ -661,7 +661,7 @@ function BaseClass:GetNearEnemy()
 end
 
 function BaseClass:GetLastEnemy()
-	for i = #self.enemies, 1, -1 do
+	for i = self.enemies_count, 1, -1 do
 		local enemy = self.enemies[i]
 		if IsValid(enemy) then return enemy end
 	end
@@ -710,7 +710,8 @@ function BaseClass:SetState(state, data, forced)
 	forced = forced or false
 
 	if not forced then
-		if state == 'ignore' then return end
+		if state == 'ignore' or state == 'none' then return end
+		-- if state == 'ignore' then return end
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if self.state_data.state == state then return end
@@ -743,7 +744,9 @@ function BaseClass:SetState(state, data, forced)
 	end
 
 	local new_state, new_data = self:CallStateAction(state, 'pre_start', state, data)
-	if type(new_state) == 'boolean' and new_state == true then return end
+	if type(new_state) == 'boolean' and new_state == true then
+		return
+	end
 
 	state = new_state or state
 	data = new_data or data
@@ -764,6 +767,8 @@ function BaseClass:SetState(state, data, forced)
 
 	self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
 	hook_Run('BGN_SetState', self, self.state_data.state, self.state_data.data)
+
+	-- self.npc:SetNWString('bgn_actor_state', state)
 
 	return self.state_data
 end
@@ -888,6 +893,26 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 
 	self.walkPos = pos
 	self.walkPath = walkPath
+end
+
+function BaseClass:CheckMoveUpdate(tag, time)
+	self.checkMoveUpdateData = self.checkMoveUpdateData or {}
+	local is_update = false
+	if self.checkMoveUpdateData[tag] and self.checkMoveUpdateData[tag].state then
+		is_update = true
+	end
+	if is_update or not self.checkMoveUpdateData[tag] then
+		self.checkMoveUpdateData[tag] = { state = false,  time = CurTime() + (time or 0) }
+	end
+	return is_update
+end
+
+function BaseClass:GetWalkTarget()
+	return self.walkTarget
+end
+
+function BaseClass:GetWalkPos()
+	return self.walkPos
 end
 
 function BaseClass:UpdateMovement()
@@ -1120,51 +1145,69 @@ function BaseClass:GetClosestPointInRadius(radius)
 end
 
 function BaseClass:GetReactionForDamage()
-	local percent, reaction
+	local at_value = self.data.at_damage
+	if not at_value then return 'none' end
 
-	if self.data.at_damage then
-		local probability = math_random(1, self.data.at_damage_range or 100)
-		percent, reaction = table_RandomOpt(self.data.at_damage)
+	local reaction
+	local probability_max = 0
+	for _, percent_value in pairs(at_value) do
+		probability_max = probability_max + percent_value
+	end
 
-		if probability > percent then
-			local last_percent = 0
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
 
-			for _reaction, _percent in next, self.data.at_damage do
-				if _percent > last_percent then
-					percent = _percent
-					reaction = _reaction
-					last_percent = _percent
-				end
-			end
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
 		end
 	end
 
-	reaction = reaction or 'ignore'
+	if not reaction then
+		local last_percent = 0
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
+			end
+		end
+	end
 
 	return reaction
 end
 
 function BaseClass:GetReactionForProtect()
-	local percent, reaction
+	local at_value = self.data.at_protect
+	if not at_value then return 'none' end
 
-	if self.data.at_protect then
-		local probability = math_random(1, self.data.at_protect_range or 100)
-		percent, reaction = table_RandomOpt(self.data.at_protect)
+	local reaction
+	local probability_max = 0
+	for _, percent_value in pairs(at_value) do
+		probability_max = probability_max + percent_value
+	end
 
-		if probability > percent then
-			local last_percent = 0
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
 
-			for _reaction, _percent in next, self.data.at_protect do
-				if _percent > last_percent then
-					percent = _percent
-					reaction = _reaction
-					last_percent = _percent
-				end
-			end
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
 		end
 	end
 
-	reaction = reaction or 'ignore'
+	if not reaction then
+		local last_percent = 0
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
+			end
+		end
+	end
 
 	return reaction
 end
@@ -1343,6 +1386,15 @@ function BaseClass:FearScream()
 	end
 end
 
+function BaseClass:Fear()
+	if not self.mechanics.fear then return end
+	if not self:IsAlive() then return end
+
+	local npc = self.npc
+	npc:SetNPCState(NPC_STATE_ALERT)
+	npc:SetSchedule(SCHED_COWER)
+end
+
 function BaseClass:CallForHelp(enemy)
 	if not self.mechanics.call_for_help then return end
 	if not IsValid(enemy) then return end
@@ -1417,6 +1469,7 @@ end
 
 function BaseClass:EnterVehicle(vehicle)
 	if not self.mechanics.use_vehicle then return end
+	if not IsValid(vehicle) then return end
 	if not DecentVehicleDestination or not vehicle:IsVehicle() then return end
 
 	local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
@@ -1492,11 +1545,11 @@ function BaseClass:EnterVehicle(vehicle)
 		npc:SetNoDraw(true)
 		npc:slibSetVar('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		-- npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
-		npc:SetPos(vector_0_0_0)
+		npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
+		-- npc:SetPos(vector_0_0_0)
 		-- npc:SetModelScale(0.1)
 		npc:SetModelScale(0)
-		-- npc:SetParent(self_vehicle)
+		npc:SetParent(self_vehicle)
 		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 		self.walkUpdatePathDelay = 0
@@ -1527,7 +1580,7 @@ function BaseClass:ExitVehicle()
 		if slib.chance(50) then add_right = -dist end
 
 		npc:slibSetVar('bgn_vehicle_entered', false)
-		-- npc:SetParent(nil)
+		npc:SetParent(nil)
 
 		-- local npc = ents.Create(self.class)
 		-- npc:SetModel(self.model)
@@ -1691,6 +1744,12 @@ end
 function BaseClass:GetAngles()
 	if not self:IsValid() then return Angle(0, 0, 0) end
 	return self.npc:GetAngles()
+end
+
+function BaseClass:Think()
+	if self:GetState() == 'none' and self.data.at_random then
+		self:RandomState()
+	end
 end
 
 BaseClass.__index = BaseClass

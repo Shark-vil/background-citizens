@@ -20,7 +20,6 @@ bgNPC.cfg:SetActor('zombie', {
 	health = { 35, 150 },
 	random_skin = true,
 	random_bodygroups = true,
-	start_random_state = true,
 	at_random = { ['walk'] = 70, ['idle'] = 30 },
 	at_damage = { ['defense'] = 100 },
 	at_protect = { ['defense'] = 100 },

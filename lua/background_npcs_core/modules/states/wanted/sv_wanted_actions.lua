@@ -11,6 +11,8 @@ local enable_arrest_mode = GetConVar('bgn_arrest_mode'):GetBool()
 local impunity_limit = GetConVar('bgn_wanted_impunity_limit'):GetInt()
 local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction_period'):GetFloat()
 local impunity_last_reduction_period = 0
+-- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
+local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 
 -- Just registered for the RPC
 -- cl_visual_wanted.lua
@@ -193,6 +195,8 @@ end)
 timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	if bgNPC:IsPeacefulMode() or not enable_wanted_mode then return end
 
+	-- local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
+	local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
 
@@ -204,7 +208,8 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	local min_distance_detect = 360000
 
 	-- 1500 ^ 2
-	local ray_distance_detect = 2250000
+	-- local ray_distance_detect = 2250000
+	local ray_distance_detect = radius_visibility
 
 	for i = wanted_count, 1, -1 do
 		local WantedClass = wanted_list[i]

@@ -76,6 +76,11 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	for npcType, v in pairs(bgNPC.cfg.actors) do
 		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
 	end
+
+	for npcType, v in pairs(bgNPC.cfg.actors) do
+		local max_vehicle = v.max_vehicle or 0
+		RunConsoleCommand('bgn_npc_vehicle_max_' .. npcType, max_vehicle)
+	end
 end)
 
 local is_first_bgn_enable = false

@@ -66,9 +66,9 @@ local function SetAmbient(ambient_value)
 				current_volume = sound_volume
 			end
 
-			if current_volume ~= sound_volume then
-				bgNPC:Log('Ambient volume - ' .. current_volume)
-			end
+			-- if current_volume ~= sound_volume then
+			-- 	bgNPC:Log('Ambient volume - ' .. current_volume)
+			-- end
 
 			currentSound:ChangeVolume(current_volume)
 		end)

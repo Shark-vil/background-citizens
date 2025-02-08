@@ -16,8 +16,8 @@ bgNPC.cfg:SetActor('civil_defense', {
 	weapon_skill = WEAPON_PROFICIENCY_GOOD,
 	money = { 0, 200 },
 	at_random = { ['walk'] = 100 },
-	at_damage_range = 100,
+	at_damage_range = 100, -- Obsolete (not in use)
 	at_damage = { ['defense'] = 100 },
-	at_protect_range = 100,
+	at_protect_range = 100, -- Obsolete (not in use)
 	at_protect = { ['defense'] = 100 },
 })

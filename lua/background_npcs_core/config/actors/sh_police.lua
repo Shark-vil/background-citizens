@@ -29,18 +29,18 @@ bgNPC.cfg:SetActor('police', {
 	vehicles = { 'sim_fphys_combineapc' },
 	random_skin = true,
 	random_bodygroups = true,
-	at_random_range = 100,
+	at_random_range = 100, -- Obsolete (not in use)
 	at_random = {
 		['walk'] = 70,
 		['idle'] = 25,
 		['dialogue'] = 15,
 	},
-	at_damage_range = 100,
+	at_damage_range = 100, -- Obsolete (not in use)
 	at_damage = {
 		['defense'] = 20,
 		['arrest'] = 80
 	},
-	at_protect_range = 100,
+	at_protect_range = 100, -- Obsolete (not in use)
 	at_protect = {
 		['defense'] = 20,
 		['arrest'] = 80

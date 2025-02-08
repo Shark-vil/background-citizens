@@ -5,7 +5,7 @@ local istable = istable
 local isstring = isstring
 local string_StartWith = string.StartWith
 local table_Copy = table.Copy
-local table_ToString = table.ToString
+-- local table_ToString = table.ToString
 local string_Replace = string.Replace
 local string_Explode = string.Explode
 local table_insert = table.insert
@@ -42,13 +42,13 @@ function bgNPC:GetActorConfig(actor_type)
 
 						if not exists_data_key then
 							data[inherit_key] = inherit_value
-							if istable(inherit_value) then
-								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
-									inherit_key .. ' : ' .. table_ToString(inherit_value), 'GetActorConfig')
-							else
-								bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
-									inherit_key .. ' : ' .. tostring(inherit_value), 'GetActorConfig')
-							end
+							-- if istable(inherit_value) then
+							-- 	bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
+							-- 		inherit_key .. ' : ' .. table_ToString(inherit_value), 'GetActorConfig')
+							-- else
+							-- 	bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
+							-- 		inherit_key .. ' : ' .. tostring(inherit_value), 'GetActorConfig')
+							-- end
 						end
 					end
 				end

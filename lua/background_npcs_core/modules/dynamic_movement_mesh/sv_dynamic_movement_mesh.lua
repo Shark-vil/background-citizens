@@ -51,7 +51,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local expensive_generator
 	local radius
 	local is_infmap = slib.IsInfinityMap()
-	local infO_message_for_admins_has_send = true
+	local info_message_for_admins_has_send = true
 	if is_infmap then
 		util_IsInWorld = function(...) return util.IsInWorld(...) end
 		util_TraceLine = function(...) return util.TraceLine(...) end
@@ -114,11 +114,11 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 	while true do
 		if not IsEnableGenerator() then
-			if infO_message_for_admins_has_send then infO_message_for_admins_has_send = false end
+			if info_message_for_admins_has_send then info_message_for_admins_has_send = false end
 			wait(1)
 		else
-			if not infO_message_for_admins_has_send then
-				infO_message_for_admins_has_send = true
+			if not info_message_for_admins_has_send then
+				info_message_for_admins_has_send = true
 				local admins = {}
 				for _, v in ipairs(player_GetAll()) do
 					if IsValid(v) and (v:IsAdmin() or v:IsSuperAdmin()) then
