@@ -1728,6 +1728,12 @@ function BaseClass:GetAngles()
 	return self.npc:GetAngles()
 end
 
+function BaseClass:Think()
+	if self:GetState() == 'none' and self.data.at_random then
+		self:RandomState()
+	end
+end
+
 BaseClass.__index = BaseClass
 
 return BaseClass

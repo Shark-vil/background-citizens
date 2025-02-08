@@ -203,6 +203,7 @@ local function ExecutableScripts()
 	script:using('actions/sv_movement_service.lua')
 	script:using('actions/sv_enemy_controller.lua')
 	script:using('actions/sv_state_randomize.lua')
+	script:using('actions/sv_actors_think.lua')
 
 	script:using('states/sv_impingement.lua')
 	script:using('states/sv_defense.lua')
