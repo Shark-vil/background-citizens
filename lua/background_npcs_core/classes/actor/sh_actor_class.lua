@@ -187,6 +187,10 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 			obj:DropToFloor()
 			obj:CreateFakePlayerMethodsForNPC()
 
+			if npc_data.start_random_state == nil then
+				npc_data.start_random_state = npc_data.at_random ~= nil
+			end
+
 			if npc_data.start_random_state or npc_data.start_state then
 				timer_Simple(1, function()
 					if not obj:IsAlive() then return end
