@@ -212,6 +212,8 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		end
 
 		hook_Run('BGN_InitActor', obj)
+
+		obj.start_think = true
 	end)
 
 	return obj
