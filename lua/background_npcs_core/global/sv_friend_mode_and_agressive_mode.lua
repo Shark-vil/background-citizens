@@ -52,9 +52,11 @@ local function OverrideDamageReaction(attacker, target)
 			actor:AddEnemy(set_enemy)
 			if actor:EqualStateGroup('calm') then
 				local reaction = actor:GetReactionForDamage()
-				if reaction == 'ignore' then continue end
-				actor:RemoveAllTargets()
-				actor:SetState(reaction)
+				if reaction ~= 'ignore' and reaction ~= 'none' then
+				-- if reaction ~= 'ignore' then
+					actor:RemoveAllTargets()
+					actor:SetState(reaction)
+				end
 			end
 		end
 	end
@@ -78,7 +80,7 @@ async.Add('BGN_Agressive_Mode', function(yield, wait)
 						actor:AddEnemy(ply)
 						if actor:EqualStateGroup('calm') then
 							local reaction = actor:GetReactionForDamage()
-							if reaction ~= 'ignore' then
+							if reaction ~= 'ignore' and reaction ~= 'none' then
 								actor:RemoveAllTargets()
 								actor:SetState(reaction)
 							end

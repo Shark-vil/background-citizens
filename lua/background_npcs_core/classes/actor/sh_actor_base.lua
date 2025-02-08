@@ -18,7 +18,7 @@ local type = type
 local tobool = tobool
 local isfunction = isfunction
 local table_remove = table.remove
-local table_RandomOpt = table.RandomOpt
+-- local table_RandomOpt = table.RandomOpt
 local table_RandomBySeq = table.RandomBySeq
 local table_HasValueBySeq = table.HasValueBySeq
 local table_RemoveByValue = table.RemoveByValue
@@ -143,39 +143,44 @@ function BaseClass:RandomState()
 			self:SetState(state)
 		end
 	end
+	return self:GetState()
 end
 
 -- Gets a random identifier from the "at_random" table.
 -- ? The result depends on the set weights. The higher the value, the greater the chance of falling out.
 -- @return string identifier state identifier
 function BaseClass:GetRandomState()
-	if self.data.at_random == nil then
-		return 'none'
-	end
+	local at_value = self.data.at_random
+	if not at_value then return 'none' end
 
-	-- local probability = math_random(1, self.data.at_random_range or 100)
+	local reaction
 	local probability_max = 0
-	for _, percent_value in pairs(self.data.at_random) do
+	for _, percent_value in pairs(at_value) do
 		probability_max = probability_max + percent_value
 	end
-	local probability = math_random(1, probability_max ~= 0 and probability_max or 100)
-	local percent, state = table_RandomOpt(self.data.at_random)
 
-	if probability > percent then
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
+
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
+		end
+	end
+
+	if not reaction then
 		local last_percent = 0
-
-		for _state, _percent in pairs(self.data.at_random) do
-			if _percent > last_percent then
-				percent = _percent
-				state = _state
-				last_percent = _percent
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
 			end
 		end
 	end
 
-	state = state or 'none'
-
-	return state
+	return reaction
 end
 
 function BaseClass:Health()
@@ -705,7 +710,8 @@ function BaseClass:SetState(state, data, forced)
 	forced = forced or false
 
 	if not forced then
-		if state == 'ignore' then return end
+		if state == 'ignore' or state == 'none' then return end
+		-- if state == 'ignore' then return end
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if self.state_data.state == state then return end
@@ -738,7 +744,9 @@ function BaseClass:SetState(state, data, forced)
 	end
 
 	local new_state, new_data = self:CallStateAction(state, 'pre_start', state, data)
-	if type(new_state) == 'boolean' and new_state == true then return end
+	if type(new_state) == 'boolean' and new_state == true then
+		return
+	end
 
 	state = new_state or state
 	data = new_data or data
@@ -759,6 +767,8 @@ function BaseClass:SetState(state, data, forced)
 
 	self:CallStateAction(state, 'start', self.state_data.state, self.state_data.data)
 	hook_Run('BGN_SetState', self, self.state_data.state, self.state_data.data)
+
+	-- self.npc:SetNWString('bgn_actor_state', state)
 
 	return self.state_data
 end
@@ -1135,61 +1145,69 @@ function BaseClass:GetClosestPointInRadius(radius)
 end
 
 function BaseClass:GetReactionForDamage()
-	local percent, reaction
+	local at_value = self.data.at_damage
+	if not at_value then return 'none' end
 
-	if self.data.at_damage then
-		-- local probability = math_random(1, self.data.at_damage_range or 100)
-		local probability_max = 0
-		for _, percent_value in pairs(self.data.at_damage) do
-			probability_max = probability_max + percent_value
-		end
-		local probability = math_random(1, probability_max ~= 0 and probability_max or 100)	
-		percent, reaction = table_RandomOpt(self.data.at_damage)
+	local reaction
+	local probability_max = 0
+	for _, percent_value in pairs(at_value) do
+		probability_max = probability_max + percent_value
+	end
 
-		if probability > percent then
-			local last_percent = 0
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
 
-			for _reaction, _percent in pairs(self.data.at_damage) do
-				if _percent > last_percent then
-					percent = _percent
-					reaction = _reaction
-					last_percent = _percent
-				end
-			end
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
 		end
 	end
 
-	reaction = reaction or 'ignore'
+	if not reaction then
+		local last_percent = 0
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
+			end
+		end
+	end
 
 	return reaction
 end
 
 function BaseClass:GetReactionForProtect()
-	local percent
+	local at_value = self.data.at_protect
+	if not at_value then return 'none' end
 
-	if self.data.at_protect then
-		-- local probability = math_random(1, self.data.at_protect_range or 100)
-		local probability_max = 0
-		for _, percent_value in pairs(self.data.at_protect) do
-			probability_max = probability_max + percent_value
-		end
-		local probability = math_random(1, probability_max ~= 0 and probability_max or 100)
-		percent, reaction = table_RandomOpt(self.data.at_protect)
+	local reaction
+	local probability_max = 0
+	for _, percent_value in pairs(at_value) do
+		probability_max = probability_max + percent_value
+	end
 
-		if probability > percent then
-			local last_percent = 0
+	local roll = math_random(1, probability_max)
+	local cumulative = 0
 
-			for _reaction, _percent in pairs(self.data.at_protect) do
-				if _percent > last_percent then
-					percent = _percent
-					reaction = _reaction
-					last_percent = _percent
-				end
-			end
+	for new_reaction, percent in pairs(at_value) do
+		cumulative = cumulative + percent
+		if roll <= cumulative then
+			reaction = new_reaction
+			break
 		end
 	end
 
-	reaction = reaction or 'ignore'
+	if not reaction then
+		local last_percent = 0
+		for new_reaction, percent in pairs(at_value) do
+			if percent > last_percent then
+				reaction = new_reaction
+				last_percent = percent
+			end
+		end
+	end
 
 	return reaction
 end

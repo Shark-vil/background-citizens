@@ -21,7 +21,8 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		reaction = actor:GetLastReaction()
 
 		if actor:EqualStateGroup('calm') then
-			if reaction == 'ignore' then continue end
+			if reaction == 'ignore' or reaction == 'none' then continue end
+			-- if reaction == 'ignore' then continue end
 			actor:RemoveAllTargets()
 			actor:SetState(reaction)
 		end
