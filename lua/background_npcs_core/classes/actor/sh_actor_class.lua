@@ -6,7 +6,7 @@ local setmetatable = setmetatable
 local table_RandomBySeq = table.RandomBySeq
 local table_Copy = table.Copy
 local isstring = isstring
-local slib_GetUid = slib.GetUid
+local slib_GetUID = slib.GetUID
 local slib_chance = slib.chance
 local snet_Request = snet.Request
 local isbool = isbool
@@ -55,7 +55,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		name = default_name,
 		gender = default_gender,
 	}
-	obj.uid = custom_uid or slib_GetUid()
+	obj.uid = custom_uid or slib_GetUID()
 	obj.npc = npc
 	obj.npc_index = npc:EntIndex()
 	obj.class = npc:GetClass()

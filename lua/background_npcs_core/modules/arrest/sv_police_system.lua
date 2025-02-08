@@ -46,7 +46,7 @@ hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', functio
 
 	if target:IsPlayer() then target:KillSilent() end
 
-	timer.Create('police_system_stage_2_' .. slib.GetUid(), 1.5, 1, function()
+	timer.Create('police_system_stage_2_' .. slib.UUID(), 1.5, 1, function()
 		if not actor or not actor:IsAlive() or not IsValid(fakePlayer) or not IsValid(arrestEntity) then
 			return
 		end
