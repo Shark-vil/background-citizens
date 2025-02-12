@@ -93,7 +93,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 		if is_player then
 			if impunity_limit ~= 0 then
 				local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
-				if current_impunity >= impunity_limit then
+				if current_impunity >= impunity_limit or actor:HasTeam('police') then
 					attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
 					bgNPC:ResetKillingStatistic(attacker)
 					asset:AddWanted(attacker)
