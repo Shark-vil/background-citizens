@@ -2,6 +2,9 @@ local IsValid = IsValid
 local CurTime = CurTime
 local math_random = math.random
 local Vector = Vector
+local ipairs = ipairs
+local table_insert = table.insert
+local table_remove = table.remove
 --
 
 bgNPC:SetStateAction('run_from_danger', 'danger', {
@@ -13,17 +16,14 @@ bgNPC:SetStateAction('run_from_danger', 'danger', {
 
 		local data = actor:GetStateData()
 		local enemy = actor:GetNearEnemy()
-
 		data.call_for_help = data.call_for_help or CurTime() + math_random(20, 30)
-
 		if not IsValid(enemy) or enemy:Health() <= 0 then return end
-		if not actor:CheckMoveUpdate('state_run_from_danger', 5) then return end
-
+		if not data.skip_update_delay and not actor:CheckMoveUpdate('state_run_from_danger', 5) then return end
+		data.skip_update_delay = false
 		local npc = actor:GetNPC()
 		local npc_pos = npc:GetPos()
 		local enemy_pos = enemy:GetPos()
 		local dist = npc_pos:DistToSqr(enemy_pos)
-
 		if data.call_for_help < CurTime() then
 			actor:CallForHelp(enemy)
 			data.call_for_help = CurTime() + math_random(20, 30)
@@ -34,17 +34,38 @@ bgNPC:SetStateAction('run_from_danger', 'danger', {
 		elseif dist < 40000 and (enemy:IsPlayer() or slib.chance(10)) and enemy:slibIsViewVector(npc_pos) then
 			actor:SetState('fear')
 		else
-			local position = actor:GetDistantPointToPoint(enemy_pos, math_random(700, 1500))
+			local min, max = 1000, 2000
+			local position = actor:GetDistantPointToPoint(enemy_pos, math_random(min, max))
 			if position then
 				actor:WalkToPos(position, 'run')
+				-- Avoid danger
+				if #actor.walkPath ~= 0 then
+					local last_check_pos
+					local remove_index = {}
+					for point_index, point in ipairs(actor.walkPath) do
+						local enemy_to_point_dist = enemy_pos:DistToSqr(point)
+						if not last_check_pos then
+							last_check_pos = enemy_to_point_dist
+						elseif enemy_to_point_dist > last_check_pos then
+							last_check_pos = enemy_to_point_dist
+						else
+							table_insert(remove_index, point_index)
+						end
+					end
+
+					if #remove_index ~= 0 then
+						for index = #remove_index, 1, -1 do
+							table_remove(actor.walkPath, remove_index[index])
+						end
+					end
+				end
 			elseif #actor.walkPath == 0 then
-				local distance_to_enemy = npc_pos:DistToSqr(enemy_pos)
+				min, max = 500, 1000
 				for i = 1, 5 do
-					position = npc_pos + Vector(math_random(100, 500), math_random(100, 500), 0)
-					if position:DistToSqr(enemy_pos) > distance_to_enemy then
+					position = npc_pos + Vector(math_random(min, max), math_random(min, max), 0)
+					if position:DistToSqr(enemy_pos) > dist then
 						actor:WalkToPos(position, 'run')
-						if #actor.walkPath == 0 then continue end
-						break
+						if #actor.walkPath ~= 0 then break end
 					end
 				end
 			end
