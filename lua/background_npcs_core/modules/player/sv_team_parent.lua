@@ -1,3 +1,9 @@
+local bgNPC = bgNPC
+local IsValid = IsValid
+local isfunction = isfunction
+local pairs = pairs
+local team_GetName = team.GetName
+--
 local ASSET = {}
 
 function ASSET:HasTeam(ply, actor)
@@ -8,7 +14,7 @@ function ASSET:HasTeam(ply, actor)
 		if actor:HasTeam(team_name) and table.HasValueBySeq(data, team_id) then return true end
 	end
 
-	local ply_team_name = team.GetName(team_id)
+	local ply_team_name = team_GetName(team_id)
 
 	for team_name, data in pairs(bgNPC.cfg.player.team_names_parents) do
 		if actor:HasTeam(team_name) and table.HasValueBySeq(data, ply_team_name) then return true end
@@ -29,6 +35,7 @@ function ASSET:HasUserGroup(ply, actor)
 end
 
 function ASSET:HasParent(ply, actor)
+	if not IsValid(ply) or not isfunction(ply.SteamID) or not isfunction(ply.SteamID64) then return false end
 	if ply.bgn_team and actor:HasTeam(ply.bgn_team) then return true end
 	if self:HasTeam(ply, actor) or self:HasUserGroup(ply, actor) then return true end
 
