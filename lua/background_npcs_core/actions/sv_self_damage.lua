@@ -5,6 +5,7 @@ local CurTime = CurTime
 local hook_Run = hook.Run
 local table_WhereFindBySeq = table.WhereFindBySeq
 local table_insert = table.insert
+local math_Round = math.Round
 --
 local TeamParentModule
 
@@ -67,7 +68,9 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 				end
 				return true
 			elseif ActorTarget ~= nil then
-				if target:Health() > 40 and not ActorTarget:HasEnemy(attacker) then
+				local hp = target:Health()
+				local max_hp = target:GetMaxHealth()
+				if hp > 0 and max_hp > 0 and hp > math_Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
 					return false
 				end
 			end
