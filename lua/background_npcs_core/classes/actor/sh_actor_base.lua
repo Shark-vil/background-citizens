@@ -901,6 +901,8 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 
 	self.walkPos = pos
 	self.walkPath = walkPath
+
+	hook_Run('BGN_ActorSetWalkPath', self, walkPath, pos)
 end
 
 function BaseClass:CheckMoveUpdate(tag, time)
