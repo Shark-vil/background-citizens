@@ -1,3 +1,5 @@
+local FirstAttackerModule, WantedModule
+
 do
 	local bit_band = bit.band
 	local util_PointContents = util.PointContents
@@ -134,8 +136,8 @@ function bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
 	if IsAttackerTeam then return target end
 	if IsTargetTeam then return attacker end
 
-	local FirstAttackerModule = bgNPC:GetModule('first_attacker')
-	local WantedModule = bgNPC:GetModule('wanted')
+	FirstAttackerModule = FirstAttackerModule or bgNPC:GetModule('first_attacker')
+	WantedModule = WantedModule or bgNPC:GetModule('wanted')
 	local AttackerType = GetEntityType(attacker)
 	local TargetType = GetEntityType(target)
 	local ActorAttacker =  bgNPC:GetActor(attacker)
