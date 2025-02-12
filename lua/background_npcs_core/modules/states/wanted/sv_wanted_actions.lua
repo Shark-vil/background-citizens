@@ -78,10 +78,6 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
 
 	if asset:HasWanted(attacker) then
-		if attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0) > 0 then
-			attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
-		end
-
 		local WantedClass = asset:GetWanted(attacker)
 		WantedClass:UpdateWanted()
 
@@ -90,22 +86,25 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 			WantedClass:LevelUp()
 		end
 	else
-		local can_see, see_actor = bgNPC:CanAnyActorSeeEntity(attacker)
-		if not can_see or see_actor == actor then return end
+		local can_see, _ = bgNPC:CanAnyActorSeeEntity(attacker, actor)
+		if not can_see then return end
 
 		local is_player = attacker:IsPlayer()
-		if impunity_limit ~= 0 and is_player then
-			local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
-			if current_impunity >= impunity_limit then
-				asset:AddWanted(attacker)
-				return
-			else
-				attacker:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity + 1)
+		if is_player then
+			if impunity_limit ~= 0 then
+				local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
+				if current_impunity >= impunity_limit then
+					attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
+					bgNPC:ResetKillingStatistic(attacker)
+					asset:AddWanted(attacker)
+				else
+					attacker:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity + 1)
+				end
 			end
-		end
-
-		if not is_player or (enable_wanted_police_instantly and not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police')) then
-			asset:AddWanted(attacker)
+		else
+			if enable_wanted_police_instantly and not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
+				asset:AddWanted(attacker)
+			end
 		end
 	end
 end)
