@@ -668,6 +668,14 @@ function BaseClass:GetLastEnemy()
 	return NULL
 end
 
+function BaseClass:HasEnemy(ent)
+	for i = self.enemies_count, 1, -1 do
+		local enemy = self.enemies[i]
+		if IsValid(enemy) and enemy == ent then return true end
+	end
+	return false
+end
+
 function BaseClass:DropToFloor()
 	local npc = self.npc
 	if not IsValid(npc) then return end
