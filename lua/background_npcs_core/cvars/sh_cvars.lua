@@ -10,6 +10,7 @@ bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_dynamic_nodes_type = 'random'
 bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
 bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
+bgNPC.cvar.bgn_dynamic_nodes_alternative = 1
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -285,6 +286,10 @@ scvar.Register('bgn_module_bio_annihilation_two_replacement',
 scvar.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
 	bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists,
 	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh restriction. 0 - disable.')
+	.Access(DefaultAccess)
+
+scvar.Register('bgn_dynamic_nodes_alternative', bgNPC.cvar.bgn_dynamic_nodes_alternative,
+	FCVAR_ARCHIVE, '1 - Enable alternative dynamic movement mesh. 0 - disable.')
 	.Access(DefaultAccess)
 
 scvar.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes,
