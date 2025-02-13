@@ -1,18 +1,11 @@
 bgNPC.LoadRoutes = function()
-	local jsonString
 	local map_name = game.GetMap()
+	local jsonString = BGN_NODE:GetRouteFileData()
 	hook.Run('BGN_PreLoadRoutes', map_name)
-
-	if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
-		local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
-		jsonString = util.Decompress(file_data)
-	elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
-		jsonString = file.Read('background_npcs/nodes/' .. map_name .. '.json', 'DATA')
-	end
 
 	BGN_NODE:ClearNodeMap()
 
-	if jsonString and jsonString ~= '' then
+	if jsonString then
 		BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 	end
 
