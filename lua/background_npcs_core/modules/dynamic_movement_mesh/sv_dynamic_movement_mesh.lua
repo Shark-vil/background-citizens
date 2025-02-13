@@ -1,18 +1,120 @@
-local map_name = game.GetMap()
 local IsValid = IsValid
-local file_Exists = file.Exists
 local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
 local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
-
-local function MovementMeshExists()
-	local d, t = 'background_npcs/nodes/', 'DATA'
-	return file_Exists(d .. map_name .. '.dat', t) or file_Exists(d .. map_name .. '.json', t)
-end
+local cvar_bgn_enable = GetConVar('bgn_enable')
 
 local function IsEnableGenerator()
 	local restict = cvar_bgn_generator_restict:GetBool()
-	local enabled = cvar_bgn_dynamic_nodes:GetBool()
-	return enabled and (not BGN_NODE:IsOnChunkSystem() or IsValid(BGN_NODE:GetChunkManager())) and (not restict or not MovementMeshExists())
+	local enabled = cvar_bgn_enable:GetBool() and cvar_bgn_dynamic_nodes:GetBool()
+	return enabled and (not BGN_NODE:IsOnChunkSystem() or IsValid(BGN_NODE:GetChunkManager())) and (not restict or not BGN_NODE:RouteFileExists())
+end
+
+do
+	local bgNPC = bgNPC
+	local ipairs = ipairs
+	local player_GetAll = player.GetAll
+	local math_random = math.random
+	local slib_IsInWorld = slib.IsInWorld
+	local BGN_NODE = BGN_NODE
+	local table_remove = table.remove
+	local table_insert = table.insert
+	local util_TraceLine = util.TraceLine
+	local FrameTime = FrameTime
+	local ipairs = ipairs
+	local trace_data = {}
+	local vec_0_0_20 = Vector(0, 0, 20)
+	local vec_0_0_50 = Vector(0, 0, 50)
+	local vec_0_0_1000 = Vector(0, 0, 1000)
+
+	local function TracePositionFixed(position)
+		trace_data.start = position + vec_0_0_50
+		trace_data.endpos = position - vec_0_0_1000
+		trace_data.filter = nil
+		return util_TraceLine(trace_data).HitPos + vec_0_0_20
+	end
+
+	local function TraceIsWorld(startPos, endPos)
+		trace_data.start = startPos
+		trace_data.endpos = endPos
+		trace_data.filter = function(ent)
+			if ent:IsWorld() and not ent:slibDoorIsLocked() then
+				return true
+			end
+		end
+		local pos = util_TraceLine(trace_data).HitPos
+		return pos
+	end
+
+	cvars.AddChangeCallback('bgn_dynamic_nodes', function(_, _, new_value)
+		if new_value == '1' and IsEnableGenerator() and not BGN_NODE:RouteFileExists() then
+			BGN_NODE:ClearNodeMap()
+		end
+	end, 'on_change_bgn_dynamic_nodes_and_off_altgen')
+
+	async.AddDedic('bgNPC_MovementMapDynamicGeneratorAlternative', function(yield, wait)
+		local current_pass = 0
+		local function PassYield()
+			if current_pass >= 1 / FrameTime() then
+				current_pass = 0
+				yield()
+			end
+			current_pass = current_pass + 1
+		end
+		wait(5)
+		while true do
+			if not cvar_bgn_enable:GetBool() or IsEnableGenerator() and BGN_NODE:RouteFileExists() then
+				wait(1)
+				continue
+			end
+			local new_nodes = {}
+			for _, ply in ipairs(player_GetAll()) do
+				if IsValid(ply) and ply:Alive() then
+					local ply_pos = ply:GetPos()
+					for i = 1, 50 do
+						local x = ply_pos.x + math_random(-1000, 1000)
+						local y = ply_pos.y + math_random(-1000, 1000)
+						local new_point = TracePositionFixed(Vector(x, y, ply_pos.z))
+						if new_point and not bgNPC:VectorInWater(new_point) and slib_IsInWorld(new_point) then
+							local skip_point = false
+							for _, node in ipairs(new_nodes) do
+								if node:GetPos():DistToSqr(new_point) <= 202500 then
+									skip_point = true
+									break
+								end
+							end
+							if not skip_point then
+								local node = BGN_NODE:Instance(new_point)
+								table_insert(new_nodes, node)
+							end
+						end
+						PassYield()
+					end
+				end
+			end
+			for i = #new_nodes, 1, -1 do
+				local node = new_nodes[i]
+				for _, another_node in ipairs(BGN_NODE:GetMap()) do
+					local node_pos = node:GetPos()
+					local another_node_pos = another_node:GetPos()
+					if node_pos:DistToSqr(another_node_pos) <= 22500
+					or (
+						node_pos:DistToSqr(another_node_pos) <= 202500
+						and not TraceIsWorld(node_pos, another_node_pos)
+					)
+					then
+						table_remove(new_nodes, i)
+					end
+					PassYield()
+				end
+			end
+			for i = 1, #new_nodes do
+				BGN_NODE:AddNodeToMap(new_nodes[i])
+				PassYield()
+			end
+			BGN_NODE:AutoLinkAsync()
+			wait(5)
+		end
+	end)
 end
 
 hook.Add('slib.FirstPlayerSpawn', 'BGN_MovementMeshGeneratorNotify', function(ply)
