@@ -105,14 +105,23 @@ if SERVER then
 			self.Actor:ClearSchedule()
 
 			local pos = tr.HitPos
+			local function walk_to_pos()
+				if not IsValid(self.Target) or not self.Actor or not self.Actor:IsAlive() then
+					timer.Remove('bgn_tool_actor_mover_update')
+					return
+				end
 
-			if self.Target:GetPos():Distance(pos) <= 500 then
-				self.Actor:WalkToPos(pos)
-			else
-				self.Actor:WalkToPos(pos, 'run')
+				if self.Target:GetPos():Distance(pos) <= 500 then
+					self.Actor:WalkToPos(pos)
+				else
+					self.Actor:WalkToPos(pos, 'run')
+				end
+
+				snet.ClientRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or { pos })	
 			end
 
-			snet.ClientRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or { pos })
+			walk_to_pos()
+			timer.Create('bgn_tool_actor_mover_update', 5, 0, walk_to_pos)
 		end
 	end
 
@@ -129,6 +138,10 @@ if SERVER then
 		self.Target = NULL
 
 		snet.ClientRPC(self, 'ResetActor')
+	end
+
+	function TOOL:Holster()
+		timer.Remove('bgn_tool_actor_mover_update')
 	end
 else
 	function TOOL:ResetActor()
@@ -182,7 +195,7 @@ else
 			local pos = tool.Path[i]
 
 			if i ~= 1 then
-			render.DrawLine(pos, tool.Path[i - 1], clr_58)
+				render.DrawLine(pos, tool.Path[i - 1], clr_58)
 			end
 
 			render.DrawSphere(pos, 10, 30, 30, clr_green)
