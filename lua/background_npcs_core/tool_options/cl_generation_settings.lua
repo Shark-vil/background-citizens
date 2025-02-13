@@ -47,6 +47,12 @@ local function TOOL_MENU(panel)
 		['Max'] = '2000',
 		['Help'] = true,
 	})
+
+	panel:AddControl('CheckBox', {
+		['Label'] = '#bgn.settings.generation.dynamic_nodes_alternative',
+		['Command'] = 'bgn_dynamic_nodes_alternative',
+		['Help'] = true,
+	})
 end
 
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_GenerationSettings', function()
