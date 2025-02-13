@@ -30,6 +30,13 @@ snet.Callback('bgn_movement_mesh_load', function(ply)
 		.Invoke(ply)
 end).Protect()
 
+snet.Callback('bgn_movement_mesh_unload', function(ply)
+	BGN_NODE:ClearNodeMap()
+
+	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
+		.Invoke(ply)
+end).Protect()
+
 snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
 	if BGN_NODE:CountNodesOnMap() == 0 then
 		bgNPC.LoadRoutes()
