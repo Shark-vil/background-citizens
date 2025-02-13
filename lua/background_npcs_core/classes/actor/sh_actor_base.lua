@@ -718,8 +718,8 @@ function BaseClass:SetState(state, data, forced)
 	forced = forced or false
 
 	if not forced then
-		if state == 'ignore' or state == 'none' then return end
-		-- if state == 'ignore' then return end
+		-- if state == 'ignore' or state == 'none' then return end
+		if state == 'ignore' then return end
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if self.state_data.state == state then return end
