@@ -38,27 +38,6 @@ bgNPC:SetStateAction('run_from_danger', 'danger', {
 			local position = actor:GetDistantPointToPoint(enemy_pos, math_random(min, max))
 			if position then
 				actor:WalkToPos(position, 'run')
-				-- Avoid danger
-				if #actor.walkPath ~= 0 then
-					local last_check_pos
-					local remove_index = {}
-					for point_index, point in ipairs(actor.walkPath) do
-						local enemy_to_point_dist = enemy_pos:DistToSqr(point)
-						if not last_check_pos then
-							last_check_pos = enemy_to_point_dist
-						elseif enemy_to_point_dist > last_check_pos then
-							last_check_pos = enemy_to_point_dist
-						else
-							table_insert(remove_index, point_index)
-						end
-					end
-
-					if #remove_index ~= 0 then
-						for index = #remove_index, 1, -1 do
-							table_remove(actor.walkPath, remove_index[index])
-						end
-					end
-				end
 			elseif #actor.walkPath == 0 then
 				min, max = 500, 1000
 				for i = 1, 5 do
