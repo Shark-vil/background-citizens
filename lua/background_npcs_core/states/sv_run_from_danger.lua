@@ -2,9 +2,6 @@ local IsValid = IsValid
 local CurTime = CurTime
 local math_random = math.random
 local Vector = Vector
-local ipairs = ipairs
-local table_insert = table.insert
-local table_remove = table.remove
 --
 
 bgNPC:SetStateAction('run_from_danger', 'danger', {
