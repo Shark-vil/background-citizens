@@ -1359,18 +1359,21 @@ function BaseClass:StopStaticSequence()
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
-
+	if IsValid(self.npc) then
+		slib.Animator.Stop(self.npc)
+	end
 	self:ClearSchedule()
 end
 
 function BaseClass:ResetSequence()
 	if self.anim_action ~= nil and not self.anim_action(self) then return end
-
 	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
-
+	if IsValid(self.npc) then
+		slib.Animator.Stop(self.npc)
+	end
 	self:ClearSchedule()
 end
 
@@ -1757,8 +1760,10 @@ function BaseClass:GetAngles()
 end
 
 function BaseClass:Think()
-	if self:GetState() == 'none' and self.data.at_random then
+	if not self:InVehicle() and self:GetState() == 'none' and self.data.at_random then
 		self:RandomState()
+	elseif self.is_animated or (IsValid(self.npc) and IsValid(self.npc.slib_animator)) then
+		self:StopStaticSequence()
 	end
 end
 
