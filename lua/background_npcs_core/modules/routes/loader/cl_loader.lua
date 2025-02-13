@@ -16,6 +16,11 @@ concommand.Add('cl_citizens_clear_route', function(ply)
 	snet.InvokeServer('bgn_movement_mesh_unload')
 end, nil, 'Clears all points on the map')
 
+concommand.Add('cl_citizens_get_load_info_route', function(ply)
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.InvokeServer('bgn_movement_mesh_get_load_info')
+end, nil, 'Clears all points on the map')
+
 concommand.Add('cl_citizens_load_route_from_client', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')

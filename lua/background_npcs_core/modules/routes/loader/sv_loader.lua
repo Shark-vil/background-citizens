@@ -23,6 +23,11 @@ bgNPC.LoadRoutes = function()
 	return BGN_NODE:GetMap()
 end
 
+snet.Callback('bgn_movement_mesh_get_load_info', function(ply)
+	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
+		.Invoke(ply)
+end).Protect()
+
 snet.Callback('bgn_movement_mesh_load', function(ply)
 	bgNPC.LoadRoutes()
 
