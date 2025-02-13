@@ -9,8 +9,17 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
-		if npc == target then continue end
-		if actor:HasTeam(target) and actor:HasTeam(attacker) then continue end
+		if npc == target or npc == attacker then continue end
+		local is_team_target = actor:HasTeam(target)
+		local is_team_attacker = actor:HasTeam(attacker)
+		if is_team_target and is_team_attacker then continue end
+		if not is_team_target and is_team_attacker then
+			local save_attacker = attacker
+			attacker = target
+			target = save_attacker
+		end
+		local actor_attacker = bgNPC:GetActor(attacker)
+		if actor_attacker and not actor_attacker:HasEnemy(target) then continue end
 
 		local reaction = actor:GetReactionForProtect()
 		actor:SetReaction(reaction)
