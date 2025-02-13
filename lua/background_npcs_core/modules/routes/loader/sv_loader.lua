@@ -36,11 +36,14 @@ snet.Callback('bgn_movement_mesh_unload', function(ply)
 end).Protect()
 
 snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
-	if BGN_NODE:CountNodesOnMap() == 0 then
-		bgNPC.LoadRoutes()
-	end
+	-- if BGN_NODE:CountNodesOnMap() == 0 then
+	-- 	bgNPC.LoadRoutes()
+	-- end
 
-	snet.Request('bgn_movement_mesh_load_from_client_cl', BGN_NODE:MapToJson())
+	local jsonString = (BGN_NODE:RouteFileExists() and BGN_NODE:GetRouteFileData()) or (BGN_NODE:CountNodesOnMap() ~= 0 and BGN_NODE:MapToJson())
+	-- local jsonString = BGN_NODE:GetRouteFileData()
+
+	snet.Request('bgn_movement_mesh_load_from_client_cl', jsonString)
 		.ProgressText('Loading mesh from server')
 		.Invoke(ply)
 end).Protect()
