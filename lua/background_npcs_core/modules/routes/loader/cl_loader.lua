@@ -35,7 +35,7 @@ local function LoadPointInfo(count)
 
 	if count == 0 then
 		notification.AddLegacy(
-			'[For admin] Mesh file not found. Background NPCs will not spawn.',
+			'[For admin] Mesh not load or file not exists. Background NPCs will not spawn.',
 			NOTIFY_ERROR,
 			4
 		)
