@@ -64,14 +64,14 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		if attacker:IsPlayer() then
 			if TeamParentModule:HasParent(attacker, ActorTarget) or ActorTarget:HasTeam('player') then
 				if bgNPC.cfg.EnablePlayerKilledTeamActors then
-					return true
+					return
 				end
 				return true
 			elseif ActorTarget ~= nil then
-				local hp = target:Health()
+				local hp = target:Health() - dmginfo:GetDamage()
 				local max_hp = target:GetMaxHealth()
 				if hp > 0 and max_hp > 0 and hp > math_Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
-					return false
+					return
 				end
 			end
 		elseif ActorAttacker ~= nil and attacker:IsNPC() then
