@@ -4,6 +4,20 @@ do
 	local bit_band = bit.band
 	local util_PointContents = util.PointContents
 	local CONTENTS_WATER = CONTENTS_WATER
+	-- local util_TraceLine = util.TraceLine
+	-- local MASK_WATER = MASK_WATER
+
+	-- function bgNPC:VectorInWater(position)
+	-- 	local is_water = bit_band(util_PointContents(position), CONTENTS_WATER) == CONTENTS_WATER
+	-- 	if not is_water then
+	-- 		is_water = util_TraceLine({
+	-- 			start = position,
+	-- 			endpos = position,
+	-- 			mask = MASK_WATER
+	-- 		}).Hit
+	-- 	end
+	-- 	return is_water
+	-- end
 
 	function bgNPC:VectorInWater(position)
 		return bit_band(util_PointContents(position), CONTENTS_WATER) == CONTENTS_WATER
