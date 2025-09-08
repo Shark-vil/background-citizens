@@ -30,8 +30,6 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 					end
 				end
 			end
-
-			break
 		end
 	end
 end)
