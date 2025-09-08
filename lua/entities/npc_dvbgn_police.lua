@@ -52,7 +52,7 @@ if CLIENT then
     end)
 
     hook.Add('PostDrawTranslucentRenderables', 'BGN_DvPoliceDebugDrawPath', function()
-        if not _cvar_bgn_debug:GetBool() then return end
+        if not _cvar_bgn_debug or not _cvar_bgn_debug:GetBool() then return end
         for _, dv in _ipairs(_ents_FindByClass('npc_dvbgn_police')) do
             -- Отрисовка точек из WaypointList
             if _IsValid(dv) and dv.WaypointList then
