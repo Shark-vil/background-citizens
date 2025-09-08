@@ -1,12 +1,17 @@
 local bgNPC = bgNPC
 local table_insert = table.insert
 local table_HasValueBySeq = table.HasValueBySeq
+local isfunction = isfunction
 local IsValid = IsValid
 --
 
 function bgNPC:GetActor(npc)
 	if IsValid(npc) and npc.isBgnActor then
-		return npc:GetActor()
+		if isfunction(npc.GetActor) then
+			return npc:GetActor()
+		elseif npc.BGN_ACTOR_OBJECT then
+			return npc.BGN_ACTOR_OBJECT
+		end
 	end
 	return nil
 end
@@ -44,8 +49,9 @@ function bgNPC:GetAllPoints(linkType)
 
 		for i = 1, #map do
 			local v = map[i]
-			local links_list = v.links[linkType]
+			if not v then continue end
 
+			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
 				continue
 			end
@@ -65,6 +71,8 @@ function bgNPC:GetAllPointsInRadius(center, radius, linkType)
 
 	for i = 1, #map do
 		local v = map[i]
+		if not v then continue end
+
 		if v.position:DistToSqr(center) <= radius then
 			if linkType then
 				local links_list = v.links[linkType]
@@ -88,6 +96,8 @@ function bgNPC:GetAllIndexPointsInRadius(center, radius, linkType)
 
 	for i = 1, #map do
 		local v = map[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -112,6 +122,8 @@ function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 
 	for i = 1, #radius_points do
 		local v = radius_points[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -120,7 +132,6 @@ function bgNPC:GetClosestPointInRadius(center, radius, linkType)
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance < dist then
 			point = v
 			dist = calcualte_distance
@@ -139,6 +150,8 @@ function bgNPC:GetDistantPointInRadius(center, radius, linkType)
 
 	for i = 1, #radius_points do
 		local v = radius_points[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -147,7 +160,6 @@ function bgNPC:GetDistantPointInRadius(center, radius, linkType)
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance > dist then
 			point = v
 			dist = calcualte_distance
@@ -164,6 +176,8 @@ function bgNPC:GetClosestPointInChunk(center, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -172,7 +186,6 @@ function bgNPC:GetClosestPointInChunk(center, linkType)
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance < dist then
 			point = v
 			dist = calcualte_distance
@@ -189,6 +202,8 @@ function bgNPC:GetDistantPointInChunk(center, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -197,7 +212,6 @@ function bgNPC:GetDistantPointInChunk(center, linkType)
 		end
 
 		local calcualte_distance = center:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance > dist then
 			point = v
 			dist = calcualte_distance
@@ -214,6 +228,8 @@ function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -222,7 +238,6 @@ function bgNPC:GetClosestPointToPointInChunk(center, pos, linkType)
 		end
 
 		local calcualte_distance = pos:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance < dist then
 			point = v
 			dist = calcualte_distance
@@ -239,6 +254,8 @@ function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
 
 	for i = 1, #nodes do
 		local v = nodes[i]
+		if not v then continue end
+
 		if linkType then
 			local links_list = v.links[linkType]
 			if not links_list or #links_list == 0 then
@@ -247,7 +264,6 @@ function bgNPC:GetDistantPointToPointInChunk(center, pos, linkType)
 		end
 
 		local calcualte_distance = pos:DistToSqr(v.position)
-
 		if dist == nil or calcualte_distance > dist then
 			point = v
 			dist = calcualte_distance
