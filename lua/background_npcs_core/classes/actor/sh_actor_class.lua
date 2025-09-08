@@ -162,7 +162,9 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		return obj
 	end
 
+	npc.BGN_ACTOR_OBJECT = obj
 	npc.isBgnActor = true
+
 	-- npc:SetNWBool('IS_BGN_ACTOR', true)
 	-- npc:SetNWString('BGB_ACTOR_TYPE', npc_type)
 	-- npc:SetNWString('BGB_ACTOR_UID', obj.uid)

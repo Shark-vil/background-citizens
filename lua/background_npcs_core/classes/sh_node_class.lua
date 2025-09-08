@@ -772,3 +772,31 @@ function BGN_NODE:JsonToMap(json_string)
 
 	return map
 end
+
+function BGN_NODE:GetRouteFileData()
+	local map_name = game.GetMap()
+	local jsonString
+
+	if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') and file.Size('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') > 0 then
+		local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
+		jsonString = util.Decompress(file_data)
+	elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') and file.Size('background_npcs/nodes/' .. map_name .. '.json', 'DATA') > 0 then
+		jsonString = file.Read('background_npcs/nodes/' .. map_name .. '.json', 'DATA')
+	end
+
+	if not jsonString or jsonString == '' then return end
+
+	return jsonString
+end
+
+function BGN_NODE:RouteFileExists()
+	local map_name = game.GetMap()
+
+	if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') and file.Size('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') > 0 then
+		return true
+	elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') and file.Size('background_npcs/nodes/' .. map_name .. '.json', 'DATA') > 0 then
+		return true
+	end
+
+	return false
+end

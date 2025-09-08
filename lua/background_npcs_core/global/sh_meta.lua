@@ -2,9 +2,11 @@ local IsValid = IsValid
 local pairs = pairs
 local ipairs = ipairs
 local istable = istable
+local unpack = unpack
 local isstring = isstring
 local string_StartWith = string.StartWith
 local table_Copy = table.Copy
+local table_HasValueBySeq = table.HasValueBySeq
 -- local table_ToString = table.ToString
 local string_Replace = string.Replace
 local string_Explode = string.Explode
@@ -121,13 +123,18 @@ function bgNPC:NPCIsViewVector(ent, pos, radius)
 	return angCos >= directionAngCos
 end
 
-function bgNPC:CanAnyActorSeeEntity(ent)
+function bgNPC:CanAnyActorSeeEntity(ent, ...)
 	if not IsValid(ent) or not isentity(ent) then return false end
 
+	local exclude_actors = unpack(...)
+	local exclude_actors_is_valid = exclude_actors and #exclude_actors ~= 0
 	local actors = bgNPC:GetAll()
 	for i = 1, #actors do
 		local actor = actors[i]
 		if actor and actor:IsAlive() then
+			if exclude_actors_is_valid and table_HasValueBySeq(exclude_actors_is_valid, actor) then
+				continue
+			end
 			local npc = actor:GetNPC()
 			if IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true) then
 				return true, actor

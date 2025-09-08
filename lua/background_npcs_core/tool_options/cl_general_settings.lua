@@ -14,6 +14,15 @@ local function TOOL_MENU(panel)
 		['Text'] = '#bgn.settings.general.cl_citizens_load_route.help'
 	})
 
+	panel:AddControl('Button', {
+		['Label'] = '#bgn.settings.general.clear_nodes',
+		['Command'] = 'cl_citizens_clear_route '
+	})
+
+	panel:AddControl('Label', {
+		['Text'] = '#bgn.settings.general.clear_nodes.help'
+	})
+
 	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.general.peaceful_mode',
 		['Command'] = 'bgn_peaceful_mode',

@@ -5,8 +5,9 @@ local CurTime = CurTime
 local hook_Run = hook.Run
 local table_WhereFindBySeq = table.WhereFindBySeq
 local table_insert = table.insert
+local math_Round = math.Round
 --
-local TeamParentModule = bgNPC:GetModule('team_parent')
+local TeamParentModule
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
@@ -57,12 +58,21 @@ end
 hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target, dmginfo)
 	local ActorTarget = bgNPC:GetActor(target)
 	local ActorAttacker = bgNPC:GetActor(attacker)
+	TeamParentModule = TeamParentModule or bgNPC:GetModule('team_parent')
 
 	if ActorTarget ~= nil then
 		if attacker:IsPlayer() then
 			if TeamParentModule:HasParent(attacker, ActorTarget) or ActorTarget:HasTeam('player') then
-				if bgNPC.cfg.EnablePlayerKilledTeamActors then return end
+				if bgNPC.cfg.EnablePlayerKilledTeamActors then
+					return
+				end
 				return true
+			elseif ActorTarget ~= nil then
+				local hp = target:Health() - dmginfo:GetDamage()
+				local max_hp = target:GetMaxHealth()
+				if hp > 0 and max_hp > 0 and hp > math_Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
+					return
+				end
 			end
 		elseif ActorAttacker ~= nil and attacker:IsNPC() then
 			if ActorTarget:HasTeam(ActorAttacker) then
@@ -99,12 +109,16 @@ end)
 
 hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
 	local ActorAttacker = bgNPC:GetActor(attacker)
+	TeamParentModule = TeamParentModule or bgNPC:GetModule('team_parent')
+
 	if ActorAttacker ~= nil then
 		if TeamParentModule:HasParent(target, ActorAttacker) or ActorAttacker:HasTeam('player') then
 			return true
 		end
 
-		if not ActorAttacker:HasEnemy(target) then return end
+		if not ActorAttacker:HasEnemy(target) then
+			return true
+		end
 	end
 
 	local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, nil, dmginfo)

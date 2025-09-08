@@ -11,6 +11,16 @@ concommand.Add('cl_citizens_load_route', function(ply)
 	snet.InvokeServer('bgn_movement_mesh_load')
 end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
+concommand.Add('cl_citizens_clear_route', function(ply)
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.InvokeServer('bgn_movement_mesh_unload')
+end, nil, 'Clears all points on the map')
+
+concommand.Add('cl_citizens_get_load_info_route', function(ply)
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	snet.InvokeServer('bgn_movement_mesh_get_load_info')
+end, nil, 'Clears all points on the map')
+
 concommand.Add('cl_citizens_load_route_from_client', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
@@ -25,7 +35,7 @@ local function LoadPointInfo(count)
 
 	if count == 0 then
 		notification.AddLegacy(
-			'[For admin] Mesh file not found. Background NPCs will not spawn.',
+			'[For admin] Mesh not load or file not exists. Background NPCs will not spawn.',
 			NOTIFY_ERROR,
 			4
 		)

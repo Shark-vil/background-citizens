@@ -37,7 +37,6 @@ local function process(yield, wait)
 
 				if IsValid(npc) then
 					local npc_pos = npc:GetPos()
-					local max_dist = nil
 					local is_adding_no_think_flag = true
 
 					for k = 1, players_count do
@@ -45,8 +44,6 @@ local function process(yield, wait)
 
 						if IsValid(ply) then
 							local dist = npc_pos:DistToSqr(ply:GetPos())
-							if not max_dist or dist < max_dist then max_dist = dist end
-
 							if dist <= bgn_disable_logic_radius or ply:slibIsViewVector(npc_pos) then
 								is_adding_no_think_flag = false
 								break
@@ -54,37 +51,28 @@ local function process(yield, wait)
 						end
 					end
 
+					local is_no_think_flag = npc:IsEFlagSet(EFL_NO_THINK_FUNCTION)
 					local no_think_state = npc:slibGetLocalVar('bgn_optimize_no_think_enable', false)
-					local no_think_enable = no_think_state
+					local delay = npc:slibGetLocalVar('bgn_optimize_no_think_delay', 0)
+					local time = CurTime()
+
+					if is_adding_no_think_flag and no_think_state and delay < time then
+						is_adding_no_think_flag = false
+					end
+
+					if (is_adding_no_think_flag and is_no_think_flag) or (not is_adding_no_think_flag and not is_no_think_flag) then
+						continue
+					end
 
 					if is_adding_no_think_flag then
-						local delay = npc:slibGetLocalVar('bgn_optimize_no_think_delay', 0)
-						local time = CurTime()
-
-						if delay < time then
-							no_think_enable = not no_think_enable
-
-							if no_think_enable and max_dist and max_dist >= 1000000 then
-								delay = time + 3
-							else
-								delay = time + 1
-							end
-
-							npc:slibSetLocalVar('bgn_optimize_no_think_delay', delay)
-						end
-					elseif no_think_enable then
-						no_think_enable = false
+						npc:AddEFlags(EFL_NO_THINK_FUNCTION)
+					else
+						npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
 					end
+					npc:slibSetLocalVar('bgn_optimize_no_think_enable', is_adding_no_think_flag)
 
-					if no_think_state ~= no_think_enable then
-						if no_think_enable then
-							npc:AddEFlags(EFL_NO_THINK_FUNCTION)
-						else
-							npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
-						end
-
-						npc:slibSetLocalVar('bgn_optimize_no_think_enable', no_think_enable)
-					end
+					delay = is_adding_no_think_flag and time + 3 or time + 1
+					npc:slibSetLocalVar('bgn_optimize_no_think_delay', delay)
 				end
 			end
 

@@ -668,6 +668,14 @@ function BaseClass:GetLastEnemy()
 	return NULL
 end
 
+function BaseClass:HasEnemy(ent)
+	for i = self.enemies_count, 1, -1 do
+		local enemy = self.enemies[i]
+		if IsValid(enemy) and enemy == ent then return true end
+	end
+	return false
+end
+
 function BaseClass:DropToFloor()
 	local npc = self.npc
 	if not IsValid(npc) then return end
@@ -710,8 +718,8 @@ function BaseClass:SetState(state, data, forced)
 	forced = forced or false
 
 	if not forced then
-		if state == 'ignore' or state == 'none' then return end
-		-- if state == 'ignore' then return end
+		-- if state == 'ignore' or state == 'none' then return end
+		if state == 'ignore' then return end
 		if self:GetData().disable_states then return end
 		if self.state_lock then return end
 		if self.state_data.state == state then return end
@@ -893,6 +901,8 @@ function BaseClass:WalkToPos(pos, moveType, pathType)
 
 	self.walkPos = pos
 	self.walkPath = walkPath
+
+	hook_Run('BGN_ActorSetWalkPath', self, walkPath, pos)
 end
 
 function BaseClass:CheckMoveUpdate(tag, time)
@@ -1349,18 +1359,21 @@ function BaseClass:StopStaticSequence()
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
-
+	if IsValid(self.npc) then
+		slib.Animator.Stop(self.npc)
+	end
 	self:ClearSchedule()
 end
 
 function BaseClass:ResetSequence()
 	if self.anim_action ~= nil and not self.anim_action(self) then return end
-
 	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
 	self.anim_action = nil
-
+	if IsValid(self.npc) then
+		slib.Animator.Stop(self.npc)
+	end
 	self:ClearSchedule()
 end
 
@@ -1747,8 +1760,10 @@ function BaseClass:GetAngles()
 end
 
 function BaseClass:Think()
-	if self:GetState() == 'none' and self.data.at_random then
+	if not self:InVehicle() and self:GetState() == 'none' and self.data.at_random then
 		self:RandomState()
+	elseif self.is_animated or (IsValid(self.npc) and IsValid(self.npc.slib_animator)) then
+		self:StopStaticSequence()
 	end
 end
 

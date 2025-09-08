@@ -1,18 +1,11 @@
 bgNPC.LoadRoutes = function()
-	local jsonString
 	local map_name = game.GetMap()
+	local jsonString = BGN_NODE:GetRouteFileData()
 	hook.Run('BGN_PreLoadRoutes', map_name)
-
-	if file.Exists('background_npcs/nodes/' .. map_name .. '.dat', 'DATA') then
-		local file_data = file.Read('background_npcs/nodes/' .. map_name .. '.dat', 'DATA')
-		jsonString = util.Decompress(file_data)
-	elseif file.Exists('background_npcs/nodes/' .. map_name .. '.json', 'DATA') then
-		jsonString = file.Read('background_npcs/nodes/' .. map_name .. '.json', 'DATA')
-	end
 
 	BGN_NODE:ClearNodeMap()
 
-	if jsonString and jsonString ~= '' then
+	if jsonString then
 		BGN_NODE:SetMap(BGN_NODE:JsonToMap(jsonString))
 	end
 
@@ -23,6 +16,11 @@ bgNPC.LoadRoutes = function()
 	return BGN_NODE:GetMap()
 end
 
+snet.Callback('bgn_movement_mesh_get_load_info', function(ply)
+	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
+		.Invoke(ply)
+end).Protect()
+
 snet.Callback('bgn_movement_mesh_load', function(ply)
 	bgNPC.LoadRoutes()
 
@@ -30,12 +28,22 @@ snet.Callback('bgn_movement_mesh_load', function(ply)
 		.Invoke(ply)
 end).Protect()
 
-snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
-	if BGN_NODE:CountNodesOnMap() == 0 then
-		bgNPC.LoadRoutes()
-	end
+snet.Callback('bgn_movement_mesh_unload', function(ply)
+	BGN_NODE:ClearNodeMap()
 
-	snet.Request('bgn_movement_mesh_load_from_client_cl', BGN_NODE:MapToJson())
+	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
+		.Invoke(ply)
+end).Protect()
+
+snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
+	-- if BGN_NODE:CountNodesOnMap() == 0 then
+	-- 	bgNPC.LoadRoutes()
+	-- end
+
+	local jsonString = (BGN_NODE:RouteFileExists() and BGN_NODE:GetRouteFileData()) or (BGN_NODE:CountNodesOnMap() ~= 0 and BGN_NODE:MapToJson())
+	-- local jsonString = BGN_NODE:GetRouteFileData()
+
+	snet.Request('bgn_movement_mesh_load_from_client_cl', jsonString)
 		.ProgressText('Loading mesh from server')
 		.Invoke(ply)
 end).Protect()

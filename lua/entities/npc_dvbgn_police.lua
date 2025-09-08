@@ -287,21 +287,25 @@ function ENT:CarCollide(data)
     end
 
     local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(self)
+    local actor
     if vehicle_provider then
-        local driver = hitEnt:GetDriver()
-        if _IsValid(driver) then
-            local actor = vehicle_provider:GetDriver()
-            if actor and actor:IsAlive() then
-                actor:AddEnemy(driver)
-                actor:SetState('defense')
+        actor = vehicle_provider:GetDriver()
+        local enemy_vehicle_provider = BGN_VEHICLE:GetVehicleProvider(hitEnt)
+        local driver
+        if enemy_vehicle_provider then
+            local driver_actor = enemy_vehicle_provider:GetDriver()
+            if driver_actor and driver_actor:IsAlive() and not actor:HasTeam(driver_actor) then
+                driver = driver_actor:GetNPC()
             end
+        else
+            local driver_ent = hitEnt:GetDriver()
+            if not actor:HasTeam(driver_ent) then driver = driver_ent end
+        end
+        if _IsValid(driver) and actor and actor:IsAlive() then
+            actor:AddEnemy(driver)
+            actor:SetState('defense')
         end
     end
-    -- local driver = hitEnt:GetDriver()
-    -- if not _IsValid(driver) then return end
-    -- local dv = self:GetDriver()
-    -- if not _IsValid(dv) or dv:GetClass() ~= 'npc_dvbgn_police' then return end
-    -- dv.EnemyTarget = driver
 end
 
 function ENT:GetCurrentMaxSpeed()
