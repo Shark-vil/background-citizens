@@ -172,7 +172,11 @@ local function UpdateWantedAndSetReaction(actor, enemy)
 		actor:SetState(reaction)
 	end
 
-	actor:AddEnemy(enemy)
+	if reaction == 'arrest' then
+		actor:AddTarget(enemy)
+	else
+		actor:AddEnemy(enemy)
+	end
 end
 
 timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
