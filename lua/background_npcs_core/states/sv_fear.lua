@@ -37,6 +37,8 @@ local function update_animation(actor)
 	if data.update_animation < CurTime() then
 		data.update_animation = CurTime() + 2
 		data.animation_type = math_random(0, 100)
+	else
+		return
 	end
 
 	local animation_twitching = math_random(0, 100)
@@ -80,6 +82,12 @@ bgNPC:SetStateAction('fear', 'danger', {
 
 		actor:WalkToPos(nil)
 	end,
+	stop = function(actor)
+		actor:StopStaticSequence()
+	end,
+	-- not_stop = function(actor)
+	-- 	return not actor:HasNoEnemies()
+	-- end,
 	update = function(actor)
 		if not actor:HasNoEnemies() then
 			update_animation(actor)
