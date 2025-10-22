@@ -46,10 +46,10 @@ bgNPC.cfg:SetActor('citizen', {
 	start_random_state = true, -- (Optional) It works, but it's optional
 	at_random_range = 120, -- Obsolete (not in use)
 	at_random = {
-		['walk'] = 50,
+		['walk'] = 30,
 		['idle'] = 15,
-		['dialogue'] = 20,
-		['sit_to_chair'] = 20,
+		['dialogue'] = 30,
+		['sit_to_chair'] = 30,
 		['random_gesture'] = 15,
 	},
 	at_damage_range = 100, -- Obsolete (not in use)
