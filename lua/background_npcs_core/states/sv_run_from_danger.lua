@@ -26,12 +26,16 @@ bgNPC:SetStateAction('run_from_danger', 'danger', {
 			data.call_for_help = CurTime() + math_random(20, 30)
 		end
 
+		if math_random(0, 100) <= 5 then
+			actor:FearScream()
+		end
+
 		if dist > 1000000 and (not data.dyspnea_delay or data.dyspnea_delay < CurTime()) then
 			actor:SetState('dyspnea_danger')
 		elseif dist < 40000 and (enemy:IsPlayer() or slib.chance(10)) and enemy:slibIsViewVector(npc_pos) then
 			actor:SetState('fear')
 		else
-			local min, max = 1000, 2000
+			local min, max = 700, 1000
 			local position = actor:GetDistantPointToPoint(enemy_pos, math_random(min, max))
 			if position then
 				actor:WalkToPos(position, 'run')
