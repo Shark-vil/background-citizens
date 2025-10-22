@@ -19,7 +19,10 @@ bgNPC:SetStateAction('dialogue', 'calm', {
 	end,
 	update = function(actor)
 		local dialogue = asset:GetDialogue(actor)
-		if not dialogue then return end
+		if not dialogue then
+			actor:RandomState()
+			return
+		end
 
 		asset:SwitchDialogue(actor)
 		local actor1 = dialogue.interlocutors[1]

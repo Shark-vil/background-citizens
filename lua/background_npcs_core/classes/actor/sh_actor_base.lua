@@ -1239,15 +1239,19 @@ function BaseClass:IsValidSequence(sequence_name)
 end
 
 function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
-	if not self.mechanics.animator_controller then return end
-	if not sequence_name or not self:IsValidSequence(sequence_name) then return false end
+	if not self.mechanics.animator_controller
+	or not sequence_name
+	or not self:IsValidSequence(sequence_name) then
+		if isfunction(action) then action(self) end
+		return false
+	end
 
-	if self:HasSequence(sequence_name) then
-		if self.anim_is_loop and not self:IsSequenceLoopFinished() then
-			return true
-		elseif not self.anim_is_loop and not self:IsSequenceFinished() then
-			return true
-		end
+	if self:HasSequence(sequence_name) and (
+		(self.anim_is_loop and not self:IsSequenceLoopFinished())
+		or (not self.anim_is_loop and not self:IsSequenceFinished())
+	) then
+		if isfunction(action) then action(self) end
+		return true
 	end
 
 	local hook_result = hook_Run('BGN_PreNPCStartAnimation', self, sequence_name, loop, loop_time)
@@ -1257,7 +1261,7 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 
 	self.anim_is_loop = loop or false
 	self.anim_name = string_lower(sequence_name)
-	if loop_time ~= nil and loop_time ~= 0 then
+	if isnumber(loop_time) and loop_time ~= 0 then
 		self.loop_time = RealTime() + loop_time
 		self.loop_time_normal = self.loop_time - RealTime()
 	else
@@ -1268,6 +1272,7 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 	self.anim_time_normal = self.anim_time - RealTime()
 	self.is_animated = true
 	self.anim_action = action
+	self.anim_sequence = sequence
 
 	self.npc_schedule = SCHED_SLEEP
 	self.npc_state = NPC_STATE_SCRIPT
@@ -1282,13 +1287,28 @@ function BaseClass:PlayStaticSequence(sequence_name, loop, loop_time, action)
 
 	self.npc:PhysWake()
 
+	-- local hookName = 'bgn_anim_' .. slib.UUID()
+	-- local npc = self.npc
+	-- hook.Add('Think', hookName, function()
+	-- 	if not self.is_animated or not IsValid(npc) or (isfunction(npc.Health) and npc:Health() <= 0) then
+	-- 		hook.Remove('Think', hookName)
+	-- 		return
+	-- 	end
+	-- 	npc:SetNPCState(NPC_STATE_SCRIPT)
+	-- 	npc:SetSchedule(SCHED_SLEEP)
+	-- 	npc:ResetSequence(sequence)
+	-- end)
+
 	hook_Run('BGN_StartedNPCAnimation', self, sequence_name, loop, loop_time)
 
 	return true
 end
 
 function BaseClass:SetNextSequence(sequence_name, loop, loop_time, action)
-	if not self.mechanics.animator_controller then return end
+	if not self.mechanics.animator_controller then
+		if isfunction(action) then action(self) end
+		return
+	end
 
 	self.next_anim = {
 		sequence_name = sequence_name,
@@ -1310,6 +1330,7 @@ function BaseClass:IsAnimationPlayed()
 end
 
 function BaseClass:IsSequenceLoopFinished()
+	if not self:IsAnimationPlayed() then return true end
 	if self:IsLoopSequence() then
 		if self.loop_time == 0 then return false end
 
@@ -1327,6 +1348,7 @@ function BaseClass:IsLoopSequence()
 end
 
 function BaseClass:IsSequenceFinished()
+	if not self:IsAnimationPlayed() then return true end
 	if self.anim_time_normal > 0 then
 		self.anim_time_normal = self.anim_time - RealTime()
 	else
@@ -1343,7 +1365,7 @@ function BaseClass:PlayNextStaticSequence()
 		self:PlayStaticSequence(self.next_anim.sequence_name,
 			self.next_anim.loop, self.next_anim.loop_time)
 
-		if self.next_anim.action ~= nil then
+		if isfunction(self.next_anim.action) then
 			self.next_anim.action(self)
 		end
 
@@ -1355,9 +1377,14 @@ function BaseClass:PlayNextStaticSequence()
 end
 
 function BaseClass:StopStaticSequence()
+	if isfunction(self.anim_action) and self.anim_action(self) then
+		bgNPC:Log('[Background NPCs] Reject: BaseClass:StopStaticSequence')
+		return
+	end
 	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
+	self.anim_sequence = nil
 	self.anim_action = nil
 	if IsValid(self.npc) then
 		slib.Animator.Stop(self.npc)
@@ -1366,10 +1393,14 @@ function BaseClass:StopStaticSequence()
 end
 
 function BaseClass:ResetSequence()
-	if self.anim_action ~= nil and not self.anim_action(self) then return end
+	if isfunction(self.anim_action) and self.anim_action(self) then
+		bgNPC:Log('[Background NPCs] Reject: BaseClass:ResetSequence')
+		return
+	end
 	self.anim_name = ''
 	self.is_animated = false
 	self.next_anim = nil
+	self.anim_sequence = nil
 	self.anim_action = nil
 	if IsValid(self.npc) then
 		slib.Animator.Stop(self.npc)
@@ -1762,8 +1793,8 @@ end
 function BaseClass:Think()
 	if not self:InVehicle() and self:GetState() == 'none' and self.data.at_random then
 		self:RandomState()
-	elseif self.is_animated or (IsValid(self.npc) and IsValid(self.npc.slib_animator)) then
-		self:StopStaticSequence()
+	-- elseif self.is_animated or (IsValid(self.npc) and IsValid(self.npc.slib_animator)) then
+	-- 	self:StopStaticSequence()
 	end
 end
 

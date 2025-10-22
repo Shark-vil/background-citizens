@@ -2,6 +2,7 @@ local bgNPC = bgNPC
 local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 local IsValid = IsValid
 local CurTime = CurTime
+local isfunction = isfunction
 local player_GetAll = player.GetAll
 --
 local bgn_enable = GetConVar('bgn_enable'):GetBool()
@@ -35,7 +36,7 @@ local function process(yield, wait)
 			if actor and not actor:InVehicle() then
 				local npc = actor:GetNPC()
 
-				if IsValid(npc) then
+				if IsValid(npc) and (not isfunction(npc.GetActiveWeapon) or not IsValid(npc:GetActiveWeapon())) then
 					local npc_pos = npc:GetPos()
 					local is_adding_no_think_flag = true
 
