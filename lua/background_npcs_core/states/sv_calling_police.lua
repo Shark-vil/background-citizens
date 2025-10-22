@@ -36,6 +36,9 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 			return 'fear'
 		end
 	end,
+	stop = function(actor)
+		actor:StopStaticSequence()
+	end,
 	update = function(actor)
 		if actor:HasNoEnemies() then
 			actor:RandomState()
