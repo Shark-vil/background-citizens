@@ -63,6 +63,16 @@ local function UpdateActorMovementType(actor, data)
 end
 
 local function UpdateActorTargetPointAsync(actor, data)
+	-- if not data.Dick or data.Dick > CurTime() then
+	-- 	local actors = bgNPC:GetAllByRadius(actor:GetPos(), 300)
+	-- 	if #actors >= 3 then
+	-- 		data.updateTargetPointDelay = 0
+	-- 		print(1)
+	-- 		data.Dick = CurTime() + 10
+	-- 	else
+	-- 		data.Dick = CurTime() + 1
+	-- 	end
+	-- end
 	if not data.updateTargetPointDelay or data.updateTargetPointDelay > CurTime() then
 		return
 	end
