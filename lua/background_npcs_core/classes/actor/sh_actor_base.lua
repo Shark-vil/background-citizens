@@ -25,6 +25,7 @@ local table_RemoveByValue = table.RemoveByValue
 local table_Copy = table.Copy
 local table_Add = table.Add
 local table_insert = table.insert
+local table_isArray = table.isArray
 local string_find = string.find
 local string_lower = string.lower
 local hook_Run = hook.Run
@@ -1032,36 +1033,46 @@ function BaseClass:GetRelationship(value, default)
 end
 
 function BaseClass:HasTeam(value)
-	local value = value
-	if self.data.team ~= nil and value ~= nil then
-		if isstring(value) then
-			return table_HasValueBySeq(self.data.team, value)
-		end
+	if self.data == nil or self.data.team == nil or value == nil then
+		return false
+	end
 
-		if isentity(value) then
-			if value:IsPlayer() then
-				if table_HasValueBySeq(self.data.team, 'player') then
-					return true
-				else
-					return bgNPC:GetModule('team_parent'):HasParent(value, self)
-				end
-			elseif value.isBgnActor and (value:IsNPC() or value:IsNextBot()) then
-				local actor = bgNPC:GetActor(value)
-				if not actor then return false end
-				value = actor:GetData().team
+	if isstring(value) then
+		return table_HasValueBySeq(self.data.team, value)
+	end
+
+	if isentity(value) then
+		if isfunction(value.IsPlayer) and value:IsPlayer() then
+			if table_HasValueBySeq(self.data.team, 'player') then
+				return true
+			else
+				return bgNPC:GetModule('team_parent'):HasParent(value, self)
+			end
+		elseif value.isBgnActor and ((isfunction(value.IsNPC) and value:IsNPC()) or (isfunction(value.IsNextBot) and value:IsNextBot())) then
+			local actor = bgNPC:GetActor(value)
+			if actor then value = actor end
+		end
+	end
+
+	if istable(value) then
+		if value.isBgnClass and isfunction(value.GetData) then
+			local data = value:GetData()
+			if istable(data) and istable(data.team) then
+				value = data.team
 			end
 		end
 
-		if istable(value) then
-			if value.isBgnClass then value = value:GetData().team end
+		if not table_isArray(value) then
+			return false
+		end
 
-			for i = 1, #self.data.team do
-				for k = 1, #value do
-					if self.data.team[i] == value[k] then return true end
-				end
+		for i = 1, #self.data.team do
+			for k = 1, #value do
+				if self.data.team[i] == value[k] then return true end
 			end
 		end
 	end
+
 	return false
 end
 
