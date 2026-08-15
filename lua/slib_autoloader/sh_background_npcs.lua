@@ -153,6 +153,7 @@ local function ExecutableScripts()
 	script:using('modules/spawner/actors/sh_actor_remover.lua')
 	script:using('modules/spawner/actors/sv_actor_remover.lua')
 	script:using('modules/spawner/actors/sv_actor_spawner.lua')
+	script:using('modules/spawner/actors/sv_zone_spawner.lua')
 	script:using('modules/spawner/sv_dv_spawner.lua')
 	script:using('modules/spawner/sv_dv_remover.lua')
 
