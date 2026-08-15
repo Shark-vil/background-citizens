@@ -1,10 +1,24 @@
 local Vector = Vector
 local math_random = math.random
 local IsValid = IsValid
+local GetConVar = GetConVar
+local table_RandomBySeq = table.RandomBySeq
 --
 
 bgNPC:SetStateAction('defense', 'danger', {
 	pre_start = function(actor)
+		if not actor.weapon then
+			-- Self-heal: the actor may have lost its weapon class (e.g. was never
+			-- armed in time, config allows it) - try to assign one before giving up
+			-- and fleeing, instead of being permanently stuck as unarmed.
+			local data = actor:GetData()
+			local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor:GetType())
+
+			if data.weapons and (not cvar_disable_weapon or not cvar_disable_weapon:GetBool()) then
+				actor.weapon = table_RandomBySeq(data.weapons)
+			end
+		end
+
 		if not actor.weapon then return 'fear' end
 	end,
 	start = function(actor)
@@ -45,6 +59,11 @@ bgNPC:SetStateAction('defense', 'danger', {
 				actor:WalkToTarget(enemy, 'run')
 			end
 		else
+			-- Don't yank the NPC into a reposition/retreat schedule while it's
+			-- already mid-attack (SCHED_RANGE_ATTACK1/RELOAD/etc.) - doing so was
+			-- constantly cancelling shots before they landed.
+			if actor:IsExecutingCombatSchedule() then return end
+
 			local node
 			local is_melee_weapon = actor:IsMeleeWeapon()
 

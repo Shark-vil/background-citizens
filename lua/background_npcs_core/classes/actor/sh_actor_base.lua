@@ -926,6 +926,18 @@ function BaseClass:GetWalkPos()
 	return self.walkPos
 end
 
+function BaseClass:IsExecutingCombatSchedule()
+	local npc = self.npc
+	if not IsValid(npc) or not isfunction(npc.GetCurrentSchedule) then return false end
+
+	local current_schedule = npc:GetCurrentSchedule()
+	for i = 1, #schedule_white_list do
+		if schedule_white_list[i] == current_schedule then return true end
+	end
+
+	return false
+end
+
 function BaseClass:UpdateMovement()
 	if not self.mechanics.movement_controller then return end
 	if self.is_animated or not self:IsAlive() then return end
@@ -978,12 +990,7 @@ function BaseClass:UpdateMovement()
 			self.waitUpdateMovementDelay = CurTime() + .5
 		end
 
-		if isfunction(npc.GetCurrentSchedule) then
-			local current_schedule = npc:GetCurrentSchedule()
-			for i = 1, #schedule_white_list do
-				if schedule_white_list[i] == current_schedule then return end
-			end
-		end
+		if self:IsExecutingCombatSchedule() then return end
 
 		if targetPosition and isfunction(npc.SetLastPosition) then
 			npc:SetLastPosition(targetPosition)
@@ -1517,9 +1524,13 @@ function BaseClass:IsMeleeWeapon()
 
 	local npc = self.npc
 	local wep = npc:GetActiveWeapon()
-	if not IsValid(wep) then return true end
+	local weapon_class = IsValid(wep) and wep:GetClass() or self.weapon
 
-	return table_HasValueBySeq(bgNPC.cfg.melee_weapons, wep:GetClass())
+	-- No weapon in hand yet and no intended weapon class known: treat as ranged (not melee)
+	-- so the defense state doesn't wrongly rush the enemy instead of holding distance.
+	if not weapon_class then return false end
+
+	return table_HasValueBySeq(bgNPC.cfg.melee_weapons, weapon_class)
 end
 
 function BaseClass:EnterVehicle(vehicle)

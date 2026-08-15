@@ -164,8 +164,13 @@ hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim,
 end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
-	if not actor:EqualStateGroup('danger') then
-		local reaction = actor:GetReactionForProtect()
+	local reaction
+
+	-- Also re-evaluate for actors stuck in "fear" (e.g. were unarmed when they first
+	-- reacted): "fear" belongs to the "danger" group too, so without this they would
+	-- never be pushed back towards "defense"/"arrest" again for the rest of the chase.
+	if not actor:EqualStateGroup('danger') or actor:HasState('fear') then
+		reaction = actor:GetReactionForProtect()
 		if reaction == 'arrest' and not enable_arrest_mode then
 			reaction = 'defense'
 		end

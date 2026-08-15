@@ -90,6 +90,19 @@ bgNPC:SetStateAction('fear', 'danger', {
 	-- end,
 	update = function(actor)
 		if not actor:HasNoEnemies() then
+			-- Armed actors (police/civil_defense/special_forces) can end up here only
+			-- because they had no weapon at the moment they entered "defense". Keep
+			-- retrying to get them back into the fight instead of leaving them stuck
+			-- fleeing/screaming for the whole wanted chase.
+			local data = actor:GetStateData()
+			data.rearm_retry = data.rearm_retry or CurTime() + 3
+
+			if data.rearm_retry < CurTime() then
+				data.rearm_retry = CurTime() + 3
+				actor:SetState('defense', nil, true)
+				if not actor:HasState('fear') then return end
+			end
+
 			update_animation(actor)
 			update_state(actor)
 		else
