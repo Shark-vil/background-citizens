@@ -241,17 +241,12 @@ function bgNPC:FindSpawnPosition(settings, is_async)
 	local desired_position = settings.position
 
 	if not desired_position then
+		-- Per-zone actor concentration ("more police at the police station") is
+		-- handled by the dedicated zone-boost spawner (sv_zone_spawner.lua), which
+		-- targets specific actor types instead of blindly pulling every spawn
+		-- toward whichever area happens to be nearby.
 		local ply = table_RandomBySeq(all_players)
 		desired_position = ply:GetPos()
-
-		for _, area in pairs(bgNPC.SpawnArea) do
-			local center = (area.startPoint + area.endPoint) / 2
-			local radius = center:DistToSqr(area.startPoint) + 1000000
-			if desired_position:DistToSqr(center) <= radius and slib_chance(80) then
-				desired_position = center
-				break
-			end
-		end
 	end
 
 	settings.position = desired_position

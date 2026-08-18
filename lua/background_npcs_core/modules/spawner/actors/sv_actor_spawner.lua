@@ -9,7 +9,9 @@ local isbool = isbool
 local StopAnimator = slib.Animator.Stop
 --
 
-local function ActorSpawnOnPosition(npc_type, position)
+-- bgNPC:IsValidSpawnArea is defined in modules/spawner/actors/sv_zone_spawner.lua,
+-- alongside the rest of the spawn-area/zone system.
+function bgNPC:ActorSpawnOnPosition(npc_type, position)
 	if not bgNPC:IsValidSpawnArea(npc_type, position) then return end
 
 	local actor = bgNPC:SpawnActor(npc_type, position)
@@ -20,19 +22,6 @@ local function ActorSpawnOnPosition(npc_type, position)
 	end
 
 	-- actor:RandomState()
-end
-
-function bgNPC:IsValidSpawnArea(actorType, spawnPosition)
-	for _, area in pairs(bgNPC.SpawnArea) do
-		if spawnPosition:WithinAABox(area.startPoint, area.endPoint) then
-			for areaActorType, isValidSpawn in pairs(area.actors) do
-				if areaActorType == actorType and not isValidSpawn then
-					return false
-				end
-			end
-		end
-	end
-	return true
 end
 
 function bgNPC:RespawnActor(actor, spawn_position, func)
@@ -154,7 +143,7 @@ local function InitActorsSpawner(delay)
 
 				local node_position = bgNPC:FindSpawnPositionAsync({ position = pos })
 				if node_position then
-					ActorSpawnOnPosition(npc_type, node_position)
+					bgNPC:ActorSpawnOnPosition(npc_type, node_position)
 				end
 
 				yield()
