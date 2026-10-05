@@ -929,10 +929,12 @@ function BaseClass:WalkToTarget(target, move_type, path_type)
 end
 
 -- Builds a path to the position and starts walking.
--- @param pos vector|nil destination, nil stops walking
+-- @param pos vector|node|nil destination, nil stops walking
 function BaseClass:WalkToPos(pos, move_type, path_type)
-	Assert.Arg(1, pos, 'vector|nil', 'ACTOR:WalkToPos')
+	Assert.Arg(1, pos, 'vector|node|nil', 'ACTOR:WalkToPos')
 	Assert.Arg(3, path_type, 'string|nil', 'ACTOR:WalkToPos')
+
+	if istable(pos) then pos = pos:GetPos() end
 
 	if not self.mechanics.movement_controller then return end
 

@@ -37,8 +37,9 @@ local DEFAULT_MECHANICS = {
 	inpc_ignore = true,
 }
 
-local NPC_CAPABILITIES = CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_AUTO_DOORS
-	+ CAP_OPEN_DOORS + CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN
+-- CAP_* enums exist only on the server
+local NPC_CAPABILITIES = SERVER and (CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_AUTO_DOORS
+	+ CAP_OPEN_DOORS + CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN) or 0
 
 local function BuildMechanics(actor_data)
 	local overrides = istable(actor_data.mechanics) and actor_data.mechanics or {}
