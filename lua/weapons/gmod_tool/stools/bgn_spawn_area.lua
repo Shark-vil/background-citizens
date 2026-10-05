@@ -246,9 +246,15 @@ if CLIENT then
 	end
 
 	local function RequestRemoveArea(areaName)
+		state.areaList[areaName] = nil
+		NotifyStateUpdated()
+
 		snet.InvokeServer('sv_tool_bgn_spawn_area_remove', areaName)
 	end
 
+	-- Updates the local zone list immediately instead of waiting on the
+	-- server's sync roundtrip, so the Save button always gives instant
+	-- feedback even if the sync response is delayed or lost.
 	local function RequestSaveArea(areaName, actors)
 		if not state.startPoint or not state.endPoint then return false end
 
@@ -257,6 +263,8 @@ if CLIENT then
 
 		state.areaName = areaName
 		state.actors = actors or {}
+		state.areaList[areaName] = { startPoint = state.startPoint, endPoint = state.endPoint }
+		NotifyStateUpdated()
 
 		snet.InvokeServer('sv_tool_bgn_spawn_area_save', areaName, actors, state.startPoint, state.endPoint)
 		return true
@@ -522,13 +530,25 @@ if CLIENT then
 			RequestRemoveArea(state.areaName)
 		end
 
+		local nameEntry = vgui.Create('DTextEntry', panel)
+		nameEntry:Dock(TOP)
+		nameEntry:DockMargin(5, 5, 5, 0)
+		nameEntry:SetPlaceholderText('Zone name')
+
+		-- Also usable to name and create a brand new zone straight from this
+		-- panel - the Zone Manager is only required for per-actor tuning.
 		local resaveButton = vgui.Create('DButton', panel)
 		resaveButton:Dock(TOP)
-		resaveButton:DockMargin(5, 0, 5, 5)
-		resaveButton:SetText('Save current points to loaded zone')
+		resaveButton:DockMargin(5, 5, 5, 5)
+		resaveButton:SetText('Save current points')
 		resaveButton.DoClick = function()
-			if not state.areaName or #state.areaName == 0 then return end
-			RequestSaveArea(state.areaName, state.actors)
+			local areaName = string.Trim(nameEntry:GetValue())
+			if #areaName == 0 then
+				surface.PlaySound('buttons/button10.wav')
+				return
+			end
+
+			RequestSaveArea(areaName, state.actors)
 		end
 
 		local managerButton = vgui.Create('DButton', panel)
@@ -542,6 +562,8 @@ if CLIENT then
 			for _, areaName in ipairs(SortedAreaNames()) do
 				areaList:AddLine(areaName)
 			end
+
+			nameEntry:SetValue(state.areaName or '')
 
 			if state.startPoint and state.endPoint then
 				pointsLabel:SetText('Current zone: ' .. (state.areaName ~= '' and state.areaName or '(unsaved)'))
