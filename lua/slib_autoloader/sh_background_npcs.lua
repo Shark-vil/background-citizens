@@ -23,6 +23,7 @@ bgNPC.actors = {}
 bgNPC.factors = {}
 bgNPC.npcs = {}
 bgNPC.fnpcs = {}
+bgNPC.actors_by_uid = {}
 bgNPC.points = {}
 -- bgNPC.wanted = {}
 -- bgNPC.killing_statistic = {}
@@ -45,6 +46,8 @@ local root_directory = 'background_npcs_core'
 local script = slib.CreateIncluder(root_directory, load_file_text)
 
 local function ExecutableScripts()
+	script:using('global/sh_assert.lua')
+
 	script:using('config/sh_main.lua')
 	script:using('config/sh_config.lua')
 

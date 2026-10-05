@@ -1,13 +1,17 @@
+local bgNPC = bgNPC
+local Assert = bgNPC.Assert
 local IsValid = IsValid
+local isnumber = isnumber
+local math_cos = math.cos
+local math_rad = math.rad
+local util_TraceLine = util.TraceLine
 local pairs = pairs
 local ipairs = ipairs
 local istable = istable
-local unpack = unpack
 local isstring = isstring
 local string_StartWith = string.StartWith
 local table_Copy = table.Copy
 local table_HasValueBySeq = table.HasValueBySeq
--- local table_ToString = table.ToString
 local string_Replace = string.Replace
 local string_Explode = string.Explode
 local table_insert = table.insert
@@ -19,83 +23,83 @@ function bgNPC:ClearActorsConfig()
 	actors_config_cache = {}
 end
 
-function bgNPC:GetActorConfig(actor_type)
-	if actors_config_cache[actor_type] then
-		return actors_config_cache[actor_type]
-	else
-		if not bgNPC.cfg.actors[actor_type] then return end
-		local data = table_Copy(bgNPC.cfg.actors[actor_type])
+-- Resolves "@type" references: a string value "@police@citizen" is replaced
+-- with the same field from the referenced actor types.
+local function ResolveFieldReferences(actor_type, data)
+	for key, value in pairs(data) do
+		if isstring(value) and string_StartWith(value, '@') then
+			local resolved = false
 
-		if data.inherit and data.inherit ~= actor_type then
-			local inherit_data = bgNPC:GetActorConfig(data.inherit)
-			if inherit_data then
-				bgNPC:Log('Data Inherit - ' .. data.inherit, 'GetActorConfig')
+			for _, ref_type in ipairs(string_Explode('@', string_Replace(value, ' ', ''))) do
+				if #ref_type ~= 0 and ref_type ~= actor_type then
+					local ref_data = bgNPC:GetActorConfig(ref_type)
+					local ref_value = ref_data and ref_data[key]
 
-				for inherit_key, inherit_value in pairs(inherit_data) do
-					if inherit_key ~= 'inherit' then
-						local exists_data_key = false
-
-						for data_key, _ in pairs(data) do
-							if data_key == inherit_key then
-								exists_data_key = true
-								break
-							end
-						end
-
-						if not exists_data_key then
-							data[inherit_key] = inherit_value
-							-- if istable(inherit_value) then
-							-- 	bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
-							-- 		inherit_key .. ' : ' .. table_ToString(inherit_value), 'GetActorConfig')
-							-- else
-							-- 	bgNPC:Log(actor_type .. ' inherit ' .. data.inherit .. ' key  - ' ..
-							-- 		inherit_key .. ' : ' .. tostring(inherit_value), 'GetActorConfig')
-							-- end
-						end
-					end
-				end
-			end
-		end
-
-		for k, v in pairs(data) do
-			if isstring(v) and string_StartWith(v, '@') then
-				local inherit_groups = string_Explode('@', string_Replace(v, ' ', ''))
-
-				for _, inherit_actor_type in ipairs(inherit_groups) do
-					if #inherit_actor_type ~= 0 and inherit_actor_type ~= actor_type then
-						local inherit_data = bgNPC.cfg.actors[inherit_actor_type]
-
-						if inherit_data and inherit_data.inherit then
-							inherit_data = bgNPC:GetActorConfig(data.inherit)
-						end
-
-						if inherit_data and inherit_data[k] ~= nil then
-							if data[k] == nil or isstring(data[k]) then
-								data[k] = inherit_data[k]
-							elseif data[k] ~= nil and istable(data[k]) and istable(inherit_data[k]) then
-								for another_key, another_value in pairs(inherit_data[k]) do
-									if isnumber(another_key) then
-										table_insert(data, another_value)
-									elseif data[another_key] == nil then
-										data[another_key] = another_value
-									end
+					if ref_value ~= nil then
+						if not resolved then
+							data[key] = istable(ref_value) and table_Copy(ref_value) or ref_value
+							resolved = true
+						elseif istable(data[key]) and istable(ref_value) then
+							local target = data[key]
+							for ref_key, ref_item in pairs(ref_value) do
+								if isnumber(ref_key) then
+									table_insert(target, ref_item)
+								elseif target[ref_key] == nil then
+									target[ref_key] = ref_item
 								end
 							end
-						elseif data[k] ~= nil and isstring(data[k]) then
-							if string_StartWith(data[k], '@') then
-								data[k] = nil
-							end
 						end
 					end
 				end
+			end
 
+			if not resolved then data[key] = nil end
+		end
+	end
+end
+
+local resolving = {}
+
+-- Returns the actor config with "inherit" and "@type" references resolved.
+-- @param actor_type string
+-- @return table|nil config (shared cached table, copy it before changing)
+function bgNPC:GetActorConfig(actor_type)
+	Assert.Arg(1, actor_type, 'string', 'bgNPC:GetActorConfig')
+
+	local cached = actors_config_cache[actor_type]
+	if cached then return cached end
+
+	local source = bgNPC.cfg.actors[actor_type]
+	if not source then return end
+
+	if resolving[actor_type] then
+		ErrorNoHalt('[Background NPCs] Circular actor config inheritance: ' .. actor_type .. '\n')
+		return
+	end
+
+	resolving[actor_type] = true
+
+	local data = table_Copy(source)
+
+	if data.inherit and data.inherit ~= actor_type then
+		local inherit_data = bgNPC:GetActorConfig(data.inherit)
+		if inherit_data then
+			bgNPC:Log('Data Inherit - ' .. data.inherit, 'GetActorConfig')
+
+			for inherit_key, inherit_value in pairs(inherit_data) do
+				if inherit_key ~= 'inherit' and data[inherit_key] == nil then
+					data[inherit_key] = istable(inherit_value) and table_Copy(inherit_value) or inherit_value
+				end
 			end
 		end
-
-		actors_config_cache[actor_type] = data
-
-		return actors_config_cache[actor_type]
 	end
+
+	ResolveFieldReferences(actor_type, data)
+
+	resolving[actor_type] = nil
+	actors_config_cache[actor_type] = data
+
+	return data
 end
 
 function bgNPC:Log(message, tag)
@@ -111,86 +115,85 @@ function bgNPC:PlayerIsViewVector(ply, pos, radius)
 	return ply:slibIsViewVector(pos, radius)
 end
 
-function bgNPC:NPCIsViewVector(ent, pos, radius)
-	if not ent:IsNPC() or ent:IsNextBot() then return true end
-	if not IsValid(ent) or ent:Health() <= 0 then return false end
+-- Checks whether the position is inside the NPC's field of view.
+-- @param fov number|nil half-angle of the view cone in degrees (default 90)
+function bgNPC:NPCIsViewVector(ent, pos, fov)
+	Assert.Arg(2, pos, 'vector', 'bgNPC:NPCIsViewVector')
+	Assert.Arg(3, fov, 'number|nil', 'bgNPC:NPCIsViewVector')
 
-	radius = radius or 90
-	local directionAngCos = math.pi / radius
-	local aimVector = ent:GetAimVector()
-	local entVector = pos - ent:GetShootPos()
-	local angCos = aimVector:Dot(entVector) / entVector:Length()
-	return angCos >= directionAngCos
+	if not IsValid(ent) or ent:Health() <= 0 then return false end
+	if not ent:IsNPC() then return true end
+
+	local direction = pos - ent:GetShootPos()
+	local length = direction:Length()
+	if length == 0 then return true end
+
+	return ent:GetAimVector():Dot(direction) / length >= math_cos(math_rad(fov or 90))
 end
 
-function bgNPC:CanAnyActorSeeEntity(ent, ...)
-	if not IsValid(ent) or not isentity(ent) then return false end
+local function CanSee(actor, ent)
+	if not actor or not actor:IsAlive() then return false end
+	local npc = actor:GetNPC()
+	return IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true)
+end
 
-	local exclude_actors = unpack(...)
-	local exclude_actors_is_valid = exclude_actors and #exclude_actors ~= 0
+-- Checks whether any actor sees the entity.
+-- @param ent entity
+-- @param exclude actor|table|nil actor or list of actors to skip
+-- @return boolean, actor|nil
+function bgNPC:CanAnyActorSeeEntity(ent, exclude)
+	if not IsValid(ent) then return false end
+
+	if istable(exclude) and exclude.isBgnClass then exclude = { exclude } end
+	local has_exclude = istable(exclude) and #exclude ~= 0
+
 	local actors = bgNPC:GetAll()
 	for i = 1, #actors do
 		local actor = actors[i]
-		if actor and actor:IsAlive() then
-			if exclude_actors_is_valid and table_HasValueBySeq(exclude_actors_is_valid, actor) then
-				continue
-			end
-			local npc = actor:GetNPC()
-			if IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true) then
-				return true, actor
-			end
+		if not (has_exclude and table_HasValueBySeq(exclude, actor)) and CanSee(actor, ent) then
+			return true, actor
 		end
 	end
 
 	return false
 end
 
+-- Returns all actors that see the entity.
+-- @return boolean, table
 function bgNPC:CanActorsSeeEntity(ent)
-	if not IsValid(ent) or not isentity(ent) then return false end
+	if not IsValid(ent) then return false, {} end
 
 	local actors = bgNPC:GetAll()
 	local valid_actors = {}
-	local valid_actors_count = 0
 
 	for i = 1, #actors do
 		local actor = actors[i]
-		if actor and actor:IsAlive() then
-			local npc = actor:GetNPC()
-			if IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true) then
-				valid_actors_count = valid_actors_count + 1
-				valid_actors[valid_actors_count] = actor
-			end
+		if CanSee(actor, ent) then
+			valid_actors[#valid_actors + 1] = actor
 		end
 	end
 
-	return valid_actors_count ~= 0, valid_actors
+	return #valid_actors ~= 0, valid_actors
 end
 
 function bgNPC:GetModule(module_name)
-	return list.Get('BGN_Modules')[module_name]
+	Assert.Arg(1, module_name, 'string', 'bgNPC:GetModule')
+	return list.GetForEdit('BGN_Modules')[module_name]
 end
 
+-- Checks a direct line of sight from the watcher's eyes to the entity's center.
+-- @return boolean visible, entity hit entity
 function bgNPC:IsTargetRay(watcher, ent)
 	if not IsValid(watcher) or watcher:Health() <= 0 then return false end
 	if not IsValid(ent) or ent:Health() <= 0 then return false end
 
-	local center_pos = LocalToWorld(ent:OBBCenter(), Angle(), ent:GetPos(), Angle())
-
-	local tr = util.TraceLine({
+	local tr = util_TraceLine({
 		start = watcher:EyePos(),
-		endpos = center_pos,
-		filter = function(e)
-			if e ~= watcher then
-				return true
-			end
-		end
+		endpos = ent:WorldSpaceCenter(),
+		filter = watcher,
 	})
 
-	if not tr.Hit or tr.Entity ~= ent then
-		return false, tr.Entity
-	end
-
-	return true, tr.Entity
+	return tr.Hit and tr.Entity == ent, tr.Entity
 end
 
 function bgNPC:GetActivePlayerTool(tool_name, ply)

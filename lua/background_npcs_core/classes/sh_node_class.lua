@@ -3,8 +3,11 @@ local pairs = pairs
 local ipairs = ipairs
 local isbool = isbool
 local assert = assert
+local Assert = bgNPC.Assert
+local setmetatable = setmetatable
+local istable = istable
+local isstring = isstring
 local math_floor = math.floor
--- local math_modf = math.modf
 local table_insert = table.insert
 local table_remove = table.remove
 local table_RemoveValueBySeq = table.RemoveValueBySeq
@@ -102,8 +105,211 @@ cvars.AddChangeCallback('bgn_point_z_limit', function(convar_name, value_old, va
 	LimitPointAxisZ = value_new
 end, 'bgn_point_z_limit_change_callback')
 
+local NODE = {}
+NODE.__index = NODE
+BGN_NODE.NodeClass = NODE
+
+local function IsNode(value)
+	return istable(value) and value.isNode == true
+end
+
+-- Calls fn(node) for every node on the map. Safe for maps with holes.
+local function ForEachMapNode(fn)
+	local map = BGN_NODE.Map
+	for i = 1, BGN_NODE.MapCount do
+		local node = map[i]
+		if node then fn(node) end
+	end
+end
+
+function NODE:AddParentNode(node)
+	Assert.Arg(1, node, 'node', 'NODE:AddParentNode')
+
+	if self == node or table_HasValueBySeq(self.parents, node) then return end
+	table_insert(self.parents, node)
+	if not node:HasParent(self) then node:AddParentNode(self) end
+end
+
+function NODE:RemoveParentNode(node)
+	Assert.Arg(1, node, 'node', 'NODE:RemoveParentNode')
+
+	if self == node then return end
+
+	local parents = self.parents
+	for i = 1, #parents do
+		if parents[i] == node then
+			self:RemoveLink(node)
+			table_remove(parents, i)
+			break
+		end
+	end
+
+	if node:HasParent(self) then
+		node:RemoveParentNode(self)
+	end
+end
+
+function NODE:ClearParents()
+	ForEachMapNode(function(node)
+		if node ~= self and node:HasParent(self) then
+			node:RemoveParentNode(self)
+		end
+	end)
+
+	self.parents = {}
+end
+
+function NODE:HasParent(node)
+	return table_HasValueBySeq(self.parents, node)
+end
+
+function NODE:AddLink(node, linkType)
+	Assert.Arg(1, node, 'node', 'NODE:AddLink')
+	Assert.Arg(2, linkType, 'string|nil', 'NODE:AddLink')
+
+	if self == node or not linkType then return end
+
+	local links = self.links[linkType]
+	if not links then
+		links = {}
+		self.links[linkType] = links
+	end
+
+	if table_HasValueBySeq(links, node) then return end
+
+	if not node:HasParent(self) then
+		node:AddParentNode(self)
+	end
+
+	table_insert(links, node)
+
+	if not node:HasLink(self, linkType) then
+		node:AddLink(self, linkType)
+	end
+end
+
+function NODE:RemoveLink(node, linkType)
+	Assert.Arg(1, node, 'node', 'NODE:RemoveLink')
+	Assert.Arg(2, linkType, 'string|nil', 'NODE:RemoveLink')
+
+	if self == node then return end
+
+	if not linkType then
+		for linkTypeKey in pairs(self.links) do
+			self:RemoveLink(node, linkTypeKey)
+		end
+		return
+	end
+
+	local links = self.links[linkType]
+	if not links then return end
+
+	for i = 1, #links do
+		if links[i] == node then
+			table_remove(links, i)
+			break
+		end
+	end
+
+	if node:HasLink(self, linkType) then
+		node:RemoveLink(self, linkType)
+	end
+end
+
+function NODE:ClearLinks(linkType)
+	Assert.Arg(1, linkType, 'string', 'NODE:ClearLinks')
+
+	if not self.links[linkType] then return end
+
+	ForEachMapNode(function(node)
+		if node ~= self and node:HasLink(self, linkType) then
+			node:RemoveLink(self, linkType)
+		end
+	end)
+
+	self.links[linkType] = {}
+end
+
+function NODE:HasLink(node, linkType)
+	local links = self.links[linkType]
+	if not links then return false end
+	return table_HasValueBySeq(links, node)
+end
+
+function NODE:GetLinks(linkType)
+	return self.links[linkType] or {}
+end
+
+function NODE:GetPos()
+	return self.position
+end
+
+function NODE:CheckDistanceLimitToNode(position)
+	return self.position:DistToSqr(position) <= self.parent_distance
+end
+
+function NODE:CheckHeightLimitToNode(position)
+	local z = self.position.z
+	return z >= position.z - LimitPointAxisZ and z <= position.z + LimitPointAxisZ
+end
+
+function NODE:CheckTraceSuccessToNode(position)
+	local tr = util_TraceLine({
+		start = self.position + CheckTraceSuccessToNodeUpperVector,
+		endpos = position + CheckTraceSuccessToNodeUpperVector,
+		filter = CheckTraceSuccessToNodeFilter
+	})
+
+	return not tr.Hit
+end
+
+function NODE:RemoveFromMap()
+	if self.index == -1 then return end
+
+	ForEachMapNode(function(node)
+		if node ~= self and node:HasParent(self) then
+			node:RemoveParentNode(self)
+		end
+	end)
+
+	local node_chunk_id = self:GetChunkID()
+	if node_chunk_id ~= -1 then
+		local node_chunk = BGN_NODE.Chunks[node_chunk_id]
+		if node_chunk then table_RemoveValueBySeq(node_chunk, self.index) end
+	end
+
+	if not table_remove(BGN_NODE.Map, self.index) then return end
+
+	BGN_NODE.MapCount = BGN_NODE.MapCount - 1
+	self.index = -1
+
+	-- Indexes after the removed node have shifted, update them and their chunks.
+	for i = 1, BGN_NODE.MapCount do
+		local another_node = BGN_NODE.Map[i]
+		if another_node and another_node.index ~= i then
+			local past_index = another_node.index
+			local chunk_id = another_node:GetChunkID()
+			another_node.index = i
+
+			if chunk_id ~= -1 then
+				local another_chunk = BGN_NODE.Chunks[chunk_id]
+				if another_chunk and table_RemoveValueBySeq(another_chunk, past_index) then
+					table_insert(another_chunk, i)
+				end
+			end
+		end
+	end
+end
+
+function NODE:GetChunkID()
+	if not self.chunk then return -1 end
+	return self.chunk.index
+end
+
 function BGN_NODE:Instance(position_value)
-	local obj = {}
+	Assert.Arg(1, position_value, 'vector|table', 'BGN_NODE:Instance')
+
+	local obj = setmetatable({}, NODE)
 	obj.x = math_floor(position_value.x)
 	obj.y = math_floor(position_value.y)
 	obj.z = math_floor(position_value.z)
@@ -115,7 +321,8 @@ function BGN_NODE:Instance(position_value)
 	obj.parent_distance = 250000
 	obj.chunk = MAP_CHUNKS:GetChunkByVector(obj.position)
 
-	function obj:_snet_getdata()
+	-- The serializer calls this without arguments, so it has to be a closure.
+	function obj._snet_getdata()
 		local netobj = {}
 		netobj.index = obj.index
 		netobj.isNode = obj.isNode
@@ -128,197 +335,20 @@ function BGN_NODE:Instance(position_value)
 		end
 
 		for linkType, nodes in pairs(obj.links) do
-			netobj.links[linkType] = netobj.links[linkType] or {}
-
+			local net_links = {}
 			for i = 1, #nodes do
-				table_insert(netobj.links[linkType], nodes[i].index)
+				table_insert(net_links, nodes[i].index)
 			end
+			netobj.links[linkType] = net_links
 		end
 
 		return netobj
 	end
 
-	function obj:AddParentNode(node)
-		if self == node or table_HasValueBySeq(self.parents, node) then return end
-		local index = table_insert(self.parents, node)
-		self.parent_count = index
-		if not node:HasParent(self) then node:AddParentNode(self) end
-	end
-
-	function obj:RemoveParentNode(node)
-		if self == node then return end
-
-		for i = 1, self.parent_count do
-			local parentNode = self.parents[i]
-
-			if parentNode == node then
-				self:RemoveLink(parentNode)
-				if table_remove(self.parents, i) then
-					self.parent_count = self.parent_count - 1
-				end
-				break
-			end
-		end
-
-		if node:HasParent(self) then
-			node:RemoveParentNode(self)
-		end
-	end
-
-	function obj:ClearParents()
-		for i = 1, BGN_NODE.MapCount do
-			local node = BGN_NODE.Map[i]
-
-			if node:HasParent(self) then
-				node:RemoveParentNode(self)
-			end
-		end
-
-		self.parents = {}
-	end
-
-	function obj:HasParent(node)
-		return table_HasValueBySeq(self.parents, node)
-	end
-
-	function obj:AddLink(node, linkType)
-		if self == node then return end
-		if not linkType then return end
-		self.links[linkType] = self.links[linkType] or {}
-		if table_HasValueBySeq(self.links[linkType], node) then return end
-
-		if not node:HasParent(self) then
-			node:AddParentNode(self)
-		end
-
-		table_insert(self.links[linkType], node)
-
-		if not node:HasLink(self) then
-			node:AddLink(self, linkType)
-		end
-	end
-
-	function obj:RemoveLink(node, linkType)
-		if self == node then return end
-
-		if not linkType then
-			for linkTypeKey, _ in pairs(self.links) do
-				self:RemoveLink(node, linkTypeKey)
-			end
-		else
-			for i = 1, #self.links[linkType] do
-				local parentNode = self.links[linkType][i]
-
-				if parentNode == node then
-					table_remove(self.links[linkType], i)
-					break
-				end
-			end
-
-			if node:HasLink(self, linkType) then
-				node:RemoveLink(self, linkType)
-			end
-		end
-	end
-
-	function obj:ClearLinks(linkType)
-		if not self.links[linkType] then return end
-
-		for i = 1, BGN_NODE.MapCount do
-			local node = BGN_NODE.Map[i]
-
-			if node:HasLink(self, linkType) then
-				node:RemoveLink(self, linkType)
-			end
-		end
-
-		self.links[linkType] = {}
-	end
-
-	function obj:HasLink(node, linkType)
-		if not self.links[linkType] then return false end
-
-		return table_HasValueBySeq(self.links[linkType], node)
-	end
-
-	function obj:GetLinks(linkType)
-		return self.links[linkType] or {}
-	end
-
-	function obj:GetPos()
-		return self.position
-	end
-
-	function obj:CheckDistanceLimitToNode(position)
-		return self.position:DistToSqr(position) <= self.parent_distance
-	end
-
-	function obj:CheckHeightLimitToNode(position)
-		local nodePos = self.position
-		local anotherPosition = position
-		return nodePos.z >= anotherPosition.z - LimitPointAxisZ and nodePos.z <= anotherPosition.z + LimitPointAxisZ
-	end
-
-	function obj:CheckTraceSuccessToNode(position)
-		local nodePos = self.position + CheckTraceSuccessToNodeUpperVector
-		local anotherPosition = position + CheckTraceSuccessToNodeUpperVector
-
-		local tr = util_TraceLine({
-			start = nodePos,
-			endpos = anotherPosition,
-			filter = CheckTraceSuccessToNodeFilter
-		})
-
-		return not tr.Hit
-	end
-
-	function obj:RemoveFromMap()
-		if self.index == -1 then return end
-
-		for i = 1, BGN_NODE.MapCount do
-			local node = BGN_NODE.Map[i]
-			if node ~= self and node:HasParent(self) then
-				node:RemoveParentNode(self)
-			end
-		end
-
-		do
-			local node_chunk_id = self:GetChunkID()
-			if node_chunk_id ~= -1 then
-				local node_chunk = BGN_NODE.Chunks[node_chunk_id]
-				if node_chunk and table_HasValueBySeq(node_chunk, self.index) then
-					table_RemoveValueBySeq(node_chunk, self.index)
-				end
-			end
-		end
-
-		if table_remove(BGN_NODE.Map, self.index) then
-			BGN_NODE.MapCount = BGN_NODE.MapCount - 1
-
-			for i = 1, BGN_NODE.MapCount do
-				local another_node = BGN_NODE.Map[i]
-				local another_node_chunk_id = another_node:GetChunkID()
-				local another_node_past_index = another_node.index
-				another_node.index = i
-
-				if another_node_chunk_id ~= -1 and another_node_past_index ~= another_node.index then
-					local another_chunk = BGN_NODE.Chunks[another_node_chunk_id]
-					if another_chunk and table_HasValueBySeq(another_chunk, another_node_past_index) then
-						table_RemoveValueBySeq(another_chunk, another_node_past_index)
-						table_insert(another_chunk, another_node.index)
-					end
-				end
-			end
-		end
-	end
-
-	function obj:GetChunkID()
-		if not self.chunk then return -1 end
-		return self.chunk.index
-	end
-
 	return obj
 end
+
+BGN_NODE.IsNode = IsNode
 
 function BGN_NODE:GetChunkID(pos)
 	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
@@ -379,6 +409,7 @@ function BGN_NODE:GetChunkNodesAsync(pos)
 end
 
 function BGN_NODE:AddNodeToMap(node)
+	Assert.Arg(1, node, 'node|nil', 'BGN_NODE:AddNodeToMap')
 	if not node then return end
 
 	local chunk_id = node:GetChunkID()
@@ -391,13 +422,13 @@ function BGN_NODE:AddNodeToMap(node)
 	local index
 	if node.index ~= -1 then
 		index = node.index
+		if self.Map[index] == nil then self.MapCount = self.MapCount + 1 end
 		self.Map[index] = node
 	else
 		index = table_insert(self.Map, node)
 		node.index = index
+		self.MapCount = self.MapCount + 1
 	end
-
-	self.MapCount = self.MapCount + 1
 
 	if chunk_id ~= -1 then
 		self.Chunks[chunk_id] = self.Chunks[chunk_id] or {}
@@ -413,7 +444,8 @@ end
 
 function BGN_NODE:GetNodeByPos(pos)
 	for i = 1, self.MapCount do
-		if self.Map[i]:GetPos() == pos then return self.Map[i] end
+		local node = self.Map[i]
+		if node and node:GetPos() == pos then return node end
 	end
 end
 
@@ -467,7 +499,7 @@ function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
 
 	for i = 1, self.MapCount do
 		local node = self.Map[i]
-		if node:GetPos():DistToSqr(pos) <= radius then
+		if node and node:GetPos():DistToSqr(pos) <= radius then
 			nodes_count = nodes_count + 1
 			nodes_in_radius[nodes_count] = node
 		end
@@ -535,7 +567,7 @@ function BGN_NODE:GetNodesCountInRadius(pos, radius, is_async)
 
 	for i = 1, self.MapCount do
 		local node = self.Map[i]
-		if node:GetPos():DistToSqr(pos) <= radius then
+		if node and node:GetPos():DistToSqr(pos) <= radius then
 			nodes_count = nodes_count + 1
 		end
 
@@ -736,7 +768,7 @@ function BGN_NODE:JsonToMap(json_string)
 		return {}
 	end
 
-	if not mapData.version then return {} end
+	if not istable(mapData) or not mapData.version or not istable(mapData.nodes) then return {} end
 
 	local map = {}
 
@@ -750,7 +782,7 @@ function BGN_NODE:JsonToMap(json_string)
 		local node = map[index]
 
 		if node then
-			for _, parentIndex in ipairs(nodeData.parents) do
+			for _, parentIndex in ipairs(nodeData.parents or {}) do
 				local parentNode = map[parentIndex]
 
 				if parentNode then
@@ -758,7 +790,7 @@ function BGN_NODE:JsonToMap(json_string)
 				end
 			end
 
-			for linkType, links in pairs(nodeData.links) do
+			for linkType, links in pairs(nodeData.links or {}) do
 				for _, parentIndex in ipairs(links) do
 					local parentNode = map[parentIndex]
 

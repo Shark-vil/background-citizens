@@ -1,66 +1,94 @@
+local Assert = bgNPC.Assert
+local Vector = Vector
+local Angle = Angle
+local NULL = NULL
+local setmetatable = setmetatable
+local istable = istable
+local isvector = isvector
+local isangle = isangle
+local table_insert = table.insert
+--
+
 BGN_SEAT = {}
 BGN_SEAT.Map = {}
 
+local SEAT = {}
+SEAT.__index = SEAT
+BGN_SEAT.SeatClass = SEAT
+
+function SEAT:GetPos()
+	return self.position + self.offset
+end
+
+function SEAT:GetAngles()
+	return self.angle
+end
+
+function SEAT:SetStartSittingPos(start_pos)
+	Assert.Arg(1, start_pos, 'vector|nil', 'SEAT:SetStartSittingPos')
+	self.start_pos = start_pos or self.position
+end
+
+function SEAT:GetStartSittingPos()
+	return self.start_pos
+end
+
+function SEAT:SetOffset(offset)
+	Assert.Arg(1, offset, 'vector|nil', 'SEAT:SetOffset')
+	self.offset = offset or Vector(0, 0, 0)
+end
+
+function SEAT:SetSitting(ent)
+	Assert.Arg(1, ent, 'entity|nil', 'SEAT:SetSitting')
+	self.sitting = ent or NULL
+end
+
+function SEAT:GetSitting()
+	return self.sitting
+end
+
 function BGN_SEAT:Instance(pos, ang)
-	local obj = {}
+	Assert.Arg(1, pos, 'vector|nil', 'BGN_SEAT:Instance')
+	Assert.Arg(2, ang, 'angle|nil', 'BGN_SEAT:Instance')
+
+	local obj = setmetatable({}, SEAT)
 	obj.isSeat = true
-	obj.start_pos = pos
 	obj.position = pos or Vector(0, 0, 0)
+	obj.start_pos = obj.position
 	obj.offset = Vector(0, 0, 0)
 	obj.angle = ang or Angle(0, 0, 0)
 	obj.sitting = NULL
-
-	function obj:GetPos()
-		return self.position + self.offset
-	end
-
-	function obj:GetAngles()
-		return self.angle
-	end
-
-	function obj:SetStartSittingPos(start_pos)
-		self.start_pos = start_pos
-	end
-
-	function obj:GetStartSittingPos()
-		return self.start_pos
-	end
-
-	function obj:SetOffset(offset)
-		self.offset = offset
-	end
-
-	function obj:SetSitting(ent)
-		self.sitting = ent
-	end
-
-	function obj:GetSitting()
-		return self.sitting
-	end
 
 	return obj
 end
 
 function BGN_SEAT:Initialize()
 	self:ClearSeats()
+
 	local file_path = 'background_npcs/seats/' .. game.GetMap() .. '.dat'
+	if not file.Exists(file_path, 'DATA') then return end
 
-	if file.Exists(file_path, 'DATA') then
-		local read_data = util.JSONToTable(util.Decompress(file.Read(file_path, 'DATA')))
+	local raw_data = util.Decompress(file.Read(file_path, 'DATA') or '')
+	local read_data = raw_data and util.JSONToTable(raw_data)
+	if not istable(read_data) then
+		bgNPC:Log('Failed to read the seats file: ' .. file_path, 'BGN_SEAT:Initialize')
+		return
+	end
 
-		for i = 1, #read_data do
-			local t = read_data[i]
-			local seat = self:Instance(t.position, t.angle)
-			seat:SetOffset(t.offset)
-			seat:SetStartSittingPos(t.start_pos)
+	for i = 1, #read_data do
+		local seat_data = read_data[i]
+		if istable(seat_data) and isvector(seat_data.position) then
+			local seat = self:Instance(seat_data.position, isangle(seat_data.angle) and seat_data.angle or nil)
+			seat:SetOffset(isvector(seat_data.offset) and seat_data.offset or nil)
+			seat:SetStartSittingPos(isvector(seat_data.start_pos) and seat_data.start_pos or nil)
 			self:AddSeatToMap(seat)
 		end
 	end
 end
 
 function BGN_SEAT:AddSeatToMap(seat)
-	if not seat.isSeat then return end
-	table.insert(self.Map, seat)
+	if not istable(seat) or not seat.isSeat then return end
+	table_insert(self.Map, seat)
 end
 
 function BGN_SEAT:ClearSeats()

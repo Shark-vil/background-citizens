@@ -4,6 +4,7 @@ hook.Add('PostCleanupMap', 'BGN_ResetAllGlobalTablesAndVariables', function()
 	bgNPC.factors = {}
 	bgNPC.npcs = {}
 	bgNPC.fnpcs = {}
+	bgNPC.actors_by_uid = {}
 end)
 
 cvars.AddChangeCallback('bgn_enable', function(convar_name, value_old, value_new)

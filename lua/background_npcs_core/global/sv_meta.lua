@@ -1,92 +1,87 @@
+local bgNPC = bgNPC
+local Assert = bgNPC.Assert
+local IsValid = IsValid
+local istable = istable
+local isnumber = isnumber
 local FirstAttackerModule, WantedModule
 
 do
 	local bit_band = bit.band
 	local util_PointContents = util.PointContents
 	local CONTENTS_WATER = CONTENTS_WATER
-	-- local util_TraceLine = util.TraceLine
-	-- local MASK_WATER = MASK_WATER
-
-	-- function bgNPC:VectorInWater(position)
-	-- 	local is_water = bit_band(util_PointContents(position), CONTENTS_WATER) == CONTENTS_WATER
-	-- 	if not is_water then
-	-- 		is_water = util_TraceLine({
-	-- 			start = position,
-	-- 			endpos = position,
-	-- 			mask = MASK_WATER
-	-- 		}).Hit
-	-- 	end
-	-- 	return is_water
-	-- end
 
 	function bgNPC:VectorInWater(position)
 		return bit_band(util_PointContents(position), CONTENTS_WATER) == CONTENTS_WATER
 	end
 end
 
-function bgNPC:SetActorWeapon(actor, weapon_class, switching)
-	local npc = actor:GetNPC()
-	local data = actor:GetData()
-	local can_give = false
+-- VJ Base NPCs define their own weapon list, prefer it over the actor config.
+local function GetVJBaseWeapon(npc)
+	local vj_npcs = list.GetForEdit('VJBASE_SPAWNABLE_NPC')
+	local vj_data = vj_npcs and vj_npcs[npc:GetClass()]
+	if vj_data and istable(vj_data.Weapons) and #vj_data.Weapons ~= 0 then
+		return table.RandomBySeq(vj_data.Weapons)
+	end
+end
 
-	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor.type)
-	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end
+-- Gives the weapon if the NPC doesn't have it and makes it active.
+-- @return boolean true if the weapon is in the NPC's hands
+local function EquipWeapon(actor, npc, weapon_class)
+	local weapon = npc:GetWeapon(weapon_class)
 
-	if weapon_class then
-		local active_weapon = npc:GetActiveWeapon()
-
-		switching = switching or false
-
-		if IsValid(active_weapon) then
-			local is_equal_class = active_weapon:GetClass() == weapon_class
-			if (switching and is_equal_class) or (not switching and not is_equal_class) then
-				return
-			end
-		end
-
-		local weapon = npc:GetWeapon(weapon_class)
-		if not IsValid(weapon) and not hook.Run('BGN_PreGiveWeapon', actor, npc, weapon_class) then
-			weapon = npc:Give(weapon_class)
-			hook.Run('BGN_PostGiveWeapon', actor, npc, weapon_class)
-			can_give = true
-		end
-
-		if can_give and IsValid(weapon) and not hook.Run('BGN_PreSelectWeapon', actor, npc, weapon_class) then
-			npc:SelectWeapon(weapon_class)
-			hook.Run('BGN_PostSelectWeapon', actor, npc, weapon_class)
-		end
-	else
-		local actor_weapon_class = actor.weapon
-		if actor_weapon_class and #actor_weapon_class ~= 0 then
-			local active_weapon = npc:GetActiveWeapon()
-			if not IsValid(active_weapon) then
-				local vj_base_npcs_list = list.Get('VJBASE_SPAWNABLE_NPC')
-				if vj_base_npcs_list then
-					local npc_class = npc:GetClass()
-					local vj_base_npc_data = vj_base_npcs_list[npc_class]
-					if vj_base_npc_data and vj_base_npc_data.Weapons then
-						actor_weapon_class = table.RandomBySeq(vj_base_npc_data.Weapons)
-					end
-				end
-
-				local weapon = npc:GetWeapon(actor_weapon_class)
-				if not IsValid(weapon) and not hook.Run('BGN_PreGiveWeapon', actor, npc, actor_weapon_class) then
-					weapon = npc:Give(actor_weapon_class)
-					hook.Run('BGN_PostGiveWeapon', actor, npc, actor_weapon_class)
-					can_give = true
-				end
-
-				if can_give and IsValid(weapon) and not hook.Run('BGN_PreSelectWeapon', actor, npc, actor_weapon_class) then
-					npc:SelectWeapon(actor_weapon_class)
-					hook.Run('BGN_PostSelectWeapon', actor, npc, actor_weapon_class)
-				end
-			end
-		end
+	if not IsValid(weapon) then
+		if hook.Run('BGN_PreGiveWeapon', actor, npc, weapon_class) then return false end
+		weapon = npc:Give(weapon_class)
+		hook.Run('BGN_PostGiveWeapon', actor, npc, weapon_class)
+		if not IsValid(weapon) then return false end
 	end
 
+	local active_weapon = npc:GetActiveWeapon()
+	if active_weapon == weapon then return true end
+
+	if hook.Run('BGN_PreSelectWeapon', actor, npc, weapon_class) then return false end
+	npc:SelectWeapon(weapon_class)
+	hook.Run('BGN_PostSelectWeapon', actor, npc, weapon_class)
+
+	return true
+end
+
+-- Arms the actor.
+-- @param actor table
+-- @param weapon_class string|nil weapon to give, nil - the actor's own weapon
+-- @param switching boolean|nil with a class: true - replace another active weapon,
+--   false - only give the weapon if the NPC holds nothing else
+function bgNPC:SetActorWeapon(actor, weapon_class, switching)
+	Assert.Arg(1, actor, 'actor', 'bgNPC:SetActorWeapon')
+	Assert.Arg(2, weapon_class, 'string|nil', 'bgNPC:SetActorWeapon')
+	Assert.Arg(3, switching, 'boolean|nil', 'bgNPC:SetActorWeapon')
+
+	if not actor:IsAlive() or not actor:IsNPC() then return end
+
+	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor:GetType())
+	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end
+
+	local npc = actor:GetNPC()
+	local active_weapon = npc:GetActiveWeapon()
+
+	if weapon_class then
+		if IsValid(active_weapon) then
+			local is_same = active_weapon:GetClass() == weapon_class
+			if is_same or not switching then return end
+		end
+	else
+		weapon_class = actor:GetActorWeapon()
+		if not weapon_class or #weapon_class == 0 then return end
+		if IsValid(active_weapon) then return end
+		weapon_class = GetVJBaseWeapon(npc) or weapon_class
+	end
+
+	if not EquipWeapon(actor, npc, weapon_class) then return end
+
 	-- Backward compatibility with the old version of the config
+	local data = actor:GetData()
 	local weapon_skill = data.weapon_skill or data.weaponSkill
-	if weapon_skill and isnumber(weapon_skill) then
+	if isnumber(weapon_skill) then
 		npc:SetCurrentWeaponProficiency(weapon_skill)
 	end
 
@@ -108,7 +103,7 @@ function bgNPC:IsEnemyTeam(target_actor, attacker)
 	local AttackerActor = bgNPC:GetActor(attacker)
 	if AttackerActor and AttackerActor:HasEnemy(target_actor) then return true end
 
-	local FirstAttackerModule = bgNPC:GetModule('first_attacker')
+	FirstAttackerModule = FirstAttackerModule or bgNPC:GetModule('first_attacker')
 	if FirstAttackerModule:IsFirstAttacker(attacker, target_actor) then return true end
 
 	for i = #actors, 1, -1 do

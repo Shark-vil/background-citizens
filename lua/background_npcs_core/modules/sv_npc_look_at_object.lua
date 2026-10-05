@@ -27,7 +27,7 @@ local function ParseEntitiesForActorAsync(actor)
 
 		if not IsValid(npc) then break end
 
-		if not bgNPC:NPCIsViewVector(npc, ent_pos, 70) then
+		if not bgNPC:NPCIsViewVector(npc, ent_pos, 85) then
 			continue
 		end
 
