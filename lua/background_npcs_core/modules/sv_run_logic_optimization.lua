@@ -28,7 +28,7 @@ local function process(yield, wait)
 			return
 		end
 
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -104,7 +104,7 @@ cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 		async.Remove('bgn_server_logic_optimization')
 
 		timer.Simple(1, function()
-			local actors = bgNPC:GetAll()
+			local actors = bgNPC.Actors.GetAll()
 
 			for i = 1, #actors do
 				local actor = actors[i]

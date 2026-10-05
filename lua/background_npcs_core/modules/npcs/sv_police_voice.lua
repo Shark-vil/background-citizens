@@ -21,7 +21,7 @@ end)
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_PoliceVoiceOnDefenseState', function(_, target, reaction)
 	if reaction ~= 'defense' then return end
-	RandomPlay(bgNPC:GetActor(target))
+	RandomPlay(bgNPC.Actors.Get(target))
 end)
 
 hook.Add('BGN_StartReplic', 'BGN_PoliceVoice', function(actor)

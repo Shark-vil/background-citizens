@@ -50,7 +50,7 @@ if SERVER then
 		if not tr.Hit then return end
 
 		local ent = tr.Entity
-		local actor = bgNPC:GetActor(ent)
+		local actor = bgNPC.Actors.Get(ent)
 
 		if ent:IsVehicle() then
 			local provider = BGN_VEHICLE:GetVehicleProvider(ent)
@@ -60,12 +60,12 @@ if SERVER then
 		end
 
 		if not actor then
-			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			bgNPC.Util.Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
 			return
 		end
 
 		snet.IsValidForClient(ply, function(_, success)
-			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
+			bgNPC.Util.Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
 			if not success then return end
 
 			if self.Actor then
@@ -151,9 +151,9 @@ else
 	end
 
 	function TOOL:SetActor(uid)
-		local actor = bgNPC:GetActorByUid(uid)
+		local actor = bgNPC.Actors.GetByUid(uid)
 		if actor == nil then
-			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
+			bgNPC.Util.Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end

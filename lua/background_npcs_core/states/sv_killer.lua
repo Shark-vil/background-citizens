@@ -1,6 +1,6 @@
 local MeleeWeapon = { 'weapon_crowbar', 'weapon_stunstick' }
 
-bgNPC:SetStateAction('killer', 'danger', {
+bgNPC.States.Register('killer', 'danger', {
 	start = function(actor)
 		if actor.eternal then
 			actor:GetData().not_eternal = true
@@ -53,8 +53,8 @@ bgNPC:SetStateAction('killer', 'danger', {
 					data.isAttack = true
 				end
 			else
-				if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
-					bgNPC:SetActorWeapon(actor)
+				if current_distance <= 90000 and bgNPC.Vision.HasLineOfSight(npc, enemy) then
+					bgNPC.Combat.EquipActor(actor)
 
 					local isMeleeWeapon = false
 					local npcWeapon = npc:GetActiveWeapon()

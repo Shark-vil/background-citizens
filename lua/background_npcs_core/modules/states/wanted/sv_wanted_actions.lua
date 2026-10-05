@@ -3,8 +3,8 @@ local player_GetHumans = player.GetHumans
 local ipairs = ipairs
 local IsValid = IsValid
 --
-local asset = bgNPC:GetModule('wanted')
-local TeamParentModule = bgNPC:GetModule('team_parent')
+local asset = bgNPC.Modules.Get('wanted')
+local TeamParentModule = bgNPC.Modules.Get('team_parent')
 local enable_wanted_mode = GetConVar('bgn_enable_wanted_mode'):GetBool()
 local enable_wanted_police_instantly = GetConVar('bgn_wanted_police_instantly'):GetBool()
 local enable_arrest_mode = GetConVar('bgn_arrest_mode'):GetBool()
@@ -22,7 +22,7 @@ slib.GlobalCvarRegisterChangeCallback('bgn_disable_halo_calling', 'bgn_cl_wanted
 cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 	enable_wanted_mode = tonumber(newValue) == 1
 
-	bgNPC:Log('New value for "enable_wanted_mode" - ' .. tostring(enable_wanted_mode), 'Wanted Module')
+	bgNPC.Util.Log('New value for "enable_wanted_mode" - ' .. tostring(enable_wanted_mode), 'Wanted Module')
 
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
@@ -32,7 +32,7 @@ cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 		local WantedClass = wanted_list[i]
 		if WantedClass and WantedClass.target then
 			asset:RemoveWanted(WantedClass.target)
-			bgNPC:Log('Reset wanted for - ' .. tostring(WantedClass.target), 'Wanted Module')
+			bgNPC.Util.Log('Reset wanted for - ' .. tostring(WantedClass.target), 'Wanted Module')
 		end
 	end
 end, 'bgn_wanted_module_cvar_bgn_enable_wanted_mode')
@@ -40,27 +40,27 @@ end, 'bgn_wanted_module_cvar_bgn_enable_wanted_mode')
 cvars.AddChangeCallback('bgn_wanted_police_instantly', function(_, _, newValue)
 	enable_wanted_police_instantly = tonumber(newValue) == 1
 
-	bgNPC:Log('New value for "enable_wanted_police_instantly" - ' .. tostring(enable_wanted_police_instantly), 'Wanted Module')
+	bgNPC.Util.Log('New value for "enable_wanted_police_instantly" - ' .. tostring(enable_wanted_police_instantly), 'Wanted Module')
 end, 'bgn_wanted_module_cvar_bgn_wanted_police_instantly')
 
 cvars.AddChangeCallback('bgn_arrest_mode', function(_, _, newValue)
 	enable_arrest_mode = tonumber(newValue) == 1
 
-	bgNPC:Log('New value for "enable_arrest_mode" - ' .. tostring(enable_arrest_mode), 'Wanted Module')
+	bgNPC.Util.Log('New value for "enable_arrest_mode" - ' .. tostring(enable_arrest_mode), 'Wanted Module')
 end, 'bgn_wanted_module_cvar_bgn_arrest_mode')
 
 cvars.AddChangeCallback('bgn_wanted_impunity_limit', function(_, _, newValue)
 	impunity_limit = tonumber(newValue)
 
-	bgNPC:Log('New value for "impunity_limit" - ' .. tostring(impunity_limit), 'Wanted Module')
+	bgNPC.Util.Log('New value for "impunity_limit" - ' .. tostring(impunity_limit), 'Wanted Module')
 end, 'bgn_wanted_module_cvar_bgn_wanted_impunity_limit')
 
 cvars.AddChangeCallback('bgn_wanted_impunity_reduction_period', function(_, _, newValue)
 	impunity_limit_reduction_period = tonumber(newValue)
 	impunity_last_reduction_period = 0
 
-	bgNPC:Log('New value for "impunity_limit_reduction_period" - ' .. tostring(impunity_limit_reduction_period), 'Wanted Module')
-	bgNPC:Log('New value for "impunity_last_reduction_period" - ' .. tostring(impunity_last_reduction_period), 'Wanted Module')
+	bgNPC.Util.Log('New value for "impunity_limit_reduction_period" - ' .. tostring(impunity_limit_reduction_period), 'Wanted Module')
+	bgNPC.Util.Log('New value for "impunity_last_reduction_period" - ' .. tostring(impunity_last_reduction_period), 'Wanted Module')
 end, 'bgn_wanted_module_cvar_bgn_wanted_impunity_reduction_period')
 
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker', function(attacker, target)
@@ -72,21 +72,21 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttac
 end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', function(actor, attacker)
-	if bgNPC:IsPeacefulMode() or not enable_wanted_mode then return end
+	if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode then return end
 
-	local AttackerActor = bgNPC:GetActor(attacker)
+	local AttackerActor = bgNPC.Actors.Get(attacker)
 	if AttackerActor and AttackerActor:HasTeam('residents') then return end
 
 	if asset:HasWanted(attacker) then
 		local WantedClass = asset:GetWanted(attacker)
 		WantedClass:UpdateWanted()
 
-		local kills = bgNPC:GetWantedKillingStatisticSumm(attacker)
+		local kills = bgNPC.Statistics.GetSum(attacker)
 		if WantedClass.next_kill_update <= kills then
 			WantedClass:LevelUp()
 		end
 	else
-		local can_see, _ = bgNPC:CanAnyActorSeeEntity(attacker, actor)
+		local can_see, _ = bgNPC.Vision.AnyActorSees(attacker, actor)
 		if not can_see then return end
 
 		local is_player = attacker:IsPlayer()
@@ -95,7 +95,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 				local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
 				if current_impunity >= impunity_limit or actor:HasTeam('police') then
 					attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
-					bgNPC:ResetKillingStatistic(attacker)
+					bgNPC.Statistics.Reset(attacker)
 					asset:AddWanted(attacker)
 				else
 					attacker:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity + 1)
@@ -110,7 +110,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 end)
 
 hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(target)
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
 			actor:AddEnemy(target)
 
@@ -122,13 +122,13 @@ hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(tar
 end)
 
 hook.Add('BGN_RemoveWantedTarget', 'BGN_RemoveWantedTargetFromResidents', function(target)
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
 			actor:RemoveEnemy(target)
 		end
 	end
 
-	bgNPC:ResetKillingStatistic(target)
+	bgNPC.Statistics.Reset(target)
 	-- bgNPC:ResetWantedKillingStatistic(target)
 end)
 
@@ -201,7 +201,7 @@ timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
 end)
 
 timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
-	if bgNPC:IsPeacefulMode() or not enable_wanted_mode then return end
+	if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode then return end
 
 	-- local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 	local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
@@ -210,7 +210,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	if wanted_count == 0 then return end
 
-	local residents = bgNPC:GetAllByTeam('residents')
+	local residents = bgNPC.Actors.GetByTeam('residents')
 
 	-- 600 ^ 2
 	local min_distance_detect = 360000
@@ -237,7 +237,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 					if dist <= min_distance_detect then
 						UpdateWantedAndSetReaction(actor, enemy)
 						is_update = true
-					elseif dist <= ray_distance_detect and bgNPC:IsTargetRay(npc, enemy) then
+					elseif dist <= ray_distance_detect and bgNPC.Vision.HasLineOfSight(npc, enemy) then
 						UpdateWantedAndSetReaction(actor, enemy)
 						is_update = true
 					end

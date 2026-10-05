@@ -7,7 +7,7 @@ local hook_Run = hook.Run
 local math_random = math.random
 local CHAN_AUTO = CHAN_AUTO
 --
-local asset = bgNPC:GetModule('wanted')
+local asset = bgNPC.Modules.Get('wanted')
 local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
 local phone_911_sounnds = {
 	Sound('background_npcs/calling_police/911/1.wav'),
@@ -30,7 +30,7 @@ local function IsValidWantedMode()
 	return cvar_bgn_enable_wanted_mode:GetBool()
 end
 
-bgNPC:SetStateAction('calling_police', 'danger', {
+bgNPC.States.Register('calling_police', 'danger', {
 	pre_start = function(actor)
 		if not IsValidWantedMode() then
 			return 'fear'
@@ -54,7 +54,7 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 			return
 		end
 
-		local enemyActor = bgNPC:GetActor(currentEnemy)
+		local enemyActor = bgNPC.Actors.Get(currentEnemy)
 		if enemyActor and enemyActor:HasTeam('police') then
 			actor:SetState(reaction)
 			return
@@ -64,7 +64,7 @@ bgNPC:SetStateAction('calling_police', 'danger', {
 		local npc_index = npc:EntIndex()
 
 		-- 90000 = 300 ^ 2
-		if not bgNPC:IsTargetRay(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
+		if not bgNPC.Vision.HasLineOfSight(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
 			local rnd = math_random(0, 100)
 			if rnd > 80 then
 				actor:CallForHelp(currentEnemy)

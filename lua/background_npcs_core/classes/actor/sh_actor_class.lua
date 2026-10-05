@@ -122,7 +122,7 @@ local function PostInitialize(actor, actor_data, not_sync_actor_on_client, not_a
 	end
 
 	if not not_auto_added_to_list then
-		bgNPC:AddNPC(actor)
+		bgNPC.Actors.Register(actor)
 	end
 
 	hook_Run('BGN_InitActor', actor)
@@ -145,7 +145,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 
 	if not IsValid(npc) then return end
 
-	local npc_data = bgNPC:GetActorConfig(npc_type)
+	local npc_data = bgNPC.Config.GetActor(npc_type)
 	if not npc_data then return end
 
 	local data = table_Copy(npc_data)
@@ -244,5 +244,5 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 end
 
 snet.RegisterValidator('actor', function(ply, uid, actor_uid)
-	return bgNPC:GetActorByUid(actor_uid) ~= nil
+	return bgNPC.Actors.GetByUid(actor_uid) ~= nil
 end)

@@ -1,15 +1,15 @@
-local asset = bgNPC:GetModule('actors_dialogue')
+local asset = bgNPC.Modules.Get('actors_dialogue')
 
-bgNPC:SetStateAction('dialogue', 'calm', {
+bgNPC.States.Register('dialogue', 'calm', {
 	validator = function(actor)
 		if GetConVar('bgn_disable_dialogues'):GetBool() then return end
 
 		local npc = actor:GetNPC()
-		local actors = bgNPC:GetAllByRadius(npc:GetPos(), 500)
+		local actors = bgNPC.Actors.GetInRadius(npc:GetPos(), 500)
 		local ActorTarget = table.RandomBySeq(actors)
 
 		if ActorTarget and ActorTarget ~= actor and ActorTarget:IsAlive() then
-			if not bgNPC:IsTargetRay(npc, ActorTarget:GetNPC()) then return end
+			if not bgNPC.Vision.HasLineOfSight(npc, ActorTarget:GetNPC()) then return end
 			if not asset:SetDialogue(actor, ActorTarget) then return end
 
 			ActorTarget:SetState('dialogue', { isIgnore = true }, true)

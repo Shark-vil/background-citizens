@@ -25,14 +25,14 @@ end
 local function GetNextMovePosition(actor)
 	local npc_pos = actor:GetPos()
 	local dist = GetRandomFoundPointDistance()
-	local points = bgNPC:GetAllPointsInRadius(npc_pos, dist, 'walk')
+	local points = bgNPC.Points.GetInRadius(npc_pos, dist, 'walk')
 
 	if not points or #points == 0 then
-		points = bgNPC:GetAllPoints('walk')
+		points = bgNPC.Points.GetAll('walk')
 	end
 
 	if not points or #points == 0 then
-		points = bgNPC:GetAllPoints()
+		points = bgNPC.Points.GetAll()
 	end
 
 	if not points or #points == 0 then
@@ -64,7 +64,7 @@ end
 
 local function UpdateActorTargetPointAsync(actor, data)
 	-- if not data.Dick or data.Dick > CurTime() then
-	-- 	local actors = bgNPC:GetAllByRadius(actor:GetPos(), 300)
+	-- 	local actors = bgNPC.Actors.GetInRadius(actor:GetPos(), 300)
 	-- 	if #actors >= 3 then
 	-- 		data.updateTargetPointDelay = 0
 	-- 		print(1)
@@ -84,7 +84,7 @@ local function UpdateActorTargetPointAsync(actor, data)
 	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
 end
 
-bgNPC:SetStateAction('walk', 'calm', {
+bgNPC.States.Register('walk', 'calm', {
 	update = function(actor)
 		local data = actor:GetStateData()
 		data.schedule = data.schedule or 'walk'

@@ -1,3 +1,3 @@
 hook.Add('NBC_PlayerDisconnectedBypass', 'BGN_CancelNPCRemover', function(npc)
-   return bgNPC:GetActor(npc) ~= nil
+   return bgNPC.Actors.Get(npc) ~= nil
 end)

@@ -12,7 +12,7 @@ hook.Add('BGN_PreSpawnActor', 'BGN_SetPoliceHelicopterUpperPosition', function(n
 end)
 
 timer.Create('BGN_PoliceHelicopterSetTarget', 1, 0, function()
-	for _, actor in ipairs(bgNPC:GetAllByType('police_helicopter')) do
+	for _, actor in ipairs(bgNPC.Actors.GetByType('police_helicopter')) do
 		if actor:IsAlive() and actor.class == 'npc_apache_scp_sb' then
 			local enemy = actor:GetNearEnemy()
 			if IsValid(enemy) then

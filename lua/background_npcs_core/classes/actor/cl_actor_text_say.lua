@@ -25,7 +25,7 @@ end
 local function DrawActorText(actor_uid, say_text, say_time)
 	RemoveSpeakByUid(actor_uid)
 
-	local actor = bgNPC:GetActorByUid(actor_uid)
+	local actor = bgNPC.Actors.GetByUid(actor_uid)
 	if not actor then return end
 
 	local text_lines = {}

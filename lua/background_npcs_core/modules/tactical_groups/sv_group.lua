@@ -102,7 +102,7 @@ end
 local function CalcTacticalGroup()
 	local max_group_size = 3
 
-	for _, target_actor in ipairs(bgNPC:GetAll()) do
+	for _, target_actor in ipairs(bgNPC.Actors.GetAll()) do
 		-- if not slib.chance(10) then continue end
 		if not target_actor or not target_actor:IsAlive() then continue end
 		if not target_actor:EqualStateGroup('danger') then continue end
@@ -115,7 +115,7 @@ local function CalcTacticalGroup()
 		local tactical_group = GetTacticalGroup(target_actor)
 		if tactical_group:Count() == max_group_size then continue end
 
-		for _, actor in ipairs(bgNPC:GetAllByRadius(npc:GetPos(), math_random(500, 700))) do
+		for _, actor in ipairs(bgNPC.Actors.GetInRadius(npc:GetPos(), math_random(500, 700))) do
 			if tactical_group:Count() == max_group_size then break end
 			if not actor or not actor:IsAlive() or not actor:HasTeam(target_actor) or actor == target_actor then
 				continue

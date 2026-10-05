@@ -9,7 +9,7 @@ local isnumber = isnumber
 -- timer.Create('BGN_ActorAnimationController', .1, 0, function()
 
 hook.Add('Think', 'BGN_ActorAnimationController', function()
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()

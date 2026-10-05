@@ -7,13 +7,13 @@ if SERVER then
 
 		if file.Exists(json_file, 'DATA') then
 			file.Delete(json_file)
-			bgNPC:Log('Remove route file - ' .. json_file, 'Route')
+			bgNPC.Util.Log('Remove route file - ' .. json_file, 'Route')
 			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. json_file)
 		end
 
 		if file.Exists(dat_file, 'DATA') then
 			file.Delete(dat_file)
-			bgNPC:Log('Remove route file - ' .. dat_file, 'Route')
+			bgNPC.Util.Log('Remove route file - ' .. dat_file, 'Route')
 			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. dat_file)
 		end
 

@@ -37,7 +37,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 							enemy_vehicle = enemy:GetVehicle()
 						end
 					else
-						local enemy_actor = bgNPC:GetActor(enemy)
+						local enemy_actor = bgNPC.Actors.Get(enemy)
 						if enemy_actor then
 							enemy_vehicle = enemy_actor:GetVehicle()
 							in_vehicle = _IsValid(enemy_vehicle)

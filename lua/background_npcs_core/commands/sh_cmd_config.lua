@@ -1,11 +1,11 @@
 scommand.Create('bgn_config_reload').OnShared(function()
-	bgNPC:ClearActorsConfig()
+	bgNPC.Config.ClearCache()
 end).Access( { isAdmin = true } ).Broadcast().Register()
 
 scommand.Create('bgn_config_view').OnShared(function(_, _, args)
 	local actor_type = args[1]
 	if not bgNPC.cfg.actors[actor_type] then return end
-	PrintTable(bgNPC:GetActorConfig(actor_type))
+	PrintTable(bgNPC.Config.GetActor(actor_type))
 end).AutoComplete(function(cmd)
 	local actors_type_list = {}
 
@@ -17,7 +17,7 @@ end).AutoComplete(function(cmd)
 end).Access( { isAdmin = true } ).Register()
 
 scommand.Create('bgn_print_spawned_actors_count').OnShared(function(_, _, args)
-	print(bgNPC:Count(args[1]))
+	print(bgNPC.Actors.Count(args[1]))
 end).AutoComplete(function(cmd)
 	local actors_type_list = {}
 

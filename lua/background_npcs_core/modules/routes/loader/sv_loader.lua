@@ -10,7 +10,7 @@ bgNPC.LoadRoutes = function()
 	end
 
 	local count = BGN_NODE:CountNodesOnMap()
-	bgNPC:Log('Load citizens walk points - ' .. tostring(count), 'Route')
+	bgNPC.Util.Log('Load citizens walk points - ' .. tostring(count), 'Route')
 	hook.Run('BGN_PostLoadRoutes', map_name)
 
 	return BGN_NODE:GetMap()

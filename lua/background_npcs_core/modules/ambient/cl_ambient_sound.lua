@@ -21,7 +21,7 @@ local function SetAmbient(ambient_value)
 				currentSound = nil
 			end)
 
-			bgNPC:Log('Stop ambient - ' .. currentAmbient)
+			bgNPC.Util.Log('Stop ambient - ' .. currentAmbient)
 		end
 
 		currentAmbient = nil
@@ -44,7 +44,7 @@ local function SetAmbient(ambient_value)
 	timer.Create('BGN_SetNewAmbientSoundAfterFade', fade_time + 0.1, 1, function()
 		if currentSound then
 			currentSound:Stop()
-			bgNPC:Log('Stop ambient - ' .. tostring(currentAmbient))
+			bgNPC.Util.Log('Stop ambient - ' .. tostring(currentAmbient))
 		end
 
 		currentSound = CreateSound(game.GetWorld(), sound_name)
@@ -67,14 +67,14 @@ local function SetAmbient(ambient_value)
 			end
 
 			-- if current_volume ~= sound_volume then
-			-- 	bgNPC:Log('Ambient volume - ' .. current_volume)
+			-- 	bgNPC.Util.Log('Ambient volume - ' .. current_volume)
 			-- end
 
 			currentSound:ChangeVolume(current_volume)
 		end)
 
 		if oldAmbient ~= currentAmbient then
-			bgNPC:Log('Play ambient - ' .. sound_name)
+			bgNPC.Util.Log('Play ambient - ' .. sound_name)
 		end
 	end)
 
@@ -96,7 +96,7 @@ timer.Create('BGN_SetAmbientSound', 2, 0, function()
 	for i = 1, #entities do
 		local npc = entities[i]
 
-		if bgNPC:GetActor(npc) ~= nil and bgNPC:IsTargetRay(ply, npc) then
+		if bgNPC.Actors.Get(npc) ~= nil and bgNPC.Vision.HasLineOfSight(ply, npc) then
 			count = count + 1
 		end
 	end

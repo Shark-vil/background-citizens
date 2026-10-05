@@ -76,32 +76,6 @@ bgNPC.cvar.bgn_chunk_size = 5000
 bgNPC.cvar.bgn_agressive_mode = 0
 bgNPC.cvar.bgn_friend_mode = 0
 
-function bgNPC:IsActiveNPCType(npc_type)
-	local cvar = GetConVar('bgn_npc_type_' .. npc_type)
-	if not cvar then return false end
-	return cvar:GetBool()
-end
-
-function bgNPC:GetFullness(npc_type)
-	local data = bgNPC.cfg.actors[npc_type]
-	if data == nil then
-		return 0
-	end
-
-	if data.fullness ~= nil then
-		local max = math.Round( (data.fullness / 100) * GetConVar('bgn_max_npc'):GetInt() )
-		if max >= 0 then return max end
-	elseif data.limit ~= nil then
-		return math.Round(data.limit)
-	end
-
-	return 0
-end
-
-function bgNPC:GetLimitActors(npc_type)
-	return GetConVar('bgn_npc_type_max_' .. npc_type):GetInt()
-end
-
 CreateConVar('bgn_installed', 1, {
 	FCVAR_ARCHIVE,
 	FCVAR_NOTIFY,
@@ -345,7 +319,7 @@ for npcType, v in pairs(bgNPC.cfg.actors) do
 end
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
-	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType), FCVAR_ARCHIVE)
+	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType), FCVAR_ARCHIVE)
 		.Access(DefaultAccess)
 end
 

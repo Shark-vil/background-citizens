@@ -118,7 +118,7 @@ snet.Callback('BGN_ActorSpawnmenuResetSpawner', function(ply, actorType)
 
 	if isbool(actorType) then
 		if actorType == true then
-			bgNPC:ResetConfiguration()
+			bgNPC.Config.Reset()
 			bgNPC.SpawnMenu.Creator['NPC'] = {}
 		end
 	elseif isstring(actorType) then

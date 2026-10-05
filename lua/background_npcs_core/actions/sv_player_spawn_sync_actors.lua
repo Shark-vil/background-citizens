@@ -6,7 +6,7 @@ local IsValid = IsValid
 
 hook.Add('slib.FirstPlayerSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 	local delay = 0
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]

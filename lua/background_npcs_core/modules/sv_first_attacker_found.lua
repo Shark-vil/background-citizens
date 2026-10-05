@@ -16,8 +16,8 @@ hook.Add('EntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, dmginfo)
 	if not EntityHasValid(attacker) or not EntityHasValid(target) then return end
 
 	if not attacker:IsPlayer() and not target:IsPlayer() then
-		local AttackerActor = bgNPC:GetActor(attacker)
-		local TargetActor = bgNPC:GetActor(target)
+		local AttackerActor = bgNPC.Actors.Get(attacker)
+		local TargetActor = bgNPC.Actors.Get(target)
 		if AttackerActor and TargetActor and AttackerActor:HasTeam(TargetActor) then return end
 	end
 

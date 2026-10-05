@@ -17,7 +17,7 @@ local surface_DrawTexturedRect = surface.DrawTexturedRect
 local math_Round = math.Round
 local string_Replace = string.Replace
 --
-local asset = bgNPC:GetModule('wanted')
+local asset = bgNPC.Modules.Get('wanted')
 local text_wanted_font_name = 'Trebuchet24'
 local text_calling_police_font_name = 'DermaLarge'
 local wanted_config = bgNPC.cfg.wanted
@@ -128,7 +128,7 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnNPCCallingPolice', function()
 	local playerPos = localPlayer:GetPos()
 	local npcs = {}
 	local npcs_count = 0
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -156,7 +156,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', fun
 	local color_text = wanted_config.color['calling_police_text']
 	local color_text_outline = wanted_config.color['calling_police_text_outline']
 	local text = wanted_config.language['calling_police']
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]

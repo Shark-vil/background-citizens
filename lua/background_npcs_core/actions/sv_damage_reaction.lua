@@ -4,8 +4,8 @@ local hook_Run = hook.Run
 local WantedModule
 
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
-	local actors = bgNPC:GetAllByRadius(target:GetPos(), 2500)
-	WantedModule = WantedModule or bgNPC:GetModule('wanted')
+	local actors = bgNPC.Actors.GetInRadius(target:GetPos(), 2500)
+	WantedModule = WantedModule or bgNPC.Modules.Get('wanted')
 	for i = 1, #actors do
 		local actor = actors[i]
 		local npc = actor:GetNPC()
@@ -18,15 +18,15 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			attacker = target
 			target = save_attacker
 		end
-		local actor_attacker = bgNPC:GetActor(attacker)
+		local actor_attacker = bgNPC.Actors.Get(attacker)
 		if actor_attacker and not actor_attacker:HasEnemy(target) then continue end
 
 		local reaction = actor:GetReactionForProtect()
 		actor:SetReaction(reaction)
 
 		if not WantedModule:HasWanted(attacker)
-			and not bgNPC:IsTargetRay(npc, attacker)
-			and not bgNPC:IsTargetRay(npc, target)
+			and not bgNPC.Vision.HasLineOfSight(npc, attacker)
+			and not bgNPC.Vision.HasLineOfSight(npc, target)
 		then
 			continue
 		end
@@ -43,7 +43,7 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			actor:SetState(reaction)
 		end
 
-		local enemy = bgNPC:GetEnemyFromActorByTarget(actor, target, attacker)
+		local enemy = bgNPC.Combat.ResolveEnemy(actor, target, attacker)
 		if enemy and IsValid(enemy) then
 			actor:AddEnemy(enemy, reaction)
 		end

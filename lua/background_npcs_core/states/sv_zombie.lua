@@ -3,7 +3,7 @@ hook.Add('BGN_OnValidSpawnActor', 'BGN_ZombieSpawnLocation', function(npc_type, 
 
 	local humans_count_on_range = 0
 
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		if not actor or not actor:IsAlive() then continue end
 
 		local npc = actor:GetNPC()
@@ -19,7 +19,7 @@ hook.Add('BGN_OnValidSpawnActor', 'BGN_ZombieSpawnLocation', function(npc_type, 
 	end
 end)
 
-bgNPC:SetStateAction('zombie', 'danger', {
+bgNPC.States.Register('zombie', 'danger', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then

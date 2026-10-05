@@ -46,8 +46,6 @@ local root_directory = 'background_npcs_core'
 local script = slib.CreateIncluder(root_directory, load_file_text)
 
 local function ExecutableScripts()
-	script:using('global/sh_assert.lua')
-
 	script:using('config/sh_main.lua')
 	script:using('config/sh_config.lua')
 
@@ -67,7 +65,20 @@ local function ExecutableScripts()
 
 	slib.usingDirectory(root_directory .. '/custom_modules/config', load_modules_text)
 
-	script:using('global/sh_oldconfig.lua')
+	script:using('config/sh_oldconfig.lua')
+
+	-- Public API. Loaded before console variables, which already use it.
+	script:using('api/sh_assert.lua')
+	script:using('api/sh_core.lua')
+	script:using('api/sh_config.lua')
+	script:using('api/sh_actors.lua')
+	script:using('api/sh_points.lua')
+	script:using('api/sh_states.lua')
+	script:using('api/sh_vision.lua')
+	script:using('api/sh_modes.lua')
+	script:using('api/sh_statistics.lua')
+	script:using('api/sv_combat.lua')
+	script:using('api/sh_legacy.lua')
 
 	script:using('cvars/sh_cvars.lua')
 	script:using('cvars/sv_cvars.lua')
@@ -78,6 +89,9 @@ local function ExecutableScripts()
 
 	slib.usingDirectory(root_directory .. '/custom_modules/preload', load_modules_text)
 
+	-- Remember actor configs (including custom modules) for bgNPC.Config.Reset
+	bgNPC.Config.SaveDefaults()
+
 	script:using('classes/actor/sh_actor_base.lua', true)
 	script:using('classes/actor/cl_actor_text_say.lua')
 	script:using('classes/actor/sh_actor_class.lua')
@@ -86,19 +100,12 @@ local function ExecutableScripts()
 	script:using('classes/sh_seat_class.lua')
 	script:using('classes/sh_dv_class.lua')
 
-	script:using('global/cl_fonts.lua')
-	script:using('global/sv_meta.lua')
-	script:using('global/sh_meta.lua')
+	script:using('modules/cl_fonts.lua')
 	script:using('global/sv_spawner.lua')
-	script:using('global/sh_actors_finder.lua')
-	script:using('global/sh_actors_register.lua')
-	script:using('global/sh_killing_statistic.lua')
-	script:using('global/sh_wanted_killing_statistic.lua')
-	script:using('global/sh_states.lua')
-	script:using('global/sh_find_path_service.lua')
-	script:using('global/sv_peaceful_mode.lua')
-	script:using('global/sv_relationship.lua')
-	script:using('global/sv_friend_mode_and_agressive_mode.lua')
+
+	script:using('modules/modes/sv_peaceful_mode.lua')
+	script:using('modules/modes/sv_friend_and_aggressive_mode.lua')
+	script:using('modules/relationship/sv_relationship.lua')
 
 	-- script:using('modules/cl_updatepage.lua')
 	script:using('modules/cl_render_optimization.lua')
@@ -196,6 +203,7 @@ local function ExecutableScripts()
 
 	script:using('modules/tactical_groups/sv_group.lua')
 
+	script:using('actions/sh_state_machine.lua')
 	script:using('actions/sv_open_door.lua')
 	script:using('actions/sv_police_luggage.lua')
 	script:using('actions/sv_damage_reaction.lua')

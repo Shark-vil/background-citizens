@@ -24,7 +24,7 @@ end
 snet.RegisterCallback('bgn_debug_send_actor_movement_path', function(ply, uid, path)
 	if not DebugIsEnabled() then return end
 
-	local actor = bgNPC:GetActorByUid(uid)
+	local actor = bgNPC.Actors.GetByUid(uid)
 	if not actor then return end
 	actor.walkPath = path
 end)
@@ -42,7 +42,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 
 	render_SetColorMaterial()
 
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 	local ply = LocalPlayer()
 	local plyPosition = ply:GetPos()
 	local cam_angle = ply:EyeAngles()

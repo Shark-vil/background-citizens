@@ -10,7 +10,7 @@ local function GetEntityName(ent)
 	end
 
 	local name = ent:GetName()
-	local actor = bgNPC:GetActor(ent)
+	local actor = bgNPC.Actors.Get(ent)
 
 	if actor then
 		name = actor:GetName()
@@ -49,19 +49,19 @@ end
 local function Call_BGN_OnKilledActor(actor, npc, attacker)
 	actor.OnNPCKilled = true
 
-	bgNPC:Log(tostring(attacker) .. ' killed ' .. actor:GetName(), 'OnNPCKilled')
+	bgNPC.Util.Log(tostring(attacker) .. ' killed ' .. actor:GetName(), 'OnNPCKilled')
 
-	bgNPC:AddKillingStatistic(attacker, actor)
+	bgNPC.Statistics.AddKill(attacker, actor)
 	-- bgNPC:AddWantedKillingStatistic(attacker, actor)
 
 	hook.Run('BGN_OnKilledActor', actor, attacker)
 end
 
 hook.Add('PlayerDeath', 'BGN_OnPlayerDeath', function(victim, inflictor, attacker)
-	attacker = bgNPC:CheckVehicleAttacker(attacker)
+	attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker)
 	if not attacker then return end
 
-	local actor = bgNPC:GetActor(attacker)
+	local actor = bgNPC.Actors.Get(attacker)
 	if not actor then return end
 
 	local killed_data = {
@@ -76,13 +76,13 @@ hook.Add('PlayerDeath', 'BGN_OnPlayerDeath', function(victim, inflictor, attacke
 end)
 
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
-	attacker = bgNPC:CheckVehicleAttacker(attacker)
+	attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker)
 	if not attacker then return end
 
-	local actor = bgNPC:GetActor(npc)
+	local actor = bgNPC.Actors.Get(npc)
 	local killed_data
 
-	if not actor and not bgNPC:GetActor(attacker) then return end
+	if not actor and not bgNPC.Actors.Get(attacker) then return end
 
 	killed_data = {
 		attacker = GetEntityName(attacker),
@@ -102,7 +102,7 @@ hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 end)
 
 hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)
-	local actor = bgNPC:GetActor(npc)
+	local actor = bgNPC.Actors.Get(npc)
 	if not actor or actor.OnNPCKilled or not actor._onKilledActorLastDamageAttacker or EntityRemovedLock then
 		return
 	end
@@ -114,9 +114,9 @@ hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)
 end)
 
 hook.Add('EntityTakeDamage', 'BGN_OnKilledActorByRemoved', function(target, dmginfo)
-	local actor = bgNPC:GetActor(target)
+	local actor = bgNPC.Actors.Get(target)
 	if not actor then return end
-	local attacker = bgNPC:CheckVehicleAttacker(dmginfo:GetAttacker())
+	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
 	if not IsValid(attacker) or attacker == target then return end
 	actor._onKilledActorLastDamageAttacker = attacker
 end)

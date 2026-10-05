@@ -7,7 +7,7 @@ function ulx.bgnsetwantedlevel(calling_ply, target_ply, wanted_level)
     ulx.fancyLogAdmin(calling_ply, '#A remove wanted level for #T', target_ply)
 
     ULib.queueFunctionCall(function(target)
-      local ASSET = bgNPC:GetModule('wanted')
+      local ASSET = bgNPC.Modules.Get('wanted')
 
       if ASSET:HasWanted(target) then
         ASSET:RemoveWanted(target)
@@ -18,7 +18,7 @@ function ulx.bgnsetwantedlevel(calling_ply, target_ply, wanted_level)
 
     ULib.queueFunctionCall(function(target, wanted_level)
       local delay = 0
-      local ASSET = bgNPC:GetModule('wanted')
+      local ASSET = bgNPC.Modules.Get('wanted')
 
       if not ASSET:HasWanted(target) then
         ASSET:AddWanted(target)

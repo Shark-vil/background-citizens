@@ -1,5 +1,5 @@
-local WantedModule = bgNPC:GetModule('wanted')
-local ArrestModule = bgNPC:GetModule('player_arrest')
+local WantedModule = bgNPC.Modules.Get('wanted')
+local ArrestModule = bgNPC.Modules.Get('player_arrest')
 
 hook.Add('BGN_PreCallForHelp', 'BGN_PlayerArrest', function(actor, enemy)
 	if not ArrestModule:HasTarget(enemy) then return end
@@ -18,8 +18,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 	if not attacker:IsPlayer() and not attacker:IsNPC() then return end
 	if attacker:IsPlayer() and WantedModule:HasWanted(attacker) then return end
 
-	local TargetActor = bgNPC:GetActor(target)
-	local AttackerActor = bgNPC:GetActor(attacker)
+	local TargetActor = bgNPC.Actors.Get(target)
+	local AttackerActor = bgNPC.Actors.Get(attacker)
 
 	if attacker:IsNPC() and not AttackerActor then return end
 
@@ -36,13 +36,13 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 			end
 		end
 
-		local enemy = bgNPC:GetEnemyFromActorByTarget(PoliceActor, target, attacker)
+		local enemy = bgNPC.Combat.ResolveEnemy(PoliceActor, target, attacker)
 		if enemy ~= attacker then
 			target = attacker
 			attacker = enemy
 
-			TargetActor = bgNPC:GetActor(target)
-			AttackerActor = bgNPC:GetActor(attacker)
+			TargetActor = bgNPC.Actors.Get(target)
+			AttackerActor = bgNPC.Actors.Get(attacker)
 		end
 
 		ArrestModule:AddTarget(attacker, PoliceActor)
@@ -116,7 +116,7 @@ end)
 local function OnSetDefense(actor)
 	local target = actor:GetFirstTarget()
 	local ArrestComponent = ArrestModule:GetTarget(target)
-	local TargetActor = bgNPC:GetActor(target)
+	local TargetActor = bgNPC.Actors.Get(target)
 
 	if not IsValid(target)
 		or not ArrestComponent
@@ -133,14 +133,14 @@ local function OnSetDefense(actor)
 	end
 end
 
-bgNPC:SetStateAction('arrest', 'guarded', {
+bgNPC.States.Register('arrest', 'guarded', {
 	pre_start = function(actor)
 		return OnSetDefense(actor)
 	end,
 	update = function(actor, state, data)
 		local npc = actor:GetNPC()
 		local target = actor:GetFirstTarget()
-		local TargetActor = bgNPC:GetActor(target)
+		local TargetActor = bgNPC.Actors.Get(target)
 		local ArrestComponent = ArrestModule:GetTarget(target)
 
 		if not IsValid(target) or actor:TargetsCount() == 0 or not ArrestComponent then
@@ -234,7 +234,7 @@ bgNPC:SetStateAction('arrest', 'guarded', {
 						end
 					end
 
-					for _, selectActor in ipairs(bgNPC:GetAll()) do
+					for _, selectActor in ipairs(bgNPC.Actors.GetAll()) do
 						selectActor:RemoveTarget(target)
 						selectActor:RemoveEnemy(target)
 					end

@@ -11,7 +11,7 @@ local function version_check()
 	http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 		function(github_version, length, headers, code)
 			if code ~= 200 or not github_version then
-				bgNPC:Log('Failed to check the actual version: error code\n' .. tostring(code), 'Version Checker')
+				bgNPC.Util.Log('Failed to check the actual version: error code\n' .. tostring(code), 'Version Checker')
 				return
 			end
 

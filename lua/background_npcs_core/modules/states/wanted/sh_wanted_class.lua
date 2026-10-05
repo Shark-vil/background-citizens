@@ -16,7 +16,7 @@ local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
 slib.GlobalCvarAddChangeCallback('bgn_wanted_time', function(_, _, newValue)
 	wanted_time = tonumber(newValue)
 
-	bgNPC:Log('New value for "wanted_time" - ' .. tostring(wanted_time), 'Wanted Module Class')
+	bgNPC.Util.Log('New value for "wanted_time" - ' .. tostring(wanted_time), 'Wanted Module Class')
 end, 'bgn_wanted_module_cvar_bgn_wanted_time')
 
 function ASSET:Instance(ent)
@@ -69,7 +69,7 @@ function ASSET:Instance(ent)
 		end
 
 		local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
-		self.next_kill_update = bgNPC:GetWantedKillingStatisticSumm(ent) + cfg_kills
+		self.next_kill_update = bgNPC.Statistics.GetSum(ent) + cfg_kills
 	end
 
 	function public:LevelUp()
@@ -116,7 +116,7 @@ function ASSET:AddWanted(ent)
 	if self:HasWanted(ent) then return end
 
 	if SERVER and not ent:IsPlayer() then
-		bgNPC:GetModule('player_arrest'):RemoveTarget(ent)
+		bgNPC.Modules.Get('player_arrest'):RemoveTarget(ent)
 	end
 
 	local WantedClass = self:Instance(ent)
@@ -127,7 +127,7 @@ function ASSET:AddWanted(ent)
 	end
 
 	hook.Run('BGN_AddWantedTarget', ent)
-	bgNPC:Log('AddWanted - ' .. tostring(ent), 'Module | Wanted')
+	bgNPC.Util.Log('AddWanted - ' .. tostring(ent), 'Module | Wanted')
 
 	return WantedClass
 end
@@ -143,13 +143,13 @@ function ASSET:RemoveWanted(ent)
 	end
 
 	hook.Run('BGN_RemoveWantedTarget', ent)
-	bgNPC:Log('RemoveWanted - ' .. tostring(ent), 'Module | Wanted')
+	bgNPC.Util.Log('RemoveWanted - ' .. tostring(ent), 'Module | Wanted')
 
 	return true
 end
 
 function ASSET:ClearAll()
-	bgNPC:Log('ClearAll', 'Module | Wanted')
+	bgNPC.Util.Log('ClearAll', 'Module | Wanted')
 	wanted_list = {}
 end
 
@@ -160,7 +160,7 @@ function ASSET:ClearDeath()
 
 		if not IsValid(target) or target:Health() <= 0 then
 			table.remove(wanted_list, i)
-			bgNPC:Log('RemoveWanted - ' .. tostring(target), 'Module | Wanted')
+			bgNPC.Util.Log('RemoveWanted - ' .. tostring(target), 'Module | Wanted')
 		end
 	end
 end

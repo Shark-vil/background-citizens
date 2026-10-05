@@ -11,7 +11,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 	is_active = new_value
 
 	if not is_active then
-		local entities = bgNPC:GetAllNPCs()
+		local entities = bgNPC.Actors.GetAllNPCs()
 
 		for i = 1, #entities do
 			local npc = entities[i]
@@ -39,7 +39,7 @@ async.AddDedic('bgn_client_render_optimization', function(yield, wait)
 		end
 
 		local ply = LocalPlayer()
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]

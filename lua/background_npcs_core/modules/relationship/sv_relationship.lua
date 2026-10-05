@@ -62,12 +62,12 @@ local function SetNPCRelationship(actor, another_npc)
 	if not actor:IsAlive() then return end
 
 	local actor_npc = actor:GetNPC()
-	local another_actor = bgNPC:GetActor(another_npc)
+	local another_actor = bgNPC.Actors.Get(another_npc)
 	local is_ignore_another_npc = cvar_bgn_ignore_another_npc:GetBool()
 	local disposition = GetPlayersDisposition(another_npc)
 
 	if another_actor then
-		if bgNPC:IsPeacefulMode() or actor:HasTeam(another_actor) then
+		if bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor) then
 			if isfunction(actor_npc.AddEntityRelationship) then
 				actor_npc:AddEntityRelationship(
 					another_npc,
@@ -101,7 +101,7 @@ local function SetNPCRelationship(actor, another_npc)
 			end
 		end
 	else
-		if bgNPC:IsPeacefulMode() or is_ignore_another_npc or disposition ~= D_HT then
+		if bgNPC.Modes.IsPeaceful() or is_ignore_another_npc or disposition ~= D_HT then
 			if isfunction(actor_npc.AddEntityRelationship) then
 				actor_npc:AddEntityRelationship(another_npc, actor:GetRelationship(another_npc) or D_NU, 99)
 			end
@@ -121,7 +121,7 @@ local function SetNPCRelationship(actor, another_npc)
 	end
 
 	-- if cvar_bgn_debug:GetBool() and actor_npc:IsNPC() then
-	-- 	bgNPC:Log(
+	-- 	bgNPC.Util.Log(
 	-- 		string.format('Actor NPC: [%s] %q > [%s] %q : %s',
 	-- 			tostring(actor:GetType()),
 	-- 			tostring(actor_npc),
@@ -137,9 +137,9 @@ end
 local function RebuildActorsRelationship(actor)
 	if not actor or not actor:IsAlive() then return end
 
-	bgNPC:Log('RebuildActorsRelationship', 'Relationship')
+	bgNPC.Util.Log('RebuildActorsRelationship', 'Relationship')
 
-	for _, another_actor in ipairs(bgNPC:GetAll()) do
+	for _, another_actor in ipairs(bgNPC.Actors.GetAll()) do
 		if not another_actor or not another_actor:IsAlive() or another_actor == actor then
 			continue
 		end
@@ -152,7 +152,7 @@ cvars.AddChangeCallback('bgn_peaceful_mode', function()
 	timer.Simple(.1, function()
 		local entities = ents.GetAll()
 
-		for _, actor in ipairs(bgNPC:GetAll()) do
+		for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 			actor:RemoveAllEnemies()
 			actor:SetState('walk', nil, true)
 
@@ -172,12 +172,12 @@ cvars.AddChangeCallback('bgn_friend_mode', function(_, old_value, new_value)
 		local new_value_number = tonumber(new_value)
 		if new_value_number == 0 then return end
 
-		local asset = bgNPC:GetModule('wanted')
+		local asset = bgNPC.Modules.Get('wanted')
 		for _, ply in ipairs(player.GetAll()) do
 			if asset:HasWanted(ply) then
 				asset:RemoveWanted(ply)
 			end
-			for _, actor in ipairs(bgNPC:GetAll()) do
+			for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 				actor:RemoveEnemy(ply)
 			end
 		end
@@ -199,7 +199,7 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 			npc:AddEntityRelationship(ply, actor:GetRelationship(ply) or D_NU, 99)
 
 			-- if cvar_bgn_debug:GetBool() then
-			-- 	bgNPC:Log(
+			-- 	bgNPC.Util.Log(
 			-- 		string.format('Player relationship: %q > %q : %s',
 			-- 			tostring(npc),
 			-- 			tostring(ply),
@@ -230,7 +230,7 @@ hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
 	timer.Simple(.5, function()
 		if not IsValid(npc) or npc.isBgnActor then return end
 
-		for _, actor in ipairs(bgNPC:GetAll()) do
+		for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 			if actor and actor:IsAlive() then
 				SetNPCRelationship(actor, npc)
 			end

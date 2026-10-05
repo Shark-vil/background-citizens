@@ -6,7 +6,7 @@ end)
 
 async.Add('BGN_ActorEnemyController', function(yield, wait)
 	while true do
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -23,9 +23,9 @@ async.Add('BGN_ActorEnemyController', function(yield, wait)
 end)
 
 hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)
-	bgNPC:ResetKillingStatistic(victim)
+	bgNPC.Statistics.Reset(victim)
 
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -37,7 +37,7 @@ hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)
 end)
 
 hook.Add('OnNPCKilled', 'BGN_ActorEnemyNPCDeathRemove', function(victim)
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]

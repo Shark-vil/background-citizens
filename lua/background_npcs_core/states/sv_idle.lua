@@ -1,4 +1,4 @@
-bgNPC:SetStateAction('idle', 'calm', {
+bgNPC.States.Register('idle', 'calm', {
 	start = function(actor, state, data)
 		local delay = math.random(10, 30)
 		data.time = delay

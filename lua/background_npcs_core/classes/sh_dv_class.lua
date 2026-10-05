@@ -88,7 +88,7 @@ function VEHICLE:Initialize()
 
 	local decentvehicle = ents_Create(self.ai_class)
 	if not IsValid(decentvehicle) then
-		bgNPC:Log('Failed to create vehicle AI "' .. tostring(self.ai_class) .. '"', 'VEHICLE:Initialize')
+		bgNPC.Util.Log('Failed to create vehicle AI "' .. tostring(self.ai_class) .. '"', 'VEHICLE:Initialize')
 		return
 	end
 

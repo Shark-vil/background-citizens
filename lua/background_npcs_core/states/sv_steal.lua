@@ -4,7 +4,7 @@ end)
 
 hook.Add('BGN_StealFinish', 'BGN_StealFinishedCallForHelp', function(actor, target, success)
 	if not success or slib.chance(30) then
-		local anotherActor = bgNPC:GetActor(target)
+		local anotherActor = bgNPC.Actors.Get(target)
 		if anotherActor then
 			if not anotherActor:HasTeam('police') then
 				anotherActor:CallForHelp(actor:GetNPC())
@@ -14,7 +14,7 @@ hook.Add('BGN_StealFinish', 'BGN_StealFinishedCallForHelp', function(actor, targ
 	end
 end)
 
-bgNPC:SetStateAction('steal', 'wary', {
+bgNPC.States.Register('steal', 'wary', {
 	pre_start = function(actor, state, data)
 		local npc = actor:GetNPC()
 		local npc_pos = npc:GetPos()
@@ -28,7 +28,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 			end
 
 			local distToPlayer = npc_pos:DistToSqr(ent:GetPos())
-			local anotherActor = bgNPC:GetActor(ent)
+			local anotherActor = bgNPC.Actors.Get(ent)
 			if anotherActor and anotherActor:GetType() == 'thief' then
 				continue
 			end
@@ -57,7 +57,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 		}
 	end,
 	update = function(actor)
-		local polices = bgNPC:GetAllByTeam('police')
+		local polices = bgNPC.Actors.GetByTeam('police')
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 		local target = actor:GetFirstTarget()
@@ -76,7 +76,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 					local PoliceNPC = ActorPolice:GetNPC()
 
 					if PoliceNPC:GetPos():DistToSqr(npc_pos) <= 490000 and
-						bgNPC:NPCIsViewVector(PoliceNPC, npc_pos) and bgNPC:IsTargetRay(PoliceNPC, npc)
+						bgNPC.Vision.NPCCanSeePos(PoliceNPC, npc_pos) and bgNPC.Vision.HasLineOfSight(PoliceNPC, npc)
 					then
 						ActorPolice:AddEnemy(npc)
 						ActorPolice:SetState('defense')
@@ -118,7 +118,7 @@ bgNPC:SetStateAction('steal', 'wary', {
 					actor:ClearSchedule()
 
 					if slib.chance(50) then
-						local target_actor = bgNPC:GetActor(target)
+						local target_actor = bgNPC.Actors.Get(target)
 						if target_actor then
 							target_actor:SetState('idle')
 						end

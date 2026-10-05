@@ -3,7 +3,7 @@ local _IsValid = IsValid
 local _ipairs = ipairs
 local _ents_GetAll = ents.GetAll
 
-bgNPC:SetStateAction('go_to_police_car', 'danger', {
+bgNPC.States.Register('go_to_police_car', 'danger', {
     pre_start = function(actor, state, data)
         local near_car
         local last_dist

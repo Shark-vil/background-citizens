@@ -257,7 +257,7 @@ end
 function BaseClass:RemoveActor()
 	if self.is_removed then return end
 	self.is_removed = true
-	bgNPC:RemoveNPC(self.npc)
+	bgNPC.Actors.Unregister(self.npc)
 end
 
 -- Unregisters the actor and removes the entity.
@@ -498,7 +498,7 @@ function BaseClass:AddEnemy(ent, reaction, always_visible)
 	Assert.Arg(3, always_visible, 'boolean|nil', 'ACTOR:AddEnemy')
 
 	if not self.mechanics.enemies_controller then return end
-	if bgNPC:IsPeacefulMode() then return end
+	if bgNPC.Modes.IsPeaceful() then return end
 
 	if istable(ent) then ent = ent:GetNPC() end
 	if not IsValid(ent) or ent.BGN_HasBuildMode then return end
@@ -652,14 +652,14 @@ function BaseClass:EnemiesRecalculate()
 	local enemy = self:GetNearEnemy()
 	if not IsValid(enemy) then return end
 
-	if bgNPC:IsTargetRay(npc, enemy) or enemy.bgn_always_visible then
+	if bgNPC.Vision.HasLineOfSight(npc, enemy) or enemy.bgn_always_visible then
 		npc:SetEnemy(enemy)
 		npc:SetTarget(enemy)
 		npc:UpdateEnemyMemory(enemy, enemy:GetPos())
 		return
 	end
 
-	local WantedModule = bgNPC:GetModule('wanted')
+	local WantedModule = bgNPC.Modules.Get('wanted')
 	if WantedModule:HasWanted(enemy) then return end
 	if table_HasValueBySeq(self.enemies_always_visible, enemy) then return end
 
@@ -720,7 +720,7 @@ end
 function BaseClass:CallStateAction(state_name, func_name, ...)
 	Assert.Arg(1, state_name, 'string|nil', 'ACTOR:CallStateAction')
 	Assert.NonEmptyString(2, func_name, 'ACTOR:CallStateAction')
-	return bgNPC:CallStateAction(state_name or self.state_data.state, func_name, self, ...)
+	return bgNPC.States.Call(state_name or self.state_data.state, func_name, self, ...)
 end
 
 -- Switches the actor to a new state.
@@ -764,7 +764,7 @@ function BaseClass:SetState(state, data, forced)
 		data = hook_result.data or data
 	end
 
-	if not forced and bgNPC:StateActionExists(state, 'validator')
+	if not forced and bgNPC.States.HasAction(state, 'validator')
 		and not self:CallStateAction(state, 'validator', state, data)
 	then
 		return
@@ -834,13 +834,13 @@ function BaseClass:EqualStateGroup(group_name)
 end
 
 function BaseClass:GetStateGroupName()
-	return bgNPC:GetStateGroupName(self:GetState())
+	return bgNPC.States.GetGroup(self:GetState())
 end
 
 -- @param state_name string
 -- @param group_name string|table group name or list of names
 function BaseClass:HasStateGroup(state_name, group_name)
-	local state_group = bgNPC:GetStateGroupName(state_name)
+	local state_group = bgNPC.States.GetGroup(state_name)
 
 	if isstring(group_name) then return state_group == group_name end
 
@@ -961,7 +961,7 @@ function BaseClass:WalkToPos(pos, move_type, path_type)
 	if not self:InVehicle() then
 		if npc:IsEFlagSet(EFL_NO_THINK_FUNCTION) then return end
 
-		walk_path = bgNPC:FindWalkPath(npc:GetPos(), pos, nil, path_type)
+		walk_path = bgNPC.Points.FindPath(npc:GetPos(), pos, nil, path_type)
 		if #walk_path == 0 then return end
 
 		self.pathType = path_type
@@ -969,7 +969,7 @@ function BaseClass:WalkToPos(pos, move_type, path_type)
 	else
 		local decentvehicle = self:GetVehicleAI()
 		if not IsValid(decentvehicle) then
-			bgNPC:Log('Trying to build a path for a vehicle that doesn\'t exist', 'ACTOR:WalkToPos')
+			bgNPC.Util.Log('Trying to build a path for a vehicle that doesn\'t exist', 'ACTOR:WalkToPos')
 			return
 		end
 
@@ -1108,7 +1108,7 @@ function BaseClass:GetRelationship(value, default)
 	if istable(value) and value.isBgnClass then
 		actor = value
 	elseif IsValid(value) then
-		actor = bgNPC:GetActor(value)
+		actor = bgNPC.Actors.Get(value)
 	end
 
 	if actor then
@@ -1157,10 +1157,10 @@ function BaseClass:HasTeam(value)
 
 		if value:IsPlayer() then
 			return table_HasValueBySeq(own_team, 'player')
-				or bgNPC:GetModule('team_parent'):HasParent(value, self)
+				or bgNPC.Modules.Get('team_parent'):HasParent(value, self)
 		end
 
-		value = bgNPC:GetActor(value)
+		value = bgNPC.Actors.Get(value)
 		if not value then return false end
 	end
 
@@ -1198,7 +1198,7 @@ end
 local function FindPointByDistanceTo(actor, pos, radius, want_far)
 	if not actor:IsAlive() then return nil end
 
-	local points = bgNPC:GetAllPointsInRadius(actor.npc:GetPos(), radius or 500)
+	local points = bgNPC.Points.GetInRadius(actor.npc:GetPos(), radius or 500)
 	local result, result_dist
 
 	for i = 1, #points do
@@ -1230,13 +1230,13 @@ end
 function BaseClass:GetDistantPointInRadius(radius)
 	Assert.Arg(1, radius, 'number|nil', 'ACTOR:GetDistantPointInRadius')
 	if not self:IsAlive() then return nil end
-	return bgNPC:GetDistantPointInRadius(self.npc:GetPos(), radius)
+	return bgNPC.Points.GetDistantInRadius(self.npc:GetPos(), radius)
 end
 
 function BaseClass:GetClosestPointInRadius(radius)
 	Assert.Arg(1, radius, 'number|nil', 'ACTOR:GetClosestPointInRadius')
 	if not self:IsAlive() then return nil end
-	return bgNPC:GetClosestPointInRadius(self.npc:GetPos(), radius)
+	return bgNPC.Points.GetClosestInRadius(self.npc:GetPos(), radius)
 end
 
 -- ---------------------------------------------------------------------------
@@ -1380,7 +1380,7 @@ end
 -- Stops the current static animation and returns the NPC to AI control.
 function BaseClass:ResetSequence()
 	if self.anim_action and self.anim_action(self) then
-		bgNPC:Log('Reject: ACTOR:ResetSequence')
+		bgNPC.Util.Log('Reject: ACTOR:ResetSequence')
 		return
 	end
 
@@ -1431,13 +1431,13 @@ function BaseClass:CallForHelp(enemy)
 
 	self:FearScream()
 
-	local near_actors = bgNPC:GetAllByRadius(self.npc:GetPos(), 1000)
+	local near_actors = bgNPC.Actors.GetInRadius(self.npc:GetPos(), 1000)
 	for i = 1, #near_actors do
 		local near_actor = near_actors[i]
 		if near_actor ~= self
 			and near_actor:IsAlive()
 			and near_actor:HasTeam(self)
-			and bgNPC:IsTargetRay(near_actor.npc, enemy)
+			and bgNPC.Vision.HasLineOfSight(near_actor.npc, enemy)
 		then
 			near_actor:SetState(near_actor:GetReactionForProtect())
 			near_actor:AddEnemy(enemy)
@@ -1495,7 +1495,7 @@ end
 function BaseClass:PrepareWeapon(weapon_class, switching)
 	Assert.Arg(1, weapon_class, 'string|nil', 'ACTOR:PrepareWeapon')
 	Assert.Arg(2, switching, 'boolean|nil', 'ACTOR:PrepareWeapon')
-	bgNPC:SetActorWeapon(self, weapon_class, switching)
+	bgNPC.Combat.EquipActor(self, weapon_class, switching)
 end
 
 function BaseClass:FoldWeapon()

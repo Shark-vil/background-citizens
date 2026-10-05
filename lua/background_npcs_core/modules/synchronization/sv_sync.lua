@@ -20,7 +20,7 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 		local sync_list_count = 0
 
 		do
-			local actors = bgNPC:GetAll()
+			local actors = bgNPC.Actors.GetAll()
 			local players = player_GetHumans()
 
 			for i = 1, #actors do

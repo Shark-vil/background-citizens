@@ -29,7 +29,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 	end
 
 	if not IsFound then return end
-	local actors = bgNPC:GetAllByRadius(attacker:GetPos(), 2500)
+	local actors = bgNPC.Actors.GetInRadius(attacker:GetPos(), 2500)
 
 	for i = 1, #actors do
 		local actor = actors[i]
@@ -37,7 +37,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 		actor:SetReaction(reaction)
 		local npc = actor:GetNPC()
 
-		if npc == attacker or not bgNPC:IsTargetRay(npc, attacker) or hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then
+		if npc == attacker or not bgNPC.Vision.HasLineOfSight(npc, attacker) or hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then
 			continue
 		end
 

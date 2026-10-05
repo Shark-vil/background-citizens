@@ -1,6 +1,6 @@
 concommand.Add('bgn_compile', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	bgNPC:Log('Wait for all points to load...', 'Route')
+	bgNPC.Util.Log('Wait for all points to load...', 'Route')
 	snet.InvokeServer('sv_start_bgn_compile')
 end, nil, 'Saves your points as a lua script so you can place your mesh in the workshop.')
 

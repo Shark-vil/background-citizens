@@ -12,7 +12,7 @@ local TeamParentModule
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
-	local attacker = bgNPC:CheckVehicleAttacker(dmginfo:GetAttacker())
+	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
 	if not IsValid(attacker) or not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
 	if attacker.BGN_HasBuildMode or attacker.bgNPCIgnore or attacker == target then return end
 
@@ -56,9 +56,9 @@ local function GetLastDamageCount(attacker, target)
 end
 
 hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, target, dmginfo)
-	local ActorTarget = bgNPC:GetActor(target)
-	local ActorAttacker = bgNPC:GetActor(attacker)
-	TeamParentModule = TeamParentModule or bgNPC:GetModule('team_parent')
+	local ActorTarget = bgNPC.Actors.Get(target)
+	local ActorAttacker = bgNPC.Actors.Get(attacker)
+	TeamParentModule = TeamParentModule or bgNPC.Modules.Get('team_parent')
 
 	if ActorTarget ~= nil then
 		if attacker:IsPlayer() then
@@ -108,8 +108,8 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 end)
 
 hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
-	local ActorAttacker = bgNPC:GetActor(attacker)
-	TeamParentModule = TeamParentModule or bgNPC:GetModule('team_parent')
+	local ActorAttacker = bgNPC.Actors.Get(attacker)
+	TeamParentModule = TeamParentModule or bgNPC.Modules.Get('team_parent')
 
 	if ActorAttacker ~= nil then
 		if TeamParentModule:HasParent(target, ActorAttacker) or ActorAttacker:HasTeam('player') then

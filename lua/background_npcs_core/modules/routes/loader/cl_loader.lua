@@ -1,7 +1,7 @@
 concommand.Add('cl_bgn_clear_tool_points', function()
 	local wep = LocalPlayer():GetActiveWeapon()
 	if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-	local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+	local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor')
 	if not tool then return end
 	tool:ClearPoints()
 end)
@@ -31,7 +31,7 @@ local function LoadPointInfo(count)
 
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 
-	bgNPC:Log('Client routes is loading! (' .. count .. ')', 'Route')
+	bgNPC.Util.Log('Client routes is loading! (' .. count .. ')', 'Route')
 
 	if count == 0 then
 		notification.AddLegacy(

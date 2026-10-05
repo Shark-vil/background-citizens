@@ -415,7 +415,7 @@ function BGN_NODE:AddNodeToMap(node)
 	local chunk_id = node:GetChunkID()
 	if SERVER and BGN_NODE:IsOnChunkSystem() and chunk_id == -1 then
 		-- slib.Warning('Node cannot exist outside of a chunk!')
-		bgNPC:Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
+		bgNPC.Util.Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
 		return
 	end
 
@@ -701,7 +701,7 @@ function BGN_NODE:FixOutsideMapNodes()
 		if not node or node.is_in_world then continue end
 
 		local position = node:GetPos()
-		if not util_IsInWorld(position) or bgNPC:VectorInWater(position) then
+		if not util_IsInWorld(position) or bgNPC.Util.IsVectorInWater(position) then
 			remove_count = remove_count + 1
 			node:RemoveFromMap()
 		else
@@ -710,7 +710,7 @@ function BGN_NODE:FixOutsideMapNodes()
 	end
 
 	if remove_count ~= 0 then
-		bgNPC:Log('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
+		bgNPC.Util.Log('[Background NPCs] "' .. remove_count .. '" points outside the map have been removed.')
 	end
 end
 

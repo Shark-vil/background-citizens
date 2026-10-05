@@ -4,7 +4,7 @@ local function init_bsmod_animations()
 
 	hook.Add('EntityTakeDamage', 'DAModuleDamage', function(target, dmginfo)
 		if target and IsValid(target) then
-			local actor = bgNPC:GetActor(target)
+			local actor = bgNPC.Actors.Get(target)
 			if actor then
 				local data = actor:GetData()
 				if actor.bsmod_damage_animation_disable or (data and data.bsmod_damage_animation_disable) then

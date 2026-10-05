@@ -74,7 +74,7 @@ do
 						local x = ply_pos.x + math_random(-1000, 1000)
 						local y = ply_pos.y + math_random(-1000, 1000)
 						local new_point = TracePositionFixed(Vector(x, y, ply_pos.z))
-						if new_point and not bgNPC:VectorInWater(new_point) and slib_IsInWorld(new_point) then
+						if new_point and not bgNPC.Util.IsVectorInWater(new_point) and slib_IsInWorld(new_point) then
 							local skip_point = false
 							for _, node in ipairs(new_nodes) do
 								if node:GetPos():DistToSqr(new_point) <= 202500 then
@@ -256,10 +256,10 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 			yield()
 
-			bgNPC:Log('[Dynamic Nodes] Start generate new nodes...')
+			bgNPC.Util.Log('[Dynamic Nodes] Start generate new nodes...')
 
 			if not expensive_generator then
-				bgNPC:Log('[Dynamic Nodes] Generator type - Random')
+				bgNPC.Util.Log('[Dynamic Nodes] Generator type - Random')
 
 				for player_index = 1, #players do
 					local ply = players[player_index]
@@ -297,7 +297,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 						-- 	continue
 						-- end
 
-						if bgNPC:VectorInWater(new_point_position) then
+						if bgNPC.Util.IsVectorInWater(new_point_position) then
 							PassYield()
 							continue
 						end
@@ -322,13 +322,13 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					end
 				end
 			else
-				bgNPC:Log('[Dynamic Nodes] Generator type - Grid')
+				bgNPC.Util.Log('[Dynamic Nodes] Generator type - Grid')
 
 				local generator_iterations = 0
 				local calc_iterations = true
 				local sqr_radius = radius ^ 2
 
-				bgNPC:Log('[Dynamic Nodes] Grid generator - make X axis nodes')
+				bgNPC.Util.Log('[Dynamic Nodes] Grid generator - make X axis nodes')
 
 				for player_index = 1, #players do
 					local ply = players[player_index]
@@ -373,7 +373,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							-- 	continue
 							-- end
 
-							if bgNPC:VectorInWater(new_point_position) then
+							if bgNPC.Util.IsVectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end
@@ -400,7 +400,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					PassYield()
 				end
 
-				bgNPC:Log('[Dynamic Nodes] Grid generator - make Y axis nodes')
+				bgNPC.Util.Log('[Dynamic Nodes] Grid generator - make Y axis nodes')
 
 				local y_axis_points = {}
 				local y_points_count = 0
@@ -446,7 +446,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							-- 	continue
 							-- end
 
-							if bgNPC:VectorInWater(new_point_position) then
+							if bgNPC.Util.IsVectorInWater(new_point_position) then
 								PassYield()
 								continue
 							end
@@ -475,29 +475,29 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					PassYield()
 				end
 
-				bgNPC:Log('[Dynamic Nodes] Grid generator - combine X and Y nodes')
+				bgNPC.Util.Log('[Dynamic Nodes] Grid generator - combine X and Y nodes')
 
 				map_points = table_Combine(map_points, y_axis_points)
 				points_count = #map_points
 			end
 
 			if cvar_bgn_dynamic_nodes_save_progress:GetBool() then
-				bgNPC:Log('[Dynamic Nodes] Expandable generator - start expand map')
+				bgNPC.Util.Log('[Dynamic Nodes] Expandable generator - start expand map')
 				BGN_NODE:ExpandMapAsync(map_points, false)
 				yield()
-				bgNPC:Log('[Dynamic Nodes] Expandable generator - start link nodes')
+				bgNPC.Util.Log('[Dynamic Nodes] Expandable generator - start link nodes')
 				BGN_NODE:AutoLinkAsync()
 				yield()
 			else
-				bgNPC:Log('[Dynamic Nodes] Static generator - start set map')
+				bgNPC.Util.Log('[Dynamic Nodes] Static generator - start set map')
 				BGN_NODE:SetMap(map_points)
 				yield()
-				bgNPC:Log('[Dynamic Nodes] Static generator - start link nodes')
+				bgNPC.Util.Log('[Dynamic Nodes] Static generator - start link nodes')
 				BGN_NODE:AutoLink()
 				yield()
 			end
 
-			bgNPC:Log('[Dynamic Nodes] Complete generation')
+			bgNPC.Util.Log('[Dynamic Nodes] Complete generation')
 
 			wait(1)
 		end

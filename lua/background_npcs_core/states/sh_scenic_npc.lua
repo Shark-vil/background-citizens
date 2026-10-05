@@ -1,1 +1,1 @@
-bgNPC:SetStateAction('scenic_npc', 'calm')
+bgNPC.States.Register('scenic_npc', 'calm')

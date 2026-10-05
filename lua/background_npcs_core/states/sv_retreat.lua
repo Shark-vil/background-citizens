@@ -1,4 +1,4 @@
-local asset = bgNPC:GetModule('wanted')
+local asset = bgNPC.Modules.Get('wanted')
 
 hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
 	if (asset:HasWanted(actor:GetNPC()) or actor:HasState('impingement')) and actor:EnemiesCount() == 0 then
@@ -7,7 +7,7 @@ hook.Add('PreRandomState', 'BGN_ChangeImpingementToRetreat', function(actor)
 	end
 end)
 
-bgNPC:SetStateAction('retreat', 'other', {
+bgNPC.States.Register('retreat', 'other', {
 	update = function(actor)
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
@@ -16,7 +16,7 @@ bgNPC:SetStateAction('retreat', 'other', {
 		data.cooldown = data.cooldown or CurTime() + 20
 		local enemy = actor:GetNearEnemy()
 
-		if IsValid(enemy) and bgNPC:IsTargetRay(npc, enemy) then
+		if IsValid(enemy) and bgNPC.Vision.HasLineOfSight(npc, enemy) then
 			data.cooldown = CurTime() + 20
 		end
 

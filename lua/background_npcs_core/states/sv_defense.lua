@@ -5,7 +5,7 @@ local GetConVar = GetConVar
 local table_RandomBySeq = table.RandomBySeq
 --
 
-bgNPC:SetStateAction('defense', 'danger', {
+bgNPC.States.Register('defense', 'danger', {
 	pre_start = function(actor)
 		if not actor.weapon then
 			-- Self-heal: the actor may have lost its weapon class (e.g. was never
@@ -67,8 +67,8 @@ bgNPC:SetStateAction('defense', 'danger', {
 			local node
 			local is_melee_weapon = actor:IsMeleeWeapon()
 
-			if not is_melee_weapon and current_distance < 250000 and bgNPC:IsTargetRay(npc, enemy) then
-				node = bgNPC:GetDistantPointInRadius(npc_pos + npc:GetForward() * -500, 500)
+			if not is_melee_weapon and current_distance < 250000 and bgNPC.Vision.HasLineOfSight(npc, enemy) then
+				node = bgNPC.Points.GetDistantInRadius(npc_pos + npc:GetForward() * -500, 500)
 				actor:WalkToTarget()
 
 				if node then

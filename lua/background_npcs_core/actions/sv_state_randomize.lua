@@ -8,7 +8,7 @@ local cvar_bgn_module_replics_enable = GetConVar('bgn_module_replics_enable')
 timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 	if not cvar_bgn_module_replics_enable:GetBool() then return end
 
-	local actors = bgNPC:GetAll()
+	local actors = bgNPC.Actors.GetAll()
 
 	for i = 1, #actors do
 		local actor = actors[i]

@@ -20,7 +20,7 @@ local function FindCustomChair(actor)
 	end
 end
 
-bgNPC:SetStateAction('sit_to_chair_2', 'calm', {
+bgNPC.States.Register('sit_to_chair_2', 'calm', {
 	pre_start = function(actor, state, data)
 		local npc = actor:GetNPC()
 

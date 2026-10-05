@@ -36,7 +36,7 @@ else
 	snet.RegisterCallback('cl_bgn_tool_seat_load', function(ply, points)
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
 		if not tool then return end
 
 		for _, t in ipairs(tool.SeatPoints) do
@@ -79,7 +79,7 @@ else
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
 		if not tool then return end
 		snet.Invoke('sv_bgn_tool_seat_load')
 	end)
@@ -89,7 +89,7 @@ else
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
-		local tool = bgNPC:GetActivePlayerTool('bgn_seat_tool')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
 		if not tool then return end
 		local points = {}
 

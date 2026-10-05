@@ -1,6 +1,6 @@
-local ArrestModule = bgNPC:GetModule('player_arrest')
+local ArrestModule = bgNPC.Modules.Get('player_arrest')
 
-bgNPC:SetStateAction('arrest_surrender', 'danger', {
+bgNPC.States.Register('arrest_surrender', 'danger', {
 	pre_start = function(actor)
 		local npc = actor:GetNPC()
 		if IsValid(npc) and not ArrestModule:HasTarget(npc) then
@@ -17,7 +17,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		data.check_target_time = CurTime() + 2
 		data.arrest_limit_time = CurTime() + 30
 
-		for _, police in ipairs(bgNPC:GetAll()) do
+		for _, police in ipairs(bgNPC.Actors.GetAll()) do
 			if police and police:IsAlive() and police:HasTeam('police') then
 				police:RemoveEnemy(actor.npc)
 			end
@@ -36,7 +36,7 @@ bgNPC:SetStateAction('arrest_surrender', 'danger', {
 		local target = actor:GetFirstTarget()
 		local npc = actor:GetNPC()
 		if IsValid(target) and IsValid(npc) and actor:CheckMoveUpdate('state_arrest_surrender', 2) then
-			local TargetActor = bgNPC:GetActor(target)
+			local TargetActor = bgNPC.Actors.Get(target)
 			if not TargetActor or not TargetActor:HasState('arrest') or data.arrest_limit_time < CurTime() then
 				actor:RemoveTarget(target)
 				actor:AddEnemy(target)

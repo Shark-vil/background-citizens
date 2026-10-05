@@ -4,7 +4,7 @@ local math_random = math.random
 local Vector = Vector
 --
 
-bgNPC:SetStateAction('run_from_danger', 'danger', {
+bgNPC.States.Register('run_from_danger', 'danger', {
 	update = function(actor)
 		if actor:HasNoEnemies() then
 			actor:RandomState()

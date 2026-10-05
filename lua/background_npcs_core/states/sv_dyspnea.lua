@@ -6,7 +6,7 @@ hook.Add('BGN_PreSetNPCState', 'BGN_OverrideDyspneaDangerStateToCallingPolice', 
 	end
 end)
 
-bgNPC:SetStateAction('dyspnea_danger', 'danger', {
+bgNPC.States.Register('dyspnea_danger', 'danger', {
 	update = function(actor)
 		if actor:HasNoEnemies() then
 			actor:RandomState()

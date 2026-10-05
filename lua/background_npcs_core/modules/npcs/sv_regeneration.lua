@@ -4,7 +4,7 @@ async.Add('BGN_ActorsRegeneration', function(yield, wait)
 	local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 
 	while true do
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]

@@ -80,7 +80,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			return false
 		end
 
-		if bgNPC:PlayerIsViewVector(ply, node_position) then
+		if bgNPC.Vision.PlayerCanSeePos(ply, node_position) then
 			if ply_pos:DistToSqr(node_position) <= radius_visibility_sqrt then
 				return false
 			end
@@ -133,7 +133,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		teleport_radius = radius_visibility
 	end
 
-	local points = bgNPC:GetAllPointsInRadius(desired_position, teleport_radius, 'walk')
+	local points = bgNPC.Points.GetInRadius(desired_position, teleport_radius, 'walk')
 	local points_count = #points
 	local nodePosition
 
@@ -165,7 +165,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		if not tr.Hit then return end
 		new_pos = tr.HitPos
 		if not util_IsInWorld(new_pos) then return end
-		if bgNPC:VectorInWater(new_pos) then return end
+		if bgNPC.Util.IsVectorInWater(new_pos) then return end
 		if not IsNotBlockSpawnPosition(new_pos, all_players, target_entity) then return end
 		-- debugoverlay_Sphere(new_pos, 10, 2, clr_good_spawn_pos)
 		return new_pos
@@ -175,7 +175,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
 
-		if bgNPC:VectorInWater(nodePosition) then
+		if bgNPC.Util.IsVectorInWater(nodePosition) then
 			nodePosition = nil
 			continue
 		end
@@ -274,9 +274,9 @@ do
 
 	function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect)
 		if player_GetCount() == 0 then return end
-		if bgNPC:VectorInWater(desiredPosition) then return end
+		if bgNPC.Util.IsVectorInWater(desiredPosition) then return end
 
-		local npc_data = bgNPC:GetActorConfig(npc_type)
+		local npc_data = bgNPC.Config.GetActor(npc_type)
 		local is_many_classes = false
 		local npc_class
 

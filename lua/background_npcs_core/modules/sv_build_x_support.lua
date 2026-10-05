@@ -1,4 +1,4 @@
-local WantedModule = bgNPC:GetModule('wanted')
+local WantedModule = bgNPC.Modules.Get('wanted')
 
 timer.Create('BGN_PlayersHasBuildMode', 1, 0, function()
 	for _, v in ipairs(player.GetAll()) do
@@ -12,7 +12,7 @@ timer.Create('BGN_PlayersHasBuildMode', 1, 0, function()
 					WantedModule:RemoveWanted(v)
 				end
 
-				for _, actor in ipairs(bgNPC:GetAll()) do
+				for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 					if actor and actor:IsAlive() then
 						actor:RemoveEnemy(v)
 						actor:RemoveTarget(v)

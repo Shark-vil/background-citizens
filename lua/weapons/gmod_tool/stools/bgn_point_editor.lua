@@ -114,7 +114,7 @@ else
 	end
 
 	hook.Add('BGN_LoadingClientRoutes', 'BGN_TOOL_PointEditorReset', function()
-		local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor')
 		if not tool then return end
 
 		tool.LinkerNode = nil
@@ -262,7 +262,7 @@ else
 					return
 				end
 
-				local tool = bgNPC:GetActivePlayerTool('bgn_point_editor')
+				local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor')
 				if not tool then
 					timer.Remove('BGN_PointEditorToolRefreshRangePoints')
 					return
@@ -277,7 +277,7 @@ else
 					local node = nodes[index]
 					local pos = node:GetPos()
 
-					if bgNPC:PlayerIsViewVector(owner, pos) and owner:GetPos():DistToSqr(pos) <= dist then
+					if bgNPC.Vision.PlayerCanSeePos(owner, pos) and owner:GetPos():DistToSqr(pos) <= dist then
 						local tr = util_TraceLine({
 							start = owner:GetShootPos(),
 							endpos = node.position,

@@ -71,7 +71,7 @@ function BGN_SEAT:Initialize()
 	local raw_data = util.Decompress(file.Read(file_path, 'DATA') or '')
 	local read_data = raw_data and util.JSONToTable(raw_data)
 	if not istable(read_data) then
-		bgNPC:Log('Failed to read the seats file: ' .. file_path, 'BGN_SEAT:Initialize')
+		bgNPC.Util.Log('Failed to read the seats file: ' .. file_path, 'BGN_SEAT:Initialize')
 		return
 	end
 

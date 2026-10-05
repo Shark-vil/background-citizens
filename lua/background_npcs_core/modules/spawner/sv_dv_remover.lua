@@ -49,7 +49,7 @@ timer.Create('BGN_Timer_DVCars_Remover', 1, 0, function()
 					local player_position = ply:GetPos()
 					local dist = vehicle_position:DistToSqr(player_position)
 
-					if dist < bgn_spawn_radius or bgNPC:PlayerIsViewVector(ply, vehicle_position) then
+					if dist < bgn_spawn_radius or bgNPC.Vision.PlayerCanSeePos(ply, vehicle_position) then
 						isRemove = false
 						break
 					end

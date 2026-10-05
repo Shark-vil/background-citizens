@@ -8,7 +8,7 @@ local function init_enhanced_npc_override()
 		hook.Add('PlayerSpawnedNPC', 'Enhanced Sbox NPC Handling', function(ply, ent)
 			timer_Simple(.1, function()
 				if not IsValid(ent) or not IsValid(ply) then return end
-				local actor = bgNPC:GetActor(ent)
+				local actor = bgNPC.Actors.Get(ent)
 				if actor and actor.mechanics.enhanced_npc_ignore then return end
 				return player_spawned_hook(ply, ent)
 			end)
@@ -20,7 +20,7 @@ local function init_enhanced_npc_override()
 		hook.Add('OnEntityCreated', 'Enhanced Sbox NPC Handling', function(ent)
 			timer_Simple(.1, function()
 				if not IsValid(ent) then return end
-				local actor = bgNPC:GetActor(ent)
+				local actor = bgNPC.Actors.Get(ent)
 				if actor and actor.mechanics.enhanced_npc_ignore then return end
 				return ent_spawned_hook(ent)
 			end)

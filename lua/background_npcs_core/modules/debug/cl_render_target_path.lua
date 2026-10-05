@@ -64,7 +64,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
 
 	render_SetColorMaterial()
 
-	for _, actor in ipairs(bgNPC:GetAll()) do
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		if actor:IsAlive() then
 			local npc = actor:GetNPC()
 			local npcPosition = npc:GetPos()

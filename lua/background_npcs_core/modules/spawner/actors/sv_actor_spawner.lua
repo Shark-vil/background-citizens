@@ -30,7 +30,7 @@ function bgNPC:RespawnActor(actor, spawn_position, func)
 		return
 	end
 
-	-- if bgNPC:VectorInWater(spawn_position) then
+	-- if bgNPC.Util.IsVectorInWater(spawn_position) then
 	-- 	if func and isfunction(func) then func(false) end
 	-- 	return
 	-- end
@@ -78,18 +78,18 @@ local function InitActorsSpawner(delay)
 			local bgn_enable = GetConVar('bgn_enable'):GetBool()
 			if not bgn_enable or player.GetCount() == 0 then continue end
 
-			bgNPC:ClearRemovedNPCs()
+			bgNPC.Actors.ClearRemoved()
 
 			for npc_type, npc_data in pairs(bgNPC.cfg.actors) do
 				yield()
 
-				if not bgNPC:IsActiveNPCType(npc_type) or npc_data.hidden then
+				if not bgNPC.Config.IsTypeActive(npc_type) or npc_data.hidden then
 					yield()
 					continue
 				end
 
-				local max_limit = bgNPC:GetLimitActors(npc_type)
-				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) >= max_limit then
+				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
+				if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) >= max_limit then
 					yield()
 					continue
 				end
@@ -97,7 +97,7 @@ local function InitActorsSpawner(delay)
 				local pos
 
 				if npc_data.wanted_level then
-					local asset = bgNPC:GetModule('wanted')
+					local asset = bgNPC.Modules.Get('wanted')
 					local success = false
 					local wanted_list = asset:GetAllWanted()
 
@@ -163,7 +163,7 @@ hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
 
 	local data = actor:GetData()
 	if data.wanted_level ~= nil then
-		local asset = bgNPC:GetModule('wanted')
+		local asset = bgNPC.Modules.Get('wanted')
 		local wanted_list = asset:GetAllWanted()
 
 		for i = 1, #wanted_list do
@@ -172,7 +172,7 @@ hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
 				actor:AddEnemy(WantedClass.target)
 				if actor:GetState() ~= 'defense' then
 					actor:SetState('defense')
-					bgNPC:Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
+					bgNPC.Util.Log('Spawn wanted level actor - ' .. actor:GetType(), 'Actor | Spawn')
 				end
 			end
 		end

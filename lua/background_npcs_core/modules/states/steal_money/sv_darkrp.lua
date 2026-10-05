@@ -19,7 +19,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_DarkRp_DropStealMoney', function(atta
    if not target:slibGetVar('is_stealer') then return end
 
    if attacker:IsNPC() then
-      local actor = bgNPC:GetActor(attacker)
+      local actor = bgNPC.Actors.Get(attacker)
       if actor == nil or not actor:HasTeam('police') then return end
    elseif not attacker:IsPlayer() then return end
 

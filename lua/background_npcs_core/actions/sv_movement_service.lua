@@ -6,7 +6,7 @@ async.Add('BGN_MovementProcess', function(yield, wait)
 	-- local current_pass = 0
 
 	while true do
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -21,7 +21,7 @@ async.Add('BGN_MovementProcess', function(yield, wait)
 						end
 					else
 						if IsValid(actor.walkTarget) and actor.walkUpdatePathDelay < curtime then
-							local walkPath = bgNPC:FindWalkPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
+							local walkPath = bgNPC.Points.FindPath(npc:GetPos(), actor.walkTarget:GetPos(), nil, actor.pathType)
 
 							if #walkPath ~= 0 then
 								actor.walkPath = walkPath

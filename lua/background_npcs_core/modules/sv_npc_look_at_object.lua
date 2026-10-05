@@ -27,7 +27,7 @@ local function ParseEntitiesForActorAsync(actor)
 
 		if not IsValid(npc) then break end
 
-		if not bgNPC:NPCIsViewVector(npc, ent_pos, 85) then
+		if not bgNPC.Vision.NPCCanSeePos(npc, ent_pos, 85) then
 			continue
 		end
 
@@ -64,7 +64,7 @@ end
 
 async.Add('BGN_Timer_ActorLookAtObject', function()
 	while true do
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 
 		for i = 1, #actors do
 			local actor = actors[i]

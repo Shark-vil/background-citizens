@@ -173,7 +173,7 @@ bgNPC:LoadSpawnAreas()
 if SERVER then
 	local function CountAliveInArea(area, actorType)
 		local count = 0
-		local actors = bgNPC:GetAllByType(actorType)
+		local actors = bgNPC.Actors.GetByType(actorType)
 
 		for i = 1, #actors do
 			local actor = actors[i]
@@ -206,13 +206,13 @@ if SERVER then
 	-- bypass them (e.g. force wanted-only actors to camp a zone with no chase
 	-- going on, or ignore an admin-set per-type max).
 	local function CanActorTypeSpawnNow(npc_type, npc_data)
-		if not bgNPC:IsActiveNPCType(npc_type) or npc_data.hidden then return false end
+		if not bgNPC.Config.IsTypeActive(npc_type) or npc_data.hidden then return false end
 
-		local max_limit = bgNPC:GetLimitActors(npc_type)
-		if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) >= max_limit then return false end
+		local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
+		if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) >= max_limit then return false end
 
 		if npc_data.wanted_level then
-			local asset = bgNPC:GetModule('wanted')
+			local asset = bgNPC.Modules.Get('wanted')
 			local wanted_list = asset:GetAllWanted()
 			local has_target = false
 

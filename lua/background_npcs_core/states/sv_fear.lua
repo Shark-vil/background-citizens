@@ -58,7 +58,7 @@ local function update_animation(actor)
 	end
 end
 
-bgNPC:SetStateAction('fear', 'danger', {
+bgNPC.States.Register('fear', 'danger', {
 	start = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then return end

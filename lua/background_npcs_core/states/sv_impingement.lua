@@ -7,13 +7,13 @@ hook.Add('BGN_SetState', 'BGN_SetImpingementState', function(actor, state)
 	local targets = {}
 
 	for _, ent in pairs(target_from_zone) do
-		if bgNPC:IsTargetRay(npc, ent) then
+		if bgNPC.Vision.HasLineOfSight(npc, ent) then
 			if ent:IsPlayer() then
 				table.insert(targets, ent)
 			end
 
 			if ent:IsNPC() and ent ~= npc then
-				local ActorTarget = bgNPC:GetActor(ent)
+				local ActorTarget = bgNPC.Actors.Get(ent)
 				if ActorTarget ~= nil and not actor:HasTeam(ActorTarget) then
 					table.insert(targets, ent)
 				end
@@ -29,7 +29,7 @@ hook.Add('BGN_SetState', 'BGN_SetImpingementState', function(actor, state)
 	end
 end)
 
-bgNPC:SetStateAction('impingement', 'assault', {
+bgNPC.States.Register('impingement', 'assault', {
 	update = function(actor)
 		local enemy = actor:GetNearEnemy()
 		if not IsValid(enemy) then
@@ -47,7 +47,7 @@ bgNPC:SetStateAction('impingement', 'assault', {
 
 			local current_distance = npc:GetPos():DistToSqr(enemy:GetPos())
 
-			if current_distance <= 90000 and bgNPC:IsTargetRay(npc, enemy) then
+			if current_distance <= 90000 and bgNPC.Vision.HasLineOfSight(npc, enemy) then
 				if actor:IsMeleeWeapon() then
 					actor:WalkToTarget(enemy, 'run')
 				else

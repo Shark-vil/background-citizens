@@ -70,7 +70,7 @@ else
 		local tr = self:GetTrace()
 		if not tr.Hit then return end
 		self.EndPos = tr.HitPos
-		local foundPath = bgNPC:FindWalkPath(self.StartPos, self.EndPos)
+		local foundPath = bgNPC.Points.FindPath(self.StartPos, self.EndPos)
 
 		if foundPath and istable(foundPath) then
 			self.Path = foundPath

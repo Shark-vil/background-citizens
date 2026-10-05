@@ -24,7 +24,7 @@ end)
 
 hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 	if not ent.isBgnActor then return end
-	bgNPC:RemoveNPC(ent)
+	bgNPC.Actors.Unregister(ent)
 end)
 
 local function FindExistCarAndEnterThis(actor)
@@ -92,7 +92,7 @@ async.AddDedic('bgn_actors_last_player_interaction', function(yield, wait)
 	local player_GetHumans = player.GetHumans
 	while true do
 		local players = player_GetHumans()
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 		for i = 1, #actors do
 			local actor = actors[i]
 			if actor and actor:IsAlive() then
@@ -114,7 +114,7 @@ async.AddDedic('bgn_actors_last_player_interaction', function(yield, wait)
 end)
 
 local function run_remover_process_async(yield, wait, actors, actors_count)
-	local WantedModule = bgNPC:GetModule('wanted')
+	local WantedModule = bgNPC.Modules.Get('wanted')
 
 	yield()
 
@@ -147,14 +147,14 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 		local npc = actor:GetNPC()
 		local npc_type = actor:GetType()
 
-		if not bgn_enable or player_count == 0 or not bgNPC:IsActiveNPCType(npc_type) then
+		if not bgn_enable or player_count == 0 or not bgNPC.Config.IsTypeActive(npc_type) then
 			if not hook.Run('BGN_PreRemoveNPC', npc) then
 				actor:Remove()
 			end
 		else
 			if not actor.mechanics.ignore_limit then
-				local max_limit = bgNPC:GetLimitActors(npc_type)
-				if max_limit == 0 or #bgNPC:GetAllNPCsByType(npc_type) > max_limit then
+				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
+				if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) > max_limit then
 					actor:Remove()
 					yield()
 					continue
@@ -230,7 +230,7 @@ end
 
 async.AddDedic('bgn_actors_remover_process', function(yield, wait)
 	while true do
-		local actors = bgNPC:GetAll()
+		local actors = bgNPC.Actors.GetAll()
 		local actors_count = #actors
 
 		yield()
@@ -252,7 +252,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 	if data.wanted_level ~= nil then
 		local npc = actor:GetNPC()
 
-		local asset = bgNPC:GetModule('wanted')
+		local asset = bgNPC.Modules.Get('wanted')
 		local wanted_list = asset:GetAllWanted()
 		local success = false
 
@@ -266,14 +266,14 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 		end
 
 		if not success and not hook.Run('BGN_PreRemoveNPC', npc) then
-			bgNPC:Log('Remove wanted npc (reset targets)', 'Wanted NPC')
+			bgNPC.Util.Log('Remove wanted npc (reset targets)', 'Wanted NPC')
 			actor:Remove()
 		end
 	end
 end)
 
 hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent, level)
-	for _, actor in ipairs(bgNPC:GetAllByTeam('police')) do
+	for _, actor in ipairs(bgNPC.Actors.GetByTeam('police')) do
 		local wanted_level = actor:GetData().wanted_level
 
 		if wanted_level ~= nil and level < wanted_level then
