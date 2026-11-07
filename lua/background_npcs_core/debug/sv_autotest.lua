@@ -68,6 +68,35 @@ local function Provoke()
 	MsgN('[BGN AUTOTEST] fight: gangster attacks a citizen at ' .. math.floor(math.sqrt(best)) .. ' units')
 end
 
+-- How often walking NextBots really change position (updates per second), measured over 3 s.
+local motion = {}
+local function MeasureMotion()
+	local bots = {}
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local npc = actor:GetNPC()
+		if IsValid(npc) and npc.IsBGNNextBot then bots[#bots + 1] = { ent = npc, last = npc:GetPos(), changes = 0 } end
+	end
+	local ticks, started = 0, SysTime()
+	hook.Add('Tick', 'BGN_AutoTest_Motion', function()
+		ticks = ticks + 1
+		for _, b in ipairs(bots) do
+			if IsValid(b.ent) then
+				local pos = b.ent:GetPos()
+				if pos ~= b.last then b.changes = b.changes + 1 b.last = pos end
+			end
+		end
+		if SysTime() - started < 3 then return end
+		hook.Remove('Tick', 'BGN_AutoTest_Motion')
+		local best = 0
+		for _, b in ipairs(bots) do best = math.max(best, b.changes) end
+		motion = {
+			ticks_per_second = ticks / 3,
+			max_bot_updates_per_second = best / 3,
+			nb_update_frequency = GetConVar('nb_update_frequency') and GetConVar('nb_update_frequency'):GetFloat(),
+		}
+	end)
+end
+
 local function CollectReport(samples, started_at)
 	local by_type, by_state, by_brain, by_body, by_lod, by_model = {}, {}, {}, {}, {}, {}
 
@@ -113,6 +142,7 @@ local function CollectReport(samples, started_at)
 		selftest_ok = bgNPC.Test.last_ok,
 		nav = nav,
 		movement = CountMoved(),
+		motion = motion,
 		combat = combat,
 		goap_seen = goap_seen,
 		goap_examples = goap_examples,
@@ -150,6 +180,7 @@ local function Run(duration, commands, fight)
 	end)
 
 	if fight then timer.Simple(fight, Provoke) end
+	timer.Simple(2, MeasureMotion)
 
 	timer.Simple(duration, function()
 		timer.Remove('BGN_AutoTest_Sample')

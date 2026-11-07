@@ -322,10 +322,15 @@ function ENT:UpdateCombat()
 	self:Attack(enemy, stats)
 end
 
+-- Runs every tick (a slower think made the movement choppy); combat is checked 10 times per second.
 function ENT:Think()
-	self:UpdateCombat()
+	local now = CurTime()
+	if now >= (self.next_combat_check or 0) then
+		self.next_combat_check = now + 0.1
+		self:UpdateCombat()
+	end
 	self:UpdateActivity()
-	self:NextThink(CurTime() + 0.1)
+	self:NextThink(now)
 	return true
 end
 
