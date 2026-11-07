@@ -62,6 +62,12 @@ local WEAPONS = {
 }
 local DEFAULT_WEAPON = WEAPONS.weapon_pistol
 
+-- Spread multiplier per WEAPON_PROFICIENCY_* (0 poor .. 4 perfect): the HL2 NPC cone scales 7 / 5 / 3.3 / 1.7 / 1,
+-- relative to average, which the WEAPONS spreads are tuned for.
+local PROFICIENCY_SPREAD = { [0] = 1.4, 1, 0.67, 0.33, 0.2 }
+local HAND_ATTACHMENT = 'anim_attachment_RH'
+local MUZZLE_FORWARD = 10 -- hand to muzzle
+
 -- SWEP hold type -> ACTIVITIES key; unknown gun hold types use 'rifle'
 local HOLD_TYPES = {
 	pistol = 'pistol', revolver = 'pistol', duel = 'pistol',
@@ -143,6 +149,7 @@ function ENT:Initialize()
 	self.alert = 'idle'
 	self.next_fire = 0
 	self.clip = 0
+	self.proficiency = WEAPON_PROFICIENCY_AVERAGE
 	self.busy_until = 0
 	self.sequence_lock = false
 	self.activity_cache = {}
@@ -211,6 +218,39 @@ function ENT:Give(weapon_class)
 	return weapon
 end
 ENT.SelectWeapon = function() end
+
+-- Same API as HL2 NPCs, so the actor config weapon_skill applies to the bot too
+function ENT:SetCurrentWeaponProficiency(proficiency) self.proficiency = proficiency end
+function ENT:GetCurrentWeaponProficiency() return self.proficiency end
+
+-- @return table|nil { Pos, Ang } of the right hand
+function ENT:BGN_Hand()
+	local id = self:LookupAttachment(HAND_ATTACHMENT)
+	return id and id > 0 and self:GetAttachment(id) or nil
+end
+
+-- Drops the weapon as a normal world weapon (anyone can pick it up), like an HL2 NPC does on death.
+function ENT:BGN_DropWeapon()
+	local weapon = self.weapon
+	if not IsValid(weapon) then return end
+	local hand = self:BGN_Hand()
+	self.weapon = nil
+	self:SetNW2Entity('bgn_weapon', NULL)
+	self.weapon_stats = nil
+
+	weapon.bgn_nextbot_weapon = nil
+	weapon:SetParent(NULL)
+	weapon:RemoveEffects(EF_BONEMERGE)
+	weapon:SetOwner(NULL)
+	weapon:SetPos(hand and hand.Pos or self:WorldSpaceCenter())
+	weapon:SetAngles(hand and hand.Ang or self:GetAngles())
+	weapon:PhysicsInit(SOLID_VPHYSICS)
+	weapon:SetMoveType(MOVETYPE_VPHYSICS)
+	weapon:SetSolid(SOLID_VPHYSICS)
+	weapon:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+	local phys = weapon:GetPhysicsObject()
+	if IsValid(phys) then phys:Wake() end
+end
 
 function ENT:BGN_RemoveWeapon()
 	if IsValid(self.weapon) then self.weapon:Remove() end
@@ -370,22 +410,23 @@ function ENT:Attack(enemy, stats)
 		end
 	end
 
-	local src = self:BGN_EyePos()
-	local muzzle = IsValid(self.weapon) and self.weapon:GetAttachment(1)
-	if muzzle then src = muzzle.Pos end
+	-- From the bot's own hand: the server doesn't bonemerge, so the weapon's muzzle attachment is wrong there
+	local hand = self:BGN_Hand()
+	local src = hand and hand.Pos + hand.Ang:Forward() * MUZZLE_FORWARD or self:BGN_EyePos()
+	local spread = stats.spread * (PROFICIENCY_SPREAD[self.proficiency] or 1)
 
 	self:FireBullets({
 		Attacker = self,
 		Src = src,
 		Dir = (enemy:WorldSpaceCenter() - src):GetNormalized(),
-		Spread = Vector(stats.spread, stats.spread, 0),
+		Spread = Vector(spread, spread, 0),
 		Num = stats.num or 1,
 		Damage = stats.damage,
 		Tracer = 1,
 		IgnoreEntity = self.weapon,
 	})
 
-	if muzzle then
+	if IsValid(self.weapon) then
 		local effect = EffectData()
 		effect:SetEntity(self.weapon)
 		effect:SetAttachment(1)
@@ -537,7 +578,7 @@ end
 
 function ENT:OnKilled(dmginfo)
 	hook.Run('OnNPCKilled', self, dmginfo:GetAttacker(), dmginfo:GetInflictor())
-	self:BGN_RemoveWeapon()
+	self:BGN_DropWeapon()
 	self:BecomeRagdoll(dmginfo)
 end
 

@@ -83,15 +83,20 @@ function Combat.EquipActor(actor, weapon_class, switching)
 	end
 
 	if not EquipWeapon(actor, npc, weapon_class) then return end
-
-	-- Backward compatibility with the old version of the config
-	local data = actor:GetData()
-	local weapon_skill = data.weapon_skill or data.weaponSkill
-	if isnumber(weapon_skill) and npc:IsNPC() then
-		npc:SetCurrentWeaponProficiency(weapon_skill)
-	end
+	Combat.ApplyWeaponSkill(actor)
 
 	hook.Run('BGN_OnSetActorWeapon', actor)
+end
+
+-- Sets the shooting skill (HL2 NPC or NextBot): the config weapon_skill, or poor for an actor that was spawned
+-- unarmed and picked a weapon up (actor.novice_shooter).
+function Combat.ApplyWeaponSkill(actor)
+	local npc = actor:GetNPC()
+	if not IsValid(npc) or not npc.SetCurrentWeaponProficiency then return end
+	local data = actor:GetData()
+	-- weaponSkill: backward compatibility with the old version of the config
+	local weapon_skill = actor.novice_shooter and WEAPON_PROFICIENCY_POOR or data.weapon_skill or data.weaponSkill
+	if isnumber(weapon_skill) then npc:SetCurrentWeaponProficiency(weapon_skill) end
 end
 
 -- ---------------------------------------------------------------------------

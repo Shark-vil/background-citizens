@@ -65,6 +65,11 @@ bgNPC.States.Register('fear', 'danger', {
 		-- A planning brain (GOAP) already weighs the weapon in hand, the redirect is for the FSM only.
 		local active_weapon = not actor.brain.PickReaction and not actor:IsStayingOut() and actor:GetBody():GetActiveWeapon()
 		if IsValid(active_weapon) then
+			-- spawned unarmed: the engine AI picked this weapon up
+			if not actor.weapon then
+				actor.novice_shooter = true
+				bgNPC.Combat.ApplyWeaponSkill(actor)
+			end
 			actor.weapon = active_weapon:GetClass()
 			actor:SetState('defense', nil, true)
 			return

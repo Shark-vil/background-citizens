@@ -56,16 +56,16 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
 							npc.bgn_render_optimization = true
 							if IsValid(weapon) then
 								weapon:SetNoDraw(true)
+								npc.bgn_hidden_weapon = weapon
 							end
 						end
-					else
-						if past_set_no_draw and npc:GetNoDraw() then
-							npc:SetNoDraw(false)
-							npc.bgn_render_optimization = false
-							if IsValid(weapon) then
-								weapon:SetNoDraw(false)
-							end
-						end
+					elseif past_set_no_draw then
+						-- No GetNoDraw check: a server update may have cleared the NPC's flag already,
+						-- the weapon would then stay hidden in its hands for good.
+						npc:SetNoDraw(false)
+						npc.bgn_render_optimization = false
+						if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(false) end
+						npc.bgn_hidden_weapon = nil
 					end
 
 					budget()
