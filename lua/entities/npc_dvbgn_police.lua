@@ -5,6 +5,8 @@ AddCSLuaFile()
 ENT.Base = 'npc_decentvehicle'
 ENT.PrintName = dvd.Texts.npc_dvpolice
 ENT.DV_Police = true
+-- Drives to the driver's enemy (police) or to actor.drive_target_pos (medics) by the shortest way:
+-- against the lane direction, across lanes, red lights ignored. Without a target it is a normal DV car.
 ENT.Model = {'models/player/police.mdl', 'models/player/police_fem.mdl',}
 ENT.EnemyTarget = NULL
 ENT.Preference = {
@@ -28,13 +30,6 @@ ENT.Preference = {
 }
 
 local _cvar_bgn_debug = GetConVar('bgn_debug')
-local _util_TraceLine = util.TraceLine
-local _table_insert = table.insert
-local _table_remove = table.remove
-local _table_Reverse = table.Reverse
-local _table_HasValue = table.HasValue
-local _ents_FindByClass = ents.FindByClass
-local vector_0_0_10 = Vector(0, 0, 10)
 
 -- list.Set('NPC', 'npc_dvbgn_police', {
 --     Name = ENT.PrintName,
@@ -51,7 +46,7 @@ if CLIENT then
 
     hook.Add('PostDrawTranslucentRenderables', 'BGN_DvPoliceDebugDrawPath', function()
         if not _cvar_bgn_debug or not _cvar_bgn_debug:GetBool() then return end
-        for _, dv in ipairs(_ents_FindByClass('npc_dvbgn_police')) do
+        for _, dv in ipairs(ents.FindByClass('npc_dvbgn_police')) do
             -- Отрисовка точек из WaypointList
             if IsValid(dv) and dv.WaypointList then
                 for index, waypoint in ipairs(dv.WaypointList) do
@@ -84,302 +79,208 @@ if CLIENT then
     return
 end
 
-local function Heuristic(a, b)
-    return a:DistToSqr(b)
+local JUMP_DIST = 600 -- lane changes and crossing to another road part between unlinked waypoints
+local EYE = Vector(0, 0, 40)
+local graph, graph_size
+
+-- Undirected waypoint graph: DV links both ways plus jumps to nearby waypoints in sight. Built once per waypoint set.
+-- shortcut: rebuilt only when the waypoint count changes, an edit that keeps the count keeps the old graph
+local function BuildGraph()
+    local wps = dvd.Waypoints
+    local adj, grid = {}, {}
+    local function Cell(x, y) return math.floor(x / JUMP_DIST) .. ':' .. math.floor(y / JUMP_DIST) end
+    for id, w in ipairs(wps) do
+        adj[id] = adj[id] or {}
+        for _, nid in ipairs(w.Neighbors or {}) do
+            if wps[nid] then
+                adj[id][nid] = true
+                adj[nid] = adj[nid] or {}
+                adj[nid][id] = true
+            end
+        end
+        local key = Cell(w.Target.x, w.Target.y)
+        grid[key] = grid[key] or {}
+        table.insert(grid[key], id)
+    end
+
+    local jump_sqr = JUMP_DIST * JUMP_DIST
+    for id, w in ipairs(wps) do
+        local p = w.Target
+        for dx = -1, 1 do
+            for dy = -1, 1 do
+                for _, oid in ipairs(grid[Cell(p.x + dx * JUMP_DIST, p.y + dy * JUMP_DIST)] or {}) do
+                    if oid > id and not adj[id][oid] and p:DistToSqr(wps[oid].Target) <= jump_sqr
+                        and not util.TraceLine({ start = p + EYE, endpos = wps[oid].Target + EYE, mask = MASK_SOLID_BRUSHONLY }).Hit
+                    then
+                        adj[id][oid] = true
+                        adj[oid][id] = true
+                    end
+                end
+            end
+        end
+    end
+    return adj
 end
 
 local function GetCustomNode(self, position, speed)
     return {
         Target = position,
         Neighbors = {},
-        SpeedLimit = speed or self.MaxSpeed / 2
+        SpeedLimit = speed or self.MaxSpeed / 2,
+        bgn_custom = true,
     }
 end
 
-local function IsVisibleTarget(self, pos)
-    -- if self:GetPos():DistToSqr(pos) > 1000000 then return false end
-    local trace = _util_TraceLine({
+-- @return boolean nothing but the target (or nothing at all) is on the straight line to it
+local function IsVisibleTarget(self, pos, enemy)
+    local tr = util.TraceLine({
         start = self:LocalToWorld(self:OBBCenter()),
-        endpos = pos + vector_0_0_10,
+        endpos = pos + EYE,
         filter = function(ent)
-            if IsValid(ent)
-                and ent ~= self
-                and ent ~= self.v
-                and ent:GetClass() ~= 'prop_vehicle_prisoner_pod'
-            then
-                return true
-            end
-        end
+            return ent ~= self and ent ~= self.v and ent:GetClass() ~= 'prop_vehicle_prisoner_pod'
+        end,
     })
-    if not trace.Hit then return false end
-    if trace.Entity == self.EnemyTarget then return true end
-    if trace.Entity:IsVehicle() and trace.Entity:GetDriver() == self.EnemyTarget then return true end
-    return false
+    if not tr.Hit then return true end
+    local ent = tr.Entity
+    if not IsValid(enemy) or not IsValid(ent) then return false end
+    return ent == enemy or (ent:IsVehicle() and ent:GetDriver() == enemy)
 end
 
--- local function IsVisibleNode(self, startPos, endPos)
---     local trace = _util_TraceLine({
---         start = startPos,
---         endpos = endPos,
---         filter = function(ent)
---             if IsValid(ent)
---                 and ent ~= self
---                 and ent ~= self.v
---                 and ent:GetClass() ~= 'prop_vehicle_prisoner_pod'
---             then
---                 return true
---             end
---         end
---     })
---     return not trace.Hit
--- end
-
-local function FindPath(self, targetPos)
-    if IsVisibleTarget(self, targetPos) then
-        self.Waypoint = GetCustomNode(self, targetPos)
-        -- self.WaypointList = {self.Waypoint}
+local function FindPath(self, target_pos, enemy)
+    self.NextWaypoint = nil
+    self.WaypointList = {}
+    if IsVisibleTarget(self, target_pos, enemy) then
+        self.Waypoint = GetCustomNode(self, target_pos)
         return
     end
 
-    -- Получаем начальную и конечную точки
-    local startWaypoint = dvd.GetNearestWaypoint(self:GetPos())
-    local endWaypoint = dvd.GetNearestWaypoint(targetPos)
-    -- local startCustomWaypoint = GetCustomNode(self, self:GetPos())
-    -- _table_insert(startCustomWaypoint.Neighbors, startWaypoint)
-    -- local endCustomWaypoint = GetCustomNode(self, targetPos)
-    -- _table_insert(endCustomWaypoint.Neighbors, endWaypoint)
-    -- Очередь с приоритетом для поиска
-    local max_iteration = 500
-    local current_iteration = 0
-    local openSet = {}
-    -- Множество для посещённых точек
-    local closedSet = {}
-    -- Стоимость пути до точки
-    local gScore = {}
-    -- Оценка пути с учётом эвристики
-    local fScore = {}
-    -- Режим следования по родительским точкам
-    local cameFrom = {}
-    -- Инициализируем начальную точку
-    _table_insert(openSet, startWaypoint)
-    gScore[startWaypoint] = 0
-    fScore[startWaypoint] = Heuristic(startWaypoint.Target, endWaypoint.Target)
-    while #openSet > 0 do
-        -- Находим точку с наименьшей fScore в очереди
-        local currentNode = nil
-        local lowestF = math.huge
-        for _, node in ipairs(openSet) do
-            if fScore[node] < lowestF then
-                lowestF = fScore[node]
-                currentNode = node
-            end
-        end
+    local wps = dvd.Waypoints
+    if graph_size ~= #wps then graph, graph_size = BuildGraph(), #wps end
+    local _, start_id = dvd.GetNearestWaypoint(self:GetPos())
+    local goal, goal_id = dvd.GetNearestWaypoint(target_pos)
+    if not start_id or not goal_id then return end
 
-        current_iteration = current_iteration + 1
+    local goal_pos = goal.Target
+    local path = bgNPC.AStar.Search({
+        start = start_id,
+        is_goal = function(id) return id == goal_id end,
+        neighbours = function(id, push)
+            local pos = wps[id].Target
+            for nid in pairs(graph[id]) do push(nid, pos:Distance(wps[nid].Target)) end
+        end,
+        heuristic = function(id) return wps[id].Target:Distance(goal_pos) end,
+        max_iterations = 3000,
+    })
+    if not path then return end
 
-        -- Если мы достигли цели, восстанавливаем путь
-        if current_iteration == max_iteration or currentNode == endWaypoint then
-            local path = {}
-            while cameFrom[currentNode] do
-                _table_insert(path, 1, currentNode)
-                currentNode = cameFrom[currentNode]
-            end
-
-            -- local newPath = {}
-            -- local path_count = #path
-            -- for index = 1, path_count do
-            --     local node = path[index]
-            --     local newNode = GetCustomNode(self, node.Target, node.SpeedLimit)
-            --     local parentNodeIndex = index + 1
-            --     if parentNodeIndex < path_count then
-            --         newNode.Neighbors = {parentNodeIndex}
-            --     end
-            --     _table_insert(newPath, newNode)
-            -- end
-
-            local newIndex = 0
-            local newPath = {}
-            local path_count = #path
-            for index = path_count, 1, -1 do
-                newIndex = newIndex + 1
-                local node = path[index]
-                local newNode = GetCustomNode(self, node.Target, node.SpeedLimit)
-                local parentNodeIndex = newIndex + 1
-                if parentNodeIndex < path_count then
-                    newNode.Neighbors = {parentNodeIndex}
-                end
-                newPath[newIndex] = newNode
-            end
-            -- local startCustomWaypoint = GetCustomNode(self, self:GetPos())
-            -- _table_insert(startCustomWaypoint.Neighbors, #newPath)
-
-            self.Waypoint = newPath[#newPath]
-            -- self.Waypoint = startCustomWaypoint
-            self.WaypointList = newPath
-            return
-        end
-
-        -- Убираем текущую точку из openSet
-        for i, node in ipairs(openSet) do
-            if node == currentNode then
-                _table_remove(openSet, i)
-                break
-            end
-        end
-
-        -- Добавляем текущую точку в closedSet
-        closedSet[currentNode] = true
-        -- Проходим по соседям текущей точки
-        for _, neighborID in ipairs(currentNode.Neighbors) do
-            local neighbor = dvd.Waypoints[neighborID]
-            if closedSet[neighbor] then
-                -- Пропускаем уже посещённые точки
-                continue
-            end
-
-            -- Расчёт стоимости пути
-            local tentativeGScore = gScore[currentNode] + currentNode.Target:DistToSqr(neighbor.Target)
-            if not gScore[neighbor] or tentativeGScore < gScore[neighbor] then
-                -- Если путь через текущую точку лучше, обновляем
-                cameFrom[neighbor] = currentNode
-                gScore[neighbor] = tentativeGScore
-                fScore[neighbor] = gScore[neighbor] + Heuristic(neighbor.Target, endWaypoint.Target)
-                -- Добавляем соседа в openSet, если его там ещё нет
-                if not _table_HasValue(openSet, neighbor) then
-                    _table_insert(openSet, neighbor)
-                end
-            end
-        end
-
-        -- Возможность переключения на другие 'полосы' или точки, не связанные через Neighbors
-        -- Пробуем 'перескочить' на соседние точки, которые не связаны напрямую
-        -- Пример: Если текущая точка и сосед не связаны напрямую, но их расстояние минимально, можно их соединить
-        for _, possibleWaypoint in ipairs(dvd.Waypoints) do
-            -- Пропускаем себя и уже посещённые точки
-            if possibleWaypoint == currentNode or closedSet[possibleWaypoint] then continue end
-            -- Расстояние от текущей точки до возможной точки
-            local tentativeGScore = gScore[currentNode] + currentNode.Target:DistToSqr(possibleWaypoint.Target)
-            if tentativeGScore <= 360000 and (not gScore[possibleWaypoint] or tentativeGScore < gScore[possibleWaypoint]) then
-                -- Если путь через возможную точку лучше, обновляем
-                cameFrom[possibleWaypoint] = currentNode
-                gScore[possibleWaypoint] = tentativeGScore
-                fScore[possibleWaypoint] = gScore[possibleWaypoint] + Heuristic(possibleWaypoint.Target, endWaypoint.Target)
-                -- Добавляем возможную точку в openSet
-                if not _table_HasValue(openSet, possibleWaypoint) then
-                    _table_insert(openSet, possibleWaypoint)
-                end
-            end
-        end
+    -- DV takes the next point from the end of the list; the start waypoint is skipped, it is usually behind the car
+    local list = { GetCustomNode(self, target_pos) }
+    for i = #path, 2, -1 do
+        local w = wps[path[i]]
+        list[#list + 1] = GetCustomNode(self, w.Target, w.SpeedLimit)
     end
+    self.Waypoint = table.remove(list)
+    self.NextWaypoint = table.remove(list)
+    self.WaypointList = list
+end
 
-    -- Если пути нет, возвращаем пустой список
-    self.WaypointList = {}
-    return
+-- @return Vector|nil, Entity|nil where to drive: the driver's enemy, or the point the driver was sent to
+local function GetTarget(self)
+    local provider = BGN_VEHICLE:GetVehicleProvider(self.v)
+    local actor = provider and provider:GetDriver()
+    if not actor or not actor:IsAlive() then return end
+    local enemy = actor:GetNearEnemy()
+    if IsValid(enemy) and enemy:Health() > 0 then return enemy:GetPos(), enemy end
+    return actor.drive_target_pos
 end
 
 function ENT:CarCollide(data)
     local hitEnt = data.HitEntity
     if not hitEnt:IsVehicle() then return end
-    for _, dv in ipairs(_ents_FindByClass('npc_dvbgn_police')) do
-        if dv.v == hitEnt and dv.DV_Police then return end
+    for _, dv in ipairs(ents.FindByClass('npc_dvbgn_police')) do
+        if dv.v == hitEnt then return end
     end
 
     local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(self)
-    local actor
-    if vehicle_provider then
-        actor = vehicle_provider:GetDriver()
-        local enemy_vehicle_provider = BGN_VEHICLE:GetVehicleProvider(hitEnt)
-        local driver
-        if enemy_vehicle_provider then
-            local driver_actor = enemy_vehicle_provider:GetDriver()
-            if driver_actor and driver_actor:IsAlive() and not actor:HasTeam(driver_actor) then
-                driver = driver_actor:GetNPC()
-            end
-        else
-            local driver_ent = hitEnt:GetDriver()
-            if not actor:HasTeam(driver_ent) then driver = driver_ent end
+    local actor = vehicle_provider and vehicle_provider:GetDriver()
+    if not actor or not actor:IsAlive() or not actor:HasTeam('police') then return end
+
+    local driver
+    local enemy_vehicle_provider = BGN_VEHICLE:GetVehicleProvider(hitEnt)
+    if enemy_vehicle_provider then
+        local driver_actor = enemy_vehicle_provider:GetDriver()
+        if driver_actor and driver_actor:IsAlive() and not actor:HasTeam(driver_actor) then
+            driver = driver_actor:GetNPC()
         end
-        if IsValid(driver) and actor and actor:IsAlive() then
-            actor:AddEnemy(driver)
-            actor:SetState('defense')
-        end
+    else
+        local driver_ent = hitEnt:GetDriver()
+        if IsValid(driver_ent) and not actor:HasTeam(driver_ent) then driver = driver_ent end
+    end
+    if IsValid(driver) then
+        actor:AddEnemy(driver)
+        actor:SetState('defense')
     end
 end
 
 function ENT:GetCurrentMaxSpeed()
-    if IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
-        local limit
-        if self.Trace.Entity == self.EnemyTarget
-        or self.EnemyTarget:IsVehicle()
-        or (
-            self.EnemyTarget:IsPlayer()
-            and self.EnemyTarget:InVehicle()
-            and (
-                self.Trace.Entity == self.EnemyTarget:GetVehicle()
-                or self.Trace.Entity == self.EnemyTarget:GetVehicle():GetParent()
-            )
-        )  then
-            limit = self.MaxSpeed
-        else
-            if self.Prependicular >= .9 then
-                self.TurnWaitDelay = CurTime() + 5
-            end
-            if self.TurnWaitDelay and self.TurnWaitDelay > CurTime() then
-                limit = math.Clamp(self.MaxSpeed / 2, 500, 800)
-            else
-                limit = math.Clamp(self.MaxSpeed / 2, 500, 2500)
-            end
-        end
-        if not limit then
-            return self.BaseClass.GetCurrentMaxSpeed(self)
-        end
-        self.Waypoint.SpeedLimit = limit
-        return limit
+    if not self.IsTargetExists or not self.Waypoint then return self.BaseClass.GetCurrentMaxSpeed(self) end
+
+    local enemy = self.EnemyTarget
+    local trace_ent = self.Trace.Entity
+    local limit
+    if IsValid(enemy) and (trace_ent == enemy or enemy:IsVehicle() or (
+        enemy:IsPlayer() and enemy:InVehicle()
+        and (trace_ent == enemy:GetVehicle() or trace_ent == enemy:GetVehicle():GetParent())
+    )) then
+        limit = self.MaxSpeed
     else
-        return self.BaseClass.GetCurrentMaxSpeed(self)
+        if self.Prependicular >= .9 then self.TurnWaitDelay = CurTime() + 5 end
+        if self.TurnWaitDelay and self.TurnWaitDelay > CurTime() then
+            limit = math.Clamp(self.MaxSpeed / 2, 500, 800)
+        else
+            limit = math.Clamp(self.MaxSpeed / 2, 500, 2500)
+        end
     end
+    -- only our own path nodes: a DV waypoint is shared by every car
+    if self.Waypoint.bgn_custom then self.Waypoint.SpeedLimit = limit end
+    return limit
 end
 
 function ENT:Think()
-    local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(self.v)
-    if vehicle_provider then
-        local actor = vehicle_provider:GetDriver()
-        if actor and actor:IsAlive() then
-            self.EnemyTarget = actor:GetNearEnemy()
-        end
-    end
-
+    local target_pos, enemy = GetTarget(self)
+    self.EnemyTarget = enemy or NULL
     self.UpdateWaypointListDelay = self.UpdateWaypointListDelay or 0
-    if IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
+
+    if target_pos then
         if not self.IsTargetExists then
+            self.IsTargetExists = true
             self.Preference.GiveWay = false
             self.Preference.StopAtTL = false
+            self.Preference.WaitUntilNext = false
             self:SetELS(true)
             self:SetELSSound(true)
+            self.UpdateWaypointListDelay = 0
         end
 
-        self.IsTargetExists = true
-
-        if (not IsValid(self.Trace.Entity) or not self.Trace.Entity:IsWorld())
-        and (#self.WaypointList == 0
-        or self.UpdateWaypointListDelay < CurTime()
-        or self:GetPos():DistToSqr(self.EnemyTarget:GetPos()) <= 250000)
-        then
-            FindPath(self, self.EnemyTarget:GetPos())
-            if _cvar_bgn_debug:GetBool() then 
+        if not self.Waypoint or self.UpdateWaypointListDelay < CurTime() then
+            FindPath(self, target_pos, enemy)
+            if _cvar_bgn_debug:GetBool() then
                 net.Start('BGN_DvPoliceDebugDrawPath')
                 net.WriteEntity(self)
                 net.WriteTable(self.WaypointList)
                 net.Broadcast()
             end
-            self.UpdateWaypointListDelay = CurTime() + 15
+            -- a moving target needs fresh paths, close to it more often
+            self.UpdateWaypointListDelay = CurTime() + (self:GetPos():DistToSqr(target_pos) < 1000000 and 1 or 3)
         end
     elseif self.IsTargetExists then
         self.IsTargetExists = false
         self.WaypointList = {}
-        self.EnemyTarget = NULL
+        self.Waypoint = nil
+        self.NextWaypoint = nil
         self.Preference.GiveWay = true
         self.Preference.StopAtTL = true
+        self.Preference.WaitUntilNext = true
         self:SetELS(false)
         self:SetELSSound(false)
     end

@@ -56,3 +56,11 @@ bgNPC.Nav.GetInfo()       -- { provider, points, links, source }
 | `BGN_NavEditorGraphLoaded` | client | graph |
 | `BGN_PreLoadRoutes`, `BGN_PostLoadRoutes` | server | **OUTDATED**, still called |
 | `BGN_LoadingClientRoutes` | client | **OUTDATED**, still called |
+
+## Emergency cars (Decent Vehicle)
+
+Police cars (`npc_dvbgn_police`) chasing an enemy, and ambulances sent to a body (`actor.drive_target_pos`),
+ignore traffic rules: siren on, no stopping at red lights or giving way. The route is the shortest one over
+the DV waypoints taken in both directions, with jumps to waypoints within 600 units in sight (lane changes,
+the opposite side of the road). When the target is in plain sight the car drives straight at it.
+Paths are refreshed every 3 s, every 1 s within 1000 units of the target.
