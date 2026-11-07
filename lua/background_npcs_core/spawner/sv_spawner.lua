@@ -99,14 +99,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	local desired_position = settings.position
 	local teleport_radius = settings.radius or spawn_radius
 	local target_entity = settings.target
-	local pass_current = 0
-	local AsyncYield = function()
-		pass_current = pass_current + 1
-		if pass_current >= bgNPC.Util.PassesPerYield() then
-			pass_current = 0
-			coroutine.yield()
-		end
-	end
+	local AsyncYield = bgNPC.Tasks.Budget
 
 	if teleport_radius and teleport_radius <= block_radius then
 		teleport_radius = radius_visibility
@@ -120,7 +113,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		if is_async then AsyncYield() end
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
-	elseif BGN_NODE:CountNodesOnMap() == 0 then
+	elseif bgNPC.Points.Count() == 0 then
 		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
 		radius_visibility = math.Clamp(block_radius, 0, 1000)
 		block_radius = math.Clamp(block_radius, 0, 600)

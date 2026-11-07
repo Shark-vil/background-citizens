@@ -48,7 +48,6 @@ local function CollectReport(samples, started_at)
 		frame_ms_avg = frame_sum / n * 1000,
 		selftest_ok = bgNPC.Test.last_ok,
 		nav = nav,
-		legacy_points = BGN_NODE and BGN_NODE:CountNodesOnMap() or nil,
 		extra = bgNPC.AutoTestExtra and bgNPC.AutoTestExtra() or nil,
 	}
 end

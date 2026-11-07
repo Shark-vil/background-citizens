@@ -14,7 +14,7 @@
 		bgNPC.Util        - logging and small helpers        (this file)
 		bgNPC.Assert      - argument validation              (api/sh_assert.lua)
 
-	The old "bgNPC:Method()" functions still work, see api/sh_legacy.lua.
+	The old "bgNPC:Method()" functions still work, see api/compat/sh_legacy.lua.
 --]]
 
 local Assert = bgNPC.Assert

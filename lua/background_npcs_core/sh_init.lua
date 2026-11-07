@@ -5,7 +5,7 @@
 	Layout:
 		core/      class system, scheduler, net, cvars, commands, utils (no external libraries)
 		config/    actor configs and settings (user editable)
-		api/       public namespaces (bgNPC.Actors, bgNPC.Points, ...)
+		api/       public namespaces (bgNPC.Actors, bgNPC.Points, ...); api/compat: OUTDATED bgNPC:Method() aliases, loaded last
 		actor/     Actor class, body adapters, update loop, events, sync
 		nav/       navigation providers, node graph, generator, route files
 		brain/     FSM and GOAP brains
@@ -136,6 +136,10 @@ local function ExecutableScripts()
 	IncludeDir('actor/body')
 	IncludeDir('actor')
 
+	Include('nav/sh_astar.lua')
+	Include('nav/sh_node_graph.lua')
+	Include('nav/sv_nav.lua')
+	Include('nav/providers/sv_graph_provider.lua')
 	IncludeDir('nav')
 	Include('modules/dv/sh_dv_vehicle.lua')
 
@@ -177,7 +181,7 @@ bgNPC.Commands.Register('bgn_scripts_reload', {
 	server = function()
 		ExecutableScripts()
 		include(ROOT .. '/config/sh_player.lua')
-		bgNPC.LoadRoutes()
+		bgNPC.Nav.Load()
 	end,
 	client = function()
 		ExecutableScripts()

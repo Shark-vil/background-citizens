@@ -35,11 +35,6 @@ function Util.UUID()
 	end))
 end
 
--- How many cheap iterations a background task may do before yielding (about one per tick).
-function Util.PassesPerYield()
-	return math.max(1, math.floor(1 / engine.TickInterval()))
-end
-
 -- ---------------------------------------------------------------------------
 -- Language
 -- ---------------------------------------------------------------------------

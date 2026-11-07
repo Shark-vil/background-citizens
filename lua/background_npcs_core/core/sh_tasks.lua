@@ -14,6 +14,7 @@
 	yield()   always gives the tick away.
 	budget()  gives the tick away only when the budget ("bgn_tasks_budget_ms") is spent.
 	wait(s)   sleeps, the scheduler does not resume the task until the time passes.
+	bgNPC.Tasks.Budget() is budget() for shared helpers; outside a task it does nothing.
 
 	Tasks are resumed round-robin, so one heavy task can't starve the others.
 	A task that errors is removed and reported. Returning from the function finishes the task.
@@ -46,8 +47,11 @@ local function wait(seconds)
 end
 
 local function budget()
-	if SysTime() >= tick_deadline then coroutine.yield() end
+	if current and SysTime() >= tick_deadline then coroutine.yield() end
 end
+
+-- For helpers that may run inside a task: yields only when called from a scheduler task.
+Tasks.Budget = budget
 
 local function RemoveFromOrder(id)
 	for i = #order, 1, -1 do

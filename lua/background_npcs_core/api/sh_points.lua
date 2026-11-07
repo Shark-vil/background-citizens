@@ -1,378 +1,216 @@
+--[[
+	bgNPC.Points: movement points and paths for actors (server). Backed by the active navigation
+	provider (bgNPC.Nav: navmesh, nodegraph or custom graph).
+
+	Point queries return point objects { position = Vector } with :GetPos(), as the old node objects did.
+	On the client the functions return empty results.
+--]]
+
 local Assert = bgNPC.Assert
 local Points = bgNPC.Points
 --
+
+local POINT = {}
+POINT.__index = POINT
+function POINT:GetPos() return self.position end
+
+local function ToPoint(pos)
+	return setmetatable({ position = pos }, POINT)
+end
+
+local function ToPoints(positions)
+	local list = {}
+	for i = 1, #positions do list[i] = ToPoint(positions[i]) end
+	return list
+end
+
+local function Nav()
+	return SERVER and bgNPC.Nav and bgNPC.Nav.GetProvider and bgNPC.Nav or nil
+end
+
+-- Radius used by the OUTDATED "chunk" functions.
+local CHUNK_RADIUS = 1000
 
 -- ---------------------------------------------------------------------------
 -- Point queries
 -- ---------------------------------------------------------------------------
 
-local function HasLinkType(node, link_type)
-	if not link_type then return true end
-	local links = node.links[link_type]
-	return links ~= nil and #links ~= 0
+function Points.Count()
+	local nav = Nav()
+	return nav and nav.Count() or 0
 end
 
--- Returns the node with the smallest (or largest) distance to pos.
-local function PickByDistance(nodes, pos, link_type, want_far)
-	local result, result_dist
-
-	for i = 1, #nodes do
-		local node = nodes[i]
-		if node and HasLinkType(node, link_type) then
-			local dist = pos:DistToSqr(node.position)
-			if not result_dist or (want_far and dist > result_dist) or (not want_far and dist < result_dist) then
-				result = node
-				result_dist = dist
-			end
-		end
-	end
-
-	return result
-end
-
--- @param link_type string|nil only nodes that have links of this type
--- ! Without a link type the internal map table is returned, do not modify it.
+-- @return table list of points (for the navmesh: a capped sample around the map origin)
 function Points.GetAll(link_type)
-	local map = BGN_NODE:GetMap()
-	if not link_type then return map end
-
-	local points = {}
-	for i = 1, #map do
-		local node = map[i]
-		if node and HasLinkType(node, link_type) then points[#points + 1] = node end
-	end
-	return points
+	local nav = Nav()
+	if not nav then return {} end
+	return ToPoints(nav.GetAllPoints(link_type))
 end
 
 function Points.GetInRadius(center, radius, link_type)
 	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetInRadius')
 	Assert.Arg(2, radius, 'number', 'bgNPC.Points.GetInRadius')
-
-	local radius_sqr = radius * radius
-	local map = BGN_NODE:GetMap()
-	local points = {}
-
-	for i = 1, #map do
-		local node = map[i]
-		if node and node.position:DistToSqr(center) <= radius_sqr and HasLinkType(node, link_type) then
-			points[#points + 1] = node
-		end
-	end
-
-	return points
+	local nav = Nav()
+	if not nav then return {} end
+	return ToPoints(nav.GetPointsInRadius(center, radius, link_type))
 end
 
-function Points.GetIndexesInRadius(center, radius, link_type)
-	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetIndexesInRadius')
-	Assert.Arg(2, radius, 'number', 'bgNPC.Points.GetIndexesInRadius')
+-- @return Vector|nil random point (anywhere when center is nil)
+function Points.GetRandom(center, radius, link_type)
+	local nav = Nav()
+	return nav and nav.GetRandomPoint(center, radius or 1500, link_type)
+end
 
-	local radius_sqr = radius * radius
-	local map = BGN_NODE:GetMap()
-	local indexes = {}
-
-	for i = 1, #map do
-		local node = map[i]
-		if node and node.position:DistToSqr(center) <= radius_sqr and HasLinkType(node, link_type) then
-			indexes[#indexes + 1] = i
+local function PickByDistance(points, pos, want_far)
+	local result, result_dist
+	for i = 1, #points do
+		local dist = pos:DistToSqr(points[i].position)
+		if not result_dist or (want_far and dist > result_dist) or (not want_far and dist < result_dist) then
+			result, result_dist = points[i], dist
 		end
 	end
-
-	return indexes
+	return result
 end
 
 function Points.GetClosestInRadius(center, radius, link_type)
 	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetClosestInRadius')
-	return PickByDistance(Points.GetInRadius(center, radius or 500, link_type), center, nil, false)
+	return PickByDistance(Points.GetInRadius(center, radius or 500, link_type), center, false)
 end
 
 function Points.GetDistantInRadius(center, radius, link_type)
 	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetDistantInRadius')
-	return PickByDistance(Points.GetInRadius(center, radius or 500, link_type), center, nil, true)
+	return PickByDistance(Points.GetInRadius(center, radius or 500, link_type), center, true)
+end
+
+-- OUTDATED: chunks were removed, these search within 1000 units of center.
+function Points.GetIndexesInRadius(center, radius, link_type)
+	local indexes = {}
+	for i = 1, #Points.GetInRadius(center, radius, link_type) do indexes[i] = i end
+	return indexes
 end
 
 function Points.GetClosestInChunk(center, link_type)
-	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetClosestInChunk')
-	return PickByDistance(BGN_NODE:GetChunkNodes(center), center, link_type, false)
+	return Points.GetClosestInRadius(center, CHUNK_RADIUS, link_type)
 end
 
 function Points.GetDistantInChunk(center, link_type)
-	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetDistantInChunk')
-	return PickByDistance(BGN_NODE:GetChunkNodes(center), center, link_type, true)
+	return Points.GetDistantInRadius(center, CHUNK_RADIUS, link_type)
 end
 
--- Closest to pos among the nodes of the chunk that contains center.
 function Points.GetClosestToPosInChunk(center, pos, link_type)
-	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetClosestToPosInChunk')
-	Assert.Arg(2, pos, 'vector', 'bgNPC.Points.GetClosestToPosInChunk')
-	return PickByDistance(BGN_NODE:GetChunkNodes(center), pos, link_type, false)
+	return PickByDistance(Points.GetInRadius(center, CHUNK_RADIUS, link_type), pos, false)
 end
 
--- Farthest from pos among the nodes of the chunk that contains center.
 function Points.GetDistantToPosInChunk(center, pos, link_type)
-	Assert.Arg(1, center, 'vector', 'bgNPC.Points.GetDistantToPosInChunk')
-	Assert.Arg(2, pos, 'vector', 'bgNPC.Points.GetDistantToPosInChunk')
-	return PickByDistance(BGN_NODE:GetChunkNodes(center), pos, link_type, true)
+	return PickByDistance(Points.GetInRadius(center, CHUNK_RADIUS, link_type), pos, true)
 end
 
 -- ---------------------------------------------------------------------------
 -- Path finding
 -- ---------------------------------------------------------------------------
 
-local MAX_MOVE_DISTANCE_SQR = 500 ^ 2
-local DEFAULT_ITERATION_LIMIT = 300
+local DIRECT_DISTANCE_SQR = 500 ^ 2
 local PRIMITIVE_POINT_SPACING = 200
 local DOOR_SEARCH_RADIUS = 1000
-local VECTOR_UP_50 = Vector(0, 0, 50)
-local VECTOR_UP_20 = Vector(0, 0, 20)
-local VECTOR_DOWN_1000 = Vector(0, 0, 1000)
+local EYE = Vector(0, 0, 32)
+local UP_50 = Vector(0, 0, 50)
+local UP_20 = Vector(0, 0, 20)
+local DOWN_1000 = Vector(0, 0, 1000)
 
-local world_trace = {
-	filter = function(ent) return ent:IsWorld() end
-}
+local world_trace = { mask = MASK_NPCWORLDSTATIC }
 
--- Is the line between two points blocked by the world.
-local function IsWorldBetween(start_pos, end_pos)
-	world_trace.start = start_pos
-	world_trace.endpos = end_pos
+local function IsWorldBetween(a, b)
+	world_trace.start = a + EYE
+	world_trace.endpos = b + EYE
 	return util.TraceLine(world_trace).Hit
 end
 
-local floor_trace = {}
+local floor_trace = { mask = MASK_NPCWORLDSTATIC }
 
 local function SnapToFloor(pos)
-	floor_trace.start = pos + VECTOR_UP_50
-	floor_trace.endpos = pos - VECTOR_DOWN_1000
-	return util.TraceLine(floor_trace).HitPos + VECTOR_UP_20
+	floor_trace.start = pos + UP_50
+	floor_trace.endpos = pos - DOWN_1000
+	return util.TraceLine(floor_trace).HitPos + UP_20
 end
 
-local function CanSeeDoorFrom(door, pos)
-	local tr = util.TraceLine({
-		start = pos,
-		endpos = door:GetPos(),
-		filter = function(ent) return ent == door end
-	})
-	return tr.HitPos
-end
-
--- A point just in front of the door, on the side facing start_pos.
-local function GetDoorPassPoint(door, start_pos)
+-- A point just in front of the door, on the side facing from_pos.
+local function GetDoorPassPoint(door, from_pos)
 	local min, max = door:GetModelBounds()
 	local door_pos = door:LocalToWorld((min + max) / 2)
-	local dir = (start_pos - door_pos):GetNormalized()
+	local dir = (from_pos - door_pos):GetNormalized()
 	local forward, right = door:GetForward(), door:GetRight()
 	local forward_dot, right_dot = dir:Dot(forward), dir:Dot(right)
-	local shift = 20
 
 	if math.abs(forward_dot) > math.abs(right_dot) then
-		return door_pos + forward * shift * (forward_dot > 0 and 1 or -1)
+		return door_pos + forward * 20 * (forward_dot > 0 and 1 or -1)
 	end
-
-	return door_pos + right * shift * (right_dot > 0 and 1 or -1)
+	return door_pos + right * 20 * (right_dot > 0 and 1 or -1)
 end
 
-local function CollectUnlockedDoors(start_pos, end_pos)
-	local doors = {}
-	local seen = {}
-
-	local function collect(ent)
-		if not seen[ent] and IsValid(ent) and bgNPC.Util.IsDoor(ent) and not bgNPC.Util.IsDoorLocked(ent) then
-			doors[#doors + 1] = ent
+local function FindDoorBetween(start_pos, end_pos)
+	local best, best_dist
+	for _, ent in ipairs(ents.FindInSphere(start_pos, DOOR_SEARCH_RADIUS)) do
+		if bgNPC.Util.IsDoor(ent) and not bgNPC.Util.IsDoorLocked(ent) then
+			local dist = ent:GetPos():DistToSqr(end_pos)
+			if not best_dist or dist < best_dist then best, best_dist = ent, dist end
 		end
-		seen[ent] = true
 	end
-
-	for _, ent in ipairs(ents.FindInSphere(start_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
-	for _, ent in ipairs(ents.FindInSphere(end_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
-
-	return doors
+	return best
 end
 
--- A straight-line path used when there are no movement points.
--- If a wall is in the way, tries to route through nearby unlocked doors.
+-- A straight-line path used when the provider has no path (or no points).
+-- Routes through the nearest unlocked door when a wall is in the way.
 local function GetPrimitivePath(start_pos, end_pos)
-	local break_dist_sqr = PRIMITIVE_POINT_SPACING ^ 2
-	local points_limit = math.Round(math.sqrt(start_pos:DistToSqr(end_pos) / break_dist_sqr))
-	local direction = (end_pos - start_pos):GetNormalized()
-	local path = { SnapToFloor(start_pos) }
-	local doors = IsWorldBetween(start_pos, end_pos) and CollectUnlockedDoors(start_pos, end_pos) or {}
-
-	local function NextDoorPoint(from_pos)
-		if #doors == 0 or not IsWorldBetween(from_pos, end_pos) then return end
-
-		local best_pos, best_dist
-		for i = #doors, 1, -1 do
-			local door = doors[i]
-			local dist = end_pos:DistToSqr(door:GetPos())
-			if from_pos:DistToSqr(end_pos) <= break_dist_sqr
-				and (not best_dist or best_dist > dist)
-				and (CanSeeDoorFrom(door, end_pos) or CanSeeDoorFrom(door, from_pos))
-			then
-				table.remove(doors, i)
-				best_pos = GetDoorPassPoint(door, start_pos)
-				best_dist = dist
-			end
-		end
-
-		return best_pos
-	end
-
-	local door_pos = NextDoorPoint(start_pos)
-	if door_pos then
-		table.insert(path, door_pos)
-		start_pos = Vector(door_pos.x, door_pos.y, start_pos.z)
-	end
-
-	local offset = 0
-	for _ = 1, points_limit do
-		offset = offset + PRIMITIVE_POINT_SPACING
-
-		local point = SnapToFloor(start_pos + direction * offset)
-		if point:DistToSqr(end_pos) <= break_dist_sqr or not bgNPC.Util.IsInWorld(point) then
-			break
-		end
-
-		door_pos = NextDoorPoint(point)
-		if door_pos then
-			table.insert(path, door_pos)
-			offset = PRIMITIVE_POINT_SPACING
-			start_pos = door_pos
-		else
-			table.insert(path, point)
-		end
-	end
-
-	table.insert(path, SnapToFloor(end_pos))
-
-	return path
-end
-
-local function FindStartNode(start_pos)
-	local node = Points.GetClosestInChunk(start_pos)
-	if node and not IsWorldBetween(start_pos, node.position) then return node end
-
-	node = Points.GetClosestInRadius(start_pos, 500)
-	if node and not IsWorldBetween(start_pos, node.position) then return node end
-end
-
-local function BuildPath(came_from, last_node, end_pos)
-	local reversed = { end_pos }
-	local node = last_node
-
-	while node do
-		reversed[#reversed + 1] = node.position
-		node = came_from[node]
-	end
-
 	local path = {}
-	for i = #reversed, 1, -1 do
-		path[#path + 1] = reversed[i]
-	end
 
-	return path
-end
-
--- Drops leading points the NPC can already walk past in a straight line.
-local function TrimPathStart(path, start_pos)
-	while #path > 1 do
-		local pos = path[1]
-		if pos:DistToSqr(start_pos) >= MAX_MOVE_DISTANCE_SQR or IsWorldBetween(start_pos, pos) then
-			break
+	if IsWorldBetween(start_pos, end_pos) then
+		local door = FindDoorBetween(start_pos, end_pos)
+		if door then
+			local door_pos = GetDoorPassPoint(door, start_pos)
+			path[#path + 1] = door_pos
+			start_pos = door_pos
 		end
-		table.remove(path, 1)
 	end
+
+	local direction = (end_pos - start_pos):GetNormalized()
+	local steps = math.floor(start_pos:Distance(end_pos) / PRIMITIVE_POINT_SPACING)
+
+	for i = 1, steps do
+		local point = SnapToFloor(start_pos + direction * PRIMITIVE_POINT_SPACING * i)
+		if not bgNPC.Util.IsInWorld(point) then break end
+		path[#path + 1] = point
+	end
+
+	path[#path + 1] = SnapToFloor(end_pos)
 	return path
 end
 
 --[[
-	Finds a walking path between two positions over the movement points (A*).
-	The node map is never modified - all search state lives in local tables.
+	Finds a walking path between two positions.
 
 	@param start_pos vector
 	@param end_pos vector
-	@param iteration_limit number|nil max expanded nodes (default 300)
-	@param link_type string|nil walk only over links of this type, nil - over all neighbours
-	@return table list of positions, empty if no path was found
+	@param iteration_limit number|nil OUTDATED, ignored
+	@param link_type string|nil walk only over links of this type (graph providers)
+	@param actor table|nil the walking actor; bodies that path by themselves get the goal only
+	@return table list of positions (never empty)
 --]]
-function Points.FindPath(start_pos, end_pos, iteration_limit, link_type)
+function Points.FindPath(start_pos, end_pos, iteration_limit, link_type, actor)
 	Assert.Arg(1, start_pos, 'vector', 'bgNPC.Points.FindPath')
 	Assert.Arg(2, end_pos, 'vector', 'bgNPC.Points.FindPath')
-	Assert.Arg(3, iteration_limit, 'number|nil', 'bgNPC.Points.FindPath')
 	Assert.Arg(4, link_type, 'string|nil', 'bgNPC.Points.FindPath')
 
-	if start_pos:DistToSqr(end_pos) <= MAX_MOVE_DISTANCE_SQR and not IsWorldBetween(start_pos, end_pos) then
-		return { start_pos, end_pos }
+	if start_pos:DistToSqr(end_pos) <= DIRECT_DISTANCE_SQR and not IsWorldBetween(start_pos, end_pos) then
+		return { end_pos }
 	end
 
-	if BGN_NODE:CountNodesOnMap() == 0 then
-		return GetPrimitivePath(start_pos, end_pos)
-	end
+	local nav = Nav()
+	if not nav then return { end_pos } end
 
-	local start_node = FindStartNode(start_pos)
-	if not start_node then
-		return GetPrimitivePath(start_pos, end_pos)
-	end
+	if actor and nav.BodyPathsItself(actor.body) then return { end_pos } end
 
-	iteration_limit = iteration_limit or DEFAULT_ITERATION_LIMIT
+	local path = nav.FindPath(start_pos, end_pos, link_type)
+	if not path and link_type then path = nav.FindPath(start_pos, end_pos, nil) end
 
-	local open = { start_node }
-	local in_open = { [start_node] = true }
-	local closed = {}
-	local came_from = {}
-	local cost = { [start_node] = 0 }
-	local score = { [start_node] = start_node.position:Distance(end_pos) }
-
-	for _ = 1, iteration_limit do
-		local open_count = #open
-		if open_count == 0 then break end
-
-		-- The open list stays small, a linear scan is cheaper than a heap here.
-		local best_index = 1
-		local best_score = score[open[1]]
-		for i = 2, open_count do
-			local node_score = score[open[i]]
-			if node_score < best_score then
-				best_index = i
-				best_score = node_score
-			end
-		end
-
-		local current = open[best_index]
-		open[best_index] = open[open_count]
-		open[open_count] = nil
-		in_open[current] = nil
-
-		local current_pos = current.position
-		if current_pos:DistToSqr(end_pos) <= MAX_MOVE_DISTANCE_SQR and not IsWorldBetween(current_pos, end_pos) then
-			local path = TrimPathStart(BuildPath(came_from, current, end_pos), start_pos)
-			if #path ~= 0 then return path end
-			break
-		end
-
-		closed[current] = true
-
-		local neighbours = link_type and current:GetLinks(link_type) or current.parents
-		local current_cost = cost[current]
-
-		for i = 1, #neighbours do
-			local neighbour = neighbours[i]
-			if not closed[neighbour] then
-				local new_cost = current_cost + current_pos:Distance(neighbour.position)
-				local old_cost = cost[neighbour]
-
-				if not old_cost or new_cost < old_cost then
-					came_from[neighbour] = current
-					cost[neighbour] = new_cost
-					score[neighbour] = new_cost + neighbour.position:Distance(end_pos)
-
-					if not in_open[neighbour] then
-						in_open[neighbour] = true
-						open[#open + 1] = neighbour
-					end
-				end
-			end
-		end
-	end
-
-	return GetPrimitivePath(start_pos, end_pos)
+	return path or GetPrimitivePath(start_pos, end_pos)
 end
-

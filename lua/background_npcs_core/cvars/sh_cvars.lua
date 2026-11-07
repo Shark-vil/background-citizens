@@ -3,12 +3,9 @@ bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
 bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
-bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists = 1
 bgNPC.cvar.bgn_dynamic_nodes = 1
-bgNPC.cvar.bgn_dynamic_nodes_type = 'random'
 bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
 bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
-bgNPC.cvar.bgn_dynamic_nodes_alternative = 1
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2500
@@ -50,7 +47,6 @@ bgNPC.cvar.bgn_tool_seat_offset_angle_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
 bgNPC.cvar.bgn_cl_draw_npc_path = 0
-bgNPC.cvar.bgn_cl_draw_chunks = 0
 bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
@@ -69,8 +65,6 @@ bgNPC.cvar.bgn_module_tactical_groups = 0
 bgNPC.cvar.bgn_module_followers_mod_addon = 1
 bgNPC.cvar.bgn_drop_money = 1
 bgNPC.cvar.bgn_module_n2money = 1
-bgNPC.cvar.bgn_chunk_system = 1
-bgNPC.cvar.bgn_chunk_size = 5000
 bgNPC.cvar.bgn_agressive_mode = 0
 bgNPC.cvar.bgn_friend_mode = 0
 
@@ -86,10 +80,6 @@ bgNPC.CVars.Register('bgn_enable', bgNPC.cvar.bgn_enable, 'Toggles the modificat
 bgNPC.CVars.Register('bgn_agressive_mode', bgNPC.cvar.bgn_agressive_mode, 'All actors will be hostile towards you.')
 
 bgNPC.CVars.Register('bgn_friend_mode', bgNPC.cvar.bgn_friend_mode, 'All actors will be friendly towards you.')
-
-bgNPC.CVars.Register('bgn_chunk_system', bgNPC.cvar.bgn_chunk_system, '1 - enabled, 0 - disabled.')
-
-bgNPC.CVars.Register('bgn_chunk_size', bgNPC.cvar.bgn_chunk_size, '1 - enabled, 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_dynamic_nodes_radius', bgNPC.cvar.bgn_dynamic_nodes_radius, '')
 
@@ -168,14 +158,7 @@ bgNPC.CVars.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_
 bgNPC.CVars.Register('bgn_module_bio_annihilation_two_replacement',
 	bgNPC.cvar.bgn_module_bio_annihilation_two_replacement, '1 - Enable "BA2" addon support. 0 - disable.')
 
-bgNPC.CVars.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
-	bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists, '1 - Enable dynamic movement mesh restriction. 0 - disable.')
-
-bgNPC.CVars.Register('bgn_dynamic_nodes_alternative', bgNPC.cvar.bgn_dynamic_nodes_alternative, '1 - Enable alternative dynamic movement mesh. 0 - disable.')
-
 bgNPC.CVars.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes, '1 - Enable dynamic movement mesh. 0 - disable.')
-
-bgNPC.CVars.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type, 'Types - grid, random')
 
 bgNPC.CVars.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement, '1 - includes the replacement of weapons. 0 - disables.')
 

@@ -33,6 +33,8 @@ function Provider:Load() return true end
 function Provider:Count() return 0 end
 -- @return table list of Vectors
 function Provider:GetPointsInRadius(center, radius, link_type) return {} end
+-- @return table list of Vectors, every point (or a sample for huge sources)
+function Provider:GetAllPoints(link_type) return {} end
 -- @return Vector|nil
 function Provider:GetRandomPoint(center, radius, link_type)
 	local points = self:GetPointsInRadius(center, radius, link_type)
@@ -100,11 +102,16 @@ function Nav.Load(name)
 		provider:Load()
 	end
 
+	hook.Run('BGN_PreLoadRoutes', game.GetMap()) -- OUTDATED
 	active = provider
 	MsgN('[Background NPCs] Navigation: ' .. active.name .. ' (' .. active:Count() .. ' points)')
 	hook.Run('BGN_NavProviderChanged', active)
+	hook.Run('BGN_PostLoadRoutes', game.GetMap()) -- OUTDATED
 	return true
 end
+
+-- OUTDATED: old name
+bgNPC.LoadRoutes = function() Nav.Load() end
 
 function Nav.GetInfo()
 	return active:GetInfo()
@@ -116,6 +123,7 @@ end
 
 function Nav.Count() return active:Count() end
 function Nav.GetPointsInRadius(center, radius, link_type) return active:GetPointsInRadius(center, radius, link_type) end
+function Nav.GetAllPoints(link_type) return active:GetAllPoints(link_type) end
 function Nav.GetRandomPoint(center, radius, link_type) return active:GetRandomPoint(center, radius, link_type) end
 function Nav.FindPath(start_pos, goal_pos, link_type) return active:FindPath(start_pos, goal_pos, link_type) end
 function Nav.BodyPathsItself(body) return active:BodyPathsItself(body) end

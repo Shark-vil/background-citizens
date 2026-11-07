@@ -48,10 +48,7 @@ else
 	end
 
 	function TOOL.BuildCPanel(Panel)
-		Panel:AddControl('Button', {
-			['Label'] = '#tool.bgn_path_finder.pnl.load_points',
-			['Command'] = 'cl_citizens_load_route_from_client',
-		})
+		Panel:AddControl('Label', { ['Text'] = '#tool.bgn_path_finder.pnl.help' })
 	end
 
 	function TOOL:LeftClick()
@@ -68,11 +65,13 @@ else
 		local tr = self:GetTrace()
 		if not tr.Hit then return end
 		self.EndPos = tr.HitPos
-		local foundPath = bgNPC.Points.FindPath(self.StartPos, self.EndPos)
 
-		if foundPath and istable(foundPath) then
-			self.Path = foundPath
-		end
+		-- Paths are built on the server by the active navigation provider.
+		local start_pos = self.StartPos
+		bgNPC.NavEditor.RequestPath(start_pos, self.EndPos, function(path)
+			table.insert(path, 1, start_pos)
+			self.Path = path
+		end)
 
 		surface.PlaySound('buttons/blip1.wav')
 	end
@@ -117,14 +116,14 @@ else
 		['tool.bgn_path_finder.name'] = 'Path finder',
 		['tool.bgn_path_finder.desc'] = '',
 		['tool.bgn_path_finder.0'] = '',
-		['tool.bgn_path_finder.pnl.load_points'] = 'Load points',
+		['tool.bgn_path_finder.pnl.help'] = 'Left click - start, right click - end. The server builds the path with the active navigation (bgn_nav_info).',
 	}
 
 	local ru_lang = {
 		['tool.bgn_path_finder.name'] = 'Поиск пути',
 		['tool.bgn_path_finder.desc'] = '',
 		['tool.bgn_path_finder.0'] = '',
-		['tool.bgn_path_finder.pnl.load_points'] = 'Загрузить точки',
+		['tool.bgn_path_finder.pnl.help'] = 'ЛКМ - начало, ПКМ - конец. Путь строит сервер по активной навигации (bgn_nav_info).',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang

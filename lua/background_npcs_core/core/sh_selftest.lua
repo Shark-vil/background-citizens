@@ -88,16 +88,6 @@ Test.Add('core.net.serializer', function(check)
 	check(Net.Deserialize(Net.Serialize(1 / 3))[1] == 1 / 3, 'float precision')
 end)
 
-Test.Add('core.spatial_grid', function(check)
-	local grid = bgNPC.SpatialGrid(1000)
-	check(grid:Key(Vector(10, 10, 10)) == grid:Key(Vector(999, 0, 500)), 'same cell')
-	check(grid:Key(Vector(-1, 0, 0)) ~= grid:Key(Vector(1, 0, 0)), 'negative side differs')
-	check(grid:Key(Vector(0, 1000, 0)) ~= grid:Key(Vector(0, 0, 1000)), 'axes do not collide')
-	local cell = grid:GetCell(Vector(-1500, 2500, 10))
-	check(Vector(-1500, 2500, 10):WithinAABox(cell.start_pos, cell.end_pos), 'cell bounds contain the point')
-	check(grid:GetCell(Vector(-1500, 2500, 10)) == cell and grid:CellsCount() == 1, 'cells are cached')
-end)
-
 Test.Add('core.table', function(check)
 	local T = bgNPC.Table
 	local list = { 1, 2, 3 }

@@ -41,6 +41,15 @@ function GraphProvider:GetPointsInRadius(center, radius, link_type)
 	return points
 end
 
+function GraphProvider:GetAllPoints(link_type)
+	local graph = self.graph
+	local points = {}
+	for id, pos in graph:Nodes() do
+		if link_type == nil or graph:HasLinks(id, link_type) then points[#points + 1] = pos end
+	end
+	return points
+end
+
 function GraphProvider:GetRandomPoint(center, radius, link_type)
 	local graph = self.graph
 	local id = center and graph:GetRandom(center, radius, link_type) or graph:GetRandom(nil, nil, link_type)

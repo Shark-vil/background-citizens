@@ -228,7 +228,7 @@ function Actor:Init(npc, npc_type, custom_uid, not_sync_actor_on_client, not_aut
 		self.bodygroups[bodygroup.id] = npc:GetBodygroup(bodygroup.id)
 	end
 	if SERVER then self.keyvalues = npc:GetKeyValues() end
-	self.sync_players_hash = {}
+	self.sync_players_hash = setmetatable({}, { __mode = 'k' }) -- players that left are dropped
 
 	-- States
 	self.state_data = { state = 'none', data = {} }

@@ -1,94 +1,58 @@
+--[[
+	Sends actor state to the players that have the actor in their PVS.
+	Each player gets the data only when it changed (CRC of the serialized data).
+--]]
+
 local Serialize = bgNPC.Net.Serialize
---
-local current_pass = 0
-local function has_yield()
-	current_pass = current_pass + 1
-	if current_pass >= 1 / FrameTime() then
-		current_pass = 0
-		return true
-	end
-	return false
+local SYNC_PERIOD = 0.25
+
+local function BuildSyncData(actor)
+	return {
+		name = actor:GetName(),
+		gender = actor:GetGender(),
+		state = actor:GetState(),
+		enemies = actor.enemies,
+		targets = actor.targets,
+		anim_name = actor.anim_name,
+		is_animated = actor.is_animated,
+		state_lock = actor.state_lock,
+		reaction = actor.reaction,
+		npc_schedule = actor.npc_schedule,
+		npc_state = actor.npc_state,
+	}
 end
 
-bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield)
+bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 	while true do
-		local sync_list = {}
-		local sync_list_count = 0
+		local players = player.GetHumans()
+		local actors = bgNPC.Actors.GetAll()
 
-		do
-			local actors = bgNPC.Actors.GetAll()
-			local players = player.GetHumans()
+		for i = 1, #actors do
+			local actor = actors[i]
+			local npc = actor and actor:IsAlive() and actor:GetNPC()
 
-			for i = 1, #actors do
-				local actor = actors[i]
-				local sync_players = {}
-				local sync_players_count = 0
-
-				if actor and actor:IsAlive() then
-					local npc = actor:GetNPC()
-					for k = 1, #players do
-						local ply = players[k]
-						if IsValid(ply) and IsValid(npc) and ply:TestPVS(npc) then
-							sync_players_count = sync_players_count + 1
-							sync_players[sync_players_count] = ply
-						end
-						if has_yield() then yield() end
-					end
-				end
-
-				if sync_players_count ~= 0 then
-					sync_list_count = sync_list_count + 1
-					sync_list[sync_list_count] = {
-						actor = actor,
-						players = sync_players
-					}
-				end
-
-				yield()
-			end
-		end
-
-		yield()
-
-		for i = 1, #sync_list do
-			local sync_list_value = sync_list[i]
-			local actor = sync_list_value.actor
-
-			if actor and actor:IsAlive() then
-				local players = sync_list_value.players
-				local sync_data = {
-					name = actor:GetName(),
-					gender = actor:GetGender(),
-					state = actor:GetState(),
-					enemies = actor.enemies,
-					targets = actor.targets,
-					anim_name = actor.anim_name,
-					is_animated = actor.is_animated,
-					state_lock = actor.state_lock,
-					reaction = actor.reaction,
-					npc_schedule = actor.npc_schedule,
-					npc_state = actor.npc_state,
-				}
-
-				local sync_hash = util.CRC(Serialize(sync_data))
+			if IsValid(npc) then
+				local sync_data, sync_hash
 
 				for k = 1, #players do
 					local ply = players[k]
-					if ply and IsValid(ply) and ply.bgn_ready then
-						local old_sync_hash = actor.sync_players_hash[ply] or -1
-						if sync_hash ~= old_sync_hash then
+					if IsValid(ply) and ply.bgn_ready and ply:TestPVS(npc) then
+						if not sync_hash then
+							sync_data = BuildSyncData(actor)
+							sync_hash = util.CRC(Serialize(sync_data))
+						end
+
+						if actor.sync_players_hash[ply] ~= sync_hash then
 							bgNPC.Net.Send('bgn_actor_sync_data', ply, actor.uid, sync_data)
 							actor.sync_players_hash[ply] = sync_hash
 						end
-						-- if has_yield() then yield() end
-						yield()
 					end
 				end
-
-				yield()
 			end
+
+			budget()
 		end
 
-		yield()
+		wait(SYNC_PERIOD)
 	end
 end)

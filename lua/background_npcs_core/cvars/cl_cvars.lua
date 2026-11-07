@@ -12,9 +12,6 @@ CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_h
 CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path,
 { FCVAR_ARCHIVE }, 'Draw the path of movement of the NPC. 1 - enabled, 0 - disabled.')
 
-CreateConVar('bgn_cl_draw_chunks', bgNPC.cvar.bgn_cl_draw_chunks,
-{ FCVAR_ARCHIVE }, 'Receives and displays chunks from the server. 1 - enabled, 0 - disabled. (Use command "bgn_cl_draw_chunks_reload" to retrieve chunks)')
-
 CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization,
 { FCVAR_ARCHIVE }, 'Enable field of view optimization.')
 

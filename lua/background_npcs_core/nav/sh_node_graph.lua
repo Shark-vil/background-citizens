@@ -219,6 +219,16 @@ function NodeGraph:ForEachInRadius(center, radius, fn)
 	local cx, cy, cz = center.x, center.y, center.z
 	local pos_list = self.pos
 
+	-- A huge radius covers more cells than there are nodes: scan the nodes instead.
+	local span = math.floor(2 * radius / s) + 2
+	if span * span * span > self.count then
+		for id, pos in pairs(pos_list) do
+			local dist_sqr = pos:DistToSqr(center)
+			if dist_sqr <= radius_sqr and fn(id, pos, dist_sqr) then return end
+		end
+		return
+	end
+
 	for x = floor((cx - radius) / s), floor((cx + radius) / s) do
 		for y = floor((cy - radius) / s), floor((cy + radius) / s) do
 			for z = floor((cz - radius) / s), floor((cz + radius) / s) do

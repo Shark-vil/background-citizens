@@ -6,28 +6,9 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.generation.dynamic_nodes_restict',
-		['Command'] = 'bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
-		['Help'] = true,
-	})
-
-	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.generation.dynamic_nodes_save_progress',
 		['Command'] = 'bgn_dynamic_nodes_save_progress',
 		['Help'] = true,
-	})
-
-	panel:AddControl('ListBox', {
-		['Label'] = '#bgn.settings.generation.dynamic_nodes_type',
-		['Command'] = 'bgn_dynamic_nodes_type',
-		['Options'] = {
-			['grid'] = { ['bgn_dynamic_nodes_type'] = 'grid' },
-			['random'] = { ['bgn_dynamic_nodes_type'] = 'random' },
-		}
-	})
-
-	panel:AddControl('Label', {
-		['Text'] = '#bgn.settings.generation.dynamic_nodes_type.help'
 	})
 
 	panel:AddControl('Slider', {
@@ -45,12 +26,6 @@ local function TOOL_MENU(panel)
 		['Type'] = 'Integer',
 		['Min'] = '0',
 		['Max'] = '2000',
-		['Help'] = true,
-	})
-
-	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.generation.dynamic_nodes_alternative',
-		['Command'] = 'bgn_dynamic_nodes_alternative',
 		['Help'] = true,
 	})
 end

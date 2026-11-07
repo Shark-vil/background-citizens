@@ -48,21 +48,6 @@ local function TOOL_MENU(panel)
 	})
 
 	panel:AddControl('CheckBox', {
-		['Label'] = '#bgn.settings.general.chunk_system',
-		['Command'] = 'bgn_chunk_system',
-		['Help'] = true,
-	})
-
-	panel:AddControl('Slider', {
-		['Label'] = '#bgn.settings.general.chunk_size',
-		['Command'] = 'bgn_chunk_size',
-		['Type'] = 'Integer',
-		['Min'] = '0',
-		['Max'] = '10000',
-		['Help'] = true,
-	})
-
-	panel:AddControl('CheckBox', {
 		['Label'] = '#bgn.settings.general.debug',
 		['Command'] = 'bgn_debug',
 		['Help'] = true,

@@ -26,13 +26,11 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(_, _, v
 	min_range = new_value
 end, 'ro_bgn_cl_field_view_optimization_range')
 
-bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait)
-	local current_pass = 0
-
+bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
 	while true do
 		if not is_active then
 			wait(1)
-			return
+			continue
 		end
 
 		local ply = LocalPlayer()
@@ -70,12 +68,7 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait)
 						end
 					end
 
-					if current_pass >= bgNPC.Util.PassesPerYield() then
-						current_pass = 0
-						yield()
-					else
-						current_pass = current_pass + 1
-					end
+					budget()
 				end
 			end
 		end
