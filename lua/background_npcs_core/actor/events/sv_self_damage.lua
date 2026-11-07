@@ -1,6 +1,7 @@
 local table_WhereFindBySeq = bgNPC.Table.FindWhere
 --
 local TeamParentModule
+local cvar_team_damage = GetConVar('bgn_team_damage')
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
@@ -81,7 +82,9 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 					ActorTarget:SetState('fear')
 					ActorTarget:StayOutOfFight()
 				end
-				return true
+				-- nil lets the damage through without a reaction
+				if not cvar_team_damage:GetBool() then return true end
+				return
 			end
 		end
 

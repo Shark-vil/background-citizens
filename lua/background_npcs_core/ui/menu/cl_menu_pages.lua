@@ -19,6 +19,7 @@ Menu.AddPage('general', {
 		page:Toggle('bgn_friend_mode', '#bgn.settings.general.bgn_friend_mode')
 		page:Toggle('bgn_agressive_mode', '#bgn.settings.general.bgn_agressive_mode')
 		page:Toggle('bgn_ignore_another_npc', '#bgn.settings.general.ignore_another_npc')
+		page:Toggle('bgn_team_damage', '#bgn.settings.general.team_damage')
 	end,
 })
 

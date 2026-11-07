@@ -28,6 +28,7 @@ bgNPC.cvar.bgn_arrest_mode = 1
 bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_ignore_another_npc = 0
+bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_cl_disable_halo = 0
 bgNPC.cvar.bgn_disable_halo_wanted = 0
@@ -137,6 +138,8 @@ bgNPC.CVars.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, 'Includes a 
 bgNPC.CVars.Register('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time, 'Sets the time allotted for your detention.')
 
 bgNPC.CVars.Register('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit, 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
+
+bgNPC.CVars.Register('bgn_team_damage', bgNPC.cvar.bgn_team_damage, 'Actors of one team damage each other (they still never fight back). 1 - enabled, 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
 
