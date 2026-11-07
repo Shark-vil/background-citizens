@@ -52,9 +52,36 @@ function Actor:GetReactionForDamage(enemy)
 	return PickReaction(self, self.data.at_damage, enemy)
 end
 
+local LAW_RADIUS_SQR = 2000 * 2000
+local MAX_CIVILIAN_FIGHTERS = 2
+
+-- A civilian stays out of someone else's fight when the police already fight that enemy nearby
+-- or enough other civilians do. Self-defence (GetReactionForDamage) is not limited.
+local function ShouldStayOut(actor, enemy)
+	if CLIENT or not IsValid(enemy) or actor:HasTeam('police') or not actor:HasTeam('residents') then return false end
+	local npc = actor:GetNPC()
+	if not IsValid(npc) then return false end
+	local pos = npc:GetPos()
+	local civilians = 0
+	for _, other in ipairs(bgNPC.Actors.GetAll()) do
+		if other ~= actor and other:IsAlive() and other:HasEnemy(enemy) then
+			if other:HasTeam('police') then
+				local other_npc = other:GetNPC()
+				if IsValid(other_npc) and other_npc:GetPos():DistToSqr(pos) < LAW_RADIUS_SQR then return true end
+			elseif other:HasTeam('residents') then
+				civilians = civilians + 1
+				if civilians >= MAX_CIVILIAN_FIGHTERS then return true end
+			end
+		end
+	end
+	return false
+end
+
 -- @param enemy entity|nil who the actor reacts to
 function Actor:GetReactionForProtect(enemy)
-	return PickReaction(self, self.data.at_protect, enemy)
+	local reaction = PickReaction(self, self.data.at_protect, enemy)
+	if reaction == 'defense' and ShouldStayOut(self, enemy) then return 'fear' end
+	return reaction
 end
 
 -- Sets the reaction to the event.

@@ -127,7 +127,7 @@ Menu.AddPage('behavior', {
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
 		page:Toggle('bgn_module_replics_enable', '#bgn.settings.extension.replics_enable')
 		page:Choice('bgn_module_replics_language', '#bgn.menu.replics_language', {
-			{ 'english', 'English' }, { 'russian', 'Русский' },
+			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
 		})
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
 		page:Toggle('bgn_all_models_random', '#bgn.settings.extension.all_models_random')

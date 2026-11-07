@@ -51,7 +51,7 @@ bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
-bgNPC.cvar.bgn_module_replics_language = 'english'
+bgNPC.cvar.bgn_module_replics_language = 'auto'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
 bgNPC.cvar.bgn_module_arccw_weapon_replacement = 0
 bgNPC.cvar.bgn_module_arc9_weapon_replacement = 0
@@ -156,7 +156,7 @@ bgNPC.CVars.Register('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporter, 
 
 bgNPC.CVars.Register('bgn_actors_max_teleports', bgNPC.cvar.bgn_actors_max_teleports, 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.')
 
-bgNPC.CVars.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_language, 'Sets the language of the NPC replicas. The default is - en.')
+bgNPC.CVars.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_language, 'Language of the NPC phrases: auto (game language), english, russian.')
 
 bgNPC.CVars.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable, 'Enables or disables NPC text replics.')
 

@@ -70,7 +70,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 					return
 				end
 			end
-		elseif ActorAttacker ~= nil and attacker:IsNPC() then
+		elseif ActorAttacker ~= nil then
 			if ActorTarget:HasTeam(ActorAttacker) then
 				ActorTarget:RemoveEnemy(attacker)
 				ActorAttacker:RemoveEnemy(target)

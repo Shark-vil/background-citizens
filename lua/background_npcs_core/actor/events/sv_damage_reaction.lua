@@ -1,11 +1,13 @@
 --
 local WantedModule
 
-hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(attacker, target)
-	local actors = bgNPC.Actors.GetInRadius(target:GetPos(), 2500)
+hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor', function(hit_attacker, hit_target)
+	local actors = bgNPC.Actors.GetInRadius(hit_target:GetPos(), 2500)
 	WantedModule = WantedModule or bgNPC.Modules.Get('wanted')
 	for i = 1, #actors do
 		local actor = actors[i]
+		-- per witness: the swap below must not leak into the next iteration
+		local attacker, target = hit_attacker, hit_target
 		local npc = actor:GetNPC()
 		if npc == target or npc == attacker then continue end
 		local is_team_target = actor:HasTeam(target)
