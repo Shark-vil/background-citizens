@@ -40,6 +40,7 @@ GOAP.sensors = {
 		return IsValid(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) < ENEMY_CLOSE_DIST_SQR
 	end,
 	enemy_armed = function(actor, npc, enemy) return IsValid(enemy) and IsArmedEntity(enemy) end,
+	wanted = function(actor) return actor:IsWanted() end,
 	police_called = function(actor, npc, enemy)
 		wanted = wanted or bgNPC.Modules.Get('wanted')
 		return IsValid(enemy) and wanted ~= nil and wanted:HasWanted(enemy)
@@ -88,9 +89,19 @@ GOAP.RegisterAction('attack', {
 
 GOAP.RegisterAction('flee', {
 	state = 'fear',
-	also = { 'run_from_danger', 'dyspnea_danger' },
+	also = { 'run_from_danger', 'dyspnea_danger', 'pick_up_weapon' },
 	effects = { safe = true },
 	cost = 2,
+})
+
+-- Needs no config weight: any wanted actor hides from its pursuers, fighting back only when cornered.
+GOAP.RegisterAction('hide', {
+	state = 'retreat',
+	also = { 'defense' },
+	always = true,
+	pre = { wanted = true },
+	effects = { hidden = true },
+	cost = 1,
 })
 
 GOAP.RegisterAction('call_police', {
@@ -109,7 +120,10 @@ GOAP.goals = {
 	eliminate = GOAP.Goal('eliminate', { want = { threat_handled = true } }),
 	survive = GOAP.Goal('survive', { want = { safe = true } }),
 	report = GOAP.Goal('report', { want = { police_called = true } }),
+	hide = GOAP.Goal('hide', { want = { hidden = true } }),
 }
+
+local function HideWhenWanted(ws) return Has(ws, 'wanted') and 20 or 0 end
 
 -- set name -> { goal name -> priority function(ws) }
 GOAP.sets = GOAP.sets or {}
@@ -126,6 +140,7 @@ GOAP.RegisterSet('police', {
 GOAP.RegisterSet('gangster', {
 	eliminate = function() return 6 end,
 	survive = function(ws) return Has(ws, 'low_health') and 8 or 2 end,
+	hide = HideWhenWanted,
 })
 
 GOAP.RegisterSet('citizen', {
@@ -141,6 +156,7 @@ GOAP.RegisterSet('citizen', {
 		return Has(ws, 'low_health') and 3 or 9
 	end,
 	report = function(ws) return Has(ws, 'enemy_close') and 0 or 6 end,
+	hide = HideWhenWanted,
 })
 
 -- @return string set name for the actor
@@ -169,7 +185,7 @@ function GOAP.ActionsFor(actor)
 	-- so the config weight still limits how many actors do it.
 	local list = {}
 	for _, action in SortedPairs(GOAP.actions) do
-		local chance = share[action.state]
+		local chance = action.always and 1 or share[action.state]
 		if chance and (not action.trait or math.random() < chance) then list[#list + 1] = action end
 	end
 	return list
@@ -194,4 +210,10 @@ bgNPC.Test.Add('goap.sets', function(check)
 	check(citizen.survive(ws) > citizen.eliminate(ws), 'hurt armed citizen runs')
 
 	check(GOAP.actions.flee:Runs('run_from_danger'), 'running from danger is still fleeing')
+
+	ws = bit.bor(F('has_enemy'), F('armed'), F('wanted'))
+	local gangster = GOAP.sets.gangster
+	check(gangster.hide(ws) > gangster.eliminate(ws), 'a wanted gangster hides first')
+	plan = GOAP.Plan(ws, GOAP.goals.hide, { GOAP.actions.attack, GOAP.actions.hide })
+	check(plan and plan[1] == GOAP.actions.hide, 'hiding runs retreat')
 end)

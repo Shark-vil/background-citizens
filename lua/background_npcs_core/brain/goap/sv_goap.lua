@@ -97,6 +97,7 @@ function Action:Init(name, def)
 	self.states = { [def.state] = true }
 	for _, state in ipairs(def.also or {}) do self.states[state] = true end
 	self.trait = def.trait
+	self.always = def.always -- allowed without a config weight
 	self.pre_mask, self.pre_value = GOAP.Condition(def.pre)
 	self.effect_mask, self.effect_value = GOAP.Condition(def.effects)
 	self.cost = def.cost or 1

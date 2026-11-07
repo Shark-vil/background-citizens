@@ -4,6 +4,7 @@ local SLOT_REACHED_SQR = 50 ^ 2
 local SLOT_MOVED_SQR = 64 ^ 2
 local MELEE_STOP_SQR = 50 ^ 2
 local MELEE_ENGINE_DIST_SQR = 700 ^ 2
+local WANTED_FIGHT_DIST_SQR = 300 ^ 2 -- a wanted actor fights only this close (retreat turns to defense at 190)
 --
 
 -- A melee fighter has to close in. A NextBot is steered at the enemy on every update; an HL2 NPC chases
@@ -92,6 +93,11 @@ bgNPC.States.Register('defense', 'danger', {
 			if actor:IsCivilian() and actor:PoliceFights(enemy) then
 				actor:StayOutOfFight()
 				actor:SetState('fear')
+				return
+			end
+			-- a wanted actor no longer cornered goes back to hiding
+			if actor:IsWanted() and actor:GetPos():DistToSqr(enemy:GetPos()) > WANTED_FIGHT_DIST_SQR then
+				actor:SetState('retreat')
 				return
 			end
 		end

@@ -41,10 +41,17 @@ function Actor:GetRandomState()
 end
 
 -- A brain with PickReaction (GOAP) chooses by the situation, otherwise a weighted random pick.
+-- A wanted actor hides instead of fighting ("retreat" turns to defense only when cornered).
 local function PickReaction(actor, reactions, enemy)
 	local brain = actor.brain
-	if brain and brain.PickReaction and istable(reactions) then return brain:PickReaction(reactions, enemy) end
-	return H.PickWeighted(reactions)
+	local reaction
+	if brain and brain.PickReaction and istable(reactions) then
+		reaction = brain:PickReaction(reactions, enemy)
+	else
+		reaction = H.PickWeighted(reactions)
+	end
+	if reaction == 'defense' and actor:IsWanted() then return 'retreat' end
+	return reaction
 end
 
 -- @param enemy entity|nil who the actor reacts to (lets a planning brain judge the threat)
@@ -56,6 +63,10 @@ local LAW_RADIUS_SQR = 2000 * 2000
 local MAX_CIVILIAN_FIGHTERS = 2
 
 local STAY_OUT_TIME = 15
+
+function Actor:IsWanted()
+	return bgNPC.Modules.Get('wanted'):HasWanted(self.npc)
+end
 
 -- A resident who is not the police
 function Actor:IsCivilian()

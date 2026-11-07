@@ -12,7 +12,7 @@ bgNPC.States.Register('retreat', 'other', {
 		local npc = actor:GetNPC()
 		local data = actor:GetStateData()
 		data.delay = data.delay or 0
-		data.update_point_delay = data.update_point_delay or CurTime() + 5
+		data.update_point_delay = data.update_point_delay or 0 -- run at once
 		data.cooldown = data.cooldown or CurTime() + 20
 		local enemy = actor:GetNearEnemy()
 
