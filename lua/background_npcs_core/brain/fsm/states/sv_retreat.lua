@@ -37,7 +37,9 @@ bgNPC.States.Register('retreat', 'other', {
 
 				position = actor:GetDistantPointToPoint(enemy:GetPos(), 1000)
 			else
-				position = actor:GetDistantPointInRadius(1000)
+				-- the *InRadius helpers return a point object, the *ToPoint ones a vector
+				local point = actor:GetDistantPointInRadius(1000)
+				position = point and point:GetPos()
 			end
 
 			if position then
