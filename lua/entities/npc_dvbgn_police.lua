@@ -29,8 +29,6 @@ ENT.Preference = {
 
 local _cvar_bgn_debug = GetConVar('bgn_debug')
 local _util_TraceLine = util.TraceLine
-local _IsValid = IsValid
-local _ipairs = ipairs
 local _table_insert = table.insert
 local _table_remove = table.remove
 local _table_Reverse = table.Reverse
@@ -48,15 +46,15 @@ if CLIENT then
     net.Receive('BGN_DvPoliceDebugDrawPath', function()
         local ent = net.ReadEntity()
         local waypoints = net.ReadTable()
-        if _IsValid(ent) then ent.WaypointList = waypoints end
+        if IsValid(ent) then ent.WaypointList = waypoints end
     end)
 
     hook.Add('PostDrawTranslucentRenderables', 'BGN_DvPoliceDebugDrawPath', function()
         if not _cvar_bgn_debug or not _cvar_bgn_debug:GetBool() then return end
-        for _, dv in _ipairs(_ents_FindByClass('npc_dvbgn_police')) do
+        for _, dv in ipairs(_ents_FindByClass('npc_dvbgn_police')) do
             -- Отрисовка точек из WaypointList
-            if _IsValid(dv) and dv.WaypointList then
-                for index, waypoint in _ipairs(dv.WaypointList) do
+            if IsValid(dv) and dv.WaypointList then
+                for index, waypoint in ipairs(dv.WaypointList) do
                     if waypoint and waypoint.Target then
                         -- Отрисовка точки
                         render.SetColorMaterial()
@@ -70,7 +68,7 @@ if CLIENT then
             end
 
             -- Отрисовка пути (линии между точками)
-            if _IsValid(dv) and dv.WaypointList and #dv.WaypointList > 1 then
+            if IsValid(dv) and dv.WaypointList and #dv.WaypointList > 1 then
                 for i = 1, #dv.WaypointList - 1 do
                     local startPos = dv.WaypointList[i].Target
                     local endPos = dv.WaypointList[i + 1].Target
@@ -104,7 +102,7 @@ local function IsVisibleTarget(self, pos)
         start = self:LocalToWorld(self:OBBCenter()),
         endpos = pos + vector_0_0_10,
         filter = function(ent)
-            if _IsValid(ent)
+            if IsValid(ent)
                 and ent ~= self
                 and ent ~= self.v
                 and ent:GetClass() ~= 'prop_vehicle_prisoner_pod'
@@ -124,7 +122,7 @@ end
 --         start = startPos,
 --         endpos = endPos,
 --         filter = function(ent)
---             if _IsValid(ent)
+--             if IsValid(ent)
 --                 and ent ~= self
 --                 and ent ~= self.v
 --                 and ent:GetClass() ~= 'prop_vehicle_prisoner_pod'
@@ -170,7 +168,7 @@ local function FindPath(self, targetPos)
         -- Находим точку с наименьшей fScore в очереди
         local currentNode = nil
         local lowestF = math.huge
-        for _, node in _ipairs(openSet) do
+        for _, node in ipairs(openSet) do
             if fScore[node] < lowestF then
                 lowestF = fScore[node]
                 currentNode = node
@@ -222,7 +220,7 @@ local function FindPath(self, targetPos)
         end
 
         -- Убираем текущую точку из openSet
-        for i, node in _ipairs(openSet) do
+        for i, node in ipairs(openSet) do
             if node == currentNode then
                 _table_remove(openSet, i)
                 break
@@ -232,7 +230,7 @@ local function FindPath(self, targetPos)
         -- Добавляем текущую точку в closedSet
         closedSet[currentNode] = true
         -- Проходим по соседям текущей точки
-        for _, neighborID in _ipairs(currentNode.Neighbors) do
+        for _, neighborID in ipairs(currentNode.Neighbors) do
             local neighbor = dvd.Waypoints[neighborID]
             if closedSet[neighbor] then
                 -- Пропускаем уже посещённые точки
@@ -256,7 +254,7 @@ local function FindPath(self, targetPos)
         -- Возможность переключения на другие 'полосы' или точки, не связанные через Neighbors
         -- Пробуем 'перескочить' на соседние точки, которые не связаны напрямую
         -- Пример: Если текущая точка и сосед не связаны напрямую, но их расстояние минимально, можно их соединить
-        for _, possibleWaypoint in _ipairs(dvd.Waypoints) do
+        for _, possibleWaypoint in ipairs(dvd.Waypoints) do
             -- Пропускаем себя и уже посещённые точки
             if possibleWaypoint == currentNode or closedSet[possibleWaypoint] then continue end
             -- Расстояние от текущей точки до возможной точки
@@ -282,7 +280,7 @@ end
 function ENT:CarCollide(data)
     local hitEnt = data.HitEntity
     if not hitEnt:IsVehicle() then return end
-    for _, dv in _ipairs(_ents_FindByClass('npc_dvbgn_police')) do
+    for _, dv in ipairs(_ents_FindByClass('npc_dvbgn_police')) do
         if dv.v == hitEnt and dv.DV_Police then return end
     end
 
@@ -301,7 +299,7 @@ function ENT:CarCollide(data)
             local driver_ent = hitEnt:GetDriver()
             if not actor:HasTeam(driver_ent) then driver = driver_ent end
         end
-        if _IsValid(driver) and actor and actor:IsAlive() then
+        if IsValid(driver) and actor and actor:IsAlive() then
             actor:AddEnemy(driver)
             actor:SetState('defense')
         end
@@ -309,7 +307,7 @@ function ENT:CarCollide(data)
 end
 
 function ENT:GetCurrentMaxSpeed()
-    if _IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
+    if IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
         local limit
         if self.Trace.Entity == self.EnemyTarget
         or self.EnemyTarget:IsVehicle()
@@ -352,7 +350,7 @@ function ENT:Think()
     end
 
     self.UpdateWaypointListDelay = self.UpdateWaypointListDelay or 0
-    if _IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
+    if IsValid(self.EnemyTarget) and self.EnemyTarget:Health() > 0 then
         if not self.IsTargetExists then
             self.Preference.GiveWay = false
             self.Preference.StopAtTL = false
@@ -362,7 +360,7 @@ function ENT:Think()
 
         self.IsTargetExists = true
 
-        if (not _IsValid(self.Trace.Entity) or not self.Trace.Entity:IsWorld())
+        if (not IsValid(self.Trace.Entity) or not self.Trace.Entity:IsWorld())
         and (#self.WaypointList == 0
         or self.UpdateWaypointListDelay < CurTime()
         or self:GetPos():DistToSqr(self.EnemyTarget:GetPos()) <= 250000)

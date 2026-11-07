@@ -40,12 +40,19 @@ function Actor:GetRandomState()
 	return H.PickWeighted(self.data.at_random)
 end
 
+-- A brain with PickReaction (GOAP) chooses by the situation, otherwise a weighted random pick.
+local function PickReaction(actor, reactions)
+	local brain = actor.brain
+	if brain and brain.PickReaction and istable(reactions) then return brain:PickReaction(reactions) end
+	return H.PickWeighted(reactions)
+end
+
 function Actor:GetReactionForDamage()
-	return H.PickWeighted(self.data.at_damage)
+	return PickReaction(self, self.data.at_damage)
 end
 
 function Actor:GetReactionForProtect()
-	return H.PickWeighted(self.data.at_protect)
+	return PickReaction(self, self.data.at_protect)
 end
 
 -- Sets the reaction to the event.

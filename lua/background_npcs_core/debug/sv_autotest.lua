@@ -1,12 +1,50 @@
 --[[
 	In-game smoke test, used by the development harness.
-	Does nothing unless "data/bgn_autotest/run.txt" exists (JSON: { "duration": 60, "commands": ["bgn_max_npc 30"] }).
+	Does nothing unless "data/bgn_autotest/run.txt" exists
+	(JSON: { "duration": 60, "commands": ["bgn_max_npc 30"], "fight": 10 }).
+	"fight": seconds after start when a gangster hits the nearest citizen (exercises reactions and GOAP).
 	The trigger file is deleted on start. The report is written to "data/bgn_autotest/report.json".
 	Manual run: "bgn_autotest [seconds]".
 --]]
 
 local TRIGGER = 'bgn_autotest/run.txt'
 local REPORT = 'bgn_autotest/report.json'
+
+-- GOAP observations over the run: "set/goal/action" -> samples seen
+local goap_seen, goap_examples = {}, {}
+
+local function SampleGOAP()
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local brain = actor.brain
+		if brain and brain.plan and brain.goal then
+			local action = brain.plan[brain.step]
+			local key = brain.set_name .. '/' .. brain.goal.name .. '/' .. (action and action.name or '-')
+			goap_seen[key] = (goap_seen[key] or 0) + 1
+			if not goap_examples[key] then goap_examples[key] = actor:GetType() .. ': ' .. brain:Describe() end
+		end
+	end
+end
+
+-- A gangster hits the nearest citizen, through the normal damage path.
+local function Provoke()
+	local gangster = bgNPC.Actors.GetByType('gangster')[1]
+	if not gangster then MsgN('[BGN AUTOTEST] fight: no gangster') return end
+	local attacker = gangster:GetNPC()
+	local victim, best
+	for _, actor in ipairs(bgNPC.Actors.GetByType('citizen')) do
+		local dist = actor:GetNPC():GetPos():DistToSqr(attacker:GetPos())
+		if not best or dist < best then victim, best = actor:GetNPC(), dist end
+	end
+	if not IsValid(victim) then MsgN('[BGN AUTOTEST] fight: no citizen') return end
+
+	local dmg = DamageInfo()
+	dmg:SetDamage(5)
+	dmg:SetAttacker(attacker)
+	dmg:SetInflictor(attacker)
+	dmg:SetDamageType(DMG_CLUB)
+	victim:TakeDamageInfo(dmg)
+	MsgN('[BGN AUTOTEST] fight: gangster hit a citizen at ' .. math.floor(math.sqrt(best)) .. ' units')
+end
 
 local function CollectReport(samples, started_at)
 	local by_type, by_state, by_brain, by_body, by_lod = {}, {}, {}, {}, {}
@@ -48,11 +86,14 @@ local function CollectReport(samples, started_at)
 		frame_ms_avg = frame_sum / n * 1000,
 		selftest_ok = bgNPC.Test.last_ok,
 		nav = nav,
+		goap_seen = goap_seen,
+		goap_examples = goap_examples,
 		extra = bgNPC.AutoTestExtra and bgNPC.AutoTestExtra() or nil,
 	}
 end
 
-local function Run(duration, commands)
+local function Run(duration, commands, fight)
+	goap_seen, goap_examples = {}, {}
 	MsgN('[BGN AUTOTEST] start, ' .. duration .. 's')
 
 	for _, command in ipairs(commands or {}) do
@@ -68,7 +109,10 @@ local function Run(duration, commands)
 
 	timer.Create('BGN_AutoTest_Sample', 0.5, 0, function()
 		samples[#samples + 1] = { task_ms = bgNPC.Tasks.last_tick_ms, frame = FrameTime() }
+		SampleGOAP()
 	end)
+
+	if fight then timer.Simple(fight, Provoke) end
 
 	timer.Simple(duration, function()
 		timer.Remove('BGN_AutoTest_Sample')
@@ -86,7 +130,7 @@ hook.Add('BGN_PlayerReady', 'BGN_AutoTest', function()
 	file.Delete(TRIGGER)
 
 	timer.Simple(config.delay or 5, function()
-		Run(config.duration or 60, config.commands)
+		Run(config.duration or 60, config.commands, config.fight)
 	end)
 end)
 

@@ -57,7 +57,7 @@ bgNPC.States.Register('killer', 'danger', {
 					bgNPC.Combat.EquipActor(actor)
 
 					local isMeleeWeapon = false
-					local npcWeapon = npc:GetActiveWeapon()
+					local npcWeapon = actor:GetBody():GetActiveWeapon()
 					if IsValid(npcWeapon) then
 						isMeleeWeapon = bgNPC.Table.HasValue(MeleeWeapon, npcWeapon:GetClass())
 					end
@@ -71,7 +71,7 @@ bgNPC.States.Register('killer', 'danger', {
 								actor:WalkToPos(node:GetPos(), 'run')
 							else
 								actor:WalkToTarget()
-								npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+								actor:GetBody():MoveAwayFromEnemy()
 							end
 						end
 					end

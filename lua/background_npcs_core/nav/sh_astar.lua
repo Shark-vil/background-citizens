@@ -4,7 +4,7 @@
 		local path = bgNPC.AStar.Search({
 			start = start_id,
 			is_goal = function(id) return id == goal_id end,
-			neighbours = function(id, push) push(next_id, step_cost) ... end,
+			neighbours = function(id, push) push(next_id, step_cost) ... end, -- push returns true if accepted
 			heuristic = function(id) return estimate end,
 			max_iterations = 2000,
 		})
@@ -99,13 +99,14 @@ function AStar.Search(params)
 
 	local current, current_cost
 	local function push(next_id, step_cost)
-		if closed[next_id] then return end
+		if closed[next_id] then return false end
 		local new_cost = current_cost + step_cost
 		local old_cost = cost[next_id]
-		if old_cost and old_cost <= new_cost then return end
+		if old_cost and old_cost <= new_cost then return false end
 		cost[next_id] = new_cost
 		came_from[next_id] = current
 		open:Push(next_id, new_cost + heuristic(next_id))
+		return true
 	end
 
 	local iterations = 0

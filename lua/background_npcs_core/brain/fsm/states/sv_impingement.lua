@@ -57,7 +57,7 @@ bgNPC.States.Register('impingement', 'assault', {
 							actor:WalkToPos(node:GetPos(), 'run')
 						else
 							actor:WalkToTarget()
-							npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+							actor:GetBody():MoveAwayFromEnemy()
 						end
 					end
 				end

@@ -62,13 +62,12 @@ bgNPC.States.Register('fear', 'danger', {
 
 		local npc = actor:GetNPC()
 
-		if npc.GetActiveWeapon then
-			local active_weapon = npc:GetActiveWeapon()
-			if IsValid(active_weapon) then
-				actor.weapon = active_weapon:GetClass()
-				actor:SetState('defense', nil, true)
-				return
-			end
+		-- A planning brain (GOAP) already weighs the weapon in hand, the redirect is for the FSM only.
+		local active_weapon = not actor.brain.PickReaction and actor:GetBody():GetActiveWeapon()
+		if IsValid(active_weapon) then
+			actor.weapon = active_weapon:GetClass()
+			actor:SetState('defense', nil, true)
+			return
 		end
 
 		local dist = enemy:GetPos():DistToSqr(npc:GetPos())

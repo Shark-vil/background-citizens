@@ -85,7 +85,7 @@ bgNPC.States.Register('defense', 'danger', {
 			end
 
 			if #actor.walkPath == 0 and not is_melee_weapon then
-				npc:SetSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
+				actor:GetBody():MoveAwayFromEnemy()
 			end
 		end
 	end

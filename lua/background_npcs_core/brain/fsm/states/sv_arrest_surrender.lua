@@ -6,7 +6,7 @@ bgNPC.States.Register('arrest_surrender', 'danger', {
 		if IsValid(npc) and not ArrestModule:HasTarget(npc) then
 			local target = actor:GetFirstTarget()
 			if IsValid(target) then
-				npc:AddEntityRelationship(target, D_FR, 50)
+				actor:GetBody():SetDisposition(target, D_FR)
 				actor:AddEnemy(target)
 				actor:RemoveTarget(target)
 			end
