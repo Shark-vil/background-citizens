@@ -99,6 +99,18 @@ function ASSET:GetAllTargets()
 	return arrest_targets
 end
 
+-- The police still try to arrest: arrest mode is on, the target didn't kill (arrested), didn't keep attacking
+-- (damege_count), obeys within the time limit and is not wanted.
+-- @return boolean
+function ASSET:CanArrest(target)
+	local ArrestComponent = self:GetTarget(target)
+	if not ArrestComponent or not ArrestComponent.arrested or ArrestComponent.damege_count > 5 then return false end
+	if not GetConVar('bgn_arrest_mode'):GetBool() then return false end
+	if not target:IsPlayer() then return true end
+	if not ArrestComponent.detention and ArrestComponent.warningTime < CurTime() then return false end
+	return not bgNPC.Modules.Get('wanted'):HasWanted(target)
+end
+
 function ASSET:NotSubjectToArrest(target)
 	local ArrestComponent = self:GetTarget(target)
 	if ArrestComponent then

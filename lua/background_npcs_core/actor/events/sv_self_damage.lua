@@ -63,7 +63,10 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			elseif ActorTarget ~= nil then
 				local hp = target:Health() - dmginfo:GetDamage()
 				local max_hp = target:GetMaxHealth()
-				if hp > 0 and max_hp > 0 and hp > math.Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
+				-- An HL2 NPC still reacts to these hits with its engine AI; a NextBot has none and would keep walking.
+				if hp > 0 and max_hp > 0 and hp > math.Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker)
+					and not target:IsNextBot()
+				then
 					return
 				end
 			end
@@ -75,7 +78,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			end
 		end
 
-		local reaction = ActorTarget:GetReactionForDamage()
+		local reaction = ActorTarget:GetReactionForDamage(attacker)
 		ActorTarget:SetReaction(reaction)
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)

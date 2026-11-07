@@ -41,6 +41,8 @@ function Actor:AddEnemy(ent, reaction, always_visible)
 	if body then
 		body:SetDisposition(ent, relationship)
 		body:SetAlertLevel(relationship == D_HT and 'combat' or 'alert')
+		-- the body would otherwise get its enemy on the next EnemiesRecalculate, up to a second later
+		if not IsValid(body:GetEnemy()) then body:SetEnemy(ent) end
 	end
 end
 

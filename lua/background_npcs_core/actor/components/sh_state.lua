@@ -41,18 +41,20 @@ function Actor:GetRandomState()
 end
 
 -- A brain with PickReaction (GOAP) chooses by the situation, otherwise a weighted random pick.
-local function PickReaction(actor, reactions)
+local function PickReaction(actor, reactions, enemy)
 	local brain = actor.brain
-	if brain and brain.PickReaction and istable(reactions) then return brain:PickReaction(reactions) end
+	if brain and brain.PickReaction and istable(reactions) then return brain:PickReaction(reactions, enemy) end
 	return H.PickWeighted(reactions)
 end
 
-function Actor:GetReactionForDamage()
-	return PickReaction(self, self.data.at_damage)
+-- @param enemy entity|nil who the actor reacts to (lets a planning brain judge the threat)
+function Actor:GetReactionForDamage(enemy)
+	return PickReaction(self, self.data.at_damage, enemy)
 end
 
-function Actor:GetReactionForProtect()
-	return PickReaction(self, self.data.at_protect)
+-- @param enemy entity|nil who the actor reacts to
+function Actor:GetReactionForProtect(enemy)
+	return PickReaction(self, self.data.at_protect, enemy)
 end
 
 -- Sets the reaction to the event.

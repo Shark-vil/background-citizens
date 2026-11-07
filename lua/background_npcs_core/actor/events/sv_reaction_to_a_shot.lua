@@ -27,13 +27,12 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 
 	for i = 1, #actors do
 		local actor = actors[i]
-		local reaction = actor:GetReactionForProtect()
-		actor:SetReaction(reaction)
 		local npc = actor:GetNPC()
+		if npc == attacker or not bgNPC.Vision.HasLineOfSight(npc, attacker) then continue end
 
-		if npc == attacker or not bgNPC.Vision.HasLineOfSight(npc, attacker) or hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then
-			continue
-		end
+		local reaction = actor:GetReactionForProtect(attacker)
+		actor:SetReaction(reaction)
+		if hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then continue end
 
 		if actor:EqualStateGroup('calm') then
 			actor:SetState(actor:GetLastReaction())

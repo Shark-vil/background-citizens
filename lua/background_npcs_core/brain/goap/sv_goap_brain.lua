@@ -112,12 +112,12 @@ function GOAPBrain:Update()
 
 	if action then
 		local state = actor:GetState()
-		if self.entered == action and state ~= action.state then
+		if self.entered == action and not action:Runs(state) then
 			-- the state ended or redirected on its own
 			self:Block(action)
-		elseif state ~= action.state then
+		elseif not action:Runs(state) then
 			actor:SetState(action.state)
-			if actor:GetState() == action.state then
+			if action:Runs(actor:GetState()) then
 				self.entered = action
 			else
 				self:Block(action)
@@ -129,22 +129,22 @@ function GOAPBrain:Update()
 end
 
 -- @param reactions table { state = weight } from the actor config
+-- @param enemy entity|nil who the actor reacts to; without it the enemy facts come from the nearest enemy
 -- @return string reaction state
-function GOAPBrain:PickReaction(reactions)
+function GOAPBrain:PickReaction(reactions, enemy)
 	local roll = PickWeighted(reactions)
 	if roll == 'ignore' or roll == 'none' then return roll end
 
 	-- The enemy is added right after the reaction is picked, so plan as if it already exists.
-	-- shortcut: enemy facts (armed, close, arrestable) are still unknown here; the brain replans
-	-- once the enemy is added, pass the enemy into the reaction getters if the switch shows up in play.
-	self:Sense(true)
-	local plan = self:MakePlan(bit.bor(self.ws, GOAP.Fact('has_enemy')))
+	local ws = bit.bor(GOAP.Sense(self.actor, enemy), GOAP.Fact('has_enemy'))
+	local plan = self:MakePlan(ws)
 	return plan and plan[1].state or roll
 end
 
 function GOAPBrain:OnEvent(name)
 	if name == 'enemy_added' or name == 'damaged' then
 		self.next_sense = 0
+		self.actor.next_brain = 0 -- react on the next update pass, not after the LOD period
 	elseif name == 'enemies_cleared' then
 		self:ResetPlan()
 	end
@@ -170,7 +170,7 @@ end
 hook.Add('BGN_AddActorEnemy', 'BGN_GOAPBrainEvents', function(actor) Notify(actor, 'enemy_added') end)
 hook.Add('BGN_ResetEnemiesForActor', 'BGN_GOAPBrainEvents', function(actor) Notify(actor, 'enemies_cleared') end)
 hook.Add('EntityTakeDamage', 'BGN_GOAPBrainEvents', function(target)
-	if target:IsNPC() then Notify(bgNPC.Actors.Get(target), 'damaged') end
+	if target:IsNPC() or target:IsNextBot() then Notify(bgNPC.Actors.Get(target), 'damaged') end
 end)
 
 bgNPC.Commands.Register('bgn_goap_debug', {

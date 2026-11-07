@@ -12,7 +12,8 @@ function Vision.HasLineOfSight(watcher, ent)
 	if not IsValid(watcher) or watcher:Health() <= 0 then return false end
 	if not IsValid(ent) or ent:Health() <= 0 then return false end
 
-	trace_data.start = watcher:EyePos()
+	-- a NextBot has no view offset, its EyePos is at the feet and low cover would block the view
+	trace_data.start = watcher.BGN_EyePos and watcher:BGN_EyePos() or watcher:EyePos()
 	trace_data.endpos = ent:WorldSpaceCenter()
 	trace_data.filter = watcher
 

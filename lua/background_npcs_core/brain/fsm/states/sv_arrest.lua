@@ -115,16 +115,10 @@ end)
 
 local function OnSetDefense(actor)
 	local target = actor:GetFirstTarget()
-	local ArrestComponent = ArrestModule:GetTarget(target)
 	local TargetActor = bgNPC.Actors.Get(target)
 
 	if not IsValid(target)
-		or not ArrestComponent
-		or not ArrestComponent.arrested
-		or ArrestComponent.damege_count > 5
-		or (target:IsPlayer() and not ArrestComponent.detention and ArrestComponent.warningTime < CurTime())
-		or (target:IsPlayer() and WantedModule:HasWanted(target))
-		or not GetConVar('bgn_arrest_mode'):GetBool()
+		or not ArrestModule:CanArrest(target)
 		or (TargetActor and not TargetActor:HasState('arrest_surrender'))
 	then
 		actor:RemoveAllTargets()

@@ -40,21 +40,19 @@ GOAP.sensors = {
 		return IsValid(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) < ENEMY_CLOSE_DIST_SQR
 	end,
 	enemy_armed = function(actor, npc, enemy) return IsValid(enemy) and IsArmedEntity(enemy) end,
-	enemy_arrestable = function(actor, npc, enemy)
-		return IsValid(enemy) and enemy:IsPlayer() and not enemy:InVehicle()
-	end,
 	police_called = function(actor, npc, enemy)
 		wanted = wanted or bgNPC.Modules.Get('wanted')
 		return IsValid(enemy) and wanted ~= nil and wanted:HasWanted(enemy)
 	end,
 }
 
+-- @param enemy entity|nil enemy to sense against, the nearest enemy by default
 -- @return number world state of the actor
-function GOAP.Sense(actor)
+function GOAP.Sense(actor, enemy)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return 0 end
 
-	local enemy = actor:GetNearEnemy()
+	enemy = IsValid(enemy) and enemy or actor:GetNearEnemy()
 	local ws = 0
 	for name, sensor in pairs(GOAP.sensors) do
 		if sensor(actor, npc, enemy) then ws = bit.bor(ws, F(name)) end
@@ -77,6 +75,7 @@ end
 
 GOAP.RegisterAction('attack', {
 	state = 'defense',
+	also = { 'go_to_police_car', 'retreat' },
 	pre = { has_enemy = true, armed = true },
 	effects = { threat_handled = true },
 	cost = function(ws)
@@ -87,21 +86,16 @@ GOAP.RegisterAction('attack', {
 	end,
 })
 
-GOAP.RegisterAction('arrest', {
-	state = 'arrest',
-	pre = { has_enemy = true, enemy_arrestable = true },
-	effects = { threat_handled = true },
-	cost = function(ws) return Has(ws, 'enemy_armed') and 4 or 1 end,
-})
-
 GOAP.RegisterAction('flee', {
 	state = 'fear',
+	also = { 'run_from_danger', 'dyspnea_danger' },
 	effects = { safe = true },
 	cost = 2,
 })
 
 GOAP.RegisterAction('call_police', {
 	state = 'calling_police',
+	trait = true, -- only some actors make the call, see GOAP.ActionsFor
 	pre = { has_enemy = true, police_called = false, enemy_close = false },
 	effects = { police_called = true },
 	cost = 2,
@@ -143,8 +137,8 @@ GOAP.RegisterSet('citizen', {
 	end,
 	eliminate = function(ws)
 		if not Has(ws, 'armed') then return 0 end
-		local confident = not Has(ws, 'enemy_armed') and not Has(ws, 'low_health')
-		return confident and 7 or 3
+		-- an armed citizen keeps fighting until it is hurt, an armed enemy alone doesn't scare it off
+		return Has(ws, 'low_health') and 3 or 9
 	end,
 	report = function(ws) return Has(ws, 'enemy_close') and 0 or 6 end,
 })
@@ -160,18 +154,23 @@ end
 -- @return table actions allowed by the actor config (sorted by name, so the cache key is stable)
 function GOAP.ActionsFor(actor)
 	local data = actor.data
-	local allowed = {}
+	local share = {} -- state -> best weight / table total
 	for _, reactions in ipairs({ data.at_damage, data.at_protect }) do
 		if istable(reactions) then
+			local total = 0
+			for _, weight in pairs(reactions) do total = total + math.max(0, weight) end
 			for state, weight in pairs(reactions) do
-				if weight > 0 then allowed[state] = true end
+				if weight > 0 then share[state] = math.max(share[state] or 0, weight / total) end
 			end
 		end
 	end
 
+	-- A trait action is rolled once per actor with its config share (calling_police 20 -> 20% of actors),
+	-- so the config weight still limits how many actors do it.
 	local list = {}
 	for _, action in SortedPairs(GOAP.actions) do
-		if allowed[action.state] then list[#list + 1] = action end
+		local chance = share[action.state]
+		if chance and (not action.trait or math.random() < chance) then list[#list + 1] = action end
 	end
 	return list
 end
@@ -187,4 +186,12 @@ bgNPC.Test.Add('goap.sets', function(check)
 
 	plan = GOAP.Plan(bit.bor(F('has_enemy'), F('enemy_close')), GOAP.goals.report, actions)
 	check(plan == nil, 'close enemy: cannot call the police')
+
+	local citizen = GOAP.sets.citizen
+	ws = bit.bor(F('has_enemy'), F('armed'), F('enemy_armed'))
+	check(citizen.eliminate(ws) > citizen.survive(ws), 'armed citizen keeps fighting an armed enemy')
+	ws = bit.bor(ws, F('low_health'))
+	check(citizen.survive(ws) > citizen.eliminate(ws), 'hurt armed citizen runs')
+
+	check(GOAP.actions.flee:Runs('run_from_danger'), 'running from danger is still fleeing')
 end)

@@ -19,15 +19,16 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		local actor_attacker = bgNPC.Actors.Get(attacker)
 		if actor_attacker and not actor_attacker:HasEnemy(target) then continue end
 
-		local reaction = actor:GetReactionForProtect()
-		actor:SetReaction(reaction)
-
 		if not WantedModule:HasWanted(attacker)
 			and not bgNPC.Vision.HasLineOfSight(npc, attacker)
 			and not bgNPC.Vision.HasLineOfSight(npc, target)
 		then
 			continue
 		end
+
+		-- picked after the witness check: a planning brain plans per pick
+		local reaction = actor:GetReactionForProtect(attacker)
+		actor:SetReaction(reaction)
 
 		local hook_result = hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, target, reaction)
 		if hook_result then continue end

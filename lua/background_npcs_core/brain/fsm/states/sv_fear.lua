@@ -90,10 +90,11 @@ bgNPC.States.Register('fear', 'danger', {
 			-- because they had no weapon at the moment they entered "defense". Keep
 			-- retrying to get them back into the fight instead of leaving them stuck
 			-- fleeing/screaming for the whole wanted chase.
+			-- A planning brain (GOAP) decides itself when to fight, and an actor without a weapon has nothing to retry.
 			local data = actor:GetStateData()
 			data.rearm_retry = data.rearm_retry or CurTime() + 3
 
-			if data.rearm_retry < CurTime() then
+			if not actor.brain.PickReaction and actor.weapon and data.rearm_retry < CurTime() then
 				data.rearm_retry = CurTime() + 3
 				actor:SetState('defense', nil, true)
 				if not actor:HasState('fear') then return end

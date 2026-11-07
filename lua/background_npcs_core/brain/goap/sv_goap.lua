@@ -93,9 +93,17 @@ GOAP.Action = Action
 function Action:Init(name, def)
 	self.name = name
 	self.state = def.state
+	-- states the FSM state may move on to while still doing the action (fear -> run_from_danger, ...)
+	self.states = { [def.state] = true }
+	for _, state in ipairs(def.also or {}) do self.states[state] = true end
+	self.trait = def.trait
 	self.pre_mask, self.pre_value = GOAP.Condition(def.pre)
 	self.effect_mask, self.effect_value = GOAP.Condition(def.effects)
 	self.cost = def.cost or 1
+end
+
+function Action:Runs(state)
+	return self.states[state] == true
 end
 
 function Action:CanRun(ws)
