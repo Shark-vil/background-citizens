@@ -21,6 +21,6 @@ Work log of the core rewrite (`refactor/core-rewrite`). See `REWRITE_PLAN.md` fo
 - FIXED: seat tool "save" never reached the server (client called a server-only send).
 - FIXED: `dance` state update used an undefined `data` variable.
 - FIXED: version checker / client ready hooks ran for every admin that joined, not only for the local player.
-- FIXED: loader included `modules/sv_inpc.lua`, which never existed (slib skipped missing files silently).
+- FIXED: `modules/sv_inpc.lua` was included but never committed; restored the iNPC integration: actors get `inpcIgnore`, so iNPC does not take over their AI.
 - FIXED: `bgNPC.States.Register` required callbacks, breaking the marker state `scenic_npc`; callbacks are optional now.
 - PENDING: Stage 1 in-game verification.

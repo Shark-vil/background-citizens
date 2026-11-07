@@ -235,6 +235,7 @@ local function ExecutableScripts()
 
 	Include('modules/cl_version_checker.lua')
 
+	Include('modules/sv_inpc.lua')
 	Include('modules/sv_enhanced_npc.lua')
 	Include('modules/sv_scenic_npc.lua')
 
