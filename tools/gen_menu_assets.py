@@ -238,6 +238,27 @@ def icon_lock():
     return img
 
 
+def icon_search():
+    img, d = canvas()
+    d.ellipse((30, 30, 170, 170), outline=W, width=26)
+    d.line([(150, 150), (222, 222)], fill=W, width=34)
+    return img
+
+
+def icon_maximize():
+    img, d = canvas()
+    d.rounded_rectangle((40, 40, 216, 216), radius=22, outline=W, width=24)
+    return img
+
+
+def icon_restore():
+    img, d = canvas()
+    d.rounded_rectangle((84, 34, 222, 172), radius=18, outline=W, width=22)
+    d.rounded_rectangle((26, 76, 182, 232), radius=20, fill=0)
+    d.rounded_rectangle((34, 84, 172, 222), radius=18, outline=W, width=22)
+    return img
+
+
 def save_mono(name, img, size=64):
     path = ROOT / 'materials' / 'background_npcs' / 'vgui' / 'menu' / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -265,6 +286,7 @@ ICONS = {
     'arrest.png': icon_shield, 'behavior.png': icon_bubble, 'navigation.png': icon_graph,
     'performance.png': icon_gauge, 'addons.png': icon_grid, 'client.png': icon_monitor, 'tools.png': icon_wrench,
     'sun.png': icon_sun, 'moon.png': icon_moon, 'close.png': icon_close, 'lock.png': icon_lock,
+    'search.png': icon_search, 'maximize.png': icon_maximize, 'restore.png': icon_restore,
 }
 
 if __name__ == '__main__':

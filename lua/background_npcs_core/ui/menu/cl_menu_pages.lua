@@ -113,10 +113,22 @@ Menu.AddPage('behavior', {
 	icon = ICONS .. 'behavior.png',
 	order = 600,
 	build = function(page)
+		page:Section('#bgn.menu.section.ai')
+		page:Choice('bgn_brain', '#bgn.menu.brain', {
+			{ 'auto', '#bgn.menu.auto' }, { 'fsm', 'FSM' }, { 'goap', 'GOAP' },
+		})
+		page:Choice('bgn_actor_body', '#bgn.menu.body', {
+			{ 'auto', '#bgn.menu.auto' }, { 'npc', 'NPC' }, { 'nextbot', 'NextBot' },
+		})
 		page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
+
+		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
 		page:Toggle('bgn_module_replics_enable', '#bgn.settings.extension.replics_enable')
+		page:Choice('bgn_module_replics_language', '#bgn.menu.replics_language', {
+			{ 'english', 'English' }, { 'russian', 'Русский' },
+		})
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
 		page:Toggle('bgn_all_models_random', '#bgn.settings.extension.all_models_random')
 		page:Toggle('bgn_drop_money', '#bgn.settings.extension.drop_money')
@@ -128,10 +140,18 @@ Menu.AddPage('navigation', {
 	icon = ICONS .. 'navigation.png',
 	order = 700,
 	build = function(page)
+		page:Section('#bgn.menu.section.main')
+		page:Choice('bgn_nav_provider', '#bgn.menu.nav_provider', {
+			{ 'auto', '#bgn.menu.auto' }, { 'navmesh', 'Navmesh' }, { 'nodegraph', 'Nodegraph' }, { 'custom', '#bgn.menu.nav_custom' },
+		})
+		page:Slider('bgn_point_z_limit', '#bgn.menu.point_z_limit', 0, 500)
+
+		page:Section('#bgn.menu.section.generation')
 		page:Toggle('bgn_dynamic_nodes', '#bgn.settings.generation.dynamic_nodes')
 		page:Toggle('bgn_dynamic_nodes_save_progress', '#bgn.settings.generation.dynamic_nodes_save_progress')
 		page:Slider('bgn_runtime_generator_grid_offset', '#bgn.settings.generation.runtime_generator_grid_offset', 50, 500)
 		page:Slider('bgn_dynamic_nodes_radius', '#bgn.settings.generation.dynamic_nodes_radius', 0, 2000)
+		page:Slider('bgn_nav_generator_max_nodes', '#bgn.menu.nav_max_nodes', 1000, 50000, { limit = 200000 })
 	end,
 })
 
@@ -146,6 +166,7 @@ Menu.AddPage('performance', {
 
 		page:Section('#bgn.menu.section.server')
 		page:Slider('bgn_disable_logic_radius', '#bgn.settings.optimization.disable_logic', 0, 1000)
+		page:Slider('bgn_lod_near_radius', '#bgn.menu.lod_near_radius', 0, 10000)
 	end,
 })
 
@@ -173,6 +194,7 @@ Menu.AddPage('client', {
 	build = function(page)
 		page:Section('#bgn.menu.section.client')
 		page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
+		page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
 
 		page:Section('#bgn.menu.section.menu')
 		page:Toggle('bgn_menu_dark', '#bgn.menu.dark')

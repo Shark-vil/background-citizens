@@ -5,16 +5,18 @@
 		page:Toggle(cvar, label, opts)                   -- on / off
 		page:Slider(cvar, label, min, max, opts)         -- opts.decimals (0), opts.limit (max for typed values)
 		page:Button(label, command|func, opts)           -- opts.text (caption), opts.confirm (true|text), opts.danger, opts.admin
+		page:Choice(cvar, label, { { value, text }, ... }, opts)  -- one of a few values
 		page:Color(label, { r_cvar, g_cvar, b_cvar }, opts)
 		page:Note(text)                                  -- a muted paragraph
-		page:Row(label, help, server)                    -- an empty row: set row.control to your own panel
+		page:Row(label, help, server, cvar)              -- an empty row: set row.control to your own panel
 		page:Custom(function(panel) end)                 -- anything else, docked at the top
 
 	Every label/help takes '#phrase', plain text or { en = '', ru = '' }. Without opts.help a '#key' label uses
 	'#key.help' when it exists. opts.server (default: the cvar is a bgNPC.CVars server setting) locks the
 	control for non-admins.
 
-	Methods can be added to bgNPC.Menu.Builder by other addons.
+	Search builds every page with a filter (builder.filter): rows that don't match go into a hidden panel,
+	so a page's build function works unchanged. Methods can be added to bgNPC.Menu.Builder by other addons.
 --]]
 
 local Menu = bgNPC.Menu
@@ -31,8 +33,64 @@ function Menu.ContentChanged()
 end
 
 -- @param scroll DScrollPanel page content; @param notice Panel "read-only" banner
-function Menu.NewBuilder(scroll, notice)
-	return setmetatable({ scroll = scroll, notice = notice }, Builder)
+-- @param search table|nil { query, page_id, page_title, results = { count } } builds only matching rows
+function Menu.NewBuilder(scroll, notice, search)
+	local builder = setmetatable({ scroll = scroll, notice = notice }, Builder)
+	if search then
+		builder.filter = search.query
+		builder.search = search
+		builder.emitted = false
+		builder.page_match = Menu.Normalize(search.page_title):find(search.query, 1, true) ~= nil
+	end
+	return builder
+end
+
+-- Lower case for Latin and Cyrillic (string.lower is byte-wise), ё -> е.
+function Menu.Normalize(text)
+	local ok, result = pcall(function()
+		local out = {}
+		for _, code in utf8.codes(text) do
+			if (code >= 0x41 and code <= 0x5A) or (code >= 0x410 and code <= 0x42F) then
+				code = code + 32
+			elseif code == 0x401 or code == 0x451 then
+				code = 0x435
+			end
+			out[#out + 1] = utf8.char(code)
+		end
+		return table.concat(out)
+	end)
+	return ok and result or string.lower(text)
+end
+
+-- @return boolean the texts match the search query (or the page / section title does)
+function Builder:Matches(...)
+	if self.page_match or self.section_match then return true end
+	local parts = {}
+	for _, text in pairs({ ... }) do parts[#parts + 1] = text end
+	return Menu.Normalize(table.concat(parts, ' ')):find(self.filter, 1, true) ~= nil
+end
+
+-- Hidden holder for the rows a search filtered out
+function Builder:Trash()
+	if not IsValid(self.trash) then
+		self.trash = self.scroll:Add('DPanel')
+		self.trash:SetVisible(false)
+	end
+	return self.trash
+end
+
+-- Search: the "Page › Section" heading before the first matching row of a section
+function Builder:EmitHeading()
+	if self.emitted == self.pending then return end
+	self.emitted = self.pending
+	local title = self.search.page_title
+	if self.pending then title = title .. '  ›  ' .. Menu.Text(self.pending) end
+	local head = self:SectionHead(title)
+	local page_id = self.search.page_id
+	head.link = true
+	head:SetCursor('hand')
+	head:SetMouseInputEnabled(true)
+	head.OnMousePressed = function() Menu.Sound('click') Menu.ShowPage(page_id) end
 end
 
 local function Help(label, opts)
@@ -61,14 +119,24 @@ function Builder:Add(class)
 end
 
 function Builder:Section(title, help)
+	if self.filter then
+		self.pending = title
+		self.section_match = false
+		self.section_match = self:Matches(Menu.Text(title))
+		self.card = nil
+		return
+	end
+	return self:SectionHead(Menu.Text(title), help and Menu.Text(help))
+end
+
+-- @param title_text string; @param help_text string|nil (already translated)
+function Builder:SectionHead(title_text, help_text)
 	local s = Menu.Scale()
 	local head = self:Add('DPanel')
 	head:DockMargin(0, self.started and math.Round(24 * s) or 0, 0, math.Round(8 * s))
 	self.started = true
 	self.card = nil
 
-	local title_text = Menu.Text(title)
-	local help_text = help and Menu.Text(help)
 	head.PerformLayout = function(panel, w)
 		local h = Menu.FontHeight('BGN.Menu.Section')
 		if help_text then h = h + math.Round(2 * s) + #Menu.Wrap(help_text, 'BGN.Menu.Small', w) * Menu.FontHeight('BGN.Menu.Small') end
@@ -78,7 +146,7 @@ function Builder:Section(title, help)
 		end
 	end
 	head.Paint = function(panel, w)
-		draw.SimpleText(title_text, 'BGN.Menu.Section', 0, 0, C.muted)
+		draw.SimpleText(title_text, 'BGN.Menu.Section', 0, 0, panel.link and panel:IsHovered() and C.accent or C.muted)
 		if not help_text then return end
 		local y = Menu.FontHeight('BGN.Menu.Section') + math.Round(2 * s)
 		local lh = Menu.FontHeight('BGN.Menu.Small')
@@ -174,20 +242,35 @@ local function RowPaint(row, w, h)
 end
 
 -- @param server boolean the row changes a server setting (locked for non-admins)
+-- @param cvar string|nil searched by its name too
 -- @return Panel the row; put your control into row.control (it is placed on the right)
-function Builder:Row(label, help, server)
-	local row = self:Card():Add('DPanel')
+function Builder:Row(label, help, server, cvar)
+	local label_text = Menu.Text(label)
+	local help_text = help and Menu.Text(help) or nil
+	if help_text == '' then help_text = nil end
+
+	local parent
+	if self.filter and not self:Matches(label_text, help_text, cvar) then
+		parent = self:Trash()
+	else
+		if self.filter then
+			self:EmitHeading()
+			self.search.results.count = self.search.results.count + 1
+		end
+		parent = self:Card()
+	end
+
+	local row = parent:Add('DPanel')
 	row:Dock(TOP)
-	row.label = Menu.Text(label)
-	row.help = help and Menu.Text(help) or nil
-	if row.help == '' then row.help = nil end
+	row.label = label_text
+	row.help = help_text
 	row.locked = server and not Menu.IsAdmin() or false
 	row.hover = 0
 	row.PerformLayout = RowLayout
 	row.Paint = RowPaint
 	if row.locked then
 		row:SetTooltip(Menu.Text('#bgn.menu.admin_only'))
-		if IsValid(self.notice) and not self.notice:IsVisible() then
+		if parent ~= self.trash and IsValid(self.notice) and not self.notice:IsVisible() then
 			self.notice:SetVisible(true)
 			Menu.ContentChanged()
 		end
@@ -196,6 +279,7 @@ function Builder:Row(label, help, server)
 end
 
 function Builder:Note(text)
+	if self.filter then return Menu.Paragraph(self:Trash(), Menu.Text(text), 'BGN.Menu.Small') end
 	local s = Menu.Scale()
 	local note = Menu.Paragraph(self.scroll, Menu.Text(text), 'BGN.Menu.Small', C.muted)
 	note:DockMargin(0, self.started and math.Round(12 * s) or 0, 0, math.Round(12 * s))
@@ -211,7 +295,7 @@ end
 
 -- @param build function(panel) fills a panel docked at the top; set its height yourself
 function Builder:Custom(build)
-	local panel = self:Add('DPanel')
+	local panel = self.filter and self:Trash():Add('DPanel') or self:Add('DPanel')
 	panel.Paint = nil
 	self.started = true
 	self.card = nil
@@ -226,7 +310,7 @@ end
 function Builder:Toggle(cvar, label, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts))
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -268,7 +352,7 @@ function Builder:Slider(cvar, label, min, max, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
 	local decimals = opts.decimals or 0
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts))
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -387,7 +471,7 @@ end
 
 function Builder:Button(label, action, opts)
 	opts = opts or {}
-	local row = self:Row(label, Help(label, opts), opts.admin)
+	local row = self:Row(label, Help(label, opts), opts.admin, isstring(action) and action or nil)
 	local caption = Menu.Text(opts.text or '#bgn.menu.run')
 
 	local function Run()
@@ -412,7 +496,7 @@ end
 function Builder:Color(label, rgb, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(rgb[1], opts))
+	local row = self:Row(label, Help(label, opts), IsServer(rgb[1], opts), rgb[1])
 
 	local function Get()
 		local values = {}
@@ -461,5 +545,63 @@ function Builder:Color(label, rgb, opts)
 		end)
 	end
 	row.control = swatch
+	return row
+end
+
+-- Segmented control. @param options table { { value, text }, ... } (text: '#phrase', plain or { en, ru })
+function Builder:Choice(cvar, label, options, opts)
+	opts = opts or {}
+	local s = Menu.Scale()
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
+
+	local function Get()
+		local cv = GetConVar(cvar)
+		return cv and cv:GetString() or ''
+	end
+
+	local ctrl = row:Add('DPanel')
+	ctrl:SetTall(math.Round(32 * s))
+	local inset = math.Round(3 * s)
+	surface.SetFont('BGN.Menu.Value')
+	local x = inset
+	for _, option in ipairs(options) do
+		local value, text = tostring(option[1]), Menu.Text(option[2])
+		local segment = ctrl:Add('DButton')
+		segment:SetText('')
+		segment:SetPos(x, inset)
+		segment:SetSize(surface.GetTextSize(text) + math.Round(24 * s), ctrl:GetTall() - inset * 2)
+		segment:SetCursor(row.locked and 'no' or 'hand')
+		segment.hover = 0
+		segment.Paint = function(panel, w, h)
+			local active = Get() == value
+			panel.hover = Lerp(FrameTime() * 16, panel.hover, (panel:IsHovered() and not row.locked and not active) and 1 or 0)
+			local alpha = row.locked and 0.5 or 1
+			if active then
+				draw.RoundedBox(math.Round(5 * s), 0, 0, w, h, Menu.Fade(C.accent, alpha))
+			elseif panel.hover > 0.01 then
+				draw.RoundedBox(math.Round(5 * s), 0, 0, w, h, Menu.Fade(C.hover, panel.hover))
+			end
+			draw.SimpleText(text, 'BGN.Menu.Value', w / 2, h / 2, Menu.Fade(active and C.on_accent or C.text, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		segment.OnCursorEntered = function() if not row.locked then Menu.Sound('hover') end end
+		segment.DoClick = function()
+			if row.locked then
+				Menu.Sound('denied')
+				return
+			end
+			if Get() == value then return end
+			RunConsoleCommand(cvar, value)
+			Menu.Sound('click')
+			if opts.on_change then opts.on_change(value) end
+		end
+		x = x + segment:GetWide() + math.Round(2 * s)
+	end
+	ctrl:SetWide(x - math.Round(2 * s) + inset)
+	ctrl.Paint = function(panel, w, h)
+		local r = math.Round(7 * s)
+		draw.RoundedBox(r, 0, 0, w, h, C.border)
+		draw.RoundedBox(r, 1, 1, w - 2, h - 2, C.bg)
+	end
+	row.control = ctrl
 	return row
 end

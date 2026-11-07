@@ -408,11 +408,12 @@ local function StyleScrollBar(scroll, s)
 	end
 end
 
-local function BuildPage(frame, def)
+-- Clears the content and adds the hidden "read-only" banner. @return Panel the banner
+local function ResetContent(frame, title)
 	local s = Menu.Scale()
 	local content = frame.content
 	content:Clear()
-	frame.page_title = Menu.Text(def.title)
+	frame.page_title = title
 
 	local canvas = content:GetCanvas()
 	canvas:SetAlpha(0)
@@ -430,13 +431,45 @@ local function BuildPage(frame, def)
 		Menu.Icon(ICONS .. 'lock.png', math.Round(14 * s), (h - icon) / 2, icon, C.accent)
 		draw.SimpleText(Menu.Text('#bgn.menu.readonly'), 'BGN.Menu.Small', math.Round(40 * s), h / 2, C.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
+	return notice
+end
 
-	local page = Menu.NewBuilder(content, notice)
+local function RunBuild(def, page)
 	local ok, err = pcall(def.build, page)
 	if not ok then
 		ErrorNoHalt('[Background NPCs] Menu page "' .. def.id .. '" failed: ' .. tostring(err) .. '\n')
-		page:Note(Menu.Text('#bgn.menu.page_error'))
+		if not page.filter then page:Note(Menu.Text('#bgn.menu.page_error')) end
 	end
+end
+
+local function BuildPage(frame, def)
+	frame.query = nil
+	RunBuild(def, Menu.NewBuilder(frame.content, ResetContent(frame, Menu.Text(def.title))))
+end
+
+-- Every page built with a filter: only the matching rows, under "Page › Section" headings
+-- @param query string normalized (Menu.Normalize), not empty
+local function BuildSearch(frame, query)
+	frame.query = query
+	local notice = ResetContent(frame, Menu.Text('#bgn.menu.search.results'))
+	local results = { count = 0 }
+	for _, def in ipairs(SortedPages()) do
+		RunBuild(def, Menu.NewBuilder(frame.content, notice, {
+			query = query, page_id = def.id, page_title = Menu.Text(def.title), results = results,
+		}))
+	end
+	if results.count == 0 then
+		Menu.Paragraph(frame.content, Menu.Text('#bgn.menu.search.empty'), 'BGN.Menu.Body', C.muted)
+	end
+end
+
+-- Shows a page in the open window (clears the search). Opens the window when it is closed.
+function Menu.ShowPage(page_id)
+	local frame = Menu.frame
+	if not IsValid(frame) or not Menu.pages[page_id] then return Menu.Open(page_id) end
+	if IsValid(frame.search) then frame.search:SetText('') end
+	Menu.page_id = page_id
+	BuildPage(frame, Menu.pages[page_id])
 end
 
 -- @param page_id string|nil page to show, the last one by default
@@ -452,12 +485,28 @@ function Menu.Open(page_id)
 	local s = Menu.Scale()
 	local W = math.min(math.Round(1000 * s), ScrW() - 32)
 	local H = math.min(math.Round(680 * s), ScrH() - 32)
-	local radius = math.Round(10 * s)
+	local corner = math.Round(10 * s)
+	local radius = corner
 
 	local frame = vgui.Create('EditablePanel')
 	Menu.frame = frame
-	frame:SetSize(W, H)
-	frame:Center()
+
+	-- full screen: square corners, the content column keeps a readable width (content.PerformLayout)
+	function frame.SetMaximized(on)
+		Menu.maximized = on
+		radius = on and 0 or corner
+		if on then
+			frame:SetPos(0, 0)
+			frame:SetSize(ScrW(), ScrH())
+		else
+			frame:SetSize(W, H)
+			frame:Center()
+		end
+		frame:InvalidateLayout()
+		Menu.ContentChanged()
+	end
+
+	frame.SetMaximized(Menu.maximized or false)
 	frame:MakePopup()
 	frame:SetAlpha(0)
 	frame:AlphaTo(255, 0.15)
@@ -470,8 +519,20 @@ function Menu.Open(page_id)
 			self.relayout = false
 			self.content:InvalidateLayout()
 		end
+		-- Ctrl+F: the search field
+		local find = input.IsKeyDown(KEY_F) and (input.IsKeyDown(KEY_LCONTROL) or input.IsKeyDown(KEY_RCONTROL))
+		if find and not self.find_down and IsValid(self.search) then
+			self.search:RequestFocus()
+			self.search:SelectAllText()
+		end
+		self.find_down = find
 	end
 	frame.Paint = function(self, w, h)
+		if radius == 0 then
+			surface.SetDrawColor(C.bg)
+			surface.DrawRect(0, 0, w, h)
+			return
+		end
 		DisableClipping(true)
 		for i = 1, 4 do
 			draw.RoundedBox(radius + i * 2, -i * 2, -i * 2 + 4, w + i * 4, h + i * 4, Menu.Fade(C.shadow, 0.35 / i))
@@ -497,6 +558,43 @@ function Menu.Open(page_id)
 		draw.SimpleText(Menu.Text('#bgn.menu.title'), 'BGN.Menu.Brand', x + icon + math.Round(10 * s), y + icon / 2, C.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 
+	-- search: rebuilds the content a moment after typing stops
+	local search_box = sidebar:Add('DPanel')
+	search_box:Dock(TOP)
+	search_box:DockMargin(0, 0, 0, math.Round(10 * s))
+	search_box:SetTall(math.Round(34 * s))
+	local search_icon = math.Round(16 * s)
+	search_box:DockPadding(math.Round(20 * s) + search_icon, 0, math.Round(8 * s), 0)
+	local search = search_box:Add('DTextEntry')
+	search:Dock(FILL)
+	search:SetFont('BGN.Menu.Nav')
+	search:SetUpdateOnType(true)
+	frame.search = search
+	search_box.Paint = function(self, w, h)
+		local r = math.Round(6 * s)
+		draw.RoundedBox(r, 0, 0, w, h, search:HasFocus() and C.accent or C.border)
+		draw.RoundedBox(r, 1, 1, w - 2, h - 2, C.surface)
+		Menu.Icon(ICONS .. 'search.png', math.Round(10 * s), (h - search_icon) / 2, search_icon, C.muted)
+	end
+	search.Paint = function(self, w, h)
+		if self:GetText() == '' then
+			draw.SimpleText(Menu.Text('#bgn.menu.search'), 'BGN.Menu.Nav', 3, h / 2, C.muted, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		end
+		self:DrawTextEntryText(C.text, C.accent, C.text)
+	end
+	search.OnChange = function(self)
+		timer.Create('BGN_Menu_Search', 0.2, 1, function()
+			if not IsValid(frame) or not IsValid(self) then return end
+			local query = Menu.Normalize(string.Trim(self:GetText()))
+			if query == (frame.query or '') then return end
+			if query == '' then
+				BuildPage(frame, Menu.pages[Menu.page_id])
+			else
+				BuildSearch(frame, query)
+			end
+		end)
+	end
+
 	local nav = sidebar:Add('DScrollPanel')
 	nav:Dock(FILL)
 	StyleScrollBar(nav, s)
@@ -509,7 +607,7 @@ function Menu.Open(page_id)
 		item:SetText('')
 		item.hover = 0
 		item.Paint = function(self, w, h)
-			local active = Menu.page_id == def.id
+			local active = Menu.page_id == def.id and not frame.query
 			self.hover = Lerp(FrameTime() * 16, self.hover, (self:IsHovered() or active) and 1 or 0)
 			local r = math.Round(6 * s)
 			if active then
@@ -528,10 +626,9 @@ function Menu.Open(page_id)
 		end
 		item.OnCursorEntered = function() Menu.Sound('hover') end
 		item.DoClick = function()
-			if Menu.page_id == def.id then return end
+			if Menu.page_id == def.id and not frame.query then return end
 			Menu.Sound('click')
-			Menu.page_id = def.id
-			BuildPage(frame, def)
+			Menu.ShowPage(def.id)
 		end
 	end
 
@@ -547,9 +644,16 @@ function Menu.Open(page_id)
 	header.Paint = function(self, w, h)
 		draw.SimpleText(frame.page_title or '', 'BGN.Menu.PageTitle', pad, h / 2 + math.Round(4 * s), C.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
-	-- drag the window by the header
+	-- drag the window by the header, a double click maximizes / restores it
 	header.OnMousePressed = function(self, code)
 		if code ~= MOUSE_LEFT then return end
+		if RealTime() - (self.last_click or 0) < 0.35 then
+			self.last_click = 0
+			frame.ToggleMaximized()
+			return
+		end
+		self.last_click = RealTime()
+		if Menu.maximized then return end
 		local mx, my = gui.MousePos()
 		self.drag = { mx - frame.x, my - frame.y }
 		self:MouseCapture(true)
@@ -574,18 +678,40 @@ function Menu.Open(page_id)
 			Menu.Sound('click')
 			RunConsoleCommand('bgn_menu_dark', cvar_dark:GetBool() and '0' or '1')
 		end)
+	local maximize = IconButton(header, button_size,
+		function() return Menu.maximized and ICONS .. 'restore.png' or ICONS .. 'maximize.png' end,
+		Menu.Text(Menu.maximized and '#bgn.menu.restore' or '#bgn.menu.maximize'),
+		function() frame.ToggleMaximized() end)
+	function frame.ToggleMaximized()
+		Menu.Sound('click')
+		frame.SetMaximized(not Menu.maximized)
+		maximize:SetTooltip(Menu.Text(Menu.maximized and '#bgn.menu.restore' or '#bgn.menu.maximize'))
+	end
 	header.PerformLayout = function(self, w, h)
 		local y = math.Round(18 * s)
+		local gap = math.Round(8 * s)
 		close:SetPos(w - math.Round(20 * s) - button_size, y)
-		theme:SetPos(w - math.Round(28 * s) - button_size * 2, y)
+		maximize:SetPos(close.x - gap - button_size, y)
+		theme:SetPos(maximize.x - gap - button_size, y)
 	end
 
 	local content = main:Add('DScrollPanel')
 	content:Dock(FILL)
 	content:DockMargin(pad, math.Round(4 * s), math.Round(16 * s), math.Round(16 * s))
-	content:GetCanvas():DockPadding(0, 0, math.Round(16 * s), math.Round(16 * s))
 	StyleScrollBar(content, s)
 	frame.content = content
+	-- the column is capped and centred on wide (maximized) windows; the scroll bar stays on the right
+	local max_width = math.Round(1100 * s)
+	local base_layout = content.PerformLayout
+	content.PerformLayout = function(self, w, h)
+		local side = math.max(0, math.floor((self:GetWide() - max_width) / 2))
+		if side ~= self.side then
+			self.side = side
+			self:GetCanvas():DockPadding(side, 0, math.Round(16 * s) + side, math.Round(16 * s))
+			Menu.ContentChanged()
+		end
+		base_layout(self, w, h)
+	end
 
 	Menu.page_id = page_id
 	BuildPage(frame, Menu.pages[page_id])
@@ -612,6 +738,8 @@ hook.Add('OnPauseMenuShow', 'BGN_Menu', function()
 	if not IsValid(frame) then return end
 	if IsValid(frame.dialog) then
 		frame.dialog:Remove()
+	elseif frame.query then
+		Menu.ShowPage(Menu.page_id)
 	else
 		Menu.Close()
 	end

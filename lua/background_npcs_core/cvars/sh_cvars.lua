@@ -67,6 +67,11 @@ bgNPC.cvar.bgn_drop_money = 1
 bgNPC.cvar.bgn_module_n2money = 1
 bgNPC.cvar.bgn_agressive_mode = 0
 bgNPC.cvar.bgn_friend_mode = 0
+bgNPC.cvar.bgn_brain = 'auto'
+bgNPC.cvar.bgn_actor_body = 'auto'
+bgNPC.cvar.bgn_nav_provider = 'auto'
+bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
+bgNPC.cvar.bgn_lod_near_radius = 2500
 
 CreateConVar('bgn_installed', 1, {
 	FCVAR_ARCHIVE,
@@ -179,6 +184,13 @@ bgNPC.CVars.Register('bgn_module_followers_mod_addon', bgNPC.cvar.bgn_module_fol
 bgNPC.CVars.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random, '1 - makes any NPCs with random models from the list. 0 - disables.')
 
 bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset, 'Offset between points for grid generation')
+
+-- Created by their systems on the server too (same defaults); registered here so the settings window can change them.
+bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (auto, fsm, goap)')
+bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (auto - NextBot on NavMesh maps, npc, nextbot)')
+bgNPC.CVars.Register('bgn_nav_provider', bgNPC.cvar.bgn_nav_provider, 'Background NPCs: navigation source (auto, navmesh, nodegraph, custom)')
+bgNPC.CVars.Register('bgn_nav_generator_max_nodes', bgNPC.cvar.bgn_nav_generator_max_nodes, 'Background NPCs: node limit of the generator')
+bgNPC.CVars.Register('bgn_lod_near_radius', bgNPC.cvar.bgn_lod_near_radius, 'Background NPCs: actors closer than this to a player get full updates')
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0
