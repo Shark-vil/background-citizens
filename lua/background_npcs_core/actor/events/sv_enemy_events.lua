@@ -1,25 +1,9 @@
+-- Enemy bookkeeping on deaths and when an actor has no enemies left.
+
 hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', function(actor)
 	if not actor:IsAlive() then return end
 	actor:FoldWeapon()
 	actor:RandomState()
-end)
-
-bgNPC.Tasks.Add('BGN_ActorEnemyController', function(yield, wait)
-	while true do
-		local actors = bgNPC.Actors.GetAll()
-
-		for i = 1, #actors do
-			local actor = actors[i]
-
-			if actor and actor:IsAlive() then
-				actor:EnemiesRecalculate()
-			end
-
-			yield()
-		end
-
-		wait(1)
-	end
 end)
 
 hook.Add('PlayerDeath', 'BGN_ActorEnemyPlayerDeathRemove', function(victim)

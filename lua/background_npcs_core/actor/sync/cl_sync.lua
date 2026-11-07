@@ -4,7 +4,7 @@ bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 
 	actor:SetName(data.name)
 	actor:SetGender(data.gender)
-	actor:SetState(data.state)
+	actor:SyncState(data.state)
 	actor.enemies = data.enemies
 	actor.targets = data.targets
 	actor.anim_name = data.anim_name

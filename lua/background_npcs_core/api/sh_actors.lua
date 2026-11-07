@@ -125,7 +125,7 @@ if CLIENT then
 
 	bgNPC.Net.Receive('bgn_add_actor_from_client', function(ply, npc, npc_type, uid, info)
 		if Actors.Get(npc) ~= nil then return end
-		local actor = BGN_ACTOR:Instance(npc, npc_type, uid)
+		local actor = bgNPC.Actor.Create(npc, npc_type, uid)
 		if actor and info then actor.info = info end
 	end, { wait_entities = true })
 end

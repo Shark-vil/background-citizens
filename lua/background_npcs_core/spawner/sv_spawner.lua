@@ -408,6 +408,6 @@ do
 			end
 		end
 
-		return BGN_ACTOR:Instance(npc, npc_type)
+		return bgNPC.Actor.Create(npc, npc_type)
 	end
 end

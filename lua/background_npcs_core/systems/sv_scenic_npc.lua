@@ -15,7 +15,7 @@ local scenic_actions = {}
 --]]
 scenic_actions['npc_cheering_citizen_looping'] = {
 	OnInit = function(actor_info, scenic_ent)
-		local actor = BGN_ACTOR:Instance(scenic_ent.npc, actor_info.npc_type)
+		local actor = bgNPC.Actor.Create(scenic_ent.npc, actor_info.npc_type)
 		table.insert(scenic_ent.actors, actor)
 	end,
 	OnRemove = function(actor_info, scenic_ent)
@@ -25,8 +25,8 @@ scenic_actions['npc_cheering_citizen_looping'] = {
 
 scenic_actions['npc_metrocop_abusing_male_wall_spread'] = {
 	OnInit = function(actor_info, scenic_ent)
-		local actor_citizen = BGN_ACTOR:Instance(scenic_ent.spreadwall_male, actor_info.npc_type)
-		local actor_police = BGN_ACTOR:Instance(scenic_ent.spreadwall_metrocop, 'police')
+		local actor_citizen = bgNPC.Actor.Create(scenic_ent.spreadwall_male, actor_info.npc_type)
+		local actor_police = bgNPC.Actor.Create(scenic_ent.spreadwall_metrocop, 'police')
 
 		table.insert(scenic_ent.actors, actor_citizen)
 		table.insert(scenic_ent.actors, actor_police)

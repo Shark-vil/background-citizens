@@ -149,7 +149,7 @@ hook.Add('PlayerSpawnedNPC', 'BGN_SpawnMenuChecker', function(ply, npc)
 		if not actorType or not isstring(actorType) then return end
 		if not bgNPC.cfg.actors[actorType] then return end
 
-		local actor = BGN_ACTOR:Instance(npc, actorType)
+		local actor = bgNPC.Actor.Create(npc, actorType)
 		if actor then actor.eternal = true end
 	end)
 end)

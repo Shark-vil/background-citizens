@@ -9,7 +9,7 @@ local TRIGGER = 'bgn_autotest/run.txt'
 local REPORT = 'bgn_autotest/report.json'
 
 local function CollectReport(samples, started_at)
-	local by_type, by_state, by_brain, by_body = {}, {}, {}, {}
+	local by_type, by_state, by_brain, by_body, by_lod = {}, {}, {}, {}, {}
 
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		local actor_type = actor:GetType()
@@ -20,6 +20,8 @@ local function CollectReport(samples, started_at)
 		by_brain[brain] = (by_brain[brain] or 0) + 1
 		local body = actor.body and actor.body.ClassName or 'none'
 		by_body[body] = (by_body[body] or 0) + 1
+		local lod = tostring(actor.lod)
+		by_lod[lod] = (by_lod[lod] or 0) + 1
 	end
 
 	local task_ms_sum, task_ms_max, frame_sum = 0, 0, 0
@@ -40,6 +42,7 @@ local function CollectReport(samples, started_at)
 		by_state = by_state,
 		by_brain = by_brain,
 		by_body = by_body,
+		by_lod = by_lod,
 		tasks_ms_avg = task_ms_sum / n,
 		tasks_ms_max = task_ms_max,
 		frame_ms_avg = frame_sum / n * 1000,
