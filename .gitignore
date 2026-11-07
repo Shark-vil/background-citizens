@@ -41,3 +41,7 @@ luac.out
 
 workspace.code-workspace
 .vscode/
+
+# Local work notes
+CHANGELOG.md
+PLANS.md
