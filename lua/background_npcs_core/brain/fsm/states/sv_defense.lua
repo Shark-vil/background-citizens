@@ -1,16 +1,36 @@
 local table_RandomBySeq = bgNPC.Table.Random
+local REPOSITION_PERIOD = 3
+local SLOT_REACHED_SQR = 50 ^ 2
+local SLOT_MOVED_SQR = 64 ^ 2
 --
+
+-- Squad member (systems/sv_tactical_groups.lua): the body goes straight to the formation slot.
+-- The actor walk would stop 150 units short (MOVEMENT_FINISHED_DIST), wider than the formation spacing.
+local function MoveToSlot(actor, data, slot)
+	local body = actor:GetBody()
+	if actor:WalkDestinationExists() then actor:StopWalk() end
+
+	if actor:GetPos():DistToSqr(slot) <= SLOT_REACHED_SQR then
+		if data.slot then body:StopMoving() end
+		data.slot = nil
+		return
+	end
+
+	if data.slot and data.slot:DistToSqr(slot) < SLOT_MOVED_SQR and body:IsMoving() then return end
+	data.slot = slot
+	body:MoveTo(slot, true)
+end
 
 bgNPC.States.Register('defense', 'danger', {
 	pre_start = function(actor)
 		if not actor.weapon then
-			-- Self-heal: the actor may have lost its weapon class (e.g. was never
-			-- armed in time, config allows it) - try to assign one before giving up
-			-- and fleeing, instead of being permanently stuck as unarmed.
+			-- Self-heal: an always-armed actor (no getting_weapon_chance) may have lost its weapon class.
+			-- Actors with a chance lost the roll on spawn; arming them here armed every citizen that
+			-- fear sent back to defense.
 			local data = actor:GetData()
 			local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor:GetType())
 
-			if data.weapons and (not cvar_disable_weapon or not cvar_disable_weapon:GetBool()) then
+			if data.weapons and not data.getting_weapon_chance and (not cvar_disable_weapon or not cvar_disable_weapon:GetBool()) then
 				actor.weapon = table_RandomBySeq(data.weapons)
 			end
 		end
@@ -18,6 +38,13 @@ bgNPC.States.Register('defense', 'danger', {
 		if not actor.weapon then return 'fear' end
 	end,
 	start = function(actor)
+		-- an actor that came from fear still has its enemies as D_FR: an NPC won't shoot, a NextBot isn't in combat
+		local body = actor:GetBody()
+		for _, enemy in ipairs(actor.enemies) do
+			if IsValid(enemy) then body:SetDisposition(enemy, D_HT) end
+		end
+		body:SetAlertLevel('combat')
+
 		if actor:HasTeam('police') then
 			local enemy = actor:GetNearEnemy()
 			local npc = actor:GetNPC()
@@ -27,7 +54,8 @@ bgNPC.States.Register('defense', 'danger', {
 		end
 	end,
 	update = function(actor)
-		local enemy = bgNPC:GetTacticalGroupGetNearEnemy(actor)
+		local squad = actor.squad
+		local enemy = squad and squad.enemy
 
 		if not IsValid(enemy) then enemy = actor:GetNearEnemy() end
 		if not IsValid(enemy) then
@@ -35,10 +63,19 @@ bgNPC.States.Register('defense', 'danger', {
 			return
 		end
 
-		if not actor:CheckMoveUpdate('state_defense', 5) then return end
-
+		-- the weapon comes out right away; only the repositioning below is throttled
 		local data = actor:GetStateData()
 		if not data.disableWeapon then actor:PrepareWeapon() end
+
+		if squad then
+			MoveToSlot(actor, data, squad.slot)
+			return
+		end
+		data.slot = nil
+
+		local now = CurTime()
+		if (data.next_move or 0) > now then return end
+		data.next_move = now + REPOSITION_PERIOD
 
 		local npc = actor:GetNPC()
 		local npc_pos = npc:GetPos()

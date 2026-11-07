@@ -1,237 +1,187 @@
-local cvar_bgn_module_tactical_groups = GetConVar('bgn_module_tactical_groups')
-local table_shuffle = bgNPC.Table.Shuffle
-local table_HasValueBySeq = bgNPC.Table.HasValue
-local _color_8_255_250 = Color(8, 222, 250)
-local _color_8_250_60 = Color(8, 250, 60)
-local _color_250_85_0 = Color(250, 85, 8)
-local _tactical_groups_storage = {}
---
+--[[
+	Squads (cvar "bgn_module_tactical_groups"): armed actors of one team that fight near each other act as a group.
 
-local function Instance()
-	local private = {}
-	private.actors = {}
-	private.tactical = math.random(0, 1)
+	Every UPDATE_PERIOD the actors in the "defense" state are grouped: same team, within SQUAD_RADIUS of the leader,
+	at most MAX_SIZE. The healthiest actor leads; its nearest enemy becomes the target of the whole squad
+	(every member gets it as an enemy, so they engage together).
 
-	local public = {}
+	Formation, facing the target:
+		column - nobody in the squad sees the target: advance in file
+		wedge  - 4+ healthy members and the target is seen
+		line   - otherwise: abreast
+	Members are ranked by health fraction: the healthiest stand in front, the wounded (< WOUNDED_FRACTION)
+	form a rear rank behind the formation.
 
-	function public:AddActor(actor)
-		table.insert(private.actors, actor)
-	end
+	Result: actor.squad = { squad, enemy, slot, role = 'front' | 'rear' }. The defense state moves the actor
+	to its slot instead of its own repositioning; shooting stays with the body (engine NPC / NextBot).
+--]]
 
-	function public:GetActors()
-		for i = #private.actors, 1, -1 do
-			local actor = private.actors[i]
-			if not actor or not actor:IsAlive() then
-				table.remove(private.actors, i)
-			else
-				local npc = actor:GetNPC()
-				if not npc.GetActiveWeapon or not isfunction(npc.GetActiveWeapon) or not IsValid(npc:GetActiveWeapon()) then
-					table.remove(private.actors, i)
-				end
-			end
-		end
+local cvar_enabled = GetConVar('bgn_module_tactical_groups')
 
-		for _, actor1 in ipairs(private.actors) do
-			for _, actor2 in ipairs(private.actors) do
-				if actor1 ~= actor2 and actor1:GetPos():DistToSqr(actor2:GetPos()) >= 1000000 then
-					table.RemoveByValue(private.actors, actor1)
-					break
-				end
-			end
-		end
+local UPDATE_PERIOD = 1
+local SQUAD_RADIUS_SQR = 1200 ^ 2
+local MAX_SIZE = 5
+local WOUNDED_FRACTION = 0.4
+local ENGAGE_DIST = 550
+local SPACING = 90
+local REAR_GAP = 250
+local UP = Vector(0, 0, 1)
 
-		return private.actors
-	end
+local Squads = { list = {} }
+bgNPC.Squads = Squads
 
-	function public:Count()
-		return #self:GetActors()
-	end
+local function HealthFraction(actor)
+	local npc = actor:GetNPC()
+	local max = npc:GetMaxHealth()
+	return max > 0 and npc:Health() / max or 1
+end
 
-	function public:ExistsActor(actor)
-		return table_HasValueBySeq(self:GetActors(), actor)
-	end
+local function CanJoin(actor)
+	return actor:IsAlive() and actor:GetState() == 'defense' and actor.weapon ~= nil
+		and not actor:HasNoEnemies() and not actor:InVehicle() and not actor:IsMeleeWeapon()
+end
 
-	function public:GetSortedActors()
-		local actors = self:GetActors()
+local function SnapToNav(pos)
+	if not navmesh.IsLoaded() then return pos end
+	local area = navmesh.GetNearestNavArea(pos, false, 250)
+	return area and area:GetClosestPointOnArea(pos) or pos
+end
 
-		if private.tactical == 1 then
-			table.sort(actors, function(a, b)
-				if a and b and a:IsAlive() and b:IsAlive() then
-					local npc_1 = a:GetNPC()
-					local npc_2 = b:GetNPC()
-					return npc_1:Health() > npc_2:Health()
-				end
-			end)
-
-			return actors
+-- @return table { { forward, right } } offsets of n ranked members from the formation anchor
+function Squads.FormationOffsets(formation, n)
+	local offsets = {}
+	for i = 1, n do
+		local k = i - 1
+		if formation == 'column' then
+			offsets[i] = { -k * SPACING, 0 }
+		elseif formation == 'wedge' then
+			local row = math.ceil(k / 2)
+			local side = k == 0 and 0 or (k % 2 == 1 and 1 or -1)
+			offsets[i] = { -row * SPACING, side * row * SPACING }
 		else
-			return table_shuffle(actors)
+			offsets[i] = { 0, (k - (n - 1) / 2) * SPACING }
 		end
 	end
-
-	return public
+	return offsets
 end
 
-local function GetTacticalGroup(actor)
-	for i = #_tactical_groups_storage, 1, -1 do
-		local group = _tactical_groups_storage[i]
-		if not group or group:Count() == 0 then
-			table.remove(_tactical_groups_storage, i)
-			continue
-		end
+-- Groups the candidates greedily, healthiest first, so every squad is led by its healthiest member.
+local function Build(candidates)
+	table.sort(candidates, function(a, b) return HealthFraction(a) > HealthFraction(b) end)
 
-		if group:ExistsActor(actor) then return group end
-	end
+	local squads, taken = {}, {}
+	for _, leader in ipairs(candidates) do
+		if not taken[leader] then
+			taken[leader] = true
+			local members = { leader }
+			local pos = leader:GetPos()
 
-	local new_group = Instance()
-	new_group:AddActor(actor)
-	local index = table.insert(_tactical_groups_storage, new_group)
-	return _tactical_groups_storage[index]
-end
-
-local function CalcTacticalGroup()
-	local max_group_size = 3
-
-	for _, target_actor in ipairs(bgNPC.Actors.GetAll()) do
-		-- if not bgNPC.Util.Chance(10) then continue end
-		if not target_actor or not target_actor:IsAlive() then continue end
-		if not target_actor:EqualStateGroup('danger') then continue end
-
-		local npc = target_actor:GetNPC()
-		if not npc.GetActiveWeapon or not isfunction(npc.GetActiveWeapon) or not IsValid(npc:GetActiveWeapon()) then
-			continue
-		end
-
-		local tactical_group = GetTacticalGroup(target_actor)
-		if tactical_group:Count() == max_group_size then continue end
-
-		for _, actor in ipairs(bgNPC.Actors.GetInRadius(npc:GetPos(), math.random(500, 700))) do
-			if tactical_group:Count() == max_group_size then break end
-			if not actor or not actor:IsAlive() or not actor:HasTeam(target_actor) or actor == target_actor then
-				continue
-			end
-
-			if tactical_group:ExistsActor(actor) then
-				continue
-			end
-
-			local actor_tactical_group = GetTacticalGroup(actor)
-			if actor_tactical_group:Count() > 1 then continue end
-
-			tactical_group:AddActor(actor)
-
-			for i = #_tactical_groups_storage, 1, -1 do
-				local group = _tactical_groups_storage[i]
-				if group ~= tactical_group and group:ExistsActor(actor) then
-					table.remove(_tactical_groups_storage, i)
+			for _, other in ipairs(candidates) do
+				if #members >= MAX_SIZE then break end
+				if not taken[other] and other:HasTeam(leader) and other:GetPos():DistToSqr(pos) <= SQUAD_RADIUS_SQR then
+					taken[other] = true
+					members[#members + 1] = other
 				end
 			end
+
+			if #members > 1 then squads[#squads + 1] = { leader = leader, members = members } end
 		end
 	end
+	return squads
 end
 
-local function MovementTacticalGroup()
-	for _, tactical_group in ipairs(_tactical_groups_storage) do
-		if tactical_group and tactical_group:Count() > 1 then
-			local actors = tactical_group:GetSortedActors()
-			local leader = actors[1]
-			local leader_npc = leader:GetNPC()
-			local leader_npc_pos = leader_npc:GetPos()
-			local leader_center_pos = leader_npc:LocalToWorld(leader_npc:OBBCenter())
-			local forward = leader_npc:GetForward() * 150
-			local offset = 20
-			local leftside = true
+local function Assign(squad)
+	local enemy = squad.leader:GetNearEnemy()
+	if not IsValid(enemy) then return end
 
-			for _, actor in ipairs(actors) do
-				if actor == leader or actor:IsMeleeWeapon() then continue end
-				if actor.movement_order_delay and actor.movement_order_delay > CurTime() then continue end
+	local members = squad.members
+	local center = Vector()
+	local sees = false
+	for _, member in ipairs(members) do
+		center:Add(member:GetPos())
+		sees = sees or bgNPC.Vision.HasLineOfSight(member:GetNPC(), enemy)
+	end
+	center:Div(#members)
 
-				local right = leader_npc:GetRight() * (leftside and offset or -offset)
-				local move_pos = leader_npc_pos - forward + right
+	local enemy_pos = enemy:GetPos()
+	local forward = enemy_pos - center
+	forward.z = 0
+	if forward:LengthSqr() < 1 then forward = squad.leader:GetNPC():GetForward() end
+	forward:Normalize()
+	local right = forward:Cross(UP)
 
-				actor.movement_order = true
-				actor:WalkToPos(move_pos, 'run')
-				actor.movement_order = false
-
-				local actor_npc = actor:GetNPC()
-				local actor_center_pos = actor_npc:LocalToWorld(actor_npc:OBBCenter())
-				local start_pos = actor_npc:LocalToWorld(actor_npc:OBBCenter())
-				debugoverlay.Line(start_pos, move_pos, 1, _color_8_255_250)
-				debugoverlay.Sphere(move_pos, 10, 1, _color_8_255_250)
-
-				debugoverlay.Line(leader_center_pos, actor_center_pos, 1, _color_8_250_60)
-				debugoverlay.Sphere(leader_center_pos, 10, 1, _color_250_85_0)
-
-				leftside = not leftside
-			end
+	-- members are sorted by health already; the leader is always in front
+	local front, rear = {}, {}
+	for _, member in ipairs(members) do
+		if #front ~= 0 and HealthFraction(member) < WOUNDED_FRACTION then
+			rear[#rear + 1] = member
+		else
+			front[#front + 1] = member
 		end
 	end
-end
 
-local function TacticalGroupUpdateTimer()
-	CalcTacticalGroup()
-	MovementTacticalGroup()
-end
+	local formation = not sees and 'column' or (#front >= 4 and 'wedge' or 'line')
+	squad.formation, squad.enemy = formation, enemy
 
-local function TacticalGroupWalkOverrideHook(actor, pos)
-	if not actor or not actor:IsAlive() or not actor:EqualStateGroup('danger') then
-		return
-	end
-
-	local tactical_group = GetTacticalGroup(actor)
-	if tactical_group and tactical_group:Count() > 1 then
-		local actors = tactical_group:GetSortedActors()
-		if actors[1] ~= actor and not actor.movement_order then
-			return false
+	local anchor = enemy_pos - forward * ENGAGE_DIST
+	local depth = 0
+	local function Place(list, offsets, base, role)
+		for i, member in ipairs(list) do
+			local offset = offsets[i]
+			depth = math.min(depth, offset[1])
+			member.squad = {
+				squad = squad,
+				enemy = enemy,
+				role = role,
+				slot = SnapToNav(base + forward * offset[1] + right * offset[2]),
+			}
+			member:AddEnemy(enemy)
 		end
 	end
+
+	Place(front, Squads.FormationOffsets(formation, #front), anchor, 'front')
+	Place(rear, Squads.FormationOffsets('line', #rear), anchor + forward * (depth - REAR_GAP), 'rear')
 end
 
-function bgNPC:GetTacticalGroupGetFirstEnemy(actor)
-	if not cvar_bgn_module_tactical_groups:GetBool() then return end
-	for _, group in ipairs(_tactical_groups_storage) do
-		if group and group:Count() > 1 and group:ExistsActor(actor) then
-			local actors = group:GetSortedActors()
-			local leader = actors[1]
-			if leader and leader ~= actor and leader:IsAlive() then
-				return leader:GetFirstEnemy()
-			end
-		end
+local function Update()
+	local candidates = {}
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		actor.squad = nil
+		if CanJoin(actor) then candidates[#candidates + 1] = actor end
 	end
+
+	Squads.list = Build(candidates)
+	for _, squad in ipairs(Squads.list) do Assign(squad) end
 end
 
-function bgNPC:GetTacticalGroupGetNearEnemy(actor)
-	if not cvar_bgn_module_tactical_groups:GetBool() then return end
-	for _, group in ipairs(_tactical_groups_storage) do
-		if group and group:Count() > 1 and group:ExistsActor(actor) then
-			local actors = group:GetSortedActors()
-			local leader = actors[1]
-			if leader and leader ~= actor and leader:IsAlive() then
-				return leader:GetNearEnemy()
-			end
-		end
-	end
-end
-
-local function Start(arguments)
-	timer.Create('BGN_TacticalGroupUpdate', 1, 0, TacticalGroupUpdateTimer)
-	hook.Add('BGN_PreSetWalkPos', 'BGN_TacticalGroupWalkOverride', TacticalGroupWalkOverrideHook)
+local function Start()
+	timer.Create('BGN_TacticalGroupUpdate', UPDATE_PERIOD, 0, function()
+		local ok, err = pcall(Update)
+		if not ok then ErrorNoHalt('[Background NPCs] Squad update error: ' .. tostring(err) .. '\n') end
+	end)
 end
 
 local function Stop()
 	timer.Remove('BGN_TacticalGroupUpdate')
-	hook.Remove('BGN_PreSetWalkPos', 'BGN_TacticalGroupWalkOverride')
-	_tactical_groups_storage = {}
+	Squads.list = {}
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do actor.squad = nil end
 end
 
-cvars.AddChangeCallback('bgn_module_tactical_groups', function(_, _, newValue)
-	if tonumber(newValue) == 1 then
-		Start()
-	else
-		Stop()
-	end
+cvars.AddChangeCallback('bgn_module_tactical_groups', function(_, _, value)
+	if tonumber(value) == 1 then Start() else Stop() end
 end, 'tg_bgn_module_tactical_groups')
 
-if cvar_bgn_module_tactical_groups:GetBool() then
-	Start()
-end
+if cvar_enabled:GetBool() then Start() end
+
+bgNPC.Test.Add('squads.formations', function(check)
+	local line = Squads.FormationOffsets('line', 3)
+	check(line[1][2] == -SPACING and line[2][2] == 0 and line[3][2] == SPACING, 'line is abreast and centered')
+
+	local wedge = Squads.FormationOffsets('wedge', 5)
+	check(wedge[1][1] == 0 and wedge[1][2] == 0, 'wedge tip is the leader')
+	check(wedge[2][1] == wedge[3][1] and wedge[2][2] == -wedge[3][2], 'wedge rows are symmetric')
+	check(wedge[4][1] < wedge[2][1], 'wedge widens backwards')
+
+	local column = Squads.FormationOffsets('column', 3)
+	check(column[3][1] == -2 * SPACING and column[3][2] == 0, 'column is in file')
+end)
