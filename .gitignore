@@ -39,7 +39,7 @@ luac.out
 *.x86_64
 *.hex
 
-workspace.code-workspace
+*.code-workspace
 .vscode/
 
 # Local work notes
