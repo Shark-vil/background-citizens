@@ -107,7 +107,7 @@ hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(tar
 			actor:AddEnemy(target)
 
 			if actor:HasState('idle') or actor:HasState('walk') then
-				actor:SetState(actor:GetReactionForProtect())
+				actor:SetState(actor:GetReactionForProtect(target))
 			end
 		end
 	end
@@ -138,7 +138,7 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 			if actor:HasTeam('police') then
 				actor:SetState('defense')
 			elseif actor:HasTeam('residents') then
-				actor:SetState(actor:GetReactionForProtect())
+				actor:SetState(actor:GetReactionForProtect(enemy))
 			end
 		end
 	end
@@ -162,7 +162,7 @@ local function UpdateWantedAndSetReaction(actor, enemy)
 	-- reacted): "fear" belongs to the "danger" group too, so without this they would
 	-- never be pushed back towards "defense"/"arrest" again for the rest of the chase.
 	if not actor:EqualStateGroup('danger') or actor:HasState('fear') then
-		reaction = actor:GetReactionForProtect()
+		reaction = actor:GetReactionForProtect(enemy)
 		if reaction == 'arrest' and not enable_arrest_mode then
 			reaction = 'defense'
 		end

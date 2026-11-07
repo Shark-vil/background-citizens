@@ -55,10 +55,35 @@ end
 local LAW_RADIUS_SQR = 2000 * 2000
 local MAX_CIVILIAN_FIGHTERS = 2
 
+local STAY_OUT_TIME = 15
+
+-- A resident who is not the police
+function Actor:IsCivilian()
+	return self:HasTeam('residents') and not self:HasTeam('police')
+end
+
+-- Leaves the fight to others for a while: "fear" keeps the enemy, and neither the fear state nor
+-- a planning brain sends the actor back into "defense" until the time runs out.
+function Actor:StayOutOfFight(time)
+	local until_time = CurTime() + (time or STAY_OUT_TIME)
+	self.stay_out_until = until_time
+	local brain = self.brain
+	if brain and brain.actions and brain.blocked then
+		for _, action in ipairs(brain.actions) do
+			if action.state == 'defense' then brain.blocked[action.name] = until_time end
+		end
+		brain:ResetPlan()
+	end
+end
+
+function Actor:IsStayingOut()
+	return (self.stay_out_until or 0) > CurTime()
+end
+
 -- A civilian stays out of someone else's fight when the police already fight that enemy nearby
--- or enough other civilians do. Self-defence (GetReactionForDamage) is not limited.
-local function ShouldStayOut(actor, enemy)
-	if CLIENT or not IsValid(enemy) or actor:HasTeam('police') or not actor:HasTeam('residents') then return false end
+-- or (unless police_only) enough other civilians do. Self-defence (GetReactionForDamage) is not limited.
+local function ShouldStayOut(actor, enemy, police_only)
+	if CLIENT or not IsValid(enemy) or not actor:IsCivilian() then return false end
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return false end
 	local pos = npc:GetPos()
@@ -68,7 +93,7 @@ local function ShouldStayOut(actor, enemy)
 			if other:HasTeam('police') then
 				local other_npc = other:GetNPC()
 				if IsValid(other_npc) and other_npc:GetPos():DistToSqr(pos) < LAW_RADIUS_SQR then return true end
-			elseif other:HasTeam('residents') then
+			elseif not police_only and other:HasTeam('residents') then
 				civilians = civilians + 1
 				if civilians >= MAX_CIVILIAN_FIGHTERS then return true end
 			end
@@ -77,10 +102,18 @@ local function ShouldStayOut(actor, enemy)
 	return false
 end
 
+-- @return boolean the police already fight this enemy near the (civilian) actor
+function Actor:PoliceFights(enemy)
+	return ShouldStayOut(self, enemy, true)
+end
+
 -- @param enemy entity|nil who the actor reacts to
 function Actor:GetReactionForProtect(enemy)
 	local reaction = PickReaction(self, self.data.at_protect, enemy)
-	if reaction == 'defense' and ShouldStayOut(self, enemy) then return 'fear' end
+	if reaction == 'defense' and (self:IsStayingOut() or ShouldStayOut(self, enemy)) then
+		self:StayOutOfFight()
+		return 'fear'
+	end
 	return reaction
 end
 

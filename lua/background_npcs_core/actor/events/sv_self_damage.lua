@@ -74,11 +74,26 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			if ActorTarget:HasTeam(ActorAttacker) then
 				ActorTarget:RemoveEnemy(attacker)
 				ActorAttacker:RemoveEnemy(target)
+				-- a teammate's stray bullet: a calm civilian runs from whoever the shooter fights
+				local danger = ActorAttacker:GetNearEnemy()
+				if ActorTarget:IsCivilian() and ActorTarget:EqualStateGroup('calm') and IsValid(danger) and danger ~= target then
+					ActorTarget:AddEnemy(danger, 'fear')
+					ActorTarget:SetState('fear')
+					ActorTarget:StayOutOfFight()
+				end
 				return true
 			end
 		end
 
-		local reaction = ActorTarget:GetReactionForDamage(attacker)
+		-- Stray hit: the shooter fights someone else. A civilian runs instead of answering.
+		local stray = ActorAttacker ~= nil and ActorAttacker:EnemiesCount() > 0 and not ActorAttacker:HasEnemy(target)
+		local reaction
+		if stray and ActorTarget:IsCivilian() then
+			reaction = 'fear'
+			ActorTarget:StayOutOfFight()
+		else
+			reaction = ActorTarget:GetReactionForDamage(attacker)
+		end
 		ActorTarget:SetReaction(reaction)
 
 		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)

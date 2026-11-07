@@ -83,8 +83,20 @@ bgNPC.States.Register('defense', 'danger', {
 			return
 		end
 
-		-- the weapon comes out right away; only the repositioning below is throttled
 		local data = actor:GetStateData()
+		local now = CurTime()
+
+		-- the police took over: a civilian leaves the fight to them
+		if (data.next_police_check or 0) <= now then
+			data.next_police_check = now + 1
+			if actor:IsCivilian() and actor:PoliceFights(enemy) then
+				actor:StayOutOfFight()
+				actor:SetState('fear')
+				return
+			end
+		end
+
+		-- the weapon comes out right away; only the repositioning below is throttled
 		if not data.disableWeapon then actor:PrepareWeapon() end
 
 		if squad then
@@ -95,7 +107,6 @@ bgNPC.States.Register('defense', 'danger', {
 
 		if actor:IsMeleeWeapon() and ChaseMelee(actor, enemy) then return end
 
-		local now = CurTime()
 		if (data.next_move or 0) > now then return end
 		data.next_move = now + REPOSITION_PERIOD
 

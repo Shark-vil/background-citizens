@@ -34,6 +34,9 @@ local SIDESTEP_DIST = 80
 local CONTACT_PUSH = 60
 local AIM_TURN_RATE = 540 -- degrees per second while moving in combat
 local EYE_OFFSET = Vector(0, 0, 62)
+local LOF_HULL = Vector(10, 10, 10) -- covers the spread of a few shots
+local LOF_STEP_DIST = 120
+local LOF_STEP_PERIOD = 1.5
 local HULL_MINS, HULL_MAXS = Vector(-13, -13, 0), Vector(13, 13, 72)
 local DOOR_CLASSES = { func_door = true, func_door_rotating = true, prop_door_rotating = true }
 
@@ -305,6 +308,34 @@ function ENT:CanSeeEnemy(enemy)
 	return tr.Entity == enemy or not tr.Hit
 end
 
+-- @return boolean someone who is not an enemy stands between the bot and its target
+function ENT:FriendInLineOfFire(enemy)
+	local tr = util.TraceHull({
+		start = self:BGN_EyePos(),
+		endpos = enemy:WorldSpaceCenter(),
+		mins = -LOF_HULL,
+		maxs = LOF_HULL,
+		filter = { self, self.weapon, enemy },
+		mask = MASK_SHOT,
+	})
+	local ent = tr.Entity
+	if not IsValid(ent) or not (ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer()) then return false end
+	local actor = bgNPC.Actors.Get(self)
+	return not (actor and actor:HasEnemy(ent))
+end
+
+-- Steps to the side of the line to the enemy (left or right at random) to get a clear shot
+function ENT:StepOutOfLine(enemy)
+	local now = CurTime()
+	if now < (self.next_lof_step or 0) then return end
+	self.next_lof_step = now + LOF_STEP_PERIOD
+	local dir = enemy:GetPos() - self:GetPos()
+	dir.z = 0
+	dir:Normalize()
+	local side = Vector(-dir.y, dir.x, 0) * (math.random(2) == 1 and LOF_STEP_DIST or -LOF_STEP_DIST)
+	self:BGN_MoveTo(self:GetPos() + side, true)
+end
+
 function ENT:Attack(enemy, stats)
 	local now = CurTime()
 	local set = ACTIVITIES[stats.hold] or ACTIVITIES.none
@@ -388,6 +419,11 @@ function ENT:UpdateCombat()
 
 	local to_enemy = (enemy:GetPos() - self:GetPos()):GetNormalized()
 	if self:GetForward():Dot(to_enemy) < 0.7 then return end
+
+	if not stats.melee and self:FriendInLineOfFire(enemy) then
+		self:StepOutOfLine(enemy)
+		return
+	end
 
 	self:Attack(enemy, stats)
 end

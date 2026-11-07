@@ -63,7 +63,7 @@ bgNPC.States.Register('fear', 'danger', {
 		local npc = actor:GetNPC()
 
 		-- A planning brain (GOAP) already weighs the weapon in hand, the redirect is for the FSM only.
-		local active_weapon = not actor.brain.PickReaction and actor:GetBody():GetActiveWeapon()
+		local active_weapon = not actor.brain.PickReaction and not actor:IsStayingOut() and actor:GetBody():GetActiveWeapon()
 		if IsValid(active_weapon) then
 			actor.weapon = active_weapon:GetClass()
 			actor:SetState('defense', nil, true)
@@ -94,7 +94,7 @@ bgNPC.States.Register('fear', 'danger', {
 			local data = actor:GetStateData()
 			data.rearm_retry = data.rearm_retry or CurTime() + 3
 
-			if not actor.brain.PickReaction and actor.weapon and data.rearm_retry < CurTime() then
+			if not actor.brain.PickReaction and actor.weapon and not actor:IsStayingOut() and data.rearm_retry < CurTime() then
 				data.rearm_retry = CurTime() + 3
 				actor:SetState('defense', nil, true)
 				if not actor:HasState('fear') then return end
