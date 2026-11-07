@@ -1,13 +1,5 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Actors = bgNPC.Actors
-local CLIENT = CLIENT
-local SERVER = SERVER
-local IsValid = IsValid
-local pairs = pairs
-local istable = istable
-local table_insert = table.insert
-local table_remove = table.remove
 local table_HasValueBySeq = bgNPC.Table.HasValue
 --
 
@@ -37,7 +29,7 @@ if not bgNPC.actors_by_uid then Actors.ResetStorage() end
 local function RemoveFirst(list, value)
 	for i = #list, 1, -1 do
 		if list[i] == value then
-			table_remove(list, i)
+			table.remove(list, i)
 			return true
 		end
 	end
@@ -55,14 +47,14 @@ function Actors.Register(actor)
 
 	local actor_type = actor:GetType()
 
-	table_insert(bgNPC.actors, actor)
-	table_insert(bgNPC.npcs, npc)
+	table.insert(bgNPC.actors, actor)
+	table.insert(bgNPC.npcs, npc)
 
 	bgNPC.factors[actor_type] = bgNPC.factors[actor_type] or {}
-	table_insert(bgNPC.factors[actor_type], actor)
+	table.insert(bgNPC.factors[actor_type], actor)
 
 	bgNPC.fnpcs[actor_type] = bgNPC.fnpcs[actor_type] or {}
-	table_insert(bgNPC.fnpcs[actor_type], npc)
+	table.insert(bgNPC.fnpcs[actor_type], npc)
 
 	bgNPC.actors_by_uid[actor.uid] = actor
 end
@@ -77,7 +69,7 @@ function Actors.Unregister(npc)
 	for i = #list, 1, -1 do
 		if list[i]:GetNPC() == npc then
 			actor = list[i]
-			table_remove(list, i)
+			table.remove(list, i)
 			break
 		end
 	end
@@ -103,24 +95,24 @@ function Actors.ClearRemoved()
 		local actor = actors[i]
 		if not IsValid(actor:GetNPC()) then
 			bgNPC.actors_by_uid[actor.uid] = nil
-			table_remove(actors, i)
+			table.remove(actors, i)
 		end
 	end
 
 	local npcs = bgNPC.npcs
 	for i = #npcs, 1, -1 do
-		if not IsValid(npcs[i]) then table_remove(npcs, i) end
+		if not IsValid(npcs[i]) then table.remove(npcs, i) end
 	end
 
 	for _, list in pairs(bgNPC.factors) do
 		for i = #list, 1, -1 do
-			if not IsValid(list[i]:GetNPC()) then table_remove(list, i) end
+			if not IsValid(list[i]:GetNPC()) then table.remove(list, i) end
 		end
 	end
 
 	for _, list in pairs(bgNPC.fnpcs) do
 		for i = #list, 1, -1 do
-			if not IsValid(list[i]) then table_remove(list, i) end
+			if not IsValid(list[i]) then table.remove(list, i) end
 		end
 	end
 end

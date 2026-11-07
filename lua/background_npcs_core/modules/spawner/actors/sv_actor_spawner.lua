@@ -1,11 +1,3 @@
-local bgNPC = bgNPC
-local hook = hook
-local player = player
-local IsValid = IsValid
-local pairs = pairs
-local GetConVar = GetConVar
-local CurTime = CurTime
-local isbool = isbool
 local StopAnimator = bgNPC.Animator.Stop
 --
 

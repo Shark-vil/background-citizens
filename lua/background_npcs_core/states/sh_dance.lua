@@ -1,5 +1,4 @@
 if SERVER then
-	local IsValid = IsValid
 
 	bgNPC.States.Register('dance', 'calm', {
 		pre_start = function(actor, state, data)

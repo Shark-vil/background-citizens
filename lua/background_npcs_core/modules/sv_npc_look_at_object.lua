@@ -1,21 +1,14 @@
-local bgNPC = bgNPC
-local ents_FindInSphere = ents.FindInSphere
-local util_TraceLine = util.TraceLine
-local hook_Run = hook.Run
-local math_abs = math.abs
-local IsValid = IsValid
-local coroutine_yield = coroutine.yield
 --
 
 local function ParseEntitiesForActorAsync(actor)
 	local npc = actor:GetNPC()
 	local npc_pos = npc:GetPos()
-	local entities = ents_FindInSphere(npc_pos, 1000)
+	local entities = ents.FindInSphere(npc_pos, 1000)
 
 	for k = 1, #entities do
 		local ent = entities[k]
 
-		coroutine_yield()
+		coroutine.yield()
 
 		if not IsValid(ent) then
 			continue
@@ -23,7 +16,7 @@ local function ParseEntitiesForActorAsync(actor)
 
 		local ent_pos = ent:GetPos()
 
-		coroutine_yield()
+		coroutine.yield()
 
 		if not IsValid(npc) then break end
 
@@ -41,13 +34,13 @@ local function ParseEntitiesForActorAsync(actor)
 			diff = diff - 360
 		end
 
-		diff = math_abs(diff)
+		diff = math.abs(diff)
 
 		local dist = npc_pos:Distance(ent_pos)
-		hook_Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
+		hook.Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
 
 		if npc:IsNPC() then
-			local tr = util_TraceLine({
+			local tr = util.TraceLine({
 				start = npc:GetShootPos(),
 				endpos = npc:GetShootPos() + npc:GetForward() * 1000,
 				filter = function(trace_entity)
@@ -56,7 +49,7 @@ local function ParseEntitiesForActorAsync(actor)
 			})
 
 			if tr.Hit and IsValid(ent) and actor:IsAlive() then
-				hook_Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
+				hook.Run('BGN_ActorLookAtObject', actor, ent, dist, diff)
 			end
 		end
 	end
@@ -71,9 +64,9 @@ bgNPC.Tasks.Add('BGN_Timer_ActorLookAtObject', function()
 			if actor and actor:IsAlive() then
 				ParseEntitiesForActorAsync(actor)
 			end
-			coroutine_yield()
+			coroutine.yield()
 		end
 
-		coroutine_yield()
+		coroutine.yield()
 	end
 end)

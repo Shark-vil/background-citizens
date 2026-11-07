@@ -1,7 +1,3 @@
-local CurTime = CurTime
-local player_GetHumans = player.GetHumans
-local ipairs = ipairs
-local IsValid = IsValid
 --
 local asset = bgNPC.Modules.Get('wanted')
 local TeamParentModule = bgNPC.Modules.Get('team_parent')
@@ -186,7 +182,7 @@ timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
 	if impunity_last_reduction_period > CurTime() then return end
 	impunity_last_reduction_period = CurTime() + impunity_limit_reduction_period
 
-	for _, ply in ipairs(player_GetHumans()) do
+	for _, ply in ipairs(player.GetHumans()) do
 		if IsValid(ply) then
 			local current_impunity = (ply.bgn_wanted_module_impunity or 0)
 			if current_impunity > 0 then

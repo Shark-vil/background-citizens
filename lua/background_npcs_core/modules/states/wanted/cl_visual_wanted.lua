@@ -1,21 +1,3 @@
-local bgNPC = bgNPC
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local IsValid = IsValid
-local GetConVar = GetConVar
-local LocalPlayer = LocalPlayer
-local cam_Start3D2D = cam.Start3D2D
-local cam_End3D2D = cam.End3D2D
-local draw_SimpleTextOutlined = draw.SimpleTextOutlined
-local halo_Add = halo.Add
-local surface_SetFont = surface.SetFont
-local surface_SetTextColor = surface.SetTextColor
-local surface_SetTextPos = surface.SetTextPos
-local surface_SetDrawColor = surface.SetDrawColor
-local surface_SetMaterial = surface.SetMaterial
-local surface_DrawText = surface.DrawText
-local surface_DrawTexturedRect = surface.DrawTexturedRect
-local math_Round = math.Round
-local string_Replace = string.Replace
 --
 local asset = bgNPC.Modules.Get('wanted')
 local text_wanted_font_name = 'Trebuchet24'
@@ -72,7 +54,7 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnPlayerWanted', function()
 
 	if targets_count == 0 then return end
 
-	halo_Add(targets, wanted_config.color['wanted_halo'], 3, 3, 2)
+	halo.Add(targets, wanted_config.color['wanted_halo'], 3, 3, 2)
 end)
 
 hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
@@ -90,20 +72,20 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 	if not WantedClass then return end
 
 	if is_draw_text then
-		surface_SetFont(text_wanted_font_name)
-		surface_SetTextColor(255, 0, 0)
-		surface_SetTextPos(30, 30)
+		surface.SetFont(text_wanted_font_name)
+		surface.SetTextColor(255, 0, 0)
+		surface.SetTextPos(30, 30)
 
 		local wanted_text
 		local time = WantedClass.wait_time
 		if time > 60 then
-			time = math_Round(time / 60)
-			wanted_text = string_Replace(wanted_config.language['wanted_text_m'], '%time%', time)
+			time = math.Round(time / 60)
+			wanted_text = string.Replace(wanted_config.language['wanted_text_m'], '%time%', time)
 		else
-			wanted_text = string_Replace(wanted_config.language['wanted_text_s'], '%time%', time)
+			wanted_text = string.Replace(wanted_config.language['wanted_text_s'], '%time%', time)
 		end
 
-		surface_DrawText(wanted_text)
+		surface.DrawText(wanted_text)
 	end
 
 	if is_draw_stars then
@@ -111,9 +93,9 @@ hook.Add('HUDPaint', 'BGN_DrawWantedText', function()
 		local x_update = x
 
 		for i = 1, WantedClass.level do
-			surface_SetDrawColor(255, 255, 255, 255)
-			surface_SetMaterial(wanted_config.texture['wanted_star'])
-			surface_DrawTexturedRect(x_update, 60, 30, 30)
+			surface.SetDrawColor(255, 255, 255, 255)
+			surface.SetMaterial(wanted_config.texture['wanted_star'])
+			surface.DrawTexturedRect(x_update, 60, 30, 30)
 			x_update = x_update + 40
 		end
 	end
@@ -144,7 +126,7 @@ hook.Add('PreDrawHalos', 'BGN_RenderOutlineOnNPCCallingPolice', function()
 
 	if npcs_count == 0 then return end
 
-	halo_Add(npcs, wanted_config.color['calling_police_halo'], 3, 3, 2)
+	halo.Add(npcs, wanted_config.color['calling_police_halo'], 3, 3, 2)
 end)
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', function()
@@ -170,9 +152,9 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_RenderTextAboveNPCCallingPolice', fun
 		angle:RotateAroundAxis(angle:Forward(), 90)
 		angle:RotateAroundAxis(angle:Right(), 90)
 
-		cam_Start3D2D(npc:GetPos() + npc:GetForward() + npc:GetUp() * 78, angle, 0.25)
-			draw_SimpleTextOutlined(text, text_calling_police_font_name, 0, -15, color_text,
+		cam.Start3D2D(npc:GetPos() + npc:GetForward() + npc:GetUp() * 78, angle, 0.25)
+			draw.SimpleTextOutlined(text, text_calling_police_font_name, 0, -15, color_text,
 			TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_text_outline)
-		cam_End3D2D()
+		cam.End3D2D()
 	end
 end)

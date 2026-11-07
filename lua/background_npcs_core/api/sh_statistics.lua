@@ -1,9 +1,5 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Statistics = bgNPC.Statistics
-local IsValid = IsValid
-local pairs = pairs
-local hook_Run = hook.Run
 --
 
 -- attacker -> { actor_type -> kills }
@@ -31,19 +27,19 @@ end
 local function SetKills(attacker, actor_type, value)
 	kills[attacker] = kills[attacker] or {}
 	kills[attacker][actor_type] = value
-	hook_Run('BGN_SetKillingStatistic', attacker, actor_type, value)
+	hook.Run('BGN_SetKillingStatistic', attacker, actor_type, value)
 end
 
 local function ResetAttacker(attacker)
 	if not kills[attacker] then return false end
 	kills[attacker] = nil
-	hook_Run('BGN_ResetKillingStatistic', attacker)
+	hook.Run('BGN_ResetKillingStatistic', attacker)
 	return true
 end
 
 local function ResetAll()
 	kills = {}
-	hook_Run('BGN_ResetAllKillingStatistic')
+	hook.Run('BGN_ResetAllKillingStatistic')
 end
 
 if CLIENT then

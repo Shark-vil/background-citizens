@@ -1,16 +1,5 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Points = bgNPC.Points
-local IsValid = IsValid
-local ipairs = ipairs
-local Vector = Vector
-local util_TraceLine = util.TraceLine
-local table_remove = table.remove
-local table_insert = table.insert
-local ents_FindInSphere = ents.FindInSphere
-local math_sqrt = math.sqrt
-local math_Round = math.Round
-local math_abs = math.abs
 --
 
 -- ---------------------------------------------------------------------------
@@ -145,7 +134,7 @@ local world_trace = {
 local function IsWorldBetween(start_pos, end_pos)
 	world_trace.start = start_pos
 	world_trace.endpos = end_pos
-	return util_TraceLine(world_trace).Hit
+	return util.TraceLine(world_trace).Hit
 end
 
 local floor_trace = {}
@@ -153,11 +142,11 @@ local floor_trace = {}
 local function SnapToFloor(pos)
 	floor_trace.start = pos + VECTOR_UP_50
 	floor_trace.endpos = pos - VECTOR_DOWN_1000
-	return util_TraceLine(floor_trace).HitPos + VECTOR_UP_20
+	return util.TraceLine(floor_trace).HitPos + VECTOR_UP_20
 end
 
 local function CanSeeDoorFrom(door, pos)
-	local tr = util_TraceLine({
+	local tr = util.TraceLine({
 		start = pos,
 		endpos = door:GetPos(),
 		filter = function(ent) return ent == door end
@@ -174,7 +163,7 @@ local function GetDoorPassPoint(door, start_pos)
 	local forward_dot, right_dot = dir:Dot(forward), dir:Dot(right)
 	local shift = 20
 
-	if math_abs(forward_dot) > math_abs(right_dot) then
+	if math.abs(forward_dot) > math.abs(right_dot) then
 		return door_pos + forward * shift * (forward_dot > 0 and 1 or -1)
 	end
 
@@ -192,8 +181,8 @@ local function CollectUnlockedDoors(start_pos, end_pos)
 		seen[ent] = true
 	end
 
-	for _, ent in ipairs(ents_FindInSphere(start_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
-	for _, ent in ipairs(ents_FindInSphere(end_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
+	for _, ent in ipairs(ents.FindInSphere(start_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
+	for _, ent in ipairs(ents.FindInSphere(end_pos, DOOR_SEARCH_RADIUS)) do collect(ent) end
 
 	return doors
 end
@@ -202,7 +191,7 @@ end
 -- If a wall is in the way, tries to route through nearby unlocked doors.
 local function GetPrimitivePath(start_pos, end_pos)
 	local break_dist_sqr = PRIMITIVE_POINT_SPACING ^ 2
-	local points_limit = math_Round(math_sqrt(start_pos:DistToSqr(end_pos) / break_dist_sqr))
+	local points_limit = math.Round(math.sqrt(start_pos:DistToSqr(end_pos) / break_dist_sqr))
 	local direction = (end_pos - start_pos):GetNormalized()
 	local path = { SnapToFloor(start_pos) }
 	local doors = IsWorldBetween(start_pos, end_pos) and CollectUnlockedDoors(start_pos, end_pos) or {}
@@ -218,7 +207,7 @@ local function GetPrimitivePath(start_pos, end_pos)
 				and (not best_dist or best_dist > dist)
 				and (CanSeeDoorFrom(door, end_pos) or CanSeeDoorFrom(door, from_pos))
 			then
-				table_remove(doors, i)
+				table.remove(doors, i)
 				best_pos = GetDoorPassPoint(door, start_pos)
 				best_dist = dist
 			end
@@ -229,7 +218,7 @@ local function GetPrimitivePath(start_pos, end_pos)
 
 	local door_pos = NextDoorPoint(start_pos)
 	if door_pos then
-		table_insert(path, door_pos)
+		table.insert(path, door_pos)
 		start_pos = Vector(door_pos.x, door_pos.y, start_pos.z)
 	end
 
@@ -244,15 +233,15 @@ local function GetPrimitivePath(start_pos, end_pos)
 
 		door_pos = NextDoorPoint(point)
 		if door_pos then
-			table_insert(path, door_pos)
+			table.insert(path, door_pos)
 			offset = PRIMITIVE_POINT_SPACING
 			start_pos = door_pos
 		else
-			table_insert(path, point)
+			table.insert(path, point)
 		end
 	end
 
-	table_insert(path, SnapToFloor(end_pos))
+	table.insert(path, SnapToFloor(end_pos))
 
 	return path
 end
@@ -289,7 +278,7 @@ local function TrimPathStart(path, start_pos)
 		if pos:DistToSqr(start_pos) >= MAX_MOVE_DISTANCE_SQR or IsWorldBetween(start_pos, pos) then
 			break
 		end
-		table_remove(path, 1)
+		table.remove(path, 1)
 	end
 	return path
 end

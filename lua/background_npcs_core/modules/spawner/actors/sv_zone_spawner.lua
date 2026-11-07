@@ -1,11 +1,3 @@
-local bgNPC = bgNPC
-local IsValid = IsValid
-local pairs = pairs
-local istable = istable
-local GetConVar = GetConVar
-local CurTime = CurTime
-local isbool = isbool
-local table_insert = table.insert
 --
 
 --[[
@@ -145,7 +137,7 @@ function bgNPC:GetSpawnAreasAtPosition(position)
 
 	for _, area in pairs(bgNPC.SpawnArea) do
 		if position:WithinAABox(area.startPoint, area.endPoint) then
-			table_insert(list, area)
+			table.insert(list, area)
 		end
 	end
 

@@ -1,15 +1,3 @@
-local util = util
-local game = game
-local GetConVar = GetConVar
-local ipairs = ipairs
-local table = table
-local Vector = Vector
-local Angle = Angle
-local IsFirstTimePredicted = IsFirstTimePredicted
-local ClientsideModel = ClientsideModel
-local hook = hook
-local render = render
-local LocalPlayer = LocalPlayer
 --
 TOOL.Category = 'Background NPCs'
 TOOL.Name = '#tool.bgn_seat_tool.name'

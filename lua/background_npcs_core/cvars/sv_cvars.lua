@@ -1,6 +1,3 @@
-local cvars = cvars
-local pairs = pairs
-local RunConsoleCommand = RunConsoleCommand
 --
 cvars.AddChangeCallback('bgn_max_npc', function(cvar_name, old_value, new_value)
 	if old_value == new_value then return end

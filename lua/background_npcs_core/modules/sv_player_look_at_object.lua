@@ -1,8 +1,4 @@
-local IsValid = IsValid
-local RealTime = RealTime
 local player_GetAll =  player.GetAll
-local util_TraceLine = util.TraceLine
-local hook_Run = hook.Run
 --
 
 bgNPC.Tasks.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
@@ -12,7 +8,7 @@ bgNPC.Tasks.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
 		local ply = players[i]
 
 		if IsValid(ply) and ply:Alive() then
-			local tr = util_TraceLine({
+			local tr = util.TraceLine({
 				start = ply:EyePos(),
 				endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000,
 				filter = function(ent)
@@ -40,7 +36,7 @@ bgNPC.Tasks.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
 
 				if viewed_entity and call_hook_delay then
 					local observation_time = RealTime() - call_hook_delay
-					if hook_Run('BGN_PlayerLookAtObject', ply, ent, observation_time) then
+					if hook.Run('BGN_PlayerLookAtObject', ply, ent, observation_time) then
 						ply.bgn_look_at_object_hook_delay = RealTime()
 					end
 				end

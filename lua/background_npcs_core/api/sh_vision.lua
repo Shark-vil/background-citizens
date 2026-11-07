@@ -1,12 +1,6 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Vision = bgNPC.Vision
 local Actors = bgNPC.Actors
-local IsValid = IsValid
-local istable = istable
-local math_cos = math.cos
-local math_rad = math.rad
-local util_TraceLine = util.TraceLine
 local table_HasValueBySeq = bgNPC.Table.HasValue
 --
 
@@ -22,7 +16,7 @@ function Vision.HasLineOfSight(watcher, ent)
 	trace_data.endpos = ent:WorldSpaceCenter()
 	trace_data.filter = watcher
 
-	local tr = util_TraceLine(trace_data)
+	local tr = util.TraceLine(trace_data)
 	return tr.Hit and tr.Entity == ent, tr.Entity
 end
 
@@ -40,7 +34,7 @@ function Vision.NPCCanSeePos(ent, pos, fov)
 	local length = direction:Length()
 	if length == 0 then return true end
 
-	return ent:GetAimVector():Dot(direction) / length >= math_cos(math_rad(fov or 90))
+	return ent:GetAimVector():Dot(direction) / length >= math.cos(math.rad(fov or 90))
 end
 
 -- Checks whether the position is inside the player's view.

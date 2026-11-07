@@ -1,43 +1,3 @@
-local bgNPC = bgNPC
-local game = game
-local util = util
-local hook = hook
-local surface = surface
-local concommand = concommand
-local table = table
-local cam = cam
-local render = render
-local draw = draw
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local language = language
-local tostring = tostring
-local Vector = Vector
-local GetConVar = GetConVar
-local LocalPlayer = LocalPlayer
-local IsFirstTimePredicted = IsFirstTimePredicted
-local ipairs = ipairs
-local pairs = pairs
-local util_TraceLine = util.TraceLine
-local table_insert = table.insert
-local is_infmap = bgNPC.Util.IsInfinityMap()
-if is_infmap then
-	util_TraceLine = function(...) return util.TraceLine(...) end
-end
-
-local render_SetColorMaterial, render_DrawSphere, render_DrawLine, draw_SimpleTextOutlined, cam_Start3D2D, cam_End3D2D, surface_SetFont, surface_SetTextColor, surface_SetTextPos, surface_DrawText
-
-if CLIENT then
-	render_SetColorMaterial = render.SetColorMaterial
-	render_DrawSphere = render.DrawSphere
-	render_DrawLine = render.DrawLine
-	draw_SimpleTextOutlined = draw.SimpleTextOutlined
-	cam_Start3D2D = cam.Start3D2D
-	cam_End3D2D = cam.End3D2D
-	surface_SetFont = surface.SetFont
-	surface_SetTextColor = surface.SetTextColor
-	surface_SetTextPos = surface.SetTextPos
-	surface_DrawText = surface.DrawText
-end
 --
 local hud_text_font_name, clr, clr_green, clr_link, clr_link_alpha, clr_point, clr_point_notlinks, vec_20, color_white, color_black, clr_good, clr_bad, clr_parent, clr_parent_alpha, clr_future, default_text_font_name
 
@@ -100,7 +60,7 @@ if SERVER then
 else
 	function TOOL:GetTraceInfo()
 		local ply = self:GetOwner()
-		local tr = util_TraceLine({
+		local tr = util.TraceLine({
 			start = ply:GetShootPos(),
 			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
 			filter = function(ent)
@@ -277,7 +237,7 @@ else
 					local pos = node:GetPos()
 
 					if bgNPC.Vision.PlayerCanSeePos(owner, pos) and owner:GetPos():DistToSqr(pos) <= dist then
-						local tr = util_TraceLine({
+						local tr = util.TraceLine({
 							start = owner:GetShootPos(),
 							endpos = node.position,
 							filter = function(ent)
@@ -287,7 +247,7 @@ else
 							end
 						})
 
-						table_insert(NewRangePoints, {
+						table.insert(NewRangePoints, {
 							index = index,
 							node = node,
 							behindTheWall = tr.Hit
@@ -406,7 +366,7 @@ else
 				local output = LerpVector(fraction, startPos, endPos)
 
 				if autoalignment then
-					local tr = util_TraceLine({
+					local tr = util.TraceLine({
 						start = Vector(output.x, output.y, oldZ) + Vector(0, 0, 100),
 						endpos = output - Vector(0, 0, 500),
 						filter = function(ent)
@@ -418,9 +378,9 @@ else
 
 					if not tr.Hit then return {} end
 					oldZ = output.z
-					table_insert(points, tr.HitPos + Vector(0, 0, 10))
+					table.insert(points, tr.HitPos + Vector(0, 0, 10))
 				else
-					table_insert(points, output)
+					table.insert(points, output)
 				end
 			end
 		end
@@ -454,30 +414,30 @@ else
 	end
 
 	function TOOL:DrawHUD()
-		surface_SetFont(hud_text_font_name)
-		surface_SetTextColor(255, 255, 255)
-		surface_SetTextPos(30, ScrH() / 2)
+		surface.SetFont(hud_text_font_name)
+		surface.SetTextColor(255, 255, 255)
+		surface.SetTextPos(30, ScrH() / 2)
 		local tool_type = self:GetCurrentType()
 		if tool_type == 'creator' then
-			surface_DrawText('#tool.bgn_point_editor.vis.creator')
+			surface.DrawText('#tool.bgn_point_editor.vis.creator')
 		elseif tool_type == 'remover' then
 			if self.LastNodeRemover then
-				surface_DrawText(language.GetPhrase('tool.bgn_point_editor.vis.last_remover')
+				surface.DrawText(language.GetPhrase('tool.bgn_point_editor.vis.last_remover')
 					.. ' - ' .. tostring(BGN_NODE:CountNodesOnMap()))
 			else
-				surface_DrawText('#tool.bgn_point_editor.vis.remover')
+				surface.DrawText('#tool.bgn_point_editor.vis.remover')
 			end
 		elseif tool_type == 'linker' then
 			if self.LinkFullParents then
-				surface_DrawText('#tool.bgn_point_editor.vis.linker_parents')
+				surface.DrawText('#tool.bgn_point_editor.vis.linker_parents')
 			else
-				surface_DrawText('#tool.bgn_point_editor.vis.linker')
+				surface.DrawText('#tool.bgn_point_editor.vis.linker')
 			end
 		elseif tool_type == 'parents_cleaner' then
 			if self.LinkFullParents then
-				surface_DrawText('#tool.bgn_point_editor.vis.linker_cleaner_parents')
+				surface.DrawText('#tool.bgn_point_editor.vis.linker_cleaner_parents')
 			else
-				surface_DrawText('#tool.bgn_point_editor.vis.linker_cleaner')
+				surface.DrawText('#tool.bgn_point_editor.vis.linker_cleaner')
 			end
 		end
 	end
@@ -669,13 +629,13 @@ else
 			local cam_angle = GetCameraAngle()
 			local IsDrawingParentsNode = {}
 
-			render_SetColorMaterial()
+			render.SetColorMaterial()
 
 			for i = 1, count do
 				local value = tool.RangePoints[i]
 				local index = value.index
 				local node = value.node
-				table_insert(IsDrawingParentsNode, node)
+				table.insert(IsDrawingParentsNode, node)
 
 				local pos = node:GetPos()
 
@@ -683,44 +643,44 @@ else
 					if not bgNPC.Table.HasValue(IsDrawingParentsNode, parentNode) then
 						if node:HasLink(parentNode, 'walk') then
 							if value.behindTheWall then
-								render_DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
+								render.DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
 							else
-								render_DrawLine(pos, parentNode:GetPos(), clr_link)
+								render.DrawLine(pos, parentNode:GetPos(), clr_link)
 							end
 						elseif is_show_global_nodes then
 							if value.behindTheWall then
-								render_DrawLine(pos, parentNode:GetPos(), clr_parent_alpha)
+								render.DrawLine(pos, parentNode:GetPos(), clr_parent_alpha)
 							else
-								render_DrawLine(pos, parentNode:GetPos(), clr_parent)
+								render.DrawLine(pos, parentNode:GetPos(), clr_parent)
 							end
 						end
 					end
 				end
 
 				if index == tool.SelectedPointId and tool.CreateSelectedNode then
-					render_DrawSphere(node.position, 10, 5, 5, clr_green)
+					render.DrawSphere(node.position, 10, 5, 5, clr_green)
 				else
 					if #node:GetLinks('walk') == 0 then
-						render_DrawSphere(pos, 10, 5, 5, clr_point_notlinks)
+						render.DrawSphere(pos, 10, 5, 5, clr_point_notlinks)
 					else
-						render_DrawSphere(pos, 10, 5, 5, clr_point)
+						render.DrawSphere(pos, 10, 5, 5, clr_point)
 					end
 				end
 
-				cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
+				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
 					if index == tool.SelectedPointId then
 						local linksCount = table.Count(node:GetLinks('walk'))
 						if linksCount ~= 0 then
-							draw_SimpleTextOutlined('Walk links - ' .. linksCount,
+							draw.SimpleTextOutlined('Walk links - ' .. linksCount,
 								default_text_font_name, 0, 0, color_white,
 								TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 						end
 
-						draw_SimpleTextOutlined('#tool.bgn_point_editor.vis.selected',
+						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.selected',
 							default_text_font_name, 0, 25, color_white,
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
 					end
-				cam_End3D2D()
+				cam.End3D2D()
 			end
 		end
 	end)
@@ -746,7 +706,7 @@ else
 						and node:CheckTraceSuccessToNode(tracePos)
 					then
 						tooFar = false
-						table_insert(futurePoints, node)
+						table.insert(futurePoints, node)
 					end
 				end
 			end
@@ -754,27 +714,27 @@ else
 			if tooFar and not tool.CreateSelectedNode then
 				local cam_angle = GetCameraAngle()
 
-				render_SetColorMaterial()
-				render_DrawSphere(tracePos, 10, 5, 5, clr)
-				cam_Start3D2D(tracePos + vec_20, cam_angle, 0.9)
-					draw_SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos',
+				render.SetColorMaterial()
+				render.DrawSphere(tracePos, 10, 5, 5, clr)
+				cam.Start3D2D(tracePos + vec_20, cam_angle, 0.9)
+					draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.lock_pos',
 						default_text_font_name, 0, 0, color_white,
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-				cam_End3D2D()
+				cam.End3D2D()
 			else
 				if tool.SelectedPointId == -1 then
 					local cam_angle = GetCameraAngle()
 
-					render_SetColorMaterial()
-					render_DrawSphere(tracePos, 10, 5, 5, clr_green)
-					cam_Start3D2D(tracePos + vec_20, cam_angle, 0.9)
-						draw_SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place',
+					render.SetColorMaterial()
+					render.DrawSphere(tracePos, 10, 5, 5, clr_green)
+					cam.Start3D2D(tracePos + vec_20, cam_angle, 0.9)
+						draw.SimpleTextOutlined('#tool.bgn_point_editor.vis.good_place',
 							default_text_font_name, 0, 0, color_white,
 							TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-					cam_End3D2D()
+					cam.End3D2D()
 
 					for _, futureNode in ipairs(futurePoints) do
-						render_DrawLine(tracePos, futureNode:GetPos(), clr_future)
+						render.DrawLine(tracePos, futureNode:GetPos(), clr_future)
 					end
 				end
 			end
@@ -786,18 +746,18 @@ else
 		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool or not tool.LinkerNode then return end
 
-		render_SetColorMaterial()
-		render_DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_green)
+		render.SetColorMaterial()
+		render.DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_green)
 
 		local tr = tool:GetTraceInfo()
 		if tr.Hit then
 			if tool.SelectedPointId ~= -1 and tool.LinkerNode.position:DistToSqr(tr.HitPos) <= 250000 then
 				local node = BGN_NODE:GetNodeByIndex(tool.SelectedPointId)
-				render_DrawSphere(node.position, 10, 5, 5, clr_good)
-				render_DrawLine(tool.LinkerNode.position, node.position, clr_good)
+				render.DrawSphere(node.position, 10, 5, 5, clr_good)
+				render.DrawLine(tool.LinkerNode.position, node.position, clr_good)
 			else
-				render_DrawLine(tool.LinkerNode.position, tr.HitPos, clr_bad)
-				render_DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_bad)
+				render.DrawLine(tool.LinkerNode.position, tr.HitPos, clr_bad)
+				render.DrawSphere(tool.LinkerNode.position, 10, 5, 5, clr_bad)
 			end
 		end
 	end)
@@ -822,12 +782,12 @@ else
 			end
 		end
 
-		render_SetColorMaterial()
-		render_DrawSphere(startPos, 10, 5, 5, clr_good)
+		render.SetColorMaterial()
+		render.DrawSphere(startPos, 10, 5, 5, clr_good)
 
 		local points = tool:AutoCreatePoints(startPos, endPos)
 		if #points == 0 and endNode then
-			render_DrawLine(startPos, endPos, clr_good)
+			render.DrawLine(startPos, endPos, clr_good)
 		else
 			do
 				local startPos = startPos
@@ -836,10 +796,10 @@ else
 
 				for i = 1, countPoints do
 					local pos = points[i]
-					render_DrawLine(startPos, pos, clr_good)
+					render.DrawLine(startPos, pos, clr_good)
 
 					if i ~= countPoints then
-						render_DrawSphere(pos, 10, 5, 5, clr_good)
+						render.DrawSphere(pos, 10, 5, 5, clr_good)
 
 						if is_autoparent then
 							for _, value in ipairs(tool.RangePoints) do
@@ -847,7 +807,7 @@ else
 								if node:CheckDistanceLimitToNode(pos) and node:CheckHeightLimitToNode(pos)
 									and node:CheckTraceSuccessToNode(pos)
 								then
-									render_DrawLine(pos, node:GetPos(), clr_future)
+									render.DrawLine(pos, node:GetPos(), clr_future)
 								end
 							end
 						end
@@ -856,7 +816,7 @@ else
 					startPos = pos
 				end
 
-				render_DrawLine(startPos, endPos, clr_good)
+				render.DrawLine(startPos, endPos, clr_good)
 			end
 		end
 	end)

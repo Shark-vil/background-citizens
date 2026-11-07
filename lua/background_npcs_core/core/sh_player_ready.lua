@@ -4,9 +4,7 @@
 		bgNPC.Util.IsPlayerReady(ply)
 --]]
 
-local bgNPC = bgNPC
 local Net = bgNPC.Net
-local IsValid = IsValid
 --
 
 function bgNPC.Util.IsPlayerReady(ply)

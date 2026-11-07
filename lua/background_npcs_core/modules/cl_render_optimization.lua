@@ -1,6 +1,3 @@
-local bgNPC = bgNPC
-local IsValid = IsValid
-local LocalPlayer = LocalPlayer
 --
 local is_active = GetConVar('bgn_cl_field_view_optimization'):GetBool()
 local min_range = GetConVar('bgn_cl_field_view_optimization_range'):GetFloat() ^ 2

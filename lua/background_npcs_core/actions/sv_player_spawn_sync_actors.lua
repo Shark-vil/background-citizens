@@ -1,7 +1,3 @@
-local hook = hook
-local bgNPC = bgNPC
-local timer = timer
-local IsValid = IsValid
 --
 
 hook.Add('BGN_PlayerReady', 'BGN_PlayerFirstInitSpawnerHook', function(ply)

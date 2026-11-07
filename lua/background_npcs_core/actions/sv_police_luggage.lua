@@ -1,6 +1,3 @@
-local math = math
-local table = table
-local hook = hook
 --
 local slapSounds = {
 	'physics/body/body_medium_impact_hard1.wav',

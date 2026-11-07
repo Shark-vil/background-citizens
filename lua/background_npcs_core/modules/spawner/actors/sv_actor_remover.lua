@@ -1,11 +1,3 @@
-local bgNPC = bgNPC
-local hook = hook
-local player = player
-local GetConVar = GetConVar
-local IsValid = IsValid
-local ipairs = ipairs
-local CurTime = CurTime
-local coroutine_yield = coroutine.yield
 --
 local fasted_teleport
 local bgn_enable
@@ -53,7 +45,7 @@ local function IsValidRemovePositionAsync(actor, npc)
 		local ply = player_list[player_index]
 		if not IsValid(ply) then continue end
 
-		coroutine_yield()
+		coroutine.yield()
 
 		local ply_pos = ply:GetPos()
 		local dist = npc_pos:DistToSqr(ply_pos)
@@ -71,13 +63,13 @@ local function IsValidRemovePositionAsync(actor, npc)
 				return false
 			end
 
-			coroutine_yield()
+			coroutine.yield()
 
 			if not actor.toRemove then
 				return false
 			end
 
-			coroutine_yield()
+			coroutine.yield()
 
 			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
 				return false
@@ -89,9 +81,8 @@ local function IsValidRemovePositionAsync(actor, npc)
 end
 
 bgNPC.Tasks.Add('bgn_actors_last_player_interaction', function(yield, wait)
-	local player_GetHumans = player.GetHumans
 	while true do
-		local players = player_GetHumans()
+		local players = player.GetHumans()
 		local actors = bgNPC.Actors.GetAll()
 		for i = 1, #actors do
 			local actor = actors[i]

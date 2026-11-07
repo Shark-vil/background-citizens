@@ -1,4 +1,3 @@
-local bgNPC = bgNPC
 local Util = bgNPC.Util
 local Modes = bgNPC.Modes
 --

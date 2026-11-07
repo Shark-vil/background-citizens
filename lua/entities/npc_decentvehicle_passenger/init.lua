@@ -7,9 +7,6 @@ AddCSLuaFile('entities/npc_decentvehicle/playermeta.lua')
 include('shared.lua')
 include('entities/npc_decentvehicle/playermeta.lua')
 
-local IsValid = IsValid
-local ipairs = ipairs
-local CurTime = CurTime
 
 function ENT:AttachModel()
 	local seat = self.Seat

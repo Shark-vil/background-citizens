@@ -1,7 +1,5 @@
-local bgNPC = bgNPC
 local Actors = bgNPC.Actors
 local States = bgNPC.States
-local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 --
 
 -- Calls the "update" callback of every actor's current state, one actor per tick.

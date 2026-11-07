@@ -13,9 +13,6 @@
 		bgNPC.IsInstanceOf(dog, Animal) -- true
 --]]
 
-local setmetatable = setmetatable
-local getmetatable = getmetatable
-local istable = istable
 --
 
 function bgNPC.Class(name, base)

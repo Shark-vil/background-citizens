@@ -1,7 +1,3 @@
-local Vector = Vector
-local math_random = math.random
-local IsValid = IsValid
-local GetConVar = GetConVar
 local table_RandomBySeq = bgNPC.Table.Random
 --
 
@@ -77,8 +73,8 @@ bgNPC.States.Register('defense', 'danger', {
 					local fallback_enemy_position = enemy_pos + enemy:GetForward() * -200
 					local fallback_position = npc_pos + npc:GetForward() * -200
 
-					fallback_enemy_position = fallback_enemy_position + Vector(math_random(0, 200), math_random(0, 200), 0)
-					fallback_position = fallback_position + Vector(math_random(0, 200), math_random(0, 200), 0)
+					fallback_enemy_position = fallback_enemy_position + Vector(math.random(0, 200), math.random(0, 200), 0)
+					fallback_position = fallback_position + Vector(math.random(0, 200), math.random(0, 200), 0)
 
 					if enemy_pos:DistToSqr(fallback_enemy_position) > enemy_pos:DistToSqr(fallback_position) then
 						actor:WalkToPos(fallback_enemy_position, 'run')

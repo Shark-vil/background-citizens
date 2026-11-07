@@ -19,13 +19,10 @@
 		BGN_AnimationStarted(info)  info: name, entity, animator, model, l_hand_bone_index, r_hand_bone_index
 --]]
 
-local bgNPC = bgNPC
 local Net = bgNPC.Net
 local Animator = bgNPC.Animator or {}
 bgNPC.Animator = Animator
 
-local IsValid = IsValid
-local CurTime = CurTime
 --
 
 local animations = Animator.animations or {}

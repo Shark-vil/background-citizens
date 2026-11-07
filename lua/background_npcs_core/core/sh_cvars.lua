@@ -10,15 +10,10 @@
 		bgNPC.CVars.OnChange(name, function(name, old, new) end, id)  -- both realms
 --]]
 
-local bgNPC = bgNPC
 local Net = bgNPC.Net
 local CVars = bgNPC.CVars or {}
 bgNPC.CVars = CVars
 
-local tostring = tostring
-local IsValid = IsValid
-local GetConVar = GetConVar
-local RunConsoleCommand = RunConsoleCommand
 --
 
 local registered = CVars.registered or {}

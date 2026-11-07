@@ -1,5 +1,3 @@
-local surface = surface
-local LocalPlayer = LocalPlayer
 --
 
 TOOL.Category = 'Background NPCs'

@@ -1,9 +1,3 @@
-local CreateConVar = CreateConVar
-local RunConsoleCommand = RunConsoleCommand
-local pairs = pairs
-local LocalPlayer = LocalPlayer
-local cvars = cvars
-local tonumber = tonumber
 --
 
 CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo,

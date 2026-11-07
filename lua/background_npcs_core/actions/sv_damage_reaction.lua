@@ -1,5 +1,3 @@
-local bgNPC = bgNPC
-local hook_Run = hook.Run
 --
 local WantedModule
 
@@ -48,6 +46,6 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 			actor:AddEnemy(enemy, reaction)
 		end
 
-		hook_Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
+		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, target, reaction)
 	end
 end)

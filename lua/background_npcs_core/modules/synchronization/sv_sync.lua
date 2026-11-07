@@ -1,9 +1,4 @@
-local bgNPC = bgNPC
-local player_GetHumans = player.GetHumans
-local util_CRC = util.CRC
 local Serialize = bgNPC.Net.Serialize
-local IsValid = IsValid
-local FrameTime = FrameTime
 --
 local current_pass = 0
 local function has_yield()
@@ -22,7 +17,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield)
 
 		do
 			local actors = bgNPC.Actors.GetAll()
-			local players = player_GetHumans()
+			local players = player.GetHumans()
 
 			for i = 1, #actors do
 				local actor = actors[i]
@@ -75,7 +70,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield)
 					npc_state = actor.npc_state,
 				}
 
-				local sync_hash = util_CRC(Serialize(sync_data))
+				local sync_hash = util.CRC(Serialize(sync_data))
 
 				for k = 1, #players do
 					local ply = players[k]

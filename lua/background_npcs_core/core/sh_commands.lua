@@ -13,12 +13,10 @@
 	Typed on a client, the command is forwarded to the server first.
 --]]
 
-local bgNPC = bgNPC
 local Net = bgNPC.Net
 local Commands = bgNPC.Commands or {}
 bgNPC.Commands = Commands
 
-local IsValid = IsValid
 --
 
 local list = Commands.list or {}

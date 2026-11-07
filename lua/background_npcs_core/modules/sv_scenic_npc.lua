@@ -1,11 +1,3 @@
-local IsValid = IsValid
-local isfunction = isfunction
-local timer_Simple = timer.Simple
-local ents_Create = ents.Create
-local table_remove = table.remove
-local table_insert = table.insert
-local math_random = math.random
-local ipairs = ipairs
 --
 local scenic_actors_parent = {}
 local scenic_actions = {}
@@ -24,7 +16,7 @@ local scenic_actions = {}
 scenic_actions['npc_cheering_citizen_looping'] = {
 	OnInit = function(actor_info, scenic_ent)
 		local actor = BGN_ACTOR:Instance(scenic_ent.npc, actor_info.npc_type)
-		table_insert(scenic_ent.actors, actor)
+		table.insert(scenic_ent.actors, actor)
 	end,
 	OnRemove = function(actor_info, scenic_ent)
 		scenic_ent.npc = nil
@@ -36,8 +28,8 @@ scenic_actions['npc_metrocop_abusing_male_wall_spread'] = {
 		local actor_citizen = BGN_ACTOR:Instance(scenic_ent.spreadwall_male, actor_info.npc_type)
 		local actor_police = BGN_ACTOR:Instance(scenic_ent.spreadwall_metrocop, 'police')
 
-		table_insert(scenic_ent.actors, actor_citizen)
-		table_insert(scenic_ent.actors, actor_police)
+		table.insert(scenic_ent.actors, actor_citizen)
+		table.insert(scenic_ent.actors, actor_police)
 	end,
 	OnRemove = function(actor_info, scenic_ent)
 		scenic_ent.spreadwall_male = nil
@@ -56,13 +48,13 @@ hook.Add('BGN_OnValidSpawnActor', 'BGN_ScenicNPC', function(npc_type, npc_data, 
 
 	if scenic_actors_parent[npc_class] then
 		local tbl = scenic_actors_parent[npc_class]
-		local id = math_random(1, #tbl)
+		local id = math.random(1, #tbl)
 		scenic_class = scenic_actors_parent[npc_class][id]
 	end
 
 	if not scenic_class then return end
 
-	scenic_ent = ents_Create(scenic_class)
+	scenic_ent = ents.Create(scenic_class)
 	scenic_ent:SetPos(position)
 	scenic_ent:Spawn()
 
@@ -71,7 +63,7 @@ hook.Add('BGN_OnValidSpawnActor', 'BGN_ScenicNPC', function(npc_type, npc_data, 
 	local actions = scenic_actions[scenic_class]
 	if not actions then return end
 
-	timer_Simple(.1, function()
+	timer.Simple(.1, function()
 		if not IsValid(scenic_ent) then return end
 
 		scenic_ent.actors = {}
@@ -93,7 +85,7 @@ hook.Add('BGN_OnValidSpawnActor', 'BGN_ScenicNPC', function(npc_type, npc_data, 
 				for i = actors_count, 1, -1 do
 					local actor = self.actors[i]
 					if not actor or not actor:IsAlive() or not actor:HasState('scenic_npc') then
-						table_remove(self.actors, i)
+						table.remove(self.actors, i)
 					end
 				end
 			end

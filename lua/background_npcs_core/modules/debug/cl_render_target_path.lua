@@ -1,15 +1,3 @@
-local bgNPC = bgNPC
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local ipairs = ipairs
-local LocalToWorld = LocalToWorld
-local Angle = Angle
-local IsValid = IsValid
-local GetConVar = GetConVar
-local draw_SimpleTextOutlined = draw.SimpleTextOutlined
-local render_DrawLine = render.DrawLine
-local render_SetColorMaterial = render.SetColorMaterial
-local cam_Start3D2D = cam.Start3D2D
-local cam_End3D2D = cam.End3D2D
 --
 local cvar_bgn_debug = GetConVar('bgn_debug')
 local text_font_name = 'BGN_Debug_UpperStateText'
@@ -62,7 +50,7 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
 	upper_text_angle:RotateAroundAxis(upper_text_angle:Forward(), 90)
 	upper_text_angle:RotateAroundAxis(upper_text_angle:Right(), 90)
 
-	render_SetColorMaterial()
+	render.SetColorMaterial()
 
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		if actor:IsAlive() then
@@ -70,22 +58,22 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_RenderTargetsPath', function()
 			local npcPosition = npc:GetPos()
 
 			if npcPosition:DistToSqr(plyPosition) < 640000 then
-				cam_Start3D2D(npcPosition + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
-					draw_SimpleTextOutlined('State - ' .. actor:GetState(), text_font_name, 0, -15, state_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, text_border_color)
-				cam_End3D2D()
+				cam.Start3D2D(npcPosition + npc:GetForward() + npc:GetUp() * 78, upper_text_angle, 0.25)
+					draw.SimpleTextOutlined('State - ' .. actor:GetState(), text_font_name, 0, -15, state_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, text_border_color)
+				cam.End3D2D()
 			end
 
 			if npcPosition:DistToSqr(plyPosition) <= 250000 then
 				for _, enemy in ipairs(actor.enemies) do
 					if IsValid(enemy) then
 						local color = GetColorByTeam(actor)
-						render_DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
+						render.DrawLine(npc:EyePos(), GetCenterEntityPos(enemy), color)
 					end
 				end
 
 				for _, target in ipairs(actor.targets) do
 					if IsValid(target) then
-						render_DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
+						render.DrawLine(GetCenterEntityPos(npc), GetCenterEntityPos(target), target_color)
 					end
 				end
 			end

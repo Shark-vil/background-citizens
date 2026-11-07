@@ -1,16 +1,3 @@
-local bgNPC = bgNPC
-local hook = hook
-local render = render
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local GetConVar = GetConVar
-local LocalPlayer = LocalPlayer
-local LocalToWorld = LocalToWorld
-local render_SetColorMaterial = render.SetColorMaterial
-local render_DrawLine = render.DrawLine
-local render_DrawSphere = render.DrawSphere
-local cam_Start3D2D = cam.Start3D2D
-local cam_End3D2D = cam.End3D2D
-local draw_SimpleTextOutlined = draw.SimpleTextOutlined
 --
 local cvar_bgn_debug = GetConVar('bgn_debug')
 local cvar_bgn_cl_draw_npc_path = GetConVar('bgn_cl_draw_npc_path')
@@ -40,7 +27,7 @@ local vec_20 = Vector(0, 0, 20)
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 	if not DebugIsEnabled() then return end
 
-	render_SetColorMaterial()
+	render.SetColorMaterial()
 
 	local actors = bgNPC.Actors.GetAll()
 	local ply = LocalPlayer()
@@ -62,23 +49,23 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Debug_MovementPathRender', function()
 			if count ~= 0 then
 				local pos = actor.walkPath[1]
 				local center_pos = LocalToWorld(npc:OBBCenter(), Angle(), npc:GetPos(), Angle())
-				render_DrawLine(pos, center_pos, clr_line_to_npc)
+				render.DrawLine(pos, center_pos, clr_line_to_npc)
 			end
 
 			for k = count, 1, -1 do
 				local pos = actor.walkPath[k]
 
 				if k ~= 1 then
-					render_DrawLine(pos, actor.walkPath[k - 1], clr_line)
+					render.DrawLine(pos, actor.walkPath[k - 1], clr_line)
 				end
 
-				render_DrawSphere(pos, 10, 5, 5, clr_green)
+				render.DrawSphere(pos, 10, 5, 5, clr_green)
 
-				cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
-					draw_SimpleTextOutlined(tostring(count - k + 1),
+				cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
+					draw.SimpleTextOutlined(tostring(count - k + 1),
 						text_font_name, 0, 0, color_white,
 						TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-				cam_End3D2D()
+				cam.End3D2D()
 			end
 		end
 	end

@@ -1,4 +1,3 @@
-local IsValid = IsValid
 local cvar_bgn_generator_restict = GetConVar('bgn_enable_dynamic_nodes_only_when_mesh_not_exists')
 local cvar_bgn_dynamic_nodes = GetConVar('bgn_dynamic_nodes')
 local cvar_bgn_enable = GetConVar('bgn_enable')
@@ -10,17 +9,7 @@ local function IsEnableGenerator()
 end
 
 do
-	local bgNPC = bgNPC
-	local ipairs = ipairs
-	local player_GetAll = player.GetAll
-	local math_random = math.random
 	local IsInWorld = bgNPC.Util.IsInWorld
-	local BGN_NODE = BGN_NODE
-	local table_remove = table.remove
-	local table_insert = table.insert
-	local util_TraceLine = util.TraceLine
-	local FrameTime = FrameTime
-	local ipairs = ipairs
 	local trace_data = {}
 	local vec_0_0_20 = Vector(0, 0, 20)
 	local vec_0_0_50 = Vector(0, 0, 50)
@@ -30,7 +19,7 @@ do
 		trace_data.start = position + vec_0_0_50
 		trace_data.endpos = position - vec_0_0_1000
 		trace_data.filter = nil
-		return util_TraceLine(trace_data).HitPos + vec_0_0_20
+		return util.TraceLine(trace_data).HitPos + vec_0_0_20
 	end
 
 	local function TraceIsWorld(startPos, endPos)
@@ -41,7 +30,7 @@ do
 				return true
 			end
 		end
-		local pos = util_TraceLine(trace_data).HitPos
+		local pos = util.TraceLine(trace_data).HitPos
 		return pos
 	end
 
@@ -67,12 +56,12 @@ do
 				continue
 			end
 			local new_nodes = {}
-			for _, ply in ipairs(player_GetAll()) do
+			for _, ply in ipairs(player.GetAll()) do
 				if IsValid(ply) and ply:Alive() then
 					local ply_pos = ply:GetPos()
 					for i = 1, 50 do
-						local x = ply_pos.x + math_random(-1000, 1000)
-						local y = ply_pos.y + math_random(-1000, 1000)
+						local x = ply_pos.x + math.random(-1000, 1000)
+						local y = ply_pos.y + math.random(-1000, 1000)
 						local new_point = TracePositionFixed(Vector(x, y, ply_pos.z))
 						if new_point and not bgNPC.Util.IsVectorInWater(new_point) and IsInWorld(new_point) then
 							local skip_point = false
@@ -84,7 +73,7 @@ do
 							end
 							if not skip_point then
 								local node = BGN_NODE:Instance(new_point)
-								table_insert(new_nodes, node)
+								table.insert(new_nodes, node)
 							end
 						end
 						PassYield()
@@ -102,7 +91,7 @@ do
 						and not TraceIsWorld(node_pos, another_node_pos)
 					)
 					then
-						table_remove(new_nodes, i)
+						table.remove(new_nodes, i)
 					end
 					PassYield()
 				end
@@ -127,20 +116,11 @@ hook.Add('BGN_PlayerReady', 'BGN_MovementMeshGeneratorNotify', function(ply)
 end)
 
 bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
-	local bgNPC = bgNPC
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_dynamic_nodes_radius')
-	local FrameTime = FrameTime
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
 	local table_Combine = bgNPC.Table.Append
-	local player_GetAll = player.GetAll
-	local table_remove = table.remove
-	local math_random = math.random
-	local util_IsInWorld = util.IsInWorld
-	local util_TraceLine = util.TraceLine
-	local math_Clamp = math.Clamp
-	local Vector = Vector
 	local add_z_axis = Vector(0, 0, 20)
 	local cell_size = 200
 	-- local sqrt_cell_size = cell_size ^ 2
@@ -154,11 +134,6 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local radius
 	local is_infmap = bgNPC.Util.IsInfinityMap()
 	local info_message_for_admins_has_send = true
-	if is_infmap then
-		util_IsInWorld = function(...) return util.IsInWorld(...) end
-		util_TraceLine = function(...) return util.TraceLine(...) end
-		util_PointContents = function(...) return util.PointContents(...) end
-	end
 	local trace_filter = function(ent)
 		if IsValid(ent) and (ent:IsWorld() or (is_infmap and select(1, ent:GetClass():find('collider')) ~= nil)) then
 			return true
@@ -195,11 +170,11 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	end
 
 	-- local function HasTraceToPlayers(point_position)
-	-- 	local players = player_GetAll()
+	-- 	local players = player.GetAll()
 	-- 	for i = #players, 1, -1 do
 	-- 		local ply = players[i]
 	-- 		if IsValid(ply) and ply:Alive() then
-	-- 			local tr = util_TraceLine({
+	-- 			local tr = util.TraceLine({
 	-- 				start = point_position,
 	-- 				endpos = ply:LocalToWorld(ply:OBBCenter()),
 	-- 				filter = function(ent)
@@ -222,7 +197,7 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			if not info_message_for_admins_has_send then
 				info_message_for_admins_has_send = true
 				local admins = {}
-				for _, v in ipairs(player_GetAll()) do
+				for _, v in ipairs(player.GetAll()) do
 					if IsValid(v) and (v:IsAdmin() or v:IsSuperAdmin()) then
 						table.insert(admins, v)
 					end
@@ -242,14 +217,14 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 			sqrt_cell_size = cell_size ^ 2
 
 			-- if not is_dynamic_nodes_save then
-			-- 	radius = math_Clamp(radius, 0, 1500)
+			-- 	radius = math.Clamp(radius, 0, 1500)
 			-- end
 
-			local players = player_GetAll()
+			local players = player.GetAll()
 			for i = #players, 1, -1 do
 				local ply = players[i]
 				if not ply or not ply:Alive() then
-					table_remove(players, i)
+					table.remove(players, i)
 				end
 				PassYield()
 			end
@@ -270,13 +245,13 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					local z = center.z + 100
 
 					for i = 1, 1000 do
-						current_radius_randomize = math_Clamp(current_radius_randomize, 0, radius)
+						current_radius_randomize = math.Clamp(current_radius_randomize, 0, radius)
 
-						local x = center.x + math_random(-current_radius_randomize, current_radius_randomize)
-						local y = center.y + math_random(-current_radius_randomize, current_radius_randomize)
+						local x = center.x + math.random(-current_radius_randomize, current_radius_randomize)
+						local y = center.y + math.random(-current_radius_randomize, current_radius_randomize)
 						-- local z = center.z
 						local start_point_vector = Vector(x, y, z)
-						local tr = util_TraceLine({
+						local tr = util.TraceLine({
 							start = start_point_vector,
 							endpos = start_point_vector - add_endpos_trace_vector,
 							filter = trace_filter
@@ -304,7 +279,7 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 
 						PassYield()
 
-						if not util_IsInWorld(new_point_position) or ChunkHasFull(new_point_position) then
+						if not util.IsInWorld(new_point_position) or ChunkHasFull(new_point_position) then
 							PassYield()
 							continue
 						end
@@ -349,12 +324,12 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							start_point_vector.x = x
 
 							local different_start_point = start_point_vector
-							if not util_IsInWorld(different_start_point) then
+							if not util.IsInWorld(different_start_point) then
 								PassYield()
 								continue
 							end
 
-							local tr = util_TraceLine({
+							local tr = util.TraceLine({
 								start = different_start_point,
 								endpos = different_start_point - add_endpos_trace_vector,
 								filter = trace_filter
@@ -422,12 +397,12 @@ bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 							start_point_vector.y = y
 
 							local different_start_point = start_point_vector
-							if not util_IsInWorld(different_start_point) then
+							if not util.IsInWorld(different_start_point) then
 								PassYield()
 								continue
 							end
 
-							local tr = util_TraceLine({
+							local tr = util.TraceLine({
 								start = different_start_point,
 								endpos = different_start_point - add_endpos_trace_vector,
 								filter = trace_filter

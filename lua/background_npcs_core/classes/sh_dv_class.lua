@@ -1,18 +1,6 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
-local math_random = math.random
 local NextId = bgNPC.Util.NextId
-local string_Explode = string.Explode
-local tonumber = tonumber
-local isstring = isstring
-local IsValid = IsValid
-local ipairs = ipairs
-local setmetatable = setmetatable
-local ents_Create = ents.Create
 local table_HasValueBySeq = bgNPC.Table.HasValue
-local table_RemoveByValue = table.RemoveByValue
-local table_insert = table.insert
-local table_remove = table.remove
 --
 
 BGN_VEHICLE = {}
@@ -25,19 +13,19 @@ local DEFAULT_PASSENGERS_MIN = 1
 local DEFAULT_PASSENGERS_MAX = 4
 
 local function RandomPassengersLimit()
-	return math_random(DEFAULT_PASSENGERS_MIN, DEFAULT_PASSENGERS_MAX)
+	return math.random(DEFAULT_PASSENGERS_MIN, DEFAULT_PASSENGERS_MAX)
 end
 
 -- Parses the "passengers" part of a custom vehicle group: "3" or "1-4".
 local function ParsePassengersLimit(value)
 	if not value or value == 'nil' then return RandomPassengersLimit() end
 
-	local range = string_Explode('-', value)
+	local range = string.Explode('-', value)
 	local min_value, max_value = tonumber(range[1]), tonumber(range[2])
 
 	if min_value and max_value then
 		if min_value > max_value then min_value, max_value = max_value, min_value end
-		return math_random(min_value, max_value)
+		return math.random(min_value, max_value)
 	end
 
 	return min_value or RandomPassengersLimit()
@@ -65,7 +53,7 @@ local function SetupVehicleGroup(obj, vehicle_type)
 		return
 	end
 
-	local args = isstring(vehicle_type) and string_Explode('|', vehicle_type) or {}
+	local args = isstring(vehicle_type) and string.Explode('|', vehicle_type) or {}
 
 	if #args > 1 then
 		obj.type = OptionalArg(args[1], 'residents')
@@ -86,7 +74,7 @@ function VEHICLE:Initialize()
 	local vehicle = self.vehicle
 	if not IsValid(vehicle) then return end
 
-	local decentvehicle = ents_Create(self.ai_class)
+	local decentvehicle = ents.Create(self.ai_class)
 	if not IsValid(decentvehicle) then
 		bgNPC.Util.Log('Failed to create vehicle AI "' .. tostring(self.ai_class) .. '"', 'VEHICLE:Initialize')
 		return
@@ -132,7 +120,7 @@ function VEHICLE:SetDriver(actor)
 	self:RemovePassenger(actor)
 
 	self.driver = actor
-	table_insert(self.passengers, actor)
+	table.insert(self.passengers, actor)
 
 	if IsValid(self.ai) then self.ai:Remove() end
 	self.ai = nil
@@ -161,7 +149,7 @@ function VEHICLE:AddPassenger(actor)
 	local seat, seat_index = FindFreeSeat(vehicle)
 	if not seat then return false end
 
-	local passenger = ents_Create('npc_decentvehicle_passenger')
+	local passenger = ents.Create('npc_decentvehicle_passenger')
 	if not IsValid(passenger) then return false end
 
 	passenger.Seat = seat
@@ -173,8 +161,8 @@ function VEHICLE:AddPassenger(actor)
 	passenger:Spawn()
 	passenger:Activate()
 
-	table_insert(self.passengers_models, passenger)
-	table_insert(self.passengers, actor)
+	table.insert(self.passengers_models, passenger)
+	table.insert(self.passengers, actor)
 
 	return true
 end
@@ -183,17 +171,17 @@ function VEHICLE:RemovePassengerModel(actor)
 	for i = #self.passengers_models, 1, -1 do
 		local model = self.passengers_models[i]
 		if not IsValid(model) then
-			table_remove(self.passengers_models, i)
+			table.remove(self.passengers_models, i)
 		elseif model.actor == actor then
 			model:Remove()
-			table_remove(self.passengers_models, i)
+			table.remove(self.passengers_models, i)
 		end
 	end
 end
 
 function VEHICLE:RemovePassenger(actor)
 	self:RemovePassengerModel(actor)
-	table_RemoveByValue(self.passengers, actor)
+	table.RemoveByValue(self.passengers, actor)
 end
 
 function VEHICLE:GetPassengers()
@@ -205,7 +193,7 @@ function VEHICLE:PassengersRecalculate()
 	for i = #self.passengers, 1, -1 do
 		local actor = self.passengers[i]
 		if not actor or not actor:IsAlive() then
-			table_remove(self.passengers, i)
+			table.remove(self.passengers, i)
 		end
 	end
 end
@@ -325,11 +313,11 @@ function BGN_VEHICLE:AddToList(vehicle_provider)
 		if bgNPC.DVCars[i]:GetVehicle() == vehicle then return -1 end
 	end
 
-	return table_insert(bgNPC.DVCars, vehicle_provider)
+	return table.insert(bgNPC.DVCars, vehicle_provider)
 end
 
 function BGN_VEHICLE:RemoveFromList(vehicle_provider)
-	table_RemoveByValue(bgNPC.DVCars, vehicle_provider)
+	table.RemoveByValue(bgNPC.DVCars, vehicle_provider)
 end
 
 -- Finds a provider by its car or by its AI entity.

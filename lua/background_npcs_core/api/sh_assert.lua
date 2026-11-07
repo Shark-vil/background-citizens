@@ -16,19 +16,6 @@
 		end
 --]]
 
-local error = error
-local type = type
-local tostring = tostring
-local string_format = string.format
-local string_Explode = string.Explode
-local isstring = isstring
-local isnumber = isnumber
-local isbool = isbool
-local istable = istable
-local isfunction = isfunction
-local isentity = isentity
-local isvector = isvector
-local isangle = isangle
 --
 
 local Assert = {}
@@ -56,10 +43,10 @@ local function ParseSpec(spec)
 	if parsed then return parsed end
 
 	parsed = {}
-	for _, type_name in ipairs(string_Explode('|', spec)) do
+	for _, type_name in ipairs(string.Explode('|', spec)) do
 		local checker = CHECKERS[type_name]
 		if not checker then
-			error(string_format('bgNPC.Assert: unknown type "%s" in spec "%s"', type_name, spec), 3)
+			error(string.format('bgNPC.Assert: unknown type "%s" in spec "%s"', type_name, spec), 3)
 		end
 		parsed[#parsed + 1] = checker
 	end
@@ -92,7 +79,7 @@ end
 function Assert.Arg(index, value, spec, func_name)
 	if Matches(value, spec) then return value end
 
-	error(string_format('bad argument #%d to \'%s\' (%s expected, got %s)',
+	error(string.format('bad argument #%d to \'%s\' (%s expected, got %s)',
 		index, func_name or '?', spec, DescribeType(value)), 3)
 end
 
@@ -100,7 +87,7 @@ end
 function Assert.Field(owner_name, field_name, value, spec)
 	if Matches(value, spec) then return value end
 
-	error(string_format('bad field \'%s.%s\' (%s expected, got %s)',
+	error(string.format('bad field \'%s.%s\' (%s expected, got %s)',
 		owner_name, field_name, spec, DescribeType(value)), 3)
 end
 
@@ -109,7 +96,7 @@ function Assert.True(condition, message, ...)
 	if condition then return condition end
 
 	if select('#', ...) ~= 0 then
-		message = string_format(message, ...)
+		message = string.format(message, ...)
 	end
 
 	error(tostring(message or 'assertion failed'), 3)
@@ -119,7 +106,7 @@ end
 function Assert.NonEmptyString(index, value, func_name)
 	if isstring(value) and #value ~= 0 then return value end
 
-	error(string_format('bad argument #%d to \'%s\' (non-empty string expected, got %s)',
+	error(string.format('bad argument #%d to \'%s\' (non-empty string expected, got %s)',
 		index, func_name or '?', isstring(value) and 'empty string' or DescribeType(value)), 3)
 end
 

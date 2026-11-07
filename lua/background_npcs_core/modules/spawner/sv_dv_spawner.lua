@@ -1,12 +1,3 @@
-local bgNPC = bgNPC
-local math = math
-local player = player
-local table = table
-local util = util
-local ents = ents
-local IsValid = IsValid
-local ipairs = ipairs
-local GetConVar = GetConVar
 --
 
 local function GetNearPoints(center, radius)

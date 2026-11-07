@@ -1,6 +1,4 @@
-local pairs = pairs
 local table_RandomBySeq = bgNPC.Table.Random
-local hook_Run = hook.Run
 local Chance = bgNPC.Util.Chance
 --
 local cvar_bgn_module_replics_enable = GetConVar('bgn_module_replics_enable')
@@ -24,7 +22,7 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 				if bgNPC.cfg.replics[replics_id] and actor:HasState(state_name) then
 					local _, replic_index = table_RandomBySeq(bgNPC.cfg.replics[replics_id])
 					actor:SayReplic(replics_id, replic_index)
-					hook_Run('BGN_StartReplic', actor, replics_id, replic_index, 10)
+					hook.Run('BGN_StartReplic', actor, replics_id, replic_index, 10)
 					continue
 				end
 			end
@@ -35,7 +33,7 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 				if bgNPC.cfg.replics[replics_id] and actor:EqualStateGroup(group_name) then
 					local _, replic_index = table_RandomBySeq(bgNPC.cfg.replics[replics_id])
 					actor:SayReplic(replics_id, replic_index)
-					hook_Run('BGN_StartReplic', actor, replics_id, replic_index, 10)
+					hook.Run('BGN_StartReplic', actor, replics_id, replic_index, 10)
 					continue
 				end
 			end

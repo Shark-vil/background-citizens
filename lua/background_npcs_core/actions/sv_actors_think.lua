@@ -1,4 +1,3 @@
-local bgNPC = bgNPC
 --
 bgNPC.Tasks.Add('BGN_ThinkProcess', function(yield, wait)
     while true do

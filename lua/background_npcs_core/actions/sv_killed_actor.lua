@@ -1,6 +1,4 @@
 local EntityRemovedLock = false
-local isfunction = isfunction
-local IsValid = IsValid
 --
 local none_name = 'Gabe Newell'
 

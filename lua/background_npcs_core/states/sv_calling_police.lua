@@ -1,11 +1,4 @@
-local bgNPC = bgNPC
 local table_RandomBySeq = bgNPC.Table.Random
-local CurTime = CurTime
-local IsValid = IsValid
-local pairs = pairs
-local hook_Run = hook.Run
-local math_random = math.random
-local CHAN_AUTO = CHAN_AUTO
 --
 local asset = bgNPC.Modules.Get('wanted')
 local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
@@ -65,7 +58,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 
 		-- 90000 = 300 ^ 2
 		if not bgNPC.Vision.HasLineOfSight(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
-			local rnd = math_random(0, 100)
+			local rnd = math.random(0, 100)
 			if rnd > 80 then
 				actor:CallForHelp(currentEnemy)
 			end
@@ -77,11 +70,11 @@ bgNPC.States.Register('calling_police', 'danger', {
 		local data = actor:GetStateData()
 
 		if data.calling_time == nil then
-			data.calling_time = CurTime() + math_random(7, 15)
+			data.calling_time = CurTime() + math.random(7, 15)
 		else
 			if data.calling_time < CurTime() then
 				for _, enemy in pairs(actor.enemies) do
-					if IsValid(enemy) and not hook_Run('BGN_PreCallingPolice', actor, enemy) then
+					if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
 						if asset:HasWanted(enemy) then
 							local WantedClass = asset:GetWanted(enemy)
 							WantedClass:UpdateWanted(enemy)
@@ -92,7 +85,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 					end
 				end
 
-				if not hook_Run('BGN_PostCallingPolice', actor) then
+				if not hook.Run('BGN_PostCallingPolice', actor) then
 					actor:SetState('fear')
 				end
 			else
@@ -104,7 +97,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 				data.btn_click_delay = data.btn_click_delay or 0
 				if data.btn_click_delay < CurTime() then
 					EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 120, 0, 100)
-					data.btn_click_delay = CurTime() + math_random(.3, 1.2)
+					data.btn_click_delay = CurTime() + math.random(.3, 1.2)
 				end
 			end
 		end

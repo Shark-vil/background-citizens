@@ -1,31 +1,11 @@
-local Vector = Vector
-local pairs = pairs
-local ipairs = ipairs
-local isbool = isbool
-local assert = assert
 local Assert = bgNPC.Assert
-local setmetatable = setmetatable
-local istable = istable
-local isstring = isstring
-local math_floor = math.floor
-local table_insert = table.insert
-local table_remove = table.remove
 local table_RemoveValueBySeq = bgNPC.Table.RemoveValue
-local table_Count = table.Count
 local table_HasValueBySeq = bgNPC.Table.HasValue
-local util_TraceLine = util.TraceLine
-local util_TableToJSON = util.TableToJSON
-local util_JSONToTable = util.JSONToTable
-local coroutine_yield = coroutine.yield
 local cvar_bgn_chunk_system  = GetConVar('bgn_chunk_system')
 local cvar_bgn_chunk_size = GetConVar('bgn_chunk_size')
 --
 local MAP_CHUNKS
 local is_infmap = bgNPC.Util.IsInfinityMap()
-if is_infmap then
-	util_TraceLine = function(...) return util.TraceLine(...) end
-end
-
 local LimitPointAxisZ = GetConVar('bgn_point_z_limit'):GetInt()
 local CheckTraceSuccessToNodeUpperVector = Vector(0, 0, 10)
 local CheckTraceSuccessToNodeFilter = function(ent)
@@ -92,7 +72,7 @@ function NODE:AddParentNode(node)
 	Assert.Arg(1, node, 'node', 'NODE:AddParentNode')
 
 	if self == node or table_HasValueBySeq(self.parents, node) then return end
-	table_insert(self.parents, node)
+	table.insert(self.parents, node)
 	if not node:HasParent(self) then node:AddParentNode(self) end
 end
 
@@ -105,7 +85,7 @@ function NODE:RemoveParentNode(node)
 	for i = 1, #parents do
 		if parents[i] == node then
 			self:RemoveLink(node)
-			table_remove(parents, i)
+			table.remove(parents, i)
 			break
 		end
 	end
@@ -147,7 +127,7 @@ function NODE:AddLink(node, linkType)
 		node:AddParentNode(self)
 	end
 
-	table_insert(links, node)
+	table.insert(links, node)
 
 	if not node:HasLink(self, linkType) then
 		node:AddLink(self, linkType)
@@ -172,7 +152,7 @@ function NODE:RemoveLink(node, linkType)
 
 	for i = 1, #links do
 		if links[i] == node then
-			table_remove(links, i)
+			table.remove(links, i)
 			break
 		end
 	end
@@ -220,7 +200,7 @@ function NODE:CheckHeightLimitToNode(position)
 end
 
 function NODE:CheckTraceSuccessToNode(position)
-	local tr = util_TraceLine({
+	local tr = util.TraceLine({
 		start = self.position + CheckTraceSuccessToNodeUpperVector,
 		endpos = position + CheckTraceSuccessToNodeUpperVector,
 		filter = CheckTraceSuccessToNodeFilter
@@ -244,7 +224,7 @@ function NODE:RemoveFromMap()
 		if node_chunk then table_RemoveValueBySeq(node_chunk, self.index) end
 	end
 
-	if not table_remove(BGN_NODE.Map, self.index) then return end
+	if not table.remove(BGN_NODE.Map, self.index) then return end
 
 	BGN_NODE.MapCount = BGN_NODE.MapCount - 1
 	self.index = -1
@@ -260,7 +240,7 @@ function NODE:RemoveFromMap()
 			if chunk_id ~= -1 then
 				local another_chunk = BGN_NODE.Chunks[chunk_id]
 				if another_chunk and table_RemoveValueBySeq(another_chunk, past_index) then
-					table_insert(another_chunk, i)
+					table.insert(another_chunk, i)
 				end
 			end
 		end
@@ -276,9 +256,9 @@ function BGN_NODE:Instance(position_value)
 	Assert.Arg(1, position_value, 'vector|table', 'BGN_NODE:Instance')
 
 	local obj = setmetatable({}, NODE)
-	obj.x = math_floor(position_value.x)
-	obj.y = math_floor(position_value.y)
-	obj.z = math_floor(position_value.z)
+	obj.x = math.floor(position_value.x)
+	obj.y = math.floor(position_value.y)
+	obj.z = math.floor(position_value.z)
 	obj.index = -1
 	obj.isNode = true
 	obj.position = Vector(obj.x, obj.y, obj.z)
@@ -297,13 +277,13 @@ function BGN_NODE:Instance(position_value)
 		netobj.links = {}
 
 		for i = 1, #obj.parents do
-			table_insert(netobj.parents, obj.parents[i].index)
+			table.insert(netobj.parents, obj.parents[i].index)
 		end
 
 		for linkType, nodes in pairs(obj.links) do
 			local net_links = {}
 			for i = 1, #nodes do
-				table_insert(net_links, nodes[i].index)
+				table.insert(net_links, nodes[i].index)
 			end
 			netobj.links[linkType] = net_links
 		end
@@ -360,7 +340,7 @@ function BGN_NODE:GetChunkNodes(pos, is_async)
 			async_pass = async_pass + 1
 			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
-				coroutine_yield()
+				coroutine.yield()
 			end
 		end
 	end
@@ -389,7 +369,7 @@ function BGN_NODE:AddNodeToMap(node)
 		if self.Map[index] == nil then self.MapCount = self.MapCount + 1 end
 		self.Map[index] = node
 	else
-		index = table_insert(self.Map, node)
+		index = table.insert(self.Map, node)
 		node.index = index
 		self.MapCount = self.MapCount + 1
 	end
@@ -397,7 +377,7 @@ function BGN_NODE:AddNodeToMap(node)
 	if chunk_id ~= -1 then
 		self.Chunks[chunk_id] = self.Chunks[chunk_id] or {}
 		if not table_HasValueBySeq(self.Chunks[chunk_id], index) then
-			table_insert(self.Chunks[chunk_id], index)
+			table.insert(self.Chunks[chunk_id], index)
 		end
 	end
 end
@@ -437,7 +417,7 @@ function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
 		-- 	async_pass = async_pass + 1
 		-- 	if async_pass > bgNPC.Util.PassesPerYield() then
 		-- 		async_pass = 0
-		-- 		coroutine_yield()
+		-- 		coroutine.yield()
 		-- 	end
 		-- end
 	end
@@ -472,7 +452,7 @@ function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
 			async_pass = async_pass + 1
 			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
-				coroutine_yield()
+				coroutine.yield()
 			end
 		end
 	end
@@ -506,7 +486,7 @@ function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
 		-- 	async_pass = async_pass + 1
 		-- 	if async_pass > bgNPC.Util.PassesPerYield() then
 		-- 		async_pass = 0
-		-- 		coroutine_yield()
+		-- 		coroutine.yield()
 		-- 	end
 		-- end
 	end
@@ -539,7 +519,7 @@ function BGN_NODE:GetNodesCountInRadius(pos, radius, is_async)
 			async_pass = async_pass + 1
 			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
-				coroutine_yield()
+				coroutine.yield()
 			end
 		end
 	end
@@ -583,7 +563,7 @@ function BGN_NODE:ExpandMap(map, fix_outside_map_nodes, is_async)
 		if node.index == -1 then
 			self:AddNodeToMap(node)
 		end
-		if is_async then coroutine_yield() end
+		if is_async then coroutine.yield() end
 	end
 
 	if not isbool(fix_outside_map_nodes) and fix_outside_map_nodes == nil then
@@ -614,7 +594,7 @@ function BGN_NODE:AutoLink(settings, is_async)
 			async_current_pass = async_current_pass + 1
 			if async_current_pass > bgNPC.Util.PassesPerYield() then
 				async_current_pass = 0
-				coroutine_yield()
+				coroutine.yield()
 			end
 		end
 	end
@@ -658,14 +638,13 @@ function BGN_NODE:FixOutsideMapNodes()
 	if CLIENT then return end
 
 	local remove_count = 0
-	local util_IsInWorld = util.IsInWorld
 
 	for i = self.MapCount, 1, -1 do
 		local node = self.Map[i]
 		if not node or node.is_in_world then continue end
 
 		local position = node:GetPos()
-		if not util_IsInWorld(position) or bgNPC.Util.IsVectorInWater(position) then
+		if not util.IsInWorld(position) or bgNPC.Util.IsVectorInWater(position) then
 			remove_count = remove_count + 1
 			node:RemoveFromMap()
 		else
@@ -692,18 +671,18 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
 		if #node.parents ~= 0 then
 			for _, parentNode in ipairs(node.parents) do
 				if parentNode.index ~= -1 then
-					table_insert(JsonNode.parents, parentNode.index)
+					table.insert(JsonNode.parents, parentNode.index)
 				end
 			end
 		end
 
-		if table_Count(node.links) ~= 0 then
+		if table.Count(node.links) ~= 0 then
 			for linkType, links in pairs(node.links) do
 				if #links ~= 0 then
 					JsonNode.links[linkType] = JsonNode.links[linkType] or {}
 
 					for _, node_value in ipairs(links) do
-						table_insert(JsonNode.links[linkType], node_value.index)
+						table.insert(JsonNode.links[linkType], node_value.index)
 					end
 				end
 			end
@@ -714,7 +693,7 @@ function BGN_NODE:MapToJson(map, prettyPrint, version)
 
 	version = version or '1.2'
 
-	return util_TableToJSON({
+	return util.TableToJSON({
 		bgn_wid_2341497926 = true,
 		version = version,
 		nodes = JsonData
@@ -725,7 +704,7 @@ function BGN_NODE:JsonToMap(json_string)
 	local mapData
 
 	if isstring(json_string) then
-		mapData = util_JSONToTable(json_string)
+		mapData = util.JSONToTable(json_string)
 	elseif istable(json_string) then
 		mapData = json_string
 	else

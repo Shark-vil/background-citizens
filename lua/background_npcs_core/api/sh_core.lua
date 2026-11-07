@@ -17,15 +17,7 @@
 	The old "bgNPC:Method()" functions still work, see api/sh_legacy.lua.
 --]]
 
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
-local IsValid = IsValid
-local isstring = isstring
-local tostring = tostring
-local MsgN = MsgN
-local bit_band = bit.band
-local util_PointContents = util.PointContents
-local CONTENTS_WATER = CONTENTS_WATER
 --
 
 bgNPC.Actors = bgNPC.Actors or {}
@@ -77,7 +69,7 @@ end
 
 function Util.IsVectorInWater(pos)
 	Assert.Arg(1, pos, 'vector', 'bgNPC.Util.IsVectorInWater')
-	return bit_band(util_PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
+	return bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
 end
 
 -- Returns the player's tool object if the given tool mode is active.

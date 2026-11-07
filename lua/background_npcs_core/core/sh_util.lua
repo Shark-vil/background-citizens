@@ -4,26 +4,11 @@
 		bgNPC.Table  - array helpers
 --]]
 
-local bgNPC = bgNPC
 local Util = bgNPC.Util or {}
 bgNPC.Util = Util
 local Table = bgNPC.Table or {}
 bgNPC.Table = Table
 
-local IsValid = IsValid
-local isstring = isstring
-local istable = istable
-local isbool = isbool
-local math_random = math.random
-local math_pi = math.pi
-local util_TraceLine = util.TraceLine
-local util_CRC = util.CRC
-local timer_Create = timer.Create
-local timer_Remove = timer.Remove
-local timer_Exists = timer.Exists
-local ColorAlpha = ColorAlpha
-local string_gsub = string.gsub
-local string_format = string.format
 --
 
 -- ---------------------------------------------------------------------------
@@ -34,7 +19,7 @@ local string_format = string.format
 function Util.Chance(percent)
 	if percent <= 0 then return false end
 	if percent >= 100 then return true end
-	return percent >= math_random(1, 100)
+	return percent >= math.random(1, 100)
 end
 
 local last_uid = 0
@@ -45,8 +30,8 @@ function Util.NextId()
 end
 
 function Util.UUID()
-	return (string_gsub('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx', '[xy]', function(c)
-		return string_format('%x', c == 'x' and math_random(0, 0xf) or math_random(8, 0xb))
+	return (string.gsub('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx', '[xy]', function(c)
+		return string.format('%x', c == 'x' and math.random(0, 0xf) or math.random(8, 0xb))
 	end))
 end
 
@@ -129,7 +114,7 @@ do
 		if SERVER then return util.IsInWorld(pos) end
 		trace.start = pos
 		trace.endpos = pos
-		return not util_TraceLine(trace).HitWorld
+		return not util.TraceLine(trace).HitWorld
 	end
 end
 
@@ -169,7 +154,7 @@ function Util.IsInView(ent, pos, radius)
 	local len = diff:Length()
 	if len == 0 then return true end
 
-	return viewer:GetAimVector():Dot(diff) / len > math_pi / (radius or 90)
+	return viewer:GetAimVector():Dot(diff) / len > math.pi / (radius or 90)
 end
 
 -- Is the target directly visible from the entity's eyes.
@@ -188,7 +173,7 @@ function Util.CanSeeEntity(ent, target, check_view)
 		eye_pos = ent:LocalToWorld(center)
 	end
 
-	local tr = util_TraceLine({ start = eye_pos, endpos = target_pos, filter = ent })
+	local tr = util.TraceLine({ start = eye_pos, endpos = target_pos, filter = ent })
 	if not tr.Hit then return false end
 
 	local hit = tr.Entity
@@ -208,15 +193,15 @@ end
 -- ---------------------------------------------------------------------------
 
 local function EntityTimerName(ent, name)
-	return 'BGN_ENT_TIMER_' .. util_CRC(ent:EntIndex() .. name)
+	return 'BGN_ENT_TIMER_' .. util.CRC(ent:EntIndex() .. name)
 end
 
 -- Timer bound to an entity: stops by itself when the entity is removed.
 function Util.EntityTimer(ent, name, delay, repetitions, func)
 	local timer_name = EntityTimerName(ent, name)
-	timer_Create(timer_name, delay, repetitions, function()
+	timer.Create(timer_name, delay, repetitions, function()
 		if not IsValid(ent) then
-			timer_Remove(timer_name)
+			timer.Remove(timer_name)
 			return
 		end
 		func(ent)
@@ -224,11 +209,11 @@ function Util.EntityTimer(ent, name, delay, repetitions, func)
 end
 
 function Util.RemoveEntityTimer(ent, name)
-	timer_Remove(EntityTimerName(ent, name))
+	timer.Remove(EntityTimerName(ent, name))
 end
 
 function Util.EntityTimerExists(ent, name)
-	return timer_Exists(EntityTimerName(ent, name))
+	return timer.Exists(EntityTimerName(ent, name))
 end
 
 if SERVER then
@@ -297,7 +282,7 @@ end
 function Table.Random(t)
 	local count = #t
 	if count == 0 then return nil end
-	local index = math_random(count)
+	local index = math.random(count)
 	return t[index], index
 end
 
@@ -355,7 +340,7 @@ function Table.Shuffle(t)
 	local copy = {}
 	for i = 1, #t do copy[i] = t[i] end
 	for i = #copy, 2, -1 do
-		local j = math_random(i)
+		local j = math.random(i)
 		copy[i], copy[j] = copy[j], copy[i]
 	end
 	return copy

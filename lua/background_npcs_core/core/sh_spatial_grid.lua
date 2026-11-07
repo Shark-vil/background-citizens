@@ -7,9 +7,6 @@
 		grid:Key(pos)                   -- cell index without creating the cell
 --]]
 
-local bgNPC = bgNPC
-local Vector = Vector
-local math_floor = math.floor
 --
 
 -- 2^17 cells per axis in each direction keeps the packed key below 2^53 (exact in doubles).
@@ -27,9 +24,9 @@ end
 
 function Grid:Key(pos)
 	local size = self.size
-	local x = math_floor(pos.x / size) + OFFSET
-	local y = math_floor(pos.y / size) + OFFSET
-	local z = math_floor(pos.z / size) + OFFSET
+	local x = math.floor(pos.x / size) + OFFSET
+	local y = math.floor(pos.y / size) + OFFSET
+	local z = math.floor(pos.z / size) + OFFSET
 	return (x * SPAN + y) * SPAN + z
 end
 
@@ -39,7 +36,7 @@ function Grid:GetCell(pos)
 	if cell then return cell end
 
 	local size = self.size
-	local start_pos = Vector(math_floor(pos.x / size) * size, math_floor(pos.y / size) * size, math_floor(pos.z / size) * size)
+	local start_pos = Vector(math.floor(pos.x / size) * size, math.floor(pos.y / size) * size, math.floor(pos.z / size) * size)
 	local end_pos = start_pos + Vector(size, size, size)
 	cell = {
 		index = key,

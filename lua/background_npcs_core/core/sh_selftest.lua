@@ -4,7 +4,6 @@
 		bgNPC.Test.Add('name', function(check) check(1 + 1 == 2, 'math works') end)
 --]]
 
-local bgNPC = bgNPC
 local Test = bgNPC.Test or {}
 bgNPC.Test = Test
 

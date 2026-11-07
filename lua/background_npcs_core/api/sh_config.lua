@@ -1,18 +1,6 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Util = bgNPC.Util
 local Config = bgNPC.Config
-local pairs = pairs
-local ipairs = ipairs
-local istable = istable
-local isstring = isstring
-local isnumber = isnumber
-local math_Round = math.Round
-local string_StartWith = string.StartWith
-local string_Replace = string.Replace
-local string_Explode = string.Explode
-local table_Copy = table.Copy
-local table_insert = table.insert
 --
 
 local resolved_cache = {}
@@ -20,17 +8,17 @@ local resolving = {}
 local defaults_snapshot
 
 local function CopyValue(value)
-	return istable(value) and table_Copy(value) or value
+	return istable(value) and table.Copy(value) or value
 end
 
 -- Resolves "@type" references: a string value "@police@citizen" is replaced
 -- with the same field from the referenced actor types. Tables are merged.
 local function ResolveFieldReferences(actor_type, data)
 	for key, value in pairs(data) do
-		if isstring(value) and string_StartWith(value, '@') then
+		if isstring(value) and string.StartWith(value, '@') then
 			local resolved = false
 
-			for _, ref_type in ipairs(string_Explode('@', string_Replace(value, ' ', ''))) do
+			for _, ref_type in ipairs(string.Explode('@', string.Replace(value, ' ', ''))) do
 				if #ref_type ~= 0 and ref_type ~= actor_type then
 					local ref_data = Config.GetActor(ref_type)
 					local ref_value = ref_data and ref_data[key]
@@ -43,7 +31,7 @@ local function ResolveFieldReferences(actor_type, data)
 							local target = data[key]
 							for ref_key, ref_item in pairs(ref_value) do
 								if isnumber(ref_key) then
-									table_insert(target, ref_item)
+									table.insert(target, ref_item)
 								elseif target[ref_key] == nil then
 									target[ref_key] = ref_item
 								end
@@ -77,7 +65,7 @@ function Config.GetActor(actor_type)
 
 	resolving[actor_type] = true
 
-	local data = table_Copy(source)
+	local data = table.Copy(source)
 	local parent_type = data.inherit
 
 	if parent_type and parent_type ~= actor_type then
@@ -121,13 +109,13 @@ end
 
 -- Remembers the current actor configs as defaults for Config.Reset.
 function Config.SaveDefaults()
-	defaults_snapshot = table_Copy(bgNPC.cfg.actors)
+	defaults_snapshot = table.Copy(bgNPC.cfg.actors)
 end
 
 -- Restores the actor configs saved by Config.SaveDefaults.
 function Config.Reset()
 	if not defaults_snapshot then return end
-	bgNPC.cfg.actors = table_Copy(defaults_snapshot)
+	bgNPC.cfg.actors = table.Copy(defaults_snapshot)
 	Config.ClearCache()
 end
 
@@ -148,10 +136,10 @@ function Config.GetFullness(actor_type)
 	if data.fullness ~= nil then
 		local cvar_max = Util.GetCVar('bgn_max_npc')
 		local max_npc = cvar_max and cvar_max:GetInt() or 0
-		local max = math_Round((data.fullness / 100) * max_npc)
+		local max = math.Round((data.fullness / 100) * max_npc)
 		if max >= 0 then return max end
 	elseif data.limit ~= nil then
-		return math_Round(data.limit)
+		return math.Round(data.limit)
 	end
 
 	return 0

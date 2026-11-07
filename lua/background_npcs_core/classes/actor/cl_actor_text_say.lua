@@ -1,9 +1,3 @@
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local LocalPlayer = LocalPlayer
-local IsValid = IsValid
-local cam_Start3D2D = cam.Start3D2D
-local cam_End3D2D = cam.End3D2D
-local draw_SimpleTextOutlined = draw.SimpleTextOutlined
 --
 local speaking_actors = {}
 local font_name = 'BGN_SpeakingFont'
@@ -34,15 +28,12 @@ local function DrawActorText(actor_uid, say_text, say_time)
 	local start_pos = 1
 	local end_pos = max_line_size
 	local str_len = utf8.len(text)
-	local utf8_sub = utf8.sub
-	local string_Trim = string.Trim
-	local table_insert = table.insert
 
 	if str_len >= max_line_size then
 		for k = 1, str_len do
 			if end_pos == k then
-				local line = utf8_sub(text, start_pos, end_pos)
-				table_insert(text_lines, string_Trim(line))
+				local line = utf8.sub(text, start_pos, end_pos)
+				table.insert(text_lines, string.Trim(line))
 
 				start_pos = k
 				end_pos = end_pos + max_line_size
@@ -55,10 +46,10 @@ local function DrawActorText(actor_uid, say_text, say_time)
 	end
 
 	if #text_lines == 0 then
-		table_insert(text_lines, text)
+		table.insert(text_lines, text)
 	end
 
-	table_insert(speaking_actors, {
+	table.insert(speaking_actors, {
 		uid = actor_uid,
 		actor = actor,
 		text_lines = text_lines,
@@ -111,12 +102,12 @@ hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
 
 		local text3d_y_axis = -15
 
-		cam_Start3D2D(start_pos, local_player_eye_angles, 0.25)
+		cam.Start3D2D(start_pos, local_player_eye_angles, 0.25)
 			for k = 1, #text_lines do
 				local draw_text = text_lines[k]
-				draw_SimpleTextOutlined(draw_text, font_name, 0, text3d_y_axis, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
+				draw.SimpleTextOutlined(draw_text, font_name, 0, text3d_y_axis, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
 				text3d_y_axis = text3d_y_axis + 15
 			end
-		cam_End3D2D()
+		cam.End3D2D()
 	end
 end)

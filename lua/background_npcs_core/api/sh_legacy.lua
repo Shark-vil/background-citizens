@@ -7,7 +7,6 @@
 	of each deprecated method is reported in the console.
 --]]
 
-local bgNPC = bgNPC
 local Util = bgNPC.Util
 local Actors = bgNPC.Actors
 local Points = bgNPC.Points

@@ -1,5 +1,3 @@
-local IsValid = IsValid
-local timer_Simple = timer.Simple
 local cvar_bgn_module_followers_mod_addon = GetConVar('bgn_module_followers_mod_addon')
 --
 
@@ -20,7 +18,7 @@ end
 
 local function created_actor_handler(actor)
 	local npc = actor:GetNPC()
-	timer_Simple(0, function()
+	timer.Simple(0, function()
 		if not IsValid(npc) then return end
 		-- shortcut: assumes Followers Mod uses SetNWEntity (NW1), which calls the NW proxy
 		npc:SetNWVarProxy('FMOD_MyTarget', function(_, _, _, value)

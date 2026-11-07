@@ -1,8 +1,3 @@
-local math = math
-local CLIENT = CLIENT
-local Vector = Vector
-local CurTime = CurTime
-local math_Round = math.Round
 --
 local LagTriggerDefault = 0.001
 local LagTrigger = LagTriggerDefault
@@ -14,7 +9,7 @@ local old_progress = -1
 local notify_progress_delay = 0
 
 local function ProgressNotify(ply, i, max)
-	local new_progress = math_Round((i / max) * 100)
+	local new_progress = math.Round((i / max) * 100)
 	if new_progress ~= old_progress and notify_progress_delay < CurTime() then
 		bgNPC.Net.Send('bgn_generate_navmesh_progress', ply, new_progress)
 		old_progress = new_progress
@@ -77,7 +72,6 @@ local function GenerateFromNavigation(ply, cmd, args)
 	end
 
 	bgNPC.Tasks.Add('bgn_generate_navmesh', function(yield, wait)
-		local BGN_NODE = BGN_NODE
 
 		BGN_NODE:ClearNodeMap()
 

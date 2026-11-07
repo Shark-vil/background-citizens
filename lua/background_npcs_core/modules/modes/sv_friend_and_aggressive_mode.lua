@@ -1,8 +1,3 @@
-local bgNPC = bgNPC
-local player_GetAll = player.GetAll
-local ipairs = ipairs
-local IsValid = IsValid
-
 cvars.AddChangeCallback('bgn_friend_mode', function(_, _, new_value)
 	if tonumber(new_value) == 0 then return end
 	RunConsoleCommand('bgn_agressive_mode', 0)
@@ -65,7 +60,7 @@ bgNPC.Tasks.Add('BGN_Agressive_Mode', function(yield, wait)
 
 		for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 			if actor and actor:IsAlive() then
-				for _, ply in ipairs(player_GetAll()) do
+				for _, ply in ipairs(player.GetAll()) do
 					if ply and IsValid(ply) and ply:Alive() then
 						actor:AddEnemy(ply)
 						if actor:EqualStateGroup('calm') then

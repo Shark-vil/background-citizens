@@ -1,9 +1,3 @@
-local bgNPC = bgNPC
-local NPC_STATE_SCRIPT = NPC_STATE_SCRIPT
-local SCHED_SLEEP = SCHED_SLEEP
-local hook_Run = hook.Run
-local isfunction = isfunction
-local isnumber = isnumber
 --
 
 -- timer.Create('BGN_ActorAnimationController', .1, 0, function()
@@ -24,7 +18,7 @@ hook.Add('Think', 'BGN_ActorAnimationController', function()
 
 			if actor:IsLoopSequence() then
 				if actor:IsSequenceLoopFinished() then
-					hook_Run('BGN_FinishNPCAnimation', actor, actor.anim_name)
+					hook.Run('BGN_FinishNPCAnimation', actor, actor.anim_name)
 					if not actor:PlayNextStaticSequence() then
 						actor:ResetSequence()
 					end
@@ -32,7 +26,7 @@ hook.Add('Think', 'BGN_ActorAnimationController', function()
 					npc:ResetSequence(actor.anim_sequence)
 				end
 			elseif actor:IsSequenceFinished() then
-				hook_Run('BGN_FinishNPCAnimation', actor, actor.anim_name)
+				hook.Run('BGN_FinishNPCAnimation', actor, actor.anim_name)
 				if not actor:PlayNextStaticSequence() then
 					actor:ResetSequence()
 				end

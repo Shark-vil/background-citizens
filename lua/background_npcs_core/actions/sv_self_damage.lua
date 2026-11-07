@@ -1,11 +1,4 @@
-local bgNPC = bgNPC
-local IsValid = IsValid
-local isbool = isbool
-local CurTime = CurTime
-local hook_Run = hook.Run
 local table_WhereFindBySeq = bgNPC.Table.FindWhere
-local table_insert = table.insert
-local math_Round = math.Round
 --
 local TeamParentModule
 
@@ -19,9 +12,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	local result
 
 	if target:IsNPC() or target:IsNextBot() then
-		result = hook_Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
+		result = hook.Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
 	elseif target:IsPlayer() then
-		result = hook_Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
+		result = hook.Run('BGN_TakeDamageFromPlayer', attacker, target, dmginfo)
 	end
 
 	if isbool(result) then return result end
@@ -38,7 +31,7 @@ local function CheckDamageIgnore(attacker, target)
 			value.count = 0
 		end
 	else
-		table_insert(target.LastDamageHistory, {
+		table.insert(target.LastDamageHistory, {
 			enemy = attacker,
 			count = 1,
 			time = CurTime()
@@ -70,7 +63,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 			elseif ActorTarget ~= nil then
 				local hp = target:Health() - dmginfo:GetDamage()
 				local max_hp = target:GetMaxHealth()
-				if hp > 0 and max_hp > 0 and hp > math_Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
+				if hp > 0 and max_hp > 0 and hp > math.Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker) then
 					return
 				end
 			end
@@ -85,7 +78,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		local reaction = ActorTarget:GetReactionForDamage()
 		ActorTarget:SetReaction(reaction)
 
-		local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
+		local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, reaction, dmginfo)
 		if isbool(hook_result) then return hook_result end
 
 		reaction = ActorTarget:GetLastReaction()
@@ -104,7 +97,7 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 		end
 	end
 
-	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, reaction, dmginfo)
 end)
 
 hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attacker, target, dmginfo)
@@ -121,8 +114,8 @@ hook.Add('BGN_TakeDamageFromPlayer', 'BGN_PlayerDamageReaction', function(attack
 		end
 	end
 
-	local hook_result = hook_Run('BGN_PreReactionTakeDamage', attacker, target, nil, dmginfo)
+	local hook_result = hook.Run('BGN_PreReactionTakeDamage', attacker, target, nil, dmginfo)
 	if isbool(hook_result) then return hook_result end
 
-	return hook_Run('BGN_PostReactionTakeDamage', attacker, target, nil, dmginfo)
+	return hook.Run('BGN_PostReactionTakeDamage', attacker, target, nil, dmginfo)
 end)

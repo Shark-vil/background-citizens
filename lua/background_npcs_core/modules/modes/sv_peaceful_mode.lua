@@ -1,5 +1,3 @@
-local bgNPC = bgNPC
-
 hook.Add('BGN_PreSetState', 'BGN_Peaceful_Mode', function(actor, state, data)
 	if not bgNPC.Modes.IsPeaceful() then return end
 

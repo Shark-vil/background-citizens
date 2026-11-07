@@ -1,12 +1,4 @@
 local Assert = bgNPC.Assert
-local Vector = Vector
-local Angle = Angle
-local NULL = NULL
-local setmetatable = setmetatable
-local istable = istable
-local isvector = isvector
-local isangle = isangle
-local table_insert = table.insert
 --
 
 BGN_SEAT = {}
@@ -88,7 +80,7 @@ end
 
 function BGN_SEAT:AddSeatToMap(seat)
 	if not istable(seat) or not seat.isSeat then return end
-	table_insert(self.Map, seat)
+	table.insert(self.Map, seat)
 end
 
 function BGN_SEAT:ClearSeats()

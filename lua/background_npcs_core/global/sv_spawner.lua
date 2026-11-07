@@ -1,26 +1,6 @@
-local bgNPC = bgNPC
-local util_IsInWorld = util.IsInWorld
-local string_StartWith = string.StartWith
--- local coroutine_yield = coroutine.yield
--- local ents_FindInSphere = ents.FindInSphere
-local util_TraceHull = util.TraceHull
-local ents_FindInBox = ents.FindInBox
-local timer_Simple = timer.Simple
-local IsValid = IsValid
-local util_TraceLine = util.TraceLine
 local table_shuffle = bgNPC.Table.Shuffle
-local GetConVar = GetConVar
-local Vector = Vector
 local table_RandomBySeq = bgNPC.Table.Random
-local player_GetHumans = player.GetHumans
-local math_random = math.random
-local math_Clamp = math.Clamp
-local hook_Run = hook.Run
-local istable = istable
-local isstring = isstring
 -- local math_sqrt = math.sqrt
-local pairs = pairs
-local ipairs = ipairs
 local Chance = bgNPC.Util.Chance
 -- local angle_zero = Angle()
 local vector_0_0_50 = Vector(0, 0, 50)
@@ -31,7 +11,6 @@ local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local assert = assert
 -- local FrameTime = FrameTime
 -- local LocalToWorld = LocalToWorld
-local coroutine_yield = coroutine.yield
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
@@ -51,7 +30,7 @@ local function IsValidSpawnFilter(ent)
 		and not ent:IsNextBot()
 		and not ent:IsVehicle()
 		and ent_class ~= 'trigger_hurt'
-		and not string_StartWith(ent_class, 'prop_') then
+		and not string.StartWith(ent_class, 'prop_') then
 			return true
 	end
 	return false
@@ -61,7 +40,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 	-- local entities = ents_FindInSphere(node_position, 150)
 	-- for e = 1, #entities do
 	-- 	local ent = entities[e]
-	-- 	if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string_StartWith(ent:GetClass(), 'prop_')) then
+	-- 	if IsValid(ent) and (ent:IsNPC() or ent:IsNextBot() or string.StartWith(ent:GetClass(), 'prop_')) then
 	-- 		-- debugoverlay_Sphere(node_position, 10, 1, clr_bad_spawn_pos)
 	-- 		return false
 	-- 	end
@@ -89,7 +68,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			-- local direction = (node_position - ply_eye_pos):GetNormalized()
 			-- local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
 
-			local tr = util_TraceLine({
+			local tr = util.TraceLine({
 				start = ply_eye_pos,
 				-- endpos = node_position + (direction * -100),
 				endpos = node_position,
@@ -100,7 +79,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 				end
 			})
 
-			if not tr.Hit or not util_IsInWorld(node_position) then
+			if not tr.Hit or not util.IsInWorld(node_position) then
 				return false
 			end
 		end
@@ -125,7 +104,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		pass_current = pass_current + 1
 		if pass_current >= bgNPC.Util.PassesPerYield() then
 			pass_current = 0
-			coroutine_yield()
+			coroutine.yield()
 		end
 	end
 
@@ -142,20 +121,20 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
 	elseif BGN_NODE:CountNodesOnMap() == 0 then
-		spawn_radius = math_Clamp(spawn_radius, 0, 1500)
-		radius_visibility = math_Clamp(block_radius, 0, 1000)
-		block_radius = math_Clamp(block_radius, 0, 600)
+		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
+		radius_visibility = math.Clamp(block_radius, 0, 1000)
+		block_radius = math.Clamp(block_radius, 0, 600)
 		spawn_radius_sqrt = spawn_radius ^ 2
 		radius_visibility_sqrt = radius_visibility ^ 2
 		block_radius_sqrt = block_radius ^ 2
 
-		local dist_x = math_random(block_radius, spawn_radius)
-		local dist_y = math_random(block_radius, spawn_radius)
-		local dist_z = math_random(0, 100)
+		local dist_x = math.random(block_radius, spawn_radius)
+		local dist_y = math.random(block_radius, spawn_radius)
+		local dist_z = math.random(0, 100)
 		if Chance(50) then dist_x = -dist_x end
 		if Chance(50) then dist_y = -dist_y end
 		local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z + dist_z)
-		local tr = util_TraceLine({
+		local tr = util.TraceLine({
 			start = new_pos + vector_0_0_50,
 			endpos = new_pos - vector_0_0_1000,
 			filter = function(ent)
@@ -164,7 +143,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		})
 		if not tr.Hit then return end
 		new_pos = tr.HitPos
-		if not util_IsInWorld(new_pos) then return end
+		if not util.IsInWorld(new_pos) then return end
 		if bgNPC.Util.IsVectorInWater(new_pos) then return end
 		if not IsNotBlockSpawnPosition(new_pos, all_players, target_entity) then return end
 		-- debugoverlay_Sphere(new_pos, 10, 2, clr_good_spawn_pos)
@@ -208,7 +187,7 @@ function bgNPC:NPCIsStuck(npc, position)
 
 	-- debugoverlay.Box(origin_center, obb_min, obb_max, 5, Color(233, 147, 34))
 
-	local tr = util_TraceHull({
+	local tr = util.TraceHull({
 		start = origin_center,
 		endpos = origin_center,
 		maxs = obb_max,
@@ -223,7 +202,7 @@ function bgNPC:NPCIsStuck(npc, position)
 		return true
 	end
 
-	local entities = ents_FindInBox(min_vector, max_vector)
+	local entities = ents.FindInBox(min_vector, max_vector)
 	for i = 1, #entities do
 		local ent = entities[i]
 		if ent ~= npc and not IsValidSpawnFilter(ent) or ent:IsWorld() then
@@ -237,7 +216,7 @@ end
 function bgNPC:FindSpawnPosition(settings, is_async)
 	settings = settings or {}
 
-	local all_players = player_GetHumans()
+	local all_players = player.GetHumans()
 	local desired_position = settings.position
 
 	if not desired_position then
@@ -252,7 +231,6 @@ function bgNPC:FindSpawnPosition(settings, is_async)
 	settings.position = desired_position
 	if not settings.position then return end
 
-	local isvector = isvector
 	local nodePosition = FindSpawnLocationProcess(all_players, settings, is_async)
 	if nodePosition and isvector(nodePosition) then
 		return nodePosition
@@ -265,15 +243,10 @@ end
 
 do
 	local random_models_storage = {}
-	local player_GetCount = player.GetCount
 	local table_HasValueBySeq = bgNPC.Table.HasValue
-	local list_Get = list.Get
-	local table_insert = table.insert
-	local util_IsValidModel = util.IsValidModel
-	-- local math_random = math.random
 
 	function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect)
-		if player_GetCount() == 0 then return end
+		if player.GetCount() == 0 then return end
 		if bgNPC.Util.IsVectorInWater(desiredPosition) then return end
 
 		local npc_data = bgNPC.Config.GetActor(npc_type)
@@ -287,9 +260,9 @@ do
 			npc_class = npc_data.class
 		end
 
-		if hook_Run('BGN_OnValidSpawnActor', npc_type, npc_data, npc_class, desiredPosition) then return end
+		if hook.Run('BGN_OnValidSpawnActor', npc_type, npc_data, npc_class, desiredPosition) then return end
 
-		local new_npc_data, new_npc_class = hook_Run('BGN_OverrideSpawnData', npc_type, npc_data, npc_class)
+		local new_npc_data, new_npc_class = hook.Run('BGN_OverrideSpawnData', npc_type, npc_data, npc_class)
 
 		if new_npc_data then
 			npc_data = new_npc_data
@@ -311,9 +284,9 @@ do
 			ATTENTION! Be careful, this hook is called before the NPC spawns. 
 			If you give out a weapon or something similar, it will crash the game!
 		--]]
-		if hook_Run('BGN_PreSpawnActor', npc, npc_type, npc_data, npc_class, desiredPosition) then
+		if hook.Run('BGN_PreSpawnActor', npc, npc_type, npc_data, npc_class, desiredPosition) then
 			npc:Spawn()
-			timer_Simple(0, function()
+			timer.Simple(0, function()
 				if not IsValid(npc) then return end
 				npc:Remove()
 			end)
@@ -332,7 +305,7 @@ do
 		npc:PhysWake()
 
 		if bgNPC:NPCIsStuck(npc) then
-			timer_Simple(0, function()
+			timer.Simple(0, function()
 				if not IsValid(npc) then return end
 				npc:Remove()
 			end)
@@ -341,14 +314,14 @@ do
 
 		-- if npc.DropToFloor then npc:DropToFloor() end
 
-		hook_Run('BGN_PostSpawnActor', npc, npc_type, npc_data)
+		hook.Run('BGN_PostSpawnActor', npc, npc_type, npc_data)
 
 		local skip_set_model = false
 		local npcs_list = nil
 
 		do
 			local actorData = bgNPC.cfg.actors[npc_type]
-			npcs_list = list_Get('NPC')
+			npcs_list = list.Get('NPC')
 
 			for npcClass, actorTypesList in pairs(bgNPC.SpawnMenu.Creator['NPC']) do
 				for _, actorType in ipairs(actorTypesList) do
@@ -369,7 +342,7 @@ do
 
 				for k, v in pairs(npcs_list) do
 					if v.Model and isstring(v.Model) and v.Class == npc_class then
-						table_insert(random_models_storage[npc_class], v)
+						table.insert(random_models_storage[npc_class], v)
 					end
 				end
 			end
@@ -377,7 +350,7 @@ do
 			local models = random_models_storage[npc_class]
 			if models and #models ~= 0 then
 				local model_info = table_RandomBySeq(models)
-				if util_IsValidModel(model_info.Model) then
+				if util.IsValidModel(model_info.Model) then
 					npc:SetModel(model_info.Model)
 
 					if model_info.KeyValues and istable(model_info.KeyValues) then
@@ -396,11 +369,11 @@ do
 				model = table_RandomBySeq(npc_data.models)
 			end
 
-			if model and util_IsValidModel(model) then
+			if model and util.IsValidModel(model) then
 				-- Backward compatibility with the old version of the config
 				local default_models = npc_data.default_models or npc_data.defaultModels
 
-				if (not default_models or Chance(80)) and not hook_Run('BGN_PreSetActorModel', model, npc, npc_type, npc_data) then
+				if (not default_models or Chance(80)) and not hook.Run('BGN_PreSetActorModel', model, npc, npc_type, npc_data) then
 					npc:SetModel(model)
 				end
 			end
@@ -411,10 +384,10 @@ do
 			local random_skin = npc_data.random_skin or npc_data.randomSkin
 
 			if random_skin then
-				local skinNumber = math_random(0, npc:SkinCount())
+				local skinNumber = math.random(0, npc:SkinCount())
 
-				if not hook_Run('BGN_PreSetActorSkin', skinNumber, npc, npc_type, npc_data) then
-					npc:SetSkin(math_random(0, npc:SkinCount()))
+				if not hook.Run('BGN_PreSetActorSkin', skinNumber, npc, npc_type, npc_data) then
+					npc:SetSkin(math.random(0, npc:SkinCount()))
 				end
 			end
 		end
@@ -426,9 +399,9 @@ do
 			if random_bodygroups then
 				for _, bodygroup in ipairs(npc:GetBodyGroups()) do
 					local id = bodygroup.id
-					local value = math_random(0, npc:GetBodygroupCount(id))
+					local value = math.random(0, npc:GetBodygroupCount(id))
 
-					if not hook_Run('BGN_PreSetActorBodygroup', id, value, npc, npc_type, npc_data) then
+					if not hook.Run('BGN_PreSetActorBodygroup', id, value, npc, npc_type, npc_data) then
 						npc:SetBodygroup(id, value)
 					end
 				end

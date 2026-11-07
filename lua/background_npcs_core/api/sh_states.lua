@@ -1,4 +1,3 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local States = bgNPC.States
 --

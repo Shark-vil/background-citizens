@@ -1,6 +1,3 @@
-local IsValid = IsValid
-local CurTime = CurTime
-local math_random = math.random
 --
 
 local function update_state(actor)
@@ -11,18 +8,18 @@ local function update_state(actor)
 
 	local npc = actor:GetNPC()
 	local data = actor:GetStateData()
-	data.call_for_help = data.call_for_help or CurTime() + math_random(25, 40)
+	data.call_for_help = data.call_for_help or CurTime() + math.random(25, 40)
 
 	local dist = npc:GetPos():DistToSqr(enemy:GetPos())
 	if dist < 40000 and bgNPC.Util.IsInView(enemy, npc:GetPos()) then -- 200 ^ 2
-		if data.call_for_help < CurTime() and math_random(0, 100) <= 2 then
+		if data.call_for_help < CurTime() and math.random(0, 100) <= 2 then
 			actor:CallForHelp(enemy)
-			data.call_for_help = CurTime() + math_random(25, 40)
+			data.call_for_help = CurTime() + math.random(25, 40)
 		end
 	elseif bgNPC.Util.Chance(25) then
 		actor:StopStaticSequence()
 		actor:SetState('run_from_danger', {
-			dyspnea_delay = CurTime() + math_random(10, 20)
+			dyspnea_delay = CurTime() + math.random(10, 20)
 		})
 	end
 end
@@ -36,12 +33,12 @@ local function update_animation(actor)
 
 	if data.update_animation < CurTime() then
 		data.update_animation = CurTime() + 2
-		data.animation_type = math_random(0, 100)
+		data.animation_type = math.random(0, 100)
 	else
 		return
 	end
 
-	local animation_twitching = math_random(0, 100)
+	local animation_twitching = math.random(0, 100)
 
 	if data.animation_type > 30 then
 		if animation_twitching >= 10 then
@@ -75,7 +72,7 @@ bgNPC.States.Register('fear', 'danger', {
 		end
 
 		local dist = enemy:GetPos():DistToSqr(npc:GetPos())
-		if dist <= 490000 and math_random(0, 10) > 5 then
+		if dist <= 490000 and math.random(0, 10) > 5 then
 			actor:FearScream()
 			actor:Fear()
 		end

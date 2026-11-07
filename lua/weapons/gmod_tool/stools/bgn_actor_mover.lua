@@ -1,14 +1,3 @@
-local IsValid = IsValid
-local util = util
-local CurTime = CurTime
-local bgNPC = bgNPC
-local hook = hook
-local surface = surface
-local cam = cam
-local draw = draw
-local halo = halo
-local GetConVar = GetConVar
-local language = language
 --
 
 TOOL.Category = 'Background NPCs'

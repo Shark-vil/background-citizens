@@ -1,10 +1,4 @@
-local GetConVar = GetConVar
-local hook_Run = hook.Run
-local IsValid = IsValid
-local string_find = string.find
 local table_HasValueBySeq = bgNPC.Table.HasValue
-local bgNPC = bgNPC
-local IsValid = IsValid
 local cvar_bgn_shot_sound_mode = GetConVar('bgn_shot_sound_mode')
 --
 
@@ -22,7 +16,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 	for i = 1, #sounds_name_found do
 		local name = sounds_name_found[i]
 
-		if string_find(sound_name, name) then
+		if string.find(sound_name, name) then
 			IsFound = true
 			break
 		end
@@ -37,7 +31,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 		actor:SetReaction(reaction)
 		local npc = actor:GetNPC()
 
-		if npc == attacker or not bgNPC.Vision.HasLineOfSight(npc, attacker) or hook_Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then
+		if npc == attacker or not bgNPC.Vision.HasLineOfSight(npc, attacker) or hook.Run('BGN_PreDamageToAnotherActor', actor, attacker, npc, reaction) then
 			continue
 		end
 
@@ -45,6 +39,6 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 			actor:SetState(actor:GetLastReaction())
 		end
 
-		hook_Run('BGN_PostDamageToAnotherActor', actor, attacker, npc, reaction)
+		hook.Run('BGN_PostDamageToAnotherActor', actor, attacker, npc, reaction)
 	end
 end)

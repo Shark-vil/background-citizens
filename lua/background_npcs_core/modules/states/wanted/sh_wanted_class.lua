@@ -1,13 +1,3 @@
-local bgNPC = bgNPC
-local SERVER = SERVER
-local IsValid = IsValid
-local GetConVar = GetConVar
-local CurTime = CurTime
-local isnumber = isnumber
-local math_Round = math.Round
-local hook = hook
-local table = table
-local list = list
 --
 local ASSET = {}
 local wanted_list = {}
@@ -39,14 +29,14 @@ function ASSET:Instance(ent)
 	end
 
 	function public:UpdateWaitTime(time)
-		self.wait_time = math_Round(time)
+		self.wait_time = math.Round(time)
 
 		if self.time_reset - CurTime() > wanted_time then
 			self.time_reset = CurTime() + wanted_time
 		end
 
 		if self.wait_time > wanted_time then
-			self.wait_time = math_Round(wanted_time)
+			self.wait_time = math.Round(wanted_time)
 		end
 
 		if SERVER then

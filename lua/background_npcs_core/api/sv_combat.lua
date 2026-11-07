@@ -1,12 +1,8 @@
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local Util = bgNPC.Util
 local Actors = bgNPC.Actors
 local Modules = bgNPC.Modules
 local Combat = bgNPC.Combat
-local IsValid = IsValid
-local istable = istable
-local isnumber = isnumber
 --
 
 local FirstAttackerModule, WantedModule

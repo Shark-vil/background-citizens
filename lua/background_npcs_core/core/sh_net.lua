@@ -17,7 +17,6 @@
 		Net.SetProgressText(name, text) shows a progress notification for chunked transfers
 --]]
 
-local bgNPC = bgNPC
 local Net = bgNPC.Net or {}
 bgNPC.Net = Net
 
@@ -28,40 +27,6 @@ local CHUNK_LIFETIME = 30
 local WAIT_ENTITIES_TIME = 3
 local CLIENT_RATE_LIMIT = 100 -- messages per second from one client
 
-local SERVER = SERVER
-local CLIENT = CLIENT
-local TypeID = TypeID
-local IsValid = IsValid
-local IsColor = IsColor
-local Entity = Entity
-local Vector = Vector
-local Angle = Angle
-local Color = Color
-local NULL = NULL
-local pairs = pairs
-local tonumber = tonumber
-local tostring = tostring
-local unpack = unpack
-local select = select
-local xpcall = xpcall
-local RealTime = RealTime
-local string_format = string.format
-local string_find = string.find
-local string_sub = string.sub
-local string_byte = string.byte
-local string_match = string.match
-local table_concat = table.concat
-local util_Compress = util.Compress
-local util_Decompress = util.Decompress
-local ErrorNoHaltWithStack = ErrorNoHaltWithStack
-local TYPE_NIL = TYPE_NIL
-local TYPE_BOOL = TYPE_BOOL
-local TYPE_NUMBER = TYPE_NUMBER
-local TYPE_STRING = TYPE_STRING
-local TYPE_TABLE = TYPE_TABLE
-local TYPE_ENTITY = TYPE_ENTITY
-local TYPE_VECTOR = TYPE_VECTOR
-local TYPE_ANGLE = TYPE_ANGLE
 --
 
 -- ---------------------------------------------------------------------------
@@ -72,8 +37,8 @@ local function num(v)
 	if v ~= v then return 'nan' end
 	if v == math.huge then return 'inf' end
 	if v == -math.huge then return '-inf' end
-	if v % 1 == 0 and v > -1e15 and v < 1e15 then return string_format('%d', v) end
-	return string_format('%.17g', v)
+	if v % 1 == 0 and v > -1e15 and v < 1e15 then return string.format('%d', v) end
+	return string.format('%.17g', v)
 end
 
 local function tonum(s)
@@ -146,18 +111,18 @@ function Net.Serialize(...)
 	for i = 1, count do
 		n = WriteValue(buf, n, (select(i, ...)), seen)
 	end
-	return table_concat(buf, '', 1, n)
+	return table.concat(buf, '', 1, n)
 end
 
 local Read
 
 local function ReadNumberUntil(s, i, stop)
-	local j = string_find(s, stop, i, true)
-	return string_sub(s, i, j - 1), j + 1
+	local j = string.find(s, stop, i, true)
+	return string.sub(s, i, j - 1), j + 1
 end
 
 local function ReadValue(s, i, state)
-	local c = string_byte(s, i)
+	local c = string.byte(s, i)
 
 	if c == 95 then return nil, i + 1 -- _
 	elseif c == 84 then return true, i + 1 -- T
@@ -166,9 +131,9 @@ local function ReadValue(s, i, state)
 		local text, j = ReadNumberUntil(s, i + 1, ';')
 		return tonum(text), j
 	elseif c == 115 then -- s
-		local j = string_find(s, ':', i + 1, true)
-		local len = tonumber(string_sub(s, i + 1, j - 1))
-		return string_sub(s, j + 1, j + len), j + len + 1
+		local j = string.find(s, ':', i + 1, true)
+		local len = tonumber(string.sub(s, i + 1, j - 1))
+		return string.sub(s, j + 1, j + len), j + len + 1
 	elseif c == 101 then -- e
 		local text, j = ReadNumberUntil(s, i + 1, ';')
 		local index = tonumber(text)
@@ -178,17 +143,17 @@ local function ReadValue(s, i, state)
 	elseif c == 69 then return NULL, i + 1 -- E
 	elseif c == 118 or c == 97 then -- v / a
 		local text, j = ReadNumberUntil(s, i + 1, ';')
-		local x, y, z = string_match(text, '^([^,]+),([^,]+),(.+)$')
+		local x, y, z = string.match(text, '^([^,]+),([^,]+),(.+)$')
 		if c == 118 then return Vector(tonum(x), tonum(y), tonum(z)), j end
 		return Angle(tonum(x), tonum(y), tonum(z)), j
 	elseif c == 99 then -- c
 		local text, j = ReadNumberUntil(s, i + 1, ';')
-		local r, g, b, a = string_match(text, '^([^,]+),([^,]+),([^,]+),(.+)$')
+		local r, g, b, a = string.match(text, '^([^,]+),([^,]+),([^,]+),(.+)$')
 		return Color(tonumber(r), tonumber(g), tonumber(b), tonumber(a)), j
 	elseif c == 123 then -- {
 		local t = {}
 		i = i + 1
-		while string_byte(s, i) ~= 125 do
+		while string.byte(s, i) ~= 125 do
 			local key, value
 			key, i = Read(s, i, state)
 			value, i = Read(s, i, state)
@@ -303,7 +268,7 @@ end
 local function Transmit(name, send, ...)
 	local payload = Net.Serialize(...)
 	local compressed = #payload > COMPRESS_FROM
-	if compressed then payload = util_Compress(payload) end
+	if compressed then payload = util.Compress(payload) end
 
 	local total = math.ceil(#payload / CHUNK_SIZE)
 	if total <= 1 then
@@ -319,7 +284,7 @@ local function Transmit(name, send, ...)
 	-- One chunk per tick, so big transfers never overflow the reliable channel.
 	timer.Create('bgn_net_send_' .. id, 0, total, function()
 		part = part + 1
-		local chunk = string_sub(payload, (part - 1) * CHUNK_SIZE + 1, part * CHUNK_SIZE)
+		local chunk = string.sub(payload, (part - 1) * CHUNK_SIZE + 1, part * CHUNK_SIZE)
 		WriteMessage(name, total, id, part, text, compressed, chunk, send)
 		if CLIENT then Progress('bgn_net_' .. id, text, part, total) end
 	end)
@@ -412,11 +377,11 @@ net.Receive(CHANNEL, function(_, ply)
 		if buffer.count < total then return end
 
 		buffers[sender][id] = nil
-		data = table_concat(buffer.parts, '', 1, total)
+		data = table.concat(buffer.parts, '', 1, total)
 	end
 
 	if compressed then
-		data = util_Decompress(data)
+		data = util.Decompress(data)
 		if not data then return end
 	end
 

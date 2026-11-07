@@ -1,8 +1,3 @@
-local bgNPC = bgNPC
-local IsValid = IsValid
-local isfunction = isfunction
-local pairs = pairs
-local team_GetName = team.GetName
 --
 local ASSET = {}
 
@@ -14,7 +9,7 @@ function ASSET:HasTeam(ply, actor)
 		if actor:HasTeam(team_name) and bgNPC.Table.HasValue(data, team_id) then return true end
 	end
 
-	local ply_team_name = team_GetName(team_id)
+	local ply_team_name = team.GetName(team_id)
 
 	for team_name, data in pairs(bgNPC.cfg.player.team_names_parents) do
 		if actor:HasTeam(team_name) and bgNPC.Table.HasValue(data, ply_team_name) then return true end

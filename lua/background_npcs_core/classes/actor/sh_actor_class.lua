@@ -1,21 +1,8 @@
 local BaseClass = include('background_npcs_core/classes/actor/sh_actor_base.lua')
-local bgNPC = bgNPC
 local Assert = bgNPC.Assert
-local SERVER = SERVER
-local SCHED_FORCED_GO = SCHED_FORCED_GO
-local NULL = NULL
-local setmetatable = setmetatable
-local ipairs = ipairs
-local isbool = isbool
-local istable = istable
-local isstring = isstring
-local IsValid = IsValid
 local table_RandomBySeq = bgNPC.Table.Random
-local table_Copy = table.Copy
 local NextId = bgNPC.Util.NextId
 local Chance = bgNPC.Util.Chance
-local timer_Simple = timer.Simple
-local hook_Run = hook.Run
 --
 
 BGN_ACTOR = {}
@@ -105,7 +92,7 @@ local function PostInitialize(actor, actor_data, not_sync_actor_on_client, not_a
 		end
 
 		if start_random_state or actor_data.start_state then
-			timer_Simple(1, function()
+			timer.Simple(1, function()
 				if not actor:IsAlive() then return end
 				if start_random_state then
 					actor:RandomState()
@@ -124,7 +111,7 @@ local function PostInitialize(actor, actor_data, not_sync_actor_on_client, not_a
 		bgNPC.Actors.Register(actor)
 	end
 
-	hook_Run('BGN_InitActor', actor)
+	hook.Run('BGN_InitActor', actor)
 
 	actor.start_think = true
 end
@@ -147,7 +134,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	local npc_data = bgNPC.Config.GetActor(npc_type)
 	if not npc_data then return end
 
-	local data = table_Copy(npc_data)
+	local data = table.Copy(npc_data)
 	local obj = setmetatable({}, BaseClass)
 
 	obj.isBgnClass = true
@@ -235,7 +222,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 		npc:CapabilitiesAdd(NPC_CAPABILITIES)
 	end
 
-	timer_Simple(0, function()
+	timer.Simple(0, function()
 		PostInitialize(obj, data, not_sync_actor_on_client, not_auto_added_to_list)
 	end)
 

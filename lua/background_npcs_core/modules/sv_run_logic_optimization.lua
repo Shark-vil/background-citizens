@@ -1,9 +1,3 @@
-local bgNPC = bgNPC
-local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
-local IsValid = IsValid
-local CurTime = CurTime
-local isfunction = isfunction
-local player_GetAll = player.GetAll
 --
 local bgn_enable = GetConVar('bgn_enable'):GetBool()
 local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat() ^ 2
@@ -20,7 +14,7 @@ local function process(yield, wait)
 			return
 		end
 
-		local players = player_GetAll()
+		local players = player.GetAll()
 		local players_count = #players
 
 		if players_count == 0 then

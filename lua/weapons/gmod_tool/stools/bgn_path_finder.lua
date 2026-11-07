@@ -1,5 +1,3 @@
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local LocalPlayer = LocalPlayer
 --
 TOOL.Category = 'Background NPCs'
 TOOL.Name = '#tool.bgn_path_finder.name'
@@ -90,11 +88,6 @@ else
 	local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
 	local vec_20 = Vector(0, 0, 20)
-	local cam_Start3D2D = cam.Start3D2D
-	local cam_End3D2D = cam.End3D2D
-	local draw_SimpleTextOutlined = draw.SimpleTextOutlined
-	local render_DrawSphere = render.DrawSphere
-	local render_DrawLine = render.DrawLine
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PathFinder', function()
 		local tool = bgNPC.Util.GetActivePlayerTool('bgn_path_finder', LocalPlayer())
@@ -105,18 +98,18 @@ else
 			local pos = tool.Path[i]
 
 			if i ~= 1 then
-				render_DrawLine(pos, tool.Path[i - 1], clr_232_59)
+				render.DrawLine(pos, tool.Path[i - 1], clr_232_59)
 			end
 
-			render_DrawSphere(pos, 10, 5, 5, clr_green)
+			render.DrawSphere(pos, 10, 5, 5, clr_green)
 
 			local cam_angle = LocalPlayer():EyeAngles()
 			cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
 			cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 
-			cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
-				draw_SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-			cam_End3D2D()
+			cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
+				draw.SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
+			cam.End3D2D()
 		end
 	end)
 

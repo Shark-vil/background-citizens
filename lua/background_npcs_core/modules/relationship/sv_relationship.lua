@@ -1,8 +1,3 @@
-local ipairs = ipairs
-local player_GetAll = player.GetAll
-local ents_GetAll = ents.GetAll
-local isfunction = isfunction
-local IsValid = IsValid
 --
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
 -- local cvar_bgn_debug = GetConVar('bgn_debug')
@@ -26,7 +21,7 @@ local function GetPlayersDisposition(npc)
 
 	local dispositions = {}
 
-	for _, ply in ipairs(player_GetAll()) do
+	for _, ply in ipairs(player.GetAll()) do
 		local index = npc:Disposition(ply)
 		dispositions[index] = dispositions[index] or 0
 		dispositions[index] = dispositions[index] + 1
@@ -48,7 +43,7 @@ end
 -- Gets a neutral value if the NPC is not aggressive towards any player
 local function GetPlayersDisposition(npc)
 	if isfunction(npc.Disposition) then
-		for _, ply in ipairs(player_GetAll()) do
+		for _, ply in ipairs(player.GetAll()) do
 			if npc:Disposition(ply) == D_HT then
 				return D_HT
 			end
@@ -195,7 +190,7 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 
 	-- Sets neutral relations for all existing players
 	if isfunction(npc.AddEntityRelationship) then
-		for _, ply in ipairs(player_GetAll()) do
+		for _, ply in ipairs(player.GetAll()) do
 			npc:AddEntityRelationship(ply, actor:GetRelationship(ply) or D_NU, 99)
 
 			-- if cvar_bgn_debug:GetBool() then
@@ -216,7 +211,7 @@ end)
 hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', function(actor)
 	if not actor:IsAlive() then return end
 
-	for _, npc in ipairs(ents_GetAll()) do
+	for _, npc in ipairs(ents.GetAll()) do
 		if IsValid(npc) and (npc:IsNPC() or npc:IsNextBot()) then
 			SetNPCRelationship(actor, npc)
 		end

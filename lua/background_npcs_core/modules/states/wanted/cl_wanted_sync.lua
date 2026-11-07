@@ -1,4 +1,3 @@
-local bgNPC = bgNPC
 --
 local asset = bgNPC.Modules.Get('wanted')
 
