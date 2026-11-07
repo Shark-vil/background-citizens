@@ -48,15 +48,8 @@ bgNPC.States.Register('dialogue', 'calm', {
 				npc1:SetAngles(Angle(npc1Angle.x, npc1NewAngle.y, npc1Angle.z))
 				npc2:SetAngles(Angle(npc2Angle.x, npc2NewAngle.y, npc2Angle.z))
 
-				if actor1:IsSequenceFinished() then
-					npc1:SetNPCState(NPC_STATE_SCRIPT)
-					npc1:SetSchedule(SCHED_SLEEP)
-				end
-
-				if actor2:IsSequenceFinished() then
-					npc2:SetNPCState(NPC_STATE_SCRIPT)
-					npc2:SetSchedule(SCHED_SLEEP)
-				end
+				if actor1:IsSequenceFinished() then actor1:GetBody():HoldStill() end
+				if actor2:IsSequenceFinished() then actor2:GetBody():HoldStill() end
 
 				npc1:PhysWake()
 				npc2:PhysWake()

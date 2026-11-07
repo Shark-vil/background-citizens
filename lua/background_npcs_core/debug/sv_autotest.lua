@@ -2,7 +2,7 @@
 	In-game smoke test, used by the development harness.
 	Does nothing unless "data/bgn_autotest/run.txt" exists
 	(JSON: { "duration": 60, "commands": ["bgn_max_npc 30"], "fight": 10 }).
-	"fight": seconds after start when a gangster hits the nearest citizen (exercises reactions and GOAP).
+	"fight": seconds after start when the closest gangster attacks a citizen (exercises reactions and GOAP).
 	The trigger file is deleted on start. The report is written to "data/bgn_autotest/report.json".
 	Manual run: "bgn_autotest [seconds]".
 --]]
@@ -12,6 +12,22 @@ local REPORT = 'bgn_autotest/report.json'
 
 -- GOAP observations over the run: "set/goal/action" -> samples seen
 local goap_seen, goap_examples = {}, {}
+-- actor uid -> position at the start, to count actors that actually walked
+local start_positions = {}
+local combat = { nextbot_shots = 0, kills = 0 }
+
+local function CountMoved()
+	local moved, total = 0, 0
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local from = start_positions[actor.uid]
+		local npc = actor:GetNPC()
+		if from and IsValid(npc) then
+			total = total + 1
+			if npc:GetPos():DistToSqr(from) > 200 * 200 then moved = moved + 1 end
+		end
+	end
+	return { moved = moved, tracked = total }
+end
 
 local function SampleGOAP()
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
@@ -25,29 +41,35 @@ local function SampleGOAP()
 	end
 end
 
--- A gangster hits the nearest citizen, through the normal damage path.
+-- The closest gangster/citizen pair: the gangster targets the citizen and hits it through the normal damage path.
 local function Provoke()
-	local gangster = bgNPC.Actors.GetByType('gangster')[1]
-	if not gangster then MsgN('[BGN AUTOTEST] fight: no gangster') return end
-	local attacker = gangster:GetNPC()
-	local victim, best
-	for _, actor in ipairs(bgNPC.Actors.GetByType('citizen')) do
-		local dist = actor:GetNPC():GetPos():DistToSqr(attacker:GetPos())
-		if not best or dist < best then victim, best = actor:GetNPC(), dist end
+	local gangster, victim, best
+	for _, g in ipairs(bgNPC.Actors.GetByType('gangster')) do
+		for _, c in ipairs(bgNPC.Actors.GetByType('citizen')) do
+			if g:IsAlive() and c:IsAlive() then
+				local dist = g:GetNPC():GetPos():DistToSqr(c:GetNPC():GetPos())
+				if not best or dist < best then gangster, victim, best = g, c, dist end
+			end
+		end
 	end
-	if not IsValid(victim) then MsgN('[BGN AUTOTEST] fight: no citizen') return end
+	if not gangster then MsgN('[BGN AUTOTEST] fight: no gangster/citizen pair') return end
+
+	local attacker = gangster:GetNPC()
+	gangster.weapon = gangster.weapon or 'weapon_pistol'
+	gangster:AddEnemy(victim:GetNPC())
+	gangster:SetState('defense', nil, true)
 
 	local dmg = DamageInfo()
 	dmg:SetDamage(5)
 	dmg:SetAttacker(attacker)
 	dmg:SetInflictor(attacker)
 	dmg:SetDamageType(DMG_CLUB)
-	victim:TakeDamageInfo(dmg)
-	MsgN('[BGN AUTOTEST] fight: gangster hit a citizen at ' .. math.floor(math.sqrt(best)) .. ' units')
+	victim:GetNPC():TakeDamageInfo(dmg)
+	MsgN('[BGN AUTOTEST] fight: gangster attacks a citizen at ' .. math.floor(math.sqrt(best)) .. ' units')
 end
 
 local function CollectReport(samples, started_at)
-	local by_type, by_state, by_brain, by_body, by_lod = {}, {}, {}, {}, {}
+	local by_type, by_state, by_brain, by_body, by_lod, by_model = {}, {}, {}, {}, {}, {}
 
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		local actor_type = actor:GetType()
@@ -58,6 +80,9 @@ local function CollectReport(samples, started_at)
 		by_brain[brain] = (by_brain[brain] or 0) + 1
 		local body = actor.body and actor.body.ClassName or 'none'
 		by_body[body] = (by_body[body] or 0) + 1
+		local npc = actor:GetNPC()
+		local model = IsValid(npc) and npc:GetModel() or 'none'
+		by_model[model] = (by_model[model] or 0) + 1
 		local lod = tostring(actor.lod)
 		by_lod[lod] = (by_lod[lod] or 0) + 1
 	end
@@ -81,11 +106,14 @@ local function CollectReport(samples, started_at)
 		by_brain = by_brain,
 		by_body = by_body,
 		by_lod = by_lod,
+		by_model = by_model,
 		tasks_ms_avg = task_ms_sum / n,
 		tasks_ms_max = task_ms_max,
 		frame_ms_avg = frame_sum / n * 1000,
 		selftest_ok = bgNPC.Test.last_ok,
 		nav = nav,
+		movement = CountMoved(),
+		combat = combat,
 		goap_seen = goap_seen,
 		goap_examples = goap_examples,
 		extra = bgNPC.AutoTestExtra and bgNPC.AutoTestExtra() or nil,
@@ -93,7 +121,16 @@ local function CollectReport(samples, started_at)
 end
 
 local function Run(duration, commands, fight)
-	goap_seen, goap_examples = {}, {}
+	goap_seen, goap_examples, start_positions = {}, {}, {}
+	combat = { nextbot_shots = 0, kills = 0 }
+	hook.Add('EntityFireBullets', 'BGN_AutoTest', function(ent)
+		if ent.IsBGNNextBot then combat.nextbot_shots = combat.nextbot_shots + 1 end
+	end)
+	hook.Add('OnNPCKilled', 'BGN_AutoTest', function() combat.kills = combat.kills + 1 end)
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local npc = actor:GetNPC()
+		if IsValid(npc) then start_positions[actor.uid] = npc:GetPos() end
+	end
 	MsgN('[BGN AUTOTEST] start, ' .. duration .. 's')
 
 	for _, command in ipairs(commands or {}) do

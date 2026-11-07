@@ -38,6 +38,8 @@ function Body:StopMoving() end
 function Body:IsMoving() return false end
 -- Steps away from the current enemy (short retreat).
 function Body:MoveAwayFromEnemy() end
+-- Stands still and keeps the AI from walking away (dialogues, scripted moments).
+function Body:HoldStill() self:StopMoving() end
 -- Plays the cower / scared reaction.
 function Body:Cower() end
 -- Runs an engine schedule id. NPCs execute it as is, other bodies map the common ones.

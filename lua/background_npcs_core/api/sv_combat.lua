@@ -62,7 +62,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
 	Assert.Arg(2, weapon_class, 'string|nil', 'bgNPC.Combat.EquipActor')
 	Assert.Arg(3, switching, 'boolean|nil', 'bgNPC.Combat.EquipActor')
 
-	if not actor:IsAlive() or not actor:IsNPC() then return end
+	if not actor:IsAlive() or not (actor:IsNPC() or actor:IsNextBot()) then return end
 
 	local cvar_disable_weapon = Util.GetCVar('bgn_disable_weapon_' .. actor:GetType())
 	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end
@@ -87,7 +87,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
 	-- Backward compatibility with the old version of the config
 	local data = actor:GetData()
 	local weapon_skill = data.weapon_skill or data.weaponSkill
-	if isnumber(weapon_skill) then
+	if isnumber(weapon_skill) and npc:IsNPC() then
 		npc:SetCurrentWeaponProficiency(weapon_skill)
 	end
 

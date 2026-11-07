@@ -218,7 +218,7 @@ function Actor:Init(npc, npc_type, custom_uid, not_sync_actor_on_client, not_aut
 	-- Entity snapshot
 	self.npc = npc
 	self.npc_index = npc:EntIndex()
-	self.class = npc:GetClass()
+	self.class = npc.bgn_npc_class or npc:GetClass()
 	self.skin = npc:GetSkin()
 	self.model = npc:GetModel()
 	self.collision_group = npc:GetCollisionGroup()

@@ -265,11 +265,12 @@ do
 			npc_class = new_npc_class
 		end
 
-		local npc = ents.Create(npc_class)
+		local npc = ents.Create(bgNPC.NextBotBody.ResolveClass(npc_class))
 		if not IsValid(npc) then
 			MsgN('[Background NPCs] ERROR: Actor with class - ' .. npc_class .. ' cannot be created!')
 			return
 		end
+		npc.bgn_npc_class = npc_class -- the NPC class a NextBot body stands in for
 
 		npc:SetPos(desiredPosition)
 

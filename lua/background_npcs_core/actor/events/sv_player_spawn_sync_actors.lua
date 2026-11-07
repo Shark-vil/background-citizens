@@ -10,7 +10,7 @@ hook.Add('BGN_PlayerReady', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 			local npc_type = actor:GetType()
 			local npc = actor:GetNPC()
 
-			npc:AddEntityRelationship(ply, D_NU, 99)
+			actor:GetBody():SetDisposition(ply, D_NU)
 
 			timer.Simple(delay, function()
 				if not IsValid(ply) or not IsValid(npc) then return end

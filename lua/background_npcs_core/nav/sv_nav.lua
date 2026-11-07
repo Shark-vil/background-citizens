@@ -43,7 +43,6 @@ end
 -- @return table|nil list of Vectors from start to goal (excluding start)
 function Provider:FindPath(start_pos, goal_pos, link_type) return nil end
 -- Can the body walk the whole way to a far point by itself (no waypoints needed)?
-function Provider:BodyPathsItself(body) return false end
 function Provider:GetInfo() return { provider = self.name, points = self:Count() } end
 
 -- ---------------------------------------------------------------------------
@@ -126,7 +125,8 @@ function Nav.GetPointsInRadius(center, radius, link_type) return active:GetPoint
 function Nav.GetAllPoints(link_type) return active:GetAllPoints(link_type) end
 function Nav.GetRandomPoint(center, radius, link_type) return active:GetRandomPoint(center, radius, link_type) end
 function Nav.FindPath(start_pos, goal_pos, link_type) return active:FindPath(start_pos, goal_pos, link_type) end
-function Nav.BodyPathsItself(body) return active:BodyPathsItself(body) end
+-- NextBot bodies path over the NavMesh themselves, whatever provider gives the points.
+function Nav.BodyPathsItself(body) return body ~= nil and body:IsNextBot() and navmesh.IsLoaded() end
 
 -- Does the map have a NavMesh (NextBot bodies need it)?
 function Nav.HasNavMesh()

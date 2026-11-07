@@ -108,8 +108,4 @@ function NavMeshProvider:FindPath(start_pos, goal_pos)
 	return path
 end
 
-function NavMeshProvider:BodyPathsItself(body)
-	return body ~= nil and body:IsNextBot()
-end
-
 Nav.RegisterProvider('navmesh', NavMeshProvider)

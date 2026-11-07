@@ -74,6 +74,13 @@ function NPCBody:IsMoving()
 	return IsValid(self.ent) and self.ent:IsMoving()
 end
 
+function NPCBody:HoldStill()
+	local ent = self.ent
+	if not IsValid(ent) then return end
+	ent:SetNPCState(NPC_STATE_SCRIPT)
+	self:RunSchedule(SCHED_SLEEP)
+end
+
 function NPCBody:MoveAwayFromEnemy()
 	self:RunSchedule(SCHED_MOVE_AWAY_FROM_ENEMY)
 end
