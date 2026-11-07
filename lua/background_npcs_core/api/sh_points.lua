@@ -186,7 +186,7 @@ local function CollectUnlockedDoors(start_pos, end_pos)
 	local seen = {}
 
 	local function collect(ent)
-		if not seen[ent] and IsValid(ent) and ent:slibIsDoor() and not ent:slibDoorIsLocked() then
+		if not seen[ent] and IsValid(ent) and bgNPC.Util.IsDoor(ent) and not bgNPC.Util.IsDoorLocked(ent) then
 			doors[#doors + 1] = ent
 		end
 		seen[ent] = true
@@ -238,7 +238,7 @@ local function GetPrimitivePath(start_pos, end_pos)
 		offset = offset + PRIMITIVE_POINT_SPACING
 
 		local point = SnapToFloor(start_pos + direction * offset)
-		if point:DistToSqr(end_pos) <= break_dist_sqr or not slib.IsInWorld(point) then
+		if point:DistToSqr(end_pos) <= break_dist_sqr or not bgNPC.Util.IsInWorld(point) then
 			break
 		end
 

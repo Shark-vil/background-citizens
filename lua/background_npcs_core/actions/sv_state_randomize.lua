@@ -1,7 +1,7 @@
 local pairs = pairs
-local table_RandomBySeq = table.RandomBySeq
+local table_RandomBySeq = bgNPC.Table.Random
 local hook_Run = hook.Run
-local slib_chance = slib.chance
+local Chance = bgNPC.Util.Chance
 --
 local cvar_bgn_module_replics_enable = GetConVar('bgn_module_replics_enable')
 
@@ -12,7 +12,7 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
 
 	for i = 1, #actors do
 		local actor = actors[i]
-		if not actor or not actor:IsAlive() or actor:InVehicle() or not slib_chance(15) then
+		if not actor or not actor:IsAlive() or actor:InVehicle() or not Chance(15) then
 			continue
 		end
 

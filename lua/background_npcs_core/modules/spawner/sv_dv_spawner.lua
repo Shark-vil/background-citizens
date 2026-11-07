@@ -30,7 +30,7 @@ local function FindSpawnLocation(center)
 	local points = GetNearPoints(center, spawn_radius)
 	if #points == 0 then return nil end
 
-	points = table.shuffle(points)
+	points = bgNPC.Table.Shuffle(points)
 	local dvd = DecentVehicleDestination
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
 	local all_players = player.GetAll()
@@ -50,7 +50,7 @@ local function FindSpawnLocation(center)
 					goto skip
 				end
 
-				if ply:slibIsViewVector(spawn_position) then
+				if bgNPC.Util.IsInView(ply, spawn_position) then
 					local tr = util.TraceLine({
 						start = ply:EyePos(),
 						endpos = spawn_position,
@@ -131,7 +131,7 @@ end
 function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	local actor_data = actor:GetData()
 	local chance = actor_data.enter_to_exist_vehicle_chance
-	if not bypass and chance and not slib.chance(chance) then return false end
+	if not bypass and chance and not bgNPC.Util.Chance(chance) then return false end
 
 	local all_players = player.GetAll()
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
@@ -173,7 +173,7 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 					break
 				end
 
-				if IsValid(ply) and ply:slibIsViewVector(vehiclePosition, 70) then
+				if IsValid(ply) and bgNPC.Util.IsInView(ply, vehiclePosition, 70) then
 					local tr = util.TraceLine({
 						start = ply:EyePos(),
 						endpos = vehiclePosition,
@@ -253,12 +253,12 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local actor_type = actor:GetType()
 	if not bypass and not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
 
-	local ply = table.RandomBySeq(player.GetAll())
+	local ply = bgNPC.Table.Random(player.GetAll())
 	local data = FindSpawnLocation(ply:GetPos())
 	if not data then return false end
 
 	local npc = actor:GetNPC()
-	local car_class = table.RandomBySeq(car_classes)
+	local car_class = bgNPC.Table.Random(car_classes)
 	local spawn_pos = data.pos + Vector(0, 0, 50)
 	local spawn_ang = data.ang
 	local spawn_pos_offest = Vector(0, 0, 0)
@@ -295,7 +295,7 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 
 	if actor_data.vehicles_random_color then
 		local vehicles_strict_color_chance = actor_data.vehicles_strict_color_chance or 0
-		if not slib.chance(vehicles_strict_color_chance) then
+		if not bgNPC.Util.Chance(vehicles_strict_color_chance) then
 			car:SetColor(ColorRand())
 		else
 			local r, g, b = math.random(50, 190), math.random(50, 190), math.random(50, 190)
@@ -323,7 +323,7 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local original_color = car:GetColor()
 	car:SetColor(ColorAlpha(original_color, 0))
 
-	car:slibCreateTimer('spawn_dv_ai', .1, 1, function(ent)
+	bgNPC.Util.EntityTimer(car, 'spawn_dv_ai', .1, 1, function(ent)
 		if not IsValid(npc) then
 			ent:Remove()
 			return

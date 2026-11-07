@@ -1,5 +1,5 @@
-snet.RegisterCallback('bgn_dynamic_mevement_mesh_alert_message', function()
-	local _, lang_code = LocalPlayer():slibGetLanguage()
+bgNPC.Net.Receive('bgn_dynamic_mevement_mesh_alert_message', function()
+	local _, lang_code = bgNPC.Util.GetLanguage()
 	local text_color_red = Color(255, 0, 0)
 	local text_color = Color(255, 196, 0)
 	local text_color_mod_title = Color(85, 180, 243)

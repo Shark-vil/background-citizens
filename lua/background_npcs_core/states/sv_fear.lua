@@ -14,12 +14,12 @@ local function update_state(actor)
 	data.call_for_help = data.call_for_help or CurTime() + math_random(25, 40)
 
 	local dist = npc:GetPos():DistToSqr(enemy:GetPos())
-	if dist < 40000 and enemy:slibIsViewVector(npc:GetPos()) then -- 200 ^ 2
+	if dist < 40000 and bgNPC.Util.IsInView(enemy, npc:GetPos()) then -- 200 ^ 2
 		if data.call_for_help < CurTime() and math_random(0, 100) <= 2 then
 			actor:CallForHelp(enemy)
 			data.call_for_help = CurTime() + math_random(25, 40)
 		end
-	elseif slib.chance(25) then
+	elseif bgNPC.Util.Chance(25) then
 		actor:StopStaticSequence()
 		actor:SetState('run_from_danger', {
 			dyspnea_delay = CurTime() + math_random(10, 20)

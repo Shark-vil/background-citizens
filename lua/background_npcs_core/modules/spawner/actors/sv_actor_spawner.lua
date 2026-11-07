@@ -6,7 +6,7 @@ local pairs = pairs
 local GetConVar = GetConVar
 local CurTime = CurTime
 local isbool = isbool
-local StopAnimator = slib.Animator.Stop
+local StopAnimator = bgNPC.Animator.Stop
 --
 
 -- bgNPC:IsValidSpawnArea is defined in modules/spawner/actors/sv_zone_spawner.lua,
@@ -71,7 +71,7 @@ function bgNPC:RespawnActor(actor, spawn_position, func)
 end
 
 local function InitActorsSpawner(delay)
-	async.AddDedic('bgn_actors_spawner_process', function(yield, wait)
+	bgNPC.Tasks.Add('bgn_actors_spawner_process', function(yield, wait)
 		while true do
 			wait(delay)
 

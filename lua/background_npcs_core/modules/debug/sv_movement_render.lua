@@ -11,8 +11,8 @@ timer.Create('BGN_Debug_MovementPathRender', 1, 0, function()
 			local players = player.GetAll()
 			for k = 1, #players do
 				local ply = players[k]
-				if ply and ply.snet_ready and (ply:IsAdmin() or ply:IsSuperAdmin()) and position:DistToSqr(ply:GetPos()) <= 250000 then
-					snet.Invoke('bgn_debug_send_actor_movement_path', ply, actor.uid, actor.walkPath)
+				if ply and ply.bgn_ready and (ply:IsAdmin() or ply:IsSuperAdmin()) and position:DistToSqr(ply:GetPos()) <= 250000 then
+					bgNPC.Net.Send('bgn_debug_send_actor_movement_path', ply, actor.uid, actor.walkPath)
 				end
 			end
 		end

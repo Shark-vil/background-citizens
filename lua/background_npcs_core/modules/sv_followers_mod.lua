@@ -22,10 +22,11 @@ local function created_actor_handler(actor)
 	local npc = actor:GetNPC()
 	timer_Simple(0, function()
 		if not IsValid(npc) then return end
-		npc:slibSetNWListener('entity', 'FMOD_MyTarget', function(val, default)
-			if not val then return end
+		-- shortcut: assumes Followers Mod uses SetNWEntity (NW1), which calls the NW proxy
+		npc:SetNWVarProxy('FMOD_MyTarget', function(_, _, _, value)
+			if not value then return end
 			movement_handler(actor)
-		end, 'bgn_module_fmod')
+		end)
 	end)
 end
 

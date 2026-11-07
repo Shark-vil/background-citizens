@@ -91,9 +91,17 @@ function Util.GetActivePlayerTool(tool_name, ply)
 		ply = LocalPlayer()
 	end
 
+	local weapon = ply:GetActiveWeapon()
+	if not IsValid(weapon) or weapon:GetClass() ~= 'gmod_tool' then return end
+
 	local tool = ply:GetTool()
 	if not tool or not tool.GetMode or tool:GetMode() ~= tool_name then return end
 	return tool
+end
+
+-- Always printed, not only in debug mode.
+function Util.Warning(message)
+	MsgC(Color(255, 180, 60), '[Background NPCs] ' .. tostring(message) .. '\n')
 end
 
 -- ---------------------------------------------------------------------------

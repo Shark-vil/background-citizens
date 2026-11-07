@@ -16,26 +16,23 @@ bgNPC.LoadRoutes = function()
 	return BGN_NODE:GetMap()
 end
 
-snet.Callback('bgn_movement_mesh_get_load_info', function(ply)
-	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
-		.Invoke(ply)
-end).Protect()
+bgNPC.Net.Receive('bgn_movement_mesh_get_load_info', function(ply)
+	bgNPC.Net.Send('bgn_movement_mesh_load_info', ply, BGN_NODE:CountNodesOnMap())
+end, { admin = true })
 
-snet.Callback('bgn_movement_mesh_load', function(ply)
+bgNPC.Net.Receive('bgn_movement_mesh_load', function(ply)
 	bgNPC.LoadRoutes()
 
-	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
-		.Invoke(ply)
-end).Protect()
+	bgNPC.Net.Send('bgn_movement_mesh_load_info', ply, BGN_NODE:CountNodesOnMap())
+end, { admin = true })
 
-snet.Callback('bgn_movement_mesh_unload', function(ply)
+bgNPC.Net.Receive('bgn_movement_mesh_unload', function(ply)
 	BGN_NODE:ClearNodeMap()
 
-	snet.Request('bgn_movement_mesh_load_info', BGN_NODE:CountNodesOnMap())
-		.Invoke(ply)
-end).Protect()
+	bgNPC.Net.Send('bgn_movement_mesh_load_info', ply, BGN_NODE:CountNodesOnMap())
+end, { admin = true })
 
-snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
+bgNPC.Net.Receive('bgn_movement_mesh_load_from_client_sv', function(ply)
 	-- if BGN_NODE:CountNodesOnMap() == 0 then
 	-- 	bgNPC.LoadRoutes()
 	-- end
@@ -43,10 +40,8 @@ snet.Callback('bgn_movement_mesh_load_from_client_sv', function(ply)
 	local jsonString = (BGN_NODE:RouteFileExists() and BGN_NODE:GetRouteFileData()) or (BGN_NODE:CountNodesOnMap() ~= 0 and BGN_NODE:MapToJson())
 	-- local jsonString = BGN_NODE:GetRouteFileData()
 
-	snet.Request('bgn_movement_mesh_load_from_client_cl', jsonString)
-		.ProgressText('Loading mesh from server')
-		.Invoke(ply)
-end).Protect()
+	bgNPC.Net.Send('bgn_movement_mesh_load_from_client_cl', ply, jsonString)
+end, { admin = true })
 
 hook.Add('InitPostEntity', 'BGN_FirstInitializeRoutesOnMap', function()
 	bgNPC.LoadRoutes()

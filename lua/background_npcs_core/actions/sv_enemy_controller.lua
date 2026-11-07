@@ -4,7 +4,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', functi
 	actor:RandomState()
 end)
 
-async.Add('BGN_ActorEnemyController', function(yield, wait)
+bgNPC.Tasks.Add('BGN_ActorEnemyController', function(yield, wait)
 	while true do
 		local actors = bgNPC.Actors.GetAll()
 

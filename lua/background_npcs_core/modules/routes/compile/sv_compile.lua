@@ -1,4 +1,4 @@
-snet.Callback('sv_start_bgn_compile', function(ply)
+bgNPC.Net.Receive('sv_start_bgn_compile', function(ply)
 	local map_name = game.GetMap()
 	local nodes = ''
 	local seats = ''
@@ -32,7 +32,5 @@ snet.Callback('sv_start_bgn_compile', function(ply)
 		dv_nodes = dv_nodes
 	}
 
-	snet.Request('cl_start_bgn_compile', send_data)
-		.ProgressText('Loading data from the server')
-		.Invoke(ply)
-end).Protect()
+	bgNPC.Net.Send('cl_start_bgn_compile', ply, send_data)
+end, { admin = true })

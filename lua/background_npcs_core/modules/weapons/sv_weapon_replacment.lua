@@ -1,5 +1,5 @@
 local GetConVar = GetConVar
-local table_HasValueBySeq = table.HasValueBySeq
+local table_HasValueBySeq = bgNPC.Table.HasValue
 local table_insert = table.insert
 local pairs = pairs
 local weapons_GetList = weapons.GetList
@@ -28,7 +28,7 @@ hook.Add('BGN_PostSelectWeapon', 'BGN_Arc9WeaponReplacment', function(actor, npc
 		if not ARC9 then return end
 		ARC9.ReplaceSpawnedWeapon(npc)
 	elseif give_base_name == 'arccw' then
-		local arcw_replacement = slib.Component('Hook', 'Get', 'OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
+		local arcw_replacement = bgNPC.Util.GetHook('OnEntityCreated', 'ArcCW_NPCWeaponReplacement')
 		if not arcw_replacement then return end
 		arcw_replacement(npc)
 	elseif give_base_name == 'tfa' then

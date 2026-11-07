@@ -29,7 +29,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization_range', function(_, _, v
 	min_range = new_value
 end, 'ro_bgn_cl_field_view_optimization_range')
 
-async.AddDedic('bgn_client_render_optimization', function(yield, wait)
+bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait)
 	local current_pass = 0
 
 	while true do
@@ -47,19 +47,18 @@ async.AddDedic('bgn_client_render_optimization', function(yield, wait)
 			if actor and actor:IsAlive() then
 				local npc = actor:GetNPC()
 
-				if not IsValid(npc.slib_animator) then
+				if not bgNPC.Animator.IsPlaying(npc) then
 					local pos = npc:GetPos()
 					local weapon = npc:GetActiveWeapon()
 					local in_vehicle = actor:InVehicle()
-					local past_set_no_draw = npc:slibGetLocalVar('bgn_render_optimization', false)
+					local past_set_no_draw = (npc.bgn_render_optimization or false)
 
 					if in_vehicle or (
-						ply:GetPos():DistToSqr(pos) > min_range and not ply:slibIsViewVector(pos)
+						ply:GetPos():DistToSqr(pos) > min_range and not bgNPC.Util.IsInView(ply, pos)
 					) then
 						if not past_set_no_draw and not npc:GetNoDraw() then
 							npc:SetNoDraw(true)
-							npc:slibSetLocalVar('bgn_render_optimization', true)
-
+							npc.bgn_render_optimization = true
 							if IsValid(weapon) then
 								weapon:SetNoDraw(true)
 							end
@@ -67,15 +66,14 @@ async.AddDedic('bgn_client_render_optimization', function(yield, wait)
 					else
 						if past_set_no_draw and npc:GetNoDraw() then
 							npc:SetNoDraw(false)
-							npc:slibSetLocalVar('bgn_render_optimization', false)
-
+							npc.bgn_render_optimization = false
 							if IsValid(weapon) then
 								weapon:SetNoDraw(false)
 							end
 						end
 					end
 
-					if current_pass >= 1 / slib.deltaTime then
+					if current_pass >= bgNPC.Util.PassesPerYield() then
 						current_pass = 0
 						yield()
 					else

@@ -55,7 +55,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		PoliceActor:AddTarget(attacker)
 		PoliceActor:SetState('arrest')
 
-		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and slib.chance(5) then
+		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and bgNPC.Util.Chance(5) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
@@ -75,7 +75,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		if not ArrestComponent then return end
 
 		if AttackerActor and not AttackerActor:HasState('arrest_surrender')
-			and slib.chance(10)
+			and bgNPC.Util.Chance(10)
 			and AttackerActor:Health() <= 50
 		then
 			ArrestModule:UpdatePolice(attacker)
@@ -218,15 +218,15 @@ bgNPC.States.Register('arrest', 'guarded', {
 							if TargetActor and TargetActor:IsValidSequence('arrestcurious') then
 								TargetActor:PlayStaticSequence('arrestcurious', true, 4, function()
 									TargetActor:PlayStaticSequence('arrestidle', true)
-									target:slibFadeRemove(.5)
+									bgNPC.Util.FadeRemove(target, .5)
 								end)
 							elseif TargetActor and TargetActor:IsValidSequence('checkmale') then
 								TargetActor:PlayStaticSequence('checkmale', false, nil, function()
 									TargetActor:PlayStaticSequence('checkmalepost', true)
-									target:slibFadeRemove(.5)
+									bgNPC.Util.FadeRemove(target, .5)
 								end)
 							else
-								target:slibFadeRemove()
+								bgNPC.Util.FadeRemove(target)
 							end
 						else
 							target:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 3)

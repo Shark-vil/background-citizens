@@ -248,7 +248,7 @@ if SERVER then
 	local zone_spawner_timer_name = 'BGN_ZoneActorsSpawnerProcess'
 
 	local function InitZoneBoostSpawner(delay)
-		async.AddDedic('bgn_zone_actors_spawner_process', function(yield, wait)
+		bgNPC.Tasks.Add('bgn_zone_actors_spawner_process', function(yield, wait)
 			while true do
 				wait(delay)
 

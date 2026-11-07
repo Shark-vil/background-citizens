@@ -3,7 +3,7 @@ local function init_enhanced_npc_override()
 	local timer_Simple = timer.Simple
 	local bgNPC = bgNPC
 
-	local player_spawned_hook = slib.Component('Hook', 'Get', 'PlayerSpawnedNPC', 'Enhanced Sbox NPC Handling')
+	local player_spawned_hook = bgNPC.Util.GetHook('PlayerSpawnedNPC', 'Enhanced Sbox NPC Handling')
 	if player_spawned_hook then
 		hook.Add('PlayerSpawnedNPC', 'Enhanced Sbox NPC Handling', function(ply, ent)
 			timer_Simple(.1, function()
@@ -15,7 +15,7 @@ local function init_enhanced_npc_override()
 		end)
 	end
 
-	local ent_spawned_hook = slib.Component('Hook', 'Get', 'OnEntityCreated', 'Enhanced Sbox NPC Handling')
+	local ent_spawned_hook = bgNPC.Util.GetHook('OnEntityCreated', 'Enhanced Sbox NPC Handling')
 	if ent_spawned_hook then
 		hook.Add('OnEntityCreated', 'Enhanced Sbox NPC Handling', function(ent)
 			timer_Simple(.1, function()

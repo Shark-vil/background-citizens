@@ -45,7 +45,7 @@ local function process(yield, wait)
 
 						if IsValid(ply) then
 							local dist = npc_pos:DistToSqr(ply:GetPos())
-							if dist <= bgn_disable_logic_radius or ply:slibIsViewVector(npc_pos) then
+							if dist <= bgn_disable_logic_radius or bgNPC.Util.IsInView(ply, npc_pos) then
 								is_adding_no_think_flag = false
 								break
 							end
@@ -53,8 +53,8 @@ local function process(yield, wait)
 					end
 
 					local is_no_think_flag = npc:IsEFlagSet(EFL_NO_THINK_FUNCTION)
-					local no_think_state = npc:slibGetLocalVar('bgn_optimize_no_think_enable', false)
-					local delay = npc:slibGetLocalVar('bgn_optimize_no_think_delay', 0)
+					local no_think_state = (npc.bgn_optimize_no_think_enable or false)
+					local delay = (npc.bgn_optimize_no_think_delay or 0)
 					local time = CurTime()
 
 					if is_adding_no_think_flag and no_think_state and delay < time then
@@ -70,14 +70,13 @@ local function process(yield, wait)
 					else
 						npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
 					end
-					npc:slibSetLocalVar('bgn_optimize_no_think_enable', is_adding_no_think_flag)
-
+					npc.bgn_optimize_no_think_enable = is_adding_no_think_flag
 					delay = is_adding_no_think_flag and time + 3 or time + 1
-					npc:slibSetLocalVar('bgn_optimize_no_think_delay', delay)
+					npc.bgn_optimize_no_think_delay = delay
 				end
 			end
 
-			if current_pass >= 1 / slib.deltaTime then
+			if current_pass >= bgNPC.Util.PassesPerYield() then
 				current_pass = 0
 				yield()
 			else
@@ -88,7 +87,7 @@ local function process(yield, wait)
 		yield()
 	end
 end
-async.AddDedic('bgn_server_logic_optimization', process)
+bgNPC.Tasks.Add('bgn_server_logic_optimization', process)
 
 --[[
 	Cvars
@@ -97,11 +96,11 @@ cvars.AddChangeCallback('bgn_disable_logic_radius', function(_, _, new_value)
 	bgn_disable_logic_radius = tonumber(new_value) ^ 2
 
 	if bgn_disable_logic_radius > 0 then
-		if not async.Exists('bgn_server_logic_optimization') then
-			async.Add('bgn_server_logic_optimization', process)
+		if not bgNPC.Tasks.Exists('bgn_server_logic_optimization') then
+			bgNPC.Tasks.Add('bgn_server_logic_optimization', process)
 		end
 	else
-		async.Remove('bgn_server_logic_optimization')
+		bgNPC.Tasks.Remove('bgn_server_logic_optimization')
 
 		timer.Simple(1, function()
 			local actors = bgNPC.Actors.GetAll()

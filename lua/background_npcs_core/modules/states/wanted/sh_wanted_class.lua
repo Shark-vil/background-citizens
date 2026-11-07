@@ -13,7 +13,7 @@ local ASSET = {}
 local wanted_list = {}
 local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
 
-slib.GlobalCvarAddChangeCallback('bgn_wanted_time', function(_, _, newValue)
+bgNPC.CVars.OnChange('bgn_wanted_time', function(_, _, newValue)
 	wanted_time = tonumber(newValue)
 
 	bgNPC.Util.Log('New value for "wanted_time" - ' .. tostring(wanted_time), 'Wanted Module Class')
@@ -34,7 +34,7 @@ function ASSET:Instance(ent)
 		self.wait_time = wanted_time
 
 		if SERVER then
-			snet.InvokeAll('bgn_module_wanted_UpdateWanted', ent)
+			bgNPC.Net.Send('bgn_module_wanted_UpdateWanted', nil, ent)
 		end
 	end
 
@@ -50,7 +50,7 @@ function ASSET:Instance(ent)
 		end
 
 		if SERVER then
-			snet.InvokeAll('bgn_module_wanted_UpdateWaitTime', ent, self.wait_time)
+			bgNPC.Net.Send('bgn_module_wanted_UpdateWaitTime', nil, ent, self.wait_time)
 		end
 	end
 
@@ -65,7 +65,7 @@ function ASSET:Instance(ent)
 		self.level = level
 
 		if SERVER then
-			snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+			bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', nil, ent, self.level)
 		end
 
 		local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
@@ -79,7 +79,7 @@ function ASSET:Instance(ent)
 			self.level = self.level + 1
 
 			if SERVER then
-				snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+				bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', nil, ent, self.level)
 			end
 
 			local cfg_kills = bgNPC.cfg.wanted.levels[self.level]
@@ -95,7 +95,7 @@ function ASSET:Instance(ent)
 			if self.level == 0 then
 				ASSET:RemoveWanted(ent)
 			elseif SERVER then
-				snet.InvokeAll('bgn_module_wanted_UpdateLevel', ent, self.level)
+				bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', nil, ent, self.level)
 			end
 
 			local cfg_kills = bgNPC.cfg.wanted.levels[self.level + 1]
@@ -123,7 +123,7 @@ function ASSET:AddWanted(ent)
 	table.insert(wanted_list, WantedClass)
 
 	if SERVER then
-		snet.InvokeAll('bgn_module_wanted_AddWanted', ent)
+		bgNPC.Net.Send('bgn_module_wanted_AddWanted', nil, ent)
 	end
 
 	hook.Run('BGN_AddWantedTarget', ent)
@@ -139,7 +139,7 @@ function ASSET:RemoveWanted(ent)
 	table.remove(wanted_list, index)
 
 	if SERVER then
-		snet.InvokeAll('bgn_module_wanted_RemoveWanted', ent)
+		bgNPC.Net.Send('bgn_module_wanted_RemoveWanted', nil, ent)
 	end
 
 	hook.Run('BGN_RemoveWantedTarget', ent)
@@ -167,7 +167,7 @@ end
 
 function ASSET:HasWanted(ent)
 	if not IsValid(ent) then return false end
-	return table.WhereHasValueBySeq(wanted_list, function(k, v) return v.target == ent end)
+	return bgNPC.Table.HasWhere(wanted_list, function(k, v) return v.target == ent end)
 end
 
 function ASSET:GetWanted(ent)

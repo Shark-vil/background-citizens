@@ -1,6 +1,7 @@
 local bgNPC = bgNPC
 local player_GetHumans = player.GetHumans
-local slib_GetHashSumm = slib.GetHashSumm
+local util_CRC = util.CRC
+local Serialize = bgNPC.Net.Serialize
 local IsValid = IsValid
 local FrameTime = FrameTime
 --
@@ -14,7 +15,7 @@ local function has_yield()
 	return false
 end
 
-async.AddDedic('BGN_SynchronizationService', function(yield)
+bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield)
 	while true do
 		local sync_list = {}
 		local sync_list_count = 0
@@ -74,14 +75,14 @@ async.AddDedic('BGN_SynchronizationService', function(yield)
 					npc_state = actor.npc_state,
 				}
 
-				local sync_hash = slib_GetHashSumm(sync_data, 'md5')
+				local sync_hash = util_CRC(Serialize(sync_data))
 
 				for k = 1, #players do
 					local ply = players[k]
-					if ply and IsValid(ply) and ply.snet_ready then
+					if ply and IsValid(ply) and ply.bgn_ready then
 						local old_sync_hash = actor.sync_players_hash[ply] or -1
 						if sync_hash ~= old_sync_hash then
-							snet.Invoke('bgn_actor_sync_data', ply, actor.uid, sync_data)
+							bgNPC.Net.Send('bgn_actor_sync_data', ply, actor.uid, sync_data)
 							actor.sync_players_hash[ply] = sync_hash
 						end
 						-- if has_yield() then yield() end

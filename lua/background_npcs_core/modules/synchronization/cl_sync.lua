@@ -1,4 +1,4 @@
-snet.RegisterCallback('bgn_actor_sync_data', function(ply, uid, data)
+bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 	local actor = bgNPC.Actors.GetByUid(uid)
 	if not actor then return end
 

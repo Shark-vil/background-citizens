@@ -39,11 +39,11 @@ cvars.AddChangeCallback('bgn_cl_disable_self_halo_wanted', function(_, _, newVal
 	disable_self_halo_wanted = tonumber(newValue) == 1
 end, 'bgn_cl_wanted_module_bgn_cl_disable_self_halo_wanted')
 
-slib.GlobalCvarAddChangeCallback('bgn_disable_halo_wanted', function(_, _, newValue)
+bgNPC.CVars.OnChange('bgn_disable_halo_wanted', function(_, _, newValue)
 	disable_halo_wanted = tonumber(newValue) == 1
 end, 'bgn_cl_wanted_module_bgn_disable_halo_wanted')
 
-slib.GlobalCvarAddChangeCallback('bgn_disable_halo_calling', function(_, _, newValue)
+bgNPC.CVars.OnChange('bgn_disable_halo_calling', function(_, _, newValue)
 	disable_halo_calling = tonumber(newValue) == 1
 end, 'bgn_cl_wanted_module_bgn_disable_halo_calling')
 

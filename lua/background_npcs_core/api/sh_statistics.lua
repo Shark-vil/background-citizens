@@ -47,16 +47,16 @@ local function ResetAll()
 end
 
 if CLIENT then
-	snet.RegisterCallback('bgn_killing_stats_set', function(_, attacker, actor_type, value)
+	bgNPC.Net.Receive('bgn_killing_stats_set', function(_, attacker, actor_type, value)
 		if not IsValid(attacker) or not actor_type or not value then return end
 		SetKills(attacker, actor_type, value)
 	end)
 
-	snet.RegisterCallback('bgn_killing_stats_reset', function(_, attacker)
+	bgNPC.Net.Receive('bgn_killing_stats_reset', function(_, attacker)
 		if IsValid(attacker) then ResetAttacker(attacker) end
 	end)
 
-	snet.RegisterCallback('bgn_killing_stats_reset_all', ResetAll)
+	bgNPC.Net.Receive('bgn_killing_stats_reset_all', ResetAll)
 
 	return
 end
@@ -71,20 +71,20 @@ function Statistics.AddKill(attacker, actor)
 	local value = Statistics.Get(attacker, actor_type) + 1
 
 	SetKills(attacker, actor_type, value)
-	snet.InvokeAll('bgn_killing_stats_set', attacker, actor_type, value)
+	bgNPC.Net.Send('bgn_killing_stats_set', nil, attacker, actor_type, value)
 
 	return value
 end
 
 function Statistics.Reset(attacker)
 	if ResetAttacker(attacker) then
-		snet.InvokeAll('bgn_killing_stats_reset', attacker)
+		bgNPC.Net.Send('bgn_killing_stats_reset', nil, attacker)
 	end
 end
 
 function Statistics.ResetAll()
 	ResetAll()
-	snet.InvokeAll('bgn_killing_stats_reset_all')
+	bgNPC.Net.Send('bgn_killing_stats_reset_all', nil)
 end
 
 hook.Add('PostCleanupMap', 'BGN_ResetWantedKillingStatistic', Statistics.ResetAll)

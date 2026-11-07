@@ -1,7 +1,7 @@
 bgNPC.cfg.arrest = {}
 
 -- TEXT --
-local text = slib.language({
+local text = bgNPC.Util.Lang({
 	['default'] = {
 		['order_text'] = 'Put your head down!',
 		['warning_text'] = 'Stay in this position, don\'t move!',

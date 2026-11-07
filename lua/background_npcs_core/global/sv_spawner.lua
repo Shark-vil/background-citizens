@@ -8,10 +8,10 @@ local ents_FindInBox = ents.FindInBox
 local timer_Simple = timer.Simple
 local IsValid = IsValid
 local util_TraceLine = util.TraceLine
-local table_shuffle = table.shuffle
+local table_shuffle = bgNPC.Table.Shuffle
 local GetConVar = GetConVar
 local Vector = Vector
-local table_RandomBySeq = table.RandomBySeq
+local table_RandomBySeq = bgNPC.Table.Random
 local player_GetHumans = player.GetHumans
 local math_random = math.random
 local math_Clamp = math.Clamp
@@ -21,7 +21,7 @@ local isstring = isstring
 -- local math_sqrt = math.sqrt
 local pairs = pairs
 local ipairs = ipairs
-local slib_chance = slib.chance
+local Chance = bgNPC.Util.Chance
 -- local angle_zero = Angle()
 local vector_0_0_50 = Vector(0, 0, 50)
 local vector_0_0_1000 = Vector(0, 0, 1000)
@@ -76,7 +76,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			return false
 		end
 
-		if IsValid(target_entity) and ply:slibIsTraceEntity(target_entity, spawn_radius, true) then
+		if IsValid(target_entity) and bgNPC.Util.CanSeeEntity(ply, target_entity, true) then
 			return false
 		end
 
@@ -123,7 +123,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	local pass_current = 0
 	local AsyncYield = function()
 		pass_current = pass_current + 1
-		if pass_current >= 1 / slib.deltaTime then
+		if pass_current >= bgNPC.Util.PassesPerYield() then
 			pass_current = 0
 			coroutine_yield()
 		end
@@ -152,8 +152,8 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		local dist_x = math_random(block_radius, spawn_radius)
 		local dist_y = math_random(block_radius, spawn_radius)
 		local dist_z = math_random(0, 100)
-		if slib_chance(50) then dist_x = -dist_x end
-		if slib_chance(50) then dist_y = -dist_y end
+		if Chance(50) then dist_x = -dist_x end
+		if Chance(50) then dist_y = -dist_y end
 		local new_pos = Vector(desired_position.x + dist_x, desired_position.y + dist_y, desired_position.z + dist_z)
 		local tr = util_TraceLine({
 			start = new_pos + vector_0_0_50,
@@ -266,7 +266,7 @@ end
 do
 	local random_models_storage = {}
 	local player_GetCount = player.GetCount
-	local table_HasValueBySeq = table.HasValueBySeq
+	local table_HasValueBySeq = bgNPC.Table.HasValue
 	local list_Get = list.Get
 	local table_insert = table.insert
 	local util_IsValidModel = util.IsValidModel
@@ -400,7 +400,7 @@ do
 				-- Backward compatibility with the old version of the config
 				local default_models = npc_data.default_models or npc_data.defaultModels
 
-				if (not default_models or slib_chance(80)) and not hook_Run('BGN_PreSetActorModel', model, npc, npc_type, npc_data) then
+				if (not default_models or Chance(80)) and not hook_Run('BGN_PreSetActorModel', model, npc, npc_type, npc_data) then
 					npc:SetModel(model)
 				end
 			end

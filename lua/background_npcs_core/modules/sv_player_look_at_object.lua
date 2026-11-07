@@ -5,7 +5,7 @@ local util_TraceLine = util.TraceLine
 local hook_Run = hook.Run
 --
 
-async.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
+bgNPC.Tasks.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
 	local players = player_GetAll()
 
 	for i = 1, #players do
@@ -24,14 +24,16 @@ async.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
 
 			local ent = tr.Entity
 			if tr.Hit and IsValid(ent) then
-				local viewed_entity = ply:slibGetLocalVar('bgn_look_at_object')
-				local call_hook_delay = ply:slibGetLocalVar('bgn_look_at_object_hook_delay')
+				local viewed_entity = ply.bgn_look_at_object
+				local call_hook_delay = ply.bgn_look_at_object_hook_delay
 
 				yield()
 
 				if not viewed_entity or viewed_entity ~= ent then
-					viewed_entity = ply:slibSetLocalVar('bgn_look_at_object', ent)
-					call_hook_delay = ply:slibSetLocalVar('bgn_look_at_object_hook_delay', RealTime())
+					viewed_entity = ent
+					call_hook_delay = RealTime()
+					ply.bgn_look_at_object = viewed_entity
+					ply.bgn_look_at_object_hook_delay = call_hook_delay
 				end
 
 				yield()
@@ -39,7 +41,7 @@ async.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
 				if viewed_entity and call_hook_delay then
 					local observation_time = RealTime() - call_hook_delay
 					if hook_Run('BGN_PlayerLookAtObject', ply, ent, observation_time) then
-						ply:slibSetLocalVar('bgn_look_at_object_hook_delay', RealTime())
+						ply.bgn_look_at_object_hook_delay = RealTime()
 					end
 				end
 			end

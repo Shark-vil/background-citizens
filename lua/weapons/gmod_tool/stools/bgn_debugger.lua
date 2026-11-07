@@ -42,19 +42,17 @@ if SERVER then
 			return
 		end
 
-		snet.IsValidForClient(ply, function(ply, success)
-			bgNPC.Util.Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-			if not success then return end
+		do -- the client checks that the actor exists itself (TOOL:SetActor)
 
-			local actor_data = snet.GetNormalizeDataTable(actor)
+			local actor_data = actor
 			if actor_data then MsgN('SERVER:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
 
-			snet.ClientRPC(self, 'SetActor', actor.uid)
-		end, 'actor', actor.uid)
+			bgNPC.Net.ToolRPC(self, 'SetActor', actor.uid)
+		end
 	end
 
 	function TOOL:RightClick()
-		snet.ClientRPC(self, 'ResetActor')
+		bgNPC.Net.ToolRPC(self, 'ResetActor')
 	end
 else
 	function TOOL:SetActor(uid)
@@ -65,7 +63,7 @@ else
 			return
 		end
 
-		local actor_data = snet.GetNormalizeDataTable(actor)
+		local actor_data = actor
 		if actor_data then MsgN('CLIENT:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
 
 		self.Actor = actor
@@ -80,9 +78,8 @@ else
 	end
 
 	hook.Add('HUDPaint', 'BGN_TOOL_DrawDebbugerText', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_debugger', LocalPlayer())
 		if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3

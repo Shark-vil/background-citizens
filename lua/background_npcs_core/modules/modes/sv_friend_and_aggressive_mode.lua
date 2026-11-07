@@ -56,7 +56,7 @@ end
 hook.Add('BGN_PostReactionTakeDamage', 'BGN_Friend_Mode', OverrideDamageReaction)
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_Friend_Mode', OverrideDamageReaction)
 
-async.Add('BGN_Agressive_Mode', function(yield, wait)
+bgNPC.Tasks.Add('BGN_Agressive_Mode', function(yield, wait)
 	while true do
 		if not bgNPC.Modes.IsAggressive() or bgNPC.Modes.IsPeaceful() then
 			wait(1)

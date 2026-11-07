@@ -1,5 +1,9 @@
 local target_directory = 'background_npcs_core/tool_options/lang/'
-slib.usingDirectory(target_directory .. 'ru', nil, true)
+if SERVER then
+	for _, name in ipairs(file.Find(target_directory .. 'ru/*.lua', 'LUA')) do
+		AddCSLuaFile(target_directory .. 'ru/' .. name)
+	end
+end
 
 if SERVER then return end
 

@@ -5,7 +5,7 @@ local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION
 --
 
 -- Calls the "update" callback of every actor's current state, one actor per tick.
-async.Add('BGN_StateMachine', function(yield)
+bgNPC.Tasks.Add('BGN_StateMachine', function(yield)
 	while true do
 		local actors = Actors.GetAll()
 

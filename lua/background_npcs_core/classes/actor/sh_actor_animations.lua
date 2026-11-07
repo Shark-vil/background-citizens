@@ -1,4 +1,4 @@
-slib.Animator.RegisterAnimation('bgn_check_phone', 'models/animations/bgn/npc_phone.mdl', { 'idle' })
+bgNPC.Animator.Register('bgn_check_phone', 'models/animations/bgn/npc_phone.mdl', { 'idle' })
 
 if CLIENT then
 	local phone_model_path = Model('models/props_combine/combine_intmonitor001.mdl')
@@ -31,7 +31,7 @@ if CLIENT then
 		end
 	end)
 
-	hook.Add('slib.AnimationPlaying', 'BGN_Animation_CheckPhone', function(anim_info)
+	hook.Add('BGN_AnimationStarted', 'BGN_Animation_CheckPhone', function(anim_info)
 		if anim_info.name ~= 'bgn_check_phone' then return end
 
 		local animator = anim_info.animator

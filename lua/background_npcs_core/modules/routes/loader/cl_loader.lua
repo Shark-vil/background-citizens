@@ -8,22 +8,22 @@ end)
 
 concommand.Add('cl_citizens_load_route', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	snet.InvokeServer('bgn_movement_mesh_load')
+	bgNPC.Net.SendToServer('bgn_movement_mesh_load')
 end, nil, 'loads the displacement points. This is done automatically when the map is loaded, but if you want to update the points without rebooting, use this command.')
 
 concommand.Add('cl_citizens_clear_route', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	snet.InvokeServer('bgn_movement_mesh_unload')
+	bgNPC.Net.SendToServer('bgn_movement_mesh_unload')
 end, nil, 'Clears all points on the map')
 
 concommand.Add('cl_citizens_get_load_info_route', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	snet.InvokeServer('bgn_movement_mesh_get_load_info')
+	bgNPC.Net.SendToServer('bgn_movement_mesh_get_load_info')
 end, nil, 'Clears all points on the map')
 
 concommand.Add('cl_citizens_load_route_from_client', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	snet.InvokeServer('bgn_movement_mesh_load_from_client_sv')
+	bgNPC.Net.SendToServer('bgn_movement_mesh_load_from_client_sv')
 end, nil, 'Technical command. Used to get an array of points from the server.')
 
 local function LoadPointInfo(count)
@@ -48,15 +48,15 @@ local function LoadPointInfo(count)
 	end
 end
 
-snet.Callback('bgn_movement_mesh_load_info', function(_, count)
+bgNPC.Net.Receive('bgn_movement_mesh_load_info', function(_, count)
 	LoadPointInfo(count)
-end).Protect()
+end, { admin = true })
 
-snet.Callback('bgn_movement_mesh_load_from_client_cl', function(_, data_table)
+bgNPC.Net.Receive('bgn_movement_mesh_load_from_client_cl', function(_, data_table)
 	local newMap = BGN_NODE:JsonToMap(data_table)
 	local count = table.Count(newMap)
 	LoadPointInfo(count)
 	BGN_NODE:ClearNodeMap()
 	BGN_NODE:SetMap(newMap)
 	hook.Run('BGN_LoadingClientRoutes', BGN_NODE:GetMap())
-end).Protect()
+end, { admin = true })

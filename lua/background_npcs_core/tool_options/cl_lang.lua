@@ -1,4 +1,4 @@
-local lang = slib.language({
+local lang = bgNPC.Util.Lang({
 	['default'] = bgNPC.LANGUAGES['english'],
 	['russian'] = bgNPC.LANGUAGES['russian']
 })

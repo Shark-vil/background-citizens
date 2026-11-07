@@ -1,4 +1,4 @@
-async.Add('BGN_ActorsRegeneration', function(yield, wait)
+bgNPC.Tasks.Add('BGN_ActorsRegeneration', function(yield, wait)
 	local math_Clamp = math.Clamp
 	local CurTime = CurTime
 	local EFL_NO_THINK_FUNCTION = EFL_NO_THINK_FUNCTION

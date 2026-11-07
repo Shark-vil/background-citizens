@@ -1,5 +1,5 @@
 local function init_bsmod_animations()
-	local original_hook_function = slib.Component('Hook', 'Get', 'EntityTakeDamage', 'DAModuleDamage')
+	local original_hook_function = bgNPC.Util.GetHook('EntityTakeDamage', 'DAModuleDamage')
 	if not original_hook_function then return end
 
 	hook.Add('EntityTakeDamage', 'DAModuleDamage', function(target, dmginfo)

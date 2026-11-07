@@ -4,7 +4,7 @@ local timer = timer
 local IsValid = IsValid
 --
 
-hook.Add('slib.FirstPlayerSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
+hook.Add('BGN_PlayerReady', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 	local delay = 0
 	local actors = bgNPC.Actors.GetAll()
 
@@ -18,7 +18,7 @@ hook.Add('slib.FirstPlayerSpawn', 'BGN_PlayerFirstInitSpawnerHook', function(ply
 
 			timer.Simple(delay, function()
 				if not IsValid(ply) or not IsValid(npc) then return end
-				snet.Request('bgn_add_actor_from_client', npc, npc_type, actor.uid, actor.info).Invoke(ply)
+				bgNPC.Net.Send('bgn_add_actor_from_client', ply, npc, npc_type, actor.uid, actor.info)
 			end)
 
 			delay = delay + 0.1

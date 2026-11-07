@@ -7,7 +7,7 @@ local istable = istable
 local math_cos = math.cos
 local math_rad = math.rad
 local util_TraceLine = util.TraceLine
-local table_HasValueBySeq = table.HasValueBySeq
+local table_HasValueBySeq = bgNPC.Table.HasValue
 --
 
 local trace_data = {}
@@ -47,13 +47,13 @@ end
 function Vision.PlayerCanSeePos(ply, pos, radius)
 	Assert.Arg(2, pos, 'vector', 'bgNPC.Vision.PlayerCanSeePos')
 	if not IsValid(ply) then return false end
-	return ply:slibIsViewVector(pos, radius)
+	return bgNPC.Util.IsInView(ply, pos, radius)
 end
 
 local function ActorSees(actor, ent)
 	if not actor or not actor:IsAlive() then return false end
 	local npc = actor:GetNPC()
-	return IsValid(npc) and npc:slibIsTraceEntity(ent, 1000, true)
+	return IsValid(npc) and bgNPC.Util.CanSeeEntity(npc, ent, true)
 end
 
 -- Checks whether any actor sees the entity.

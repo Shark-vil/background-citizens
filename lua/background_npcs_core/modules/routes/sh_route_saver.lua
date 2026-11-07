@@ -1,5 +1,5 @@
 if SERVER then
-	snet.Callback('bgn_movement_mesh_remove_datafile', function(ply, map_name)
+	bgNPC.Net.Receive('bgn_movement_mesh_remove_datafile', function(ply, map_name)
 		map_name = map_name or ''
 
 		local json_file = 'background_npcs/nodes/' .. map_name .. '.json'
@@ -8,19 +8,19 @@ if SERVER then
 		if file.Exists(json_file, 'DATA') then
 			file.Delete(json_file)
 			bgNPC.Util.Log('Remove route file - ' .. json_file, 'Route')
-			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. json_file)
+			bgNPC.Net.Send('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. json_file)
 		end
 
 		if file.Exists(dat_file, 'DATA') then
 			file.Delete(dat_file)
 			bgNPC.Util.Log('Remove route file - ' .. dat_file, 'Route')
-			snet.Invoke('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. dat_file)
+			bgNPC.Net.Send('cl_citizens_remove_route_notify', ply, 'Remove route file - ' .. dat_file)
 		end
 
 		bgNPC.LoadRoutes()
-	end).Protect()
+	end, { admin = true })
 
-	snet.Callback('bgn_movement_mesh_save_to_file', function(ply, bigdata)
+	bgNPC.Net.Receive('bgn_movement_mesh_save_to_file', function(ply, bigdata)
 		if bigdata.from_json then
 			file.Write('background_npcs/nodes/' .. game.GetMap() .. '.json', bigdata.data)
 		else
@@ -28,17 +28,17 @@ if SERVER then
 		end
 
 		bgNPC.LoadRoutes()
-	end).Protect()
+	end, { admin = true })
 else
-	snet.Callback('cl_citizens_remove_route_notify', function(ply, notify_text)
+	bgNPC.Net.Receive('cl_citizens_remove_route_notify', function(ply, notify_text)
 		if not notify_text then return end
 		notification.AddLegacy(notify_text, NOTIFY_GENERIC, 4)
-	end).Protect()
+	end, { admin = true })
 
 	concommand.Add('cl_citizens_remove_route', function (ply, cmd, args)
 		if args[1] ~= nil and args[1] == 'yes' then
 			local map_name = args[2] or game.GetMap()
-			snet.InvokeServer('bgn_movement_mesh_remove_datafile', map_name)
+			bgNPC.Net.SendToServer('bgn_movement_mesh_remove_datafile', map_name)
 		else
 			MsgN('[Background NPCs] If you want to delete the mesh file, '
 				.. 'add as the first command argument - yes')
@@ -57,9 +57,7 @@ else
 		end
 
 		if BGN_NODE:CountNodesOnMap() ~= 0 then
-			snet.Request('bgn_movement_mesh_save_to_file', { from_json = from_json, data = jsonNodes })
-			.ProgressText('Sending the mesh to the server')
-			.InvokeServer()
+			bgNPC.Net.SendToServer('bgn_movement_mesh_save_to_file', { from_json = from_json, data = jsonNodes })
 		else
 			local MainMenu = vgui.Create('DFrame')
 			MainMenu:SetPos(ScrW() / 2 - 500 / 2, ScrH() / 2 - 230 / 2)
@@ -100,9 +98,7 @@ else
 			ButtonYes:SetPos(170, 170)
 			ButtonYes:SetSize(155, 30)
 			ButtonYes.DoClick = function()
-				snet.Request('bgn_movement_mesh_save_to_file', { from_json = from_json, data = jsonNodes })
-					.ProgressText('Sending the mesh to the server')
-					.InvokeServer()
+				bgNPC.Net.SendToServer('bgn_movement_mesh_save_to_file', { from_json = from_json, data = jsonNodes })
 
 				MainMenu:Close()
 			end

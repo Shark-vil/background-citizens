@@ -21,7 +21,7 @@ local function DebugIsEnabled()
 	return true
 end
 
-snet.RegisterCallback('bgn_debug_send_actor_movement_path', function(ply, uid, path)
+bgNPC.Net.Receive('bgn_debug_send_actor_movement_path', function(ply, uid, path)
 	if not DebugIsEnabled() then return end
 
 	local actor = bgNPC.Actors.GetByUid(uid)

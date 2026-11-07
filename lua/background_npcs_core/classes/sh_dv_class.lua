@@ -1,7 +1,7 @@
 local bgNPC = bgNPC
 local Assert = bgNPC.Assert
 local math_random = math.random
-local slib_GetUID = slib.GetUID
+local NextId = bgNPC.Util.NextId
 local string_Explode = string.Explode
 local tonumber = tonumber
 local isstring = isstring
@@ -9,7 +9,7 @@ local IsValid = IsValid
 local ipairs = ipairs
 local setmetatable = setmetatable
 local ents_Create = ents.Create
-local table_HasValueBySeq = table.HasValueBySeq
+local table_HasValueBySeq = bgNPC.Table.HasValue
 local table_RemoveByValue = table.RemoveByValue
 local table_insert = table.insert
 local table_remove = table.remove
@@ -271,7 +271,7 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	if not IsValid(vehicle_entity) then return nil end
 
 	local obj = setmetatable({}, VEHICLE)
-	obj.uid = slib_GetUID()
+	obj.uid = NextId()
 	obj.vehicle = vehicle_entity
 	obj.type = vehicle_type or 'residents'
 	obj.actor_type = actor_type

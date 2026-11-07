@@ -22,16 +22,15 @@ local isvector = isvector
 local isfunction = isfunction
 local NULL = NULL
 local table_remove = table.remove
-local table_RandomBySeq = table.RandomBySeq
-local table_HasValueBySeq = table.HasValueBySeq
+local table_RandomBySeq = bgNPC.Table.Random
+local table_HasValueBySeq = bgNPC.Table.HasValue
 local table_RemoveByValue = table.RemoveByValue
 local table_insert = table.insert
-local table_isArray = table.isArray
+local table_isArray = bgNPC.Table.IsArray
 local string_find = string.find
 local string_lower = string.lower
 local hook_Run = hook.Run
-local snet_Invoke = snet.Invoke
-local snet_InvokeAll = snet.InvokeAll
+local Net = bgNPC.Net
 local math_random = math.random
 --
 
@@ -149,9 +148,9 @@ function BaseClass:SyncFunction(name, ply, data)
 	if not self:IsAlive() then return end
 
 	if ply then
-		if IsValid(ply) then snet_Invoke(name, ply, self.uid, data) end
+		if IsValid(ply) then Net.Send(name, ply, self.uid, data) end
 	else
-		snet_InvokeAll(name, self.uid, data)
+		Net.Send(name, nil, self.uid, data)
 	end
 end
 
@@ -1336,7 +1335,7 @@ end
 
 function BaseClass:IsAnimationPlayed()
 	if self.is_animated then return true end
-	return IsValid(self.npc) and slib.Animator.InAnimation(self.npc)
+	return IsValid(self.npc) and bgNPC.Animator.IsPlaying(self.npc)
 end
 
 function BaseClass:IsLoopSequence()
@@ -1390,7 +1389,7 @@ function BaseClass:ResetSequence()
 	self.anim_sequence = nil
 	self.anim_action = nil
 
-	if IsValid(self.npc) then slib.Animator.Stop(self.npc) end
+	if IsValid(self.npc) then bgNPC.Animator.Stop(self.npc) end
 
 	self:ClearSchedule()
 end
@@ -1537,7 +1536,7 @@ function BaseClass:EnterVehicle(vehicle)
 
 	local npc = self.npc
 
-	vehicle:slibCreateTimer('bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
+	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
 		if not IsValid(self_vehicle) or not self:IsAlive() then return end
 
 		if not vehicle_provider:GetDriver() then
@@ -1551,7 +1550,7 @@ function BaseClass:EnterVehicle(vehicle)
 		self.walkUpdatePathDelay = 0
 
 		npc:SetNoDraw(true)
-		npc:slibSetVar('bgn_vehicle_entered', true)
+		npc:SetNW2Bool('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
 		npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
 		npc:SetModelScale(0)
@@ -1570,7 +1569,7 @@ local function FindVehicleExitPos(vehicle, npc)
 	local side_dist = min:Distance(max) / 2
 	local pos = vehicle:GetPos()
 	local forward, right, up = vehicle:GetForward(), vehicle:GetRight(), vehicle:GetUp()
-	local side = slib.chance(50) and -side_dist or side_dist
+	local side = bgNPC.Util.Chance(50) and -side_dist or side_dist
 	local exit_pos = pos + up * 50
 
 	for _ = 1, 4 do
@@ -1602,7 +1601,7 @@ function BaseClass:ExitVehicle()
 	if vehicle_provider and vehicle_provider:IsValid() and IsValid(npc) then
 		hook_Run('BGN_OnExitVehicle', self, vehicle_provider)
 
-		npc:slibSetVar('bgn_vehicle_entered', false)
+		npc:SetNW2Bool('bgn_vehicle_entered', false)
 		npc:SetParent(nil)
 		npc:SetPos(FindVehicleExitPos(vehicle_provider:GetVehicle(), npc))
 		npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
@@ -1631,7 +1630,7 @@ function BaseClass:InVehicle()
 	if SERVER then
 		return self.vehicle ~= nil and self.vehicle:IsValid()
 	end
-	return IsValid(self.npc) and self.npc:slibGetVar('bgn_vehicle_entered', false)
+	return IsValid(self.npc) and self.npc:GetNW2Bool('bgn_vehicle_entered', false)
 end
 
 function BaseClass:GetVehicle()
@@ -1667,7 +1666,7 @@ function BaseClass:Say(say_text, say_time, voice_sound, animation_sequence)
 	Assert.Arg(2, say_time, 'number|nil', 'ACTOR:Say')
 
 	if say_text then
-		snet_InvokeAll('bgn_actor_text_say', self.uid, say_text, say_time or 5)
+		Net.Send('bgn_actor_text_say', nil, self.uid, say_text, say_time or 5)
 	end
 
 	self:VoiceSay(voice_sound)
@@ -1681,7 +1680,7 @@ function BaseClass:SayReplic(replic_id, replic_index, say_time, voice_sound, ani
 	local replics = bgNPC.cfg.replics[replic_id]
 	if not replics or not replics[replic_index] then return end
 
-	snet_InvokeAll('bgn_actor_text_say_replic', self.uid, replic_id, replic_index, say_time or 5)
+	Net.Send('bgn_actor_text_say_replic', nil, self.uid, replic_id, replic_index, say_time or 5)
 	self:VoiceSay(voice_sound)
 	if animation_sequence then self:PlayStaticSequence(animation_sequence) end
 end

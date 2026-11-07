@@ -6,7 +6,7 @@
 
 CreateClientConVar('bgn_spawnmenu_default_spawner', '', false)
 
-local lang = slib.language({
+local lang = bgNPC.Util.Lang({
 	['default'] = {
 		['sm_modname'] = 'Background NPCs',
 
@@ -89,7 +89,7 @@ spawnmenu.AddContentType('BackgroundNPCs', function(container, obj)
 			return
 		end
 
-		snet.InvokeServer('BGN_ActorSpawnmenu', obj.spawnname)
+		bgNPC.Net.SendToServer('BGN_ActorSpawnmenu', obj.spawnname)
 		surface.PlaySound('ui/buttonclickrelease.wav')
 	end
 
@@ -101,7 +101,7 @@ spawnmenu.AddContentType('BackgroundNPCs', function(container, obj)
 		end):SetIcon('icon16/page_copy.png')
 
 		contextMenu:AddOption('#spawnmenu.menu.spawn_with_toolgun', function()
-			snet.InvokeServer('BGN_ActorSpawnmenuToolSpawner', obj.spawnname)
+			bgNPC.Net.SendToServer('BGN_ActorSpawnmenuToolSpawner', obj.spawnname)
 
 			local toolData = LocalPlayer():GetTool('bgn_actor_spawner')
 			if toolData then
@@ -119,8 +119,8 @@ spawnmenu.AddContentType('BackgroundNPCs', function(container, obj)
 	return icon
 end)
 
-hook.Add('slib.PostSpawnmenuAddContentType', 'BackgroundNPCs', function(name, icon)
-	if not icon or name ~= 'npc' then return end
+local function ExtendNPCIcon(icon)
+	if not icon then return end
 
 	local BASE = icon.OpenMenuExtra
 	local npcClass = icon:GetSpawnName()
@@ -133,14 +133,14 @@ hook.Add('slib.PostSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ic
 			panel:SetIcon('icon16/monkey.png')
 
 			sub_menu:AddOption(lang['sm_spawn_stop'], function()
-				snet.InvokeServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass)
+				bgNPC.Net.SendToServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass)
 			end):SetIcon('icon16/cross.png')
 
 			sub_menu:AddSpacer()
 
 			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				sub_menu:AddOption(lang['sm_spawn_selector'] .. ' - ' .. (actorData.name or actorType), function()
-					snet.InvokeServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass, actorType)
+					bgNPC.Net.SendToServer('BGN_ActorSpawnmenuToolSpecificSpawner', npcClass, actorType)
 				end):SetIcon('icon16/monkey.png')
 			end
 		end
@@ -150,19 +150,19 @@ hook.Add('slib.PostSpawnmenuAddContentType', 'BackgroundNPCs', function(name, ic
 			panel:SetIcon('icon16/cross.png')
 
 			sub_menu:AddOption(lang['sm_reset_everyone'], function()
-				snet.InvokeServer('BGN_ActorSpawnmenuResetSpawner', true)
+				bgNPC.Net.SendToServer('BGN_ActorSpawnmenuResetSpawner', true)
 			end):SetIcon('icon16/cross.png')
 
 			sub_menu:AddSpacer()
 
 			for actorType, actorData in SortedPairs(bgNPC.cfg.actors) do
 				sub_menu:AddOption(lang['sm_reset_selector'] .. ' - ' .. (actorData.name or actorType), function()
-					snet.InvokeServer('BGN_ActorSpawnmenuResetSpawner', actorType)
+					bgNPC.Net.SendToServer('BGN_ActorSpawnmenuResetSpawner', actorType)
 				end):SetIcon('icon16/monkey.png')
 			end
 		end
 	end
-end)
+end
 
 hook.Add('PopulateMenuBar', 'BackgroundNPCs_MenuBar', function(menubar)
 	local m = menubar:AddOrGetMenu(lang['sm_modname'])
@@ -177,6 +177,18 @@ hook.Add('PopulateMenuBar', 'BackgroundNPCs_MenuBar', function(menubar)
 	end
 end)
 
+-- Adds the Background NPCs submenus to every NPC icon of the spawn menu.
+hook.Add('PostGamemodeLoaded', 'BGN_SpawnmenuNPCIcon', function()
+	local base = spawnmenu.GetContentType('npc')
+	if not base then return end
+
+	spawnmenu.AddContentType('npc', function(container, obj)
+		local icon = base(container, obj)
+		ExtendNPCIcon(icon)
+		return icon
+	end)
+end)
+
 cvars.AddChangeCallback('bgn_spawnmenu_default_spawner', function(_, _, actorType)
-	snet.InvokeServer('BGN_ActorSpawnmenuToolDefaultSpawner', actorType)
+	bgNPC.Net.SendToServer('BGN_ActorSpawnmenuToolDefaultSpawner', actorType)
 end, 'bgn_spawnmenu_default_spawner')

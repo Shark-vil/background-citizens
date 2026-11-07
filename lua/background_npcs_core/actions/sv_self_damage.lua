@@ -3,7 +3,7 @@ local IsValid = IsValid
 local isbool = isbool
 local CurTime = CurTime
 local hook_Run = hook.Run
-local table_WhereFindBySeq = table.WhereFindBySeq
+local table_WhereFindBySeq = bgNPC.Table.FindWhere
 local table_insert = table.insert
 local math_Round = math.Round
 --

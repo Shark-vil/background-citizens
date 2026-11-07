@@ -28,7 +28,7 @@ if SERVER then
 	function TOOL:Think()
 		if self.Actor == nil or not IsValid(self.Target) then return end
 		if self.UpdatePathDelay < CurTime() then
-			snet.ClientRPC(self, 'UpdatePath', self.Actor.walkPath)
+			bgNPC.Net.ToolRPC(self, 'UpdatePath', self.Actor.walkPath)
 			self.UpdatePathDelay = CurTime() + 1
 		end
 	end
@@ -64,9 +64,7 @@ if SERVER then
 			return
 		end
 
-		snet.IsValidForClient(ply, function(_, success)
-			bgNPC.Util.Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-			if not success then return end
+		do -- the client checks that the actor exists itself (TOOL:SetActor)
 
 			if self.Actor then
 				self.Actor.debugger = false
@@ -81,8 +79,8 @@ if SERVER then
 			self.Actor = actor
 			self.Target = actor:GetNPC()
 
-			snet.ClientRPC(self, 'SetActor', actor.uid)
-		end, 'actor', actor.uid)
+			bgNPC.Net.ToolRPC(self, 'SetActor', actor.uid)
+		end
 	end
 
 	function TOOL:RightClick()
@@ -117,7 +115,7 @@ if SERVER then
 					self.Actor:WalkToPos(pos, 'run')
 				end
 
-				snet.ClientRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or { pos })	
+				bgNPC.Net.ToolRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or { pos })	
 			end
 
 			walk_to_pos()
@@ -137,7 +135,7 @@ if SERVER then
 		self.Actor = nil
 		self.Target = NULL
 
-		snet.ClientRPC(self, 'ResetActor')
+		bgNPC.Net.ToolRPC(self, 'ResetActor')
 	end
 
 	function TOOL:Holster()
@@ -169,9 +167,8 @@ else
 
 	local halo_color = Color(196, 0, 255)
 	hook.Add('PreDrawHalos', 'BGN_TOOL_ActorMover', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_actor_mover', LocalPlayer())
 		if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		halo.Add({ tool.Target }, halo_color, 3, 3, 2)
@@ -184,9 +181,8 @@ else
 	local vec_20 = Vector(0, 0, 20)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_ActorMovement', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_actor_mover')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_actor_mover', LocalPlayer())
 		if not tool or #tool.Path == 0 then return end
 
 		render.SetColorMaterial()

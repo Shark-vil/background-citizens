@@ -3,8 +3,8 @@ local math_random = math.random
 local table_remove = table.remove
 local table_insert = table.insert
 local table_sort = table.sort
-local table_shuffle = table.shuffle
-local table_HasValueBySeq = table.HasValueBySeq
+local table_shuffle = bgNPC.Table.Shuffle
+local table_HasValueBySeq = bgNPC.Table.HasValue
 local table_RemoveByValue = table.RemoveByValue
 local debugoverlay_Line = debugoverlay.Line
 local debugoverlay_Sphere = debugoverlay.Sphere
@@ -103,7 +103,7 @@ local function CalcTacticalGroup()
 	local max_group_size = 3
 
 	for _, target_actor in ipairs(bgNPC.Actors.GetAll()) do
-		-- if not slib.chance(10) then continue end
+		-- if not bgNPC.Util.Chance(10) then continue end
 		if not target_actor or not target_actor:IsAlive() then continue end
 		if not target_actor:EqualStateGroup('danger') then continue end
 

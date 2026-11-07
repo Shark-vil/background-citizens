@@ -30,7 +30,7 @@ local function GetVJBaseWeapon(npc)
 	local vj_npcs = list.GetForEdit('VJBASE_SPAWNABLE_NPC')
 	local vj_data = vj_npcs and vj_npcs[npc:GetClass()]
 	if vj_data and istable(vj_data.Weapons) and #vj_data.Weapons ~= 0 then
-		return table.RandomBySeq(vj_data.Weapons)
+		return bgNPC.Table.Random(vj_data.Weapons)
 	end
 end
 

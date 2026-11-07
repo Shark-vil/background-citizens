@@ -14,7 +14,7 @@ do
 	local ipairs = ipairs
 	local player_GetAll = player.GetAll
 	local math_random = math.random
-	local slib_IsInWorld = slib.IsInWorld
+	local IsInWorld = bgNPC.Util.IsInWorld
 	local BGN_NODE = BGN_NODE
 	local table_remove = table.remove
 	local table_insert = table.insert
@@ -37,7 +37,7 @@ do
 		trace_data.start = startPos
 		trace_data.endpos = endPos
 		trace_data.filter = function(ent)
-			if ent:IsWorld() and not ent:slibDoorIsLocked() then
+			if ent:IsWorld() and not bgNPC.Util.IsDoorLocked(ent) then
 				return true
 			end
 		end
@@ -51,7 +51,7 @@ do
 		end
 	end, 'on_change_bgn_dynamic_nodes_and_off_altgen')
 
-	async.AddDedic('bgNPC_MovementMapDynamicGeneratorAlternative', function(yield, wait)
+	bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGeneratorAlternative', function(yield, wait)
 		local current_pass = 0
 		local function PassYield()
 			if current_pass >= 1 / FrameTime() then
@@ -74,7 +74,7 @@ do
 						local x = ply_pos.x + math_random(-1000, 1000)
 						local y = ply_pos.y + math_random(-1000, 1000)
 						local new_point = TracePositionFixed(Vector(x, y, ply_pos.z))
-						if new_point and not bgNPC.Util.IsVectorInWater(new_point) and slib_IsInWorld(new_point) then
+						if new_point and not bgNPC.Util.IsVectorInWater(new_point) and IsInWorld(new_point) then
 							local skip_point = false
 							for _, node in ipairs(new_nodes) do
 								if node:GetPos():DistToSqr(new_point) <= 202500 then
@@ -117,23 +117,23 @@ do
 	end)
 end
 
-hook.Add('slib.FirstPlayerSpawn', 'BGN_MovementMeshGeneratorNotify', function(ply)
+hook.Add('BGN_PlayerReady', 'BGN_MovementMeshGeneratorNotify', function(ply)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	if not IsEnableGenerator() then return end
-	ply:slibCreateTimer('bgn_dynamic_mevement_mesh_alert_message', 2, 1, function()
+	bgNPC.Util.EntityTimer(ply, 'bgn_dynamic_mevement_mesh_alert_message', 2, 1, function()
 		if not IsEnableGenerator() then return end
-		snet.Invoke('bgn_dynamic_mevement_mesh_alert_message', ply)
+		bgNPC.Net.Send('bgn_dynamic_mevement_mesh_alert_message', ply)
 	end)
 end)
 
-async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
+bgNPC.Tasks.Add('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local bgNPC = bgNPC
 	local cvar_bgn_dynamic_nodes_type = GetConVar('bgn_dynamic_nodes_type')
 	local cvar_bgn_spawn_radius = GetConVar('bgn_dynamic_nodes_radius')
 	local FrameTime = FrameTime
 	local cvar_bgn_runtime_generator_grid_offset = GetConVar('bgn_runtime_generator_grid_offset')
 	local cvar_bgn_dynamic_nodes_save_progress = GetConVar('bgn_dynamic_nodes_save_progress')
-	local table_Combine = table.Combine
+	local table_Combine = bgNPC.Table.Append
 	local player_GetAll = player.GetAll
 	local table_remove = table.remove
 	local math_random = math.random
@@ -152,7 +152,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 	local is_dynamic_nodes_save
 	local expensive_generator
 	local radius
-	local is_infmap = slib.IsInfinityMap()
+	local is_infmap = bgNPC.Util.IsInfinityMap()
 	local info_message_for_admins_has_send = true
 	if is_infmap then
 		util_IsInWorld = function(...) return util.IsInWorld(...) end
@@ -228,7 +228,7 @@ async.AddDedic('bgNPC_MovementMapDynamicGenerator', function(yield, wait)
 					end
 				end
 				if #admins ~= 0 then
-					snet.Invoke('bgn_dynamic_mevement_mesh_alert_message', admins)
+					bgNPC.Net.Send('bgn_dynamic_mevement_mesh_alert_message', admins)
 				end
 			end
 

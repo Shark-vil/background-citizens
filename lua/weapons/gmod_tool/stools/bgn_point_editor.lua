@@ -19,7 +19,7 @@ local ipairs = ipairs
 local pairs = pairs
 local util_TraceLine = util.TraceLine
 local table_insert = table.insert
-local is_infmap = slib.IsInfinityMap()
+local is_infmap = bgNPC.Util.IsInfinityMap()
 if is_infmap then
 	util_TraceLine = function(...) return util.TraceLine(...) end
 end
@@ -85,17 +85,17 @@ TOOL.LastNodeRemover = false
 if SERVER then
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'LeftClick')
+		bgNPC.Net.ToolRPC(self, 'LeftClick')
 	end
 
 	function TOOL:RightClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'RightClick')
+		bgNPC.Net.ToolRPC(self, 'RightClick')
 	end
 
 	function TOOL:Reload()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'Reload')
+		bgNPC.Net.ToolRPC(self, 'Reload')
 	end
 else
 	function TOOL:GetTraceInfo()
@@ -212,9 +212,8 @@ else
 	end
 
 	concommand.Add('cl_tool_point_editor_reconstruct_parents', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool then return end
 
 		local nodes = BGN_NODE:GetMap()
@@ -659,9 +658,8 @@ else
 	end
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderPoints', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool then return end
 
 		local is_show_global_nodes = GetConVar('bgn_tool_point_editor_show_parents'):GetBool()
@@ -682,7 +680,7 @@ else
 				local pos = node:GetPos()
 
 				for _, parentNode in ipairs(node.parents) do
-					if not table.HasValueBySeq(IsDrawingParentsNode, parentNode) then
+					if not bgNPC.Table.HasValue(IsDrawingParentsNode, parentNode) then
 						if node:HasLink(parentNode, 'walk') then
 							if value.behindTheWall then
 								render_DrawLine(pos, parentNode:GetPos(), clr_link_alpha)
@@ -728,9 +726,8 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorDrawCreatorPoint', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()
@@ -785,9 +782,8 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderLinkerPoints', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool or not tool.LinkerNode then return end
 
 		render_SetColorMaterial()
@@ -807,9 +803,8 @@ else
 	end)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PointEditorRenderAutoparentsPoints', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_point_editor')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_point_editor', LocalPlayer())
 		if not tool or not tool.CreateSelectedNode or tool:GetCurrentType() ~= 'creator' then return end
 
 		local tr = tool:GetTraceInfo()

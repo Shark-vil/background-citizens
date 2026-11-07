@@ -14,10 +14,6 @@ local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 
--- Just registered for the RPC
--- cl_visual_wanted.lua
-slib.GlobalCvarRegisterChangeCallback('bgn_disable_halo_wanted', 'bgn_cl_wanted_module_bgn_disable_halo_wanted')
-slib.GlobalCvarRegisterChangeCallback('bgn_disable_halo_calling', 'bgn_cl_wanted_module_bgn_disable_halo_calling')
 
 cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 	enable_wanted_mode = tonumber(newValue) == 1
@@ -92,13 +88,13 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 		local is_player = attacker:IsPlayer()
 		if is_player then
 			if impunity_limit ~= 0 then
-				local current_impunity = attacker:slibGetLocalVar('bgn_wanted_module_impunity', 0)
+				local current_impunity = (attacker.bgn_wanted_module_impunity or 0)
 				if current_impunity >= impunity_limit or actor:HasTeam('police') then
-					attacker:slibSetLocalVar('bgn_wanted_module_impunity', 0)
+					attacker.bgn_wanted_module_impunity = 0
 					bgNPC.Statistics.Reset(attacker)
 					asset:AddWanted(attacker)
 				else
-					attacker:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity + 1)
+					attacker.bgn_wanted_module_impunity = current_impunity + 1
 				end
 			end
 		else
@@ -155,8 +151,8 @@ end)
 hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim, inflictor, attacker)
 	if not IsValid(victim) then return end
 
-	if victim:slibGetLocalVar('bgn_wanted_module_impunity', 0) > 0 then
-		victim:slibSetLocalVar('bgn_wanted_module_impunity', 0)
+	if (victim.bgn_wanted_module_impunity or 0) > 0 then
+		victim.bgn_wanted_module_impunity = 0
 	end
 
 	if not asset:HasWanted(victim) then return end
@@ -192,9 +188,9 @@ timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
 
 	for _, ply in ipairs(player_GetHumans()) do
 		if IsValid(ply) then
-			local current_impunity = ply:slibGetLocalVar('bgn_wanted_module_impunity', 0)
+			local current_impunity = (ply.bgn_wanted_module_impunity or 0)
 			if current_impunity > 0 then
-				ply:slibSetLocalVar('bgn_wanted_module_impunity', current_impunity - 1)
+				ply.bgn_wanted_module_impunity = current_impunity - 1
 			end
 		end
 	end

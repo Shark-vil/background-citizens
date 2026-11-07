@@ -1,4 +1,4 @@
-local name = slib.language({
+local name = bgNPC.Util.Lang({
 	['default'] = 'Special Forces (NOT WANTED MODE)',
 	['russian'] = 'Спецназ (БЕЗ РЕЖИМА РОЗЫСКА)'
 })

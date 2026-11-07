@@ -8,7 +8,7 @@ local pairs = pairs
 local istable = istable
 local table_insert = table.insert
 local table_remove = table.remove
-local table_HasValueBySeq = table.HasValueBySeq
+local table_HasValueBySeq = bgNPC.Table.HasValue
 --
 
 --[[
@@ -92,7 +92,7 @@ function Actors.Unregister(npc)
 	if bgNPC.fnpcs[actor_type] then RemoveFirst(bgNPC.fnpcs[actor_type], npc) end
 
 	if SERVER then
-		snet.Request('bgm_update_death_actors_on_client', npc).InvokeAll()
+		bgNPC.Net.Send('bgm_update_death_actors_on_client', nil, npc)
 	end
 end
 
@@ -126,16 +126,16 @@ function Actors.ClearRemoved()
 end
 
 if CLIENT then
-	snet.Callback('bgm_update_death_actors_on_client', function(ply, npc)
+	bgNPC.Net.Receive('bgm_update_death_actors_on_client', function(ply, npc)
 		if npc then Actors.Unregister(npc) end
 		Actors.ClearRemoved()
-	end).Register()
+	end)
 
-	snet.Callback('bgn_add_actor_from_client', function(ply, npc, npc_type, uid, info)
+	bgNPC.Net.Receive('bgn_add_actor_from_client', function(ply, npc, npc_type, uid, info)
 		if Actors.Get(npc) ~= nil then return end
 		local actor = BGN_ACTOR:Instance(npc, npc_type, uid)
 		if actor and info then actor.info = info end
-	end).Validator(SNET_ENTITY_VALIDATOR).Register()
+	end, { wait_entities = true })
 end
 
 -- ---------------------------------------------------------------------------

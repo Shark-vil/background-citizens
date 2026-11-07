@@ -2,4 +2,4 @@
 -- 	if not IsValid(ply) or not bgNPC.SpawnMenu.Creator['Default'] then return end
 -- 	print(ply, cmd, table.ToString(args))
 -- 	bgNPC.SpawnMenu.Creator['Default'][ply] = args[1]
--- end).Register()
+-- end)

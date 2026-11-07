@@ -14,11 +14,11 @@ local function UpdateServerConfig()
 					data.class = { saveDataClass }
 				end
 
-				table.InsertNoValue(data.class, class)
+				bgNPC.Table.InsertUnique(data.class, class)
 
 				if model then
 					data.models = data.models or {}
-					table.InsertNoValue(data.models, model)
+					bgNPC.Table.InsertUnique(data.models, model)
 				end
 			end
 		end
@@ -47,7 +47,7 @@ local function IsValidActosConfig(actorType)
 	return true
 end
 
-snet.Callback('BGN_ActorSpawnmenu', function(ply, actorType)
+bgNPC.Net.Receive('BGN_ActorSpawnmenu', function(ply, actorType)
 	if not IsValid(ply) or not IsValidActosConfig(actorType) then return end
 
 	local tr = ply:GetEyeTrace()
@@ -55,12 +55,12 @@ snet.Callback('BGN_ActorSpawnmenu', function(ply, actorType)
 
 	local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10))
 	if not actor then
-		local error_message = ply:slibLanguage({
+		local error_message = bgNPC.Util.Lang({
 			['default'] = 'Failed to create actor',
 			['russian'] = 'Не удалось создать актёра'
-		})
+		}, ply)
 
-		ply:slibNotify(error_message, 'error')
+		bgNPC.Util.Notify(ply, error_message, 'error')
 		return
 	end
 
@@ -80,7 +80,7 @@ snet.Callback('BGN_ActorSpawnmenu', function(ply, actorType)
 	ply:AddCleanup('npcs', npc)
 end)
 
-snet.Callback('BGN_ActorSpawnmenuToolSpawner', function(ply, actorType)
+bgNPC.Net.Receive('BGN_ActorSpawnmenuToolSpawner', function(ply, actorType)
 	if not IsValid(ply) or not IsValidActosConfig(actorType) then return end
 
 	local gmod_tool_weapon = ply:GetWeapon('gmod_tool')
@@ -99,21 +99,21 @@ snet.Callback('BGN_ActorSpawnmenuToolSpawner', function(ply, actorType)
 	end
 end)
 
-snet.Callback('BGN_ActorSpawnmenuToolSpecificSpawner', function(ply, npcClass, actorType)
+bgNPC.Net.Receive('BGN_ActorSpawnmenuToolSpecificSpawner', function(ply, npcClass, actorType)
 	local tbl = bgNPC.SpawnMenu.Creator['NPC']
 	tbl[npcClass] = tbl[npcClass] or {}
 
 	if not actorType then
 		tbl[npcClass] = nil
-	elseif not table.HasValueBySeq(tbl[npcClass], actorType) then
+	elseif not bgNPC.Table.HasValue(tbl[npcClass], actorType) then
 		table.insert(tbl[npcClass], actorType)
 	end
 
 	UpdateDataFile()
 	UpdateServerConfig()
-end).Protect()
+end, { admin = true })
 
-snet.Callback('BGN_ActorSpawnmenuResetSpawner', function(ply, actorType)
+bgNPC.Net.Receive('BGN_ActorSpawnmenuResetSpawner', function(ply, actorType)
 	local tbl = bgNPC.SpawnMenu.Creator['NPC']
 
 	if isbool(actorType) then
@@ -123,16 +123,16 @@ snet.Callback('BGN_ActorSpawnmenuResetSpawner', function(ply, actorType)
 		end
 	elseif isstring(actorType) then
 		for npcClass, actorTypesList in pairs(tbl) do
-			table.RemoveValueBySeq(actorTypesList, actorType)
+			bgNPC.Table.RemoveValue(actorTypesList, actorType)
 		end
 
 		UpdateServerConfig()
 	end
 
 	UpdateDataFile()
-end).Protect()
+end, { admin = true })
 
-snet.Callback('BGN_ActorSpawnmenuToolDefaultSpawner', function(ply, actorType)
+bgNPC.Net.Receive('BGN_ActorSpawnmenuToolDefaultSpawner', function(ply, actorType)
 	local tbl = bgNPC.SpawnMenu.Creator['Default']
 	tbl[ply] = actorType
 end)

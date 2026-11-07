@@ -22,9 +22,10 @@ bgNPC.state_actions_groups = bgNPC.state_actions_groups or {}
 function States.Register(state_name, group_name, callbacks)
 	Assert.NonEmptyString(1, state_name, 'bgNPC.States.Register')
 	Assert.Arg(2, group_name, 'string|nil', 'bgNPC.States.Register')
-	Assert.Arg(3, callbacks, 'table', 'bgNPC.States.Register')
+	Assert.Arg(3, callbacks, 'table|nil', 'bgNPC.States.Register')
 
-	bgNPC.state_actions[state_name] = callbacks
+	-- A state without callbacks is a plain marker (e.g. "scenic_npc").
+	bgNPC.state_actions[state_name] = callbacks or {}
 	bgNPC.state_actions_groups[state_name] = group_name
 end
 

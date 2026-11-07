@@ -2,7 +2,10 @@
 -- https://steamcommunity.com/sharedfiles/filedetails/?id=2546066172
 
 local function MakeFakePlayer(position)
-	local fakePlayer = slib.Components.FakePlayer:Spawn('Police', position)
+	local fakePlayer = ents.Create('bgn_fakeplayer')
+	fakePlayer.PrintName = 'Police'
+	fakePlayer:SetPos(position)
+	fakePlayer:Spawn()
 	fakePlayer:SetHealth(100)
 	fakePlayer:SetNWBool('PoliceOn', true)
 	return fakePlayer
@@ -29,7 +32,7 @@ end)
 hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', function(target, actor)
 	if not GetConVar('bgn_enable_police_system_support'):GetBool() then return end
 
-	local police_system_hook = slib.Component('Hook', 'Get', 'PlayerButtonDown', 'PoliceSysButton')
+	local police_system_hook = bgNPC.Util.GetHook('PlayerButtonDown', 'PoliceSysButton')
 	if not police_system_hook then return end
 
 	local target_pos = target:GetPos()
@@ -46,19 +49,19 @@ hook.Add('BGN_PlayerArrest', 'BGN_PoliceSystemIntegration_PlayerArrest', functio
 
 	if target:IsPlayer() then target:KillSilent() end
 
-	timer.Create('police_system_stage_2_' .. slib.UUID(), 1.5, 1, function()
+	timer.Create('police_system_stage_2_' .. bgNPC.Util.UUID(), 1.5, 1, function()
 		if not actor or not actor:IsAlive() or not IsValid(fakePlayer) or not IsValid(arrestEntity) then
 			return
 		end
 
 		HPZ_PoliceSystem:DownArrestEntity(arrestEntity)
 
-		fakePlayer:slibCreateTimer('police_system_stage_3', 2, 1, function()
+		bgNPC.Util.EntityTimer(fakePlayer, 'police_system_stage_3', 2, 1, function()
 			arrestEntity:Use(fakePlayer)
 		end)
 	end)
 
-	fakePlayer:slibAutoDestroy(5)
+	SafeRemoveEntityDelayed(fakePlayer, 5)
 
 	return true
 end)

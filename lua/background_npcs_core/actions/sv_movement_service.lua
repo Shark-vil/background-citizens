@@ -2,7 +2,7 @@ local bgNPC = bgNPC
 local IsValid = IsValid
 local CurTime = CurTime
 --
-async.Add('BGN_MovementProcess', function(yield, wait)
+bgNPC.Tasks.Add('BGN_MovementProcess', function(yield, wait)
 	-- local current_pass = 0
 
 	while true do
@@ -48,7 +48,7 @@ async.Add('BGN_MovementProcess', function(yield, wait)
 						end
 					end
 
-					-- if current_pass >= 1 / slib.deltaTime then
+					-- if current_pass >= bgNPC.Util.PassesPerYield() then
 					-- 	current_pass = 0
 					-- 	yield()
 					-- end

@@ -3,11 +3,11 @@ if SERVER then
 		BGN_SEAT:Initialize()
 	end)
 
-	snet.RegisterCallback('sv_bgn_tool_seat_save', function(ply, points)
+	bgNPC.Net.Receive('sv_bgn_tool_seat_save', function(ply, points)
 			local save_data = util.Compress(util.TableToJSON(points))
 			file.Write('background_npcs/seats/' .. game.GetMap() .. '.dat', save_data)
 			BGN_SEAT:Initialize()
-	end, false, true)
+	end, { admin = true })
 
 	local function ReadSeatData()
 		local file_path = 'background_npcs/seats/' .. game.GetMap() .. '.dat'
@@ -20,20 +20,20 @@ if SERVER then
 		return {}
 	end
 
-	snet.RegisterCallback('sv_bgn_tool_seat_load', function(ply, points)
+	bgNPC.Net.Receive('sv_bgn_tool_seat_load', function(ply, points)
 		local data = ReadSeatData()
 
 		if #data ~= 0 then
-			snet.Invoke('cl_bgn_tool_seat_load', ply, data)
+			bgNPC.Net.Send('cl_bgn_tool_seat_load', ply, data)
 		end
-	end, false, true)
+	end, { admin = true })
 
-	snet.RegisterCallback('sv_bgn_tool_seat_compile', function(ply, points)
+	bgNPC.Net.Receive('sv_bgn_tool_seat_compile', function(ply, points)
 		local data = ReadSeatData()
-		snet.Invoke('cl_bgn_tool_seat_compile', ply, data)
-	end, false, true)
+		bgNPC.Net.Send('cl_bgn_tool_seat_compile', ply, data)
+	end, { admin = true })
 else
-	snet.RegisterCallback('cl_bgn_tool_seat_load', function(ply, points)
+	bgNPC.Net.Receive('cl_bgn_tool_seat_load', function(ply, points)
 		local wep = ply:GetActiveWeapon()
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
@@ -64,14 +64,14 @@ else
 		end
 	end)
 
-	snet.RegisterCallback('cl_bgn_tool_seat_compile', function(ply, points)
+	bgNPC.Net.Receive('cl_bgn_tool_seat_compile', function(ply, points)
 		hook.Run('BGN_LoadingClienSeats', points)
 	end)
 
 	concommand.Add('bgn_tool_seat_compile', function()
 		local ply = LocalPlayer()
 		if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-		snet.Invoke('sv_bgn_tool_seat_compile')
+		bgNPC.Net.SendToServer('sv_bgn_tool_seat_compile')
 	end)
 
 	concommand.Add('bgn_tool_seat_load', function()
@@ -81,7 +81,7 @@ else
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
 		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
 		if not tool then return end
-		snet.Invoke('sv_bgn_tool_seat_load')
+		bgNPC.Net.SendToServer('sv_bgn_tool_seat_load')
 	end)
 
 	concommand.Add('bgn_tool_seat_save', function()
@@ -99,6 +99,6 @@ else
 			end
 		end
 
-		snet.Invoke('sv_bgn_tool_seat_save', nil, points)
+		bgNPC.Net.SendToServer('sv_bgn_tool_seat_save', points)
 	end)
 end

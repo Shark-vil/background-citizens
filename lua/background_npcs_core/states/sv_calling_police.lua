@@ -1,5 +1,5 @@
 local bgNPC = bgNPC
-local table_RandomBySeq = table.RandomBySeq
+local table_RandomBySeq = bgNPC.Table.Random
 local CurTime = CurTime
 local IsValid = IsValid
 local pairs = pairs

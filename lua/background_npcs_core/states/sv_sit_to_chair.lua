@@ -44,7 +44,7 @@ local function FindCustomChair(actor)
 	end
 
 	if #seats ~= 0 then
-		return table.RandomBySeq(seats)
+		return bgNPC.Table.Random(seats)
 	end
 end
 

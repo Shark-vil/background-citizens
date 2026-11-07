@@ -88,6 +88,6 @@ cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
 	if is_first_bgn_enable or tonumber(new_value) ~= 1 then return end
 	is_first_bgn_enable = true
 
-	LocalPlayer():slibNotify('The first launch of "Background NPCs" can cause lags. '
+	bgNPC.Util.Notify(LocalPlayer(), 'The first launch of "Background NPCs" can cause lags. '
 	.. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
 end)

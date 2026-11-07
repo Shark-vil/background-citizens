@@ -82,7 +82,7 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 								local shoot_vector = enemy:GetPos() - decentvehicle:GetPos()
 								shoot_vector:Normalize()
 
-								decentvehicle:slibCreateTimer('dv_fire_enemy', delay, limit, function()
+								bgNPC.Util.EntityTimer(decentvehicle, 'dv_fire_enemy', delay, limit, function()
 									local dv_veh = decentvehicle.v
 									local is_static = false
 									if _IsValid(dv_veh) then

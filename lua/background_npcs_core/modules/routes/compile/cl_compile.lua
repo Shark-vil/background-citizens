@@ -1,7 +1,7 @@
 concommand.Add('bgn_compile', function(ply, cmd, args)
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
 	bgNPC.Util.Log('Wait for all points to load...', 'Route')
-	snet.InvokeServer('sv_start_bgn_compile')
+	bgNPC.Net.SendToServer('sv_start_bgn_compile')
 end, nil, 'Saves your points as a lua script so you can place your mesh in the workshop.')
 
 local function get_write_string(file_path, json_data)
@@ -20,7 +20,7 @@ local function data_is_valid(data)
 	return data and data ~= ''
 end
 
-snet.Callback('cl_start_bgn_compile', function(ply, data)
+bgNPC.Net.Receive('cl_start_bgn_compile', function(ply, data)
 	local map_name = data.map_name
 	local nodes = data.nodes
 	local seats = data.seats
@@ -57,4 +57,4 @@ snet.Callback('cl_start_bgn_compile', function(ply, data)
 	localPlayer:ChatPrint('Finaly compile! File path - ../GarrysMod/garrysmod/data/' .. compile_path)
 	localPlayer:ChatPrint('Change .txt to .lua and place this file in directory - lua/autorun/server')
 	localPlayer:ChatPrint('==============')
-end).Protect()
+end, { admin = true })

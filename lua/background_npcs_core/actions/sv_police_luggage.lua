@@ -22,7 +22,7 @@ local function TargetPlayerPush(npc, target, velocity)
 	end
 
 	target:ViewPunch(Angle(angle_punch_pitch, angle_punch_yaw, 0))
-	target:EmitSound(table.RandomBySeq(slapSounds), 75, 100, 0.3, CHAN_AUTO)
+	target:EmitSound(bgNPC.Table.Random(slapSounds), 75, 100, 0.3, CHAN_AUTO)
 	target:SetVelocity(forward * velocity)
 end
 

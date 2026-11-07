@@ -10,11 +10,10 @@ local isbool = isbool
 local istable = istable
 local isstring = isstring
 local IsValid = IsValid
-local table_RandomBySeq = table.RandomBySeq
+local table_RandomBySeq = bgNPC.Table.Random
 local table_Copy = table.Copy
-local slib_GetUID = slib.GetUID
-local slib_chance = slib.chance
-local snet_Request = snet.Request
+local NextId = bgNPC.Util.NextId
+local Chance = bgNPC.Util.Chance
 local timer_Simple = timer.Simple
 local hook_Run = hook.Run
 --
@@ -64,7 +63,7 @@ local function PickWeapon(actor_type, actor_data)
 	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor_type)
 	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return nil end
 
-	if actor_data.getting_weapon_chance and not slib_chance(actor_data.getting_weapon_chance) then
+	if actor_data.getting_weapon_chance and not Chance(actor_data.getting_weapon_chance) then
 		return nil
 	end
 
@@ -117,7 +116,7 @@ local function PostInitialize(actor, actor_data, not_sync_actor_on_client, not_a
 		end
 
 		if not not_sync_actor_on_client then
-			snet_Request('bgn_add_actor_from_client', npc, actor.type, actor.uid, actor.info).InvokeAll()
+			bgNPC.Net.Send('bgn_add_actor_from_client', nil, npc, actor.type, actor.uid, actor.info)
 		end
 	end
 
@@ -152,7 +151,7 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	local obj = setmetatable({}, BaseClass)
 
 	obj.isBgnClass = true
-	obj.uid = custom_uid or slib_GetUID()
+	obj.uid = custom_uid or NextId()
 	obj.type = npc_type
 	obj.data = data
 	obj.info = { name = 'Unknown citizen', gender = 'unknown' }
@@ -243,6 +242,4 @@ function BGN_ACTOR:Instance(npc, npc_type, custom_uid, not_sync_actor_on_client,
 	return obj
 end
 
-snet.RegisterValidator('actor', function(ply, uid, actor_uid)
-	return bgNPC.Actors.GetByUid(actor_uid) ~= nil
-end)
+

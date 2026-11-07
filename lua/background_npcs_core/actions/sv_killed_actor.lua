@@ -72,7 +72,7 @@ hook.Add('PlayerDeath', 'BGN_OnPlayerDeath', function(victim, inflictor, attacke
 		victimTeam = victim:Team(),
 	}
 
-	snet.InvokeAll('bgn_base_on_npc_killed_player', killed_data)
+	bgNPC.Net.Send('bgn_base_on_npc_killed_player', nil, killed_data)
 end)
 
 hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
@@ -93,7 +93,7 @@ hook.Add('OnNPCKilled', 'BGN_OnKilledActor', function(npc, attacker, inflictor)
 	}
 
 	if killed_data then
-		snet.InvokeAll('bgn_base_on_npc_killed', killed_data)
+		bgNPC.Net.Send('bgn_base_on_npc_killed', nil, killed_data)
 	end
 
 	if actor and not actor.OnNPCKilled and not EntityRemovedLock then

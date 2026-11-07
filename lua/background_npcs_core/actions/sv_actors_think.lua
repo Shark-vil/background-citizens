@@ -1,6 +1,6 @@
 local bgNPC = bgNPC
 --
-async.Add('BGN_ThinkProcess', function(yield, wait)
+bgNPC.Tasks.Add('BGN_ThinkProcess', function(yield, wait)
     while true do
         local actors = bgNPC.Actors.GetAll()
         for i = 1, #actors do

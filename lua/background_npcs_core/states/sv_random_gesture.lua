@@ -19,13 +19,13 @@ bgNPC.States.Register('random_gesture', 'calm', {
 		data.dancing_time = 0
 
 		local npc = actor:GetNPC()
-		local animation_name = table.RandomBySeq(gestures)
+		local animation_name = bgNPC.Table.Random(gestures)
 		local animation_time = nil
 		if animation_name == 'Sit_Zen' then
 			animation_time = math.random(10, 60)
 		end
 
-		local anim_info = slib.Animator.Play('models/player/kleiner.mdl', animation_name, npc, {
+		local anim_info = bgNPC.Animator.Play('models/player/kleiner.mdl', animation_name, npc, {
 			time = animation_time
 		})
 

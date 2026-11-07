@@ -39,17 +39,17 @@ end
 if SERVER then
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'LeftClick')
+		bgNPC.Net.ToolRPC(self, 'LeftClick')
 	end
 
 	function TOOL:RightClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'RightClick')
+		bgNPC.Net.ToolRPC(self, 'RightClick')
 	end
 
 	function TOOL:Reload()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'Reload')
+		bgNPC.Net.ToolRPC(self, 'Reload')
 	end
 else
 	function TOOL:IsLookingVector(vec)
@@ -204,7 +204,6 @@ else
 	local clr_green = Color(72, 232, 9, 200)
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_SeatEditor', function()
-		if not SLibraryIsLoaded then return end
 		local wep = LocalPlayer():GetActiveWeapon()
 
 		if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then
@@ -216,7 +215,7 @@ else
 			return
 		end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_seat_tool')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool', LocalPlayer())
 
 		if not tool then
 			if m_citizen then

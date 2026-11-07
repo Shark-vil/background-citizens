@@ -2,15 +2,15 @@ local bgNPC = bgNPC
 local math_random = math.random
 local CurTime = CurTime
 local Vector = Vector
-local slib_chance = slib.chance
-local table_RandomBySeq = table.RandomBySeq
+local Chance = bgNPC.Util.Chance
+local table_RandomBySeq = bgNPC.Table.Random
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local math_Clamp = math.Clamp
 
 local function GetRandomFoundPointDistance()
 	local result = 0
-	local chance = slib_chance(30)
-	if slib_chance(30) then
+	local chance = Chance(30)
+	if Chance(30) then
 		result = math_random(chance and 100 or 500, 2500)
 	else
 		result = math_random(chance and 500 or 1000, 2500)
@@ -38,8 +38,8 @@ local function GetNextMovePosition(actor)
 	if not points or #points == 0 then
 		local dist_x = math_random(250, 1000)
 		local dist_y = math_random(250, 1000)
-		if slib_chance(50) then dist_x = -dist_x end
-		if slib_chance(50) then dist_y = -dist_y end
+		if Chance(50) then dist_x = -dist_x end
+		if Chance(50) then dist_y = -dist_y end
 		return Vector(npc_pos.x + dist_x, npc_pos.y + dist_y, npc_pos.z)
 	end
 
@@ -54,7 +54,7 @@ local function UpdateActorMovementType(actor, data)
 		if data.timeToResetRunMovementType < CurTime() then
 			data.schedule = 'walk'
 		end
-	elseif slib_chance(5) then
+	elseif Chance(5) then
 		data.timeToResetRunMovementType = CurTime() + math_random(5, 30)
 		data.schedule = 'run'
 	end

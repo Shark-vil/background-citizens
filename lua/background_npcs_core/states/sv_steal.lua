@@ -1,9 +1,9 @@
 hook.Add('BGN_Module_FirstAttackerValidator', 'BGN_StealTargetSet', function(attacker, target)
-	if target:slibGetVar('is_stealer') then return target, attacker end
+	if target.bgn_is_stealer then return target, attacker end
 end)
 
 hook.Add('BGN_StealFinish', 'BGN_StealFinishedCallForHelp', function(actor, target, success)
-	if not success or slib.chance(30) then
+	if not success or bgNPC.Util.Chance(30) then
 		local anotherActor = bgNPC.Actors.Get(target)
 		if anotherActor then
 			if not anotherActor:HasTeam('police') then
@@ -92,7 +92,7 @@ bgNPC.States.Register('steal', 'wary', {
 			end
 		end
 
-		if target:slibIsViewVector(npc_pos, 80) then
+		if bgNPC.Util.IsInView(target, npc_pos, 80) then
 			if data.isSteal then
 				if not data.isWanted then
 					data.isWanted = true
@@ -114,10 +114,10 @@ bgNPC.States.Register('steal', 'wary', {
 			if data.isSteal then
 				if not data.isPlayAnim and not data.isWanted then
 					data.isPlayAnim = true
-					npc:slibSetVar('is_stealer', true)
+					npc.bgn_is_stealer = true
 					actor:ClearSchedule()
 
-					if slib.chance(50) then
+					if bgNPC.Util.Chance(50) then
 						local target_actor = bgNPC.Actors.Get(target)
 						if target_actor then
 							target_actor:SetState('idle')

@@ -39,7 +39,7 @@ function ASSET:SetDialogue(actor1, actor2)
 
 	local npc1_model = actor1:GetNPC():GetModel()
 	local npc2_model = actor2:GetNPC():GetModel()
-	local dialogue = table.RandomBySeq(bgNPC.cfg.dialogues)
+	local dialogue = bgNPC.Table.Random(bgNPC.cfg.dialogues)
 	local replic = dialogue.list[1]
 	if dialogue.interlocutors == nil then return false end
 	local type_1 = dialogue.interlocutors[1]
@@ -78,7 +78,7 @@ function ASSET:SetDialogue(actor1, actor2)
 	end
 
 	local index = table.insert(dialogue_actors, {
-		id = slib.UUID(),
+		id = bgNPC.Util.UUID(),
 		interlocutors = {
 			[1] = actor1,
 			[2] = actor2,
@@ -96,7 +96,7 @@ function ASSET:SetDialogue(actor1, actor2)
 		replicMax = table.Count(dialogue.list),
 		soundId = 1,
 		soundMax = table.Count(replic),
-		switchTime = CurTime() + slib.SoundDuration('sound/' .. NormalizeSoundPath(replic[1], gender_1)) + 1,
+		switchTime = CurTime() + SoundDuration('sound/' .. NormalizeSoundPath(replic[1], gender_1)) + 1,
 		isIdle = false,
 	})
 
@@ -170,7 +170,7 @@ function ASSET:SwitchDialogue(actor)
 
 				gender = dialogue.gender[dialogue.speaking]
 				local sound_path = NormalizeSoundPath(dialogue.replic[1], gender)
-				dialogue.switchTime = CurTime() + slib.SoundDuration('sound/' .. sound_path) + 0.5
+				dialogue.switchTime = CurTime() + SoundDuration('sound/' .. sound_path) + 0.5
 				local target_actor = dialogue.interlocutors[dialogue.speaking]
 				_EmitSound(target_actor, sound_path)
 				_PlayAnimation(dialogue)
@@ -178,7 +178,7 @@ function ASSET:SwitchDialogue(actor)
 		else
 			dialogue.soundId = dialogue.soundId + 1
 			local sound_path = NormalizeSoundPath(dialogue.replic[dialogue.soundId], gender)
-			dialogue.switchTime = CurTime() + slib.SoundDuration('sound/' .. sound_path) + 0.5
+			dialogue.switchTime = CurTime() + SoundDuration('sound/' .. sound_path) + 0.5
 			local target_actor = dialogue.interlocutors[dialogue.speaking]
 			_EmitSound(target_actor, sound_path)
 			_PlayAnimation(dialogue)

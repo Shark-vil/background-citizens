@@ -1,5 +1,3 @@
-local DefaultAccess = { isAdmin = true }
-
 bgNPC.cvar = bgNPC.cvar or {}
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
@@ -83,253 +81,138 @@ CreateConVar('bgn_installed', 1, {
 	FCVAR_SERVER_CAN_EXECUTE
 }, '')
 
-scvar.Register('bgn_enable', bgNPC.cvar.bgn_enable,
-	FCVAR_ARCHIVE, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_enable', bgNPC.cvar.bgn_enable, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_agressive_mode', bgNPC.cvar.bgn_agressive_mode,
-	FCVAR_ARCHIVE, 'All actors will be hostile towards you.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_agressive_mode', bgNPC.cvar.bgn_agressive_mode, 'All actors will be hostile towards you.')
 
-scvar.Register('bgn_friend_mode', bgNPC.cvar.bgn_friend_mode,
-	FCVAR_ARCHIVE, 'All actors will be friendly towards you.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_friend_mode', bgNPC.cvar.bgn_friend_mode, 'All actors will be friendly towards you.')
 
-scvar.Register('bgn_chunk_system', bgNPC.cvar.bgn_chunk_system,
-	FCVAR_ARCHIVE, '1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_chunk_system', bgNPC.cvar.bgn_chunk_system, '1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_chunk_size', bgNPC.cvar.bgn_chunk_size,
-	FCVAR_ARCHIVE, '1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_chunk_size', bgNPC.cvar.bgn_chunk_size, '1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_dynamic_nodes_radius', bgNPC.cvar.bgn_dynamic_nodes_radius,
-	FCVAR_ARCHIVE, '')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_dynamic_nodes_radius', bgNPC.cvar.bgn_dynamic_nodes_radius, '')
 
-scvar.Register('bgn_drop_money', bgNPC.cvar.bgn_drop_money,
-	FCVAR_ARCHIVE, 'Enables the ability to drop money from NPCs when they die. Invokes hook "BGN_DropMoney". 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_drop_money', bgNPC.cvar.bgn_drop_money, 'Enables the ability to drop money from NPCs when they die. Invokes hook "BGN_DropMoney". 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_module_n2money', bgNPC.cvar.bgn_module_n2money,
-	FCVAR_ARCHIVE, 'Enables a money drop from the addon "nMoney2 - Sandbox Currency". 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_n2money', bgNPC.cvar.bgn_module_n2money, 'Enables a money drop from the addon "nMoney2 - Sandbox Currency". 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_debug', bgNPC.cvar.bgn_debug,
-	FCVAR_ARCHIVE, 'Turns on debug mode and prints additional information to the console. 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_debug', bgNPC.cvar.bgn_debug, 'Turns on debug mode and prints additional information to the console. 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_dynamic_nodes_save_progress', bgNPC.cvar.bgn_dynamic_nodes_save_progress,
-	FCVAR_ARCHIVE, 'If enabled, the automatically-generated movement mesh will not be deleted with each new generation, 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_dynamic_nodes_save_progress', bgNPC.cvar.bgn_dynamic_nodes_save_progress, 'If enabled, the automatically-generated movement mesh will not be deleted with each new generation, 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport,
-	FCVAR_ARCHIVE, 'Enables fast teleportation of NPCs. Disable this if you experience performance issues. 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport, 'Enables fast teleportation of NPCs. Disable this if you experience performance issues. 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode,
-	FCVAR_ARCHIVE, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2,
-	FCVAR_ARCHIVE, 'Includes support for the "StormFox2" addon. 1 - enabled, 0 - disabled.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2, 'Includes support for the "StormFox2" addon. 1 - enabled, 0 - disabled.')
 
-scvar.Register('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode,
-	FCVAR_ARCHIVE, 'Enables or disables wanted mode.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode, 'Enables or disables wanted mode.')
 
-scvar.Register('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time,
-	FCVAR_ARCHIVE, 'The time you need to go through to remove the wanted level.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time, 'The time you need to go through to remove the wanted level.')
 
-scvar.Register('bgn_wanted_level', bgNPC.cvar.bgn_wanted_level,
-	FCVAR_ARCHIVE, 'Enables or disables the boost wanted level mode.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_level', bgNPC.cvar.bgn_wanted_level, 'Enables or disables the boost wanted level mode.')
 
-scvar.Register('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text,
-	FCVAR_ARCHIVE, 'Enables or disables the text about wanted time.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text, 'Enables or disables the text about wanted time.')
 
-scvar.Register('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars,
-	FCVAR_ARCHIVE, 'Enables or disables drawing of stars in wanted mode.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars, 'Enables or disables drawing of stars in wanted mode.')
 
-scvar.Register('bgn_wanted_impunity_limit', bgNPC.cvar.bgn_wanted_impunity_limit,
-	FCVAR_ARCHIVE, 'Sets the number of kills, on reaching which you are guaranteed to get a wanted level. The value "0" disables the option.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_impunity_limit', bgNPC.cvar.bgn_wanted_impunity_limit, 'Sets the number of kills, on reaching which you are guaranteed to get a wanted level. The value "0" disables the option.')
 
-scvar.Register('bgn_wanted_impunity_reduction_period', bgNPC.cvar.bgn_wanted_impunity_reduction_period,
-	FCVAR_ARCHIVE, 'Sets the wanted in seconds after which players have their kill limit reduced by 1 number. The value "0" disables the option.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_impunity_reduction_period', bgNPC.cvar.bgn_wanted_impunity_reduction_period, 'Sets the wanted in seconds after which players have their kill limit reduced by 1 number. The value "0" disables the option.')
 
-scvar.Register('bgn_wanted_police_instantly', bgNPC.cvar.bgn_wanted_police_instantly,
-	FCVAR_ARCHIVE, 'If enabled, you instantly get a wanted level when killing actors from the "police" team.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_wanted_police_instantly', bgNPC.cvar.bgn_wanted_police_instantly, 'If enabled, you instantly get a wanted level when killing actors from the "police" team.')
 
-scvar.Register('bgn_max_npc', bgNPC.cvar.bgn_max_npc,
-	FCVAR_ARCHIVE, 'The maximum number of background NPCs on the map.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_max_npc', bgNPC.cvar.bgn_max_npc, 'The maximum number of background NPCs on the map.')
 
-scvar.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius,
-	FCVAR_ARCHIVE, 'NPC spawn radius relative to the player.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 'NPC spawn radius relative to the player.')
 
-scvar.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius,
-	FCVAR_ARCHIVE, 'Determines at what distance the NPC will disable logic for optimization purposes')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
-scvar.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility,
-	FCVAR_ARCHIVE, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
 
-scvar.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius,
-	FCVAR_ARCHIVE, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
 
-scvar.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period,
-	FCVAR_ARCHIVE, 'The period between the spawn of the NPC. Changes require a server restart.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'The period between the spawn of the NPC. Changes require a server restart.')
 
-scvar.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit,
-	FCVAR_ARCHIVE, 'Height limit between points. Used to correctly define child points.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 'Height limit between points. Used to correctly define child points.')
 
-scvar.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode,
-	FCVAR_ARCHIVE, 'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, 'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.')
 
-scvar.Register('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time,
-	FCVAR_ARCHIVE, 'Sets the time allotted for your detention.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time, 'Sets the time allotted for your detention.')
 
-scvar.Register('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit,
-	FCVAR_ARCHIVE, 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit, 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
 
-scvar.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc,
-	FCVAR_ARCHIVE, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
 
-scvar.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode,
-	FCVAR_ARCHIVE, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 
-scvar.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_calling,
-	FCVAR_ARCHIVE, 'Disable halo for actors calling the police.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_calling, 'Disable halo for actors calling the police.')
 
-scvar.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted,
-	FCVAR_ARCHIVE, 'Disable halo for wanted entities.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted, 'Disable halo for wanted entities.')
 
-scvar.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support,
-	FCVAR_ARCHIVE, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
 
-scvar.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_system_support,
-	FCVAR_ARCHIVE,
-	'Enables compatibility with the "Police System" addon and overrides the default arrest method.'
-).Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_system_support, 'Enables compatibility with the "Police System" addon and overrides the default arrest method.')
 
-scvar.Register('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues,
-	FCVAR_ARCHIVE, 'Activate this if you want to disable dialogues between NPCs.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_disable_dialogues', bgNPC.cvar.bgn_disable_dialogues, 'Activate this if you want to disable dialogues between NPCs.')
 
-scvar.Register('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporter,
-	FCVAR_ARCHIVE, 'Instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_actors_teleporter', bgNPC.cvar.bgn_actors_teleporter, 'Instead of removing the NPC after losing it from the players field of view, it will teleport to the nearest point. This will create the effect of a more populated city. Disable this option if you notice dropped frames.')
 
-scvar.Register('bgn_actors_max_teleports', bgNPC.cvar.bgn_actors_max_teleports,
-	FCVAR_ARCHIVE, 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_actors_max_teleports', bgNPC.cvar.bgn_actors_max_teleports, 'How many NPCs can be teleported in one second. The larger the number, the more calculations will be performed. The teleport is calculated for each actor individually, without waiting for the teleport of another actor from his group.')
 
-scvar.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_language,
-	FCVAR_ARCHIVE, 'Sets the language of the NPC replicas. The default is - en.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_replics_language', bgNPC.cvar.bgn_module_replics_language, 'Sets the language of the NPC replicas. The default is - en.')
 
-scvar.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable,
-	FCVAR_ARCHIVE, 'Enables or disables NPC text replics.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_replics_enable', bgNPC.cvar.bgn_module_replics_enable, 'Enables or disables NPC text replics.')
 
-scvar.Register('bgn_module_bio_annihilation_two_replacement',
-	bgNPC.cvar.bgn_module_bio_annihilation_two_replacement,
-	FCVAR_ARCHIVE, '1 - Enable "BA2" addon support. 0 - disable.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_bio_annihilation_two_replacement',
+	bgNPC.cvar.bgn_module_bio_annihilation_two_replacement, '1 - Enable "BA2" addon support. 0 - disable.')
 
-scvar.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
-	bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists,
-	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh restriction. 0 - disable.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_enable_dynamic_nodes_only_when_mesh_not_exists',
+	bgNPC.cvar.bgn_enable_dynamic_nodes_only_when_mesh_not_exists, '1 - Enable dynamic movement mesh restriction. 0 - disable.')
 
-scvar.Register('bgn_dynamic_nodes_alternative', bgNPC.cvar.bgn_dynamic_nodes_alternative,
-	FCVAR_ARCHIVE, '1 - Enable alternative dynamic movement mesh. 0 - disable.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_dynamic_nodes_alternative', bgNPC.cvar.bgn_dynamic_nodes_alternative, '1 - Enable alternative dynamic movement mesh. 0 - disable.')
 
-scvar.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes,
-	FCVAR_ARCHIVE, '1 - Enable dynamic movement mesh. 0 - disable.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_dynamic_nodes', bgNPC.cvar.bgn_dynamic_nodes, '1 - Enable dynamic movement mesh. 0 - disable.')
 
-scvar.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type,
-	FCVAR_ARCHIVE, 'Types - grid, random')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_dynamic_nodes_type', bgNPC.cvar.bgn_dynamic_nodes_type, 'Types - grid, random')
 
-scvar.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement,
-	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_arccw_weapon_replacement', bgNPC.cvar.bgn_module_arccw_weapon_replacement, '1 - includes the replacement of weapons. 0 - disables.')
 
-scvar.Register('bgn_module_arc9_weapon_replacement', bgNPC.cvar.bgn_module_arc9_weapon_replacement,
-	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_arc9_weapon_replacement', bgNPC.cvar.bgn_module_arc9_weapon_replacement, '1 - includes the replacement of weapons. 0 - disables.')
 
--- scvar.Register('bgn_module_mw_weapon_replacement', bgNPC.cvar.bgn_module_mw_weapon_replacement,
+-- bgNPC.CVars.Register('bgn_module_mw_weapon_replacement', bgNPC.cvar.bgn_module_mw_weapon_replacement,
 -- 	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
--- 	.Access(DefaultAccess)
+--
 
-scvar.Register('bgn_module_tfa_weapon_replacement', bgNPC.cvar.bgn_module_tfa_weapon_replacement,
-	FCVAR_ARCHIVE, '1 - includes the replacement of weapons. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_tfa_weapon_replacement', bgNPC.cvar.bgn_module_tfa_weapon_replacement, '1 - includes the replacement of weapons. 0 - disables.')
 
-scvar.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestures,
-	FCVAR_ARCHIVE, '1 - Enable custom gestures animations. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_custom_gestures', bgNPC.cvar.bgn_module_custom_gestures, '1 - Enable custom gestures animations. 0 - disables.')
 
-scvar.Register('bgn_module_tactical_groups', bgNPC.cvar.bgn_module_tactical_groups,
-	FCVAR_ARCHIVE, '1 - Enable tactical groups. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_tactical_groups', bgNPC.cvar.bgn_module_tactical_groups, '1 - Enable tactical groups. 0 - disables.')
 
-scvar.Register('bgn_module_followers_mod_addon', bgNPC.cvar.bgn_module_followers_mod_addon,
-	FCVAR_ARCHIVE, '1 - Enable sopport addon "Followers Mod". 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_module_followers_mod_addon', bgNPC.cvar.bgn_module_followers_mod_addon, '1 - Enable sopport addon "Followers Mod". 0 - disables.')
 
-scvar.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random,
-	FCVAR_ARCHIVE, '1 - makes any NPCs with random models from the list. 0 - disables.')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random, '1 - makes any NPCs with random models from the list. 0 - disables.')
 
-scvar.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset,
-	FCVAR_ARCHIVE, 'Offset between points for grid generation')
-	.Access(DefaultAccess)
+bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset, 'Offset between points for grid generation')
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0
 	if v.enabled then enabled = 1 end
 
-	scvar.Register('bgn_npc_type_' .. npcType, enabled, FCVAR_ARCHIVE)
-		.Access(DefaultAccess)
+	bgNPC.CVars.Register('bgn_npc_type_' .. npcType, enabled)
 end
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
-	scvar.Register('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType), FCVAR_ARCHIVE)
-		.Access(DefaultAccess)
+	bgNPC.CVars.Register('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType))
 end
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
-	scvar.Register('bgn_disable_weapon_' .. npcType , 0, FCVAR_ARCHIVE)
-		.Access(DefaultAccess)
+	bgNPC.CVars.Register('bgn_disable_weapon_' .. npcType , 0)
 end
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local max_vehicle = v.max_vehicle or 0
-	scvar.Register('bgn_npc_vehicle_max_' .. npcType, max_vehicle, FCVAR_ARCHIVE)
-		.Access(DefaultAccess)
+	bgNPC.CVars.Register('bgn_npc_vehicle_max_' .. npcType, max_vehicle)
 end

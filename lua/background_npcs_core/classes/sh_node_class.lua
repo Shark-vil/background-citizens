@@ -10,9 +10,9 @@ local isstring = isstring
 local math_floor = math.floor
 local table_insert = table.insert
 local table_remove = table.remove
-local table_RemoveValueBySeq = table.RemoveValueBySeq
+local table_RemoveValueBySeq = bgNPC.Table.RemoveValue
 local table_Count = table.Count
-local table_HasValueBySeq = table.HasValueBySeq
+local table_HasValueBySeq = bgNPC.Table.HasValue
 local util_TraceLine = util.TraceLine
 local util_TableToJSON = util.TableToJSON
 local util_JSONToTable = util.JSONToTable
@@ -21,7 +21,7 @@ local cvar_bgn_chunk_system  = GetConVar('bgn_chunk_system')
 local cvar_bgn_chunk_size = GetConVar('bgn_chunk_size')
 --
 local MAP_CHUNKS
-local is_infmap = slib.IsInfinityMap()
+local is_infmap = bgNPC.Util.IsInfinityMap()
 if is_infmap then
 	util_TraceLine = function(...) return util.TraceLine(...) end
 end
@@ -44,61 +44,27 @@ function BGN_NODE:IsOnChunkSystem()
 	return cvar_bgn_chunk_system:GetBool()
 end
 
-do
-	local CHUNK_CLASS = slib.Component('Chunks')
+-- Nodes are bucketed by cells of a uniform grid, a position maps to its cell in O(1).
+local function InstanceChunks()
+	local chunk_size = is_infmap and 10000 or cvar_bgn_chunk_size:GetInt()
+	BGN_NODE.CHUNK_SIZE_X = chunk_size
+	BGN_NODE.CHUNK_SIZE_Y = chunk_size
+	BGN_NODE.CHUNK_SIZE_Z = chunk_size
+	MAP_CHUNKS = bgNPC.SpatialGrid(chunk_size)
+end
 
-	local function InstanceChunks()
-		local chunk_size = cvar_bgn_chunk_size:GetInt()
+InstanceChunks()
 
-		BGN_NODE.CHUNK_SIZE_X = is_infmap and 10000 or chunk_size
-		BGN_NODE.CHUNK_SIZE_Y = is_infmap and 10000 or chunk_size
-		BGN_NODE.CHUNK_SIZE_Z = is_infmap and 10000 or chunk_size
-
-		MAP_CHUNKS = CHUNK_CLASS:Instance({
-			chunk_size_x = BGN_NODE.CHUNK_SIZE_X,
-			chunk_size_y = BGN_NODE.CHUNK_SIZE_Y,
-			chunk_size_z = BGN_NODE.CHUNK_SIZE_Z,
-		})
-	end
-
-	InstanceChunks()
-
-	if SERVER then
-		local function GenerateChunks()
-			MAP_CHUNKS:SetConditionChunkTouchesTheWorld()
-			MAP_CHUNKS:MakeChunks()
-
-			MsgN('[Background NPCs] The chunking system is active.')
-			MsgN('[Background NPCs] Chunks count: ' .. tostring(MAP_CHUNKS:ChunksCount()))
-		end
-
-		hook.Add('BGN_PreLoadRoutes', 'BGN_Nodes_ChunkGenerate', function()
-			if IsValid(MAP_CHUNKS) then return end
-			if not BGN_NODE:IsOnChunkSystem() then
-				MsgN('[Background NPCs] The chunking system is disabled.')
-				return
-			end
-			GenerateChunks()
+if SERVER then
+	local function OnChangeChunkCvars()
+		timer.Create('BGN_Nodes_OnChangeChunkCvars', 2.5, 1, function()
+			InstanceChunks()
+			bgNPC.LoadRoutes()
 		end)
-
-		local function OnChangeChunkCvars(cvar_name, old_value, new_value)
-			if timer.Exists('BGN_Nodes_OnChangeChunkCvars') then
-				timer.Remove('BGN_Nodes_OnChangeChunkCvars')
-			end
-
-			timer.Create('BGN_Nodes_OnChangeChunkCvars', 2.5, 1, function()
-				InstanceChunks()
-				if cvar_name == 'bgn_chunk_size' or tonumber(new_value) == 1 then
-					bgNPC:LoadRoutes()
-				else
-					MsgN('[Background NPCs] The chunking system is disabled.')
-				end
-			end)
-		end
-
-		cvars.AddChangeCallback('bgn_chunk_system', OnChangeChunkCvars, 'bgn_chunk_system_changed')
-		cvars.AddChangeCallback('bgn_chunk_size', OnChangeChunkCvars, 'bgn_chunk_size_changed')
 	end
+
+	cvars.AddChangeCallback('bgn_chunk_system', OnChangeChunkCvars, 'bgn_chunk_system_changed')
+	cvars.AddChangeCallback('bgn_chunk_size', OnChangeChunkCvars, 'bgn_chunk_size_changed')
 end
 
 cvars.AddChangeCallback('bgn_point_z_limit', function(convar_name, value_old, value_new)
@@ -319,10 +285,10 @@ function BGN_NODE:Instance(position_value)
 	obj.parents = {}
 	obj.links = {}
 	obj.parent_distance = 250000
-	obj.chunk = MAP_CHUNKS:GetChunkByVector(obj.position)
+	obj.chunk = MAP_CHUNKS:GetCell(obj.position)
 
-	-- The serializer calls this without arguments, so it has to be a closure.
-	function obj._snet_getdata()
+	-- Network form for bgNPC.Net (links are sent as node indexes).
+	function obj.NetSerialize()
 		local netobj = {}
 		netobj.index = obj.index
 		netobj.isNode = obj.isNode
@@ -351,9 +317,7 @@ end
 BGN_NODE.IsNode = IsNode
 
 function BGN_NODE:GetChunkID(pos)
-	local chunk = MAP_CHUNKS:GetChunkByVector(pos)
-	if not chunk then return -1 end
-	return chunk.index
+	return MAP_CHUNKS:Key(pos)
 end
 
 function BGN_NODE:GetChunkManager()
@@ -394,7 +358,7 @@ function BGN_NODE:GetChunkNodes(pos, is_async)
 
 		if is_async then
 			async_pass = async_pass + 1
-			if async_pass > 1 / slib.deltaTime then
+			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
 				coroutine_yield()
 			end
@@ -414,7 +378,7 @@ function BGN_NODE:AddNodeToMap(node)
 
 	local chunk_id = node:GetChunkID()
 	if SERVER and BGN_NODE:IsOnChunkSystem() and chunk_id == -1 then
-		-- slib.Warning('Node cannot exist outside of a chunk!')
+		-- bgNPC.Util.Warning('Node cannot exist outside of a chunk!')
 		bgNPC.Util.Log('Node ' .. tostring(node:GetPos()) .. ' cannot exist outside of a chunk!')
 		return
 	end
@@ -471,7 +435,7 @@ function BGN_NODE:GetChunkNodesInRadius(pos, radius, is_async)
 
 		-- if is_async then
 		-- 	async_pass = async_pass + 1
-		-- 	if async_pass > 1 / slib.deltaTime then
+		-- 	if async_pass > bgNPC.Util.PassesPerYield() then
 		-- 		async_pass = 0
 		-- 		coroutine_yield()
 		-- 	end
@@ -506,7 +470,7 @@ function BGN_NODE:GetNodesInRadius(pos, radius, is_async)
 
 		if is_async then
 			async_pass = async_pass + 1
-			if async_pass > 1 / slib.deltaTime then
+			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
 				coroutine_yield()
 			end
@@ -540,7 +504,7 @@ function BGN_NODE:GetChunkNodesCountInRadius(pos, radius, is_async)
 
 		-- if is_async then
 		-- 	async_pass = async_pass + 1
-		-- 	if async_pass > 1 / slib.deltaTime then
+		-- 	if async_pass > bgNPC.Util.PassesPerYield() then
 		-- 		async_pass = 0
 		-- 		coroutine_yield()
 		-- 	end
@@ -573,7 +537,7 @@ function BGN_NODE:GetNodesCountInRadius(pos, radius, is_async)
 
 		if is_async then
 			async_pass = async_pass + 1
-			if async_pass > 1 / slib.deltaTime then
+			if async_pass > bgNPC.Util.PassesPerYield() then
 				async_pass = 0
 				coroutine_yield()
 			end
@@ -648,7 +612,7 @@ function BGN_NODE:AutoLink(settings, is_async)
 		async_current_pass = 0
 		AsyncYield = function()
 			async_current_pass = async_current_pass + 1
-			if async_current_pass > 1 / slib.deltaTime then
+			if async_current_pass > bgNPC.Util.PassesPerYield() then
 				async_current_pass = 0
 				coroutine_yield()
 			end

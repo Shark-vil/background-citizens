@@ -32,7 +32,7 @@ bgNPC.States.Register('run_from_danger', 'danger', {
 
 		if dist > 1000000 and (not data.dyspnea_delay or data.dyspnea_delay < CurTime()) then
 			actor:SetState('dyspnea_danger')
-		elseif dist < 40000 and (enemy:IsPlayer() or slib.chance(10)) and enemy:slibIsViewVector(npc_pos) then
+		elseif dist < 40000 and (enemy:IsPlayer() or bgNPC.Util.Chance(10)) and bgNPC.Util.IsInView(enemy, npc_pos) then
 			actor:SetState('fear')
 		else
 			local min, max = 700, 1000

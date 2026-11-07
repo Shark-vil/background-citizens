@@ -16,17 +16,17 @@ TOOL.EndPos = nil
 if SERVER then
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'LeftClick')
+		bgNPC.Net.ToolRPC(self, 'LeftClick')
 	end
 
 	function TOOL:RightClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'RightClick')
+		bgNPC.Net.ToolRPC(self, 'RightClick')
 	end
 
 	function TOOL:Reload()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'Reload')
+		bgNPC.Net.ToolRPC(self, 'Reload')
 	end
 else
 	function TOOL:GetTrace()
@@ -97,8 +97,7 @@ else
 	local render_DrawLine = render.DrawLine
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PathFinder', function()
-		if not SLibraryIsLoaded then return end
-		local tool = LocalPlayer():slibGetActiveTool('bgn_path_finder')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_path_finder', LocalPlayer())
 		if not tool then return end
 		render.SetColorMaterial()
 

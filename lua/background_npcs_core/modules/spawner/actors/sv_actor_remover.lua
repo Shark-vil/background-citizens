@@ -59,7 +59,7 @@ local function IsValidRemovePositionAsync(actor, npc)
 		local dist = npc_pos:DistToSqr(ply_pos)
 
 		if dist > bgn_spawn_radius then
-			if ply:slibIsTraceEntity(npc, dist, true) then
+			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
 				return false
 			end
 		else
@@ -79,7 +79,7 @@ local function IsValidRemovePositionAsync(actor, npc)
 
 			coroutine_yield()
 
-			if ply:slibIsTraceEntity(npc, dist, true) then
+			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
 				return false
 			end
 		end
@@ -88,7 +88,7 @@ local function IsValidRemovePositionAsync(actor, npc)
 	return true
 end
 
-async.AddDedic('bgn_actors_last_player_interaction', function(yield, wait)
+bgNPC.Tasks.Add('bgn_actors_last_player_interaction', function(yield, wait)
 	local player_GetHumans = player.GetHumans
 	while true do
 		local players = player_GetHumans()
@@ -100,7 +100,7 @@ async.AddDedic('bgn_actors_last_player_interaction', function(yield, wait)
 				if not IsValid(npc) then continue end
 				for k = 1, #players do
 					local ply = players[k]
-					if IsValid(ply) and ply:slibIsTraceEntity(npc, bgn_spawn_radius_visibility, true) then
+					if IsValid(ply) and bgNPC.Util.CanSeeEntity(ply, npc, true) then
 						actor.__last_player_interaction = CurTime() + 10
 						break
 					end
@@ -228,7 +228,7 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 	end
 end
 
-async.AddDedic('bgn_actors_remover_process', function(yield, wait)
+bgNPC.Tasks.Add('bgn_actors_remover_process', function(yield, wait)
 	while true do
 		local actors = bgNPC.Actors.GetAll()
 		local actors_count = #actors

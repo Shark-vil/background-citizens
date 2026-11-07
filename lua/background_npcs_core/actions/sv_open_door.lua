@@ -30,7 +30,7 @@ hook.Add('BGN_ActorLookAtObject', 'BGN_NPCDoorOpeningEvent', function(actor, ent
 	local entities = ents_FindInSphere(ent:GetPos(), 150)
 	for i = 1, #entities do
 		local door = entities[i]
-		if not door:slibDoorIsLocked() then
+		if not bgNPC.Util.IsDoorLocked(door) then
 			OpenDoor(actor, door)
 			break
 		end

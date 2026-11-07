@@ -87,7 +87,7 @@ timer.Create('BGN_SetAmbientSound', 2, 0, function()
 		return
 	end
 
-	if not LocalPlayer().snet_ready then return end
+	if not LocalPlayer().bgn_ready then return end
 
 	local ply = LocalPlayer()
 	local entities = ents.FindInSphere(ply:GetPos(), 1000)

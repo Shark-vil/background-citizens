@@ -59,7 +59,7 @@ bgNPC.States.Register('killer', 'danger', {
 					local isMeleeWeapon = false
 					local npcWeapon = npc:GetActiveWeapon()
 					if IsValid(npcWeapon) then
-						isMeleeWeapon = table.HasValueBySeq(MeleeWeapon, npcWeapon:GetClass())
+						isMeleeWeapon = bgNPC.Table.HasValue(MeleeWeapon, npcWeapon:GetClass())
 					end
 
 					if isMeleeWeapon then

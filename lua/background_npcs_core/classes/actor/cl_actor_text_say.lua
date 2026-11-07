@@ -72,11 +72,11 @@ local function DrawActorText(actor_uid, say_text, say_time)
 	end)
 end
 
-snet.Callback('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
+bgNPC.Net.Receive('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
 	DrawActorText(actor_uid, say_text, say_time)
 end)
 
-snet.Callback('bgn_actor_text_say_replic', function(_, actor_uid, replic_id, replic_index, say_time)
+bgNPC.Net.Receive('bgn_actor_text_say_replic', function(_, actor_uid, replic_id, replic_index, say_time)
 	if not bgNPC.cfg.replics[replic_id] or not bgNPC.cfg.replics[replic_id][replic_index] then return end
 	DrawActorText(actor_uid, bgNPC.cfg.replics[replic_id][replic_index], say_time)
 end)

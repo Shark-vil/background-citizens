@@ -6,7 +6,7 @@ bgNPC.States.Register('dialogue', 'calm', {
 
 		local npc = actor:GetNPC()
 		local actors = bgNPC.Actors.GetInRadius(npc:GetPos(), 500)
-		local ActorTarget = table.RandomBySeq(actors)
+		local ActorTarget = bgNPC.Table.Random(actors)
 
 		if ActorTarget and ActorTarget ~= actor and ActorTarget:IsAlive() then
 			if not bgNPC.Vision.HasLineOfSight(npc, ActorTarget:GetNPC()) then return end

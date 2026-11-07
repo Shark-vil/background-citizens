@@ -2,7 +2,7 @@ local Vector = Vector
 local math_random = math.random
 local IsValid = IsValid
 local GetConVar = GetConVar
-local table_RandomBySeq = table.RandomBySeq
+local table_RandomBySeq = bgNPC.Table.Random
 --
 
 bgNPC.States.Register('defense', 'danger', {
@@ -50,7 +50,7 @@ bgNPC.States.Register('defense', 'danger', {
 		local current_distance = npc_pos:DistToSqr(enemy_pos)
 		local is_player_in_vehicle = enemy:IsPlayer() and enemy:InVehicle()
 
-		if is_player_in_vehicle and slib.chance(20) then
+		if is_player_in_vehicle and bgNPC.Util.Chance(20) then
 			actor:SetState('go_to_police_car')
 		elseif current_distance > 490000 then
 			if is_player_in_vehicle then

@@ -62,7 +62,7 @@ local function ParseEntitiesForActorAsync(actor)
 	end
 end
 
-async.Add('BGN_Timer_ActorLookAtObject', function()
+bgNPC.Tasks.Add('BGN_Timer_ActorLookAtObject', function()
 	while true do
 		local actors = bgNPC.Actors.GetAll()
 
