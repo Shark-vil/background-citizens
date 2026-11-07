@@ -82,3 +82,12 @@ The healthiest stand in front, the wounded (< 40% health) form a rear rank. `def
 
 Actors far from players update less often (`bgn_lod_near_radius`); idle unarmed actors out of range sleep
 (`bgn_disable_logic_radius`). Hook: `BGN_ActorLODChanged(actor, lod)` (1 near, 2 far, 3 dormant).
+
+## Medics
+
+Actor type `medic` (`config/actors/sh_medic.lua`, limit 2) is never spawned by the regular spawner. Every actor
+death outside a vehicle is a call (`bgNPC.Medics.calls`, kept 90 s). A free medic takes it, otherwise one is
+spawned near the body, with an ambulance when Decent Vehicle is on and the config has `vehicles`. The ambulance
+drives to the body like a police car on a chase, the medic gets out, kneels over the body for 6 s with voice
+lines and medkit sounds (state `medic_revive`), the actor comes back (same type, model and skin; its ragdoll is
+removed) and the medic returns to the car. Hook: `BGN_ActorRevived(actor, call)`.
