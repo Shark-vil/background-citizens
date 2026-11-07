@@ -27,6 +27,12 @@ local GOAL_TOLERANCE = 30
 local REPATH_PERIOD = 1
 local DOOR_CHECK_PERIOD = 0.5
 local STUCK_TELEPORT_TIME = 3
+local PROGRESS_PERIOD = 1.5
+local MIN_PROGRESS_SQR = 16 ^ 2
+local SIDESTEP_TIME = 0.8
+local SIDESTEP_DIST = 80
+local CONTACT_PUSH = 60
+local AIM_TURN_RATE = 540 -- degrees per second while moving in combat
 local EYE_OFFSET = Vector(0, 0, 62)
 local HULL_MINS, HULL_MAXS = Vector(-13, -13, 0), Vector(13, 13, 72)
 local DOOR_CLASSES = { func_door = true, func_door_rotating = true, prop_door_rotating = true }
@@ -52,6 +58,45 @@ local WEAPONS = {
 	weapon_stunstick = { damage = 15, delay = 0.8, range = 75, melee = true, sound = 'Weapon_StunStick.Melee_Hit', hold = 'melee' },
 }
 local DEFAULT_WEAPON = WEAPONS.weapon_pistol
+
+-- SWEP hold type -> ACTIVITIES key; unknown gun hold types use 'rifle'
+local HOLD_TYPES = {
+	pistol = 'pistol', revolver = 'pistol', duel = 'pistol',
+	melee = 'melee', melee2 = 'melee', knife = 'melee', fist = 'melee',
+}
+
+-- Stats of a scripted weapon from its SWEP.Primary (base GMod / TFA field names), missing fields from the pistol.
+-- shortcut: ARC9 / ArcCW keep stats outside Primary and get pistol numbers, add a branch if configs use them.
+local function SwepStats(primary, hold_type)
+	local hold = HOLD_TYPES[hold_type] or 'rifle'
+	local melee = hold == 'melee'
+	local delay = primary.Delay or (primary.RPM and 60 / primary.RPM)
+	local clip = primary.ClipSize
+	local sound = primary.Sound
+	if istable(sound) then sound = sound[1] end
+	return {
+		damage = primary.Damage or (melee and 20 or DEFAULT_WEAPON.damage),
+		delay = delay or (melee and 0.8 or DEFAULT_WEAPON.delay),
+		spread = primary.Spread or primary.Cone or DEFAULT_WEAPON.spread,
+		num = primary.NumShots or primary.NumberofShots,
+		clip = (not melee and clip and clip > 0) and clip or nil,
+		range = melee and 75 or DEFAULT_WEAPON.range,
+		melee = melee or nil,
+		sound = isstring(sound) and sound or (melee and 'Weapon_Crowbar.Single' or DEFAULT_WEAPON.sound),
+		hold = hold,
+	}
+end
+
+if bgNPC and bgNPC.Test then
+	bgNPC.Test.Add('nextbot.swep_stats', function(check)
+		local s = SwepStats({ Damage = 30, RPM = 600, ClipSize = 25, Sound = { 'A.Single' } }, 'ar2')
+		check(s.damage == 30 and s.delay == 0.1 and s.clip == 25 and s.sound == 'A.Single' and s.hold == 'rifle', 'tfa-style rifle')
+		s = SwepStats({ ClipSize = -1 }, 'knife')
+		check(s.melee and s.clip == nil and s.range == 75 and s.hold == 'melee', 'melee without clip')
+		s = SwepStats({}, 'revolver')
+		check(s.hold == 'pistol' and s.damage == DEFAULT_WEAPON.damage, 'empty primary falls back to pistol')
+	end)
+end
 
 -- hold type -> { idle, walk, run, aim idle, attack gesture }; first activity the model has wins
 local ACTIVITIES = {
@@ -114,6 +159,7 @@ function ENT:BGN_MoveTo(pos, run)
 	if self.move_goal and self.move_goal:DistToSqr(pos) < 100 then return end
 	self.move_goal = pos
 	self.path_dirty = true
+	self.progress_pos = nil -- standing before a new goal is not a lack of progress
 end
 
 function ENT:BGN_Stop()
@@ -155,7 +201,9 @@ function ENT:Give(weapon_class)
 
 	self.weapon = weapon
 	self:SetNW2Entity('bgn_weapon', weapon)
-	self.weapon_stats = WEAPONS[weapon_class] or DEFAULT_WEAPON
+	self.weapon_stats = WEAPONS[weapon_class]
+		or (istable(weapon.Primary) and SwepStats(weapon.Primary, weapon:GetHoldType()))
+		or DEFAULT_WEAPON
 	self.clip = self.weapon_stats.clip or 0
 	return weapon
 end
@@ -232,6 +280,10 @@ function ENT:BodyUpdate()
 		self:FrameAdvance()
 		return
 	end
+	local velocity = self.loco:GetVelocity()
+	if velocity:Length2DSqr() > 100 then
+		self:SetPoseParameter('move_yaw', math.NormalizeAngle(velocity:Angle().y - self:GetAngles().y))
+	end
 	self:BodyMoveXY()
 end
 
@@ -304,17 +356,29 @@ function ENT:Attack(enemy, stats)
 	end
 end
 
+-- Keeps the body turned to a visible enemy while the path moves it, so it shoots on the move;
+-- move_yaw blends the HL2 run animation for running sideways or backwards.
+function ENT:AimWhileMoving()
+	local enemy = self.enemy
+	if not self.enemy_visible or self.alert ~= 'combat' or not IsValid(enemy) then return end
+	local yaw = (enemy:GetPos() - self:GetPos()):Angle().y
+	local ang = self:GetAngles()
+	self:SetAngles(Angle(0, math.ApproachAngle(ang.y, yaw, AIM_TURN_RATE * FrameTime()), 0))
+end
+
 function ENT:UpdateCombat()
 	local enemy = self.enemy
 	local stats = self.weapon_stats
+	self.enemy_visible = false
 	if self.alert ~= 'combat' or not stats or not IsValid(enemy) or not IsValid(self.weapon) then return end
 	if enemy:Health() <= 0 or self.sequence_lock then return end
 
 	local dist_sqr = self:GetPos():DistToSqr(enemy:GetPos())
 	if dist_sqr > stats.range * stats.range then return end
 
+	self.enemy_visible = self:CanSeeEnemy(enemy)
 	if not self:BGN_IsMoving() then self.loco:FaceTowards(enemy:GetPos()) end
-	if CurTime() < self.next_fire or not self:CanSeeEnemy(enemy) then return end
+	if CurTime() < self.next_fire or not self.enemy_visible then return end
 
 	local to_enemy = (enemy:GetPos() - self:GetPos()):GetNormalized()
 	if self:GetForward():Dot(to_enemy) < 0.7 then return end
@@ -360,6 +424,31 @@ function ENT:HandleStuck(path)
 	self.stuck_since = nil
 end
 
+-- Bots pushing into each other in a crowd never become loco:IsStuck, they just stop making progress.
+-- Then the bot steps aside for a moment and repaths.
+function ENT:CheckProgress()
+	local now = CurTime()
+	if now < (self.progress_check or 0) then return end
+	local pos = self:GetPos()
+	if self.progress_pos and pos:DistToSqr(self.progress_pos) < MIN_PROGRESS_SQR then
+		self.sidestep_pos = pos + self:GetRight() * (math.random(2) == 1 and SIDESTEP_DIST or -SIDESTEP_DIST)
+		self.sidestep_until = now + SIDESTEP_TIME
+		self.path_dirty = true
+	end
+	self.progress_pos = pos
+	self.progress_check = now + PROGRESS_PERIOD
+end
+
+-- Separates touching bots that both move, so a crowd spreads instead of pushing head-on.
+function ENT:OnContact(ent)
+	if not ent.IsBGNNextBot or not self.move_goal then return end
+	local away = self:GetPos() - ent:GetPos()
+	away.z = 0
+	if away:LengthSqr() < 1 then away = self:GetRight() end
+	away:Normalize()
+	self.loco:SetVelocity(self.loco:GetVelocity() + away * CONTACT_PUSH)
+end
+
 function ENT:RunBehaviour()
 	local path = Path('Follow')
 	path:SetMinLookAheadDistance(300)
@@ -379,8 +468,12 @@ function ENT:RunBehaviour()
 				if not path:IsValid() then self.move_goal = nil end
 			end
 
-			if path:IsValid() then
+			if (self.sidestep_until or 0) > CurTime() then
+				self.loco:Approach(self.sidestep_pos, 1)
+			elseif path:IsValid() then
 				path:Update(self)
+				self:AimWhileMoving()
+				self:CheckProgress()
 				if self.loco:IsStuck() then self:HandleStuck(path) else self.stuck_since = nil end
 
 				if CurTime() >= next_door_check then
