@@ -4,12 +4,7 @@ bgNPC.States.Register('idle', 'calm', {
 		data.time = delay
 		data.delay = CurTime() + delay
 
-		if bgNPC.Util.Chance(15) and GetConVar('bgn_module_custom_gestures'):GetBool() then
-			local anim_info = bgNPC.Animator.Play('bgn_check_phone', 'idle', actor:GetNPC())
-			if anim_info then
-				data.delay = CurTime() + anim_info.time + 1
-			end
-		else
+		do
 			if actor.class == 'npc_metropolice' then
 				local npc = actor:GetNPC()
 				npc:SetKeyValue('additionalequipment', 'weapon_stunstick')

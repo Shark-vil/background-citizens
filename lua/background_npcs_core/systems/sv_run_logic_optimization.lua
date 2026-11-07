@@ -5,13 +5,12 @@ local bgn_disable_logic_radius = GetConVar('bgn_disable_logic_radius'):GetFloat(
 --[[
 	Async process
 --]]
-local function process(yield, wait)
-	local current_pass = 0
+local function process(yield, wait, budget)
 
 	while true do
 		if not bgn_enable or bgn_disable_logic_radius <= 0 then
 			wait(1)
-			return
+			continue
 		end
 
 		local players = player.GetAll()
@@ -19,7 +18,7 @@ local function process(yield, wait)
 
 		if players_count == 0 then
 			wait(1)
-			return
+			continue
 		end
 
 		local actors = bgNPC.Actors.GetAll()
@@ -70,15 +69,10 @@ local function process(yield, wait)
 				end
 			end
 
-			if current_pass >= bgNPC.Util.PassesPerYield() then
-				current_pass = 0
-				yield()
-			else
-				current_pass = current_pass + 1
-			end
+			budget()
 		end
 
-		yield()
+		wait(0.5)
 	end
 end
 bgNPC.Tasks.Add('bgn_server_logic_optimization', process)

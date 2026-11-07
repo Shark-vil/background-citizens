@@ -1,4 +1,4 @@
-local BaseClass = include('background_npcs_core/classes/actor/sh_actor_base.lua')
+local BaseClass = include('background_npcs_core/actor/sh_actor_base.lua')
 local Assert = bgNPC.Assert
 local table_RandomBySeq = bgNPC.Table.Random
 local NextId = bgNPC.Util.NextId

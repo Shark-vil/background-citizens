@@ -1,4 +1,4 @@
-local target_directory = 'background_npcs_core/tool_options/lang/'
+local target_directory = 'background_npcs_core/ui/settings/lang/'
 if SERVER then
 	for _, name in ipairs(file.Find(target_directory .. 'en/*.lua', 'LUA')) do
 		AddCSLuaFile(target_directory .. 'en/' .. name)
