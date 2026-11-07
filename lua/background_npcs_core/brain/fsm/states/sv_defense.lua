@@ -2,7 +2,27 @@ local table_RandomBySeq = bgNPC.Table.Random
 local REPOSITION_PERIOD = 3
 local SLOT_REACHED_SQR = 50 ^ 2
 local SLOT_MOVED_SQR = 64 ^ 2
+local MELEE_STOP_SQR = 50 ^ 2
+local MELEE_ENGINE_DIST_SQR = 700 ^ 2
 --
+
+-- A melee fighter has to close in. A NextBot is steered at the enemy on every update; an HL2 NPC chases
+-- by its own AI nearby, so only a far one is handled (by the ranged code below).
+-- @return boolean true if handled
+local function ChaseMelee(actor, enemy)
+	local body = actor:GetBody()
+	local dist_sqr = actor:GetPos():DistToSqr(enemy:GetPos())
+
+	if not body:IsNextBot() then return dist_sqr <= MELEE_ENGINE_DIST_SQR end
+
+	if actor:WalkDestinationExists() then actor:StopWalk() end
+	if dist_sqr > MELEE_STOP_SQR then
+		body:MoveTo(enemy:GetPos(), true)
+	elseif body:IsMoving() then
+		body:StopMoving()
+	end
+	return true
+end
 
 -- Squad member (systems/sv_tactical_groups.lua): the body goes straight to the formation slot.
 -- The actor walk would stop 150 units short (MOVEMENT_FINISHED_DIST), wider than the formation spacing.
@@ -72,6 +92,8 @@ bgNPC.States.Register('defense', 'danger', {
 			return
 		end
 		data.slot = nil
+
+		if actor:IsMeleeWeapon() and ChaseMelee(actor, enemy) then return end
 
 		local now = CurTime()
 		if (data.next_move or 0) > now then return end

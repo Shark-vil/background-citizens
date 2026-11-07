@@ -310,7 +310,13 @@ function ENT:Attack(enemy, stats)
 	local set = ACTIVITIES[stats.hold] or ACTIVITIES.none
 	self.next_fire = now + stats.delay
 	self.busy_until = now + math.min(stats.delay, 0.5)
-	if set.gesture then self:RestartGesture(set.gesture) end
+	-- HL2 citizens have no melee gesture, only the full-body swing: play it as a gesture layer
+	if set.gesture and self:SelectWeightedSequence(set.gesture) > 0 then
+		self:RestartGesture(set.gesture)
+	elseif set.attack then
+		local sequence = self:SelectWeightedSequence(set.attack)
+		if sequence > 0 then self:AddGestureSequence(sequence, true) end
+	end
 	if IsValid(self.weapon) then self.weapon:EmitSound(stats.sound) end
 
 	if stats.melee then
