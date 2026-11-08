@@ -29,6 +29,8 @@ local function CurrentDensity()
 	return ''
 end
 
+Menu.DENSITY, Menu.CurrentDensity = DENSITY, CurrentDensity
+
 concommand.Add('bgn_crowd_density', function(_, _, args)
 	if not game.SinglePlayer() then return MsgN('[Background NPCs] bgn_crowd_density works in single player only') end
 	for _, preset in ipairs(DENSITY) do
@@ -46,6 +48,38 @@ Menu.AddPage('general', {
 	icon = ICONS .. 'general.png',
 	order = 100,
 	build = function(page)
+		-- quick settings: a block tinted with the accent, over the rows
+		page:Custom(function(panel)
+			local s = Menu.Scale()
+			local pad, gap = math.Round(16 * s), math.Round(8 * s)
+			local C = Menu.colors
+			local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.mode'), 'primary', function() RunConsoleCommand('bgn_mode_welcome') end)
+			local second = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'secondary', function() RunConsoleCommand('bgn_wizard', 'all') end)
+			local help = Menu.Text('#bgn.menu.quick.help')
+			panel.PerformLayout = function(self, w)
+				local lines = Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)
+				local h = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s) + #lines * Menu.FontHeight('BGN.Menu.Small')
+					+ math.Round(12 * s) + first:GetTall() + pad
+				first:SetPos(pad, h - pad - first:GetTall())
+				second:SetPos(pad + first:GetWide() + gap, h - pad - second:GetTall())
+				if self:GetTall() ~= h then
+					self:SetTall(h)
+					Menu.ContentChanged()
+				end
+			end
+			panel.Paint = function(_, w)
+				local r = math.Round(8 * s)
+				draw.RoundedBox(r, 0, 0, w, panel:GetTall(), Menu.Fade(C.accent, 0.55))
+				draw.RoundedBox(r, 1, 1, w - 2, panel:GetTall() - 2, Menu.LerpColor(0.1, C.surface, C.accent))
+				draw.SimpleText(Menu.Text('#bgn.menu.quick'), 'BGN.Menu.Section', pad, pad, C.text)
+				local y = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s)
+				for _, line in ipairs(Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)) do
+					draw.SimpleText(line, 'BGN.Menu.Small', pad, y, C.muted)
+					y = y + Menu.FontHeight('BGN.Menu.Small')
+				end
+			end
+		end)
+
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
 		page:Toggle('bgn_debug', '#bgn.settings.general.debug')
@@ -291,6 +325,8 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
 
 		page:Section('#bgn.menu.section.about')
+		page:Button('#bgn.mode.reopen', 'bgn_mode_welcome', { text = '#bgn.menu.open_page' })
+		page:Button('#bgn.wizard.title', 'bgn_wizard', { text = '#bgn.menu.open_page' })
 		page:Button('#bgn.settings.general.updateinfo', 'bgn_updateinfo', { text = '#bgn.menu.open_page' })
 	end,
 })

@@ -30,6 +30,7 @@ Menu.Builder = Builder
 -- the window to lay the page out again on the next frame (it settles in a frame or two).
 function Menu.ContentChanged()
 	if IsValid(Menu.frame) then Menu.frame.relayout = true end
+	if IsValid(Menu.wizard) then Menu.wizard.relayout = true end
 end
 
 -- @param scroll DScrollPanel page content

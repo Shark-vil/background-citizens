@@ -163,6 +163,7 @@ local function UpdateTheme()
 	end
 	if f >= 1 then theme_to = nil end
 end
+Menu.UpdateTheme = UpdateTheme
 
 Menu.ApplyTheme(true)
 cvars.AddChangeCallback('bgn_menu_dark', function() Menu.ApplyTheme() end, 'BGN_Menu')
@@ -203,6 +204,7 @@ local function CreateFonts()
 	Font('BGN.Menu.Small', 14, 400)
 	Font('BGN.Menu.Value', 15, 500)
 end
+Menu.CreateFonts = CreateFonts
 
 local materials = {}
 
@@ -261,6 +263,7 @@ local function IconButton(parent, size, icon_fn, tooltip, on_click)
 	button.DoClick = on_click
 	return button
 end
+Menu.IconButton = IconButton
 
 -- Styled push button. @param style 'primary' | 'secondary' | 'danger'
 function Menu.Button(parent, text, style, on_click)
