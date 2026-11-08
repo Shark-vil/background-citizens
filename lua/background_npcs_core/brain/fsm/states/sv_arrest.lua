@@ -128,6 +128,17 @@ local function OnSetDefense(actor)
 	end
 end
 
+-- Detention is shared by every officer of the arrest, so each officer only adds or drops its own hold:
+-- an officer far away used to reset the flag every tick and restart the warning and the countdown.
+local function SetHold(ArrestComponent, actor, hold)
+	local holders = ArrestComponent.holders
+	holders[actor] = hold or nil
+	for holder in pairs(holders) do
+		if not IsValid(holder:GetNPC()) then holders[holder] = nil end
+	end
+	ArrestComponent.detention = next(holders) ~= nil
+end
+
 bgNPC.States.Register('arrest', 'guarded', {
 	pre_start = function(actor)
 		return OnSetDefense(actor)
@@ -152,7 +163,7 @@ bgNPC.States.Register('arrest', 'guarded', {
 		if npc:GetPos():DistToSqr(target:GetPos()) > 40000 then
 			if actor:IsAnimationPlayed() then actor:ResetSequence() end
 			actor:WalkToTarget(target, 'run')
-			ArrestComponent.detention = false
+			SetHold(ArrestComponent, actor, false)
 		else
 			local addArrestTime = GetConVar('bgn_arrest_time'):GetFloat()
 			local eyeAngles = target:EyeAngles()
@@ -162,16 +173,17 @@ bgNPC.States.Register('arrest', 'guarded', {
 			end
 
 			if not target:IsPlayer() or eyeAngles.x > 40 then
-				if not ArrestComponent.detention then
+				local was_detention = ArrestComponent.detention
+				SetHold(ArrestComponent, actor, true)
+				if not was_detention then
 					actor:Voice('police_arrest_warning', bgNPC.cfg.arrest['warning_sound'])
 
 					if target:IsPlayer() then
 						target:ChatPrint(bgNPC.cfg.arrest['warning_text'])
 					end
 				end
-				ArrestComponent.detention = true
 			else
-				ArrestComponent.detention = false
+				SetHold(ArrestComponent, actor, false)
 				if actor:IsAnimationPlayed() then actor:ResetSequence() end
 			end
 
@@ -244,6 +256,8 @@ bgNPC.States.Register('arrest', 'guarded', {
 		end
 	end,
 	stop = function(actor, state, data)
+		local ArrestComponent = ArrestModule:GetTarget(actor:GetFirstTarget())
+		if ArrestComponent then SetHold(ArrestComponent, actor, false) end
 		if data.arrested then
 			hook.Run('BGN_PlayerArrestStop', actor, state, data)
 		end
