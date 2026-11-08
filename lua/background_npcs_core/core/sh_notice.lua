@@ -133,11 +133,30 @@ net.Receive(CHANNEL, function()
 	Notice.Show('server', net.ReadString(), net.ReadString(), net.ReadString())
 end)
 
+-- "old -> new", right aligned at x, centered on y; the arrow is drawn (a font may lack the glyph)
+local function DrawChange(item, font, x, y, s, color)
+	surface.SetFont(font)
+	local new_w = surface.GetTextSize(item.new)
+	local arrow = math.Round(26 * s)
+	local gap = math.Round(8 * s)
+	draw.SimpleText(item.new, font, x, y, color, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+
+	local ax2 = x - new_w - gap
+	local ax1 = ax2 - arrow
+	draw.SimpleText(item.old, font, ax1 - gap, y, Color(color.r, color.g, color.b, 150), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+
+	local head = math.Round(6 * s)
+	surface.SetDrawColor(color)
+	surface.DrawRect(ax1, y - math.max(1, math.Round(s)), arrow - head, math.max(2, math.Round(2 * s)))
+	draw.NoTexture()
+	surface.DrawPoly({ { x = ax2 - head * 1.4, y = y - head }, { x = ax2, y = y }, { x = ax2 - head * 1.4, y = y + head } })
+end
+
 local function Draw()
 	local now = RealTime()
 	local s = ScrH() / 1080
-	local w, h, gap, bar = math.Round(430 * s), math.Round(58 * s), math.Round(8 * s), math.Round(5 * s)
-	local small, big = Font(math.max(12, math.Round(15 * s))), Font(math.max(14, math.Round(20 * s)))
+	local w, h, gap, bar = math.Round(430 * s), math.Round(72 * s), math.Round(8 * s), math.Round(5 * s)
+	local small, big, value = Font(math.max(12, math.Round(15 * s))), Font(math.max(14, math.Round(20 * s))), Font(math.max(18, math.Round(28 * s)))
 	local ru = IsRussian()
 	local x, y = ScrW() - w - math.Round(24 * s), ScrH() - math.Round(150 * s)
 
@@ -154,8 +173,8 @@ local function Draw()
 			surface.SetAlphaMultiplier(alpha)
 			draw.RoundedBox(6 * s, px, py, w, h, Color(22, 24, 29, 235))
 			draw.RoundedBoxEx(6 * s, px, py, bar, h, color, true, false, true, false)
-			draw.SimpleText(TAGS[item.scope][ru and 'ru' or 'en'], small, px + bar + 12 * s, py + 8 * s, color)
-			draw.SimpleText(item.old .. '  >  ' .. item.new, small, px + w - 12 * s, py + 8 * s, color, TEXT_ALIGN_RIGHT)
+			draw.SimpleText(TAGS[item.scope][ru and 'ru' or 'en'], small, px + bar + 12 * s, py + 14 * s, color, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			DrawChange(item, value, px + w - 14 * s, py + 8 * s + 14 * s, s, color)
 			draw.SimpleText(item.name, big, px + bar + 12 * s, py + h - 8 * s, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM)
 			surface.SetAlphaMultiplier(1)
 		end
