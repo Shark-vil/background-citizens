@@ -156,6 +156,7 @@ else
 	end
 
 	local function BoneMergedModel(model, parent, source)
+		if not model then return end -- the entity came without its model yet (NextBots right after spawn)
 		local ent = ClientsideModel(model, RENDERGROUP_OPAQUE)
 		if not IsValid(ent) then return end
 		ent:SetPos(parent:GetPos())
