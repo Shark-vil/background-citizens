@@ -45,10 +45,18 @@ end
 
 -- A voice line without text. Each client plays a random clip of voice_id in its own language
 -- (actor/cl_actor_voice.lua), or the fallback sound when it has voices off or no clip. voice_id nil: fallback only.
+local COMBAT_VOICES = { police_combat = true, police_contact = true }
+local COMBAT_VOICE_COOLDOWN = 20 -- shooting and getting hit fire these every moment: one line per actor this often
+
 function Actor:Voice(voice_id, fallback)
 	Assert.Arg(1, voice_id, 'string|nil', 'ACTOR:Voice')
 	Assert.Arg(2, fallback, 'string|nil', 'ACTOR:Voice')
 
 	if not self:IsAlive() then return end
+	if COMBAT_VOICES[voice_id] then
+		local now = CurTime()
+		if (self.combat_voice_next or 0) > now then return end
+		self.combat_voice_next = now + COMBAT_VOICE_COOLDOWN
+	end
 	bgNPC.Net.Send('bgn_actor_voice', nil, self.uid, voice_id, fallback)
 end
