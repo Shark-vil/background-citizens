@@ -54,6 +54,9 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 	local ActorAttacker = bgNPC.Actors.Get(attacker)
 	TeamParentModule = TeamParentModule or bgNPC.Modules.Get('team_parent')
 
+	-- a fist fight with this player (sv_conversation.lua): the hit lands, nobody calls the police for it
+	if ActorTarget and ActorTarget:HasState('brawl') and ActorTarget:GetStateData().enemy == attacker then return end
+
 	if ActorTarget ~= nil then
 		if attacker:IsPlayer() then
 			if TeamParentModule:HasParent(attacker, ActorTarget) or ActorTarget:HasTeam('player') then

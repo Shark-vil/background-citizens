@@ -24,6 +24,7 @@ bgNPC.cfg:SetActor('gangster', {
 		['idle'] = 25,
 		['sit_to_chair'] = 15,
 		['impingement'] = 5,
+		['dialogue'] = 15,
 		['random_gesture'] = 10,
 	},
 	at_damage_range = 100, -- Obsolete (not in use)

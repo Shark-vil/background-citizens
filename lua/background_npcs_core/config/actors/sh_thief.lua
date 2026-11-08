@@ -19,6 +19,7 @@ bgNPC.cfg:SetActor('thief', {
 		['walk'] = 70,
 		['idle'] = 10,
 		['steal'] = 20,
+		['dialogue'] = 10,
 		['sit_to_chair'] = 10,
 		['random_gesture'] = 10,
 	},
