@@ -36,6 +36,8 @@ local function IsValidSpawnFilter(ent)
 	return false
 end
 
+local BODY_POINTS = { Vector(0, 0, 10), Vector(0, 0, 40), Vector(0, 0, 64) } -- feet, chest, head
+
 local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
 	-- local entities = ents_FindInSphere(node_position, 150)
 	-- for e = 1, #entities do
@@ -63,24 +65,14 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			if ply_pos:DistToSqr(node_position) <= radius_visibility_sqrt then
 				return false
 			end
+			if not util.IsInWorld(node_position) then return false end
 
+			-- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
+			-- and that counted as "hidden behind something" - actors appeared right in front of the player
 			local ply_eye_pos = ply:EyePos()
-			-- local direction = (node_position - ply_eye_pos):GetNormalized()
-			-- local trace_distance = math_sqrt(node_position:DistToSqr(ply_eye_pos)) - 250
-
-			local tr = util.TraceLine({
-				start = ply_eye_pos,
-				-- endpos = node_position + (direction * -100),
-				endpos = node_position,
-				filter = function(ent)
-					if ent ~= ply and IsValidSpawnFilter(ent) and ent:IsWorld() then
-						return true
-					end
-				end
-			})
-
-			if not tr.Hit or not util.IsInWorld(node_position) then
-				return false
+			for b = 1, #BODY_POINTS do
+				local tr = util.TraceLine({ start = ply_eye_pos, endpos = node_position + BODY_POINTS[b], mask = MASK_VISIBLE })
+				if not tr.Hit then return false end
 			end
 		end
 	end

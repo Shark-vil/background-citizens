@@ -17,6 +17,14 @@ who says which line, and each client plays it in its own language, or not at all
 Settings window: **My settings**. The server's `bgn_module_replics_language` still forces one phrase language
 for everyone when it is not `auto`.
 
+The police combat shouts (`police_combat`, `police_contact`) fire on every hit and every entry into combat, so
+`Actor:Voice` lets one of them through per officer every 20 s (`COMBAT_VOICE_COOLDOWN` in
+`actor/components/sh_speech.lua`). Other lines (arrest, officer down, body report) have no cooldown.
+
+Text over the head (`actor/cl_actor_text_say.lua`): a dark plate with the speaker's name in the team color
+(police blue, medics green, bandits orange, zombies yellow-green, others grey), an accent bar and the line
+wrapped by words. It rises and fades in, fades out at the end and from 600 to 800 units away.
+
 ## Lines
 
 Phrases live in `lua/background_npcs_core/config/replics/language/sh_<language>.lua`
