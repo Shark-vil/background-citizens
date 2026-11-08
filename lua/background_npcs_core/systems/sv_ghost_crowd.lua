@@ -151,8 +151,8 @@ local function UpdateMoods(players, r_out)
 
 	for _, actor in ipairs(actors) do
 		local npc = actor:IsAlive() and not actor:InVehicle() and actor:GetNPC()
-		if IsValid(npc) and not actor.data.hidden and npc:SelectWeightedSequence(ACT_WALK) >= 0
-			and npc:SelectWeightedSequence(ACT_IDLE) >= 0
+		if IsValid(npc) and not actor.data.hidden and (npc:SelectWeightedSequence(ACT_WALK) or -1) >= 0
+			and (npc:SelectWeightedSequence(ACT_IDLE) or -1) >= 0
 		then
 			RememberLook(actor, npc)
 		end

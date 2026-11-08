@@ -308,7 +308,10 @@ function ENT:PickActivity(list)
 
 	act = list[#list]
 	for _, candidate in ipairs(list) do
-		if self:SelectWeightedSequence(candidate) > 0 then act = candidate break end
+		local sequence = self:SelectWeightedSequence(candidate)
+		-- nil: the model isn't loaded yet (just set or invalid), don't cache the fallback for it
+		if sequence == nil then return act end
+		if sequence > 0 then act = candidate break end
 	end
 	self.activity_cache[key] = act
 	return act
@@ -404,10 +407,10 @@ function ENT:Attack(enemy, stats)
 	self.next_fire = now + stats.delay
 	self.busy_until = now + math.min(stats.delay, 0.5)
 	-- HL2 citizens have no melee gesture, only the full-body swing: play it as a gesture layer
-	if set.gesture and self:SelectWeightedSequence(set.gesture) > 0 then
+	if set.gesture and (self:SelectWeightedSequence(set.gesture) or -1) > 0 then
 		self:RestartGesture(set.gesture)
 	elseif set.attack then
-		local sequence = self:SelectWeightedSequence(set.attack)
+		local sequence = self:SelectWeightedSequence(set.attack) or -1
 		if sequence > 0 then self:AddGestureSequence(sequence, true) end
 	end
 	if IsValid(self.weapon) then self.weapon:EmitSound(stats.sound) end
