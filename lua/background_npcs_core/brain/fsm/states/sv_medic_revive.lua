@@ -4,7 +4,9 @@
 	State data: { call = <medic call> }.
 --]]
 
-local REACH_DIST_SQR = 70 ^ 2
+local REACH_DIST_SQR = 80 ^ 2
+local STRAIGHT_DIST_SQR = 300 ^ 2 -- closer than this the body walks straight (the actor walk stops 150 short)
+local MOVE_PERIOD = 1.5
 local CAR_REACH_DIST_SQR = 200 ^ 2
 local REVIVE_TIME = 6
 local GIVE_UP_TIME = 40 -- can't reach the body or the car
@@ -23,19 +25,31 @@ local function PickSequence(actor)
 	end
 end
 
+-- The actor walk follows nav points and stops 150 units short of the goal; bodies off the points
+-- (grass, squares) or that close are reached by the body going straight.
+local function MoveTo(actor, data, pos, run)
+	local now = CurTime()
+	if (data.next_move or 0) > now then return end
+	data.next_move = now + MOVE_PERIOD
+	if actor:GetPos():DistToSqr(pos) > STRAIGHT_DIST_SQR then
+		actor:WalkToPos(pos, run and 'run' or 'walk')
+		if #actor.walkPath ~= 0 then return end
+	end
+	if actor:WalkDestinationExists() then actor:StopWalk() end
+	actor:GetBody():MoveTo(pos, run)
+end
+
 -- @return boolean true while walking back to the ambulance
 local function ReturnToCar(actor, data)
 	local car = actor.medic_ambulance
 	if not IsValid(car) or actor:InVehicle() then return false end
 	if actor:GetPos():DistToSqr(car:GetPos()) <= CAR_REACH_DIST_SQR then
 		actor.medic_ambulance = nil
+		actor:GetBody():StopMoving()
 		actor:EnterVehicle(car)
 		return false
 	end
-	if (data.next_walk or 0) < CurTime() then
-		data.next_walk = CurTime() + 2
-		actor:WalkToPos(car:GetPos(), 'walk')
-	end
+	MoveTo(actor, data, car:GetPos(), false)
 	return true
 end
 
@@ -45,13 +59,21 @@ bgNPC.States.Register('medic_revive', 'calm', {
 	end,
 	stop = function(actor)
 		actor:StopStaticSequence()
+		if not actor:InVehicle() then actor.eternal = false end
 	end,
 	update = function(actor)
 		local data = actor:GetStateData()
 		local call = data.call
 		local now = CurTime()
 
-		if not call or call.done or call.medic ~= actor or data.give_up < now then
+		-- closed: revived, expired or the body is gone
+		if not call or call.done or call.closed or call.medic ~= actor or data.give_up < now then
+			if not data.returning then
+				data.returning = true
+				data.give_up = now + GIVE_UP_TIME -- the way back gets its own time
+				data.next_move = 0
+				if data.revive_end then actor:StopStaticSequence() end
+			end
 			if data.give_up >= now and ReturnToCar(actor, data) then return end
 			actor:RandomState()
 			return
@@ -59,14 +81,12 @@ bgNPC.States.Register('medic_revive', 'calm', {
 
 		if not data.revive_end then
 			if actor:GetPos():DistToSqr(call.pos) > REACH_DIST_SQR then
-				if (data.next_walk or 0) < now then
-					data.next_walk = now + 2
-					actor:WalkToPos(call.pos, 'run')
-				end
+				MoveTo(actor, data, call.pos, true)
 				return
 			end
 
 			actor:StopWalk()
+			actor:GetBody():StopMoving()
 			local npc = actor:GetNPC()
 			local dir = call.pos - npc:GetPos()
 			npc:SetAngles(Angle(0, dir:Angle().y, 0))

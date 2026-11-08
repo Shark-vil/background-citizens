@@ -64,3 +64,4 @@ ignore traffic rules: siren on, no stopping at red lights or giving way. The rou
 the DV waypoints taken in both directions, with jumps to waypoints within 600 units in sight (lane changes,
 the opposite side of the road). When the target is in plain sight the car drives straight at it.
 Paths are refreshed every 3 s, every 1 s within 1000 units of the target.
+While an actor sits in a police car or an ambulance, players can't get in (locked sound).

@@ -184,14 +184,15 @@ local function FindPath(self, target_pos, enemy)
     self.WaypointList = list
 end
 
--- @return Vector|nil, Entity|nil where to drive: the driver's enemy, or the point the driver was sent to
+-- @return Vector|nil, Entity|nil where to drive: the point the driver was sent to (an ambulance must not chase
+-- the medic's enemy), otherwise the driver's enemy
 local function GetTarget(self)
     local provider = BGN_VEHICLE:GetVehicleProvider(self.v)
     local actor = provider and provider:GetDriver()
     if not actor or not actor:IsAlive() then return end
+    if actor.drive_target_pos then return actor.drive_target_pos end
     local enemy = actor:GetNearEnemy()
     if IsValid(enemy) and enemy:Health() > 0 then return enemy:GetPos(), enemy end
-    return actor.drive_target_pos
 end
 
 function ENT:CarCollide(data)

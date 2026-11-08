@@ -90,4 +90,7 @@ death outside a vehicle is a call (`bgNPC.Medics.calls`, kept 90 s). A free medi
 spawned near the body, with an ambulance when Decent Vehicle is on and the config has `vehicles`. The ambulance
 drives to the body like a police car on a chase, the medic gets out, kneels over the body for 6 s with voice
 lines and medkit sounds (state `medic_revive`), the actor comes back (same type, model and skin; its ragdoll is
-removed) and the medic returns to the car. Hook: `BGN_ActorRevived(actor, call)`.
+removed) and the medic returns to the car. A call closes when the body is gone (a client reports its ragdoll
+faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
+and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
+Medics only take as enemies those who hurt them. Hook: `BGN_ActorRevived(actor, call)`.

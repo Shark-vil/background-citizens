@@ -1,9 +1,16 @@
--- Removes the client-side ragdoll of an actor a medic brought back (systems/sv_medics.lua).
+-- Client-side ragdolls for the medics (systems/sv_medics.lua): removes the one of a revived actor,
+-- tells the server when one fades out or is cleaned up, so the medic stops coming for it.
 local RAGDOLL_DIST_SQR = 200 ^ 2
 local ragdolls = setmetatable({}, { __mode = 'k' })
 
 hook.Add('CreateClientsideRagdoll', 'BGN_Medics', function(_, ragdoll)
 	ragdolls[ragdoll] = true
+end)
+
+hook.Add('EntityRemoved', 'BGN_Medics', function(ent)
+	if not ragdolls[ent] then return end
+	ragdolls[ent] = nil
+	bgNPC.Net.SendToServer('bgn.medic_body_gone', ent:GetPos())
 end)
 
 bgNPC.Net.Receive('bgn.medic_revived', function(_, pos)

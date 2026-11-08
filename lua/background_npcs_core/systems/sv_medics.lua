@@ -2,7 +2,9 @@
 	Medics: every actor death (not in a vehicle) is a call. A free medic takes it, otherwise one is spawned
 	near the body (bgNPC:FindSpawnPosition) with an ambulance when Decent Vehicle and the medic config have one.
 	The ambulance drives to the body with the siren (npc_dvbgn_police, actor.drive_target_pos), the medic gets out,
-	revives the actor (state "medic_revive") and drives away. A body can be revived for CORPSE_TIME seconds.
+	revives the actor (state "medic_revive") and drives away. A body can be revived for CORPSE_TIME seconds,
+	and only while it exists: a removed server ragdoll or a client report of a removed client ragdoll closes the
+	call (call.closed), and the medic goes back to its car.
 --]]
 
 local Medics = {}
@@ -11,7 +13,10 @@ bgNPC.Medics = Medics
 local CORPSE_TIME = 90
 local EXIT_DIST_SQR = 700 ^ 2 -- the ambulance stops this close to the body
 local VEHICLE_WAIT = 2 -- the medic enters the spawned ambulance after a short delay
+local STOPPED_EXIT_TIME = 5 -- an ambulance standing this long gets out even far from the body
+local STOPPED_SPEED = 50
 local MEDIC_TYPE = 'medic'
+local BODY_GONE_DIST_SQR = 200 ^ 2
 
 local calls = {}
 Medics.calls = calls
@@ -30,10 +35,32 @@ hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor)
 	}
 end)
 
+-- A medic's enemies are only those who hurt it (not the wanted, not other people's fights).
+hook.Add('BGN_PreReactionTakeDamage', 'BGN_Medics_Attacker', function(attacker, target)
+	local actor = bgNPC.Actors.Get(target)
+	if actor and actor:GetType() == MEDIC_TYPE then
+		actor.medic_attackers = actor.medic_attackers or setmetatable({}, { __mode = 'k' })
+		actor.medic_attackers[attacker] = true
+	end
+end)
+
+hook.Add('BGN_AddActorEnemy', 'BGN_Medics_OnlyAttackers', function(actor, ent)
+	if actor:GetType() == MEDIC_TYPE and not (actor.medic_attackers and actor.medic_attackers[ent]) then return true end
+end)
+
 -- A server-side ragdoll (ai_serverragdolls 1) is removed on revive.
 hook.Add('CreateEntityRagdoll', 'BGN_Medics_Ragdoll', function(owner, ragdoll)
 	for i = #calls, 1, -1 do
 		if calls[i].npc == owner then calls[i].ragdoll = ragdoll return end
+	end
+end)
+
+-- Clients own the usual NPC ragdolls: one tells when it fades or is cleaned up.
+-- shortcut: any client may close a call near a position, harmless (the medic just leaves), rate-limited by Net
+bgNPC.Net.Receive('bgn.medic_body_gone', function(_, pos)
+	if not isvector(pos) then return end
+	for _, call in ipairs(calls) do
+		if not call.done and call.pos:DistToSqr(pos) < BODY_GONE_DIST_SQR then call.gone = true end
 	end
 end)
 
@@ -82,18 +109,30 @@ end
 
 -- Moves the medic towards the body: drives while in the ambulance, walks and revives on foot.
 local function Respond(medic, call)
-	if (medic.medic_vehicle_wait or 0) > CurTime() or medic:EqualStateGroup('danger') then return end
+	local now = CurTime()
+	if (medic.medic_vehicle_wait or 0) > now then return end
 
+	-- driving ignores the medic's fear: the car keeps going to the body
 	if medic:InVehicle() then
 		local vehicle = medic:GetVehicle()
 		if IsValid(vehicle) and vehicle:GetPos():DistToSqr(call.pos) > EXIT_DIST_SQR then
 			medic.drive_target_pos = call.pos
-			return
+			if vehicle:GetVelocity():Length() > STOPPED_SPEED then
+				medic.medic_stopped_since = nil
+				return
+			end
+			-- stuck or the body is off the road: walk the rest
+			medic.medic_stopped_since = medic.medic_stopped_since or now
+			if now - medic.medic_stopped_since < STOPPED_EXIT_TIME then return end
 		end
 		medic.drive_target_pos = nil
+		medic.medic_stopped_since = nil
 		medic.medic_ambulance = vehicle
 		medic:ExitVehicle()
 	end
+	medic.eternal = true -- on foot out of the players' sight the remover would take or teleport it
+
+	if medic:EqualStateGroup('danger') then return end
 
 	-- forced: a medic still walking back from the previous call is in the same state
 	local data = medic:HasState('medic_revive') and medic:GetStateData()
@@ -110,7 +149,9 @@ timer.Create('BGN_MedicsDispatch', 1, 0, function()
 	for i = #calls, 1, -1 do
 		local call = calls[i]
 		local medic = call.medic
-		if call.done or call.time + CORPSE_TIME < now then
+		local body_removed = call.ragdoll ~= nil and not IsValid(call.ragdoll)
+		if call.done or call.gone or body_removed or call.time + CORPSE_TIME < now then
+			call.closed = true
 			table.remove(calls, i)
 			if medic and medic.medic_call == call then Release(medic) end
 		elseif not medic or not medic:IsAlive() then

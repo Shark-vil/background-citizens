@@ -29,6 +29,6 @@ bgNPC.cfg:SetActor('medic', {
 	vehicles = {},
 	vehicles_random_color = false,
 	at_damage = { ['fear'] = 100 },
-	at_protect = { ['fear'] = 100 },
+	at_protect = { ['ignore'] = 100 }, -- on duty: other people's fights (and the wanted) are not their business
 	validator = function() return false end, -- never spawned by the regular spawner
 })
