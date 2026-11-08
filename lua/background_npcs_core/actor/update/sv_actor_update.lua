@@ -80,6 +80,7 @@ local function UpdateActor(actor, now, players)
 	end
 
 	local lod = actor.lod or LOD_NEAR
+	if actor:InVehicle() then actor:FollowVehicle() end
 
 	if (actor.next_enemies or 0) <= now then
 		actor.next_enemies = now + ENEMIES_PERIOD

@@ -543,7 +543,7 @@ function ENT:RunBehaviour()
 
 	while true do
 		local goal = self.move_goal
-		if goal and not IsValid(self:GetParent()) and not self.sequence_lock then
+		if goal and not IsValid(self:GetParent()) and not self:GetNW2Bool('bgn_vehicle_entered') and not self.sequence_lock then
 			self.loco:SetDesiredSpeed(self.move_run and RUN_SPEED or WALK_SPEED)
 
 			if self.path_dirty or not path:IsValid() or path:GetAge() > REPATH_PERIOD then

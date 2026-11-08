@@ -42,12 +42,14 @@ function Actor:EnterVehicle(vehicle)
 		self.vehicle = vehicle_provider
 		self.walkUpdatePathDelay = 0
 
+		-- Not parented: a child is sent to clients with its parent even when nodraw, and then it showed up
+		-- T-posed or with its animation copy stretched to the world origin. A nodraw entity without a parent is
+		-- not sent at all; the actor update keeps it at the car (Actor:FollowVehicle).
+		bgNPC.Animator.Stop(npc)
 		npc:SetNoDraw(true)
 		npc:SetNW2Bool('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		npc:SetPos(self_vehicle:GetPos() + self_vehicle:GetUp() * 300)
-		npc:SetModelScale(0)
-		npc:SetParent(self_vehicle)
+		npc:SetPos(self_vehicle:GetPos())
 		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
 
 		hook.Run('BGN_OnEnterVehicle', self, vehicle_provider)
@@ -95,11 +97,9 @@ function Actor:ExitVehicle()
 		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
 
 		npc:SetNW2Bool('bgn_vehicle_entered', false)
-		npc:SetParent(nil)
 		npc:SetPos(FindVehicleExitPos(vehicle_provider:GetVehicle(), npc))
 		npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
 		npc:SetCollisionGroup(self.collision_group)
-		npc:SetModelScale(self.model_scale)
 		npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
 		npc:PhysWake()
 		npc:SetNoDraw(false)
@@ -117,6 +117,12 @@ function Actor:ExitVehicle()
 	self.eternal = false
 	self.vehicle = nil
 	self.vehicle_data = {}
+end
+
+-- Keeps the hidden entity of an actor in a car at the car (it is not parented, see EnterVehicle).
+function Actor:FollowVehicle()
+	local vehicle = self:GetVehicle()
+	if IsValid(vehicle) and IsValid(self.npc) then self.npc:SetPos(vehicle:GetPos()) end
 end
 
 function Actor:InVehicle()

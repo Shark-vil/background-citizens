@@ -63,6 +63,8 @@ if SERVER then
 
 	function Animator.Play(name, sequence, entity, settings)
 		if not name or not IsValid(entity) or entity:IsDormant() then return false end
+		-- hidden (an actor in a car): the client copy would be drawn anyway, on an animator with no visible parent
+		if entity:GetNoDraw() then return false end
 		if not AnyPlayerInPVS(entity) then return false end
 
 		local model = animations[name]
