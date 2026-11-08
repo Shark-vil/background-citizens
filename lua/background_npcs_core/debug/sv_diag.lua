@@ -367,6 +367,21 @@ local function ForceSpawn(actor_type, positions)
 	return nil, last_error or 'no free spot (the actor was stuck in a wall or a prop)'
 end
 
+-- Model replacement packs list models that may not be installed: count them (models can be a list or a list per class)
+local function ModelStats(data)
+	local total, found = 0, 0
+	local function Add(list)
+		for _, model in ipairs(list) do
+			total = total + 1
+			if util.IsValidModel(model) then found = found + 1 end
+		end
+	end
+	if istable(data.models) then
+		if #data.models > 0 then Add(data.models) else for _, list in pairs(data.models) do if istable(list) then Add(list) end end end
+	end
+	return total, found
+end
+
 local function TestForcedSpawn()
 	Section('spawn_forced')
 	local ply = run.ply
@@ -387,7 +402,8 @@ local function TestForcedSpawn()
 			if actor then
 				spawned = spawned + 1
 				local npc = actor:GetNPC()
-				Log('%-18s OK    class %s, model %s', actor_type, npc:GetClass(), npc:GetModel())
+				local total, found = ModelStats(data)
+				Log('%-18s OK    class %s, model %s (configured models installed: %d of %d)', actor_type, npc:GetClass(), npc:GetModel(), found, total)
 			else
 				Log('%-18s FAIL  %s', actor_type, err)
 			end
@@ -435,6 +451,11 @@ local function TestVehicles()
 				if VehicleClassExists(class) then valid = valid + 1 found_classes = found_classes + 1 end
 			end
 			Log('%-18s car classes in the config: %d, installed: %d', actor_type, #data.vehicles, valid)
+			if valid < #data.vehicles then
+				local missing = {}
+				for _, class in ipairs(data.vehicles) do if not VehicleClassExists(class) then missing[#missing + 1] = '"' .. class .. '"' end end
+				Log('  not installed: %s', table.concat(missing, ', '))
+			end
 			if valid > 0 and bgNPC.Config.IsTypeActive(actor_type) then candidates[#candidates + 1] = actor_type end
 		end
 	end
@@ -460,8 +481,13 @@ local function TestVehicles()
 		return Result('fail', 'bgn.diag.vehicles.nodriver', actor_type)
 	end
 
-	local started = bgNPC:SpawnVehicleWithActor(actor, true)
-	Log('SpawnVehicleWithActor("%s") returned %s', actor_type, tostring(started))
+	-- the class is picked at random from the config: some of a pack's cars may not be installed, try again
+	local started
+	for attempt = 1, 6 do
+		started = bgNPC:SpawnVehicleWithActor(actor, true)
+		Log('SpawnVehicleWithActor("%s") attempt %d returned %s', actor_type, attempt, tostring(started))
+		if started then break end
+	end
 	if not started then
 		actor:Remove()
 		return Result('fail', 'bgn.diag.vehicles.nocar', actor_type)
