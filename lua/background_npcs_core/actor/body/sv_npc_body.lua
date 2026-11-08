@@ -11,7 +11,7 @@ local COMBAT_SCHEDULES = {}
 for _, schedule in ipairs({
 	SCHED_HIDE_AND_RELOAD, SCHED_RELOAD, SCHED_ESTABLISH_LINE_OF_FIRE,
 	SCHED_RANGE_ATTACK1, SCHED_RANGE_ATTACK2, SCHED_SPECIAL_ATTACK1, SCHED_SPECIAL_ATTACK2,
-	SCHED_MELEE_ATTACK1, SCHED_MELEE_ATTACK2, SCHED_FAIL, SCHED_FAIL_ESTABLISH_LINE_OF_FIRE, SCHED_SLEEP,
+	SCHED_MELEE_ATTACK1, SCHED_MELEE_ATTACK2, SCHED_FAIL, SCHED_FAIL_ESTABLISH_LINE_OF_FIRE, SCHED_SLEEP, SCHED_NPC_FREEZE,
 }) do
 	if schedule then COMBAT_SCHEDULES[schedule] = true end
 end
@@ -146,7 +146,7 @@ function NPCBody:PlaySequence(sequence_id)
 	local ent = self.ent
 	if not IsValid(ent) then return false end
 	ent:SetNPCState(NPC_STATE_SCRIPT)
-	self:RunSchedule(SCHED_SLEEP)
+	self:RunSchedule(SCHED_NPC_FREEZE) -- the AI stays off while it plays (systems/sv_static_animation_controller.lua)
 	ent:ResetSequenceInfo()
 	ent:ResetSequence(sequence_id)
 	ent:PhysWake()

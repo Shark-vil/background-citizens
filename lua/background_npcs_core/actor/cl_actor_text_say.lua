@@ -4,15 +4,15 @@
 --]]
 
 local FONT, FONT_NAME = 'BGN_SpeakingFont', 'BGN_SpeakingName'
-local SCALE = 0.09
+local SCALE = 0.11
 local MAX_WIDTH = 480 -- text width on the plate, px
-local PAD_X, PAD_Y, BAR, GAP, ARROW = 14, 9, 4, 3, 8
+local PAD_X, PAD_Y, BAR, GAP, ARROW = 14, 9, 6, 3, 10
 local FADE_IN, FADE_OUT, RISE = 0.2, 0.5, 4
 local DIST, DIST_FADE = 800, 200
 local HEAD_BONE = 'ValveBiped.Bip01_Head1'
 local HEAD_OFFSET = Vector(0, 0, 14)
 
-local PLATE = Color(14, 16, 20, 205)
+local PLATE = Color(14, 16, 20, 225)
 local TEXT = Color(236, 238, 242)
 local ACCENT_DEFAULT = Color(196, 200, 210)
 local ACCENTS = {

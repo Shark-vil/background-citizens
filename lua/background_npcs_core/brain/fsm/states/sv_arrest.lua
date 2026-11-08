@@ -51,14 +51,15 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 			PoliceActor:ExitVehicle()
 		end
 
-		PoliceActor:RemoveAllTargets()
-		PoliceActor:AddTarget(attacker)
-		PoliceActor:SetState('arrest')
-
+		-- the surrender first: the arrest state checks it on start and shoots a target that isn't giving up
 		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and bgNPC.Util.Chance(5) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
+
+		PoliceActor:RemoveAllTargets()
+		PoliceActor:AddTarget(attacker)
+		PoliceActor:SetState('arrest')
 
 		if TargetActor and TargetActor ~= PoliceActor then
 			TargetActor:RemoveAllTargets()

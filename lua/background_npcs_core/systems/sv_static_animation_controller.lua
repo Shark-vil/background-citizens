@@ -8,10 +8,24 @@ hook.Add('Think', 'BGN_ActorAnimationController', function()
 		local actor = actors[i]
 		local npc = actor:GetNPC()
 		if actor and actor:IsAlive() and actor:IsAnimationPlayed() then
-			-- re-setting the schedule or the sequence every tick restarts it: the NPC flickers between frames
-			if isfunction(npc.SetSchedule) and not npc:IsCurrentSchedule(SCHED_SLEEP) then
+			-- frozen AI: under SCHED_SLEEP the engine drops the script state every ~0.3 s and runs its own
+			-- schedule for a tick, the NPC flickers between that and the sequence. Set once, not every tick
+			if isfunction(npc.SetSchedule) and not npc:IsCurrentSchedule(SCHED_NPC_FREEZE) then
 				npc:SetNPCState(NPC_STATE_SCRIPT)
-				npc:SetSchedule(SCHED_SLEEP)
+				npc:SetSchedule(SCHED_NPC_FREEZE)
+			end
+
+			local sequence = actor.anim_sequence
+			if isnumber(sequence) then
+				if npc:GetSequence() ~= sequence then
+					-- taken anyway (a schedule set by someone else): back on the same frame, not from the start
+					npc:ResetSequence(sequence)
+					npc:SetCycle(actor.anim_cycle or 0)
+				elseif actor:IsLoopSequence() and npc:GetCycle() >= 0.98 then
+					npc:ResetSequence(sequence) -- a one-shot sequence played in a loop: again
+					npc:SetCycle(0)
+				end
+				actor.anim_cycle = npc:GetCycle()
 			end
 
 			if actor:IsLoopSequence() then
@@ -20,9 +34,6 @@ hook.Add('Think', 'BGN_ActorAnimationController', function()
 					if not actor:PlayNextStaticSequence() then
 						actor:ResetSequence()
 					end
-				elseif isnumber(actor.anim_sequence) and (npc:GetSequence() ~= actor.anim_sequence or npc:GetCycle() >= 0.98) then
-					npc:ResetSequence(actor.anim_sequence) -- taken by the engine, or a one-shot sequence ended: again
-					npc:SetCycle(0)
 				end
 			elseif actor:IsSequenceFinished() then
 				hook.Run('BGN_FinishNPCAnimation', actor, actor.anim_name)

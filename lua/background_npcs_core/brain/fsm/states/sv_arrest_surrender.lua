@@ -34,16 +34,15 @@ bgNPC.States.Register('arrest_surrender', 'danger', {
 		end
 
 		local target = actor:GetFirstTarget()
-		local npc = actor:GetNPC()
-		if IsValid(target) and IsValid(npc) and actor:CheckMoveUpdate('state_arrest_surrender', 2) then
+		if not IsValid(target) then
+			actor:RemoveTarget(target)
+		elseif actor:CheckMoveUpdate('state_arrest_surrender', 2) then -- false between checks: the target stays
 			local TargetActor = bgNPC.Actors.Get(target)
 			if not TargetActor or not TargetActor:HasState('arrest') or data.arrest_limit_time < CurTime() then
 				actor:RemoveTarget(target)
 				actor:AddEnemy(target)
 				actor:SetState('retreat')
 			end
-		else
-			actor:RemoveTarget(target)
 		end
 	end
 })

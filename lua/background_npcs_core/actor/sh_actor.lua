@@ -289,6 +289,7 @@ function Actor:Init(npc, npc_type, custom_uid, not_sync_actor_on_client, not_aut
 
 	npc.BGN_ACTOR_OBJECT = self
 	npc.isBgnActor = true
+	if SERVER then npc:SetNW2Bool('bgn_actor', true) end -- clients see it even without the actor object (systems/cl_corpses.lua)
 	local actor = self
 	function npc:GetActor() return actor end
 

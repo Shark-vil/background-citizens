@@ -60,6 +60,7 @@ function Actor:PlayStaticSequence(sequence_name, loop, loop_time, action)
 	self.is_animated = true
 	self.anim_action = action
 	self.anim_sequence = sequence
+	self.anim_cycle = 0
 
 	self.body:PlaySequence(sequence)
 
@@ -111,6 +112,8 @@ end
 
 function Actor:IsSequenceFinished()
 	if not self:IsAnimationPlayed() then return true end
+	-- a loop lasts its loop time, not one sequence: movement must wait, or the NPC flickers between running and the loop
+	if self.anim_is_loop then return self:IsSequenceLoopFinished() end
 
 	local now = CurTime()
 	self.anim_time_normal = math.max(0, self.anim_time - now)

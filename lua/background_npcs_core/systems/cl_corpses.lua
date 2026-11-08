@@ -6,8 +6,7 @@ local FADE_TIME = 0.8
 local ragdolls = setmetatable({}, { __mode = 'k' })
 
 hook.Add('CreateClientsideRagdoll', 'BGN_Corpses', function(owner, ragdoll)
-	-- BGN_ACTOR_OBJECT outlives the actor's unregistering on death (isBgnActor does not)
-	if IsValid(owner) and owner.BGN_ACTOR_OBJECT then ragdolls[ragdoll] = true end
+	if IsValid(owner) and owner:GetNW2Bool('bgn_actor') then ragdolls[ragdoll] = true end
 end)
 
 hook.Add('EntityRemoved', 'BGN_Corpses', function(ent)
@@ -41,11 +40,14 @@ bgNPC.Net.Receive('bgn.body_remove', function(_, pos, fade)
 	if fade then FadeRemove(best) else best:Remove() end
 end)
 
+-- npc_battle_cleanup defines its functions in its own InitPostEntity: wrap after all of them
 hook.Add('InitPostEntity', 'BGN_Corpses_NBC', function()
-	local remove = NBC and NBC.RemoveClientsideCorpse
-	if not isfunction(remove) then return end
-	function NBC.RemoveClientsideCorpse(owner, corpse)
-		if IsValid(owner) and owner.BGN_ACTOR_OBJECT then return end
-		return remove(owner, corpse)
-	end
+	timer.Simple(0, function()
+		local remove = NBC and NBC.RemoveClientsideCorpse
+		if not isfunction(remove) then return end
+		function NBC.RemoveClientsideCorpse(owner, corpse)
+			if IsValid(owner) and owner:GetNW2Bool('bgn_actor') then return end
+			return remove(owner, corpse)
+		end
+	end)
 end)
