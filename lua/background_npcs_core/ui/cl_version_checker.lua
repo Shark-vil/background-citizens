@@ -3,7 +3,6 @@ local text_color_red = Color(255, 0, 0)
 local text_color_mod_title = Color(85, 180, 243)
 local text_color_orange = Color(255, 196, 0)
 local text_color_green = Color(30, 255, 0)
-local text_color_gray = Color(200, 200, 200)
 
 -- -1 / 0 / 1 by each number: "2.0.0" is newer than "1.13.7" (gluing the digits, 200 < 1137, was not)
 local function CompareVersions(a, b)
@@ -61,5 +60,5 @@ concommand.Add('bgn_version_check', function() version_check() end)
 hook.Add('BGN_PlayerReady', 'BGN_CheckAddonVersion', function(ply)
 	if ply ~= LocalPlayer() then return end
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
-	version_check(function() Say(text_color_gray, Phrase('bgn.classic.tip')) end)
+	version_check(function() Say(text_color_orange, Phrase('bgn.classic.tip')) end)
 end)
