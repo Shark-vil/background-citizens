@@ -86,6 +86,9 @@ bgNPC.cvar.bgn_actor_body = 'auto'
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
 bgNPC.cvar.bgn_lod_near_radius = 2500
+bgNPC.cvar.bgn_scenic = 1
+bgNPC.cvar.bgn_scenic_max = 4
+bgNPC.cvar.bgn_scenic_period = 30
 
 CreateConVar('bgn_installed', 1, {
 	FCVAR_ARCHIVE,
@@ -227,6 +230,10 @@ bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NP
 bgNPC.CVars.Register('bgn_nav_provider', bgNPC.cvar.bgn_nav_provider, 'Background NPCs: navigation source (auto, navmesh, nodegraph, custom)')
 bgNPC.CVars.Register('bgn_nav_generator_max_nodes', bgNPC.cvar.bgn_nav_generator_max_nodes, 'Background NPCs: node limit of the generator')
 bgNPC.CVars.Register('bgn_lod_near_radius', bgNPC.cvar.bgn_lod_near_radius, 'Background NPCs: actors closer than this to a player get full updates')
+
+bgNPC.CVars.Register('bgn_scenic', bgNPC.cvar.bgn_scenic, 'Staged scenes (people in a queue, an arrest, a couple on a couch...) appear on the map. 1 - enabled, 0 - disabled.')
+bgNPC.CVars.Register('bgn_scenic_max', bgNPC.cvar.bgn_scenic_max, 'The most scenic scenes on the map at once.')
+bgNPC.CVars.Register('bgn_scenic_period', bgNPC.cvar.bgn_scenic_period, 'Seconds between two tries to put a new scenic scene on the map.')
 
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0

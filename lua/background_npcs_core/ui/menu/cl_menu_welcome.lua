@@ -20,7 +20,7 @@ local MODES = {
 			{ true, '#bgn.mode.classic.f1' }, { false, '#bgn.mode.classic.f2' }, { false, '#bgn.mode.classic.f3' },
 			{ false, '#bgn.mode.classic.f4' }, { false, '#bgn.mode.classic.f5' },
 		},
-		server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0' },
+		server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0', bgn_scenic = '0' },
 		client = { bgn_cl_ghost_crowd = '0', bgn_cl_voices = '2' },
 	},
 	{
@@ -29,7 +29,7 @@ local MODES = {
 			{ true, '#bgn.mode.new.f1' }, { true, '#bgn.mode.new.f2' }, { true, '#bgn.mode.new.f3' },
 			{ true, '#bgn.mode.new.f4' }, { true, '#bgn.mode.new.f5' },
 		},
-		server = { bgn_actor_body = 'auto', bgn_brain = 'auto', bgn_ghost_crowd = '1' },
+		server = { bgn_actor_body = 'auto', bgn_brain = 'auto', bgn_ghost_crowd = '1', bgn_scenic = '1' },
 		client = { bgn_cl_ghost_crowd = '1', bgn_cl_voices = '1' },
 	},
 }

@@ -110,6 +110,13 @@ local STEPS = {
 		end,
 	},
 	{
+		id = 'scenic', modern = true, clip = 'scenic', frames = 45, labels = { '#bgn.wizard.scenic.l1', '#bgn.wizard.scenic.l2' },
+		build = function(page)
+			page:Toggle('bgn_scenic', '#bgn.menu.scenic')
+			page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
+		end,
+	},
+	{
 		id = 'wanted', clip = 'wanted', frames = 45,
 		build = function(page)
 			page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')

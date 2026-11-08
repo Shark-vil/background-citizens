@@ -18,5 +18,6 @@ Keep changes in a separate addon: [create an actor](tutorials/Creating-Custom-NP
 - [Conversations and fist fights](systems/conversations.md)
 - [Arrest](systems/arrest.md)
 - [Voices and languages](systems/voices.md)
+- [Scenic scenes](systems/scenic.md)
 
 Use the header to switch English / Русский or light / dark theme. These website choices do not change the game settings.

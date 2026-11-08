@@ -63,6 +63,7 @@ plugins:
             Conversations: Разговоры
             Arrest: Арест
             Voices: Голоса
+            Scenic scenes: Сценические сцены
             Reference: Справочник
             Actor API: API актора
             Building the docs: Сборка документации
@@ -85,6 +86,7 @@ nav:
       - Conversations: systems/conversations.md
       - Arrest: systems/arrest.md
       - Voices: systems/voices.md
+      - Scenic scenes: systems/scenic.md
   - Reference:
       - Actor API: classes/actor/index.md
       - Building the docs: contributing.md
