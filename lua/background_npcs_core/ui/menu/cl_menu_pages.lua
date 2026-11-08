@@ -143,6 +143,8 @@ Menu.AddPage('behavior', {
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
+		page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
+		page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)
 		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')
 	end,
 })
