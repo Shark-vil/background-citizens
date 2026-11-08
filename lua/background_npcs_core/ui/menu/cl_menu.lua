@@ -181,8 +181,10 @@ end
 -- Scale and fonts: the layout is designed at 1080p and scaled with the screen height
 -- ---------------------------------------------------------------------------
 
+local cvar_ui_scale = CreateClientConVar('bgn_cl_ui_scale', '1', true, false, 'Background NPCs: size of the menu text and controls (1 - by the screen height)', 0.75, 2)
+
 function Menu.Scale()
-	return math.Clamp(ScrH() / 1080, 0.75, 2)
+	return math.Clamp(ScrH() / 1080 * cvar_ui_scale:GetFloat(), 0.75, 3)
 end
 
 local font_scale
@@ -789,4 +791,5 @@ end
 hook.Add('OnScreenSizeChanged', 'BGN_Menu', Reopen)
 cvars.AddChangeCallback('gmod_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')
 cvars.AddChangeCallback('bgn_cl_ui_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')
+cvars.AddChangeCallback('bgn_cl_ui_scale', function() timer.Simple(0.5, Reopen) end, 'BGN_Menu')
 cvars.AddChangeCallback('bgn_ghost_crowd', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu') -- locks the client ghost rows

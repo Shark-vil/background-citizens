@@ -3,7 +3,7 @@
 1. Subscribe to [Background NPCs on Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2341497926), or put this repository in `garrysmod/addons/background-citizens`. Avoid installing two copies.
 2. Start a map, for example `gm_construct`. Version 2.0 does not require SLibrary.
 3. Open the developer console and run `bgn_menu`. You can also use the Background NPCs icon in the C menu.
-4. On first launch choose Classic or New, then follow the setup wizard. Classic uses engine NPCs and FSM; New selects bodies and brains automatically and enables the ghost crowd.
+4. On first launch choose Classic or New, then follow the setup wizard. Both are fully supported: Classic uses engine NPCs and FSM like the old versions, New adds NextBots, GOAP and the ghost crowd. You can switch any time in the settings.
 5. Walk around and allow time for spawning. Actors generally appear outside your view; the limit is not an immediate spawn command.
 
 Server settings require admin rights. Voice and interface choices are local to each player.

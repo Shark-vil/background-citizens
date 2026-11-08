@@ -6,9 +6,8 @@ Bodies and brains exist on the server only.
 
 ## Bodies
 
-`bgn_actor_body auto|npc|nextbot` (default `auto`). On maps with a NavMesh, actors of the HL2 classes
-`npc_citizen`, `npc_metropolice` and `npc_combine_s` spawn as `bgn_nextbot` (NextBot, `NextBotBody`), otherwise
-as HL2 NPCs (`NPCBody`). The NextBot walks with the NavMesh path follower, opens doors (the ones allowed, see navigation.md "Doors"), gets unstuck, and
+`bgn_actor_body npc|nextbot` (default `npc`; the old value `auto` is the same as `npc`). By default actors are real HL2 NPCs (`NPCBody`), like in the old versions: other addons (model replacers, ragdoll and death mods, Bio-Annihilation 2, Followers) see only real NPCs (`IsNPC`, `OnNPCKilled`). With `nextbot`, on maps with a NavMesh, actors of the HL2 classes
+`npc_citizen`, `npc_metropolice` and `npc_combine_s` spawn as `bgn_nextbot` (NextBot, `NextBotBody`), and such addons may not work with them. The NextBot walks with the NavMesh path follower, opens doors (the ones allowed, see navigation.md "Doors"), gets unstuck, and
 shoots or hits with a real HL2 weapon held in its hand (players can't pick it up while the bot is alive; it drops
 the weapon on death, like an HL2 NPC). Shots start at the bot's right hand. The config `weapon_skill` works for
 NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, good ×0.67, very good ×0.33,
@@ -29,7 +28,7 @@ perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
 ## Choosing a brain
 
-`bgn_brain auto|fsm|goap` (default `auto`). In `auto` an actor gets the brain from its config field
+`bgn_brain auto|fsm|goap` (default `fsm`, the classic brain). In `auto` an actor gets the brain from its config field
 `brain = 'fsm' | 'goap'`, otherwise GOAP when the config has `weapons`, otherwise FSM.
 
 ## FSM brain

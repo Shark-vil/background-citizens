@@ -44,3 +44,13 @@ hook.Add('Think', 'BGN_ActorAnimationController', function()
 		end
 	end
 end)
+
+-- An NPC frozen for an animation (healing, arresting, talking...) never dies: it stays alive-looking in its pose.
+-- The freeze is dropped just before a lethal hit, so the engine runs the usual death.
+hook.Add('EntityTakeDamage', 'BGN_ActorAnimationRelease', function(npc, dmginfo)
+	if not npc:IsNPC() or dmginfo:GetDamage() < npc:Health() then return end
+	local actor = bgNPC.Actors.Get(npc)
+	if not actor or not actor:IsAnimationPlayed() then return end
+	npc:SetNPCState(NPC_STATE_IDLE)
+	npc:ClearSchedule()
+end)

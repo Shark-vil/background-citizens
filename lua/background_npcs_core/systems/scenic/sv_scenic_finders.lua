@@ -75,7 +75,7 @@ end
 
 local function Refresh(kind)
 	local entry = index[kind]
-	if entry.time + INDEX_LIFETIME > CurTime() then return entry.list end
+	if entry.list and entry.time + INDEX_LIFETIME > CurTime() then return entry.list end -- no list yet: CurTime() < INDEX_LIFETIME at map start
 
 	local list = {}
 	if kind == 'doors' then

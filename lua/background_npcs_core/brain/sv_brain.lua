@@ -11,8 +11,8 @@
 local Brain = bgNPC.Class('BGN_Brain')
 bgNPC.Brain = Brain
 
-local cvar_brain = CreateConVar('bgn_brain', 'auto', { FCVAR_ARCHIVE },
-	'Background NPCs: actor brain type (auto, fsm, goap)')
+local cvar_brain = CreateConVar('bgn_brain', 'fsm', { FCVAR_ARCHIVE },
+	'Background NPCs: actor brain type (fsm - the classic one, goap - smarter fights, auto - goap for armed actors)')
 
 function Brain:Init(actor)
 	self.actor = actor

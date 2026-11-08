@@ -6,10 +6,12 @@ of the "Legion" system from Serious Sam 4. Local mode only requests navigation p
 
 Two modes:
 
-- **Server** (default, `bgn_ghost_crowd 1`): the server runs the ghosts, every player sees the same ones, and a
+The ghost crowd is **off by default** (`bgn_ghost_crowd 0`, `bgn_cl_ghost_crowd 0`); turn it on in the menu or choose the *New* mode. A ghost that a player sees never fades next to them: it runs away (or, on the server, becomes a real actor).
+
+- **Server** (`bgn_ghost_crowd 1`): the server runs the ghosts, every player sees the same ones, and a
   ghost a player walks up to becomes a real actor on its spot. The client settings then do nothing (locked in the
   menu with a note).
-- **Local** (`bgn_ghost_crowd 0`): every client may invent its own ghosts. They change nothing in the game,
+- **Local** (`bgn_ghost_crowd 0` and `bgn_cl_ghost_crowd 1`): every client may invent its own ghosts. They change nothing in the game,
   players see different ones, and a ghost can't be caught: it runs away or fades.
 
 | Cvar | Default | Meaning |

@@ -29,8 +29,10 @@ local function FindWeapon(pos)
 	return best
 end
 
+local cvar_enabled = GetConVar('bgn_pick_up_weapons')
+
 local function CanArm(actor)
-	if actor.weapon or not actor:IsAlive() or actor:IsStayingOut() or actor:InVehicle() then return false end
+	if not cvar_enabled:GetBool() or actor.weapon or not actor:IsAlive() or actor:IsStayingOut() or actor:InVehicle() then return false end
 	if not (actor:IsNPC() or actor:IsNextBot()) then return false end
 	local cvar_disable_weapon = GetConVar('bgn_disable_weapon_' .. actor:GetType())
 	return not (cvar_disable_weapon and cvar_disable_weapon:GetBool())

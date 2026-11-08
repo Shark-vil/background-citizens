@@ -87,7 +87,7 @@ local STEPS = {
 	{
 		id = 'body', modern = true, advanced = true, clip = 'body', frames = 45, labels = { '#bgn.wizard.body.l1', '#bgn.wizard.body.l2' },
 		build = function(page)
-			page:Choice('bgn_actor_body', '#bgn.menu.body', { { 'auto', '#bgn.menu.auto' }, { 'npc', 'NPC' }, { 'nextbot', 'NextBot' } })
+			page:Choice('bgn_actor_body', '#bgn.menu.body', { { 'npc', 'NPC' }, { 'nextbot', 'NextBot' } })
 		end,
 	},
 	{

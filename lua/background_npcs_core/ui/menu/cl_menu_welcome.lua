@@ -10,27 +10,27 @@ local Menu = bgNPC.Menu
 local C = Menu.colors
 local ICONS = 'background_npcs/vgui/menu/'
 
-CreateClientConVar('bgn_mode', 'new', true, false, 'Background NPCs: chosen mode (classic | new)')
+CreateClientConVar('bgn_mode', 'classic', true, false, 'Background NPCs: chosen mode (classic | new)')
 local cvar_chosen = CreateClientConVar('bgn_mode_chosen', '0', true, false, 'Background NPCs: the mode window was answered (1) or not (0)')
 
 local MODES = {
 	{
-		key = 'classic', icon = 'classic.png', neutral = true,
+		key = 'classic', icon = 'classic.png',
 		features = {
-			{ true, '#bgn.mode.classic.f1' }, { false, '#bgn.mode.classic.f2' }, { false, '#bgn.mode.classic.f3' },
-			{ false, '#bgn.mode.classic.f4' }, { false, '#bgn.mode.classic.f5' },
+			{ true, '#bgn.mode.classic.f1' }, { true, '#bgn.mode.classic.f2' }, { true, '#bgn.mode.classic.f3' },
+			{ true, '#bgn.mode.classic.f4' }, { false, '#bgn.mode.classic.f5' },
 		},
-		server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0', bgn_scenic = '0' },
-		client = { bgn_cl_ghost_crowd = '0', bgn_cl_voices = '2' },
+		server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0', bgn_scenic = '0', bgn_settings_rev = '1' },
+		client = { bgn_cl_ghost_crowd = '0', bgn_cl_voices = '2', bgn_cl_settings_rev = '1' },
 	},
 	{
-		key = 'new', icon = 'modern.png', recommended = true,
+		key = 'new', icon = 'modern.png',
 		features = {
 			{ true, '#bgn.mode.new.f1' }, { true, '#bgn.mode.new.f2' }, { true, '#bgn.mode.new.f3' },
-			{ true, '#bgn.mode.new.f4' }, { true, '#bgn.mode.new.f5' },
+			{ true, '#bgn.mode.new.f4' }, { false, '#bgn.mode.new.f5' },
 		},
-		server = { bgn_actor_body = 'auto', bgn_brain = 'auto', bgn_ghost_crowd = '1', bgn_scenic = '1' },
-		client = { bgn_cl_ghost_crowd = '1', bgn_cl_voices = '1' },
+		server = { bgn_actor_body = 'nextbot', bgn_brain = 'auto', bgn_ghost_crowd = '1', bgn_scenic = '1', bgn_settings_rev = '1' },
+		client = { bgn_cl_ghost_crowd = '1', bgn_cl_voices = '1', bgn_cl_settings_rev = '1' },
 	},
 }
 

@@ -4,7 +4,7 @@
 
 ## Выбор тела
 
-`bgn_actor_body auto` создаёт NextBot для `npc_citizen`, `npc_metropolice`, `npc_combine_s` на карте с NavMesh; иначе используются обычные NPC. Принудительный выбор: `npc` или `nextbot`. NextBot ходит по NavMesh, открывает разрешённые двери и использует оружие Half-Life 2. Параметр `weapon_skill` влияет на разброс и у NextBot.
+`bgn_actor_body` по умолчанию `npc` (старое `auto` — то же самое): актёры — настоящие NPC, как в старых версиях, поэтому реплейсеры, ragdoll-моды, Bio-Annihilation 2 и Followers их видят. `nextbot` создаёт NextBot для `npc_citizen`, `npc_metropolice`, `npc_combine_s` на карте с NavMesh; такие аддоны с ним могут не работать. NextBot ходит по NavMesh, открывает разрешённые двери и использует оружие Half-Life 2. Параметр `weapon_skill` влияет на разброс и у NextBot.
 
 ## Выбор мозга
 

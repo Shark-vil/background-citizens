@@ -69,12 +69,18 @@ The page count is read from the first page. Previews are cached in `data/bgn_wor
 GIF previews are skipped. A failed load is not retried until the next map, the page says it couldn't load.
 Any page can use `highlight = true`.
 
+## Interface size and migration
+
+`bgn_cl_ui_scale` (0.75 - 2, default 1, Settings, My settings) multiplies the menu scale, which otherwise follows the screen height; the menu reopens on change.
+
+One-time migration (`systems/sh_settings_migration.lua`): while `bgn_settings_rev` (server) / `bgn_cl_settings_rev` (client) is 0, the settings that 2.x turned on by itself go back to the old behavior: ghost crowd off, `bgn_actor_body auto` -> `npc`, `bgn_brain auto` -> `fsm`. Choosing *New* in the mode window marks the choice as deliberate and keeps it.
+
 ## First start: mode and setup wizard
 
 On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other, only for the owner of the game (singleplayer or the listen server host). A player who joins a server is never greeted; the windows stay available from the menu and the console:
 
-1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *Classic* (close to version 1.13) or *New*. A mode is only a preset of
-   existing settings; "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.
+1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *Classic* (like version 1.x) or *New* (extra features). Both are equal and fully supported, the window only explains the difference; the defaults are the classic ones, and the mode can be changed any time (Settings, About, or `bgn_mode_welcome`). A mode is only a preset of
+   existing settings (it also sets `bgn_settings_rev` / `bgn_cl_settings_rev` to 1); "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.
 2. **Setup wizard** (`ui/menu/cl_menu_wizard.lua`): a title, a short text, a looped clip and the controls of the step.
    The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step
    without a visible row is skipped. Changes apply at once; closing the wizard does not roll them back.
@@ -82,7 +88,7 @@ On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two win
 | Mode | `bgn_actor_body` | `bgn_brain` | `bgn_ghost_crowd` | `bgn_cl_ghost_crowd` | `bgn_cl_voices` |
 | --- | --- | --- | --- | --- | --- |
 | Classic | `npc` | `fsm` | 0 | 0 | 2 (only Half-Life 2 sounds) |
-| New | `auto` | `auto` | 1 | 1 | 1 (generated voices) |
+| New | `nextbot` | `auto` | 1 | 1 | 1 (generated voices) |
 
 Server settings are applied only for an admin; everybody gets the client ones. The choice is kept in `bgn_mode`
 (`classic` / `new`).
