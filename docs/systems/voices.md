@@ -1,8 +1,8 @@
 # Voices
 
-NPC phrases are voiced (XTTS-v2, generated): citizens (calm, fear; a male and a female take), the police
-(combat shouts, arrest orders, detention, squad formation calls, wounded falling back, officer down, luggage
-warnings) and every conversation line. English and Russian; the police speak through a radio filter.
+NPC phrases are voiced (XTTS-v2, generated): citizens (calm, fear, the 911 call after the operator answers; a
+male and a female take), the police (combat shouts, arrest orders, detention, squad formation calls, wounded
+falling back, officer down, luggage warnings, reporting and writing down a body) and every conversation line. English and Russian; the police speak through a radio filter.
 
 ## Who plays what
 
@@ -28,7 +28,7 @@ sound/background_npcs/vo/<language>/<id>/<index>[_f].ogg
 
 `index` is the phrase's place in its table, `_f` the female take (picked by the model's file name: female /
 woman / women first, then male / man / men). So the voice-only tables (`police_*`, `gangster_*`, `stare_*`,
-`brawl_*`) and conversation tables (`conv_*`) must have the same number of lines, in the same order, in every
+`brawl_*`, `call_911`) and conversation tables (`conv_*`) must have the same number of lines, in the same order, in every
 language.
 
 ```lua

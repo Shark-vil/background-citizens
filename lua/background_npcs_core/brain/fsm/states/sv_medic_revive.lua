@@ -39,6 +39,7 @@ local function MoveTo(actor, data, pos, run)
 	if actor:WalkDestinationExists() then actor:StopWalk() end
 	actor:GetBody():MoveTo(pos, run)
 end
+bgNPC.MoveToPoint = MoveTo -- also the police at a body (sv_police_inspect_body.lua)
 
 -- @return boolean true while walking back to the ambulance
 local function ReturnToCar(actor, data)

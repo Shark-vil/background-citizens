@@ -52,6 +52,8 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   only works on police without enemies.
 - **Goals** (`eliminate`, `survive`, `report`, `hide`) get a priority from the actor's **set**: `police`,
   `gangster` or `citizen` (by team, or the config field `goap_set`). `hide` outranks the rest while wanted.
+  A citizen reports (calls the police) an enemy farther than 700 units even when it is armed, unless it is hurt
+  (then it runs) or armed itself (then it fights).
 - The planner (A* over fact bit masks) returns the cheapest action chain for the top goal. Plans are cached.
 - `ignore` in a reaction table keeps its random chance.
 
@@ -93,4 +95,13 @@ lines and medkit sounds (state `medic_revive`), the actor comes back (same type,
 removed) and the medic returns to the car. A call closes when the body is gone (a client reports its ragdoll
 faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
 and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
-Medics only take as enemies those who hurt them. Hook: `BGN_ActorRevived(actor, call)`.
+Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
+Hook: `BGN_ActorRevived(actor, call)`.
+
+## Police at a body
+
+Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/states/sv_police_inspect_body.lua`).
+The nearest officer within 2000 units who walks or idles without enemies takes it (state `police_inspect_body`):
+walks to the body, crouches over it, reports it on the radio (`police_body_report`) and writes it down
+(`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
+calm down; a body revived by a medic is dropped.

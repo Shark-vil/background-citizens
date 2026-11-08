@@ -147,6 +147,20 @@ bgNPC.cfg.replics['call_911'] = {
 	'I am out on the street, it is chaos here, send the police, please!',
 }
 
+bgNPC.cfg.replics['police_body_report'] = {
+	'Dispatch, I have a body here, requesting a coroner.',
+	'Confirmed casualty at my location, securing the scene.',
+	'Control, one deceased, no pulse. Sending details.',
+	'Victim is down, scene is clear. Requesting forensics.',
+}
+
+bgNPC.cfg.replics['police_body_notes'] = {
+	'Time of death noted. Writing it up.',
+	'No identification on the body. Noting it down.',
+	'Recording the scene. Civilians, stay back.',
+	'Logging the incident. Case number to follow.',
+}
+
 bgNPC.cfg.replics['police_luggage_1'] = {
 	'Move along.',
 	'Hey! Keep moving.',
