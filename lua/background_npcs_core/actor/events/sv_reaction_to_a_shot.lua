@@ -6,7 +6,7 @@ hook.Add('EntityEmitSound', 'BGN_WeaponShotSoundReaction', function(t)
 	if not cvar_bgn_shot_sound_mode:GetBool() then return end
 	local sound_name = t.SoundName
 	local attacker = t.Entity
-	if not attacker:IsPlayer() then return end
+	if not attacker:IsPlayer() or bgNPC.Combat.IsIgnored(attacker) then return end
 	local wep = attacker:GetActiveWeapon()
 	if not IsValid(wep) then return end
 	if table_HasValueBySeq(bgNPC.cfg.shotsound.whitelist_weapons, wep:GetClass()) then return end

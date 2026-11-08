@@ -9,7 +9,7 @@ end
 
 hook.Add('EntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, dmginfo)
 	local attacker = dmginfo:GetAttacker()
-	if not EntityHasValid(attacker) or not EntityHasValid(target) then return end
+	if not EntityHasValid(attacker) or not EntityHasValid(target) or bgNPC.Combat.IsIgnored(attacker) then return end
 
 	if not attacker:IsPlayer() and not target:IsPlayer() then
 		local AttackerActor = bgNPC.Actors.Get(attacker)

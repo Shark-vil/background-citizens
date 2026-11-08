@@ -18,7 +18,7 @@ function Actor:AddEnemy(ent, reaction, always_visible)
 	if bgNPC.Modes.IsPeaceful() then return end
 
 	if istable(ent) then ent = ent:GetNPC() end
-	if not IsValid(ent) or ent.BGN_HasBuildMode then return end
+	if not IsValid(ent) or bgNPC.Combat.IsIgnored(ent) then return end
 	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
 	if not self:IsAlive() then return end
 

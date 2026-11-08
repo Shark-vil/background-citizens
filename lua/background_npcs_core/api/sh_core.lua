@@ -34,6 +34,16 @@ bgNPC.Util = bgNPC.Util or {}
 local Util = bgNPC.Util
 local Modules = bgNPC.Modules
 
+-- Actors never react to this entity: build mode, bgNPCIgnore, or a player while
+-- the spawn menu "Ignore players" (ai_ignoreplayers) is on.
+function bgNPC.Combat.IsIgnored(ent)
+	if not IsValid(ent) then return false end
+	if ent.BGN_HasBuildMode or ent.bgNPCIgnore then return true end
+	if not ent:IsPlayer() then return false end
+	local cvar = Util.GetCVar('ai_ignoreplayers')
+	return cvar ~= nil and cvar:GetBool()
+end
+
 -- ---------------------------------------------------------------------------
 -- Util
 -- ---------------------------------------------------------------------------

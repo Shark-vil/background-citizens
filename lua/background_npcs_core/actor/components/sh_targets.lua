@@ -12,7 +12,7 @@ function Actor:AddTarget(ent)
 	Assert.Arg(1, ent, 'entity|nil', 'ACTOR:AddTarget')
 
 	if not self.mechanics.targets_controller then return end
-	if not IsValid(ent) or ent == self.npc or ent.BGN_HasBuildMode then return end
+	if not IsValid(ent) or ent == self.npc or bgNPC.Combat.IsIgnored(ent) then return end
 	if not self:IsAlive() or bgNPC.Table.HasValue(self.targets, ent) then return end
 
 	self.targets_count = self.targets_count + 1
