@@ -119,9 +119,12 @@ firefight, a chase with the wanted level set).
 
 ## Crowd density
 
-General page, single player only (it changes server and client settings together): one choice sets
-`bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`.
-Low 15 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
+One choice (General page for an admin, Client page for everybody else, and the first wizard step) sets
+`bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`. It works on any server,
+by who presses it: an **admin** changes the server limits and his own ghosts; a **player** changes only his own ghosts
+(`bgn_cl_ghost_crowd_max`), and only while the server does not run the ghost crowd (`bgn_ghost_crowd 0`). When the
+server runs the ghosts and the player is not an admin, the choice is locked with the reason.
+Low 25 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
 No preset is selected when the limits were changed by hand. Presets: `DENSITY` in `ui/menu/cl_menu_pages.lua`.
 
 ## Setting change notices

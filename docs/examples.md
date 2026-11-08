@@ -1,8 +1,8 @@
 # Practical examples
 
-## Reduce load in single player
+## Reduce load
 
-Run `bgn_crowd_density low` in the client console: a limit of 15 actors and no ghosts. Restore the medium preset with `bgn_crowd_density medium` (35 actors, 40 ghosts). Type limits follow the total; existing actors need not disappear immediately.
+Run `bgn_crowd_density low` in the client console: a limit of 25 actors and no ghosts (an admin sets the server limit; any other player changes only their own ghosts, and only while the server does not run the ghost crowd). Restore the medium preset with `bgn_crowd_density medium` (35 actors, 40 ghosts). Type limits follow the total; existing actors need not disappear immediately.
 
 ## Russian interface, English voices
 

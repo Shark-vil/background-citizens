@@ -81,13 +81,7 @@ local STEPS = {
 	{
 		id = 'density', clip = 'density', frames = 45, labels = { '#bgn.wizard.density.l1', '#bgn.wizard.density.l2' },
 		build = function(page)
-			if game.SinglePlayer() then
-				local options = {}
-				for i, preset in ipairs(Menu.DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
-				page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, { get = Menu.CurrentDensity, server = false })
-			else
-				page:Slider('bgn_max_npc', '#bgn.settings.actor.total_max_npc', 0, 200)
-			end
+			Menu.DensityChoice(page)
 		end,
 	},
 	{

@@ -8,23 +8,46 @@ local ICONS = 'background_npcs/vgui/menu/'
 local SERVER_GROUP = '#bgn.menu.group.server'
 
 -- Crowd density: one choice sets the NPC and ghost limits at once (type limits follow bgn_max_npc, sv_cvars.lua).
--- Single player only: it changes server and client settings together.
+-- What it changes depends on the player: an admin sets the server limits and his own ghosts; a player who is
+-- not an admin sets only his own ghosts, and only while the server does not run the ghost crowd (bgn_ghost_crowd 0).
 local DENSITY = {
-	{ id = 'low', values = { bgn_max_npc = 15, bgn_ghost_crowd_max = 0, bgn_cl_ghost_crowd_max = 0 } },
+	{ id = 'low', values = { bgn_max_npc = 25, bgn_ghost_crowd_max = 0, bgn_cl_ghost_crowd_max = 0 } },
 	{ id = 'medium', values = { bgn_max_npc = 35, bgn_ghost_crowd_max = 40, bgn_cl_ghost_crowd_max = 40 } },
 	{ id = 'high', values = { bgn_max_npc = 60, bgn_ghost_crowd_max = 80, bgn_cl_ghost_crowd_max = 80 } },
 	{ id = 'ultra', values = { bgn_max_npc = 100, bgn_ghost_crowd_max = 150, bgn_cl_ghost_crowd_max = 150 } },
 }
+local CLIENT_ONLY = { bgn_cl_ghost_crowd_max = true }
+
+-- @return string|nil 'all' (admin) | 'client' (own ghosts only) | nil (the server decides, nothing can be changed)
+local function DensityScope()
+	if Menu.IsAdmin() then return 'all' end
+	local server_ghosts = GetConVar('bgn_ghost_crowd')
+	if server_ghosts and not server_ghosts:GetBool() then return 'client' end
+end
+
+-- the values of a preset this player can change
+local function DensityValues(preset)
+	local scope = DensityScope()
+	if scope == 'all' then return preset.values end
+	if scope ~= 'client' then return {} end
+
+	local values = {}
+	for name, value in pairs(preset.values) do
+		if CLIENT_ONLY[name] then values[name] = value end
+	end
+	return values
+end
 
 -- @return string the preset matching the current settings, '' when they were changed by hand
 local function CurrentDensity()
 	for _, preset in ipairs(DENSITY) do
-		local match = true
-		for name, value in pairs(preset.values) do
+		local match, any = true, false
+		for name, value in pairs(DensityValues(preset)) do
+			any = true
 			local cv = GetConVar(name)
 			if not cv or cv:GetInt() ~= value then match = false break end
 		end
-		if match then return preset.id end
+		if match and any then return preset.id end
 	end
 	return ''
 end
@@ -32,15 +55,27 @@ end
 Menu.DENSITY, Menu.CurrentDensity = DENSITY, CurrentDensity
 
 concommand.Add('bgn_crowd_density', function(_, _, args)
-	if not game.SinglePlayer() then return MsgN('[Background NPCs] bgn_crowd_density works in single player only') end
+	if not DensityScope() then return MsgN('[Background NPCs] bgn_crowd_density: the server controls the crowd') end
 	for _, preset in ipairs(DENSITY) do
 		if preset.id == args[1] then
-			for name, value in pairs(preset.values) do RunConsoleCommand(name, tostring(value)) end
+			for name, value in pairs(DensityValues(preset)) do RunConsoleCommand(name, tostring(value)) end
 			return
 		end
 	end
 	MsgN('[Background NPCs] bgn_crowd_density low | medium | high | ultra')
 end)
+
+-- The choice row (shared by the general page, the client page and the wizard); locked with the reason when
+-- the server decides everything.
+function Menu.DensityChoice(page)
+	local options = {}
+	for i, preset in ipairs(DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
+	local locked = not DensityScope()
+	page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, {
+		get = CurrentDensity, server = false, locked = locked, badge = locked and '#bgn.menu.by_server' or nil,
+	})
+	if locked then page:Note('#bgn.menu.crowd_density.by_server', 'warn') end
+end
 
 Menu.AddPage('general', {
 	group = SERVER_GROUP,
@@ -84,12 +119,8 @@ Menu.AddPage('general', {
 		page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
 		page:Toggle('bgn_debug', '#bgn.settings.general.debug')
 
-		if game.SinglePlayer() then
-			page:Section('#bgn.menu.section.crowd_density')
-			local options = {}
-			for i, preset in ipairs(DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
-			page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, { get = CurrentDensity, server = false })
-		end
+		page:Section('#bgn.menu.section.crowd_density')
+		Menu.DensityChoice(page)
 
 		page:Section('#bgn.menu.section.modes')
 		page:Toggle('bgn_peaceful_mode', '#bgn.settings.general.peaceful_mode')
@@ -296,6 +327,11 @@ Menu.AddPage('client', {
 	icon = ICONS .. 'client.png',
 	order = 1200,
 	build = function(page)
+		if not Menu.IsAdmin() then -- an admin has it on the general page
+			page:Section('#bgn.menu.section.crowd_density')
+			Menu.DensityChoice(page)
+		end
+
 		page:Section('#bgn.menu.section.graphics')
 		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
 		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
