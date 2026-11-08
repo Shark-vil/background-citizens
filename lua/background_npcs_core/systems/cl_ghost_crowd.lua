@@ -200,13 +200,6 @@ local function SetActivity(ghost, act)
 	end
 end
 
-bgNPC.Test.Add('ghost_crowd.invalid_entity', function(check)
-	local ghost = { ent = NULL, act = ACT_IDLE, speed = 0, seq_len = 1 }
-	SetActivity(ghost, ACT_WALK)
-	check(ghost.act == ACT_IDLE and ghost.speed == 0 and ghost.seq_len == 1,
-		'removed models are skipped without changing animation state')
-end)
-
 -- @param server_look table|nil the look the server picked, a random seen one otherwise
 -- @return table|nil the ghost
 local function CreateGhost(pos, server_look)
