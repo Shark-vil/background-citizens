@@ -11,6 +11,7 @@ function ASSET:AddTarget(target, policeActor)
 		notify_arrest_time = 0,
 		arrest_time = 0,
 		detention = false,
+		holders = {}, -- police actors that hold the target in detention now (several officers share one component)
 		arrested = true,
 		damege_count = 1,
 		is_look_police = false,
@@ -30,6 +31,7 @@ function ASSET:UpdateArrest(target)
 	ArrestComponent.notify_arrest_time = 0
 	ArrestComponent.arrest_time = 0
 	ArrestComponent.detention = false
+	ArrestComponent.holders = {}
 	ArrestComponent.arrested = true
 	ArrestComponent.damege_count = 1
 end

@@ -20,6 +20,8 @@ a section without visible rows has no heading, a page without visible rows is no
 `bgn_menu_as_player [1/0]` (no argument toggles) shows the window as a non-admin sees it, for debugging; the
 server still checks the rights.
 
+**Tools → Testing** runs the [testing mode](testing.md): spawn, vehicle, state and settings checks with a copyable log.
+
 ## Adding a page
 
 ```lua
@@ -40,7 +42,7 @@ bgNPC.Menu.AddPage('my_addon', {
 
 | Method | Notes |
 | --- | --- |
-| `page:Section(title, help)` | Starts a titled card; the following controls go into it. The heading appears with the first visible row. |
+| `page:Section(title, help, accent)` | Starts a titled card (`accent = true` tints it like the quick settings block); the following controls go into it. The heading appears with the first visible row. |
 | `page:Toggle(cvar, label, opts)` | `opts.on_change(enabled)`. |
 | `page:Slider(cvar, label, min, max, opts)` | `opts.decimals` (0), `opts.limit` — the max for typed values (they may pass `max`). The value is sent on release. |
 | `page:Button(label, command or function, opts)` | `opts.text` caption, `opts.confirm` (true or a question), `opts.danger`, `opts.admin`. |
@@ -67,9 +69,73 @@ The page count is read from the first page. Previews are cached in `data/bgn_wor
 GIF previews are skipped. A failed load is not retried until the next map, the page says it couldn't load.
 Any page can use `highlight = true`.
 
+## First start: mode and setup wizard
+
+On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other:
+
+1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *Classic* (close to version 1.13) or *New*. A mode is only a preset of
+   existing settings; "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.
+2. **Setup wizard** (`ui/menu/cl_menu_wizard.lua`): a title, a short text, a looped clip and the controls of the step.
+   The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step
+   without a visible row is skipped. Changes apply at once; closing the wizard does not roll them back.
+
+| Mode | `bgn_actor_body` | `bgn_brain` | `bgn_ghost_crowd` | `bgn_cl_ghost_crowd` | `bgn_cl_voices` |
+| --- | --- | --- | --- | --- | --- |
+| Classic | `npc` | `fsm` | 0 | 0 | 2 (only Half-Life 2 sounds) |
+| New | `auto` | `auto` | 1 | 1 | 1 (generated voices) |
+
+Server settings are applied only for an admin; everybody gets the client ones. The choice is kept in `bgn_mode`
+(`classic` / `new`).
+
+Steps: crowd density, scenic scenes, wanted and arrest, voices and sound, vehicles. The *body*, *brain* and *ghost crowd* steps are
+`advanced`: the mode already decides them, so the wizard shows them only as `bgn_wizard all`. Steps with
+`modern = true` (body, brain, ghosts, scenic scenes, voices) are skipped in Classic, except for `bgn_wizard all`.
+The vehicles step has Workshop cards: Decent Vehicle (required) and a pack of three items (simfphys, GTA SA cars,
+Background NPCs support) that is subscribed at once.
+
+| Command | Opens |
+| --- | --- |
+| `bgn_mode_welcome` | The mode window only |
+| `bgn_wizard` | The wizard for the current mode |
+| `bgn_wizard all` | The wizard with every step |
+| `bgn_mode_chosen 0` | Nothing now: both windows come back on the next map |
+
+The same two windows can be opened from the **Quick settings** block (General page) and from My settings.
+
+Add a step: an entry of `STEPS` in `cl_menu_wizard.lua` (`id`, `clip`, `frames`, `labels`, `modern`, `advanced`,
+`build(page)`) and the phrases `bgn.wizard.<id>` and `bgn.wizard.<id>.desc` (plus `.l1` / `.l2` for the labels).
+
+### Clips
+
+GMod can't play video, so a clip is a frame atlas: `materials/background_npcs/wizard/<clip>.jpg`, 2048x2048,
+5 columns of 384x216 frames, 45 frames played at 10 fps. With `labels` the first label is shown over the first half
+of the frames and the second over the rest ("before" / "after"). A missing atlas draws a plain placeholder.
+
+`python tools/make_wizard_clips.py <addon root> <clip> <frames dir> [<frames dir> ...]` builds an atlas: every
+folder gives an equal share of the frames (two folders: before, after), the first two frames of each folder are
+dropped. The clips were recorded in game on gm_bigcity_improved: a fixed time step (`host_framerate 10`), a
+screenshot per frame, a free camera and hand-made scenes (NPCs placed in front of the camera, a staged
+firefight, a chase with the wanted level set).
+
 ## Crowd density
 
-General page, single player only (it changes server and client settings together): one choice sets
-`bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`.
-Low 15 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
+One choice (General page for an admin, Client page for everybody else, and the first wizard step) sets
+`bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`. It works on any server,
+by who presses it: an **admin** changes the server limits and his own ghosts; a **player** changes only his own ghosts
+(`bgn_cl_ghost_crowd_max`), and only while the server does not run the ghost crowd (`bgn_ghost_crowd 0`). When the
+server runs the ghosts and the player is not an admin, the choice is locked with the reason.
+Low 25 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
 No preset is selected when the limits were changed by hand. Presets: `DENSITY` in `ui/menu/cl_menu_pages.lua`.
+
+## Setting change notices
+
+Every change of a setting shows a notice in the bottom right corner, drawn above the menus: a **blue** *SERVER*
+plate (`#03a9f4`) for a server setting (also one changed by the testing mode's *Fix* button), announced to all players
+after the server has applied it, and an **amber** *CLIENT* plate (`#dea909`) for a `bgn_cl_*` setting, shown only to its
+player. A plate has the name and `old > new`; a slider updates one plate instead of stacking new ones, and the limits that
+the mod rewrites by itself after `bgn_max_npc` are not announced. If an admin's copy is stale, the server sends the real
+value back quietly.
+
+The notices are standalone (`core/sh_notice.lua`): the file is included first, has its own network string, language
+check and drawing, and a drawing error is caught, so a failure of any later script cannot silence them. For your own
+cvar call `bgNPC.Notice.Watch(name)` (server cvar: everybody sees it; client cvar: its player).

@@ -2,7 +2,7 @@
 
 Garry's Mod can't afford hundreds of real NPCs. The ghost crowd fills the far distance with cheap
 client-side figures (`ClientsideModel`) that look and behave like the real actors near you, in the spirit
-of the "Legion" system from Serious Sam 4. The server pays nothing: it only sends navigation points.
+of the "Legion" system from Serious Sam 4. Local mode only requests navigation points from the server; server mode also runs and synchronizes ghost movement.
 
 Two modes:
 

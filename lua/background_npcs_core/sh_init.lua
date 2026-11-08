@@ -27,7 +27,7 @@ if SERVER then
 end
 
 bgNPC = bgNPC or {}
-bgNPC.VERSION = '2.0.1'
+bgNPC.VERSION = '2.1.0'
 
 -- Shared storage, filled by the API ----
 bgNPC.LANGUAGES = bgNPC.LANGUAGES or {}
@@ -97,6 +97,7 @@ local function ExecutableScripts()
 	included = {}
 
 	-- Core layer (order matters)
+	Include('core/sh_notice.lua') -- first and standalone: the setting notices must work whatever fails later
 	Include('core/sh_class.lua')
 	Include('core/sh_net.lua')
 	Include('core/sh_util.lua')

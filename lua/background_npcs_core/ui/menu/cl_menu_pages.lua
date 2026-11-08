@@ -8,37 +8,74 @@ local ICONS = 'background_npcs/vgui/menu/'
 local SERVER_GROUP = '#bgn.menu.group.server'
 
 -- Crowd density: one choice sets the NPC and ghost limits at once (type limits follow bgn_max_npc, sv_cvars.lua).
--- Single player only: it changes server and client settings together.
+-- What it changes depends on the player: an admin sets the server limits and his own ghosts; a player who is
+-- not an admin sets only his own ghosts, and only while the server does not run the ghost crowd (bgn_ghost_crowd 0).
 local DENSITY = {
-	{ id = 'low', values = { bgn_max_npc = 15, bgn_ghost_crowd_max = 0, bgn_cl_ghost_crowd_max = 0 } },
+	{ id = 'low', values = { bgn_max_npc = 25, bgn_ghost_crowd_max = 0, bgn_cl_ghost_crowd_max = 0 } },
 	{ id = 'medium', values = { bgn_max_npc = 35, bgn_ghost_crowd_max = 40, bgn_cl_ghost_crowd_max = 40 } },
 	{ id = 'high', values = { bgn_max_npc = 60, bgn_ghost_crowd_max = 80, bgn_cl_ghost_crowd_max = 80 } },
 	{ id = 'ultra', values = { bgn_max_npc = 100, bgn_ghost_crowd_max = 150, bgn_cl_ghost_crowd_max = 150 } },
 }
+local CLIENT_ONLY = { bgn_cl_ghost_crowd_max = true }
+
+-- @return string|nil 'all' (admin) | 'client' (own ghosts only) | nil (the server decides, nothing can be changed)
+local function DensityScope()
+	if Menu.IsAdmin() then return 'all' end
+	local server_ghosts = GetConVar('bgn_ghost_crowd')
+	if server_ghosts and not server_ghosts:GetBool() then return 'client' end
+end
+
+-- the values of a preset this player can change
+local function DensityValues(preset)
+	local scope = DensityScope()
+	if scope == 'all' then return preset.values end
+	if scope ~= 'client' then return {} end
+
+	local values = {}
+	for name, value in pairs(preset.values) do
+		if CLIENT_ONLY[name] then values[name] = value end
+	end
+	return values
+end
 
 -- @return string the preset matching the current settings, '' when they were changed by hand
 local function CurrentDensity()
 	for _, preset in ipairs(DENSITY) do
-		local match = true
-		for name, value in pairs(preset.values) do
+		local match, any = true, false
+		for name, value in pairs(DensityValues(preset)) do
+			any = true
 			local cv = GetConVar(name)
 			if not cv or cv:GetInt() ~= value then match = false break end
 		end
-		if match then return preset.id end
+		if match and any then return preset.id end
 	end
 	return ''
 end
 
+Menu.DENSITY, Menu.CurrentDensity = DENSITY, CurrentDensity
+
 concommand.Add('bgn_crowd_density', function(_, _, args)
-	if not game.SinglePlayer() then return MsgN('[Background NPCs] bgn_crowd_density works in single player only') end
+	if not DensityScope() then return MsgN('[Background NPCs] bgn_crowd_density: the server controls the crowd') end
 	for _, preset in ipairs(DENSITY) do
 		if preset.id == args[1] then
-			for name, value in pairs(preset.values) do RunConsoleCommand(name, tostring(value)) end
+			for name, value in pairs(DensityValues(preset)) do RunConsoleCommand(name, tostring(value)) end
 			return
 		end
 	end
 	MsgN('[Background NPCs] bgn_crowd_density low | medium | high | ultra')
 end)
+
+-- The choice row (shared by the general page, the client page and the wizard); locked with the reason when
+-- the server decides everything.
+function Menu.DensityChoice(page)
+	local options = {}
+	for i, preset in ipairs(DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
+	local locked = not DensityScope()
+	page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, {
+		get = CurrentDensity, server = false, locked = locked, badge = locked and '#bgn.menu.by_server' or nil,
+	})
+	if locked then page:Note('#bgn.menu.crowd_density.by_server', 'warn') end
+end
 
 Menu.AddPage('general', {
 	group = SERVER_GROUP,
@@ -46,16 +83,44 @@ Menu.AddPage('general', {
 	icon = ICONS .. 'general.png',
 	order = 100,
 	build = function(page)
+		-- quick settings: a block tinted with the accent, over the rows
+		page:Custom(function(panel)
+			local s = Menu.Scale()
+			local pad, gap = math.Round(16 * s), math.Round(8 * s)
+			local C = Menu.colors
+			local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.mode'), 'primary', function() RunConsoleCommand('bgn_mode_welcome') end)
+			local second = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'secondary', function() RunConsoleCommand('bgn_wizard', 'all') end)
+			local help = Menu.Text('#bgn.menu.quick.help')
+			panel.PerformLayout = function(self, w)
+				local lines = Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)
+				local h = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s) + #lines * Menu.FontHeight('BGN.Menu.Small')
+					+ math.Round(12 * s) + first:GetTall() + pad
+				first:SetPos(pad, h - pad - first:GetTall())
+				second:SetPos(pad + first:GetWide() + gap, h - pad - second:GetTall())
+				if self:GetTall() ~= h then
+					self:SetTall(h)
+					Menu.ContentChanged()
+				end
+			end
+			panel.Paint = function(_, w)
+				local r = math.Round(8 * s)
+				draw.RoundedBox(r, 0, 0, w, panel:GetTall(), Menu.Fade(C.accent, 0.55))
+				draw.RoundedBox(r, 1, 1, w - 2, panel:GetTall() - 2, Menu.LerpColor(0.1, C.surface, C.accent))
+				draw.SimpleText(Menu.Text('#bgn.menu.quick'), 'BGN.Menu.Section', pad, pad, C.text)
+				local y = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s)
+				for _, line in ipairs(Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)) do
+					draw.SimpleText(line, 'BGN.Menu.Small', pad, y, C.muted)
+					y = y + Menu.FontHeight('BGN.Menu.Small')
+				end
+			end
+		end)
+
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
 		page:Toggle('bgn_debug', '#bgn.settings.general.debug')
 
-		if game.SinglePlayer() then
-			page:Section('#bgn.menu.section.crowd_density')
-			local options = {}
-			for i, preset in ipairs(DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
-			page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, { get = CurrentDensity, server = false })
-		end
+		page:Section('#bgn.menu.section.crowd_density')
+		Menu.DensityChoice(page)
 
 		page:Section('#bgn.menu.section.modes')
 		page:Toggle('bgn_peaceful_mode', '#bgn.settings.general.peaceful_mode')
@@ -115,6 +180,11 @@ Menu.AddPage('spawn', {
 		page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
 		page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
 		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
+
+		page:Section('#bgn.menu.section.scenic')
+		page:Toggle('bgn_scenic', '#bgn.menu.scenic')
+		page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
+		page:Slider('bgn_scenic_period', '#bgn.menu.scenic_period', 5, 300)
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
@@ -257,6 +327,11 @@ Menu.AddPage('client', {
 	icon = ICONS .. 'client.png',
 	order = 1200,
 	build = function(page)
+		if not Menu.IsAdmin() then -- an admin has it on the general page
+			page:Section('#bgn.menu.section.crowd_density')
+			Menu.DensityChoice(page)
+		end
+
 		page:Section('#bgn.menu.section.graphics')
 		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
 		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
@@ -291,6 +366,8 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
 
 		page:Section('#bgn.menu.section.about')
+		page:Button('#bgn.mode.reopen', 'bgn_mode_welcome', { text = '#bgn.menu.open_page' })
+		page:Button('#bgn.wizard.title', 'bgn_wizard', { text = '#bgn.menu.open_page' })
 		page:Button('#bgn.settings.general.updateinfo', 'bgn_updateinfo', { text = '#bgn.menu.open_page' })
 	end,
 })
@@ -317,5 +394,14 @@ Menu.AddPage('tools', {
 		page:Button('#bgn.settings.general.reset_cvars_to_factory_settings', 'bgn_reset_cvars_to_factory_settings', {
 			admin = true, text = '#bgn.menu.reset', confirm = '#bgn.menu.confirm.reset', danger = true,
 		})
+
+		-- the test runs from debug/cl_diag.lua; the checks of rights and settings are open to everyone
+		page:Section('#bgn.diag.section', nil, true)
+		page:Button('#bgn.diag.run', 'bgn_test', { admin = true, text = '#bgn.menu.run' })
+		page:Button('#bgn.diag.run_settings', 'bgn_test_settings', { text = '#bgn.menu.run' })
+		page:Button('#bgn.diag.report', 'bgn_test_report', { text = '#bgn.menu.open_page' })
+		page:Slider('bgn_test_server_value', '#bgn.diag.cvar_server', 0, 100)
+		page:Slider('bgn_cl_test_value', '#bgn.diag.cvar_client', 0, 100, { server = false })
+		page:Note('#bgn.diag.note')
 	end,
 })

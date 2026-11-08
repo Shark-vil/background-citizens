@@ -91,3 +91,8 @@ cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
 	bgNPC.Util.Notify(LocalPlayer(), 'The first launch of "Background NPCs" can cause lags. '
 	.. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
 end)
+
+-- a notice to this player for every change of his own settings (the tool settings change too often)
+for name in pairs(bgNPC.cvar) do
+	if string.StartWith(name, 'bgn_cl_') and GetConVar(name) then bgNPC.Notice.Watch(name) end
+end

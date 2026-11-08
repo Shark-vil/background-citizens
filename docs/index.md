@@ -1,20 +1,23 @@
-# Background NPCs - Documentation
-This documentation is for "*Background NPCs*". General information on setting up will be published here, as well as a description of the API for developers.
+# Background NPCs
 
-## Pages
-### Information
-- [More maps](./information/More%20maps.md)
+Populate Garry's Mod maps with civilians, police, bandits and medics. Actors walk, talk, react to danger and use vehicles when Decent Vehicle is installed.
 
-### Systems
-- [Navigation](./systems/navigation.md)
-- [Actor brains](./systems/brains.md)
-- [Ghost crowd (experimental)](./systems/ghost-crowd.md)
-- [Settings menu](./systems/menu.md)
+Start with [installation and first launch](getting-started.md), then try the [practical examples](examples.md). If nobody spawns, follow [troubleshooting](troubleshooting.md).
 
-### Tutorials
-- [Change basic configuration](./tutorials/Change%20basic%20configuration.md) (**Deprecated, will be removed in the future**)
-- [Creating Custom NPCs](./tutorials/Creating-Custom-NPCs.md)
-- [Modification of Existing NPCs](./tutorials/Modification-of-Existing-NPCs.md)
+## For addon authors
 
-### Classes
-- [ACTOR](./classes/actor/index.md)
+Keep changes in a separate addon: [create an actor](tutorials/Creating-Custom-NPCs.md), [edit an existing one](tutorials/Modification-of-Existing-NPCs.md), and consult [configuration options](tutorials/Actor-Config-Settings.md) and the [Actor API](classes/actor/index.md).
+
+## Systems
+
+- [Navigation and map routes](systems/navigation.md)
+- [Bodies, brains and combat](systems/brains.md)
+- [Settings menu and extensions](systems/menu.md)
+- [Experimental ghost crowd](systems/ghost-crowd.md)
+- [Testing mode](systems/testing.md)
+- [Conversations and fist fights](systems/conversations.md)
+- [Arrest](systems/arrest.md)
+- [Voices and languages](systems/voices.md)
+- [Scenic scenes](systems/scenic.md)
+
+Use the header to switch English / Русский or light / dark theme. These website choices do not change the game settings.

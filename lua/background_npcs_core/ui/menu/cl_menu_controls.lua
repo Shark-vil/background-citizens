@@ -30,6 +30,7 @@ Menu.Builder = Builder
 -- the window to lay the page out again on the next frame (it settles in a frame or two).
 function Menu.ContentChanged()
 	if IsValid(Menu.frame) then Menu.frame.relayout = true end
+	if IsValid(Menu.wizard) then Menu.wizard.relayout = true end
 end
 
 -- @param scroll DScrollPanel page content
@@ -119,7 +120,8 @@ function Builder:Add(class)
 	return panel
 end
 
-function Builder:Section(title, help)
+-- @param accent boolean the section's card is tinted with the accent (like the quick settings block)
+function Builder:Section(title, help, accent)
 	if self.filter then
 		self.pending = title
 		self.section_match = false
@@ -128,7 +130,8 @@ function Builder:Section(title, help)
 		return
 	end
 	-- the heading appears with the first visible row (FlushSection)
-	self.pending_head = { title = title, help = help }
+	self.pending_head = { title = title, help = help, accent = accent }
+	self.section_accent = nil
 	self.card = nil
 end
 
@@ -136,6 +139,7 @@ function Builder:FlushSection()
 	local head = self.pending_head
 	if not head then return end
 	self.pending_head = nil
+	self.section_accent = head.accent
 	return self:SectionHead(Menu.Text(head.title), head.help and Menu.Text(head.help))
 end
 
@@ -176,7 +180,13 @@ function Builder:Card()
 	local card = self:Add('DPanel')
 	card:DockPadding(1, 1, 1, 1)
 	self.started = true
+	local accent = self.section_accent
 	card.Paint = function(panel, w, h)
+		if accent then
+			draw.RoundedBox(radius, 0, 0, w, h, Menu.Fade(C.accent, 0.55))
+			draw.RoundedBox(radius, 1, 1, w - 2, h - 2, Menu.LerpColor(0.1, C.surface, C.accent))
+			return
+		end
 		draw.RoundedBox(radius, 0, 0, w, h, C.border)
 		draw.RoundedBox(radius, 1, 1, w - 2, h - 2, C.surface)
 	end

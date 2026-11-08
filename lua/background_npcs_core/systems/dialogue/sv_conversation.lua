@@ -84,6 +84,7 @@ end
 
 local function IsFree(actor)
 	return actor:IsAlive() and not actor:InVehicle() and not actor.conversation and actor:EqualStateGroup('calm')
+		and not actor:HasState('scenic_npc')
 end
 
 -- @return table cast { [role] = actor } or nil

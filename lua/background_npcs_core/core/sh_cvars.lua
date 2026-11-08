@@ -8,6 +8,9 @@
 
 		bgNPC.CVars.Register(name, default, help)
 		bgNPC.CVars.OnChange(name, function(name, old, new) end, id)  -- both realms
+
+	Notices of the changes live in core/sh_notice.lua (loaded first): a server cvar is announced to all players
+	after the server applied it, a client cvar to its player only.
 --]]
 
 local Net = bgNPC.Net
@@ -44,6 +47,7 @@ if SERVER then
 		registered[name] = true
 
 		CreateConVar(name, tostring(default), FCVAR_ARCHIVE, help or '')
+		bgNPC.Notice.Watch(name)
 		cvars.AddChangeCallback(name, function(_, old_value, new_value)
 			if old_value == new_value then return end
 			Notify(name, old_value, new_value)
@@ -51,9 +55,15 @@ if SERVER then
 		end, 'BGN_CVars')
 	end
 
-	Net.Receive('bgn.cvar_set', function(_, name, value)
+	Net.Receive('bgn.cvar_set', function(ply, name, value)
 		if not registered[name] or value == nil then return end
-		RunConsoleCommand(name, tostring(value))
+		value = tostring(value)
+		-- nothing to change: tell the sender what the server holds, quietly (its copy may be stale)
+		if GetConVar(name):GetString() == value then
+			Net.Send('bgn.cvar', ply, name, value)
+			return
+		end
+		RunConsoleCommand(name, value)
 	end, { admin = true })
 
 	hook.Add('BGN_PlayerReady', 'BGN_CVarsSync', function(ply)

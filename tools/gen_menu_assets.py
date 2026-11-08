@@ -259,6 +259,36 @@ def icon_restore():
     return img
 
 
+def icon_classic():
+    # Half-Life style lambda in a ring
+    img, d = canvas()
+    d.ellipse((14, 14, 242, 242), outline=W, width=22)
+    d.line([(88, 62), (172, 196)], fill=W, width=28)
+    d.line([(130, 128), (84, 198)], fill=W, width=28)
+    d.ellipse((74, 48, 102, 76), fill=W)
+    return img
+
+
+def sparkle(d, cx, cy, r):
+    k = r * 0.26
+    d.polygon([(cx, cy - r), (cx + k, cy - k), (cx + r, cy), (cx + k, cy + k),
+               (cx, cy + r), (cx - k, cy + k), (cx - r, cy), (cx - k, cy - k)], fill=W)
+
+
+def icon_modern():
+    img, d = canvas()
+    sparkle(d, 108, 140, 100)
+    sparkle(d, 202, 58, 46)
+    sparkle(d, 206, 206, 32)
+    return img
+
+
+def icon_check():
+    img, d = canvas()
+    d.line([(48, 134), (104, 190), (210, 70)], fill=W, width=32, joint='curve')
+    return img
+
+
 def save_mono(name, img, size=64):
     path = ROOT / 'materials' / 'background_npcs' / 'vgui' / 'menu' / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -286,6 +316,7 @@ ICONS = {
     'arrest.png': icon_shield, 'behavior.png': icon_bubble, 'navigation.png': icon_graph,
     'performance.png': icon_gauge, 'addons.png': icon_grid, 'client.png': icon_monitor, 'tools.png': icon_wrench,
     'sun.png': icon_sun, 'moon.png': icon_moon, 'close.png': icon_close, 'lock.png': icon_lock,
+    'classic.png': icon_classic, 'modern.png': icon_modern, 'check.png': icon_check,
     'search.png': icon_search, 'maximize.png': icon_maximize, 'restore.png': icon_restore,
 }
 
