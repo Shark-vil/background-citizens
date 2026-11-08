@@ -126,6 +126,13 @@ No preset is selected when the limits were changed by hand. Presets: `DENSITY` i
 
 ## Setting change notices
 
-Every change of a setting shows a notice: a server setting (also one changed by the testing mode's *Fix* button)
-is announced to all players after the server has applied it, a client `bgn_cl_*` setting only to its player. A
-slider sends one notice with the last value. If an admin's copy is stale, the server sends the real value back quietly.
+Every change of a setting shows a notice in the bottom right corner, drawn above the menus: a **blue** *SERVER*
+plate (`#03a9f4`) for a server setting (also one changed by the testing mode's *Fix* button), announced to all players
+after the server has applied it, and an **amber** *CLIENT* plate (`#dea909`) for a `bgn_cl_*` setting, shown only to its
+player. A plate has the name and `old > new`; a slider updates one plate instead of stacking new ones, and the limits that
+the mod rewrites by itself after `bgn_max_npc` are not announced. If an admin's copy is stale, the server sends the real
+value back quietly.
+
+The notices are standalone (`core/sh_notice.lua`): the file is included first, has its own network string, language
+check and drawing, and a drawing error is caught, so a failure of any later script cannot silence them. For your own
+cvar call `bgNPC.Notice.Watch(name)` (server cvar: everybody sees it; client cvar: its player).

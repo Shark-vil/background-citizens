@@ -97,6 +97,7 @@ local function ExecutableScripts()
 	included = {}
 
 	-- Core layer (order matters)
+	Include('core/sh_notice.lua') -- first and standalone: the setting notices must work whatever fails later
 	Include('core/sh_class.lua')
 	Include('core/sh_net.lua')
 	Include('core/sh_util.lua')

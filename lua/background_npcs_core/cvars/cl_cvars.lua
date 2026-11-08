@@ -94,5 +94,5 @@ end)
 
 -- a notice to this player for every change of his own settings (the tool settings change too often)
 for name in pairs(bgNPC.cvar) do
-	if string.StartWith(name, 'bgn_cl_') and GetConVar(name) then bgNPC.CVars.Watch(name) end
+	if string.StartWith(name, 'bgn_cl_') and GetConVar(name) then bgNPC.Notice.Watch(name) end
 end

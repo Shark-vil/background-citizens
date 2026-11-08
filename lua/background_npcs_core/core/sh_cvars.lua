@@ -8,10 +8,9 @@
 
 		bgNPC.CVars.Register(name, default, help)
 		bgNPC.CVars.OnChange(name, function(name, old, new) end, id)  -- both realms
-		bgNPC.CVars.Watch(name)  -- client: a notice to this player only when a local cvar changes
 
-	Every change of a server cvar is announced to all players (the server confirms what it really holds, so a
-	lost or refused change is visible too); a change of a client cvar is announced to its player only.
+	Notices of the changes live in core/sh_notice.lua (loaded first): a server cvar is announced to all players
+	after the server applied it, a client cvar to its player only.
 --]]
 
 local Net = bgNPC.Net
@@ -48,6 +47,7 @@ if SERVER then
 		registered[name] = true
 
 		CreateConVar(name, tostring(default), FCVAR_ARCHIVE, help or '')
+		bgNPC.Notice.Watch(name)
 		cvars.AddChangeCallback(name, function(_, old_value, new_value)
 			if old_value == new_value then return end
 			Notify(name, old_value, new_value)
@@ -55,22 +55,12 @@ if SERVER then
 		end, 'BGN_CVars')
 	end
 
-	-- a server cvar that is not synchronized (CreateConVar in a module): only the notice goes to the players
-	local watched = {}
-	function CVars.Watch(name)
-		if watched[name] or registered[name] then return end
-		watched[name] = true
-		cvars.AddChangeCallback(name, function(_, old_value, new_value)
-			if old_value ~= new_value then Net.Send('bgn.cvar_note', nil, name, new_value) end
-		end, 'BGN_CVarWatch')
-	end
-
 	Net.Receive('bgn.cvar_set', function(ply, name, value)
 		if not registered[name] or value == nil then return end
 		value = tostring(value)
 		-- nothing to change: tell the sender what the server holds, quietly (its copy may be stale)
 		if GetConVar(name):GetString() == value then
-			Net.Send('bgn.cvar', ply, name, value, true)
+			Net.Send('bgn.cvar', ply, name, value)
 			return
 		end
 		RunConsoleCommand(name, value)
@@ -92,26 +82,6 @@ else
 		if not cvar or cvar:GetString() == value then return end
 		expected[name] = value
 		RunConsoleCommand(name, value)
-	end
-
-	-- One notice per cvar: a slider sends many changes, the last value is shown
-	local function Toast(name, value)
-		timer.Create('BGN_CVarToast_' .. name, 0.4, 1, function()
-			notification.AddLegacy(bgNPC.Util.Lang({
-				default = 'Setting changed: ' .. name .. ' = ' .. value,
-				russian = 'Настройка изменена: ' .. name .. ' = ' .. value,
-			}), NOTIFY_GENERIC, 4)
-			surface.PlaySound('UI/buttonclick.wav')
-		end)
-	end
-
-	local watched = {}
-	function CVars.Watch(name)
-		if watched[name] or registered[name] then return end
-		watched[name] = true
-		cvars.AddChangeCallback(name, function(_, old_value, new_value)
-			if old_value ~= new_value then Toast(name, new_value) end
-		end, 'BGN_CVarWatch')
 	end
 
 	function CVars.Register(name, default, help)
@@ -143,13 +113,9 @@ else
 		end, 'BGN_CVars')
 	end
 
-	Net.Receive('bgn.cvar', function(_, name, value, silent)
-		if not registered[name] then return end
-		Apply(name, value)
-		if not silent then Toast(name, value) end
+	Net.Receive('bgn.cvar', function(_, name, value)
+		if registered[name] then Apply(name, value) end
 	end)
-
-	Net.Receive('bgn.cvar_note', function(_, name, value) Toast(name, value) end)
 
 	Net.Receive('bgn.cvar_sync', function(_, values)
 		for name, value in pairs(values) do
