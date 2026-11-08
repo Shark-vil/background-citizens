@@ -20,8 +20,7 @@ local MODES = {
 			{ true, '#bgn.mode.classic.f1' }, { true, '#bgn.mode.classic.f2' }, { true, '#bgn.mode.classic.f3' },
 			{ true, '#bgn.mode.classic.f4' }, { false, '#bgn.mode.classic.f5' },
 		},
-		server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0', bgn_scenic = '0', bgn_settings_rev = '1' },
-		client = { bgn_cl_ghost_crowd = '0', bgn_cl_voices = '2', bgn_cl_settings_rev = '1' },
+		-- server / client: bgNPC.ClassicPreset (systems/sh_classic_mode.lua, also used by the bgn_classic command)
 	},
 	{
 		key = 'new', icon = 'modern.png',
@@ -35,10 +34,11 @@ local MODES = {
 }
 
 local function Apply(mode)
+	local preset = mode.key == 'classic' and bgNPC.ClassicPreset or mode
 	RunConsoleCommand('bgn_mode', mode.key == 'classic' and 'classic' or 'new')
-	for name, value in pairs(mode.client) do RunConsoleCommand(name, value) end
+	for name, value in pairs(preset.client) do RunConsoleCommand(name, value) end
 	if Menu.IsAdmin() then
-		for name, value in pairs(mode.server) do RunConsoleCommand(name, value) end
+		for name, value in pairs(preset.server) do RunConsoleCommand(name, value) end
 	end
 	notification.AddLegacy(Menu.Text('#bgn.mode.applied.' .. mode.key), NOTIFY_GENERIC, 6)
 end
