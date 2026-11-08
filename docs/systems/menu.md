@@ -42,7 +42,7 @@ bgNPC.Menu.AddPage('my_addon', {
 
 | Method | Notes |
 | --- | --- |
-| `page:Section(title, help)` | Starts a titled card; the following controls go into it. The heading appears with the first visible row. |
+| `page:Section(title, help, accent)` | Starts a titled card (`accent = true` tints it like the quick settings block); the following controls go into it. The heading appears with the first visible row. |
 | `page:Toggle(cvar, label, opts)` | `opts.on_change(enabled)`. |
 | `page:Slider(cvar, label, min, max, opts)` | `opts.decimals` (0), `opts.limit` — the max for typed values (they may pass `max`). The value is sent on release. |
 | `page:Button(label, command or function, opts)` | `opts.text` caption, `opts.confirm` (true or a question), `opts.danger`, `opts.admin`. |

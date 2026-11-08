@@ -355,7 +355,7 @@ Menu.AddPage('tools', {
 		})
 
 		-- the test runs from debug/cl_diag.lua; the checks of rights and settings are open to everyone
-		page:Section('#bgn.diag.section')
+		page:Section('#bgn.diag.section', nil, true)
 		page:Button('#bgn.diag.run', 'bgn_test', { admin = true, text = '#bgn.menu.run' })
 		page:Button('#bgn.diag.run_settings', 'bgn_test_settings', { text = '#bgn.menu.run' })
 		page:Button('#bgn.diag.report', 'bgn_test_report', { text = '#bgn.menu.open_page' })
