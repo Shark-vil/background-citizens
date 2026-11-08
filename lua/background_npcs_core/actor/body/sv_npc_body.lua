@@ -22,12 +22,13 @@ local ALERT_STATES = {
 	combat = NPC_STATE_COMBAT,
 }
 
-local CAPABILITIES = CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_AUTO_DOORS + CAP_OPEN_DOORS
-	+ CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN
+local CAPABILITIES = CAP_DUCK + CAP_MOVE_SHOOT + CAP_USE + CAP_TURN_HEAD + CAP_SQUAD + CAP_AIM_GUN
+local DOOR_CAPABILITIES = CAP_AUTO_DOORS + CAP_OPEN_DOORS -- "bgn_npc_open_doors" (actor/events/sv_open_door.lua)
 
 function NPCBody:Init(actor, ent)
 	bgNPC.Body.Init(self, actor, ent)
 	ent:CapabilitiesAdd(CAPABILITIES)
+	if GetConVar('bgn_npc_open_doors'):GetBool() then ent:CapabilitiesAdd(DOOR_CAPABILITIES) end
 end
 
 function NPCBody:IsNPC() return true end

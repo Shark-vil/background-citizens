@@ -18,7 +18,7 @@ On by default. Settings window: **My settings → Experimental**.
   sight farther than `bgn_spawn_radius_visibility` (the real actors' rule), with a fade-in. At the limit a ghost
   behind the player moves into view, so open areas don't look empty.
 - **Looks:** model, skin and bodygroups of real actors you have seen; HL2 citizens until then.
-  Models without a walk animation (vehicles, helicopters) are skipped.
+  Models without a walk or an idle animation (vehicles, helicopters, some custom models) are skipped.
 - **Mood:** taken from the real actors around you once a second. Panic when 20% or more of them are in the
   `danger` or `assault` state group, or retreating (one scared actor matters more than a dozen walkers), or
   when someone wanted is within the ghosts' ring. It lasts 10 s after the last cause; a new panic makes every

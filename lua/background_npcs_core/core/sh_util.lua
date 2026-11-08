@@ -139,6 +139,21 @@ function Util.IsDoorLocked(ent)
 	return true
 end
 
+-- Open or opening. Unknown door type: treated as closed.
+function Util.IsDoorOpen(ent)
+	local state = ent:GetInternalVariable('m_eDoorState') -- prop_door_rotating: 0 closed, 1 opening, 2 open, 3 closing
+	if isnumber(state) then return state == 1 or state == 2 end
+	state = ent:GetInternalVariable('m_toggle_state') -- func_door*: 0 open, 1 closed, 2 opening, 3 closing
+	if isnumber(state) then return state == 0 or state == 2 end
+	return false
+end
+
+-- An actor may open the door: "bgn_npc_open_doors", and "bgn_npc_open_locked_doors" for a locked one.
+function Util.CanActorOpenDoor(ent)
+	if not Util.IsDoor(ent) or not GetConVar('bgn_npc_open_doors'):GetBool() then return false end
+	return not Util.IsDoorLocked(ent) or GetConVar('bgn_npc_open_locked_doors'):GetBool()
+end
+
 -- ---------------------------------------------------------------------------
 -- View
 -- ---------------------------------------------------------------------------

@@ -216,8 +216,9 @@ local function CreateGhost(pos)
 	local ent = ClientsideModel(look.model)
 	if not IsValid(ent) then return end
 
-	-- Vehicles, helicopters and other actors without a walk animation can't be ghosts
-	if ent:SelectWeightedSequence(ACT_WALK) < 0 then
+	-- Vehicles, helicopters and other actors without a walk or idle animation can't be ghosts
+	-- (without idle the ghost stood in its bind pose, and its Think broke on a nil sequence length)
+	if ent:SelectWeightedSequence(ACT_WALK) < 0 or ent:SelectWeightedSequence(ACT_IDLE) < 0 then
 		ent:Remove()
 		ForgetLook(look)
 		return

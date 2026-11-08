@@ -150,7 +150,7 @@ end
 local function FindDoorBetween(start_pos, end_pos)
 	local best, best_dist
 	for _, ent in ipairs(ents.FindInSphere(start_pos, DOOR_SEARCH_RADIUS)) do
-		if bgNPC.Util.IsDoor(ent) and not bgNPC.Util.IsDoorLocked(ent) then
+		if bgNPC.Util.IsDoor(ent) and (bgNPC.Util.IsDoorOpen(ent) or bgNPC.Util.CanActorOpenDoor(ent)) then
 			local dist = ent:GetPos():DistToSqr(end_pos)
 			if not best_dist or dist < best_dist then best, best_dist = ent, dist end
 		end
@@ -159,7 +159,7 @@ local function FindDoorBetween(start_pos, end_pos)
 end
 
 -- A straight-line path used when the provider has no path (or no points).
--- Routes through the nearest unlocked door when a wall is in the way.
+-- Routes through the nearest door actors may pass (open, or allowed to open) when a wall is in the way.
 local function GetPrimitivePath(start_pos, end_pos)
 	local path = {}
 

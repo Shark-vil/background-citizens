@@ -31,6 +31,8 @@ bgNPC.cvar.bgn_arrest_surrender_delay = 10
 bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
+bgNPC.cvar.bgn_npc_open_doors = 1
+bgNPC.cvar.bgn_npc_open_locked_doors = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_cl_disable_halo = 0
 bgNPC.cvar.bgn_disable_halo_wanted = 0
@@ -149,6 +151,10 @@ bgNPC.CVars.Register('bgn_arrest_surrender_delay', bgNPC.cvar.bgn_arrest_surrend
 bgNPC.CVars.Register('bgn_arrest_safe_weapons', bgNPC.cvar.bgn_arrest_safe_weapons, 'Comma-separated weapon classes that do not count as being armed (see bgn_arrest_surrender_delay).')
 
 bgNPC.CVars.Register('bgn_team_damage', bgNPC.cvar.bgn_team_damage, 'Actors of one team damage each other (they still never fight back). 1 - enabled, 0 - disabled.')
+
+bgNPC.CVars.Register('bgn_npc_open_doors', bgNPC.cvar.bgn_npc_open_doors, 'Actors open closed doors on their way. 1 - enabled, 0 - disabled.')
+
+bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
 

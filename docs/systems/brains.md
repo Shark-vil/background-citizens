@@ -8,7 +8,7 @@ Bodies and brains exist on the server only.
 
 `bgn_actor_body auto|npc|nextbot` (default `auto`). On maps with a NavMesh, actors of the HL2 classes
 `npc_citizen`, `npc_metropolice` and `npc_combine_s` spawn as `bgn_nextbot` (NextBot, `NextBotBody`), otherwise
-as HL2 NPCs (`NPCBody`). The NextBot walks with the NavMesh path follower, opens doors, gets unstuck, and
+as HL2 NPCs (`NPCBody`). The NextBot walks with the NavMesh path follower, opens doors (the ones allowed, see navigation.md "Doors"), gets unstuck, and
 shoots or hits with a real HL2 weapon held in its hand (players can't pick it up while the bot is alive; it drops
 the weapon on death, like an HL2 NPC). Shots start at the bot's right hand. The config `weapon_skill` works for
 NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, good ×0.67, very good ×0.33,

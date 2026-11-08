@@ -38,7 +38,6 @@ local LOF_HULL = Vector(10, 10, 10) -- covers the spread of a few shots
 local LOF_STEP_DIST = 120
 local LOF_STEP_PERIOD = 1.5
 local HULL_MINS, HULL_MAXS = Vector(-13, -13, 0), Vector(13, 13, 72)
-local DOOR_CLASSES = { func_door = true, func_door_rotating = true, prop_door_rotating = true }
 
 local DEFAULT_MODELS = {
 	npc_metropolice = { 'models/police.mdl' },
@@ -489,7 +488,9 @@ function ENT:OpenDoorsAhead()
 	local start = self:BGN_EyePos()
 	local tr = util.TraceLine({ start = start, endpos = start + self:GetForward() * 60, filter = self })
 	local door = tr.Entity
-	if IsValid(door) and DOOR_CLASSES[door:GetClass()] then door:Fire('Open') end
+	if not bgNPC.Util.CanActorOpenDoor(door) or bgNPC.Util.IsDoorOpen(door) then return end
+	if bgNPC.Util.IsDoorLocked(door) then door:Fire('Unlock') end
+	door:Fire('Open')
 end
 
 function ENT:HandleStuck(path)
