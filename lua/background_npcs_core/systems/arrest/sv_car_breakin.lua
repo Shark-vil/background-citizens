@@ -15,7 +15,7 @@ local PERIOD = 0.25
 local STILL_TOLERANCE = 64 -- the car may roll this far and still count as standing
 local CALL_RADIUS = 2000   -- officers after the player this close come to break in
 local AT_CAR_RADIUS = 300  -- an officer this close is breaking in
-local GRACE = 1.5          -- officers move: nobody for this long before it starts over
+local GRACE = 1.5          -- officers move: nobody after the player for this long before the wait starts over
 
 -- Officers after the player within radius of pos (fighting them, arresting them or already breaking in)
 local function PoliceAfter(ply, pos, radius)
@@ -28,10 +28,14 @@ local function PoliceAfter(ply, pos, radius)
 	return list
 end
 
-local function SetBreakin(ply, start)
-	if ply.bgn_breakin_start == start then return end
-	ply.bgn_breakin_start = start
-	bgNPC.Net.Send('bgn_car_breakin', ply, start or 0, cvar_time:GetFloat())
+-- The bar on the client: progress (seconds done) and whether it runs now; sent only when that changes.
+-- progress nil hides it.
+local function SetBreakin(ply, progress, running)
+	-- while it runs the client counts on from the sent progress, so only a change of mode is sent
+	local key = progress and (running and 'run' or 'pause') or 'none'
+	if (ply.bgn_breakin_shown or 'none') == key then return end
+	ply.bgn_breakin_shown = key
+	bgNPC.Net.Send('bgn_car_breakin', ply, progress or -1, cvar_time:GetFloat(), running or false)
 end
 
 local function Reset(ply)
@@ -75,7 +79,7 @@ timer.Create('BGN_CarBreakin', PERIOD, 0, function()
 		local still = ply.bgn_still
 
 		if not still or still.car ~= car or still.pos:DistToSqr(pos) > STILL_TOLERANCE * STILL_TOLERANCE then
-			ply.bgn_still = { car = car, pos = pos, since = now, seen = now }
+			ply.bgn_still = { car = car, pos = pos, since = now, seen = now, progress = 0 }
 			SetBreakin(ply, nil)
 			continue
 		end
@@ -84,8 +88,9 @@ timer.Create('BGN_CarBreakin', PERIOD, 0, function()
 		if #police ~= 0 then
 			still.seen = now
 		elseif now - still.seen > GRACE then
-			still.since = now -- nobody after the player: the wait starts again when they come
-			SetBreakin(ply, nil)
+			-- nobody after the player: the wait starts again when they come, a started break-in keeps its progress
+			still.since = now
+			if still.progress > 0 then SetBreakin(ply, still.progress, false) end
 			continue
 		end
 
@@ -107,16 +112,17 @@ timer.Create('BGN_CarBreakin', PERIOD, 0, function()
 			end
 		end
 
+		-- the officer at the car may step away (pushed, a shot to dodge): the bar pauses, it never starts over
 		if at_car then
-			still.at_car = now
-			if not ply.bgn_breakin_start then
-				SetBreakin(ply, now)
-				at_car:Voice('police_seize', 'npc/metropolice/vo/movealong.wav')
-			elseif now - ply.bgn_breakin_start >= cvar_time:GetFloat() then
+			if still.progress == 0 then at_car:Voice('police_seize', 'npc/metropolice/vo/movealong.wav') end
+			still.progress = still.progress + PERIOD
+			if still.progress >= cvar_time:GetFloat() then
 				Arrest(ply, at_car)
+			else
+				SetBreakin(ply, still.progress, true)
 			end
-		elseif ply.bgn_breakin_start and now - (still.at_car or 0) > GRACE then
-			SetBreakin(ply, nil) -- the officer at the car is gone (killed, pushed away): starts over when one comes
+		elseif still.progress > 0 then
+			SetBreakin(ply, still.progress, false)
 		end
 	end
 end)

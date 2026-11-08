@@ -1,6 +1,7 @@
 --[[
 	medic_revive: the medic runs to the body of its call (systems/sv_medics.lua), kneels over it with sounds,
 	brings the actor back, then walks back to its ambulance and drives away (or just goes on walking).
+	The partner of the medic (call.partner) goes too and kneels beside it; only the medic brings the actor back.
 	State data: { call = <medic call> }.
 --]]
 
@@ -9,6 +10,7 @@ local STRAIGHT_DIST_SQR = 300 ^ 2 -- closer than this the body walks straight (t
 local MOVE_PERIOD = 1.5
 local CAR_REACH_DIST_SQR = 200 ^ 2
 local REVIVE_TIME = 6
+local PARTNER_OFFSET = Vector(45, 30, 0) -- the partner kneels beside the medic, not in it
 local GIVE_UP_TIME = 40 -- can't reach the body or the car
 -- first sequence the model has: the HL2 medic heal, kneeling idles as a fallback
 local SEQUENCES = { 'heal', 'Crouch_idleD', 'crouchidle', 'Crouch_idle_pistol' }
@@ -49,6 +51,14 @@ local function ReturnToCar(actor, data)
 		actor.medic_ambulance = nil
 		actor:GetBody():StopMoving()
 		actor:EnterVehicle(car)
+		-- the car drives off once someone is at the wheel: the partner close by gets in together
+		local partner = actor.medic_partner
+		if partner and partner:IsAlive() and not partner:InVehicle() and partner.medic_ambulance == car
+			and partner:GetPos():DistToSqr(car:GetPos()) <= bgNPC.Medics.PARTNER_PULL_DIST_SQR
+		then
+			partner.medic_ambulance = nil
+			partner:EnterVehicle(car)
+		end
 		return false
 	end
 	MoveTo(actor, data, car:GetPos(), false)
@@ -69,7 +79,8 @@ bgNPC.States.Register('medic_revive', 'calm', {
 		local now = CurTime()
 
 		-- closed: revived, expired or the body is gone
-		if not call or call.done or call.closed or call.medic ~= actor or data.give_up < now then
+		local is_medic = call and call.medic == actor
+		if not call or call.done or call.closed or not (is_medic or call.partner == actor) or data.give_up < now then
 			if not data.returning then
 				data.returning = true
 				data.give_up = now + GIVE_UP_TIME -- the way back gets its own time
@@ -81,9 +92,10 @@ bgNPC.States.Register('medic_revive', 'calm', {
 			return
 		end
 
+		local spot = is_medic and call.pos or call.pos + PARTNER_OFFSET
 		if not data.revive_end then
-			if actor:GetPos():DistToSqr(call.pos) > REACH_DIST_SQR then
-				MoveTo(actor, data, call.pos, true)
+			if actor:GetPos():DistToSqr(spot) > REACH_DIST_SQR then
+				MoveTo(actor, data, spot, true)
 				return
 			end
 
@@ -105,7 +117,8 @@ bgNPC.States.Register('medic_revive', 'calm', {
 			actor:GetNPC():EmitSound(bgNPC.Table.Random(WORK_SOUNDS), 70, math.random(95, 105))
 		end
 
-		if now >= data.revive_end then
+		-- the partner kneels on until the medic is done (call.done above)
+		if is_medic and now >= data.revive_end then
 			actor:StopStaticSequence()
 			call.done = true
 			bgNPC.Medics.Revive(call)

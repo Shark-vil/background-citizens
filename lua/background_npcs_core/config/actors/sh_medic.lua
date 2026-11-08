@@ -10,7 +10,7 @@ bgNPC.cfg:SetActor('medic', {
 	inherit = 'citizen',
 	class = 'npc_citizen',
 	name = name,
-	limit = 2,
+	limit = 4, -- two pairs (systems/sv_medics.lua)
 	team = { 'residents', 'medics' },
 	weapons = {},
 	getting_weapon_chance = false,
@@ -24,8 +24,8 @@ bgNPC.cfg:SetActor('medic', {
 	},
 	max_vehicle = 2,
 	enter_to_exist_vehicle_chance = 0,
-	-- npc_dvbgn_police drives to actor.drive_target_pos; no random passengers
-	vehicle_group = 'medics|npc_dvbgn_police|ambulance|0',
+	-- npc_dvbgn_police drives to actor.drive_target_pos; two seats taken: the medic and its partner
+	vehicle_group = 'medics|npc_dvbgn_police|ambulance|2',
 	vehicles = {},
 	vehicles_random_color = false,
 	at_damage = { ['fear'] = 100 },

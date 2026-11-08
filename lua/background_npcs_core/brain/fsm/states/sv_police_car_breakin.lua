@@ -9,6 +9,7 @@ local REACH_SQR = 120 ^ 2
 
 -- back to the fight (the enemies return in stop), or walk; never stay here
 local function Leave(actor, data)
+	data.leaving = true
 	actor:SetState(#data.enemies ~= 0 and 'defense' or 'walk')
 	if actor:HasState('police_car_breakin') then actor:SetState('walk', nil, true) end
 end
@@ -34,6 +35,10 @@ bgNPC.States.Register('police_car_breakin', 'guarded', {
 		actor:AddTarget(ply)
 
 		return state, { target = ply, enemies = enemies }
+	end,
+	-- nothing else pulls it away (a body to inspect, a chat, a random state); forced changes (arrest) still do
+	not_stop = function(actor, state, data)
+		return not data.leaving
 	end,
 	update = function(actor, state, data)
 		local car = TargetCar(data.target)

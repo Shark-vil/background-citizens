@@ -26,7 +26,8 @@ units). The officers then hold fire, get out of their cars and run to it (state 
 are put aside and come back when it stops). Once one is within 300 units the break-in starts (`police_seize` line)
 and takes `bgn_arrest_car_time` seconds: the player sees a bar shrinking from both sides to the middle
 (`cl_car_breakin.lua`, blinking in the last quarter). Driving 64 units away cancels it and the officers fight
-again; nobody at the car for more than 1.5 s restarts the bar. At the end the player is pulled out and arrested
+again. The officers can't be pulled away by anything else (`not_stop`; only forced states such as an arrest);
+an officer stepping away from the car only pauses the bar, it never starts over. At the end the player is pulled out and arrested
 like at the end of an arrest (`BGN_PlayerArrest`, or the fade and `KillSilent`).
 
 ## Second chance

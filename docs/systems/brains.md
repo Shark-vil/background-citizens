@@ -87,7 +87,7 @@ Actors far from players update less often (`bgn_lod_near_radius`); idle unarmed 
 
 ## Medics
 
-Actor type `medic` (`config/actors/sh_medic.lua`, limit 2) is never spawned by the regular spawner. Every actor
+Actor type `medic` (`config/actors/sh_medic.lua`, limit 4: two pairs) is never spawned by the regular spawner. Every actor
 death outside a vehicle is a call (`bgNPC.Medics.calls`, kept 90 s). A free medic takes it, otherwise one is
 spawned near the body, with an ambulance when Decent Vehicle is on and the config has `vehicles`. The ambulance
 drives to the body like a police car on a chase, the medic gets out, kneels over the body for 6 s with voice
@@ -97,6 +97,16 @@ faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the m
 and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
 Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
 Hook: `BGN_ActorRevived(actor, call)`.
+
+- **Pairs:** a medic spawned for a call brings a partner when the limit allows (`medic_partner` on both). It rides
+  in the same ambulance (seats: 2), gets out with the medic, kneels beside the body (`call.partner`) and gets
+  back in with it; a partner within 400 units of the car is pulled in when the medic takes the wheel.
+- **Ambulances:** no new one when a player near the call (3000 units) already has an ambulance around; an empty
+  ambulance there is taken instead.
+- **Attacked:** by a player, the medic reviving keeps reviving (a life first) and its partner fights with fists
+  (state `brawl`); a medic not reviving fights itself. Below 30 % health a medic leaves the call (the partner
+  takes it over) and runs, by its car when one is near (`go_to_police_car`, then `fear`). Attacked by an actor,
+  it runs as before.
 
 ## Police at a body
 
