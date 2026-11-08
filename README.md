@@ -4,7 +4,7 @@
 [![Workshop Subscribers](https://img.shields.io/badge/Workshop-Over_50000_sub.-green.svg)](https://steamcommunity.com/sharedfiles/filedetails/?id=2341497926)
 [![Favorite](https://img.shields.io/badge/Favorite-Over_5000_fav.-1abc9c.svg)](https://steamcommunity.com/sharedfiles/filedetails/?id=2341497926)
 ![Open source](https://img.shields.io/badge/Open_source-yes-brightgreen.svg)
-[![Documentation](https://img.shields.io/badge/Documentation-In_developing-yellow.svg)](https://background-npcs.itpony.ru/wiki)
+[![Documentation](https://img.shields.io/badge/Documentation-EN%20%7C%20RU-blue.svg)](https://shark-vil.github.io/background-citizens/)
 
 ## Requirements
 No other addons are required: since version 2.0 the addon no longer depends on SLibrary.
@@ -38,10 +38,9 @@ The core was rewritten from scratch:
 
 ## Documentation
 ***
-### **Warning**
-The wiki is currently under development and some methods may not be described. When the wiki is complete, this warning will be removed.
+[English documentation](https://shark-vil.github.io/background-citizens/) · [Документация на русском](https://shark-vil.github.io/background-citizens/ru/)
 
-**[Documentation](https://shark-vil.github.io/background-citizens)**
+Installation, settings, map navigation, practical Lua examples and API reference. To preview or validate the site locally, see [Building the docs](docs/contributing.md).
 
 ## Community
 <a href="https://www.patreon.com/shark_vil">

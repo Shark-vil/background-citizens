@@ -1,31 +1,20 @@
-# Editing Actor Configuration
+# Editing existing actors
 
-Sometimes it may be necessary to slightly change the parameters of the actors, rather than create new ones.
-
-To get started, check out this article to understand the steps:
-[Creating Custom NPCs](./Creating-Custom-NPCs.md)
-
-## 1. Follow the steps to create a workspace.
-
-These actions are described in the article on creating your own actors.
-
-## 2. Code preparation.
-
-Paste the following code into the configuration file:
+Create a shared file in `custom_modules/config`, as described in [creating an actor](Creating-Custom-NPCs.md). For scalar fields use:
 
 ```lua
-bgNPC.cfg:EditActor('citizen', {
-	team = { 'player' },
-	at_damage = { ['defense'] = 100 },
-	at_protect = { ['defense'] = 100 }
-})
+bgNPC.cfg:EditActor('citizen', { health = 80, random_skin = true })
 ```
 
-The "*EditActor*" function is very similar to the "*SetActor*", but there is one difference. It does not replace all the data, only the ones you have passed.
+`EditActor` merges data through `table.Merge`, including nested tables. To replace whole model, team or reaction lists, assign a new table directly:
 
-In this example, we changed the following parameters:
+```lua
+-- lua/background_npcs_core/custom_modules/config/sh_mytown_citizens.lua
+local citizen = bgNPC.cfg.actors['citizen']
+citizen.health = 80
+citizen.default_models = false
+citizen.models = { 'models/Humans/Group01/male_07.mdl' }
+citizen.at_random = { walk = 80, idle = 20 }
+```
 
-- team
-- at_damage
-- at_protect
-
+Do not use `SetActor` for a partial edit: it replaces the complete configuration. Reload the map to check changes. Built-in configs live in `lua/background_npcs_core/config/actors/`, for example `sh_citizen.lua`.

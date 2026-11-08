@@ -136,9 +136,9 @@ max_vehicle = 2
 
 ## vehicle_multiply_speed
 - *table*
-- Sets the states in which the movement speed will be multiplied.
+- Speed multiplier by state group.
 ```lua
--- No description yet
+vehicle_multiply_speed = { danger = 4 }
 ```
 
 ## enter_to_exist_vehicle_chance
@@ -217,29 +217,9 @@ vehicles = {
 }
 ```
 
-## at_random_range
-- *number*
-- Changes the ranking limits for choosing a random state value. It is recommended to use it to increase the spread if the calculations from 0 to 100 are not enough for you..
-```lua
--- number
--- Changes randomization settings from "0 -## 100" to "0 -## 120".
-at_random_range = 120
-at_random = {
-	['walk'] = 75,
-	['idle'] = 10,
-	['dialogue'] = 15,
-	['sit_to_chair'] = 10,
-	['random_gesture'] = 10,
-}
-```
+## Legacy range fields
 
-## at_damage_range
-- *number*
-- Similar actions as "*at_random_range*", but only for the field "*at_damage*".
-
-## at_protect_range
-- *number*
-- Similar actions as "*at_random_range*", but only for the field "*at_protect*".
+`at_random_range`, `at_damage_range` and `at_protect_range` are obsolete and unused. State selection uses relative weights from the corresponding tables; they need not sum to 100.
 
 ## at_random
 - *table*
@@ -281,7 +261,7 @@ wanted_level = 3
 - Possibility to turn off Background NPCs state logic. This allows you to spawn NPCs on the map, but not change their original behavior.
 ```lua
 -- NPCs will not use the state system of their Background NPCs
-disable_states = false
+disable_states = true
 ```
 
 ## validator

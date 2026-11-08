@@ -49,3 +49,6 @@ REWRITE_PLAN.md
 
 # Notes on things not understood or not tested (local only)
 NOTES_UNVERIFIED.md
+
+# Documentation build
+site/

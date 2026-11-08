@@ -1,0 +1,40 @@
+# Меню настроек
+
+Откройте `bgn_menu`, значок Background NPCs в меню C или Spawn menu → Options → Background NPCs → Open settings. Ctrl+F ищет по подписям, подсказкам и именам cvar; Esc очищает поиск.
+
+Серверные разделы видны администраторам. «Мои настройки» действуют на текущем компьютере. Светлая и тёмная тема переключаются кнопкой солнца/луны или `bgn_menu_dark`; звуки — `bgn_menu_sounds`.
+
+## Язык
+
+`bgn_cl_ui_language`: `auto`, `english`, `russian`. Язык голоса выбирается отдельно через `bgn_cl_voice_language`; см. [голоса](voices.md). Выбор языка сайта не влияет на игру.
+
+## Первый запуск
+
+Сначала появляется выбор Classic / New, затем мастер. Classic задаёт тело `npc`, мозг `fsm`, отключает призраков и оставляет звуки Half-Life 2. New задаёт `auto` для тела и мозга, включает призраков и озвучку. Серверная часть пресета применяется только администратором.
+
+| Команда | Действие |
+| --- | --- |
+| `bgn_mode_welcome` | Открыть выбор режима |
+| `bgn_wizard` | Мастер текущего режима |
+| `bgn_wizard all` | Все шаги, включая расширенные |
+| `bgn_mode_chosen 0` | Повторить первый запуск на следующей карте |
+
+Изменения мастера применяются сразу. В одиночной игре `bgn_crowd_density low|medium|high|ultra` задаёт общий лимит акторов и призраков: 15/0, 35/40, 60/80, 100/150.
+
+## Своя страница
+
+Клиентский файл `custom_modules/postload/cl_mytown_menu.lua`:
+
+```lua
+CreateClientConVar('mytown_hints', '1', true, false)
+bgNPC.Menu.AddPage('mytown', {
+    title = { en = 'My town', ru = 'Мой город' },
+    order = 1300,
+    build = function(page)
+        page:Section('Подсказки')
+        page:Toggle('mytown_hints', 'Показывать подсказки')
+    end,
+})
+```
+
+Другие элементы: `page:Slider`, `Choice`, `Button`, `Color`, `Note`. Поиск вызывает построение всех страниц; учитывайте `page.filter` для дорогих операций.

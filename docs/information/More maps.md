@@ -1,6 +1,6 @@
 # Default & Unofficial maps
 
-**I have no plans to add support for a large number of cards, but you or others can do it yourself without much difficulty.**
+Maps can use a NavMesh, an HL2 nodegraph or custom addon routes. Try `bgn_nav_info` first; a separate map pack is not always needed. See [navigation](../systems/navigation.md). The links below are historical map and community-pack examples, not a compatibility guarantee for every version.
 
 ## Maps on which you can check the addon:
 - gm_construct

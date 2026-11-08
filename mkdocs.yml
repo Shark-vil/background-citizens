@@ -1,22 +1,96 @@
 site_name: Background NPCs
 repo_url: https://github.com/Shark-vil/background-citizens
 site_author: Shark_vil
+site_description: Setup, practical examples and Lua API for Background NPCs
 site_url: https://shark-vil.github.io/background-citizens
 theme:
   name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
   features:
-    - navigation.instant
+    # Full page navigation keeps the i18n language switcher on the current page.
     - navigation.expand
     - navigation.tracking
     - navigation.sections
-    - navigation.indexes
     - toc.integrate
     - navigation.tabs
     - navigation.tabs.sticky
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
 use_directory_urls: false
 plugins:
   - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: ru
+          name: Русский
+          build: true
+          nav_translations:
+            Home: Главная
+            Guide: Руководство
+            Quick start: Быстрый старт
+            Examples: Примеры
+            Troubleshooting: Решение проблем
+            Custom actors: Свои акторы
+            Edit actors: Изменение акторов
+            Actor settings: Параметры акторов
+            Maps: Карты
+            Systems: Системы
+            Navigation: Навигация
+            Brains: Поведение
+            Settings menu: Меню настроек
+            Ghost crowd: Фоновая толпа
+            Conversations: Разговоры
+            Arrest: Арест
+            Voices: Голоса
+            Reference: Справочник
+            Actor API: API актора
+            Building the docs: Сборка документации
+nav:
+  - Home: index.md
+  - Guide:
+      - Quick start: getting-started.md
+      - Examples: examples.md
+      - Troubleshooting: troubleshooting.md
+      - Custom actors: tutorials/Creating-Custom-NPCs.md
+      - Edit actors: tutorials/Modification-of-Existing-NPCs.md
+      - Actor settings: tutorials/Actor-Config-Settings.md
+      - Maps: information/More maps.md
+  - Systems:
+      - Navigation: systems/navigation.md
+      - Brains: systems/brains.md
+      - Settings menu: systems/menu.md
+      - Ghost crowd: systems/ghost-crowd.md
+      - Conversations: systems/conversations.md
+      - Arrest: systems/arrest.md
+      - Voices: systems/voices.md
+  - Reference:
+      - Actor API: classes/actor/index.md
+      - Building the docs: contributing.md
 markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
   - meta
   - pymdownx.highlight
   - pymdownx.superfences
