@@ -35,7 +35,7 @@ bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
-bgNPC.cvar.bgn_corpse_cleanup = 1
+bgNPC.cvar.bgn_corpse_cleanup = 0
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
 bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
@@ -99,7 +99,7 @@ CreateConVar('bgn_installed', 1, {
 	FCVAR_SERVER_CAN_EXECUTE
 }, '')
 
-bgNPC.CVars.Register('bgn_enable', bgNPC.cvar.bgn_enable, 'Toggles the modification activity. 1 - enabled, 0 - disabled.')
+bgNPC.CVars.Register('bgn_enable', bgNPC.cvar.bgn_enable, 'Toggles the modification activity. 1 - enabled, 0 - disabled (default). While disabled, npc_battle_cleanup handles the bodies itself.')
 
 bgNPC.CVars.Register('bgn_agressive_mode', bgNPC.cvar.bgn_agressive_mode, 'All actors will be hostile towards you.')
 

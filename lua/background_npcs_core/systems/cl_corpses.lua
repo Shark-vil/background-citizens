@@ -46,7 +46,8 @@ hook.Add('InitPostEntity', 'BGN_Corpses_NBC', function()
 		local remove = NBC and NBC.RemoveClientsideCorpse
 		if not isfunction(remove) then return end
 		function NBC.RemoveClientsideCorpse(owner, corpse)
-			if IsValid(owner) and owner:GetNW2Bool('bgn_actor') then return end
+			local cvar = GetConVar('bgn_corpse_cleanup')
+			if cvar and cvar:GetBool() and IsValid(owner) and owner:GetNW2Bool('bgn_actor') then return end
 			return remove(owner, corpse)
 		end
 	end)

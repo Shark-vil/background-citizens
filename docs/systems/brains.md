@@ -145,7 +145,7 @@ and go on after 12-25 s. A gunshot scares them like any calm actor; two of them 
 
 | Cvar (server) | Default | Meaning |
 |---|---|---|
-| `bgn_corpse_cleanup` | `1` | the bodies of dead actors (NPC and NextBot) fade out |
+| `bgn_corpse_cleanup` | `0` | the bodies of dead actors (NPC and NextBot) fade out (off by default) |
 | `bgn_corpse_cleanup_time` | `60` | seconds after the death |
 
 A body a medic is assigned to, or an officer is inspecting, waits until they are done (both end on their own:
@@ -153,7 +153,7 @@ the call after 90 s, the inspection after its give-up time). Server ragdolls fad
 on every client. [npc_battle_cleanup](https://steamcommunity.com/sharedfiles/filedetails/?id=2120936972) would
 remove a body in seconds, before a medic or an officer gets to it, so the actors' bodies are left to this
 setting: server ragdolls get its `doNotRemove` flag, its client-side corpse cleanup skips them.
-With `bgn_corpse_cleanup 0` the bodies stay until the engine's own ragdoll limits remove them.
+With `bgn_corpse_cleanup 0` (the default) the flag is not set and npc_battle_cleanup, if installed, removes the bodies as usual; without it they stay until the engine's own ragdoll limits remove them.
 
 ## Cars
 

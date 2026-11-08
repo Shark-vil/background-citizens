@@ -3,7 +3,7 @@
 	the death (bgn_corpse_cleanup). A body a medic is coming for or an officer is inspecting waits for them:
 	the medic call and the inspection end on their own (systems/sv_medics.lua, states/sv_police_inspect_body.lua).
 	Server ragdolls fade here, client ragdolls on every client (systems/cl_corpses.lua).
-	npc_battle_cleanup leaves the actors' bodies alone (doNotRemove here, client side in cl_corpses.lua).
+	with the cleanup on, npc_battle_cleanup leaves the actors' bodies alone (doNotRemove here, client side in cl_corpses.lua).
 --]]
 
 local cvar_enabled = GetConVar('bgn_corpse_cleanup')
@@ -35,7 +35,7 @@ end)
 hook.Add('CreateEntityRagdoll', 'BGN_Corpses', function(owner, ragdoll)
 	local body = Find(owner)
 	if not body then return end
-	ragdoll.doNotRemove = true -- npc_battle_cleanup
+	if cvar_enabled:GetBool() then ragdoll.doNotRemove = true end -- npc_battle_cleanup: only while our cleanup runs
 	body.ragdoll = ragdoll
 end)
 
