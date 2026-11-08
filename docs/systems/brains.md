@@ -133,6 +133,13 @@ walks to the body, crouches over it, reports it on the radio (`police_body_repor
 (`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
 calm down; a body revived by a medic is dropped.
 
+## Onlookers
+
+Every actor death outside a vehicle is also an incident for 45 s (`brain/fsm/states/sv_watch_incident.lua`).
+From 5 s after it, calm civilians walking or idling within 1500 units come one by one (35% per 2 s check, up to 4):
+they stand 150-280 units from the spot on their side, stare (`LineIdle*`), half of them say a `watch_incident` line,
+and go on after 12-25 s. A gunshot scares them like any calm actor; two of them may start a conversation.
+
 ## Bodies
 
 `systems/sv_corpses.lua`, `systems/cl_corpses.lua`. Settings window: **Behavior > Bodies**.

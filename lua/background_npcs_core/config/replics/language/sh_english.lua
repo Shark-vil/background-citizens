@@ -168,6 +168,15 @@ bgNPC.cfg.replics['police_backup'] = {
 	'Ten thirty-three, armed suspect at my location!',
 }
 
+bgNPC.cfg.replics['watch_incident'] = {
+	'Oh my god, is he dead?',
+	'Somebody call an ambulance!',
+	'What happened here?',
+	'I cannot look at this...',
+	'Did anyone see who did it?',
+	'Get back, give them some space!',
+}
+
 bgNPC.cfg.replics['give_up'] = {
 	'Okay, okay! I give up!',
 	'Do not shoot! I surrender!',
