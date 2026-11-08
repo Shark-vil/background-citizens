@@ -12,7 +12,8 @@ local REVIVE_TIME = 6
 local GIVE_UP_TIME = 40 -- can't reach the body or the car
 -- first sequence the model has: the HL2 medic heal, kneeling idles as a fallback
 local SEQUENCES = { 'heal', 'Crouch_idleD', 'crouchidle', 'Crouch_idle_pistol' }
-local WORK_SOUNDS = { 'items/medshot4.wav', 'items/medcharge4.wav', 'items/smallmedkit1.wav' }
+-- one-shot sounds only: a looping one (items/medcharge4.wav) keeps playing after the revive or the medic's death
+local WORK_SOUNDS = { 'items/medshot4.wav', 'items/smallmedkit1.wav' }
 
 local function Voice(actor, line)
 	local folder = string.find(actor:GetNPC():GetModel(), 'female', 1, true) and 'female01' or 'male01'

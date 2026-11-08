@@ -198,7 +198,8 @@ function bgNPC:NPCIsStuck(npc, position)
 	local entities = ents.FindInBox(min_vector, max_vector)
 	for i = 1, #entities do
 		local ent = entities[i]
-		if ent ~= npc and not IsValidSpawnFilter(ent) or ent:IsWorld() then
+		-- a removed entity (the revived actor's ragdoll) stays until the end of the tick
+		if ent ~= npc and not ent:IsMarkedForDeletion() and not IsValidSpawnFilter(ent) or ent:IsWorld() then
 			return true
 		end
 	end

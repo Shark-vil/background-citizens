@@ -17,6 +17,10 @@ local STOPPED_EXIT_TIME = 5 -- an ambulance standing this long gets out even far
 local STOPPED_SPEED = 50
 local MEDIC_TYPE = 'medic'
 local BODY_GONE_DIST_SQR = 200 ^ 2
+local REVIVE_OFFSETS = {
+	Vector(0, 0, 8), Vector(40, 0, 8), Vector(-40, 0, 8), Vector(0, 40, 8), Vector(0, -40, 8),
+	Vector(60, 60, 8), Vector(-60, -60, 8), Vector(60, -60, 8), Vector(-60, 60, 8),
+}
 
 local calls = {}
 Medics.calls = calls
@@ -48,6 +52,13 @@ hook.Add('BGN_AddActorEnemy', 'BGN_Medics_OnlyAttackers', function(actor, ent)
 	if actor:GetType() == MEDIC_TYPE and not (actor.medic_attackers and actor.medic_attackers[ent]) then return true end
 end)
 
+-- npc_citizen picks its own model by citizentype on spawn; "unique" (4) keeps the medic model given before it.
+hook.Add('BGN_PreSpawnActor', 'BGN_Medics_Model', function(npc, npc_type, data)
+	if npc_type ~= MEDIC_TYPE or not istable(data.models) or #data.models == 0 then return end
+	npc:SetKeyValue('citizentype', 4)
+	npc:SetModel(data.models[math.random(#data.models)])
+end)
+
 -- A server-side ragdoll (ai_serverragdolls 1) is removed on revive.
 hook.Add('CreateEntityRagdoll', 'BGN_Medics_Ragdoll', function(owner, ragdoll)
 	for i = #calls, 1, -1 do
@@ -64,12 +75,17 @@ bgNPC.Net.Receive('bgn.medic_body_gone', function(_, pos)
 	end
 end)
 
--- Brings the dead actor back: a new actor of the same type with the same look on the body's place.
+-- Brings the dead actor back: a new actor of the same type with the same look on the body's place,
+-- or next to it when the place is taken (a car, another actor). The body stays when nowhere fits.
 function Medics.Revive(call)
 	if IsValid(call.ragdoll) then call.ragdoll:Remove() end
-	bgNPC.Net.Send('bgn.medic_revived', nil, call.pos) -- removes the client-side ragdoll
-	local actor = bgNPC:SpawnActor(call.type, call.pos + Vector(0, 0, 8))
+	local actor
+	for _, offset in ipairs(REVIVE_OFFSETS) do
+		actor = bgNPC:SpawnActor(call.type, call.pos + offset)
+		if actor then break end
+	end
 	if not actor then return end
+	bgNPC.Net.Send('bgn.medic_revived', nil, call.pos) -- removes the client-side ragdoll
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 	npc:SetModel(call.model)
