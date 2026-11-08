@@ -613,13 +613,15 @@ function Menu.Open(page_id)
 			if active then
 				draw.RoundedBox(r, 0, 0, w, h, C.nav_active)
 				draw.RoundedBox(2, 0, h * 0.25, math.Round(3 * s), h * 0.5, C.accent)
-			elseif self.hover > 0.01 then
-				draw.RoundedBox(r, 0, 0, w, h, Menu.Fade(C.hover, self.hover))
+			else
+				-- def.highlight: a faint accent tint and icon, so the page stands out a little
+				if def.highlight then draw.RoundedBox(r, 0, 0, w, h, Menu.Fade(C.accent, 0.1)) end
+				if self.hover > 0.01 then draw.RoundedBox(r, 0, 0, w, h, Menu.Fade(C.hover, self.hover)) end
 			end
 			local icon = math.Round(18 * s)
 			local x = math.Round(14 * s)
 			if def.icon then
-				Menu.Icon(def.icon, x, (h - icon) / 2, icon, active and C.accent or C.muted)
+				Menu.Icon(def.icon, x, (h - icon) / 2, icon, (active or def.highlight) and C.accent or C.muted)
 				x = x + icon + math.Round(12 * s)
 			end
 			draw.SimpleText(Menu.Text(def.title), 'BGN.Menu.Nav', x, h / 2, active and C.text or Menu.LerpColor(self.hover, C.muted, C.text), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)

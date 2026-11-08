@@ -49,3 +49,11 @@ Common options: `help` (a `'#key'` label uses `'#key.help'` when it exists), `se
 
 Other API: `bgNPC.Menu.Open(page)`, `ShowPage(page)`, `Close()`, `IsOpen()`, `RemovePage(id)`, `Confirm(text, on_yes, danger)`,
 `Dialog(width, build)`, `Sound(name)`, `colors` (the current palette), `Builder` (add your own control methods).
+
+## Other works
+
+The last page (`other_works`, `order = math.huge`, `highlight = true` tints it in the sidebar) shows a random
+page of the author's Workshop items: preview, title, short description, Subscribe (`steamworks.Subscribe`).
+The page count is read from the first page. Previews are cached in `data/bgn_workshop/<id>.jpg|png`;
+GIF previews are skipped. A failed load is not retried until the next map, the page says it couldn't load.
+Any page can use `highlight = true`.
