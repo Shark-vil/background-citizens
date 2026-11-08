@@ -42,12 +42,27 @@ when the actor has none. Reactions to damage and threats are random picks from `
 Used while the actor has enemies; without enemies it behaves like the FSM brain.
 
 - **Facts** are measured by sensors once per second (and right after damage or a new enemy):
-  `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `police_called`, `wanted`.
-- **Actions** run existing states: `attack` → `defense`, `flee` → `fear`, `call_police` → `calling_police`,
-  `hide` → `retreat` (wanted actors only).
+  `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `enemy_police`, `police_called`,
+  `wanted`, `in_cover`, `backup_called`, `surrendered`.
+- **Actions** run states: `attack` → `defense`, `flee` → `fear`, `call_police` → `calling_police`,
+  `hide` → `retreat` (wanted actors only), `take_cover` → `take_cover`, `call_backup` → `call_backup`,
+  `surrender` → `arrest_surrender`.
   An actor can only use actions whose state appears in its `at_damage` / `at_protect` config with a weight
-  above zero, except actions registered with `always = true` (`hide`). `call_police` is a trait: each actor gets it once with its config share (20 of 100 → 20%).
+  above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`).
+  A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%), `surrender`
+  with its `chance` (50%).
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
+  An action that fails (its state ends or redirects on its own) is blocked for 5 s, then the plan is made again.
+- **Chains.** Fighting an armed enemy costs more out of cover, and for the police without backup, so the plans are
+  `take_cover → attack` and, for the police, `call_backup → take_cover → attack`:
+  - `take_cover`: runs to the nearest nav point within 1000 units the enemy can't see at crouch height
+    (`bgNPC.FindCover`), crouches 3 s, then fights 10 s (`in_cover`) before the next cover. No cover found: it
+    fights.
+  - `call_backup`: the officer calls on the radio (`police_backup`); up to 3 free officers on foot within 4000
+    units take the enemy and come. Once per officer per minute.
+  - `surrender`: a hurt gangster (`low_health`) facing the police gives up (goal `give_up`, above hiding) when an
+    officer within 700 units sees it and `bgn_arrest_mode` is on: it says `give_up`, the officer arrests it
+    (`systems/arrest`). The plan never interrupts `arrest_surrender`.
 - Arrests are not planned: the arrest system (`systems/arrest`, `ArrestModule:CanArrest`) owns them, and it
   only works on police without enemies.
 - **Goals** (`eliminate`, `survive`, `report`, `hide`) get a priority from the actor's **set**: `police`,
@@ -62,11 +77,13 @@ Debug: `bgn_goap_debug` prints the set, goal, plan and facts of the actor you lo
 ### Extending
 
 ```lua
-bgNPC.GOAP.RegisterAction('take_cover', {
+bgNPC.GOAP.RegisterAction('duck', {
 	state = 'retreat',                      -- a registered state that performs the action
 	pre = { has_enemy = true, enemy_armed = true },
 	effects = { safe = true },
 	cost = function(ws) return 1 end,       -- number or function(world_state)
+	-- optional: always = true (no config weight needed), trait = true + chance = 0.3 (rolled once per actor),
+	-- prepare = function(actor) return true end (sets up before the state starts; false blocks the action)
 })
 bgNPC.GOAP.sensors.my_fact = function(actor, npc, enemy) return ... end
 bgNPC.GOAP.RegisterSet('my_set', { survive = function(ws) return 10 end })

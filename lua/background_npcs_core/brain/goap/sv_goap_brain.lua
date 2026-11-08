@@ -18,6 +18,8 @@ local PickWeighted = bgNPC.Actor.Helpers.PickWeighted
 
 local SENSE_PERIOD = 1
 local BLOCK_TIME = 5
+-- states the plan never interrupts: a surrendering actor keeps its enemies until the arrest ends
+local HOLD_STATES = { arrest_surrender = true }
 
 local GOAPBrain = bgNPC.Class('BGN_GOAPBrain', FSMBrain)
 bgNPC.GOAPBrain = GOAPBrain
@@ -85,6 +87,7 @@ end
 
 function GOAPBrain:Block(action)
 	self.blocked[action.name] = CurTime() + BLOCK_TIME
+	self.replan_at = CurTime() + BLOCK_TIME -- the plan made without the action is replaced once it is free again
 	self:ResetPlan()
 end
 
@@ -96,7 +99,14 @@ function GOAPBrain:Update()
 		return FSMBrain.Update(self)
 	end
 
+	if HOLD_STATES[actor:GetState()] then return FSMBrain.Update(self) end
+
 	self:Sense()
+
+	if self.replan_at and self.replan_at <= CurTime() then
+		self.replan_at = nil
+		self:ResetPlan()
+	end
 
 	if not self.plan then
 		self.plan, self.goal = self:MakePlan(self.ws)
@@ -116,7 +126,7 @@ function GOAPBrain:Update()
 			-- the state ended or redirected on its own
 			self:Block(action)
 		elseif not action:Runs(state) then
-			actor:SetState(action.state)
+			if not action.prepare or action.prepare(actor) then actor:SetState(action.state) end
 			if action:Runs(actor:GetState()) then
 				self.entered = action
 			else
@@ -137,8 +147,9 @@ function GOAPBrain:PickReaction(reactions, enemy)
 
 	-- The enemy is added right after the reaction is picked, so plan as if it already exists.
 	local ws = bit.bor(GOAP.Sense(self.actor, enemy), GOAP.Fact('has_enemy'))
-	local plan = self:MakePlan(ws)
-	return plan and plan[1].state or roll
+	local first = (self:MakePlan(ws) or {})[1]
+	if not first or (first.prepare and not first.prepare(self.actor)) then return roll end
+	return first.state
 end
 
 function GOAPBrain:OnEvent(name)

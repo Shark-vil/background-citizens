@@ -94,10 +94,12 @@ function Action:Init(name, def)
 	self.name = name
 	self.state = def.state
 	-- states the FSM state may move on to while still doing the action (fear -> run_from_danger, ...)
-	self.states = { [def.state] = true }
+	self.states = def.state and { [def.state] = true } or {}
 	for _, state in ipairs(def.also or {}) do self.states[state] = true end
 	self.trait = def.trait
 	self.always = def.always -- allowed without a config weight
+	self.chance = def.chance -- share of actors that get a trait action without a config weight
+	self.prepare = def.prepare -- function(actor) -> boolean, sets up the state before it starts
 	self.pre_mask, self.pre_value = GOAP.Condition(def.pre)
 	self.effect_mask, self.effect_value = GOAP.Condition(def.effects)
 	self.cost = def.cost or 1

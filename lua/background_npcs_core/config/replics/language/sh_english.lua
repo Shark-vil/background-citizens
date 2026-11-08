@@ -161,6 +161,20 @@ bgNPC.cfg.replics['police_body_notes'] = {
 	'Logging the incident. Case number to follow.',
 }
 
+bgNPC.cfg.replics['police_backup'] = {
+	'Officer needs assistance, shots fired!',
+	'Dispatch, armed suspect, requesting backup now!',
+	'All units, I am under fire, send backup!',
+	'Ten thirty-three, armed suspect at my location!',
+}
+
+bgNPC.cfg.replics['give_up'] = {
+	'Okay, okay! I give up!',
+	'Do not shoot! I surrender!',
+	'Alright, you got me!',
+	'I am done, I am done! Hands up!',
+}
+
 bgNPC.cfg.replics['police_luggage_1'] = {
 	'Move along.',
 	'Hey! Keep moving.',

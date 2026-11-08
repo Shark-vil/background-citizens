@@ -41,6 +41,13 @@ GOAP.sensors = {
 	end,
 	enemy_armed = function(actor, npc, enemy) return IsValid(enemy) and IsArmedEntity(enemy) end,
 	wanted = function(actor) return actor:IsWanted() end,
+	in_cover = function(actor) return (actor.cover_until or 0) > CurTime() end, -- set by take_cover
+	backup_called = function(actor) return (actor.backup_until or 0) > CurTime() end, -- set by call_backup
+	enemy_police = function(actor, npc, enemy)
+		local enemy_actor = IsValid(enemy) and bgNPC.Actors.Get(enemy)
+		return enemy_actor and enemy_actor:HasTeam('police') or false
+	end,
+	surrendered = function(actor) return actor:HasState('arrest_surrender') end,
 	police_called = function(actor, npc, enemy)
 		wanted = wanted or bgNPC.Modules.Get('wanted')
 		return IsValid(enemy) and wanted ~= nil and wanted:HasWanted(enemy)
@@ -82,7 +89,11 @@ GOAP.RegisterAction('attack', {
 	cost = function(ws)
 		local cost = 2
 		if Has(ws, 'low_health') then cost = cost + 4 end
-		if Has(ws, 'enemy_armed') and not Has(ws, 'is_police') then cost = cost + 2 end
+		-- an armed enemy is cheaper to fight from cover, and for the police with backup on the way
+		if Has(ws, 'enemy_armed') then
+			if not Has(ws, 'in_cover') then cost = cost + 3 end
+			if Has(ws, 'is_police') and not Has(ws, 'backup_called') then cost = cost + 2 end
+		end
 		return cost
 	end,
 })
@@ -104,6 +115,56 @@ GOAP.RegisterAction('hide', {
 	cost = 1,
 })
 
+-- attack chains: [call_backup ->] take_cover -> attack against an armed enemy (see the attack cost)
+GOAP.RegisterAction('take_cover', {
+	state = 'take_cover',
+	always = true,
+	pre = { has_enemy = true, armed = true, enemy_armed = true, in_cover = false },
+	effects = { in_cover = true },
+	cost = 2,
+})
+
+GOAP.RegisterAction('call_backup', {
+	state = 'call_backup',
+	always = true,
+	pre = { has_enemy = true, is_police = true, enemy_armed = true, backup_called = false, in_cover = false },
+	effects = { backup_called = true },
+	cost = 1,
+})
+
+-- A hurt gangster facing the police may give up (systems/arrest): it surrenders and the officer arrests it.
+local ArrestModule
+GOAP.RegisterAction('surrender', {
+	state = 'arrest_surrender',
+	trait = true,
+	chance = 0.5, -- half of the actors with this set ever give up
+	pre = { has_enemy = true, enemy_police = true, low_health = true, is_police = false },
+	effects = { surrendered = true },
+	cost = 1,
+	prepare = function(actor)
+		ArrestModule = ArrestModule or bgNPC.Modules.Get('player_arrest')
+		if not ArrestModule or not GetConVar('bgn_arrest_mode'):GetBool() then return false end
+		local npc = actor:GetNPC()
+		local police = ArrestModule:FoundPoliceInRadius(npc)
+		if not police or police:InVehicle() then return false end
+
+		if ArrestModule:HasTarget(npc) then
+			ArrestModule:GetTarget(npc).policeActor = police
+			ArrestModule:UpdateArrest(npc)
+		else
+			ArrestModule:AddTarget(npc, police)
+		end
+		-- the surrender first: the arrest state shoots a target that isn't giving up
+		actor:AddTarget(police:GetNPC())
+		actor:SetState('arrest_surrender', nil, true)
+		actor:Voice('give_up')
+		police:RemoveAllTargets()
+		police:AddTarget(npc)
+		police:SetState('arrest', nil, true)
+		return true
+	end,
+})
+
 GOAP.RegisterAction('call_police', {
 	state = 'calling_police',
 	trait = true, -- only some actors make the call, see GOAP.ActionsFor
@@ -121,6 +182,7 @@ GOAP.goals = {
 	survive = GOAP.Goal('survive', { want = { safe = true } }),
 	report = GOAP.Goal('report', { want = { police_called = true } }),
 	hide = GOAP.Goal('hide', { want = { hidden = true } }),
+	give_up = GOAP.Goal('give_up', { want = { surrendered = true } }),
 }
 
 local function HideWhenWanted(ws) return Has(ws, 'wanted') and 20 or 0 end
@@ -141,6 +203,8 @@ GOAP.RegisterSet('gangster', {
 	eliminate = function() return 6 end,
 	survive = function(ws) return Has(ws, 'low_health') and 8 or 2 end,
 	hide = HideWhenWanted,
+	-- above hiding: the police chase a wanted gangster, and a hurt one may stop running
+	give_up = function(ws) return Has(ws, 'low_health') and Has(ws, 'enemy_police') and 25 or 0 end,
 })
 
 GOAP.RegisterSet('citizen', {
@@ -186,7 +250,7 @@ function GOAP.ActionsFor(actor)
 	-- so the config weight still limits how many actors do it.
 	local list = {}
 	for _, action in SortedPairs(GOAP.actions) do
-		local chance = action.always and 1 or share[action.state]
+		local chance = action.chance or (action.always and 1) or share[action.state]
 		if chance and (not action.trait or math.random() < chance) then list[#list + 1] = action end
 	end
 	return list
@@ -215,9 +279,25 @@ bgNPC.Test.Add('goap.sets', function(check)
 
 	check(GOAP.actions.flee:Runs('run_from_danger'), 'running from danger is still fleeing')
 
+	local A = GOAP.actions
+	local fight = { A.attack, A.take_cover, A.call_backup }
+	ws = bit.bor(F('has_enemy'), F('armed'), F('enemy_armed'), F('is_police'))
+	plan = GOAP.Plan(ws, GOAP.goals.eliminate, fight)
+	check(plan and #plan == 3 and plan[1] == A.call_backup and plan[2] == A.take_cover and plan[3] == A.attack,
+		'police vs an armed enemy: backup, cover, attack')
+	plan = GOAP.Plan(bit.bor(ws, F('backup_called'), F('in_cover')), GOAP.goals.eliminate, fight)
+	check(plan and #plan == 1 and plan[1] == A.attack, 'in cover with backup: attack')
+	plan = GOAP.Plan(bit.bor(F('has_enemy'), F('armed')), GOAP.goals.eliminate, fight)
+	check(plan and #plan == 1 and plan[1] == A.attack, 'unarmed enemy: attack right away')
+
 	ws = bit.bor(F('has_enemy'), F('armed'), F('wanted'))
 	local gangster = GOAP.sets.gangster
 	check(gangster.hide(ws) > gangster.eliminate(ws), 'a wanted gangster hides first')
 	plan = GOAP.Plan(ws, GOAP.goals.hide, { GOAP.actions.attack, GOAP.actions.hide })
 	check(plan and plan[1] == GOAP.actions.hide, 'hiding runs retreat')
+
+	ws = bit.bor(F('has_enemy'), F('armed'), F('wanted'), F('low_health'), F('enemy_police'))
+	check(gangster.give_up(ws) > gangster.hide(ws), 'a hurt gangster facing the police gives up before hiding')
+	plan = GOAP.Plan(ws, GOAP.goals.give_up, { A.attack, A.hide, A.surrender })
+	check(plan and #plan == 1 and plan[1] == A.surrender, 'giving up runs the surrender')
 end)
