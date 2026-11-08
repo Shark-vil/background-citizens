@@ -119,6 +119,17 @@ function Config.Reset()
 	Config.ClearCache()
 end
 
+-- The wanted level that summons the type, or nil when the wanted system can't reach it (wanted mode off, or
+-- level growth off and the level is above 1): then the type spawns like any other actor.
+function Config.GetWantedLevel(data)
+	local level = data and data.wanted_level
+	if not level then return end
+	local mode, growth = Util.GetCVar('bgn_enable_wanted_mode'), Util.GetCVar('bgn_wanted_level')
+	if not (mode and mode:GetBool()) then return end
+	if level > 1 and not (growth and growth:GetBool()) then return end
+	return level
+end
+
 -- Is the actor type enabled by its "bgn_npc_type_<type>" console variable.
 function Config.IsTypeActive(actor_type)
 	Assert.Arg(1, actor_type, 'string', 'bgNPC.Config.IsTypeActive')

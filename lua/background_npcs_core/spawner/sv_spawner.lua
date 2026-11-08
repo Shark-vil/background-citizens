@@ -61,10 +61,11 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 			return false
 		end
 
-		if bgNPC.Vision.PlayerCanSeePos(ply, node_position) then
-			if ply_pos:DistToSqr(node_position) <= radius_visibility_sqrt then
-				return false
-			end
+		local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
+		if in_view and distance <= radius_visibility_sqrt then return false end
+
+		-- close spots behind the player need cover too: one turn of the head and the actor stood right there
+		if in_view or distance <= radius_visibility_sqrt then
 			if not util.IsInWorld(node_position) then return false end
 
 			-- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
@@ -107,7 +108,7 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 		if is_async then AsyncYield() end
 	elseif bgNPC.Points.Count() == 0 then
 		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
-		radius_visibility = math.Clamp(block_radius, 0, 1000)
+		radius_visibility = math.Clamp(radius_visibility, 0, 1000)
 		block_radius = math.Clamp(block_radius, 0, 600)
 		spawn_radius_sqrt = spawn_radius ^ 2
 		radius_visibility_sqrt = radius_visibility ^ 2
@@ -197,6 +198,11 @@ function bgNPC:NPCIsStuck(npc, position)
 	end
 
 	return false
+end
+
+-- re-check right before spawning: the async search yields for many ticks and the player turns meanwhile
+function bgNPC:IsHiddenSpawnPosition(pos, target)
+	return IsNotBlockSpawnPosition(pos, player.GetHumans(), target)
 end
 
 function bgNPC:FindSpawnPosition(settings, is_async)

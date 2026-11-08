@@ -105,6 +105,11 @@ end
 
 -- Returns the driver when the attacker is a vehicle, nil if nobody drives it.
 function Combat.ResolveVehicleAttacker(attacker)
+	-- an actor's Decent Vehicle car (or its AI): the driving actor, so the team rules apply to its hits
+	local provider = BGN_VEHICLE and IsValid(attacker) and BGN_VEHICLE:GetVehicleProvider(attacker)
+	local driver = provider and provider:GetDriver()
+	if driver and IsValid(driver:GetNPC()) then return driver:GetNPC() end
+
 	if IsValid(attacker) and attacker:IsVehicle() then
 		attacker = attacker:GetDriver()
 		if not IsValid(attacker) then return end

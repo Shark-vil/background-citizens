@@ -61,9 +61,18 @@ local WEAPONS = {
 }
 local DEFAULT_WEAPON = WEAPONS.weapon_pistol
 
--- Spread multiplier per WEAPON_PROFICIENCY_* (0 poor .. 4 perfect): the HL2 NPC cone scales 7 / 5 / 3.3 / 1.7 / 1,
--- relative to average, which the WEAPONS spreads are tuned for.
-local PROFICIENCY_SPREAD = { [0] = 1.4, 1, 0.67, 0.33, 0.2 }
+-- Per WEAPON_PROFICIENCY_* (0 poor .. 4 perfect), so the wanted levels get harder step by step:
+-- citizen poor, police / gangster average, civil defense good, special forces very good, special forces 2 perfect.
+-- spread: multiplier of the WEAPONS spread; damage: multiplier against players only (HL2 NPCs hit a player for about
+-- a third of the player's own weapon damage); reaction: seconds from spotting the enemy to the first shot.
+local PROFICIENCY = {
+	[0] = { spread = 2, damage = 0.3, reaction = 1.2 },
+	{ spread = 1.5, damage = 0.4, reaction = 0.9 },
+	{ spread = 1.2, damage = 0.45, reaction = 0.7 },
+	{ spread = 1, damage = 0.5, reaction = 0.5 },
+	{ spread = 0.8, damage = 0.6, reaction = 0.35 },
+}
+local REACQUIRE_TIME = 1 -- out of sight longer than this: the reaction delay applies again
 local HAND_ATTACHMENT = 'anim_attachment_RH'
 local MUZZLE_FORWARD = 10 -- hand to muzzle
 
@@ -103,6 +112,12 @@ if bgNPC and bgNPC.Test then
 		check(s.melee and s.clip == nil and s.range == 75 and s.hold == 'melee', 'melee without clip')
 		s = SwepStats({}, 'revolver')
 		check(s.hold == 'pistol' and s.damage == DEFAULT_WEAPON.damage, 'empty primary falls back to pistol')
+	end)
+	bgNPC.Test.Add('nextbot.proficiency_ladder', function(check)
+		for p = 1, 4 do
+			local a, b = PROFICIENCY[p - 1], PROFICIENCY[p]
+			check(b.spread < a.spread and b.damage > a.damage and b.reaction < a.reaction, 'skill ' .. p .. ' beats ' .. (p - 1))
+		end
 	end)
 end
 
@@ -420,7 +435,8 @@ function ENT:Attack(enemy, stats)
 	-- From the bot's own hand: the server doesn't bonemerge, so the weapon's muzzle attachment is wrong there
 	local hand = self:BGN_Hand()
 	local src = hand and hand.Pos + hand.Ang:Forward() * MUZZLE_FORWARD or self:BGN_EyePos()
-	local spread = stats.spread * (PROFICIENCY_SPREAD[self.proficiency] or 1)
+	local skill = PROFICIENCY[self.proficiency] or PROFICIENCY[WEAPON_PROFICIENCY_AVERAGE]
+	local spread = stats.spread * skill.spread
 
 	self:FireBullets({
 		Attacker = self,
@@ -428,7 +444,7 @@ function ENT:Attack(enemy, stats)
 		Dir = (enemy:WorldSpaceCenter() - src):GetNormalized(),
 		Spread = Vector(spread, spread, 0),
 		Num = stats.num or 1,
-		Damage = stats.damage,
+		Damage = enemy:IsPlayer() and stats.damage * skill.damage or stats.damage,
 		Tracer = 1,
 		IgnoreEntity = self.weapon,
 	})
@@ -464,6 +480,15 @@ function ENT:UpdateCombat()
 
 	self.enemy_visible = self:CanSeeEnemy(enemy)
 	if not self:BGN_IsMoving() then self.loco:FaceTowards(enemy:GetPos()) end
+	if self.enemy_visible then
+		local now = CurTime()
+		if self.aim_target ~= enemy or now - (self.enemy_seen_at or 0) > REACQUIRE_TIME then
+			local skill = PROFICIENCY[self.proficiency] or PROFICIENCY[WEAPON_PROFICIENCY_AVERAGE]
+			self.next_fire = math.max(self.next_fire, now + skill.reaction)
+			self.aim_target = enemy
+		end
+		self.enemy_seen_at = now
+	end
 	if CurTime() < self.next_fire or not self.enemy_visible then return end
 
 	local to_enemy = (enemy:GetPos() - self:GetPos()):GetNormalized()

@@ -5,6 +5,7 @@ local StopAnimator = bgNPC.Animator.Stop
 -- alongside the rest of the spawn-area/zone system.
 function bgNPC:ActorSpawnOnPosition(npc_type, position)
 	if not bgNPC:IsValidSpawnArea(npc_type, position) then return end
+	if not bgNPC:IsHiddenSpawnPosition(position) then return end
 
 	local actor = bgNPC:SpawnActor(npc_type, position)
 	if not actor or not actor:IsAlive() then return end
@@ -88,7 +89,8 @@ local function InitActorsSpawner(delay)
 
 				local pos
 
-				if npc_data.wanted_level then
+				local wanted_level = bgNPC.Config.GetWantedLevel(npc_data)
+				if wanted_level then
 					local asset = bgNPC.Modules.Get('wanted')
 					local success = false
 					local wanted_list = asset:GetAllWanted()
@@ -97,7 +99,7 @@ local function InitActorsSpawner(delay)
 						local WantedClass = wanted_list[i]
 						if WantedClass then
 							local target = WantedClass.target
-							if IsValid(target) and WantedClass.level >= npc_data.wanted_level then
+							if IsValid(target) and WantedClass.level >= wanted_level then
 								pos = target:GetPos()
 								success = true
 								break
@@ -153,14 +155,14 @@ end, 'bgn_spawn_period')
 hook.Add('BGN_InitActor', 'BGN_CheckActorSpawnWantedLevel', function(actor)
 	if not actor:HasTeam('police') then return end
 
-	local data = actor:GetData()
-	if data.wanted_level ~= nil then
+	local wanted_level = bgNPC.Config.GetWantedLevel(actor:GetData())
+	if wanted_level then
 		local asset = bgNPC.Modules.Get('wanted')
 		local wanted_list = asset:GetAllWanted()
 
 		for i = 1, #wanted_list do
 			local WantedClass = wanted_list[i]
-			if WantedClass.level >= data.wanted_level then
+			if WantedClass.level >= wanted_level then
 				actor:AddEnemy(WantedClass.target)
 				if actor:GetState() ~= 'defense' then
 					actor:SetState('defense')

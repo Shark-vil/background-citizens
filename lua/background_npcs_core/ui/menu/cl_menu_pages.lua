@@ -82,7 +82,11 @@ Menu.AddPage('actors', {
 		for actor_type, data in SortedPairs(bgNPC.cfg.actors) do
 			if not data.hidden then
 				page:Section(data.name or actor_type)
-				page:Toggle('bgn_npc_type_' .. actor_type, '#bgn.menu.actor.enabled')
+				local wanted = data.wanted_level and {
+					badge = string.format(Menu.Phrase('bgn.menu.actor.wanted') or 'Wanted %d+', data.wanted_level),
+					help = string.format(Menu.Phrase('bgn.menu.actor.wanted.help') or '', data.wanted_level),
+				} or nil
+				page:Toggle('bgn_npc_type_' .. actor_type, '#bgn.menu.actor.enabled', wanted)
 				page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.menu.actor.max', 0, 200)
 				if istable(data.weapons) and #data.weapons ~= 0 then
 					page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.menu.actor.no_weapons')

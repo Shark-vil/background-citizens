@@ -30,6 +30,7 @@ local function TeleportActor(actor, pos)
 	if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then
 		return
 	end
+	if not bgNPC:IsHiddenSpawnPosition(pos, actor:GetNPC()) then return end
 
 	bgNPC:RespawnActor(actor, pos, function(success)
 		if not success or not actor:IsAlive() then return end
@@ -189,7 +190,8 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 			else
 				local data = actor:GetData()
 
-				if data.wanted_level == nil then
+				local wanted_level = bgNPC.Config.GetWantedLevel(data)
+				if not wanted_level then
 					if max_teleporter == current_teleport then break end
 					current_teleport = current_teleport + 1
 
@@ -209,7 +211,7 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 						local WantedComponent = wanted_list[k]
 						local Target = WantedComponent.target
 
-						if IsValid(Target) and WantedComponent.level >= data.wanted_level then
+						if IsValid(Target) and WantedComponent.level >= wanted_level then
 							desiredPosition = Target:GetPos()
 							break
 						end
@@ -263,8 +265,8 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 	if not actor:HasTeam('police') then return end
 	if actor.eternal then return end
 
-	local data = actor:GetData()
-	if data.wanted_level ~= nil then
+	local wanted_level = bgNPC.Config.GetWantedLevel(actor:GetData())
+	if wanted_level then
 		local npc = actor:GetNPC()
 
 		local asset = bgNPC.Modules.Get('wanted')
@@ -274,7 +276,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 		for i = 1, #wanted_list do
 			local WantedClass = wanted_list[i]
 			local target = WantedClass.target
-			if IsValid(target) and WantedClass.level >= data.wanted_level then
+			if IsValid(target) and WantedClass.level >= wanted_level then
 				success = true
 				break
 			end
@@ -289,7 +291,7 @@ end)
 
 hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent, level)
 	for _, actor in ipairs(bgNPC.Actors.GetByTeam('police')) do
-		local wanted_level = actor:GetData().wanted_level
+		local wanted_level = bgNPC.Config.GetWantedLevel(actor:GetData())
 
 		if wanted_level ~= nil and level < wanted_level then
 			actor:RemoveTarget(ent)
