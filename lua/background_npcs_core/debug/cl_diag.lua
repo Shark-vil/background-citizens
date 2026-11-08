@@ -277,9 +277,27 @@ function Diag.OpenReport()
 		row:DockMargin(0, 0, R(14 * s), gap)
 		local title, text = Menu.Text('#bgn.diag.t.' .. result.id), Message(result)
 		local text_x = ip * 2 + icon
+
+		-- "Fix": the server offered a change of settings and this player may make it
+		local fix
+		if result.fix and Menu.IsAdmin() then
+			fix = Menu.Button(row, Menu.Text('#bgn.diag.fix'), 'primary', function()
+				Net.SendToServer('bgn.diag_fix', result.id)
+				fix.text = Menu.Text('#bgn.diag.fixed')
+				fix:SetEnabled(false)
+				notification.AddLegacy(Menu.Text('#bgn.diag.fix_done'), NOTIFY_GENERIC, 6)
+			end)
+			fix:SetTooltip(Menu.Text('#' .. result.fix))
+		end
+		local function TextWidth(w) return w - text_x - ip - (fix and fix:GetWide() + ip or 0) end
+
 		row.PerformLayout = function(self, w)
-			local lines = Menu.Wrap(text, 'BGN.Menu.Small', w - text_x - ip)
+			local lines = Menu.Wrap(text, 'BGN.Menu.Small', TextWidth(w))
 			local h = ip * 2 + Menu.FontHeight('BGN.Menu.Body') + R(3 * s) + #lines * Menu.FontHeight('BGN.Menu.Small')
+			if fix then
+				h = math.max(h, fix:GetTall() + ip * 2)
+				fix:SetPos(w - ip - fix:GetWide(), (h - fix:GetTall()) / 2)
+			end
 			if self:GetTall() ~= h then self:SetTall(h) end
 		end
 		row.Paint = function(self, w, h)
@@ -297,7 +315,7 @@ function Diag.OpenReport()
 			end
 			draw.SimpleText(title, 'BGN.Menu.Body', text_x, ip, C.text)
 			local y = ip + Menu.FontHeight('BGN.Menu.Body') + R(3 * s)
-			for _, line in ipairs(Menu.Wrap(text, 'BGN.Menu.Small', w - text_x - ip)) do
+			for _, line in ipairs(Menu.Wrap(text, 'BGN.Menu.Small', TextWidth(w))) do
 				draw.SimpleText(line, 'BGN.Menu.Small', text_x, y, C.muted)
 				y = y + Menu.FontHeight('BGN.Menu.Small')
 			end

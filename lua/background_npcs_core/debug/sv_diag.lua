@@ -22,6 +22,7 @@ local CAMERA_GROUPS = 4
 local ABORT = 'bgn_diag_abort'
 
 local run
+local last_fixes = {} -- result id -> console variables of the last run's "Fix" buttons
 
 local function IsAdmin(ply)
 	return IsValid(ply) and (ply:IsAdmin() or ply:IsSuperAdmin())
@@ -77,6 +78,29 @@ local function Result(status, key, ...)
 	run.results[#run.results + 1] = { id = run.cur.id, status = status, key = key, args = args }
 end
 
+-- "3000.000000" -> "3000": console values are compared and printed as numbers when they are numbers
+local function Norm(value)
+	local n = tonumber(value)
+	return n and string.format('%g', n) or tostring(value)
+end
+
+-- Offers the "Fix" button on the last result: console variables the server sets when an admin presses it.
+-- Entries that already have the value are dropped; nothing is offered when nothing would change.
+-- @param key string phrase "bgn.diag.fix.<case>" (the tooltip)
+local function Fix(key, set)
+	local changes = {}
+	for name, value in pairs(set) do
+		local cv = GetConVar(name)
+		if cv and Norm(cv:GetString()) ~= Norm(value) then changes[name] = tostring(value) end
+	end
+	if not next(changes) then return end
+	run.fixes[run.cur.id] = changes
+	run.results[#run.results].fix = key
+	local parts = {}
+	for name, value in SortedPairs(changes) do parts[#parts + 1] = name .. ' = ' .. value end
+	Log('fix offered: %s', table.concat(parts, ', '))
+end
+
 local function CheckAbort()
 	if run.aborted or not IsValid(run.ply) then
 		run.aborted = true
@@ -100,12 +124,6 @@ local function WaitUntil(condition, timeout)
 		CheckAbort()
 	end
 	return condition()
-end
-
--- "3000.000000" -> "3000": console values are compared and printed as numbers when they are numbers
-local function Norm(value)
-	local n = tonumber(value)
-	return n and string.format('%g', n) or tostring(value)
 end
 
 local function Cvar(name)
@@ -138,7 +156,10 @@ local function TestEnvironment()
 	Log('settings changed from the defaults: %d', #changed)
 	for _, line in ipairs(changed) do Log('  %s', line) end
 
-	if not enabled then return Result('fail', 'bgn.diag.env.disabled') end
+	if not enabled then
+		Result('fail', 'bgn.diag.env.disabled')
+		return Fix('bgn.diag.fix.enable', { bgn_enable = 1 })
+	end
 	if points == 0 then return Result('fail', 'bgn.diag.env.nonav', game.GetMap()) end
 	Result('ok', 'bgn.diag.env.ok', tostring(nav.provider), points)
 end
@@ -275,6 +296,26 @@ local function TestNaturalSpawn()
 	local reason = WhyNoSpawn(run.ply)
 	Log('most likely reason: %s', reason)
 	Result('fail', 'bgn.diag.spawn_natural.none', NATURAL_WAIT, '#bgn.diag.reason.' .. reason)
+
+	local D = bgNPC.cvar
+	if reason == 'disabled' then
+		Fix('bgn.diag.fix.enable', { bgn_enable = 1 })
+	elseif reason == 'max0' then
+		Fix('bgn.diag.fix.limit', { bgn_max_npc = D.bgn_max_npc })
+	elseif reason == 'types' then
+		local set = {}
+		for actor_type, data in pairs(bgNPC.cfg.actors) do
+			if not data.hidden then
+				set['bgn_npc_type_' .. actor_type] = data.enabled and 1 or 0
+				set['bgn_npc_type_max_' .. actor_type] = bgNPC.Config.GetFullness(actor_type)
+			end
+		end
+		Fix('bgn.diag.fix.types', set)
+	elseif reason == 'nopoints' then
+		Fix('bgn.diag.fix.radius', { bgn_spawn_radius = D.bgn_spawn_radius })
+	elseif reason == 'nohidden' then
+		Fix('bgn.diag.fix.hidden', { bgn_spawn_block_radius = D.bgn_spawn_block_radius, bgn_spawn_radius_visibility = D.bgn_spawn_radius_visibility })
+	end
 end
 
 -- ---------------------------------------------------------------------------
@@ -399,7 +440,10 @@ local function TestVehicles()
 	end
 
 	if not dv then return Result('warn', 'bgn.diag.vehicles.nodv') end
-	if not GetConVar('bgn_enable_dv_support'):GetBool() then return Result('warn', 'bgn.diag.vehicles.off') end
+	if not GetConVar('bgn_enable_dv_support'):GetBool() then
+		Result('warn', 'bgn.diag.vehicles.off')
+		return Fix('bgn.diag.fix.cars', { bgn_enable_dv_support = 1 })
+	end
 	if waypoints == 0 then return Result('warn', 'bgn.diag.vehicles.nowaypoints') end
 	if #candidates == 0 then return Result('fail', 'bgn.diag.vehicles.noclasses', found_classes, total_classes) end
 
@@ -685,6 +729,7 @@ end
 
 local function Finish()
 	local ply = run.ply
+	last_fixes = run.fixes
 	pcall(Cleanup)
 	local log = BuildLog()
 	if IsValid(ply) then Net.Send('bgn.diag_done', ply, run.results, log) end
@@ -714,7 +759,7 @@ local function Start(ply, mode)
 
 	run = {
 		ply = ply, mode = mode, steps = steps, results = {}, sections = {}, forced = {}, cars = {},
-		natural = 0, natural_types = {}, pre = #bgNPC.Actors.GetAll(),
+		fixes = {}, natural = 0, natural_types = {}, pre = #bgNPC.Actors.GetAll(),
 	}
 	run.co = coroutine.create(Main)
 	run.cur = { id = 'none', lines = {} }
@@ -754,3 +799,12 @@ end)
 Net.Receive('bgn.diag_cvar_sync_report', function(ply, seen)
 	if run and ply == run.ply then run.sync = { seen = seen == true } end
 end)
+
+-- The "Fix" button: the client sends only the result id, the values come from the last run
+Net.Receive('bgn.diag_fix', function(ply, id)
+	local set = last_fixes[id]
+	if not set then return end
+	for name, value in pairs(set) do RunConsoleCommand(name, value) end
+	last_fixes[id] = nil
+	MsgN('[Background NPCs] test fix "' .. tostring(id) .. '" applied by ' .. ply:Nick())
+end, { admin = true })

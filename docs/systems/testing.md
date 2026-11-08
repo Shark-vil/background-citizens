@@ -27,6 +27,10 @@ Open **Settings → Tools → Testing** (admins) or type a console command:
 
 Test actors and cars are removed at the end, the changed cvars are restored.
 
+## The Fix button
+
+Where the cause is obvious and the cure is a setting, an admin sees **Fix** on the row: the addon switched off, a zero total limit, all actor types off, a spawn radius with no points in it, block and visibility radii that leave no free spot, car support off. It restores the default values of just those console variables (the log lists them) and asks to run the test again. Rights, missing addons and maps without navigation have no button: they can't be fixed from a setting.
+
 ## Results window
 
 It has the settings window's look, the same light / dark switch, and one row per check with an icon (passed,
