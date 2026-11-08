@@ -7,7 +7,7 @@
 		page:Button(label, command|func, opts)           -- opts.text (caption), opts.confirm (true|text), opts.danger, opts.admin
 		page:Choice(cvar, label, { { value, text }, ... }, opts)  -- one of a few values
 		page:Color(label, { r_cvar, g_cvar, b_cvar }, opts)
-		page:Note(text)                                  -- a muted paragraph
+		page:Note(text, color)                           -- a paragraph, muted or a theme color name ('warn')
 		page:Row(label, help, server, cvar)              -- an empty row: set row.control to your own panel
 		page:Custom(function(panel) end)                 -- anything else, docked at the top
 
@@ -204,7 +204,13 @@ local function RowLayout(row, w, h)
 	if row.locked then reserved = reserved + math.Round(22 * s) end
 	local text_w = w - pad * 2 - reserved
 
-	row.lines = Menu.Wrap(row.label, 'BGN.Menu.Body', text_w)
+	-- the badge sits after the label: the label wraps short of it
+	row.badge_w = 0
+	if row.badge then
+		surface.SetFont('BGN.Menu.Small')
+		row.badge_w = surface.GetTextSize(row.badge) + math.Round(16 * s)
+	end
+	row.lines = Menu.Wrap(row.label, 'BGN.Menu.Body', math.max(text_w - row.badge_w - math.Round(8 * s), text_w * 0.4))
 	row.help_lines = row.help and Menu.Wrap(row.help, 'BGN.Menu.Small', text_w) or {}
 	local text_h = #row.lines * Menu.FontHeight('BGN.Menu.Body')
 	if #row.help_lines ~= 0 then
@@ -239,6 +245,17 @@ local function RowPaint(row, w, h)
 		draw.SimpleText(line, 'BGN.Menu.Body', pad, y, row.locked and C.muted or C.text)
 		y = y + body_h
 	end
+	if row.badge and #row.lines ~= 0 then
+		surface.SetFont('BGN.Menu.Body')
+		local bx = pad + surface.GetTextSize(row.lines[#row.lines]) + math.Round(8 * s)
+		local bh = Menu.FontHeight('BGN.Menu.Small') + math.Round(4 * s)
+		local by = y - body_h + math.Round((body_h - bh) / 2)
+		local r = math.floor(bh / 2)
+		draw.RoundedBox(r, bx, by, row.badge_w, bh, C.warn)
+		draw.RoundedBox(r, bx + 1, by + 1, row.badge_w - 2, bh - 2, C.surface)
+		draw.RoundedBox(r, bx + 1, by + 1, row.badge_w - 2, bh - 2, Menu.Fade(C.warn, 0.12))
+		draw.SimpleText(row.badge, 'BGN.Menu.Small', bx + row.badge_w / 2, by + bh / 2, C.warn, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+	end
 	y = y + math.Round(3 * s)
 	local small_h = Menu.FontHeight('BGN.Menu.Small')
 	for _, line in ipairs(row.help_lines) do
@@ -255,8 +272,9 @@ end
 -- @param server boolean the row changes a server setting (hidden from non-admins)
 -- @param cvar string|nil searched by its name too
 -- @param locked boolean|nil shown but can't be changed (opts.locked of the controls)
+-- @param badge string|nil a pill after the label, e.g. why it is locked (opts.badge of the controls)
 -- @return Panel the row; put your control into row.control (it is placed on the right)
-function Builder:Row(label, help, server, cvar, locked)
+function Builder:Row(label, help, server, cvar, locked, badge)
 	local label_text = Menu.Text(label)
 	local help_text = help and Menu.Text(help) or nil
 	if help_text == '' then help_text = nil end
@@ -281,17 +299,18 @@ function Builder:Row(label, help, server, cvar, locked)
 	row.label = label_text
 	row.help = help_text
 	row.locked = hidden or locked or false -- hidden rows stay disabled too
+	row.badge = badge and Menu.Text(badge) or nil
 	row.hover = 0
 	row.PerformLayout = RowLayout
 	row.Paint = RowPaint
 	return row
 end
 
-function Builder:Note(text)
+function Builder:Note(text, color)
 	if self.filter then return Menu.Paragraph(self:Trash(), Menu.Text(text), 'BGN.Menu.Small') end
 	self:FlushSection()
 	local s = Menu.Scale()
-	local note = Menu.Paragraph(self.scroll, Menu.Text(text), 'BGN.Menu.Small', C.muted)
+	local note = Menu.Paragraph(self.scroll, Menu.Text(text), 'BGN.Menu.Small', color or 'muted')
 	note:DockMargin(0, self.started and math.Round(12 * s) or 0, 0, math.Round(12 * s))
 	local layout = note.PerformLayout
 	note.PerformLayout = function(panel, w, h)
@@ -321,7 +340,7 @@ end
 function Builder:Toggle(cvar, label, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -363,7 +382,7 @@ function Builder:Slider(cvar, label, min, max, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
 	local decimals = opts.decimals or 0
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -563,7 +582,7 @@ end
 function Builder:Choice(cvar, label, options, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
 
 	local function Get()
 		local cv = GetConVar(cvar)

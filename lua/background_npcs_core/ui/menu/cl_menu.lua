@@ -126,7 +126,7 @@ local LIGHT = {
 	hover = Color(243, 244, 247), border = Color(222, 225, 230), text = Color(31, 35, 41),
 	muted = Color(107, 114, 128), accent = Color(37, 99, 235), accent_hover = Color(29, 78, 216),
 	on_accent = Color(255, 255, 255), track = Color(209, 213, 219), knob = Color(255, 255, 255),
-	danger = Color(220, 38, 38), nav_active = Color(255, 255, 255), overlay = Color(15, 17, 21, 110),
+	danger = Color(220, 38, 38), warn = Color(180, 83, 9), nav_active = Color(255, 255, 255), overlay = Color(15, 17, 21, 110),
 	shadow = Color(0, 0, 0, 40),
 }
 
@@ -135,7 +135,7 @@ local DARK = {
 	hover = Color(37, 41, 50), border = Color(46, 51, 61), text = Color(230, 232, 235),
 	muted = Color(154, 161, 172), accent = Color(76, 141, 255), accent_hover = Color(108, 162, 255),
 	on_accent = Color(255, 255, 255), track = Color(58, 64, 75), knob = Color(245, 246, 248),
-	danger = Color(240, 82, 82), nav_active = Color(30, 33, 40), overlay = Color(0, 0, 0, 150),
+	danger = Color(240, 82, 82), warn = Color(251, 191, 36), nav_active = Color(30, 33, 40), overlay = Color(0, 0, 0, 150),
 	shadow = Color(0, 0, 0, 90),
 }
 
@@ -360,13 +360,14 @@ function Menu.DialogButtons(card, buttons)
 end
 
 -- Text block for dialogs and notes
+-- @param color Color|string|nil a string is a theme color name (follows theme switches)
 function Menu.Paragraph(parent, text, font, color)
 	local label = parent:Add('DPanel')
 	label:Dock(TOP)
 	label.Paint = function(self, w)
 		local lh = Menu.FontHeight(font)
 		for i, line in ipairs(Menu.Wrap(text, font, w)) do
-			draw.SimpleText(line, font, 0, (i - 1) * lh, color or C.text)
+			draw.SimpleText(line, font, 0, (i - 1) * lh, isstring(color) and C[color] or color or C.text)
 		end
 	end
 	label.PerformLayout = function(self, w)
