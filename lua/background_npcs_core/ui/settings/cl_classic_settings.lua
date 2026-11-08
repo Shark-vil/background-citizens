@@ -140,10 +140,30 @@ function ITEMS.actors(panel)
 	end
 end
 
+-- The highlighted button that opens the new settings window; on its own page and at the top of every classic page
+local BUTTON_COLOR, BUTTON_HOVER = Color(46, 125, 214), Color(70, 150, 235)
+
+local function OpenNewMenuButton(panel)
+	local button = panel:Button(Text('bgn.menu.open_new'), 'bgn_menu')
+	button:SetTall(34)
+	button:SetTextColor(color_white)
+	button.Paint = function(self, w, h)
+		draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and BUTTON_HOVER or BUTTON_COLOR)
+	end
+end
+
 hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_Classic', function()
+	-- '#' sorts first in the list, so this page stays on top
+	spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_Settings', '#bgn.menu.new_menu', '', '', function(panel)
+		panel:ClearControls()
+		OpenNewMenuButton(panel)
+		panel:Help(Text('bgn.menu.open.help'))
+	end)
+
 	for _, page in ipairs(PAGES) do
 		spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_' .. page.id, Text(page.title), '', '', function(panel)
 			panel:ClearControls()
+			OpenNewMenuButton(panel)
 			if page.admin and not IsAdmin() then
 				panel:Help(Text('bgn.menu.admin_only'))
 				return
