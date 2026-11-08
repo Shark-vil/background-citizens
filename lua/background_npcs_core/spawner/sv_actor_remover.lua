@@ -38,6 +38,12 @@ local function TeleportActor(actor, pos)
 	end)
 end
 
+-- states tied to other actors or to a spot: moved away, the others went on talking to empty air
+local BUSY_STATES = {
+	'dialogue', 'arrest', 'arrest_surrender', 'medic_revive', 'police_inspect_body', 'sit_to_chair', 'sit_to_chair_2',
+	'scenic_npc',
+}
+
 local function SeenByAnyPlayer(npc)
 	for i = 1, #player_list do
 		if bgNPC.Util.CanSeeEntity(player_list[i], npc, true) then return true end
@@ -162,6 +168,12 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 					yield()
 					continue
 				end
+			end
+
+			-- no teleport or removal mid-scene: they wait until it ends
+			if actor.conversation or actor:HasState(BUSY_STATES) then
+				yield()
+				continue
 			end
 
 			if not IsValidRemovePositionAsync(actor, npc) then
