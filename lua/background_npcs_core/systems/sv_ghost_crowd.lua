@@ -71,9 +71,6 @@ local MAX_LOOKS = 32
 local PANIC_SHARE = 0.2
 local PANIC_HOLD = 10
 local SYNC_PERIOD = 2
--- shortcut: a handoff may put a type this many actors over its limit, the remover takes the far ones later;
--- free a slot by removing an unseen far actor if crowds of players hit the limit all the time
-local HANDOFF_OVERFLOW = 4
 local GROUND_UP = Vector(0, 0, 48)
 local GROUND_DOWN = Vector(0, 0, 160)
 
@@ -206,11 +203,14 @@ local function GroundPos(pos)
 end
 
 -- A real actor of the ghost's type and look on its spot, facing its way. Clients drop the ghost when they get the entity.
+-- Over the type limit too: the remover then takes over-limit actors nobody sees (sv_actor_remover.lua), which beats
+-- a figure vanishing in front of the player. Not on an overloaded server (core/sv_server_load.lua).
 -- @return boolean
 local function Handoff(ghost, pos)
 	local look = ghost.look
-	if not bgNPC.Config.IsTypeActive(look.type) then return false end
-	if #bgNPC.Actors.GetNPCsByType(look.type) >= bgNPC.Config.GetTypeLimit(look.type) + HANDOFF_OVERFLOW then return false end
+	local limit = bgNPC.Config.GetTypeLimit(look.type)
+	if not bgNPC.Config.IsTypeActive(look.type) or limit == 0 then return false end
+	if #bgNPC.Actors.GetNPCsByType(look.type) >= limit and bgNPC.ServerLoad.IsOverloaded() then return false end
 
 	local actor = bgNPC:SpawnActor(look.type, GroundPos(pos))
 	local npc = actor and actor:GetNPC()

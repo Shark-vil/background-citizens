@@ -38,6 +38,13 @@ local function TeleportActor(actor, pos)
 	end)
 end
 
+local function SeenByAnyPlayer(npc)
+	for i = 1, #player_list do
+		if bgNPC.Util.CanSeeEntity(player_list[i], npc, true) then return true end
+	end
+	return false
+end
+
 local function IsValidRemovePositionAsync(actor, npc)
 	local npc_pos = npc:GetPos()
 
@@ -119,6 +126,7 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 	current_teleport = 0
 	player_list = player.GetHumans()
 	player_count = #player_list
+	local overloaded = bgNPC.ServerLoad.IsOverloaded()
 
 	yield()
 
@@ -144,8 +152,12 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 			end
 		else
 			if not actor.mechanics.ignore_limit then
+				-- over the limit (a ghost handoff, a lowered limit): only actors no player sees, the rest wait their turn;
+				-- an overloaded server (core/sv_server_load.lua) drops them at once
 				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
-				if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) > max_limit then
+				if max_limit == 0 or (#bgNPC.Actors.GetNPCsByType(npc_type) > max_limit
+					and (overloaded or not SeenByAnyPlayer(npc)))
+				then
 					actor:Remove()
 					yield()
 					continue
