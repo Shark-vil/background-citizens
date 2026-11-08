@@ -185,6 +185,7 @@ end
 local function SetActivity(ghost, act)
 	if ghost.act == act then return end
 	local ent = ghost.ent
+	if not IsValid(ent) then return end
 	local seq = ent:SelectWeightedSequence(act)
 	if seq < 0 and act == ACT_PANIC then seq = ent:SelectWeightedSequence(ACT_RUN) end
 	if seq < 0 then return end
@@ -198,6 +199,13 @@ local function SetActivity(ghost, act)
 		ghost.speed = speed > 0 and speed or (act == ACT_WALK and 70 or 200)
 	end
 end
+
+bgNPC.Test.Add('ghost_crowd.invalid_entity', function(check)
+	local ghost = { ent = NULL, act = ACT_IDLE, speed = 0, seq_len = 1 }
+	SetActivity(ghost, ACT_WALK)
+	check(ghost.act == ACT_IDLE and ghost.speed == 0 and ghost.seq_len == 1,
+		'removed models are skipped without changing animation state')
+end)
 
 -- @param server_look table|nil the look the server picked, a random seen one otherwise
 -- @return table|nil the ghost
@@ -472,7 +480,7 @@ hook.Add('Think', 'BGN_GhostCrowd', function()
 		local ent = ghost.ent
 
 		if not IsValid(ent) then
-			table.remove(ghosts, i)
+			RemoveGhost(i)
 			continue
 		end
 
