@@ -9,9 +9,14 @@ local replics = {
 	'npc/metropolice/vo/level3civilprivacyviolator.wav'
 }
 
+local COOLDOWN = 12 -- a combat line per officer at most this often: damage comes every hit
+
 -- voice_id nil: the old sound only for players with voices off (the phrase itself is voiced)
 local function RandomPlay(actor, voice_id)
-	if not actor or not actor:IsAlive() or not actor:HasTeam('police') or math.random(0, 100) > 50  then return end
+	if not actor or not actor:IsAlive() or not actor:HasTeam('police') then return end
+	local now = CurTime()
+	if (actor.police_voice_next or 0) > now or math.random(0, 100) > 50 then return end
+	actor.police_voice_next = now + COOLDOWN
 	actor:Voice(voice_id, bgNPC.Table.Random(replics))
 end
 

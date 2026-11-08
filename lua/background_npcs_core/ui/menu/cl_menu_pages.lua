@@ -145,6 +145,10 @@ Menu.AddPage('behavior', {
 		page:Toggle('bgn_all_models_random', '#bgn.settings.extension.all_models_random')
 		page:Toggle('bgn_drop_money', '#bgn.settings.extension.drop_money')
 
+		page:Section('#bgn.menu.section.corpses')
+		page:Toggle('bgn_corpse_cleanup', '#bgn.menu.corpse_cleanup')
+		page:Slider('bgn_corpse_cleanup_time', '#bgn.menu.corpse_cleanup_time', 10, 600)
+
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
 		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')

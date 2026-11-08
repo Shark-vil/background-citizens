@@ -128,7 +128,7 @@ if SERVER then
 				else
 					Animator.Stop(entity)
 				end
-			elseif entity:IsNPC() then
+			elseif entity:IsNPC() and not entity:IsCurrentSchedule(SCHED_SLEEP) then
 				entity:SetNPCState(NPC_STATE_SCRIPT)
 				entity:SetSchedule(SCHED_SLEEP)
 			end

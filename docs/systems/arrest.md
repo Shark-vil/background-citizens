@@ -12,7 +12,8 @@ Settings window: **Arrest**.
 | `bgn_arrest_safe_weapons` | `mlp_hoof,empty,weapon_card,...` | comma-separated weapon classes that don't count as being armed |
 
 A player gives up by looking at the ground (pitch over 40°) near the officer. NPC targets give up by the
-`arrest_surrender` state. The police stop arresting and shoot when the target kills someone, keeps attacking,
+`arrest_surrender` state: an actor (an NPC or a NextBot body, e.g. a gangster) that attacks near the police may
+give up, 5% on its first attack and 10% on each later one while at 50 health or less. The police stop arresting and shoot when the target kills someone, keeps attacking,
 refuses within the time limit or is wanted.
 
 ## Second chance

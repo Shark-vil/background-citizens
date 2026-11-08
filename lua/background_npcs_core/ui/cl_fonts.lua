@@ -1,17 +1,16 @@
+-- overhead lines (actor/cl_actor_text_say.lua), drawn in 3D2D at a small scale: big sizes stay sharp
 surface.CreateFont('BGN_SpeakingFont', {
-	font = 'Museo Sans Cyrl 500',
-	extended = false,
-	size = 14,
-	weight = 100,
-	blursize = 0,
-	scanlines = 0,
+	font = 'Roboto',
+	extended = true,
+	size = 28,
+	weight = 500,
 	antialias = true,
-	underline = false,
-	italic = false,
-	strikeout = false,
-	symbol = false,
-	rotary = false,
-	shadow = true,
-	additive = false,
-	outline = false,
+})
+
+surface.CreateFont('BGN_SpeakingName', {
+	font = 'Roboto',
+	extended = true,
+	size = 20,
+	weight = 800,
+	antialias = true,
 })

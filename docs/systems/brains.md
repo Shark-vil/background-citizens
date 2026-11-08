@@ -105,3 +105,19 @@ The nearest officer within 2000 units who walks or idles without enemies takes i
 walks to the body, crouches over it, reports it on the radio (`police_body_report`) and writes it down
 (`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
 calm down; a body revived by a medic is dropped.
+
+## Bodies
+
+`systems/sv_corpses.lua`, `systems/cl_corpses.lua`. Settings window: **Behavior > Bodies**.
+
+| Cvar (server) | Default | Meaning |
+|---|---|---|
+| `bgn_corpse_cleanup` | `1` | the bodies of dead actors (NPC and NextBot) fade out |
+| `bgn_corpse_cleanup_time` | `60` | seconds after the death |
+
+A body a medic is assigned to, or an officer is inspecting, waits until they are done (both end on their own:
+the call after 90 s, the inspection after its give-up time). Server ragdolls fade on the server, client ragdolls
+on every client. [npc_battle_cleanup](https://steamcommunity.com/sharedfiles/filedetails/?id=2120936972) would
+remove a body in seconds, before a medic or an officer gets to it, so the actors' bodies are left to this
+setting: server ragdolls get its `doNotRemove` flag, its client-side corpse cleanup skips them.
+With `bgn_corpse_cleanup 0` the bodies stay until the engine's own ragdoll limits remove them.

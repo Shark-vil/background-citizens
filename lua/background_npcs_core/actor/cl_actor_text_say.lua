@@ -1,19 +1,56 @@
---
+--[[
+	Lines over the actors' heads: a dark plate with the speaker's name in the team color, an accent bar
+	and the line wrapped by words. Rises and fades in, fades out at the end and with the distance.
+--]]
+
+local FONT, FONT_NAME = 'BGN_SpeakingFont', 'BGN_SpeakingName'
+local SCALE = 0.09
+local MAX_WIDTH = 480 -- text width on the plate, px
+local PAD_X, PAD_Y, BAR, GAP, ARROW = 14, 9, 4, 3, 8
+local FADE_IN, FADE_OUT, RISE = 0.2, 0.5, 4
+local DIST, DIST_FADE = 800, 200
+local HEAD_BONE = 'ValveBiped.Bip01_Head1'
+local HEAD_OFFSET = Vector(0, 0, 14)
+
+local PLATE = Color(14, 16, 20, 205)
+local TEXT = Color(236, 238, 242)
+local ACCENT_DEFAULT = Color(196, 200, 210)
+local ACCENTS = {
+	police = Color(92, 156, 255),
+	medics = Color(80, 214, 150),
+	bandits = Color(236, 112, 72),
+	zombies = Color(150, 200, 60),
+}
+
 local speaking_actors = {}
-local font_name = 'BGN_SpeakingFont'
-local head_bone_name = 'ValveBiped.Bip01_Head'
-local clr_1 = Color(255, 255, 255)
-local clr_2 = Color(0, 0, 0)
-local vector_0_0_5 = Vector(0, 0, 5)
 
 local function RemoveSpeakByUid(uid)
 	for i = #speaking_actors, 1, -1 do
-		local item = speaking_actors[i]
-		if item and item.uid == uid then
-			table.remove(speaking_actors, i)
-			break
+		if speaking_actors[i].uid == uid then table.remove(speaking_actors, i) end
+	end
+end
+
+local function Accent(actor)
+	for team, color in pairs(ACCENTS) do
+		if actor:HasTeam(team) then return color end
+	end
+	return ACCENT_DEFAULT
+end
+
+local function Wrap(text)
+	surface.SetFont(FONT)
+	local lines, line = {}, ''
+	for word in text:gmatch('%S+') do
+		local try = line == '' and word or line .. ' ' .. word
+		if line ~= '' and surface.GetTextSize(try) > MAX_WIDTH then
+			lines[#lines + 1] = line
+			line = word
+		else
+			line = try
 		end
 	end
+	lines[#lines + 1] = line
+	return lines
 end
 
 local function DrawActorText(actor_uid, say_text, say_time)
@@ -22,45 +59,31 @@ local function DrawActorText(actor_uid, say_text, say_time)
 	local actor = bgNPC.Actors.GetByUid(actor_uid)
 	if not actor then return end
 
-	local text_lines = {}
-	local text = utf8.force(say_text)
-	local max_line_size = 50
-	local start_pos = 1
-	local end_pos = max_line_size
-	local str_len = utf8.len(text)
+	local lines = Wrap(utf8.force(say_text))
+	surface.SetFont(FONT)
+	local width, line_h = 0, select(2, surface.GetTextSize('Ay'))
+	for _, line in ipairs(lines) do width = math.max(width, (surface.GetTextSize(line))) end
 
-	if str_len >= max_line_size then
-		for k = 1, str_len do
-			if end_pos == k then
-				local line = utf8.sub(text, start_pos, end_pos)
-				table.insert(text_lines, string.Trim(line))
+	local name = actor:GetName()
+	if not isstring(name) then name = '' end
+	surface.SetFont(FONT_NAME)
+	local name_w, name_h = surface.GetTextSize(name)
+	if name == '' then name_h = -GAP end
 
-				start_pos = k
-				end_pos = end_pos + max_line_size
-
-				if end_pos > str_len then
-					end_pos = str_len
-				end
-			end
-		end
-	end
-
-	if #text_lines == 0 then
-		table.insert(text_lines, text)
-	end
-
-	table.insert(speaking_actors, {
+	local now = CurTime()
+	speaking_actors[#speaking_actors + 1] = {
 		uid = actor_uid,
 		actor = actor,
-		text_lines = text_lines,
-		time = say_time,
-	})
-
-	local timer_name = 'bgn_actor_' .. tostring(actor_uid) .. '_say_text_timer'
-
-	timer.Create(timer_name, say_time, 1, function()
-		RemoveSpeakByUid(actor_uid)
-	end)
+		lines = lines,
+		name = name,
+		accent = Accent(actor),
+		line_h = line_h,
+		name_h = name_h,
+		w = math.max(width, name_w) + PAD_X * 2 + BAR,
+		h = PAD_Y * 2 + name_h + GAP + line_h * #lines,
+		start = now,
+		finish = now + say_time,
+	}
 end
 
 bgNPC.Net.Receive('bgn_actor_text_say', function(_, actor_uid, say_text, say_time)
@@ -74,42 +97,73 @@ bgNPC.Net.Receive('bgn_actor_text_say_replic', function(_, actor_uid, replic_id,
 	if actor then bgNPC.VoicePlay(actor, replic_id, replic_index) end
 end)
 
-hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()
-	local local_player = LocalPlayer()
-	local local_player_pos = local_player:GetPos()
-	local local_player_eye_angles = local_player:EyeAngles()
-	local_player_eye_angles:RotateAroundAxis(local_player_eye_angles:Forward(), 90)
-	local_player_eye_angles:RotateAroundAxis(local_player_eye_angles:Right(), 90)
+local arrow = { {}, {}, {} }
+
+local function DrawPlate(item, alpha)
+	local w, h, accent = item.w, item.h, item.accent
+	local x, y = -w * 0.5, -h - ARROW
+
+	surface.SetDrawColor(PLATE.r, PLATE.g, PLATE.b, PLATE.a * alpha)
+	surface.DrawRect(x, y, w, h)
+	draw.NoTexture()
+	arrow[1].x, arrow[1].y = -ARROW, -ARROW
+	arrow[2].x, arrow[2].y = ARROW, -ARROW
+	arrow[3].x, arrow[3].y = 0, 0
+	surface.DrawPoly(arrow)
+
+	surface.SetDrawColor(accent.r, accent.g, accent.b, 255 * alpha)
+	surface.DrawRect(x, y, BAR, h)
+	surface.SetDrawColor(accent.r, accent.g, accent.b, 90 * alpha)
+	surface.DrawRect(x + BAR, y + h - 1, w - BAR, 1)
+
+	local text_x, text_y = x + BAR + PAD_X, y + PAD_Y
+	if item.name ~= '' then
+		surface.SetFont(FONT_NAME)
+		surface.SetTextColor(accent.r, accent.g, accent.b, 255 * alpha)
+		surface.SetTextPos(text_x, text_y)
+		surface.DrawText(item.name)
+	end
+	text_y = text_y + item.name_h + GAP
+
+	surface.SetFont(FONT)
+	surface.SetTextColor(TEXT.r, TEXT.g, TEXT.b, 255 * alpha)
+	for _, line in ipairs(item.lines) do
+		surface.SetTextPos(text_x, text_y)
+		surface.DrawText(line)
+		text_y = text_y + item.line_h
+	end
+end
+
+hook.Add('PostDrawTranslucentRenderables', 'BGN_Actor_SayText_Drawing', function(_, skybox)
+	if skybox or #speaking_actors == 0 then return end
+
+	local eye = EyePos()
+	local angle = Angle(0, EyeAngles().y - 90, 90)
+	local now = CurTime()
 
 	for i = #speaking_actors, 1, -1 do
 		local item = speaking_actors[i]
-		local actor = item.actor
-
-		if not actor or not actor:IsAlive() then continue end
-
-		local npc = actor:GetNPC()
-		if not IsValid(npc) then continue end
-
-		local npc_pos = npc:GetPos()
-		if npc_pos:Distance(local_player_pos) > 800 then continue end
-
-		local text_lines = item.text_lines
-		local upper_vector_pos = vector_0_0_5
-		local start_pos = npc:LookupBone(head_bone_name)
-		if start_pos then
-			start_pos = start_pos + npc:GetForward() + npc:GetUp() * upper_vector_pos.z
-		else
-			start_pos = npc_pos + npc:GetForward() + npc:GetUp() * (npc:OBBMaxs().z + upper_vector_pos.z)
+		if item.finish <= now then
+			table.remove(speaking_actors, i)
+			continue
 		end
 
-		local text3d_y_axis = -15
+		local actor = item.actor
+		local npc = actor:GetNPC()
+		if not IsValid(npc) or npc:GetNoDraw() or not actor:IsAlive() then continue end
 
-		cam.Start3D2D(start_pos, local_player_eye_angles, 0.25)
-			for k = 1, #text_lines do
-				local draw_text = text_lines[k]
-				draw.SimpleTextOutlined(draw_text, font_name, 0, text3d_y_axis, clr_1, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, clr_2)
-				text3d_y_axis = text3d_y_axis + 15
-			end
+		local dist = npc:GetPos():Distance(eye)
+		local shown = math.min((now - item.start) / FADE_IN, 1)
+		local alpha = math.min(shown, (item.finish - now) / FADE_OUT, (DIST - dist) / DIST_FADE)
+		if alpha <= 0 then continue end
+
+		local bone = npc:LookupBone(HEAD_BONE)
+		local pos = bone and npc:GetBonePosition(bone) or npc:GetPos() + Vector(0, 0, npc:OBBMaxs().z)
+		pos = pos + HEAD_OFFSET
+		pos.z = pos.z - (1 - shown) * RISE
+
+		cam.Start3D2D(pos, angle, SCALE)
+			DrawPlate(item, math.min(alpha, 1))
 		cam.End3D2D()
 	end
 end)

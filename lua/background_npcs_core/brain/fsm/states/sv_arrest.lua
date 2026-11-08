@@ -15,13 +15,13 @@ end)
 
 hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, reaction)
 	if not GetConVar('bgn_arrest_mode'):GetBool() then return end
-	if not attacker:IsPlayer() and not attacker:IsNPC() then return end
 	if attacker:IsPlayer() and WantedModule:HasWanted(attacker) then return end
 
 	local TargetActor = bgNPC.Actors.Get(target)
 	local AttackerActor = bgNPC.Actors.Get(attacker)
 
-	if attacker:IsNPC() and not AttackerActor then return end
+	-- players and actors (NextBot actors too, not IsNPC): a gangster in a shoot-out may give up
+	if not attacker:IsPlayer() and not AttackerActor then return end
 
 	if not ArrestModule:HasTarget(attacker) then
 		local PoliceActor

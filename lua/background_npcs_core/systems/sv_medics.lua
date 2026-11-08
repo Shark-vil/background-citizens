@@ -87,7 +87,7 @@ function Medics.Revive(call)
 		if actor then break end
 	end
 	if not actor then return end
-	bgNPC.Net.Send('bgn.medic_revived', nil, call.pos) -- removes the client-side ragdoll
+	bgNPC.Net.Send('bgn.body_remove', nil, call.pos) -- removes the client-side ragdoll
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 	npc:SetModel(call.model)

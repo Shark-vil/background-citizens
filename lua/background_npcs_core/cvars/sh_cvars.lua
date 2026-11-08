@@ -33,6 +33,8 @@ bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
+bgNPC.cvar.bgn_corpse_cleanup = 1
+bgNPC.cvar.bgn_corpse_cleanup_time = 60
 bgNPC.cvar.bgn_ghost_crowd = 1
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -159,6 +161,10 @@ bgNPC.CVars.Register('bgn_npc_open_doors', bgNPC.cvar.bgn_npc_open_doors, 'Actor
 bgNPC.CVars.Register('bgn_ghost_crowd', bgNPC.cvar.bgn_ghost_crowd, 'EXPERIMENTAL. The server runs the ghost crowd: every player sees the same ghosts, and a ghost you walk up to becomes a real NPC. The client ghost crowd settings then do nothing.')
 
 bgNPC.CVars.Register('bgn_ghost_crowd_max', bgNPC.cvar.bgn_ghost_crowd_max, 'The most server ghosts at once, shared between the players.')
+
+bgNPC.CVars.Register('bgn_corpse_cleanup', bgNPC.cvar.bgn_corpse_cleanup, 'Bodies of dead actors fade out after bgn_corpse_cleanup_time seconds (a medic or an officer busy with a body gets their time first). npc_battle_cleanup leaves these bodies to this setting. 1 - enabled, 0 - disabled.')
+
+bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_time, 'Seconds the body of a dead actor stays (bgn_corpse_cleanup).')
 
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 
