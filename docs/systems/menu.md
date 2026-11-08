@@ -71,7 +71,7 @@ Any page can use `highlight = true`.
 
 ## First start: mode and setup wizard
 
-On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other:
+On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other, only for the owner of the game (singleplayer or the listen server host). A player who joins a server is never greeted; the windows stay available from the menu and the console:
 
 1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *Classic* (close to version 1.13) or *New*. A mode is only a preset of
    existing settings; "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.

@@ -194,10 +194,11 @@ end
 
 concommand.Add('bgn_mode_welcome', Menu.OpenWelcome, nil, 'Opens the Classic / New mode choice window')
 
--- First start: a few seconds after the player has loaded in
+-- First start: a few seconds after the player has loaded in. Only for the owner of the game (singleplayer or the
+-- listen server host): a player who joins somebody's server is never greeted, the window stays in the menu and the console.
 hook.Add('InitPostEntity', 'BGN_ModeWelcome', function()
 	timer.Simple(5, function()
-		if not cvar_chosen:GetBool() and not Menu.IsOpen() and not IsValid(Menu.welcome) then
+		if (game.SinglePlayer() or LocalPlayer():IsListenServerHost()) and not cvar_chosen:GetBool() and not Menu.IsOpen() and not IsValid(Menu.welcome) then
 			Menu.welcome_first = true
 			Menu.OpenWelcome()
 		end
