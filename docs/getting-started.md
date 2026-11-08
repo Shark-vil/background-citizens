@@ -26,7 +26,7 @@ bgn_classic
 !bgn_classic
 ```
 
-The first is a console command, the second is typed in chat (`/bgn_classic` works too). Admins only. The server part applies to the server, the client part only to the caller; NPCs already on the map keep their body, reload the map for a clean start. Admins also get this tip in chat when they join.
+The first is a console command, the second is typed in chat (`!bgnclassic` and the `/` prefix work too). Admins only. The server part applies to the server, the client part only to the caller; NPCs already on the map keep their body, reload the map for a clean start. Admins also get this tip in chat when they join.
 
 ## Vehicles are optional
 
