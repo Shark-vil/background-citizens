@@ -456,7 +456,8 @@ function ENT:UpdateCombat()
 	local stats = self.weapon_stats
 	self.enemy_visible = false
 	if self.alert ~= 'combat' or not stats or not IsValid(enemy) or not IsValid(self.weapon) then return end
-	if enemy:Health() <= 0 or self.sequence_lock then return end
+	-- a player in a car: the enemy is the car (RedirectEnemyToVehicle), which mostly has no health of its own
+	if (enemy:Health() <= 0 and not enemy:IsVehicle() and not enemy.IsSimfphyscar) or self.sequence_lock then return end
 
 	local dist_sqr = self:GetPos():DistToSqr(enemy:GetPos())
 	if dist_sqr > stats.range * stats.range then return end

@@ -136,6 +136,11 @@ Actors and Decent Vehicle cars; the state `go_to_police_car` (no longer police o
   police get the chase AI). Bandits on the run (`retreat`, `fear`, `run_from_danger`) within 700 units of such a
   car take it too (35 % per check) and keep running in it.
 
+NextBots and cars (`systems/sv_nextbot_vehicle_hits.lua`): a NextBot has no physics object, so the engine deals it
+no crush damage. Every 0.1 s each moving car (players', Decent Vehicle ones) faster than 150 u/s hurts NextBots in
+its box and just ahead ((speed - 75) x 0.25, the driver is the attacker) and throws them. A NextBot whose enemy
+sits in a car shoots the car (the enemy is the car then, which has no health of its own).
+
 Which car: `VEHICLE:CanBoard`: an empty one the actor left, or of its group (`police`, `bandits`, `medics`, ...),
 never someone else's `residents` car (police and medics are residents too, citizens keep to their own).
 `VEHICLE:CanSeize`: a car of another group, empty or driven by an actor (never a player), not driven by a

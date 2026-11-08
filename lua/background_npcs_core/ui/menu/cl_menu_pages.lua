@@ -158,6 +158,8 @@ Menu.AddPage('arrest', {
 		page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, { decimals = 1 })
 		page:Slider('bgn_arrest_time_limit', '#bgn.settings.arrest.arrest_time_limit', 0, 100, { decimals = 1 })
 		page:Slider('bgn_arrest_surrender_delay', '#bgn.settings.arrest.surrender_delay', 0, 120, { decimals = 1 })
+		page:Slider('bgn_arrest_car_wait', '#bgn.settings.arrest.car_wait', 0, 60, { decimals = 1 })
+		page:Slider('bgn_arrest_car_time', '#bgn.settings.arrest.car_time', 1, 60, { decimals = 1 })
 	end,
 })
 
