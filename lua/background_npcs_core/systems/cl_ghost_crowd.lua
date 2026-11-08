@@ -7,6 +7,10 @@
 	  Panic wins from PANIC_SHARE of the actors in the "danger" state group, one scared actor matters more
 	  than a dozen walkers.
 	- They walk from point to point (server navigation, sv_ghost_crowd.lua) and never towards the player.
+	  Their feet follow the ground (a trace down a few times a second), points often hang above it.
+	- They keep out of the inner radius around every player: real actors live there (multiplayer too).
+	- They appear out of sight, or in sight farther than "bgn_spawn_radius_visibility" (the same rule as
+	  real actors). At the limit, a ghost behind the player moves into view, so open areas don't look empty.
 	- When the player comes close they leave: removed at once when out of sight, otherwise they run away
 	  and fade out only as a last resort. The real actors that spawn there take their place.
 --]]
@@ -26,6 +30,10 @@ local SPAWN_PER_THINK = 2
 local HEAD = Vector(0, 0, 64)
 local CHEST = Vector(0, 0, 40)
 local VIEW_DOT = 0.4         -- a bit wider than a usual horizontal FOV
+local GROUND_PERIOD = 0.15
+local GROUND_UP = Vector(0, 0, 48)
+local GROUND_DOWN = Vector(0, 0, 160)
+local SPAWN_TRIES = 8
 local ACT_PANIC = ACT_RUN_PROTECTED or ACT_RUN
 
 local FALLBACK_MODELS = {
@@ -50,7 +58,23 @@ local looks, looks_index = {}, {}
 -- Inner radius: ghosts leave inside it. Outer: they live up to it.
 local function Radii()
 	local radius = GetConVar('bgn_spawn_radius'):GetFloat()
-	return radius * 0.5, radius * 1.5
+	return radius * 0.35, radius * 1.5
+end
+
+-- Other players' positions: real actors live around them, ghosts keep out (filled every think)
+local others = {}
+
+local function NearOtherPlayer(pos, r_in_sqr)
+	for i = 1, #others do
+		if pos:DistToSqr(others[i]) < r_in_sqr then return true end
+	end
+	return false
+end
+
+-- @return number ground height under pos, pos.z when there is no ground in reach
+local function GroundZ(pos)
+	local tr = util.TraceLine({ start = pos + GROUND_UP, endpos = pos - GROUND_DOWN, mask = MASK_PLAYERSOLID_BRUSHONLY })
+	return tr.Hit and not tr.StartSolid and tr.HitPos.z or pos.z
 end
 
 local function IsSeen(eye, eye_dir, pos)
@@ -179,12 +203,13 @@ local function CreateGhost(pos)
 
 	ent:SetSkin(look.skin)
 	ent:SetBodyGroups(look.bodygroups)
+	pos = Vector(pos.x, pos.y, GroundZ(pos))
 	ent:SetPos(pos)
 	ent:SetAngles(Angle(0, math.random(0, 359), 0))
 	ent.bgn_ghost_alpha = 0
 	ent.RenderOverride = DrawGhost
 
-	local ghost = { ent = ent, pos = Vector(pos), alpha = 0, cycle = math.random(), yaw = ent:GetAngles().y }
+	local ghost = { ent = ent, pos = pos, z = pos.z, next_ground = 0, alpha = 0, cycle = math.random(), yaw = ent:GetAngles().y }
 	SetActivity(ghost, ACT_IDLE)
 	ghosts[#ghosts + 1] = ghost
 end
@@ -201,7 +226,7 @@ local function NextPoint(ghost, ply_pos, r_in, run_away)
 
 	graph:ForEachInRadius(from, STEP_DIST, function(_, pos, dist_sqr)
 		if dist_sqr < 2500 or math.abs(pos.z - from.z) > MAX_STEP_Z or pos == ghost.prev then return end
-		if pos:DistToSqr(ply_pos) < r_in_sqr then return end
+		if pos:DistToSqr(ply_pos) < r_in_sqr or NearOtherPlayer(pos, r_in_sqr) then return end
 		local dir = pos - from
 		dir.z = 0
 		dir:Normalize()
@@ -234,7 +259,7 @@ local function Decide(ghost, now, ply_pos, eye, eye_dir, r_in, r_out)
 	local dist = ghost.pos:Distance(ply_pos)
 	local seen = IsSeen(eye, eye_dir, ghost.pos + HEAD)
 
-	if dist > r_out * 1.15 then return Leave(ghost, seen) end
+	if dist > r_out * 1.15 or NearOtherPlayer(ghost.pos, r_in * r_in) then return Leave(ghost, seen) end
 
 	if dist < r_in then
 		if not seen or dist < r_in * 0.6 then return Leave(ghost, seen) end
@@ -265,18 +290,54 @@ local function Decide(ghost, now, ply_pos, eye, eye_dir, r_in, r_out)
 	return false
 end
 
-local function TrySpawn(ply_pos, eye, eye_dir, r_in, r_out)
-	for _ = 1, 4 do
+-- @return Vector|nil a spawn point, one in front of the player when possible
+local function FindSpawnPoint(ply_pos, eye, eye_dir, r_in, r_out)
+	local visible_from = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
+	local r_in_sqr = r_in * r_in
+	local fallback
+
+	for _ = 1, SPAWN_TRIES do
 		local id = graph:GetRandom()
 		local pos = id and graph:GetPos(id)
 		if not pos then return end
 
 		local dist = pos:Distance(ply_pos)
-		if dist >= r_in * 1.2 and dist <= r_out and (dist > r_out * 0.85 or not IsSeen(eye, eye_dir, pos + HEAD)) then
-			CreateGhost(pos)
-			return
+		-- in sight only farther than the real actors may appear in sight
+		if dist >= r_in * 1.2 and dist <= r_out and not NearOtherPlayer(pos, r_in_sqr)
+			and (dist > visible_from or not IsSeen(eye, eye_dir, pos + HEAD))
+		then
+			local dir = pos - eye
+			dir:Normalize()
+			if eye_dir:Dot(dir) > VIEW_DOT then return pos, true end
+			fallback = fallback or pos
 		end
 	end
+
+	return fallback, false
+end
+
+-- A ghost nobody sees, behind the player: it is the first to move into view at the limit
+local function FindBehindGhost(eye, eye_dir)
+	for i = 1, #ghosts do
+		local ghost = ghosts[i]
+		local dir = ghost.pos - eye
+		dir:Normalize()
+		if not ghost.fading and eye_dir:Dot(dir) < -0.2 then return i end
+	end
+end
+
+local function TrySpawn(ply_pos, eye, eye_dir, r_in, r_out, max)
+	local pos, in_front = FindSpawnPoint(ply_pos, eye, eye_dir, r_in, r_out)
+	if not pos then return end
+
+	if #ghosts >= max then
+		if not in_front then return end
+		local behind = FindBehindGhost(eye, eye_dir)
+		if not behind then return end
+		RemoveGhost(behind)
+	end
+
+	CreateGhost(pos)
 end
 
 bgNPC.Test.Add('ghost_crowd_next_point', function(check)
@@ -331,6 +392,11 @@ bgNPC.Tasks.Add('bgn_ghost_crowd', function(yield, wait, budget)
 		local eye, eye_dir = ply:EyePos(), ply:EyeAngles():Forward()
 		local r_in, r_out = Radii()
 
+		table.Empty(others)
+		for _, other in ipairs(player.GetAll()) do
+			if other ~= ply and other:Alive() then others[#others + 1] = other:GetPos() end
+		end
+
 		if now >= next_points_request and (not points_center or points_center:Distance(ply_pos) > r_in * 0.5) then
 			next_points_request = now + POINTS_PERIOD
 			points_center = ply_pos
@@ -349,11 +415,10 @@ bgNPC.Tasks.Add('bgn_ghost_crowd', function(yield, wait, budget)
 			end
 
 			local max = cvar_max:GetInt()
-			for _ = 1, SPAWN_PER_THINK do
-				if #ghosts >= max then break end
-				TrySpawn(ply_pos, eye, eye_dir, r_in, r_out)
-			end
 			while #ghosts > max do RemoveGhost(#ghosts) end
+			for _ = 1, SPAWN_PER_THINK do
+				TrySpawn(ply_pos, eye, eye_dir, r_in, r_out, max)
+			end
 		end
 
 		wait(THINK_PERIOD)
@@ -364,6 +429,7 @@ end)
 hook.Add('Think', 'BGN_GhostCrowd', function()
 	if #ghosts == 0 then return end
 	local dt = FrameTime()
+	local now = CurTime()
 
 	for i = #ghosts, 1, -1 do
 		local ghost = ghosts[i]
@@ -392,8 +458,15 @@ hook.Add('Think', 'BGN_GhostCrowd', function()
 			else
 				ghost.pos = ghost.pos + to * (step / dist)
 			end
-			ent:SetPos(ghost.pos)
 		end
+
+		-- the path runs between points that often hang above the ground: the feet follow a trace down
+		if now >= ghost.next_ground then
+			ghost.next_ground = now + GROUND_PERIOD
+			ghost.ground = GroundZ(ghost.pos)
+		end
+		ghost.z = math.Approach(ghost.z, ghost.ground or ghost.pos.z, 300 * dt)
+		ent:SetPos(Vector(ghost.pos.x, ghost.pos.y, ghost.z))
 
 		if ghost.target_yaw then
 			ghost.yaw = math.ApproachAngle(ghost.yaw, ghost.target_yaw, 360 * dt)
