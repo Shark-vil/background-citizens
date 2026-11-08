@@ -228,6 +228,7 @@ Menu.AddPage('client', {
 		local by_server = GetConVar('bgn_ghost_crowd'):GetBool() and { locked = true, help = '#bgn.menu.ghost_crowd.by_server' } or nil
 		page:Toggle('bgn_cl_ghost_crowd', '#bgn.menu.ghost_crowd', by_server)
 		page:Slider('bgn_cl_ghost_crowd_max', '#bgn.menu.ghost_crowd_max', 0, 150, by_server)
+		if by_server then page:Note('#bgn.menu.ghost_crowd.by_server') end -- visible, the help only shows on hover
 
 		page:Section('#bgn.menu.section.menu')
 		page:Choice('bgn_cl_ui_language', '#bgn.menu.ui_language', {
