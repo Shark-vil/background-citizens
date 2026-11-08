@@ -45,7 +45,7 @@ bgNPC.Menu.AddPage('my_addon', {
 | `page:Slider(cvar, label, min, max, opts)` | `opts.decimals` (0), `opts.limit` — the max for typed values (they may pass `max`). The value is sent on release. |
 | `page:Button(label, command or function, opts)` | `opts.text` caption, `opts.confirm` (true or a question), `opts.danger`, `opts.admin`. |
 | `page:Color(label, { r, g, b }, opts)` | Three integer cvars. |
-| `page:Choice(cvar, label, { { value, text }, ... }, opts)` | Segmented control for a few string values; `opts.on_change(value)`. |
+| `page:Choice(cvar, label, { { value, text }, ... }, opts)` | Segmented control for a few string values; `opts.on_change(value)`; `opts.get()` gives the active value when `cvar` is a console command. |
 | `page:Note(text)` | A muted paragraph between cards. |
 | `page:Row(label, help, server, cvar)` | An empty row: put your panel into `row.control`, it is placed on the right. `cvar` is searchable. |
 | `page:Custom(function(panel) end)` | Any panel, docked at the top. Hidden while searching. |
@@ -66,3 +66,10 @@ page of the author's Workshop items: preview, title, short description, Subscrib
 The page count is read from the first page. Previews are cached in `data/bgn_workshop/<id>.jpg|png`;
 GIF previews are skipped. A failed load is not retried until the next map, the page says it couldn't load.
 Any page can use `highlight = true`.
+
+## Crowd density
+
+General page, single player only (it changes server and client settings together): one choice sets
+`bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`.
+Low 15 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
+No preset is selected when the limits were changed by hand. Presets: `DENSITY` in `ui/menu/cl_menu_pages.lua`.

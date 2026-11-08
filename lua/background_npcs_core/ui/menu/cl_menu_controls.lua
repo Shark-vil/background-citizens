@@ -579,12 +579,14 @@ function Builder:Color(label, rgb, opts)
 end
 
 -- Segmented control. @param options table { { value, text }, ... } (text: '#phrase', plain or { en, ru })
+-- opts.get: function() the active value, when cvar is a console command rather than a variable
 function Builder:Choice(cvar, label, options, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
 	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
 
 	local function Get()
+		if opts.get then return tostring(opts.get()) end
 		local cv = GetConVar(cvar)
 		return cv and cv:GetString() or ''
 	end

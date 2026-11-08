@@ -7,6 +7,39 @@ local Menu = bgNPC.Menu
 local ICONS = 'background_npcs/vgui/menu/'
 local SERVER_GROUP = '#bgn.menu.group.server'
 
+-- Crowd density: one choice sets the NPC and ghost limits at once (type limits follow bgn_max_npc, sv_cvars.lua).
+-- Single player only: it changes server and client settings together.
+local DENSITY = {
+	{ id = 'low', values = { bgn_max_npc = 15, bgn_ghost_crowd_max = 0, bgn_cl_ghost_crowd_max = 0 } },
+	{ id = 'medium', values = { bgn_max_npc = 35, bgn_ghost_crowd_max = 40, bgn_cl_ghost_crowd_max = 40 } },
+	{ id = 'high', values = { bgn_max_npc = 60, bgn_ghost_crowd_max = 80, bgn_cl_ghost_crowd_max = 80 } },
+	{ id = 'ultra', values = { bgn_max_npc = 100, bgn_ghost_crowd_max = 150, bgn_cl_ghost_crowd_max = 150 } },
+}
+
+-- @return string the preset matching the current settings, '' when they were changed by hand
+local function CurrentDensity()
+	for _, preset in ipairs(DENSITY) do
+		local match = true
+		for name, value in pairs(preset.values) do
+			local cv = GetConVar(name)
+			if not cv or cv:GetInt() ~= value then match = false break end
+		end
+		if match then return preset.id end
+	end
+	return ''
+end
+
+concommand.Add('bgn_crowd_density', function(_, _, args)
+	if not game.SinglePlayer() then return MsgN('[Background NPCs] bgn_crowd_density works in single player only') end
+	for _, preset in ipairs(DENSITY) do
+		if preset.id == args[1] then
+			for name, value in pairs(preset.values) do RunConsoleCommand(name, tostring(value)) end
+			return
+		end
+	end
+	MsgN('[Background NPCs] bgn_crowd_density low | medium | high | ultra')
+end)
+
 Menu.AddPage('general', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.general',
@@ -16,6 +49,13 @@ Menu.AddPage('general', {
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
 		page:Toggle('bgn_debug', '#bgn.settings.general.debug')
+
+		if game.SinglePlayer() then
+			page:Section('#bgn.menu.section.crowd_density')
+			local options = {}
+			for i, preset in ipairs(DENSITY) do options[i] = { preset.id, '#bgn.menu.crowd_density.' .. preset.id } end
+			page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, { get = CurrentDensity, server = false })
+		end
 
 		page:Section('#bgn.menu.section.modes')
 		page:Toggle('bgn_peaceful_mode', '#bgn.settings.general.peaceful_mode')
