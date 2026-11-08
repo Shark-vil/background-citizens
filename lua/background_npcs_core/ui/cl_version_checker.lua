@@ -7,6 +7,16 @@ local text_color_orange = Color(255, 196, 0)
 local text_color_green = Color(30, 255, 0)
 local text_color_version = Color(135, 196, 211)
 
+-- -1 / 0 / 1 by each number: "2.0.0" is newer than "1.13.7" (gluing the digits, 200 < 1137, was not)
+local function CompareVersions(a, b)
+	local pa, pb = string.Explode('.', string.Trim(a)), string.Explode('.', string.Trim(b))
+	for i = 1, math.max(#pa, #pb) do
+		local x, y = tonumber(pa[i]) or 0, tonumber(pb[i]) or 0
+		if x ~= y then return x < y and -1 or 1 end
+	end
+	return 0
+end
+
 local function version_check()
 	http.Fetch('https://raw.githubusercontent.com/Shark-vil/background-citizens/master/version.txt',
 		function(github_version, length, headers, code)
@@ -40,15 +50,14 @@ local function version_check()
 			}
 
 			local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
-			local v_github = tonumber(string.Replace(github_version, '.', ''))
-			local v_addon = tonumber(string.Replace(bgNPC.VERSION, '.', ''))
+			local compare = CompareVersions(bgNPC.VERSION, github_version)
 			local v_storage = '[out of sync]'
 
 			if file.Exists('background_npcs/version.txt', 'DATA') then
 				v_storage = file.Read('background_npcs/version.txt', 'DATA')
 			end
 
-			if v_addon < v_github then
+			if compare < 0 then
 
 				chat.AddText(text_color_red, '[ADMIN] ',
 					text_color_mod_title, 'Background NPCs:\n',
@@ -56,7 +65,7 @@ local function version_check()
 					text_color_info, lang.update_page_1,
 					text_command_color, lang.command, text_color_info, lang.update_page_2)
 
-			elseif v_addon == v_github then
+			elseif compare == 0 then
 
 				chat.AddText(text_color_red, '[ADMIN] ',
 					text_color_mod_title, 'Background NPCs:\n',
@@ -64,7 +73,7 @@ local function version_check()
 					text_color_info, lang.update_page_1,
 					text_command_color, lang.command, text_color_info, lang.update_page_2)
 
-			elseif v_addon > v_github then
+			else
 
 				chat.AddText(text_color_red, '[ADMIN] ',
 					text_color_mod_title, 'Background NPCs:\n',

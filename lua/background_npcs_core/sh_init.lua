@@ -27,7 +27,7 @@ if SERVER then
 end
 
 bgNPC = bgNPC or {}
-bgNPC.VERSION = '1.13.7'
+bgNPC.VERSION = '2.0.0'
 
 -- Shared storage, filled by the API ----
 bgNPC.LANGUAGES = bgNPC.LANGUAGES or {}
