@@ -5,8 +5,8 @@
 hook.Add('Think', 'BGN_ActorAnimationController', function()
 	local actors = bgNPC.Actors.GetAll()
 	for i = 1, #actors do
-		local actor = actors[i]
-		local npc = actor:GetNPC()
+		local actor = actors[i] -- nil: an actor removed earlier in this pass shortened the list
+		local npc = actor and actor:GetNPC()
 		if actor and actor:IsAlive() and actor:IsAnimationPlayed() then
 			-- frozen AI: under SCHED_SLEEP the engine drops the script state every ~0.3 s and runs its own
 			-- schedule for a tick, the NPC flickers between that and the sequence. Set once, not every tick
