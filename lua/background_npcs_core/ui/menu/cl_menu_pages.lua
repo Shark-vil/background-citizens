@@ -353,5 +353,14 @@ Menu.AddPage('tools', {
 		page:Button('#bgn.settings.general.reset_cvars_to_factory_settings', 'bgn_reset_cvars_to_factory_settings', {
 			admin = true, text = '#bgn.menu.reset', confirm = '#bgn.menu.confirm.reset', danger = true,
 		})
+
+		-- the test runs from debug/cl_diag.lua; the checks of rights and settings are open to everyone
+		page:Section('#bgn.diag.section')
+		page:Button('#bgn.diag.run', 'bgn_test', { admin = true, text = '#bgn.menu.run' })
+		page:Button('#bgn.diag.run_settings', 'bgn_test_settings', { text = '#bgn.menu.run' })
+		page:Button('#bgn.diag.report', 'bgn_test_report', { text = '#bgn.menu.open_page' })
+		page:Slider('bgn_test_server_value', '#bgn.diag.cvar_server', 0, 100)
+		page:Slider('bgn_cl_test_value', '#bgn.diag.cvar_client', 0, 100, { server = false })
+		page:Note('#bgn.diag.note')
 	end,
 })
