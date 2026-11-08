@@ -121,3 +121,22 @@ on every client. [npc_battle_cleanup](https://steamcommunity.com/sharedfiles/fil
 remove a body in seconds, before a medic or an officer gets to it, so the actors' bodies are left to this
 setting: server ragdolls get its `doNotRemove` flag, its client-side corpse cleanup skips them.
 With `bgn_corpse_cleanup 0` the bodies stay until the engine's own ragdoll limits remove them.
+
+## Cars
+
+Actors and Decent Vehicle cars; the state `go_to_police_car` (no longer police only) runs to the car and gets in.
+
+- **Back to the car** (`modules/dv/sv_return_to_vehicle.lua`, every 2 s): an actor within 1000 units of an empty
+  car, walking or in a fight with every player and enemy at least 1500 units away, gets back in.
+- **The enemy drives off** (`sv_defense.lua`, every 2 s, 30 %): a player in a vehicle or an actor in a car; checked
+  before the squad move, so squad members go too.
+- **Confiscation and carjacking** (`data.seize`): when no car of its own is near, the police take a car of another
+  group ("police_seize") and bandits carjack one ("gangster_carjack"): whoever sits inside is thrown out
+  (`VEHICLE:Eject`, scared unless it is a teammate) and the car joins the actor's group (`VEHICLE:SetGroup`: the
+  police get the chase AI). Bandits on the run (`retreat`, `fear`, `run_from_danger`) within 700 units of such a
+  car take it too (35 % per check) and keep running in it.
+
+Which car: `VEHICLE:CanBoard`: an empty one the actor left, or of its group (`police`, `bandits`, `medics`, ...),
+never someone else's `residents` car (police and medics are residents too, citizens keep to their own).
+`VEHICLE:CanSeize`: a car of another group, empty or driven by an actor (never a player), not driven by a
+teammate. Only the police and bandits seize.

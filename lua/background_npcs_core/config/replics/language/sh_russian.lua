@@ -173,6 +173,13 @@ bgNPC.cfg.replics['police_luggage_2'] = {
 	'Последнее предупреждение, гражданин!',
 }
 
+bgNPC.cfg.replics['police_seize'] = {
+	'Полиция! Мне нужна ваша машина, выходите!',
+	'Из машины, живо! Полицейская операция!',
+	'Машина конфискована, выходите!',
+	'Выходи, я забираю машину!',
+}
+
 
 -- Разговоры (config/states/sh_conversations.lua) и реакции на игроков. Число и порядок строк как в sh_english.lua.
 bgNPC.cfg.replics['conv_greet'] = {
@@ -368,6 +375,13 @@ bgNPC.cfg.replics['gangster_stare_1'] = {
 bgNPC.cfg.replics['gangster_stare_2'] = {
 	'Ты нарываешься!',
 	'Последний шанс уйти!',
+}
+
+bgNPC.cfg.replics['gangster_carjack'] = {
+	'Вылезай из машины!',
+	'Вон! Теперь тачка моя!',
+	'Шевелись, или ты труп!',
+	'Спасибо за колёса, лошара!',
 }
 
 bgNPC.cfg.replics['police_stare_1'] = {

@@ -5,7 +5,16 @@ local SLOT_MOVED_SQR = 64 ^ 2
 local MELEE_STOP_SQR = 50 ^ 2
 local MELEE_ENGINE_DIST_SQR = 700 ^ 2
 local WANTED_FIGHT_DIST_SQR = 300 ^ 2 -- a wanted actor fights only this close (retreat turns to defense at 190)
+local CAR_CHECK_PERIOD = 2
+local CAR_CHANCE = 30
 --
+
+-- A player in a vehicle, or an actor in a car (its hidden entity is the enemy)
+local function IsEnemyInVehicle(enemy)
+	if enemy:IsPlayer() then return enemy:InVehicle() end
+	local enemy_actor = bgNPC.Actors.Get(enemy)
+	return enemy_actor ~= nil and enemy_actor:InVehicle()
+end
 
 -- A melee fighter has to close in. A NextBot is steered at the enemy on every update; an HL2 NPC chases
 -- by its own AI nearby, so only a far one is handled (by the ranged code below).
@@ -105,6 +114,16 @@ bgNPC.States.Register('defense', 'danger', {
 		-- the weapon comes out right away; only the repositioning below is throttled
 		if not data.disableWeapon then actor:PrepareWeapon() end
 
+		-- the enemy drives off (a player or an actor in a car): get a car too, before the squad takes over the move.
+		-- Police may confiscate one and bandits carjack one when none of their own is near (go_to_police_car).
+		if (data.next_car_check or 0) <= now then
+			data.next_car_check = now + CAR_CHECK_PERIOD
+			if IsEnemyInVehicle(enemy) and bgNPC.Util.Chance(CAR_CHANCE) then
+				actor:SetState('go_to_police_car', { seize = actor:HasTeam('police') or actor:HasTeam('bandits') })
+				if actor:HasState('go_to_police_car') then return end
+			end
+		end
+
 		if squad then
 			MoveToSlot(actor, data, squad.slot)
 			return
@@ -122,9 +141,7 @@ bgNPC.States.Register('defense', 'danger', {
 		local current_distance = npc_pos:DistToSqr(enemy_pos)
 		local is_player_in_vehicle = enemy:IsPlayer() and enemy:InVehicle()
 
-		if is_player_in_vehicle and bgNPC.Util.Chance(20) then
-			actor:SetState('go_to_police_car')
-		elseif current_distance > 490000 then
+		if current_distance > 490000 then
 			if is_player_in_vehicle then
 				actor:WalkToTarget(enemy:GetVehicle(), 'run')
 			else

@@ -202,6 +202,48 @@ function VEHICLE:GetVehicle()
 	return self.vehicle
 end
 
+-- An empty car the actor may take back: the one it left, or one of its group (police, bandits, ...).
+-- Not someone else's residents car: police and medics are residents too, and citizens keep to their own.
+function VEHICLE:CanBoard(actor)
+	local vehicle = self.vehicle
+	if not IsValid(vehicle) or self:GetDriver() or IsValid(vehicle:GetDriver()) then return false end
+	if actor.last_vehicle == self then return true end
+	local group = string.Explode('|', self.type)[1]
+	return group ~= 'residents' and actor:HasTeam(group)
+end
+
+-- A car of another group the actor may take by force (police confiscation, a gangster carjacking):
+-- empty or driven by an actor, never by a player.
+function VEHICLE:CanSeize(actor)
+	local vehicle = self.vehicle
+	if not IsValid(vehicle) or IsValid(vehicle:GetDriver()) then return false end
+	local group = string.Explode('|', self.type)[1]
+	if group == actor:GetVehicleGroup() then return false end
+	-- not from its own people (everyone shares 'residents', so that team doesn't count)
+	local driver = self:GetDriver()
+	return not (driver and group ~= 'residents' and driver:HasTeam(actor))
+end
+
+-- The car now belongs to another group: its AI (police chase, plain driving) follows on the next driver.
+function VEHICLE:SetGroup(vehicle_type)
+	self.type = vehicle_type or 'residents'
+	SetupVehicleGroup(self, vehicle_type)
+end
+
+-- Throws everyone out; they are scared of the one who did it.
+function VEHICLE:Eject(by_actor)
+	local npc = by_actor:GetNPC()
+	for _, actor in ipairs(table.Copy(self:GetPassengers())) do
+		if actor ~= by_actor and actor:InVehicle() then
+			actor:ExitVehicle()
+			if not actor:HasTeam(by_actor) then
+				actor:AddEnemy(npc, 'fear')
+				actor:SetState('fear')
+			end
+		end
+	end
+end
+
 function VEHICLE:GetVehicleAI()
 	return self.ai
 end

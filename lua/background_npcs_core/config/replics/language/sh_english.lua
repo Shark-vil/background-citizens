@@ -171,6 +171,13 @@ bgNPC.cfg.replics['police_luggage_2'] = {
 	'Last warning, citizen!',
 }
 
+bgNPC.cfg.replics['police_seize'] = {
+	'Police! I need your vehicle, get out!',
+	'Out of the car, now! Police business!',
+	'This vehicle is confiscated, step out!',
+	'Get out, I am taking your car!',
+}
+
 
 -- Conversations (config/states/sh_conversations.lua) and reactions to players. Same count and order in every language.
 bgNPC.cfg.replics['conv_greet'] = {
@@ -366,6 +373,13 @@ bgNPC.cfg.replics['gangster_stare_1'] = {
 bgNPC.cfg.replics['gangster_stare_2'] = {
 	'You\'re asking for it!',
 	'Last chance to walk away!',
+}
+
+bgNPC.cfg.replics['gangster_carjack'] = {
+	'Get out of the car!',
+	'Out! This ride is mine now!',
+	'Move it or you are dead!',
+	'Thanks for the wheels, sucker!',
 }
 
 bgNPC.cfg.replics['police_stare_1'] = {

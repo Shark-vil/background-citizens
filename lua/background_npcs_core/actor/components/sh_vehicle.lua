@@ -13,6 +13,11 @@ local function ResolveVehicleGroup(actor)
 	return nil
 end
 
+-- @return string the group of the cars this actor drives: 'police', 'bandits', ... or 'residents'
+function Actor:GetVehicleGroup()
+	return string.Explode('|', ResolveVehicleGroup(self) or 'residents')[1]
+end
+
 function Actor:EnterVehicle(vehicle)
 	Assert.Arg(1, vehicle, 'entity', 'ACTOR:EnterVehicle')
 
@@ -119,6 +124,7 @@ function Actor:ExitVehicle()
 	end
 
 	self.eternal = false
+	self.last_vehicle = vehicle_provider -- it may come back to it (go_to_police_car)
 	self.vehicle = nil
 	self.vehicle_data = {}
 end
