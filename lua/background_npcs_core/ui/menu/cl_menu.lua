@@ -69,14 +69,17 @@ function Menu.Text(value)
 		return value[(bgNPC.Util.GetLanguage())] or value.en or ''
 	end
 	value = tostring(value or '')
-	if value:sub(1, 1) == '#' then return language.GetPhrase(value:sub(2)) end
+	if value:sub(1, 1) == '#' then
+		local key = value:sub(2)
+		return bgNPC.Phrases[key] or language.GetPhrase(key)
+	end
 	return value
 end
 
 -- @return string|nil the phrase, nil when the language files don't have it
 function Menu.Phrase(key)
 	if key:sub(1, 1) == '#' then key = key:sub(2) end
-	local text = language.GetPhrase(key)
+	local text = bgNPC.Phrases[key] or language.GetPhrase(key)
 	if text ~= key then return text end
 end
 

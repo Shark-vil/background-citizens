@@ -12,7 +12,7 @@ who says which line, and each client plays it in its own language, or not at all
 | Cvar (client) | Default | Meaning |
 |---|---|---|
 | `bgn_cl_voices` | `1` | `1` voiced (the old Half-Life 2 sound where a line has no clip), `2` only the old Half-Life 2 sounds, `0` silent |
-| `bgn_cl_ui_language` | `auto` | language of the menu, hints, phrases and voices: `auto` (the game language), `english`, `russian` |
+| `bgn_cl_voice_language` | `auto` | language of the NPC phrases and voices: `auto` (the game language), `english`, `russian` |
 
 Settings window: **My settings**. The server's `bgn_module_replics_language` still forces one phrase language
 for everyone when it is not `auto`.

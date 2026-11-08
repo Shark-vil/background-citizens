@@ -7,7 +7,9 @@ The window scales with the screen height (designed at 1080p), has a light and a 
 (`bgn_menu_dark`, also the sun / moon button) and soft interface sounds (`bgn_menu_sounds`).
 Texts follow the game language (English and Russian), or the one chosen in **My settings → Menu**
 (`bgn_cl_ui_language`: `auto`, `english`, `russian`): the chosen language's
-`resource/localization/<lang>/bgn_*.properties` are loaded over the game's.
+`resource/localization/<lang>/bgn_*.properties` are loaded over the game's. `language.Add` doesn't replace a
+phrase the game already loaded, so they are also kept in `bgNPC.Phrases`, which `Menu.Text` reads first.
+The interface language doesn't change the NPC phrases: they have `bgn_cl_voice_language` (see voices.md).
 
 The search field (Ctrl+F) looks through every page: labels, help texts and cvar names; Esc clears it.
 The full screen button (or a double click on the header) maximizes the window.

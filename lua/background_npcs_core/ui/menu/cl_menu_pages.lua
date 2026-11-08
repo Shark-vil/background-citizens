@@ -210,6 +210,9 @@ Menu.AddPage('client', {
 		page:Choice('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
 			{ 1, '#bgn.menu.voices.generated' }, { 2, '#bgn.menu.voices.classic' }, { 0, '#bgn.menu.voices.off' },
 		})
+		page:Choice('bgn_cl_voice_language', '#bgn.menu.voice_language', {
+			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
+		})
 
 		page:Section('#bgn.menu.section.wanted')
 		page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
