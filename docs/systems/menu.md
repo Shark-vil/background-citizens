@@ -20,6 +20,8 @@ a section without visible rows has no heading, a page without visible rows is no
 `bgn_menu_as_player [1/0]` (no argument toggles) shows the window as a non-admin sees it, for debugging; the
 server still checks the rights.
 
+**Tools → Testing** runs the [testing mode](testing.md): spawn, vehicle, state and settings checks with a copyable log.
+
 ## Adding a page
 
 ```lua

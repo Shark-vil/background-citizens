@@ -59,6 +59,7 @@ plugins:
             Brains: Поведение
             Settings menu: Меню настроек
             Ghost crowd: Фоновая толпа
+            Testing mode: Режим тестирования
             Conversations: Разговоры
             Arrest: Арест
             Voices: Голоса
@@ -80,6 +81,7 @@ nav:
       - Brains: systems/brains.md
       - Settings menu: systems/menu.md
       - Ghost crowd: systems/ghost-crowd.md
+      - Testing mode: systems/testing.md
       - Conversations: systems/conversations.md
       - Arrest: systems/arrest.md
       - Voices: systems/voices.md

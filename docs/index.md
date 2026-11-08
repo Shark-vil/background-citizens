@@ -14,6 +14,7 @@ Keep changes in a separate addon: [create an actor](tutorials/Creating-Custom-NP
 - [Bodies, brains and combat](systems/brains.md)
 - [Settings menu and extensions](systems/menu.md)
 - [Experimental ghost crowd](systems/ghost-crowd.md)
+- [Testing mode](systems/testing.md)
 - [Conversations and fist fights](systems/conversations.md)
 - [Arrest](systems/arrest.md)
 - [Voices and languages](systems/voices.md)

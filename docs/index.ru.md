@@ -14,6 +14,7 @@
 - [Тела, поведение и бой](systems/brains.md)
 - [Меню настроек](systems/menu.md)
 - [Экспериментальная фоновая толпа](systems/ghost-crowd.md)
+- [Режим тестирования](systems/testing.md)
 - [Разговоры и драки](systems/conversations.md)
 - [Арест](systems/arrest.md)
 - [Голоса и языки](systems/voices.md)
