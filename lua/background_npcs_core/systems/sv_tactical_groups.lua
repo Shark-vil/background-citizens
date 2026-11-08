@@ -123,6 +123,13 @@ local function Assign(squad)
 	local formation = not sees and 'column' or (#front >= 4 and 'wedge' or 'line')
 	squad.formation, squad.enemy = formation, enemy
 
+	-- police leaders call the new formation on the radio (at most every 8 s: "sees" can flicker)
+	local leader = squad.leader
+	if leader:HasTeam('police') and leader.vo_formation ~= formation and (leader.vo_formation_time or 0) < CurTime() then
+		leader.vo_formation, leader.vo_formation_time = formation, CurTime() + 8
+		leader:Voice('police_squad_' .. formation)
+	end
+
 	local anchor = enemy_pos - forward * ENGAGE_DIST
 	local depth = 0
 	local function Place(list, offsets, base, role)
@@ -136,6 +143,8 @@ local function Assign(squad)
 				slot = SnapToNav(base + forward * offset[1] + right * offset[2]),
 			}
 			member:AddEnemy(enemy)
+			if role == 'rear' and member.vo_role ~= 'rear' and member:HasTeam('police') then member:Voice('police_squad_rear') end
+			member.vo_role = role
 		end
 	end
 

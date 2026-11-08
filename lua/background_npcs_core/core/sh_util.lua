@@ -64,7 +64,8 @@ end
 function Util.GetLanguage(ply)
 	local language
 	if CLIENT then
-		language = GetConVar('gmod_language'):GetString()
+		language = GetConVar('bgn_cl_ui_language'):GetString()
+		if language == 'auto' then language = GetConVar('gmod_language'):GetString() end
 	elseif IsValid(ply) then
 		language = ply:GetInfo('bgn_cl_language')
 	end
@@ -90,11 +91,13 @@ function Util.Lang(data, ply_or_language)
 end
 
 if CLIENT then
+	CreateClientConVar('bgn_cl_ui_language', 'auto', true, false, 'Language of the mod: auto (the game language), english, russian.')
 	CreateClientConVar('bgn_cl_language', 'en', false, true, 'Synchronized with gmod_language, do not change.')
 	local function SyncLanguage()
 		RunConsoleCommand('bgn_cl_language', (Util.GetLanguage()))
 	end
 	cvars.AddChangeCallback('gmod_language', SyncLanguage, 'bgn_cl_language')
+	cvars.AddChangeCallback('bgn_cl_ui_language', SyncLanguage, 'bgn_cl_language')
 	hook.Add('InitPostEntity', 'BGN_SyncLanguage', SyncLanguage)
 end
 

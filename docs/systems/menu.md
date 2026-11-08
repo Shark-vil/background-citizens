@@ -5,13 +5,15 @@ or Spawn menu → Options → Background NPCs → Open settings.
 
 The window scales with the screen height (designed at 1080p), has a light and a dark theme
 (`bgn_menu_dark`, also the sun / moon button) and soft interface sounds (`bgn_menu_sounds`).
-Texts follow the game language: English and Russian.
+Texts follow the game language (English and Russian), or the one chosen in **My settings → Menu**
+(`bgn_cl_ui_language`: `auto`, `english`, `russian`): the chosen language's
+`resource/localization/<lang>/bgn_*.properties` are loaded over the game's.
 
 The search field (Ctrl+F) looks through every page: labels, help texts and cvar names; Esc clears it.
 The full screen button (or a double click on the header) maximizes the window.
 
-The sidebar has two groups: **Server** (settings registered with `bgNPC.CVars`, admins only) and
-**Only for you** (the "My settings" page: this computer's options). Non-admins don't see server settings at all:
+The sidebar has three groups: **Server** (settings registered with `bgNPC.CVars`, admins only),
+**Only for you** (the "My settings" page: this computer's options) and **More** ("Other works"). Non-admins don't see server settings at all:
 a section without visible rows has no heading, a page without visible rows is not listed.
 `bgn_menu_as_player [1/0]` (no argument toggles) shows the window as a non-admin sees it, for debugging; the
 server still checks the rights.

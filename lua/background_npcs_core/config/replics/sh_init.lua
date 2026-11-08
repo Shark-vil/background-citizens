@@ -8,7 +8,7 @@ end
 local function GetLanguagePath()
 	local name = GetConVar('bgn_module_replics_language'):GetString()
 	if name == 'auto' then
-		name = GetConVar('gmod_language'):GetString() == 'ru' and 'russian' or GetConVar('cl_language'):GetString()
+		name = select(2, bgNPC.Util.GetLanguage())
 	end
 	local path = GetFilePath(name)
 	return file.Exists(path, 'LUA') and path or GetFilePath('english')
@@ -20,11 +20,17 @@ if SERVER then
 end
 
 include( GetFilePath('english') )
+bgNPC.cfg.replics_language = 'english'
 
 -- Only clients translate: the server keeps the English table, it picks phrase indexes from it.
 if CLIENT then
-	local function Load() include(GetLanguagePath()) end
+	local function Load()
+		local path = GetLanguagePath()
+		bgNPC.cfg.replics_language = path:match('sh_(%a+)%.lua$') -- voice clips folder (actor/cl_actor_voice.lua)
+		include(path)
+	end
 	hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', Load)
 	cvars.AddChangeCallback('bgn_module_replics_language', Load, 'BGN_Replics')
 	cvars.AddChangeCallback('gmod_language', Load, 'BGN_Replics')
+	cvars.AddChangeCallback('bgn_cl_ui_language', Load, 'BGN_Replics')
 end

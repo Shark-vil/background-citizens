@@ -188,6 +188,7 @@ local function Status(parent, text)
 end
 
 Menu.AddPage('other_works', {
+	group = '#bgn.menu.group.other', -- its own sidebar heading, apart from the settings
 	title = '#bgn.menu.page.other_works',
 	icon = 'background_npcs/vgui/menu/app.png',
 	order = math.huge, -- always the last page

@@ -70,7 +70,7 @@ bgNPC.States.Register('defense', 'danger', {
 			local enemy = actor:GetNearEnemy()
 			local npc = actor:GetNPC()
 			if IsValid(enemy) and enemy:GetPos():DistToSqr(npc:GetPos()) < 250000 then
-				npc:EmitSound('npc/metropolice/vo/defender.wav', 300, 100, 1, CHAN_AUTO)
+				actor:Voice('police_contact', 'npc/metropolice/vo/defender.wav')
 			end
 		end
 	end,

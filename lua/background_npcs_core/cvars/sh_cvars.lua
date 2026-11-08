@@ -27,6 +27,8 @@ bgNPC.cvar.bgn_wanted_police_instantly = 1
 bgNPC.cvar.bgn_arrest_mode = 1
 bgNPC.cvar.bgn_arrest_time = 5
 bgNPC.cvar.bgn_arrest_time_limit = 20
+bgNPC.cvar.bgn_arrest_surrender_delay = 10
+bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -53,6 +55,7 @@ bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
 bgNPC.cvar.bgn_cl_ghost_crowd = 1
 bgNPC.cvar.bgn_cl_ghost_crowd_max = 40
+bgNPC.cvar.bgn_cl_voices = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
 bgNPC.cvar.bgn_module_replics_language = 'auto'
 bgNPC.cvar.bgn_module_bio_annihilation_two_replacement = 0
@@ -140,6 +143,10 @@ bgNPC.CVars.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, 'Includes a 
 bgNPC.CVars.Register('bgn_arrest_time', bgNPC.cvar.bgn_arrest_time, 'Sets the time allotted for your detention.')
 
 bgNPC.CVars.Register('bgn_arrest_time_limit', bgNPC.cvar.bgn_arrest_time_limit, 'Sets how long the police will ignore you during your arrest. If you refuse to obey after the lapse of time, they will start shooting at you.')
+
+bgNPC.CVars.Register('bgn_arrest_surrender_delay', bgNPC.cvar.bgn_arrest_surrender_delay, 'A player the police shoot at who carries only safe weapons (bgn_arrest_safe_weapons) and has not hurt anyone for this many seconds is offered an arrest again. 0 - disabled.')
+
+bgNPC.CVars.Register('bgn_arrest_safe_weapons', bgNPC.cvar.bgn_arrest_safe_weapons, 'Comma-separated weapon classes that do not count as being armed (see bgn_arrest_surrender_delay).')
 
 bgNPC.CVars.Register('bgn_team_damage', bgNPC.cvar.bgn_team_damage, 'Actors of one team damage each other (they still never fight back). 1 - enabled, 0 - disabled.')
 

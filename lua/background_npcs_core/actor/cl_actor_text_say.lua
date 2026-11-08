@@ -70,6 +70,8 @@ end)
 bgNPC.Net.Receive('bgn_actor_text_say_replic', function(_, actor_uid, replic_id, replic_index, say_time)
 	if not bgNPC.cfg.replics[replic_id] or not bgNPC.cfg.replics[replic_id][replic_index] then return end
 	DrawActorText(actor_uid, bgNPC.cfg.replics[replic_id][replic_index], say_time)
+	local actor = bgNPC.Actors.GetByUid(actor_uid)
+	if actor then bgNPC.VoicePlay(actor, replic_id, replic_index) end
 end)
 
 hook.Add('PostDrawOpaqueRenderables', 'BGN_Actor_SayText_Drawing', function()

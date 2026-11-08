@@ -115,9 +115,14 @@ weapon_skill = WEAPON_PROFICIENCY_POOR
 
 ## replics
 - *table*
-- Sets the lines to be spoken by NPCs in different states.
+- Sets the lines to be spoken by NPCs in different states: now and then an actor in that state (`state_names`) or
+state group (`state_groups`) says a random phrase of the table `bgNPC.cfg.replics[id]` (text and voice, see
+[Voices](../systems/voices.md)).
 ```lua
--- No description yet
+replics = {
+	state_groups = { ['calm'] = 'calm' },
+	state_names = { ['fear'] = 'fear', ['run_from_danger'] = 'fear' },
+}
 ```
 
 ## max_vehicle

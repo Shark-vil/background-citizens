@@ -42,3 +42,13 @@ function Actor:SayReplic(replic_id, replic_index, say_time, voice_sound, animati
 	self:VoiceSay(voice_sound)
 	if animation_sequence then self:PlayStaticSequence(animation_sequence) end
 end
+
+-- A voice line without text. Each client plays a random clip of voice_id in its own language
+-- (actor/cl_actor_voice.lua), or the fallback sound when it has voices off or no clip. voice_id nil: fallback only.
+function Actor:Voice(voice_id, fallback)
+	Assert.Arg(1, voice_id, 'string|nil', 'ACTOR:Voice')
+	Assert.Arg(2, fallback, 'string|nil', 'ACTOR:Voice')
+
+	if not self:IsAlive() then return end
+	bgNPC.Net.Send('bgn_actor_voice', nil, self.uid, voice_id, fallback)
+end

@@ -109,6 +109,7 @@ Menu.AddPage('arrest', {
 		page:Toggle('bgn_arrest_mode', '#bgn.settings.arrest.arrest_mode')
 		page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, { decimals = 1 })
 		page:Slider('bgn_arrest_time_limit', '#bgn.settings.arrest.arrest_time_limit', 0, 100, { decimals = 1 })
+		page:Slider('bgn_arrest_surrender_delay', '#bgn.settings.arrest.surrender_delay', 0, 120, { decimals = 1 })
 	end,
 })
 
@@ -202,6 +203,9 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
 		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
 		page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
+		page:Choice('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
+			{ 1, '#bgn.menu.voices.generated' }, { 2, '#bgn.menu.voices.classic' }, { 0, '#bgn.menu.voices.off' },
+		})
 
 		page:Section('#bgn.menu.section.wanted')
 		page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
@@ -213,6 +217,9 @@ Menu.AddPage('client', {
 		page:Slider('bgn_cl_ghost_crowd_max', '#bgn.menu.ghost_crowd_max', 0, 150)
 
 		page:Section('#bgn.menu.section.menu')
+		page:Choice('bgn_cl_ui_language', '#bgn.menu.ui_language', {
+			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
+		})
 		page:Toggle('bgn_menu_dark', '#bgn.menu.dark')
 		page:Toggle('bgn_menu_sounds', '#bgn.menu.sounds')
 

@@ -66,7 +66,7 @@ end
 -- @param value string|table '#phrase', plain text or { en = '', ru = '' }
 function Menu.Text(value)
 	if istable(value) then
-		return value[GetConVar('gmod_language'):GetString()] or value.en or ''
+		return value[(bgNPC.Util.GetLanguage())] or value.en or ''
 	end
 	value = tostring(value or '')
 	if value:sub(1, 1) == '#' then return language.GetPhrase(value:sub(2)) end
@@ -492,7 +492,7 @@ function Menu.Open(page_id)
 
 	local s = Menu.Scale()
 	local W = math.min(math.Round(1000 * s), ScrW() - 32)
-	local H = math.min(math.Round(680 * s), ScrH() - 32)
+	local H = math.min(math.Round(720 * s), ScrH() - 32)
 	local corner = math.Round(10 * s)
 	local radius = corner
 
@@ -781,3 +781,4 @@ local function Reopen()
 end
 hook.Add('OnScreenSizeChanged', 'BGN_Menu', Reopen)
 cvars.AddChangeCallback('gmod_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')
+cvars.AddChangeCallback('bgn_cl_ui_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')

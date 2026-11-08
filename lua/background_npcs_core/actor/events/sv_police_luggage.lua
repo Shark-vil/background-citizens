@@ -61,13 +61,12 @@ hook.Add('BGN_ActorVisibleAtObject', 'BGN_PolicPlayerPushCalmly', function(actor
 	if not actor:EqualStateGroup('calm') or not actor:IsSequenceFinished() then return end
 
 	local data = actor:GetStateData()
-	local npc = actor:GetNPC()
 	data.LuggageWarn = data.LuggageWarn or 0
 
 	if data.LuggageWarn == 0 then
-		npc:EmitSound('npc/metropolice/vo/firstwarningmove.wav')
+		actor:Voice('police_luggage_1', 'npc/metropolice/vo/firstwarningmove.wav')
 	elseif data.LuggageWarn == 1 then
-		npc:EmitSound('npc/metropolice/vo/secondwarning.wav')
+		actor:Voice('police_luggage_2', 'npc/metropolice/vo/secondwarning.wav')
 	end
 
 	if data.LuggageWarn < 2 then

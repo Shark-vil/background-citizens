@@ -30,13 +30,30 @@ bgNPC.Actor = Actor
 local H = {}
 Actor.Helpers = H
 
+local FEMALE_WORDS = { 'female', 'woman', 'women' }
+local MALE_WORDS = { 'male', 'man', 'men' }
+
 function H.GenderByModel(model)
 	if not isstring(model) then return 'unknown' end
-	-- "female" must be checked first, because "male_" is a substring of it
-	if string.find(model, 'female', 1, true) then return 'female' end
-	if string.find(model, 'male_', 1, true) then return 'male' end
+	-- the file name only ("models/humans/..." has "man" in it); female words first: "male" is inside "female",
+	-- "man"/"men" inside "woman"/"women"
+	local name = string.GetFileFromFilename(model):lower()
+	for _, word in ipairs(FEMALE_WORDS) do
+		if string.find(name, word, 1, true) then return 'female' end
+	end
+	for _, word in ipairs(MALE_WORDS) do
+		if string.find(name, word, 1, true) then return 'male' end
+	end
 	return 'unknown'
 end
+
+bgNPC.Test.Add('actor.gender_by_model', function(check)
+	check(H.GenderByModel('models/humans/group01/female_01.mdl') == 'female', 'female before male')
+	check(H.GenderByModel('models/humans/group01/male_07.mdl') == 'male', 'male; "humans" folder ignored')
+	check(H.GenderByModel('models/player/woman_police.mdl') == 'female', 'woman before man')
+	check(H.GenderByModel('models/ponies/men_04.mdl') == 'male', 'men')
+	check(H.GenderByModel('models/police.mdl') == 'unknown', 'unknown')
+end)
 
 -- @return entity|NULL the valid entity nearest to origin
 function H.FindNearest(list, count, origin)
