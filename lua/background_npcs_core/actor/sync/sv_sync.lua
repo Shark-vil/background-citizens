@@ -11,6 +11,7 @@ local function BuildSyncData(actor)
 		name = actor:GetName(),
 		gender = actor:GetGender(),
 		state = actor:GetState(),
+		state_group = bgNPC.States.GetGroup(actor:GetState()),
 		enemies = actor.enemies,
 		targets = actor.targets,
 		anim_name = actor.anim_name,

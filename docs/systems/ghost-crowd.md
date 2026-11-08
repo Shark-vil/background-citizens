@@ -4,11 +4,11 @@ Garry's Mod can't afford hundreds of real NPCs. The ghost crowd fills the far di
 client-side figures (`ClientsideModel`) that look and behave like the real actors near you, in the spirit
 of the "Legion" system from Serious Sam 4. The server pays nothing: it only sends navigation points.
 
-Off by default. Settings window: **My settings → Experimental**.
+On by default. Settings window: **My settings → Experimental**.
 
 | Cvar (client) | Default | Meaning |
 |---|---|---|
-| `bgn_cl_ghost_crowd` | `0` | enable the ghost crowd |
+| `bgn_cl_ghost_crowd` | `1` | enable the ghost crowd |
 | `bgn_cl_ghost_crowd_max` | `40` | the most ghosts at once |
 
 ## Behaviour
@@ -20,8 +20,10 @@ Off by default. Settings window: **My settings → Experimental**.
 - **Looks:** model, skin and bodygroups of real actors you have seen; HL2 citizens until then.
   Models without a walk animation (vehicles, helicopters) are skipped.
 - **Mood:** taken from the real actors around you once a second. Panic when 20% or more of them are in the
-  `danger` state group (one scared actor matters more than a dozen walkers); a new panic makes every ghost
-  drop its goal and run. Calm ghosts walk, some stand for a while (the share follows actors in `idle`).
+  `danger` or `assault` state group, or retreating (one scared actor matters more than a dozen walkers), or
+  when someone wanted is within the ghosts' ring. It lasts 10 s after the last cause; a new panic makes every
+  ghost drop its goal and run. States are registered on the server only, so the actor sync sends the
+  group too (`actor.state_group` on the client). Calm ghosts walk, some stand for a while (the share follows actors in `idle`).
 - **Movement:** point to point (up to 700 units, a wall trace per step), feet on the ground (a trace down
   every 0.15 s, nav points often hang above it), never towards the player:
   sideways is allowed when calm, only away in panic. Ghosts don't enter the inner radius.

@@ -4,8 +4,9 @@
 
 	- Ghosts are ClientsideModels with the looks (model, skin, bodygroups) of real actors you have seen.
 	- They copy the mood of the real actors around you: calm (walk, sometimes stand) or panic (run away).
-	  Panic wins from PANIC_SHARE of the actors in the "danger" state group, one scared actor matters more
-	  than a dozen walkers.
+	  Panic wins from PANIC_SHARE of the actors in a panic state group (synced from the server, the client
+	  has no state registry), one scared actor matters more than a dozen walkers. Someone wanted nearby
+	  panics them too. A panic lasts PANIC_HOLD seconds after its last cause.
 	- They walk from point to point (server navigation, sv_ghost_crowd.lua) and never towards the player.
 	  Their feet follow the ground (a trace down a few times a second), points often hang above it.
 	- They keep out of the inner radius around every player: real actors live there (multiplayer too).
@@ -25,6 +26,8 @@ local STEP_DIST = 700        -- farthest next point
 local MAX_STEP_Z = 72        -- the most height change between two points
 local FADE_TIME = 1.5
 local PANIC_SHARE = 0.2
+local PANIC_HOLD = 10
+local PANIC_GROUPS = { danger = true, assault = true }
 local MAX_LOOKS = 32
 local SPAWN_PER_THINK = 2
 local HEAD = Vector(0, 0, 64)
@@ -52,7 +55,7 @@ local graph            -- bgNPC.NodeGraph of the last received points
 local points_center    -- player position of the last request
 local next_points_request = 0
 local next_mood = 0
-local mood = { panic = false, idle = 0.25 }
+local mood = { panic = false, idle = 0.25, panic_until = 0 }
 local looks, looks_index = {}, {}
 
 -- Inner radius: ghosts leave inside it. Outer: they live up to it.
@@ -121,6 +124,22 @@ local function ForgetLook(look)
 	end
 end
 
+-- Someone wanted (by the police) within the ghosts' ring
+local function WantedNearby()
+	local wanted = bgNPC.Modules.Get('wanted')
+	local ply = LocalPlayer()
+	if not wanted or not IsValid(ply) then return false end
+
+	local _, r_out = Radii()
+	local r_out_sqr = r_out * r_out
+	local list = wanted:GetAllWanted()
+	for i = 1, #list do
+		local target = list[i].target
+		if IsValid(target) and target:GetPos():DistToSqr(ply:GetPos()) <= r_out_sqr then return true end
+	end
+	return false
+end
+
 local function UpdateMood()
 	local actors = bgNPC.Actors.GetAll()
 	local total, danger, idle = 0, 0, 0
@@ -131,14 +150,17 @@ local function UpdateMood()
 		if IsValid(npc) and not npc:IsDormant() then
 			local state = actor:GetState()
 			total = total + 1
-			if bgNPC.States.GetGroup(state) == 'danger' then danger = danger + 1 end
+			if PANIC_GROUPS[actor.state_group] or state == 'retreat' then danger = danger + 1 end
 			if state == 'idle' then idle = idle + 1 end
 			if not actor:InVehicle() then RememberLook(npc) end
 		end
 	end
 
+	local now = CurTime()
+	if (total > 0 and danger / total >= PANIC_SHARE) or WantedNearby() then mood.panic_until = now + PANIC_HOLD end
+
 	local was_panic = mood.panic
-	mood.panic = total > 0 and danger / total >= PANIC_SHARE
+	mood.panic = now < mood.panic_until
 	mood.idle = total > 0 and math.min(idle / total, 0.6) or 0.25
 
 	-- A fresh panic spreads at once: walking ghosts drop their goal and run

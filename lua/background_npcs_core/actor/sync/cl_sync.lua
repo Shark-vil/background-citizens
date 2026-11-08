@@ -5,6 +5,7 @@ bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 	actor:SetName(data.name)
 	actor:SetGender(data.gender)
 	actor:SyncState(data.state)
+	actor.state_group = data.state_group -- the client has no state registry (states are server files)
 	actor.enemies = data.enemies
 	actor.targets = data.targets
 	actor.anim_name = data.anim_name
