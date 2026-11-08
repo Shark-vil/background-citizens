@@ -28,7 +28,11 @@ function ENT:AttachModel()
 		local seatpos = seat:WorldToLocal(a.Pos + a.Ang:Forward() * d.x + a.Ang:Right() * d.y + a.Ang:Up() * d.z)
 		self:SetNWVector('Pos', seatpos)
 		self:SetNWAngle('Ang', Angle(0, seatang.y, 0))
-		self:SetSequence(self:LookupSequence('Sit'))
+		-- set again: the lookup right after SetModel above may give -1, the client then drew a T-pose
+		local sit = self:LookupSequence('Sit')
+		if sit < 0 then self:SetNoDraw(true) return end -- a model with no sitting pose: better unseen than standing
+		self:SetNWInt('Sequence', sit)
+		self:SetSequence(sit)
 
 		local flex_num = self:GetFlexNum()
 		if isnumber(flex_num) then

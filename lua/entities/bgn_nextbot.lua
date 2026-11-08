@@ -126,6 +126,8 @@ local ACTIVITIES = {
 		gesture = ACT_GESTURE_MELEE_ATTACK1, attack = ACT_MELEE_ATTACK_SWING,
 	},
 }
+-- in the air (a stuck jump, a fall): the walk cycle froze mid-step and the body slid
+local AIR_ACTIVITIES = { ACT_GLIDE, ACT_JUMP, ACT_IDLE }
 
 function ENT:Initialize()
 	local models = DEFAULT_MODELS[self.bgn_npc_class] or DEFAULT_MODELS.npc_citizen
@@ -304,7 +306,9 @@ function ENT:UpdateActivity()
 	local fighting = self.alert == 'combat' and IsValid(self.enemy)
 	local moving = self.loco:GetVelocity():Length2DSqr() > 100
 	local list
-	if moving then
+	if not self:IsOnGround() then
+		list = AIR_ACTIVITIES
+	elseif moving then
 		list = self.move_run and (fighting and set.run_aim or set.run) or (fighting and set.walk_aim or set.walk)
 	else
 		list = fighting and set.aim or set.idle
@@ -320,6 +324,10 @@ end
 function ENT:BodyUpdate()
 	if self.sequence_lock then
 		self:FrameAdvance()
+		return
+	end
+	if not self:IsOnGround() then
+		self:FrameAdvance() -- BodyMoveXY plays by the ground speed, in the air it stops the cycle
 		return
 	end
 	local velocity = self.loco:GetVelocity()
