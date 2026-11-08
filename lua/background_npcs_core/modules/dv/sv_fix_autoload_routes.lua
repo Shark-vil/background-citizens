@@ -1,7 +1,7 @@
 local function init_dv_waypoints()
 	if not DecentVehicleDestination then return end
 
-	local hook_function = slib.Component('Hook', 'Get', 'InitPostEntity', 'Decent Vehicle: Load waypoints')
+	local hook_function = bgNPC.Util.GetHook('InitPostEntity', 'Decent Vehicle: Load waypoints')
 	if hook_function then
 		if not GetConVar('decentvehicle_autoload'):GetBool() then
 			RunConsoleCommand('decentvehicle_autoload', '1')

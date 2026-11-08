@@ -1,4 +1,4 @@
-local name = slib.language({
+local name = bgNPC.Util.Lang({
 	['default'] = 'Racer driver',
 	['russian'] = 'Уличный гонщик'
 })

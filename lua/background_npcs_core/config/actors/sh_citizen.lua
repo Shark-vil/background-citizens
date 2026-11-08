@@ -1,4 +1,4 @@
-local name = slib.language({
+local name = bgNPC.Util.Lang({
 	['default'] = 'Civilian',
 	['russian'] = 'Житель'
 })
@@ -20,7 +20,7 @@ bgNPC.cfg:SetActor('citizen', {
 		}
 	},
 	vehicle_multiply_speed = { ['danger'] = 4 },
-	getting_weapon_chance = 30,
+	getting_weapon_chance = 10,
 	money = { 0, 100 },
 	health = 30,
 	weapon_skill = WEAPON_PROFICIENCY_POOR,
