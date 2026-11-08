@@ -5,6 +5,12 @@ This documentation is for "*Background NPCs*". General information on setting up
 ### Information
 - [More maps](./information/More%20maps.md)
 
+### Systems
+- [Navigation](./systems/navigation.md)
+- [Actor brains](./systems/brains.md)
+- [Ghost crowd (experimental)](./systems/ghost-crowd.md)
+- [Settings menu](./systems/menu.md)
+
 ### Tutorials
 - [Change basic configuration](./tutorials/Change%20basic%20configuration.md) (**Deprecated, will be removed in the future**)
 - [Creating Custom NPCs](./tutorials/Creating-Custom-NPCs.md)

@@ -39,5 +39,13 @@ luac.out
 *.x86_64
 *.hex
 
-workspace.code-workspace
+*.code-workspace
 .vscode/
+
+# Local work notes
+CHANGELOG.md
+PLANS.md
+REWRITE_PLAN.md
+
+# Notes on things not understood or not tested (local only)
+NOTES_UNVERIFIED.md

@@ -1,9 +1,3 @@
-local CreateConVar = CreateConVar
-local RunConsoleCommand = RunConsoleCommand
-local pairs = pairs
-local LocalPlayer = LocalPlayer
-local cvars = cvars
-local tonumber = tonumber
 --
 
 CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo,
@@ -18,9 +12,6 @@ CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_h
 CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path,
 { FCVAR_ARCHIVE }, 'Draw the path of movement of the NPC. 1 - enabled, 0 - disabled.')
 
-CreateConVar('bgn_cl_draw_chunks', bgNPC.cvar.bgn_cl_draw_chunks,
-{ FCVAR_ARCHIVE }, 'Receives and displays chunks from the server. 1 - enabled, 0 - disabled. (Use command "bgn_cl_draw_chunks_reload" to retrieve chunks)')
-
 CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization,
 { FCVAR_ARCHIVE }, 'Enable field of view optimization.')
 
@@ -29,6 +20,15 @@ CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_vie
 
 CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound,
 { FCVAR_ARCHIVE }, 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
+
+CreateConVar('bgn_cl_ghost_crowd', bgNPC.cvar.bgn_cl_ghost_crowd,
+{ FCVAR_ARCHIVE }, 'EXPERIMENTAL. Draws a cheap client-side crowd far away that copies the mood of the actors near you.')
+
+CreateConVar('bgn_cl_ghost_crowd_max', bgNPC.cvar.bgn_cl_ghost_crowd_max,
+{ FCVAR_ARCHIVE }, 'The most ghost crowd figures at once.')
+
+CreateConVar('bgn_cl_voices', bgNPC.cvar.bgn_cl_voices,
+{ FCVAR_ARCHIVE }, 'NPC voices: 1 - generated voiced lines (old Half-Life 2 sounds where there is no clip), 2 - only the old Half-Life 2 sounds, 0 - silent.')
 
 CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance,
 { FCVAR_ARCHIVE }, 'Distance to draw points in edit mode.')
@@ -74,7 +74,7 @@ concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
 	end
 
 	for npcType, v in pairs(bgNPC.cfg.actors) do
-		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC:GetFullness(npcType))
+		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType))
 	end
 
 	for npcType, v in pairs(bgNPC.cfg.actors) do
@@ -88,6 +88,6 @@ cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
 	if is_first_bgn_enable or tonumber(new_value) ~= 1 then return end
 	is_first_bgn_enable = true
 
-	LocalPlayer():slibNotify('The first launch of "Background NPCs" can cause lags. '
+	bgNPC.Util.Notify(LocalPlayer(), 'The first launch of "Background NPCs" can cause lags. '
 	.. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
 end)

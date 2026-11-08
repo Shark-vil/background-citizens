@@ -74,7 +74,7 @@ weapons = { 'weapon_pistol', 'weapon_shotgun' }
 - The chance at which an NPC can get a weapon. If set to "false", the NPC will always take weapons.
 ```lua
 -- number
--- 20% chance to pick up a weapon
+-- 20% chance to spawn with a weapon
 getting_weapon_chance = 20
 -- boolean
 -- always take a weapon
@@ -107,7 +107,7 @@ health = { 30, 100 }
 
 ## weapon_skill
 - *number* | *enum*
-- Sets weapon proficiency ([Read More](https://wiki.facepunch.com/gmod/Enums/WEAPON_PROFICIENCY)).
+- Sets weapon proficiency ([Read More](https://wiki.facepunch.com/gmod/Enums/WEAPON_PROFICIENCY)). Works for NextBot actors too (it scales their spread). An actor that was spawned without a weapon and picked one up always shoots with `WEAPON_PROFICIENCY_POOR`.
 ```lua
 -- number / enum
 weapon_skill = WEAPON_PROFICIENCY_POOR
@@ -115,9 +115,14 @@ weapon_skill = WEAPON_PROFICIENCY_POOR
 
 ## replics
 - *table*
-- Sets the lines to be spoken by NPCs in different states.
+- Sets the lines to be spoken by NPCs in different states: now and then an actor in that state (`state_names`) or
+state group (`state_groups`) says a random phrase of the table `bgNPC.cfg.replics[id]` (text and voice, see
+[Voices](../systems/voices.md)).
 ```lua
--- No description yet
+replics = {
+	state_groups = { ['calm'] = 'calm' },
+	state_names = { ['fear'] = 'fear', ['run_from_danger'] = 'fear' },
+}
 ```
 
 ## max_vehicle

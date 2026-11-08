@@ -1,5 +1,3 @@
-local surface = surface
-local LocalPlayer = LocalPlayer
 --
 
 TOOL.Category = 'Background NPCs'
@@ -34,38 +32,36 @@ if SERVER then
 		if ent:IsVehicle() and ent.bgn_driver then
 			actor = ent.bgn_driver
 		else
-			actor = bgNPC:GetActor(ent)
+			actor = bgNPC.Actors.Get(ent)
 		end
 
 		if not actor then
-			bgNPC:Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
+			bgNPC.Util.Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
 			return
 		end
 
-		snet.IsValidForClient(ply, function(ply, success)
-			bgNPC:Log('Actor validator result: ' .. tostring(ply) .. ' - ' ..  tostring(success), 'Debugger')
-			if not success then return end
+		do -- the client checks that the actor exists itself (TOOL:SetActor)
 
-			local actor_data = snet.GetNormalizeDataTable(actor)
+			local actor_data = actor
 			if actor_data then MsgN('SERVER:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
 
-			snet.ClientRPC(self, 'SetActor', actor.uid)
-		end, 'actor', actor.uid)
+			bgNPC.Net.ToolRPC(self, 'SetActor', actor.uid)
+		end
 	end
 
 	function TOOL:RightClick()
-		snet.ClientRPC(self, 'ResetActor')
+		bgNPC.Net.ToolRPC(self, 'ResetActor')
 	end
 else
 	function TOOL:SetActor(uid)
-		local actor = bgNPC:GetActorByUid(uid)
+		local actor = bgNPC.Actors.GetByUid(uid)
 		if actor == nil then
-			bgNPC:Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
+			bgNPC.Util.Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
 			surface.PlaySound('common/wpn_denyselect.wav')
 			return
 		end
 
-		local actor_data = snet.GetNormalizeDataTable(actor)
+		local actor_data = actor
 		if actor_data then MsgN('CLIENT:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
 
 		self.Actor = actor
@@ -80,9 +76,8 @@ else
 	end
 
 	hook.Add('HUDPaint', 'BGN_TOOL_DrawDebbugerText', function()
-		if not SLibraryIsLoaded then return end
 
-		local tool = LocalPlayer():slibGetActiveTool('bgn_debugger')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_debugger', LocalPlayer())
 		if not tool or not tool.Actor or not IsValid(tool.Target) then return end
 
 		local ypos = ScrH() / 3
@@ -136,7 +131,7 @@ else
 
 	function TOOL:UpdateControlPanel()
 		local Panel = controlpanel.Get('bgn_debugger')
-		if not Panel then bgNPC:Log('Couldn\'t find bgn_debugger panel!', 'Tool') return end
+		if not Panel then bgNPC.Util.Log('Couldn\'t find bgn_debugger panel!', 'Tool') return end
 		if self.PanelIsInit then return end
 
 		self.PanelIsInit = true

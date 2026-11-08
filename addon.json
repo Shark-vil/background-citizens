@@ -16,6 +16,8 @@
         ".vscode*",
         "docs",
         "version.txt",
-        "*.yml"
+        "*.yml",
+        "tools",
+        "*.py"
     ] 
 } 

@@ -4,18 +4,14 @@ local function GetFilePath(name)
 	return 'background_npcs_core/config/replics/language/sh_' .. name .. '.lua'
 end
 
-local function GetGameLanguage()
-	local lnaguage_path = GetFilePath( GetConVar('cl_language'):GetString() )
-	if file.Exists(lnaguage_path, 'LUA') then
-		return lnaguage_path
-	end
-end
-
-local function GetCustomLanguage()
-	local lnaguage_path = GetFilePath( GetConVar('bgn_module_replics_language'):GetString() )
-	if file.Exists(lnaguage_path, 'LUA') then
-		return lnaguage_path
-	end
+-- The server's "bgn_module_replics_language" forces one language, otherwise the player's "bgn_cl_voice_language";
+-- "auto" follows the game language (not the menu's); unknown languages fall back to English
+local function GetLanguagePath()
+	local name = GetConVar('bgn_module_replics_language'):GetString()
+	if name == 'auto' then name = GetConVar('bgn_cl_voice_language'):GetString() end
+	if name == 'auto' then name = select(2, bgNPC.Util.LanguageCode(GetConVar('gmod_language'):GetString())) end
+	local path = GetFilePath(name)
+	return file.Exists(path, 'LUA') and path or GetFilePath('english')
 end
 
 if SERVER then
@@ -24,24 +20,19 @@ if SERVER then
 end
 
 include( GetFilePath('english') )
+bgNPC.cfg.replics_language = 'english'
 
+-- Only clients translate: the server keeps the English table, it picks phrase indexes from it.
 if CLIENT then
-	hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', function()
-		local lnaguage_path = GetGameLanguage()
+	CreateClientConVar('bgn_cl_voice_language', 'auto', true, false, 'Language of the NPC phrases and voices: auto (the game language), english, russian.')
 
-		if not lnaguage_path then
-			lnaguage_path = GetCustomLanguage()
-		end
-
-		if lnaguage_path then
-			include(lnaguage_path)
-		end
-	end)
+	local function Load()
+		local path = GetLanguagePath()
+		bgNPC.cfg.replics_language = path:match('sh_(%a+)%.lua$') -- voice clips folder (actor/cl_actor_voice.lua)
+		include(path)
+	end
+	hook.Add('BGN_PostGamemodeLoaded', 'BGN_LoadConfig_Replics_SH_Init', Load)
+	cvars.AddChangeCallback('bgn_module_replics_language', Load, 'BGN_Replics')
+	cvars.AddChangeCallback('gmod_language', Load, 'BGN_Replics')
+	cvars.AddChangeCallback('bgn_cl_voice_language', Load, 'BGN_Replics')
 end
-
-cvars.AddChangeCallback('bgn_module_replics_language', function(_, _, lang)
-	local lnaguage_path = GetFilePath(lang)
-
-	if not file.Exists(lnaguage_path, 'LUA') then return end
-	include(lnaguage_path)
-end)

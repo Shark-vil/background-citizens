@@ -24,9 +24,9 @@ do
 	local function ConVarColorInit(convar_name, r, g, b)
 		bgNPC.cfg.wanted.color[convar_name] = Color(r, g, b)
 
-		scvar.Register('bgn_wanted_color_' .. convar_name .. '_r', r, FCVAR_ARCHIVE, '').Access(DefaultAccess)
-		scvar.Register('bgn_wanted_color_' .. convar_name .. '_g', g, FCVAR_ARCHIVE, '').Access(DefaultAccess)
-		scvar.Register('bgn_wanted_color_' .. convar_name .. '_b', b, FCVAR_ARCHIVE, '').Access(DefaultAccess)
+		bgNPC.CVars.Register('bgn_wanted_color_' .. convar_name .. '_r', r, '')
+		bgNPC.CVars.Register('bgn_wanted_color_' .. convar_name .. '_g', g, '')
+		bgNPC.CVars.Register('bgn_wanted_color_' .. convar_name .. '_b', b, '')
 
 		do
 			local last_r = GetConVar('bgn_wanted_color_' .. convar_name .. '_r'):GetInt()
@@ -35,19 +35,19 @@ do
 			bgNPC.cfg.wanted.color[convar_name] = Color(last_r, last_g, last_b)
 		end
 
-		slib.GlobalCvarAddChangeCallback('bgn_wanted_color_' .. convar_name .. '_r', function(_, _, newValue)
+		bgNPC.CVars.OnChange('bgn_wanted_color_' .. convar_name .. '_r', function(_, _, newValue)
 			local color = bgNPC.cfg.wanted.color[convar_name]
 			color.r = tonumber(newValue)
 			bgNPC.cfg.wanted.color[convar_name] = color
 		end)
 
-		slib.GlobalCvarAddChangeCallback('bgn_wanted_color_' .. convar_name .. '_g', function(_, _, newValue)
+		bgNPC.CVars.OnChange('bgn_wanted_color_' .. convar_name .. '_g', function(_, _, newValue)
 			local color = bgNPC.cfg.wanted.color[convar_name]
 			color.g = tonumber(newValue)
 			bgNPC.cfg.wanted.color[convar_name] = color
 		end)
 
-		slib.GlobalCvarAddChangeCallback('bgn_wanted_color_' .. convar_name .. '_b', function(_, _, newValue)
+		bgNPC.CVars.OnChange('bgn_wanted_color_' .. convar_name .. '_b', function(_, _, newValue)
 			local color = bgNPC.cfg.wanted.color[convar_name]
 			color.b = tonumber(newValue)
 			bgNPC.cfg.wanted.color[convar_name] = color
@@ -62,7 +62,7 @@ do
 end
 
 -- LANGUAGE --
-local text = slib.language({
+local text = bgNPC.Util.Lang({
 	['default'] = {
 		['wanted_text_s'] = 'YOU ARE WANTED! The search will end in %time% sec.',
 		['wanted_text_m'] = 'YOU ARE WANTED! The search will end in %time% min.',

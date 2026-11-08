@@ -1,0 +1,128 @@
+--[[
+	The police break into a car: a player who stands still in a vehicle (within STILL_TOLERANCE) for
+	bgn_arrest_car_wait seconds while the police are after them (fighting or arresting, within CALL_RADIUS).
+	The officers then hold fire and go to the car (state police_car_breakin); once one is at it the break-in
+	takes bgn_arrest_car_time seconds (the client shows a bar shrinking from both sides, cl_car_breakin.lua).
+	Driving off STILL_TOLERANCE away cancels it and they fight again; staying ends in an arrest.
+--]]
+
+local ArrestModule = bgNPC.Modules.Get('player_arrest')
+local cvar_mode = GetConVar('bgn_arrest_mode')
+local cvar_wait = GetConVar('bgn_arrest_car_wait')
+local cvar_time = GetConVar('bgn_arrest_car_time')
+
+local PERIOD = 0.25
+local STILL_TOLERANCE = 64 -- the car may roll this far and still count as standing
+local CALL_RADIUS = 2000   -- officers after the player this close come to break in
+local AT_CAR_RADIUS = 300  -- an officer this close is breaking in
+local GRACE = 1.5          -- officers move: nobody after the player for this long before the wait starts over
+
+-- Officers after the player within radius of pos (fighting them, arresting them or already breaking in)
+local function PoliceAfter(ply, pos, radius)
+	local list = {}
+	for _, actor in ipairs(bgNPC.Actors.GetInRadius(pos, radius)) do
+		if actor:IsAlive() and actor:HasTeam('police') and (actor:HasEnemy(ply) or actor:HasTarget(ply)) then
+			list[#list + 1] = actor
+		end
+	end
+	return list
+end
+
+-- The bar on the client: progress (seconds done) and whether it runs now; sent only when that changes.
+-- progress nil hides it.
+local function SetBreakin(ply, progress, running)
+	-- while it runs the client counts on from the sent progress, so only a change of mode is sent
+	local key = progress and (running and 'run' or 'pause') or 'none'
+	if (ply.bgn_breakin_shown or 'none') == key then return end
+	ply.bgn_breakin_shown = key
+	bgNPC.Net.Send('bgn_car_breakin', ply, progress or -1, cvar_time:GetFloat(), running or false)
+end
+
+local function Reset(ply)
+	ply.bgn_still = nil
+	SetBreakin(ply, nil)
+end
+
+-- The end of an arrest for a player, as in the arrest state (BGN_PlayerArrest lets DarkRP and others take over)
+local function Arrest(ply, actor)
+	Reset(ply) -- first: the officers' state lets go of the player without its car
+	ply:ExitVehicle()
+	ArrestModule:RemoveTarget(ply)
+	actor:Voice('police_arrested')
+
+	if not hook.Run('BGN_PlayerArrest', ply, actor) then
+		ply:EmitSound('background_npcs/handcuffs_sound1.mp3')
+		ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 1, 3)
+		ply:KillSilent()
+	end
+
+	for _, other in ipairs(bgNPC.Actors.GetAll()) do
+		other:RemoveTarget(ply)
+		other:RemoveEnemy(ply)
+	end
+end
+
+timer.Create('BGN_CarBreakin', PERIOD, 0, function()
+	local wait = cvar_wait:GetFloat()
+	local enabled = wait > 0 and cvar_mode:GetBool()
+	local now = CurTime()
+
+	for _, ply in ipairs(player.GetAll()) do
+		local vehicle = ply:Alive() and ply:InVehicle() and ply:GetVehicle()
+		if not enabled or not IsValid(vehicle) or bgNPC.Combat.IsIgnored(ply) then
+			Reset(ply)
+			continue
+		end
+
+		local car = IsValid(vehicle:GetParent()) and vehicle:GetParent() or vehicle
+		local pos = car:GetPos()
+		local still = ply.bgn_still
+
+		if not still or still.car ~= car or still.pos:DistToSqr(pos) > STILL_TOLERANCE * STILL_TOLERANCE then
+			ply.bgn_still = { car = car, pos = pos, since = now, seen = now, progress = 0 }
+			SetBreakin(ply, nil)
+			continue
+		end
+
+		local police = PoliceAfter(ply, pos, CALL_RADIUS)
+		if #police ~= 0 then
+			still.seen = now
+		elseif now - still.seen > GRACE then
+			-- nobody after the player: the wait starts again when they come, a started break-in keeps its progress
+			still.since = now
+			if still.progress > 0 then SetBreakin(ply, still.progress, false) end
+			continue
+		end
+
+		if now - still.since < wait then continue end
+
+		-- they stop shooting and come to the car (driving off makes a new still table without "called")
+		still.called = true
+		for _, actor in ipairs(police) do
+			if not actor:HasState('police_car_breakin') then
+				actor:SetState('police_car_breakin', { target = ply }, true)
+			end
+		end
+
+		local at_car
+		for _, actor in ipairs(police) do
+			if actor:HasState('police_car_breakin') and actor:GetNPC():GetPos():DistToSqr(pos) <= AT_CAR_RADIUS ^ 2 then
+				at_car = actor
+				break
+			end
+		end
+
+		-- the officer at the car may step away (pushed, a shot to dodge): the bar pauses, it never starts over
+		if at_car then
+			if still.progress == 0 then at_car:Voice('police_seize', 'npc/metropolice/vo/movealong.wav') end
+			still.progress = still.progress + PERIOD
+			if still.progress >= cvar_time:GetFloat() then
+				Arrest(ply, at_car)
+			else
+				SetBreakin(ply, still.progress, true)
+			end
+		elseif still.progress > 0 then
+			SetBreakin(ply, still.progress, false)
+		end
+	end
+end)

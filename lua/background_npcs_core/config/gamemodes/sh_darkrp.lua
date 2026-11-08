@@ -1,7 +1,7 @@
 bgNPC.cfg.darkrp = {}
 
 -- TEXT --
-local text = slib.language({
+local text = bgNPC.Util.Lang({
 	['default'] = {
 		['notify'] = 'You cannot change your job while you are wanted!',
 	},

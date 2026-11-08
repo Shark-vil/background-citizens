@@ -1,5 +1,3 @@
-local TEXT_ALIGN_CENTER = TEXT_ALIGN_CENTER
-local LocalPlayer = LocalPlayer
 --
 TOOL.Category = 'Background NPCs'
 TOOL.Name = '#tool.bgn_path_finder.name'
@@ -16,17 +14,17 @@ TOOL.EndPos = nil
 if SERVER then
 	function TOOL:LeftClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'LeftClick')
+		bgNPC.Net.ToolRPC(self, 'LeftClick')
 	end
 
 	function TOOL:RightClick()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'RightClick')
+		bgNPC.Net.ToolRPC(self, 'RightClick')
 	end
 
 	function TOOL:Reload()
 		if not game.SinglePlayer() then return end
-		snet.ClientRPC(self, 'Reload')
+		bgNPC.Net.ToolRPC(self, 'Reload')
 	end
 else
 	function TOOL:GetTrace()
@@ -50,10 +48,7 @@ else
 	end
 
 	function TOOL.BuildCPanel(Panel)
-		Panel:AddControl('Button', {
-			['Label'] = '#tool.bgn_path_finder.pnl.load_points',
-			['Command'] = 'cl_citizens_load_route_from_client',
-		})
+		Panel:AddControl('Label', { ['Text'] = '#tool.bgn_path_finder.pnl.help' })
 	end
 
 	function TOOL:LeftClick()
@@ -70,11 +65,13 @@ else
 		local tr = self:GetTrace()
 		if not tr.Hit then return end
 		self.EndPos = tr.HitPos
-		local foundPath = bgNPC:FindWalkPath(self.StartPos, self.EndPos)
 
-		if foundPath and istable(foundPath) then
-			self.Path = foundPath
-		end
+		-- Paths are built on the server by the active navigation provider.
+		local start_pos = self.StartPos
+		bgNPC.NavEditor.RequestPath(start_pos, self.EndPos, function(path)
+			table.insert(path, 1, start_pos)
+			self.Path = path
+		end)
 
 		surface.PlaySound('buttons/blip1.wav')
 	end
@@ -90,15 +87,9 @@ else
 	local color_white = Color(255, 255, 255)
 	local color_black = Color(0, 0, 0)
 	local vec_20 = Vector(0, 0, 20)
-	local cam_Start3D2D = cam.Start3D2D
-	local cam_End3D2D = cam.End3D2D
-	local draw_SimpleTextOutlined = draw.SimpleTextOutlined
-	local render_DrawSphere = render.DrawSphere
-	local render_DrawLine = render.DrawLine
 
 	hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PathFinder', function()
-		if not SLibraryIsLoaded then return end
-		local tool = LocalPlayer():slibGetActiveTool('bgn_path_finder')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_path_finder', LocalPlayer())
 		if not tool then return end
 		render.SetColorMaterial()
 
@@ -106,18 +97,18 @@ else
 			local pos = tool.Path[i]
 
 			if i ~= 1 then
-				render_DrawLine(pos, tool.Path[i - 1], clr_232_59)
+				render.DrawLine(pos, tool.Path[i - 1], clr_232_59)
 			end
 
-			render_DrawSphere(pos, 10, 5, 5, clr_green)
+			render.DrawSphere(pos, 10, 5, 5, clr_green)
 
 			local cam_angle = LocalPlayer():EyeAngles()
 			cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
 			cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
 
-			cam_Start3D2D(pos + vec_20, cam_angle, 0.9)
-				draw_SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-			cam_End3D2D()
+			cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
+				draw.SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
+			cam.End3D2D()
 		end
 	end)
 
@@ -125,14 +116,14 @@ else
 		['tool.bgn_path_finder.name'] = 'Path finder',
 		['tool.bgn_path_finder.desc'] = '',
 		['tool.bgn_path_finder.0'] = '',
-		['tool.bgn_path_finder.pnl.load_points'] = 'Load points',
+		['tool.bgn_path_finder.pnl.help'] = 'Left click - start, right click - end. The server builds the path with the active navigation (bgn_nav_info).',
 	}
 
 	local ru_lang = {
 		['tool.bgn_path_finder.name'] = 'Поиск пути',
 		['tool.bgn_path_finder.desc'] = '',
 		['tool.bgn_path_finder.0'] = '',
-		['tool.bgn_path_finder.pnl.load_points'] = 'Загрузить точки',
+		['tool.bgn_path_finder.pnl.help'] = 'ЛКМ - начало, ПКМ - конец. Путь строит сервер по активной навигации (bgn_nav_info).',
 	}
 
 	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang

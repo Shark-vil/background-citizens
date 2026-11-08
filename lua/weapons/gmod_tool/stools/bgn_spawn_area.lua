@@ -22,7 +22,7 @@ local function ResetSpawnArea(tool)
 	tool.StartPoint = nil
 	tool.EndPoint = nil
 
-	snet.Invoke('cl_tool_bgn_spawn_area_reset', tool:GetOwner())
+	bgNPC.Net.Send('cl_tool_bgn_spawn_area_reset', tool:GetOwner())
 end
 
 local SendAreaListTo
@@ -30,11 +30,11 @@ local SendAreaListTo
 if SERVER then
 	hook.Add('PlayerButtonDown', 'BGN_StartKeyPadDivide', function(ply, button)
 		if (button ~= 60 and button ~= 47) or not IsFirstTimePredicted() then return end
-		snet.Invoke('BGN_ClientOpenCommandChat', ply)
+		bgNPC.Net.Send('BGN_ClientOpenCommandChat', ply)
 	end)
 
 	hook.Add('PlayerSay', 'BGN_Tool_SpawnArea', function(ply, text)
-		local tool = ply:slibGetActiveTool('bgn_spawn_area')
+		local tool = bgNPC.Util.GetActivePlayerTool('bgn_spawn_area', ply)
 		if not tool then return end
 
 		local isPosOne = string.StartWith(text, '//pos1')
@@ -48,7 +48,7 @@ if SERVER then
 			tool.EndPoint = ply:GetPos()
 		end
 
-		snet.Invoke('cl_tool_bgn_spawn_area_update_points', ply, tool.StartPoint, tool.EndPoint)
+		bgNPC.Net.Send('cl_tool_bgn_spawn_area_update_points', ply, tool.StartPoint, tool.EndPoint)
 
 		return false
 	end)
@@ -64,18 +64,18 @@ if SERVER then
 			})
 		end
 
-		snet.Invoke('cl_tool_bgn_spawn_area_sync_areas', ply, list)
+		bgNPC.Net.Send('cl_tool_bgn_spawn_area_sync_areas', ply, list)
 	end
 
-	snet.Callback('sv_tool_bgn_spawn_area_new', function(ply)
+	bgNPC.Net.Receive('sv_tool_bgn_spawn_area_new', function(ply)
 		ResetSpawnArea(ply:GetTool('bgn_spawn_area'))
-	end).Protect()
+	end, { admin = true })
 
-	snet.Callback('sv_tool_bgn_spawn_area_list', function(ply)
+	bgNPC.Net.Receive('sv_tool_bgn_spawn_area_list', function(ply)
 		SendAreaListTo(ply)
-	end).Protect()
+	end, { admin = true })
 
-	snet.Callback('sv_tool_bgn_spawn_area_get', function(ply, areaName)
+	bgNPC.Net.Receive('sv_tool_bgn_spawn_area_get', function(ply, areaName)
 		local area = bgNPC:GetSpawnArea(areaName)
 		if not area then return end
 
@@ -85,19 +85,19 @@ if SERVER then
 		tool.StartPoint = area.startPoint
 		tool.EndPoint = area.endPoint
 
-		snet.Invoke('cl_tool_bgn_spawn_area_load', ply, tool.StartPoint, tool.EndPoint, areaName, area.actors)
-	end).Protect()
+		bgNPC.Net.Send('cl_tool_bgn_spawn_area_load', ply, tool.StartPoint, tool.EndPoint, areaName, area.actors)
+	end, { admin = true })
 
-	snet.Callback('sv_tool_bgn_spawn_area_remove', function(ply, areaName)
+	bgNPC.Net.Receive('sv_tool_bgn_spawn_area_remove', function(ply, areaName)
 		if not isstring(areaName) or #areaName == 0 then return end
 
 		if bgNPC:RemoveSpawnArea(areaName) then
 			ResetSpawnArea(ply:GetTool('bgn_spawn_area'))
 			SendAreaListTo(ply)
 		end
-	end).Protect()
+	end, { admin = true })
 
-	snet.Callback('sv_tool_bgn_spawn_area_save', function(ply, areaName, actors, startPoint, endPoint)
+	bgNPC.Net.Receive('sv_tool_bgn_spawn_area_save', function(ply, areaName, actors, startPoint, endPoint)
 		if not isstring(areaName) or #string.Trim(areaName) == 0 then return end
 		if not isvector(startPoint) or not isvector(endPoint) then return end
 
@@ -111,7 +111,7 @@ if SERVER then
 		end
 
 		SendAreaListTo(ply)
-	end).Protect()
+	end, { admin = true })
 end
 
 function TOOL:Think()
@@ -132,7 +132,7 @@ function TOOL:LeftClick(tr)
 			self.EndPoint = tr.HitPos
 		end
 
-		snet.Invoke('cl_tool_bgn_spawn_area_update_points', self:GetOwner(), self.StartPoint, self.EndPoint)
+		bgNPC.Net.Send('cl_tool_bgn_spawn_area_update_points', self:GetOwner(), self.StartPoint, self.EndPoint)
 	end
 
 	return true
@@ -148,7 +148,7 @@ function TOOL:RightClick()
 end
 
 if CLIENT then
-	snet.Callback('BGN_ClientOpenCommandChat', function()
+	bgNPC.Net.Receive('BGN_ClientOpenCommandChat', function()
 		chat.Open(1)
 	end)
 
@@ -190,7 +190,7 @@ if CLIENT then
 	-- Fired on plain corner-point placement (world click / //pos1 //pos2) - only
 	-- ever touches the two points, never the loaded zone's name/actor rules, so
 	-- nudging a corner doesn't wipe out whatever's already configured for it.
-	snet.Callback('cl_tool_bgn_spawn_area_update_points', function(_, startPoint, endPoint)
+	bgNPC.Net.Receive('cl_tool_bgn_spawn_area_update_points', function(_, startPoint, endPoint)
 		state.startPoint = startPoint
 		state.endPoint = endPoint
 
@@ -198,7 +198,7 @@ if CLIENT then
 	end)
 
 	-- Fired when an existing zone is loaded into the tool (full replace).
-	snet.Callback('cl_tool_bgn_spawn_area_load', function(_, startPoint, endPoint, areaName, actors)
+	bgNPC.Net.Receive('cl_tool_bgn_spawn_area_load', function(_, startPoint, endPoint, areaName, actors)
 		state.startPoint = startPoint
 		state.endPoint = endPoint
 		state.areaName = areaName or ''
@@ -216,7 +216,7 @@ if CLIENT then
 	end)
 
 	-- Fired on right-click / "New zone" - clears everything back to a blank slate.
-	snet.Callback('cl_tool_bgn_spawn_area_reset', function()
+	bgNPC.Net.Receive('cl_tool_bgn_spawn_area_reset', function()
 		state.startPoint = nil
 		state.endPoint = nil
 		state.areaName = ''
@@ -225,7 +225,7 @@ if CLIENT then
 		NotifyStateUpdated()
 	end)
 
-	snet.Callback('cl_tool_bgn_spawn_area_sync_areas', function(_, list)
+	bgNPC.Net.Receive('cl_tool_bgn_spawn_area_sync_areas', function(_, list)
 		state.areaList = {}
 
 		for _, area in ipairs(list or {}) do
@@ -238,17 +238,23 @@ if CLIENT then
 	local function RequestNewArea()
 		state.areaName = ''
 		state.actors = {}
-		snet.InvokeServer('sv_tool_bgn_spawn_area_new')
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_new')
 	end
 
 	local function RequestLoadArea(areaName)
-		snet.InvokeServer('sv_tool_bgn_spawn_area_get', areaName)
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_get', areaName)
 	end
 
 	local function RequestRemoveArea(areaName)
-		snet.InvokeServer('sv_tool_bgn_spawn_area_remove', areaName)
+		state.areaList[areaName] = nil
+		NotifyStateUpdated()
+
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_remove', areaName)
 	end
 
+	-- Updates the local zone list immediately instead of waiting on the
+	-- server's sync roundtrip, so the Save button always gives instant
+	-- feedback even if the sync response is delayed or lost.
 	local function RequestSaveArea(areaName, actors)
 		if not state.startPoint or not state.endPoint then return false end
 
@@ -257,8 +263,10 @@ if CLIENT then
 
 		state.areaName = areaName
 		state.actors = actors or {}
+		state.areaList[areaName] = { startPoint = state.startPoint, endPoint = state.endPoint }
+		NotifyStateUpdated()
 
-		snet.InvokeServer('sv_tool_bgn_spawn_area_save', areaName, actors, state.startPoint, state.endPoint)
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_save', areaName, actors, state.startPoint, state.endPoint)
 		return true
 	end
 
@@ -473,7 +481,7 @@ if CLIENT then
 
 		Refresh()
 
-		snet.InvokeServer('sv_tool_bgn_spawn_area_list')
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_list')
 	end
 
 	----------------------------------------------------------------------
@@ -522,13 +530,25 @@ if CLIENT then
 			RequestRemoveArea(state.areaName)
 		end
 
+		local nameEntry = vgui.Create('DTextEntry', panel)
+		nameEntry:Dock(TOP)
+		nameEntry:DockMargin(5, 5, 5, 0)
+		nameEntry:SetPlaceholderText('Zone name')
+
+		-- Also usable to name and create a brand new zone straight from this
+		-- panel - the Zone Manager is only required for per-actor tuning.
 		local resaveButton = vgui.Create('DButton', panel)
 		resaveButton:Dock(TOP)
-		resaveButton:DockMargin(5, 0, 5, 5)
-		resaveButton:SetText('Save current points to loaded zone')
+		resaveButton:DockMargin(5, 5, 5, 5)
+		resaveButton:SetText('Save current points')
 		resaveButton.DoClick = function()
-			if not state.areaName or #state.areaName == 0 then return end
-			RequestSaveArea(state.areaName, state.actors)
+			local areaName = string.Trim(nameEntry:GetValue())
+			if #areaName == 0 then
+				surface.PlaySound('buttons/button10.wav')
+				return
+			end
+
+			RequestSaveArea(areaName, state.actors)
 		end
 
 		local managerButton = vgui.Create('DButton', panel)
@@ -543,6 +563,8 @@ if CLIENT then
 				areaList:AddLine(areaName)
 			end
 
+			nameEntry:SetValue(state.areaName or '')
+
 			if state.startPoint and state.endPoint then
 				pointsLabel:SetText('Current zone: ' .. (state.areaName ~= '' and state.areaName or '(unsaved)'))
 			else
@@ -554,7 +576,7 @@ if CLIENT then
 
 		Refresh()
 
-		snet.InvokeServer('sv_tool_bgn_spawn_area_list')
+		bgNPC.Net.SendToServer('sv_tool_bgn_spawn_area_list')
 	end
 
 	----------------------------------------------------------------------
@@ -572,9 +594,8 @@ if CLIENT then
 		local colorSavedAreaWireframe = Color(90, 170, 255, 160)
 
 		hook.Add('PostDrawOpaqueRenderables', 'BGN_InitDrawArea', function()
-			if not SLibraryIsLoaded then return end
 
-			local tool = LocalPlayer():slibGetActiveTool('bgn_spawn_area')
+			local tool = bgNPC.Util.GetActivePlayerTool('bgn_spawn_area', LocalPlayer())
 			if not tool then return end
 
 			render.SetColorMaterial()
@@ -613,7 +634,7 @@ if CLIENT then
 		end)
 
 		hook.Add('HUDPaint', 'BGN_DrawAreaLabels', function()
-			local tool = LocalPlayer():slibGetActiveTool('bgn_spawn_area')
+			local tool = bgNPC.Util.GetActivePlayerTool('bgn_spawn_area', LocalPlayer())
 			if not tool then return end
 
 			for areaName, area in pairs(state.areaList) do
