@@ -123,3 +123,9 @@ General page, single player only (it changes server and client settings together
 `bgn_max_npc` (type limits follow it), `bgn_ghost_crowd_max` and `bgn_cl_ghost_crowd_max`.
 Low 15 / 0 ghosts, Medium 35 / 40 (defaults), High 60 / 80, Ultra 100 / 150. Console: `bgn_crowd_density low|medium|high|ultra`.
 No preset is selected when the limits were changed by hand. Presets: `DENSITY` in `ui/menu/cl_menu_pages.lua`.
+
+## Setting change notices
+
+Every change of a setting shows a notice: a server setting (also one changed by the testing mode's *Fix* button)
+is announced to all players after the server has applied it, a client `bgn_cl_*` setting only to its player. A
+slider sends one notice with the last value. If an admin's copy is stale, the server sends the real value back quietly.
