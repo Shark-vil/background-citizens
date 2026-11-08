@@ -32,7 +32,7 @@ Provider.name = 'none'
 function Provider:Load() return true end
 function Provider:Count() return 0 end
 -- @return table list of Vectors
-function Provider:GetPointsInRadius(center, radius, link_type) return {} end
+function Provider:GetPointsInRadius(center, radius, link_type, limit) return {} end
 -- @return table list of Vectors, every point (or a sample for huge sources)
 function Provider:GetAllPoints(link_type) return {} end
 -- @return Vector|nil
@@ -121,7 +121,8 @@ end
 -- ---------------------------------------------------------------------------
 
 function Nav.Count() return active:Count() end
-function Nav.GetPointsInRadius(center, radius, link_type) return active:GetPointsInRadius(center, radius, link_type) end
+-- limit: the most points to return (navmesh caps the result, 64 by default)
+function Nav.GetPointsInRadius(center, radius, link_type, limit) return active:GetPointsInRadius(center, radius, link_type, limit) end
 function Nav.GetAllPoints(link_type) return active:GetAllPoints(link_type) end
 function Nav.GetRandomPoint(center, radius, link_type) return active:GetRandomPoint(center, radius, link_type) end
 function Nav.FindPath(start_pos, goal_pos, link_type) return active:FindPath(start_pos, goal_pos, link_type) end

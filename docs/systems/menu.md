@@ -10,7 +10,11 @@ Texts follow the game language: English and Russian.
 The search field (Ctrl+F) looks through every page: labels, help texts and cvar names; Esc clears it.
 The full screen button (or a double click on the header) maximizes the window.
 
-Server settings (registered with `bgNPC.CVars`) can only be changed by admins; other players see them locked.
+The sidebar has two groups: **Server** (settings registered with `bgNPC.CVars`, admins only) and
+**Only for you** (the "My settings" page: this computer's options). Non-admins don't see server settings at all:
+a section without visible rows has no heading, a page without visible rows is not listed.
+`bgn_menu_as_player [1/0]` (no argument toggles) shows the window as a non-admin sees it, for debugging; the
+server still checks the rights.
 
 ## Adding a page
 
@@ -19,7 +23,8 @@ Server settings (registered with `bgNPC.CVars`) can only be changed by admins; o
 bgNPC.Menu.AddPage('my_addon', {
 	title = { en = 'My addon', ru = 'Мой аддон' },   -- or '#phrase' from resource/localization, or plain text
 	icon = 'background_npcs/vgui/menu/general.png',  -- optional: a white glyph on transparent, 64x64
-	order = 1200,                                    -- built-in pages use 100..1100
+	order = 1300,                                    -- built-in pages use 100..1200
+	group = '#bgn.menu.group.client',                -- optional sidebar heading: '#bgn.menu.group.server' or your own
 	build = function(page)
 		page:Section('Movement')
 		page:Toggle('my_addon_enabled', 'Enable')
@@ -31,7 +36,7 @@ bgNPC.Menu.AddPage('my_addon', {
 
 | Method | Notes |
 | --- | --- |
-| `page:Section(title, help)` | Starts a titled card; the following controls go into it. |
+| `page:Section(title, help)` | Starts a titled card; the following controls go into it. The heading appears with the first visible row. |
 | `page:Toggle(cvar, label, opts)` | `opts.on_change(enabled)`. |
 | `page:Slider(cvar, label, min, max, opts)` | `opts.decimals` (0), `opts.limit` — the max for typed values (they may pass `max`). The value is sent on release. |
 | `page:Button(label, command or function, opts)` | `opts.text` caption, `opts.confirm` (true or a question), `opts.danger`, `opts.admin`. |
@@ -45,7 +50,7 @@ Search builds every page with a filter: rows that don't match are created in a h
 functions need no changes. `page.filter` is set while searching (skip expensive work there if needed).
 
 Common options: `help` (a `'#key'` label uses `'#key.help'` when it exists), `server` (default: the cvar is a
-`bgNPC.CVars` setting; locks the control for non-admins).
+`bgNPC.CVars` setting; hides the control from non-admins). `opts.admin` does the same for buttons.
 
 Other API: `bgNPC.Menu.Open(page)`, `ShowPage(page)`, `Close()`, `IsOpen()`, `RemovePage(id)`, `Confirm(text, on_yes, danger)`,
 `Dialog(width, build)`, `Sound(name)`, `colors` (the current palette), `Builder` (add your own control methods).

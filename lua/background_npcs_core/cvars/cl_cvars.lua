@@ -21,6 +21,12 @@ CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_vie
 CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound,
 { FCVAR_ARCHIVE }, 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
 
+CreateConVar('bgn_cl_ghost_crowd', bgNPC.cvar.bgn_cl_ghost_crowd,
+{ FCVAR_ARCHIVE }, 'EXPERIMENTAL. Draws a cheap client-side crowd far away that copies the mood of the actors near you.')
+
+CreateConVar('bgn_cl_ghost_crowd_max', bgNPC.cvar.bgn_cl_ghost_crowd_max,
+{ FCVAR_ARCHIVE }, 'The most ghost crowd figures at once.')
+
 CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance,
 { FCVAR_ARCHIVE }, 'Distance to draw points in edit mode.')
 

@@ -14,9 +14,11 @@
 				page:Slider('my_number', 'Distance', 0, 5000)
 				page:Button('Clear', 'my_command', { confirm = true })
 			end,
+			group = '#bgn.menu.group.server',                -- optional sidebar heading over pages of one group
 		})
 
-	Settings registered with bgNPC.CVars are server settings: admins change them, the others see them locked.
+	Settings registered with bgNPC.CVars are server settings: only admins see them. A page whose rows are all
+	hidden is not listed. "bgn_menu_as_player" shows the window as a non-admin sees it (debug).
 	Texts follow the game language (gmod_language).
 --]]
 
@@ -122,7 +124,7 @@ local LIGHT = {
 	muted = Color(107, 114, 128), accent = Color(37, 99, 235), accent_hover = Color(29, 78, 216),
 	on_accent = Color(255, 255, 255), track = Color(209, 213, 219), knob = Color(255, 255, 255),
 	danger = Color(220, 38, 38), nav_active = Color(255, 255, 255), overlay = Color(15, 17, 21, 110),
-	notice = Color(232, 240, 254), shadow = Color(0, 0, 0, 40),
+	shadow = Color(0, 0, 0, 40),
 }
 
 local DARK = {
@@ -131,7 +133,7 @@ local DARK = {
 	muted = Color(154, 161, 172), accent = Color(76, 141, 255), accent_hover = Color(108, 162, 255),
 	on_accent = Color(255, 255, 255), track = Color(58, 64, 75), knob = Color(245, 246, 248),
 	danger = Color(240, 82, 82), nav_active = Color(30, 33, 40), overlay = Color(0, 0, 0, 150),
-	notice = Color(31, 45, 72), shadow = Color(0, 0, 0, 90),
+	shadow = Color(0, 0, 0, 90),
 }
 
 local C = Menu.colors or {}
@@ -192,7 +194,7 @@ local function CreateFonts()
 	end
 	Font('BGN.Menu.Brand', 19, 700)
 	Font('BGN.Menu.PageTitle', 24, 700)
-	Font('BGN.Menu.Section', 13, 700)
+	Font('BGN.Menu.Section', 15, 700)
 	Font('BGN.Menu.Nav', 15, 500)
 	Font('BGN.Menu.Body', 16, 500)
 	Font('BGN.Menu.Small', 14, 400)
@@ -230,6 +232,7 @@ function Menu.Sound(name)
 end
 
 function Menu.IsAdmin()
+	if Menu.as_player then return false end
 	local ply = LocalPlayer()
 	return IsValid(ply) and ply:IsAdmin()
 end
@@ -408,9 +411,7 @@ local function StyleScrollBar(scroll, s)
 	end
 end
 
--- Clears the content and adds the hidden "read-only" banner. @return Panel the banner
 local function ResetContent(frame, title)
-	local s = Menu.Scale()
 	local content = frame.content
 	content:Clear()
 	frame.page_title = title
@@ -418,20 +419,6 @@ local function ResetContent(frame, title)
 	local canvas = content:GetCanvas()
 	canvas:SetAlpha(0)
 	canvas:AlphaTo(255, 0.15)
-
-	-- shown by the builder when the page has settings this player can't change
-	local notice = content:Add('DPanel')
-	notice:Dock(TOP)
-	notice:DockMargin(0, 0, 0, math.Round(16 * s))
-	notice:SetTall(math.Round(40 * s))
-	notice:SetVisible(false)
-	notice.Paint = function(self, w, h)
-		draw.RoundedBox(math.Round(8 * s), 0, 0, w, h, C.notice)
-		local icon = math.Round(16 * s)
-		Menu.Icon(ICONS .. 'lock.png', math.Round(14 * s), (h - icon) / 2, icon, C.accent)
-		draw.SimpleText(Menu.Text('#bgn.menu.readonly'), 'BGN.Menu.Small', math.Round(40 * s), h / 2, C.text, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-	end
-	return notice
 end
 
 local function RunBuild(def, page)
@@ -444,17 +431,18 @@ end
 
 local function BuildPage(frame, def)
 	frame.query = nil
-	RunBuild(def, Menu.NewBuilder(frame.content, ResetContent(frame, Menu.Text(def.title))))
+	ResetContent(frame, Menu.Text(def.title))
+	RunBuild(def, Menu.NewBuilder(frame.content))
 end
 
 -- Every page built with a filter: only the matching rows, under "Page › Section" headings
 -- @param query string normalized (Menu.Normalize), not empty
 local function BuildSearch(frame, query)
 	frame.query = query
-	local notice = ResetContent(frame, Menu.Text('#bgn.menu.search.results'))
+	ResetContent(frame, Menu.Text('#bgn.menu.search.results'))
 	local results = { count = 0 }
 	for _, def in ipairs(SortedPages()) do
-		RunBuild(def, Menu.NewBuilder(frame.content, notice, {
+		RunBuild(def, Menu.NewBuilder(frame.content, {
 			query = query, page_id = def.id, page_title = Menu.Text(def.title), results = results,
 		}))
 	end
@@ -472,15 +460,35 @@ function Menu.ShowPage(page_id)
 	BuildPage(frame, Menu.pages[page_id])
 end
 
+-- Pages this player sees: for non-admins, pages whose rows are all server settings are left out.
+-- A search build (no network requests) with an empty query counts the rows.
+local function VisiblePages()
+	local pages = SortedPages()
+	if Menu.IsAdmin() then return pages end
+
+	local probe = vgui.Create('DPanel')
+	probe:SetVisible(false)
+	local list = {}
+	for _, def in ipairs(pages) do
+		local builder = Menu.NewBuilder(probe, { query = '', page_id = def.id, page_title = '', results = { count = 0 } })
+		RunBuild(def, builder)
+		if builder.rows == 0 or builder.visible > 0 then list[#list + 1] = def end
+	end
+	probe:Remove()
+	return list
+end
+
 -- @param page_id string|nil page to show, the last one by default
 function Menu.Open(page_id)
 	if IsValid(Menu.frame) then Menu.frame:Remove() end
 	CreateFonts()
 	Menu.ApplyTheme(true)
 
-	local pages = SortedPages()
+	local pages = VisiblePages()
 	if #pages == 0 then return end
-	if not Menu.pages[page_id or ''] then page_id = Menu.pages[Menu.page_id or ''] and Menu.page_id or pages[1].id end
+	local shown = {}
+	for _, def in ipairs(pages) do shown[def.id] = true end
+	if not shown[page_id or ''] then page_id = shown[Menu.page_id or ''] and Menu.page_id or pages[1].id end
 
 	local s = Menu.Scale()
 	local W = math.min(math.Round(1000 * s), ScrW() - 32)
@@ -599,7 +607,18 @@ function Menu.Open(page_id)
 	nav:Dock(FILL)
 	StyleScrollBar(nav, s)
 
+	local last_group
 	for _, def in ipairs(pages) do
+		if def.group and def.group ~= last_group then
+			local head = nav:Add('DPanel')
+			head:Dock(TOP)
+			head:DockMargin(math.Round(14 * s), last_group and math.Round(14 * s) or 0, 0, math.Round(4 * s))
+			head:SetTall(Menu.FontHeight('BGN.Menu.Small'))
+			local group = def.group
+			head.Paint = function() draw.SimpleText(Menu.Text(group), 'BGN.Menu.Small', 0, 0, C.muted) end
+		end
+		last_group = def.group or last_group
+
 		local item = nav:Add('DButton')
 		item:Dock(TOP)
 		item:DockMargin(0, 0, 0, math.Round(2 * s))
@@ -724,6 +743,13 @@ end
 -- ---------------------------------------------------------------------------
 
 concommand.Add('bgn_menu', function(_, _, args) Menu.Open(args[1]) end, nil, 'Opens the Background NPCs settings: bgn_menu [page]')
+
+-- Debug: only what the window shows changes, the server still checks the rights
+concommand.Add('bgn_menu_as_player', function(_, _, args)
+	if args[1] then Menu.as_player = tobool(args[1]) else Menu.as_player = not Menu.as_player end
+	MsgN('[Background NPCs] Settings window as a non-admin: ' .. (Menu.as_player and 'on' or 'off'))
+	Menu.Open(Menu.page_id)
+end, nil, 'Debug: opens the settings window as a non-admin sees it. bgn_menu_as_player [1/0], no argument toggles')
 
 list.Set('DesktopWindows', 'BGN_Menu', {
 	title = 'Background NPCs',

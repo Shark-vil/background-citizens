@@ -1,11 +1,14 @@
 --[[
 	Built-in pages of the settings window (cl_menu.lua). Texts: resource/localization/*/bgn_*.properties.
+	Server settings live on the "server" group pages (admins only), everything of this computer on "client".
 --]]
 
 local Menu = bgNPC.Menu
 local ICONS = 'background_npcs/vgui/menu/'
+local SERVER_GROUP = '#bgn.menu.group.server'
 
 Menu.AddPage('general', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.general',
 	icon = ICONS .. 'general.png',
 	order = 100,
@@ -24,6 +27,7 @@ Menu.AddPage('general', {
 })
 
 Menu.AddPage('actors', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.actors',
 	icon = ICONS .. 'actors.png',
 	order = 200,
@@ -31,17 +35,16 @@ Menu.AddPage('actors', {
 		page:Section('#bgn.menu.section.total')
 		page:Slider('bgn_max_npc', '#bgn.settings.actor.total_max_npc', 0, 200)
 
-		page:Note('#bgn.settings.actor.active_npcs.help')
 		for actor_type, data in SortedPairs(bgNPC.cfg.actors) do
 			if not data.hidden then
 				page:Section(data.name or actor_type)
 				page:Toggle('bgn_npc_type_' .. actor_type, '#bgn.menu.actor.enabled')
-				page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.settings.actor.max_npc_' .. actor_type, 0, 200)
+				page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.menu.actor.max', 0, 200)
 				if istable(data.weapons) and #data.weapons ~= 0 then
-					page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.settings.actor.disable_weapon_' .. actor_type)
+					page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.menu.actor.no_weapons')
 				end
 				if DecentVehicleDestination and istable(data.vehicles) and #data.vehicles ~= 0 then
-					page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.settings.actor.max_npc_vehicle_' .. actor_type, 0, 200)
+					page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.menu.actor.max_vehicles', 0, 200)
 				end
 			end
 		end
@@ -49,6 +52,7 @@ Menu.AddPage('actors', {
 })
 
 Menu.AddPage('spawn', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.spawn',
 	icon = ICONS .. 'spawn.png',
 	order = 300,
@@ -58,15 +62,16 @@ Menu.AddPage('spawn', {
 		page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
 		page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
 		page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, { decimals = 1 })
-		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
 
 		page:Section('#bgn.menu.section.teleport')
 		page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
 		page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
+		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
 	end,
 })
 
 Menu.AddPage('wanted', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.wanted',
 	icon = ICONS .. 'wanted.png',
 	order = 400,
@@ -80,13 +85,10 @@ Menu.AddPage('wanted', {
 		page:Slider('bgn_wanted_impunity_reduction_period', '#bgn.settings.wanted.impunity_reduction_period', 0, 300)
 
 		page:Section('#bgn.menu.section.hud')
-		page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
 		page:Toggle('bgn_wanted_hud_text', '#bgn.settings.wanted.hud_text')
 		page:Toggle('bgn_wanted_hud_stars', '#bgn.settings.wanted.hud_stars')
 
 		page:Section('#bgn.menu.section.halo')
-		page:Toggle('bgn_cl_disable_halo', '#bgn.settings.wanted.cl_disable_halo')
-		page:Toggle('bgn_cl_disable_self_halo_wanted', '#bgn.settings.wanted.cl_disable_self_halo_wanted')
 		page:Toggle('bgn_disable_halo_calling', '#bgn.settings.wanted.disable_halo_calling')
 		page:Toggle('bgn_disable_halo_wanted', '#bgn.settings.wanted.disable_halo_wanted')
 
@@ -99,6 +101,7 @@ Menu.AddPage('wanted', {
 })
 
 Menu.AddPage('arrest', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.arrest',
 	icon = ICONS .. 'arrest.png',
 	order = 500,
@@ -110,6 +113,7 @@ Menu.AddPage('arrest', {
 })
 
 Menu.AddPage('behavior', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.behavior',
 	icon = ICONS .. 'behavior.png',
 	order = 600,
@@ -124,19 +128,22 @@ Menu.AddPage('behavior', {
 		page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
 
 		page:Section('#bgn.menu.section.main')
-		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
 		page:Toggle('bgn_module_replics_enable', '#bgn.settings.extension.replics_enable')
 		page:Choice('bgn_module_replics_language', '#bgn.menu.replics_language', {
 			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
 		})
-		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
 		page:Toggle('bgn_all_models_random', '#bgn.settings.extension.all_models_random')
 		page:Toggle('bgn_drop_money', '#bgn.settings.extension.drop_money')
+
+		page:Section('#bgn.menu.section.experimental')
+		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
+		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')
 	end,
 })
 
 Menu.AddPage('navigation', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.navigation',
 	icon = ICONS .. 'navigation.png',
 	order = 700,
@@ -157,21 +164,18 @@ Menu.AddPage('navigation', {
 })
 
 Menu.AddPage('performance', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.performance',
 	icon = ICONS .. 'performance.png',
 	order = 800,
 	build = function(page)
-		page:Section('#bgn.menu.section.client')
-		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
-		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
-
-		page:Section('#bgn.menu.section.server')
 		page:Slider('bgn_disable_logic_radius', '#bgn.settings.optimization.disable_logic', 0, 1000)
 		page:Slider('bgn_lod_near_radius', '#bgn.menu.lod_near_radius', 0, 10000)
 	end,
 })
 
 Menu.AddPage('addons', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.addons',
 	icon = ICONS .. 'addons.png',
 	order = 900,
@@ -189,21 +193,39 @@ Menu.AddPage('addons', {
 })
 
 Menu.AddPage('client', {
+	group = '#bgn.menu.group.client',
 	title = '#bgn.menu.page.client',
 	icon = ICONS .. 'client.png',
-	order = 1000,
+	order = 1200,
 	build = function(page)
-		page:Section('#bgn.menu.section.client')
+		page:Section('#bgn.menu.section.graphics')
+		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
+		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
 		page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
-		page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
+
+		page:Section('#bgn.menu.section.wanted')
+		page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
+		page:Toggle('bgn_cl_disable_halo', '#bgn.settings.wanted.cl_disable_halo')
+		page:Toggle('bgn_cl_disable_self_halo_wanted', '#bgn.settings.wanted.cl_disable_self_halo_wanted')
+
+		page:Section('#bgn.menu.section.experimental')
+		page:Toggle('bgn_cl_ghost_crowd', '#bgn.menu.ghost_crowd')
+		page:Slider('bgn_cl_ghost_crowd_max', '#bgn.menu.ghost_crowd_max', 0, 150)
 
 		page:Section('#bgn.menu.section.menu')
 		page:Toggle('bgn_menu_dark', '#bgn.menu.dark')
 		page:Toggle('bgn_menu_sounds', '#bgn.menu.sounds')
+
+		page:Section('#bgn.menu.section.debug')
+		page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
+
+		page:Section('#bgn.menu.section.about')
+		page:Button('#bgn.settings.general.updateinfo', 'bgn_updateinfo', { text = '#bgn.menu.open_page' })
 	end,
 })
 
 Menu.AddPage('tools', {
+	group = SERVER_GROUP,
 	title = '#bgn.menu.page.tools',
 	icon = ICONS .. 'tools.png',
 	order = 1100,
@@ -221,7 +243,6 @@ Menu.AddPage('tools', {
 		page:Button('#bgn.settings.workshop.save_to_script', 'bgn_compile', { admin = true, text = '#bgn.menu.save' })
 
 		page:Section('#bgn.menu.section.maintenance')
-		page:Button('#bgn.settings.general.updateinfo', 'bgn_updateinfo', { text = '#bgn.menu.open_page' })
 		page:Button('#bgn.settings.general.reset_cvars_to_factory_settings', 'bgn_reset_cvars_to_factory_settings', {
 			admin = true, text = '#bgn.menu.reset', confirm = '#bgn.menu.confirm.reset', danger = true,
 		})

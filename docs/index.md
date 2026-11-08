@@ -8,6 +8,8 @@ This documentation is for "*Background NPCs*". General information on setting up
 ### Systems
 - [Navigation](./systems/navigation.md)
 - [Actor brains](./systems/brains.md)
+- [Ghost crowd (experimental)](./systems/ghost-crowd.md)
+- [Settings menu](./systems/menu.md)
 
 ### Tutorials
 - [Change basic configuration](./tutorials/Change%20basic%20configuration.md) (**Deprecated, will be removed in the future**)

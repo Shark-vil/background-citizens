@@ -10,6 +10,5 @@ if SERVER then return end
 local lang = {}
 
 table.Merge(lang, include(target_directory .. 'en/cl_options.lua'))
-table.Merge(lang, include(target_directory .. 'en/cl_actors.lua'))
 
 bgNPC.LANGUAGES['english'] = lang

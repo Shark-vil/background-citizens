@@ -12,8 +12,8 @@
 		page:Custom(function(panel) end)                 -- anything else, docked at the top
 
 	Every label/help takes '#phrase', plain text or { en = '', ru = '' }. Without opts.help a '#key' label uses
-	'#key.help' when it exists. opts.server (default: the cvar is a bgNPC.CVars server setting) locks the
-	control for non-admins.
+	'#key.help' when it exists. opts.server (default: the cvar is a bgNPC.CVars server setting) hides the
+	control from non-admins; a section without visible rows has no heading.
 
 	Search builds every page with a filter (builder.filter): rows that don't match go into a hidden panel,
 	so a page's build function works unchanged. Methods can be added to bgNPC.Menu.Builder by other addons.
@@ -32,10 +32,11 @@ function Menu.ContentChanged()
 	if IsValid(Menu.frame) then Menu.frame.relayout = true end
 end
 
--- @param scroll DScrollPanel page content; @param notice Panel "read-only" banner
+-- @param scroll DScrollPanel page content
 -- @param search table|nil { query, page_id, page_title, results = { count } } builds only matching rows
-function Menu.NewBuilder(scroll, notice, search)
-	local builder = setmetatable({ scroll = scroll, notice = notice }, Builder)
+-- builder.rows / builder.visible: rows built / rows shown to this player
+function Menu.NewBuilder(scroll, search)
+	local builder = setmetatable({ scroll = scroll, rows = 0, visible = 0 }, Builder)
 	if search then
 		builder.filter = search.query
 		builder.search = search
@@ -126,7 +127,16 @@ function Builder:Section(title, help)
 		self.card = nil
 		return
 	end
-	return self:SectionHead(Menu.Text(title), help and Menu.Text(help))
+	-- the heading appears with the first visible row (FlushSection)
+	self.pending_head = { title = title, help = help }
+	self.card = nil
+end
+
+function Builder:FlushSection()
+	local head = self.pending_head
+	if not head then return end
+	self.pending_head = nil
+	return self:SectionHead(Menu.Text(head.title), head.help and Menu.Text(head.help))
 end
 
 -- @param title_text string; @param help_text string|nil (already translated)
@@ -146,7 +156,7 @@ function Builder:SectionHead(title_text, help_text)
 		end
 	end
 	head.Paint = function(panel, w)
-		draw.SimpleText(title_text, 'BGN.Menu.Section', 0, 0, panel.link and panel:IsHovered() and C.accent or C.muted)
+		draw.SimpleText(title_text, 'BGN.Menu.Section', 0, 0, panel.link and panel:IsHovered() and C.accent or C.text)
 		if not help_text then return end
 		local y = Menu.FontHeight('BGN.Menu.Section') + math.Round(2 * s)
 		local lh = Menu.FontHeight('BGN.Menu.Small')
@@ -160,6 +170,7 @@ end
 -- The card that holds rows; a section starts a new one.
 function Builder:Card()
 	if IsValid(self.card) then return self.card end
+	self:FlushSection()
 	local s = Menu.Scale()
 	local radius = math.Round(8 * s)
 	local card = self:Add('DPanel')
@@ -241,7 +252,7 @@ local function RowPaint(row, w, h)
 	end
 end
 
--- @param server boolean the row changes a server setting (locked for non-admins)
+-- @param server boolean the row changes a server setting (hidden from non-admins)
 -- @param cvar string|nil searched by its name too
 -- @return Panel the row; put your control into row.control (it is placed on the right)
 function Builder:Row(label, help, server, cvar)
@@ -249,10 +260,14 @@ function Builder:Row(label, help, server, cvar)
 	local help_text = help and Menu.Text(help) or nil
 	if help_text == '' then help_text = nil end
 
+	local hidden = server and not Menu.IsAdmin() -- non-admins don't see what they can't change
+	self.rows = self.rows + 1
+
 	local parent
-	if self.filter and not self:Matches(label_text, help_text, cvar) then
+	if hidden or (self.filter and not self:Matches(label_text, help_text, cvar)) then
 		parent = self:Trash()
 	else
+		self.visible = self.visible + 1
 		if self.filter then
 			self:EmitHeading()
 			self.search.results.count = self.search.results.count + 1
@@ -264,22 +279,16 @@ function Builder:Row(label, help, server, cvar)
 	row:Dock(TOP)
 	row.label = label_text
 	row.help = help_text
-	row.locked = server and not Menu.IsAdmin() or false
+	row.locked = hidden or false -- hidden rows stay disabled too
 	row.hover = 0
 	row.PerformLayout = RowLayout
 	row.Paint = RowPaint
-	if row.locked then
-		row:SetTooltip(Menu.Text('#bgn.menu.admin_only'))
-		if parent ~= self.trash and IsValid(self.notice) and not self.notice:IsVisible() then
-			self.notice:SetVisible(true)
-			Menu.ContentChanged()
-		end
-	end
 	return row
 end
 
 function Builder:Note(text)
 	if self.filter then return Menu.Paragraph(self:Trash(), Menu.Text(text), 'BGN.Menu.Small') end
+	self:FlushSection()
 	local s = Menu.Scale()
 	local note = Menu.Paragraph(self.scroll, Menu.Text(text), 'BGN.Menu.Small', C.muted)
 	note:DockMargin(0, self.started and math.Round(12 * s) or 0, 0, math.Round(12 * s))
@@ -295,6 +304,7 @@ end
 
 -- @param build function(panel) fills a panel docked at the top; set its height yourself
 function Builder:Custom(build)
+	if not self.filter then self:FlushSection() end
 	local panel = self.filter and self:Trash():Add('DPanel') or self:Add('DPanel')
 	panel.Paint = nil
 	self.started = true
@@ -605,3 +615,21 @@ function Builder:Choice(cvar, label, options, opts)
 	row.control = ctrl
 	return row
 end
+
+bgNPC.Test.Add('menu.hide_server_rows', function(check)
+	local was = Menu.as_player
+	Menu.as_player = true
+	local probe = vgui.Create('DPanel')
+	probe:SetVisible(false)
+
+	local page = Menu.NewBuilder(probe)
+	page:Section('server')
+	page:Toggle('bgn_enable', 'server row')
+	check(page.rows == 1 and page.visible == 0, 'a server row is hidden from a non-admin')
+	check(page.pending_head ~= nil, 'a section without visible rows has no heading')
+	page:Toggle('bgn_menu_dark', 'client row')
+	check(page.visible == 1 and page.pending_head == nil, 'a client row is shown under its heading')
+
+	probe:Remove()
+	Menu.as_player = was
+end)

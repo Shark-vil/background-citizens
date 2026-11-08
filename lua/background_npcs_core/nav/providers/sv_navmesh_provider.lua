@@ -34,7 +34,7 @@ function NavMeshProvider:Count()
 	return self.count or 0
 end
 
-function NavMeshProvider:GetPointsInRadius(center, radius)
+function NavMeshProvider:GetPointsInRadius(center, radius, _, limit)
 	local areas = navmesh.Find(center, radius, STEP_HEIGHT * 4, STEP_HEIGHT * 4)
 	local points = {}
 	local radius_sqr = radius * radius
@@ -48,7 +48,7 @@ function NavMeshProvider:GetPointsInRadius(center, radius)
 	end
 
 	-- Keep the result small but unbiased
-	while #points > MAX_POINTS do
+	while #points > (limit or MAX_POINTS) do
 		local i = math.random(#points)
 		points[i] = points[#points]
 		points[#points] = nil
