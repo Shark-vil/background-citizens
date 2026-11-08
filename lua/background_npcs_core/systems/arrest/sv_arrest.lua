@@ -2,7 +2,7 @@ local ASSET = {}
 local arrest_targets = {}
 
 function ASSET:AddTarget(target, policeActor)
-	if not IsValid(target) or (not target:IsPlayer() and not target:IsNPC()) then return false end
+	if not IsValid(target) or (not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot()) then return false end
 	if not policeActor or arrest_targets[target] then return false end
 
 	local ArrestComponent = {
@@ -108,6 +108,8 @@ function ASSET:CanArrest(target)
 	if not GetConVar('bgn_arrest_mode'):GetBool() then return false end
 	if not target:IsPlayer() then return true end
 	if not ArrestComponent.detention and ArrestComponent.warningTime < CurTime() then return false end
+	-- a second chance (sv_surrender.lua) holds even while wanted, until the player attacks again
+	if ArrestComponent.surrender then return (target.bgn_last_attack or 0) < ArrestComponent.surrender end
 	return not bgNPC.Modules.Get('wanted'):HasWanted(target)
 end
 

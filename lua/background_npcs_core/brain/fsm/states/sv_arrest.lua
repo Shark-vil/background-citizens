@@ -160,9 +160,9 @@ bgNPC.States.Register('arrest', 'guarded', {
 				ArrestComponent.arrest_time = CurTime() + addArrestTime
 			end
 
-			if target:IsNPC() or eyeAngles.x > 40 then
+			if not target:IsPlayer() or eyeAngles.x > 40 then
 				if not ArrestComponent.detention then
-					npc:EmitSound(bgNPC.cfg.arrest['warning_sound'], 300, 100, 1, CHAN_AUTO)
+					actor:Voice('police_arrest_warning', bgNPC.cfg.arrest['warning_sound'])
 
 					if target:IsPlayer() then
 						target:ChatPrint(bgNPC.cfg.arrest['warning_text'])
@@ -179,7 +179,7 @@ bgNPC.States.Register('arrest', 'guarded', {
 				if target:IsPlayer() then
 					target:ChatPrint(bgNPC.cfg.arrest['order_text'])
 				end
-				npc:EmitSound(bgNPC.cfg.arrest['order_sound'], 300, 100, 1, CHAN_AUTO)
+				actor:Voice('police_arrest_order', bgNPC.cfg.arrest['order_sound'])
 			elseif ArrestComponent.detention then
 				local time = ArrestComponent.arrest_time - CurTime()
 
@@ -193,11 +193,12 @@ bgNPC.States.Register('arrest', 'guarded', {
 				if time <= 0 then
 					ArrestModule:RemoveTarget(target)
 					data.arrested = true
+					actor:Voice('police_arrested')
 
 					if not hook.Run('BGN_PlayerArrest', target, actor) then
 						target:EmitSound('background_npcs/handcuffs_sound1.mp3')
 
-						if target:IsNPC() then
+						if not target:IsPlayer() then
 							if TargetActor then
 								TargetActor:RemoveAllTargets()
 								TargetActor:RemoveAllEnemies()
