@@ -1,5 +1,5 @@
 --[[
-	Medics: every actor death (not in a vehicle) is a call. A free medic takes it, otherwise one is spawned
+	Medics: every actor death (not in a vehicle, not killed by the police) is a call. A free medic takes it, otherwise one is spawned
 	near the body (bgNPC:FindSpawnPosition) with an ambulance when Decent Vehicle and the medic config have one.
 	The ambulance drives to the body with the siren (npc_dvbgn_police, actor.drive_target_pos), the medic gets out,
 	revives the actor (state "medic_revive") and drives away. A body can be revived for CORPSE_TIME seconds,
@@ -25,8 +25,10 @@ local REVIVE_OFFSETS = {
 local calls = {}
 Medics.calls = calls
 
-hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor)
+hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
 	if not bgNPC.Config.IsTypeActive(MEDIC_TYPE) or actor:InVehicle() then return end
+	local killer = IsValid(attacker) and bgNPC.Actors.Get(attacker)
+	if killer and killer:HasTeam('police') then return end -- shot by the police: no ambulance
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 	calls[#calls + 1] = {
