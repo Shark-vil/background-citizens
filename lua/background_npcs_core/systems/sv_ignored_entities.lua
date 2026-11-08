@@ -1,5 +1,5 @@
 --[[
-	Ignored entities (bgNPC.Combat.IsIgnored: build mode, bgNPCIgnore, players under ai_ignoreplayers):
+	Ignored players (bgNPC.Combat.IsIgnored: build mode, ai_ignoreplayers; never NPCs):
 	the damage and witness reaction chains stop here, so later hooks never see them.
 	The entry points check it too (sv_self_damage, sv_reaction_to_a_shot, AddEnemy, AddTarget).
 --]]
