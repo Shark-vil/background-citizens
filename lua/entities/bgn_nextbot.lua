@@ -538,8 +538,12 @@ function ENT:HandleStuck(path)
 	end
 
 	if CurTime() - self.stuck_since < STUCK_TELEPORT_TIME then return end
-	-- shortcut: teleports even if a player watches, add a visibility check if players notice it
 	local goal = path:GetCurrentGoal()
+	-- a player who sees the bot or the goal gets no teleport: try again in a second
+	if goal and not bgNPC:IsHiddenSpawnPosition(goal.pos, self) then
+		self.stuck_since = CurTime() - STUCK_TELEPORT_TIME + 1
+		return
+	end
 	if goal then self:SetPos(goal.pos) end
 	self.loco:ClearStuck()
 	self.stuck_since = nil

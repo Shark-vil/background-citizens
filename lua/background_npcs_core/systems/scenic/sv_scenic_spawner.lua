@@ -302,6 +302,14 @@ local function Backoff(id, found)
 	cooldown[id] = { fails = fails, till = CurTime() + math.min(MAX_COOLDOWN, 20 * 2 ^ fails) }
 end
 
+-- Members stand around the spot: each one must be out of sight too, not only the spot itself.
+local function MembersHidden(plan)
+	for _, member in ipairs(plan.members) do
+		if not bgNPC:IsHiddenSpawnPosition(member.pos) then return false end
+	end
+	return true
+end
+
 -- One pass: the scene id (or a random one) at the first seed that fits.
 -- @return table|nil the scene
 function Scenic.TrySpawn(id)
@@ -318,7 +326,7 @@ function Scenic.TrySpawn(id)
 		local spot = Spots.Find(scene.place, seeds[i], scene)
 		if spot and IsFarFromScenes(spot.pos) then
 			local plan = Plan(scene, spot)
-			if plan and bgNPC:IsHiddenSpawnPosition(spot.pos) then
+			if plan and bgNPC:IsHiddenSpawnPosition(spot.pos) and MembersHidden(plan) then
 				local item = Scenic.Create(id, scene, spot, plan)
 				if item then
 					Backoff(id, true)

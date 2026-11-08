@@ -37,7 +37,7 @@ bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
 bgNPC.cvar.bgn_corpse_cleanup = 1
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
-bgNPC.cvar.bgn_ghost_crowd = 1
+bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
 bgNPC.cvar.bgn_cl_disable_halo = 0
@@ -61,7 +61,7 @@ bgNPC.cvar.bgn_cl_draw_npc_path = 0
 bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1
-bgNPC.cvar.bgn_cl_ghost_crowd = 1
+bgNPC.cvar.bgn_cl_ghost_crowd = 0
 bgNPC.cvar.bgn_cl_ghost_crowd_max = 40
 bgNPC.cvar.bgn_cl_voices = 1
 bgNPC.cvar.bgn_module_replics_enable = 1
@@ -81,8 +81,10 @@ bgNPC.cvar.bgn_drop_money = 1
 bgNPC.cvar.bgn_module_n2money = 1
 bgNPC.cvar.bgn_agressive_mode = 0
 bgNPC.cvar.bgn_friend_mode = 0
-bgNPC.cvar.bgn_brain = 'auto'
-bgNPC.cvar.bgn_actor_body = 'auto'
+bgNPC.cvar.bgn_brain = 'fsm'
+bgNPC.cvar.bgn_actor_body = 'npc'
+bgNPC.cvar.bgn_pick_up_weapons = 0
+bgNPC.cvar.bgn_settings_rev = 0
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
 bgNPC.cvar.bgn_lod_near_radius = 2500
@@ -225,8 +227,11 @@ bgNPC.CVars.Register('bgn_all_models_random', bgNPC.cvar.bgn_all_models_random, 
 bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime_generator_grid_offset, 'Offset between points for grid generation')
 
 -- Created by their systems on the server too (same defaults); registered here so the settings window can change them.
-bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (auto, fsm, goap)')
-bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (auto - NextBot on NavMesh maps, npc, nextbot)')
+bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (fsm - the classic one, goap - smarter fights, auto - goap for armed actors)')
+bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (npc - regular game NPCs like the old versions, nextbot - smoother walking, needs a NavMesh; auto = npc)')
+bgNPC.CVars.Register('bgn_pick_up_weapons', bgNPC.cvar.bgn_pick_up_weapons, 'Unarmed actors in danger run to a dropped weapon, take it and fight (state pick_up_weapon). 1 - enabled, 0 - disabled (the old behavior).')
+-- Settings revision: 0 - the settings were never reset to the classic defaults (see systems/sv_settings_migration.lua)
+bgNPC.CVars.Register('bgn_settings_rev', bgNPC.cvar.bgn_settings_rev, 'Internal: settings revision. Do not change.')
 bgNPC.CVars.Register('bgn_nav_provider', bgNPC.cvar.bgn_nav_provider, 'Background NPCs: navigation source (auto, navmesh, nodegraph, custom)')
 bgNPC.CVars.Register('bgn_nav_generator_max_nodes', bgNPC.cvar.bgn_nav_generator_max_nodes, 'Background NPCs: node limit of the generator')
 bgNPC.CVars.Register('bgn_lod_near_radius', bgNPC.cvar.bgn_lod_near_radius, 'Background NPCs: actors closer than this to a player get full updates')

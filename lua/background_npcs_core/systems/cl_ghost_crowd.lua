@@ -303,7 +303,7 @@ local function Decide(ghost, now, ply_pos, eye, eye_dir, r_in, r_out)
 	if dist > r_out * 1.15 or NearOtherPlayer(ghost.pos, r_in * r_in) then return Leave(ghost, seen) end
 
 	if dist < r_in then
-		if not seen or dist < r_in * 0.6 then return Leave(ghost, seen) end
+		if not seen then return true end -- a seen one runs away, it never fades next to the player
 		if not ghost.fleeing then
 			ghost.fleeing = true
 			ghost.target = nil

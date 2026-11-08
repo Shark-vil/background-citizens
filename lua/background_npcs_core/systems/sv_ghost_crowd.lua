@@ -256,8 +256,6 @@ local function Decide(ghost, now, players, r_in, r_out)
 			if Handoff(ghost, pos) then return end
 			ghost.fleeing = true -- no slot for a real actor: it runs away like a local ghost
 			ghost.seg_end = 0
-		elseif nearest_dist < r_in * 0.6 then
-			return Leave(ghost, true, now)
 		end
 	end
 

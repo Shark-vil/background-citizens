@@ -248,9 +248,10 @@ Menu.AddPage('behavior', {
 			{ 'auto', '#bgn.menu.auto' }, { 'fsm', 'FSM' }, { 'goap', 'GOAP' },
 		})
 		page:Choice('bgn_actor_body', '#bgn.menu.body', {
-			{ 'auto', '#bgn.menu.auto' }, { 'npc', 'NPC' }, { 'nextbot', 'NextBot' },
+			{ 'npc', 'NPC' }, { 'nextbot', 'NextBot' },
 		})
 		page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
+		page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
 
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
@@ -359,6 +360,7 @@ Menu.AddPage('client', {
 		page:Choice('bgn_cl_ui_language', '#bgn.menu.ui_language', {
 			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
 		})
+		page:Slider('bgn_cl_ui_scale', '#bgn.menu.ui_scale', 0.75, 2, { decimals = 2 })
 		page:Toggle('bgn_menu_dark', '#bgn.menu.dark')
 		page:Toggle('bgn_menu_sounds', '#bgn.menu.sounds')
 

@@ -3,8 +3,10 @@
 	The bot paths over the NavMesh by itself, so the actor gives it the goal, not node by node
 	(see bgNPC.Nav.BodyPathsItself).
 
-	Body choice: "bgn_actor_body auto|npc|nextbot". NextBot needs a loaded NavMesh and an HL2 class
-	(npc_citizen, npc_metropolice, npc_combine_s); "auto" uses it whenever both are true.
+	Body choice: "bgn_actor_body npc|nextbot". The default is the regular game NPC, like in the old versions: other addons
+	(model replacers, ragdoll and death mods, Bio-Annihilation 2, Followers...) see only real NPCs (IsNPC, OnNPCKilled).
+	NextBot is opt-in and needs a loaded NavMesh and an HL2 class (npc_citizen, npc_metropolice, npc_combine_s).
+	The old value "auto" is the same as "npc".
 --]]
 
 local Body = bgNPC.Body
@@ -16,8 +18,8 @@ NextBotBody.CLASS = 'bgn_nextbot'
 NextBotBody.SUPPORTED_CLASSES = { npc_citizen = true, npc_metropolice = true, npc_combine_s = true }
 
 local MOVE_AWAY_DISTANCE = 300
-local cvar_body = CreateConVar('bgn_actor_body', 'auto', { FCVAR_ARCHIVE },
-	'Background NPCs: actor body (auto - NextBot on NavMesh maps, npc, nextbot)')
+local cvar_body = CreateConVar('bgn_actor_body', 'npc', { FCVAR_ARCHIVE },
+	'Background NPCs: actor body (npc - regular game NPCs like the old versions, nextbot - smoother walking, needs a NavMesh; auto = npc)')
 
 function NextBotBody:Init(actor, ent)
 	Body.Init(self, actor, ent)
@@ -128,8 +130,7 @@ end
 
 -- @return string entity class to create for an actor of this NPC class
 function NextBotBody.ResolveClass(npc_class)
-	local mode = cvar_body:GetString()
-	if mode == 'npc' or not NextBotBody.SUPPORTED_CLASSES[npc_class] then return npc_class end
+	if cvar_body:GetString() ~= 'nextbot' or not NextBotBody.SUPPORTED_CLASSES[npc_class] then return npc_class end
 	if not navmesh.IsLoaded() then return npc_class end
 	return NextBotBody.CLASS
 end
