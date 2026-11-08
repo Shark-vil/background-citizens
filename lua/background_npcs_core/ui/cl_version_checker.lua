@@ -104,5 +104,7 @@ concommand.Add('bgn_version_check', version_check)
 hook.Add('BGN_PlayerReady', 'BGN_CheckAddonVersion', function(ply)
 	if ply ~= LocalPlayer() then return end
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+	chat.AddText(text_color_red, '[ADMIN] ', text_color_mod_title, 'Background NPCs: ', text_color_info,
+		bgNPC.Phrases['bgn.classic.tip'] or language.GetPhrase('bgn.classic.tip'))
 	version_check()
 end)

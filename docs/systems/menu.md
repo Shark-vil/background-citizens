@@ -108,6 +108,10 @@ Background NPCs support) that is subscribed at once.
 
 The same two windows can be opened from the **Quick settings** block (General page) and from My settings.
 
+## Classic spawn menu pages
+
+Spawn menu → Options → Background NPCs also keeps the pages of the old versions (General, Actors, Spawn, Wanted, Arrest, Extensions, Optimization, Addons, Client, Workshop) for those who are used to them. They are generated from the `PAGES` table in `ui/settings/cl_classic_settings.lua`: an item is `{ kind, cvar_or_command, phrase_key, ... }` (`check`, `slider`, `button`, `actors`), a page marked `admin = true` shows a note to non-admins. Text comes from `resource/localization/<lang>/bgn_*.properties` (English and Russian, or the language chosen in the settings window). An item whose cvar or command no longer exists is skipped. The *Settings* page there opens the new window. Admin command `bgn_classic` / chat `!bgnclassic` applies the classic preset (`bgNPC.ClassicPreset` in `systems/sh_classic_mode.lua`, the same one the *Classic* mode uses).
+
 Add a step: an entry of `STEPS` in `cl_menu_wizard.lua` (`id`, `clip`, `frames`, `labels`, `modern`, `advanced`,
 `build(page)`) and the phrases `bgn.wizard.<id>` and `bgn.wizard.<id>.desc` (plus `.l1` / `.l2` for the labels).
 

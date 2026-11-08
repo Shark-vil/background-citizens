@@ -17,6 +17,17 @@ bgn_wizard
 
 `bgn_wizard all` includes advanced steps. Changes in the wizard apply immediately; closing it does not undo them.
 
+## Back to the old behavior
+
+An admin can force the old-version setup (NPC body, FSM brain, no ghost crowd, no scenic NPCs) at any time:
+
+```text
+bgn_classic
+!bgnclassic
+```
+
+The first is a console command, the second is typed in chat (`/bgnclassic` works too). Admins only. The server part applies to the server, the client part only to the caller; NPCs already on the map keep their body, reload the map for a clean start. Admins also get this tip in chat when they join.
+
 ## Vehicles are optional
 
 Install [Decent Vehicle](https://steamcommunity.com/sharedfiles/filedetails/?id=1587455087), vehicle models referenced by your actor configuration, and suitable DV waypoints for the map. Pedestrian routes and DV waypoints are separate.
