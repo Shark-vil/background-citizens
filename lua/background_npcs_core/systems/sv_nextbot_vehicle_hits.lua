@@ -42,7 +42,10 @@ local function CheckVehicle(vehicle, now)
 	maxs = maxs + PAD + Vector(math.max(ahead.x, 0), math.max(ahead.y, 0), 0)
 
 	for _, ent in ipairs(ents.FindInBox(mins, maxs)) do
-		if ent.IsBGNNextBot and ent:Health() > 0 then Hit(ent, vehicle, velocity, speed, now) end
+		-- not the crew: an actor in a car is a hidden, non-solid NextBot kept at the car's center
+		if ent.IsBGNNextBot and ent:Health() > 0 and not ent:GetNoDraw() and ent:GetSolid() ~= SOLID_NONE then
+			Hit(ent, vehicle, velocity, speed, now)
+		end
 	end
 end
 
