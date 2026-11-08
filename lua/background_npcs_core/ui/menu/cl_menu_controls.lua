@@ -254,8 +254,9 @@ end
 
 -- @param server boolean the row changes a server setting (hidden from non-admins)
 -- @param cvar string|nil searched by its name too
+-- @param locked boolean|nil shown but can't be changed (opts.locked of the controls)
 -- @return Panel the row; put your control into row.control (it is placed on the right)
-function Builder:Row(label, help, server, cvar)
+function Builder:Row(label, help, server, cvar, locked)
 	local label_text = Menu.Text(label)
 	local help_text = help and Menu.Text(help) or nil
 	if help_text == '' then help_text = nil end
@@ -279,7 +280,7 @@ function Builder:Row(label, help, server, cvar)
 	row:Dock(TOP)
 	row.label = label_text
 	row.help = help_text
-	row.locked = hidden or false -- hidden rows stay disabled too
+	row.locked = hidden or locked or false -- hidden rows stay disabled too
 	row.hover = 0
 	row.PerformLayout = RowLayout
 	row.Paint = RowPaint
@@ -320,7 +321,7 @@ end
 function Builder:Toggle(cvar, label, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -362,7 +363,7 @@ function Builder:Slider(cvar, label, min, max, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
 	local decimals = opts.decimals or 0
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
 
 	local function Get()
 		local cv = GetConVar(cvar)
@@ -562,7 +563,7 @@ end
 function Builder:Choice(cvar, label, options, opts)
 	opts = opts or {}
 	local s = Menu.Scale()
-	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar)
+	local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked)
 
 	local function Get()
 		local cv = GetConVar(cvar)

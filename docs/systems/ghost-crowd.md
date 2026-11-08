@@ -6,19 +6,20 @@ of the "Legion" system from Serious Sam 4. The server pays nothing: it only send
 
 Two modes:
 
-- **Local** (default): every client invents its own ghosts. They change nothing in the game, players see
-  different ones, and a ghost can't be caught: it runs away or fades.
-- **Server** (`bgn_ghost_crowd 1`): the server runs the ghosts, every player sees the same ones, and a ghost
-  a player walks up to becomes a real actor on its spot. The client settings then only show or hide them.
+- **Server** (default, `bgn_ghost_crowd 1`): the server runs the ghosts, every player sees the same ones, and a
+  ghost a player walks up to becomes a real actor on its spot. The client settings then do nothing (locked in the
+  menu with a note).
+- **Local** (`bgn_ghost_crowd 0`): every client may invent its own ghosts. They change nothing in the game,
+  players see different ones, and a ghost can't be caught: it runs away or fades.
 
 | Cvar | Default | Meaning |
 |---|---|---|
-| `bgn_cl_ghost_crowd` (client) | `1` | local mode: enable the ghost crowd; server mode: draw the server's ghosts |
+| `bgn_cl_ghost_crowd` (client) | `1` | local mode: enable the ghost crowd |
 | `bgn_cl_ghost_crowd_max` (client) | `40` | local mode: the most ghosts at once |
-| `bgn_ghost_crowd` (server) | `0` | server mode |
+| `bgn_ghost_crowd` (server) | `1` | server mode |
 | `bgn_ghost_crowd_max` (server) | `40` | server mode: the most ghosts at once, shared fairly between the players |
 
-Settings window: **My settings → Experimental** (client), **Behavior → Experimental** (server).
+Settings window: **My settings → Experimental** (client), **Spawn → Experimental** (server).
 
 ## Behaviour
 
@@ -53,7 +54,12 @@ Settings window: **My settings → Experimental** (client), **Behavior → Exper
 - **Handoff:** a ghost someone sees, with a player inside its inner radius, becomes a real actor of the same type
   and look on its spot (dropped to the ground), facing its way. Clients keep drawing the ghost until the
   entity arrives (at most 2 s), so there is no gap and no double. An unseen ghost there just goes.
-  When the type is over its limit by 4 or more, or the spawn fails, the ghost runs away and fades like a local one.
+  The handoff may go over the type limit: the actor remover then takes over-limit actors that no player sees
+  (never a seen one), so the count gets back within the limit without anyone vanishing in sight. On an overloaded
+  server (`core/sv_server_load.lua`: fewer than 80% of the tickrate's ticks per real second, held 3 s; or more
+  actors than twice the sum of the active types' limits) over-limit actors go at once, seen or not, and handoffs
+  stay within the limit. When the type
+  is off (or its limit is 0) or the spawn fails, the ghost runs away and fades like a local one.
 - Not in server mode: the "ghost behind the player moves into view" at the limit.
 
 - `systems/sh_ghost_crowd.lua`: rules of both modes (next point, sight, segments, radii).

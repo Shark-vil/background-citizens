@@ -3,7 +3,7 @@
 	real actors, so the city looks fuller than the server could afford.
 
 	Server mode ("bgn_ghost_crowd", sv_ghost_crowd.lua): the server runs the ghosts and this file only draws them
-	(segments from the server, the same for every player); "bgn_cl_ghost_crowd" then just shows or hides them.
+	(segments from the server, the same for every player); the client settings do nothing then.
 	A ghost the server turned into a real actor stays until its entity arrives, so there is no gap.
 	Everything below is the local mode, this player's own ghosts that change nothing in the game:
 
@@ -269,7 +269,7 @@ local function ApplyServerOp(op, now)
 end
 
 bgNPC.Net.Receive('bgn_ghost_crowd', function(_, ops)
-	if not server_mode or not cvar_enable:GetBool() or not istable(ops) then return end
+	if not server_mode or not istable(ops) then return end
 	local now = CurTime()
 	for _, op in ipairs(ops) do
 		if istable(op) and isnumber(op.id) then ApplyServerOp(op, now) end
@@ -404,7 +404,7 @@ bgNPC.Tasks.Add('bgn_ghost_crowd', function(yield, wait, budget)
 			server_synced = false
 		end
 
-		if not cvar_enable:GetBool() or not GetConVar('bgn_enable'):GetBool() or not IsValid(ply) then
+		if (not server_mode and not cvar_enable:GetBool()) or not GetConVar('bgn_enable'):GetBool() or not IsValid(ply) then
 			RemoveAll()
 			graph = nil
 			points_center = nil

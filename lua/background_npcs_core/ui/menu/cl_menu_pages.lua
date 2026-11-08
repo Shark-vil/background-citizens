@@ -71,6 +71,10 @@ Menu.AddPage('spawn', {
 		page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
 		page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
 		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
+
+		page:Section('#bgn.menu.section.experimental')
+		page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
+		page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)
 	end,
 })
 
@@ -143,8 +147,6 @@ Menu.AddPage('behavior', {
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
-		page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
-		page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)
 		page:Toggle('bgn_shot_sound_mode', '#bgn.settings.extension.shot_sound_mode')
 	end,
 })
@@ -222,8 +224,10 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_disable_self_halo_wanted', '#bgn.settings.wanted.cl_disable_self_halo_wanted')
 
 		page:Section('#bgn.menu.section.experimental')
-		page:Toggle('bgn_cl_ghost_crowd', '#bgn.menu.ghost_crowd')
-		page:Slider('bgn_cl_ghost_crowd_max', '#bgn.menu.ghost_crowd_max', 0, 150)
+		-- the server runs the ghosts for everyone: this player's own ghost settings do nothing then
+		local by_server = GetConVar('bgn_ghost_crowd'):GetBool() and { locked = true, help = '#bgn.menu.ghost_crowd.by_server' } or nil
+		page:Toggle('bgn_cl_ghost_crowd', '#bgn.menu.ghost_crowd', by_server)
+		page:Slider('bgn_cl_ghost_crowd_max', '#bgn.menu.ghost_crowd_max', 0, 150, by_server)
 
 		page:Section('#bgn.menu.section.menu')
 		page:Choice('bgn_cl_ui_language', '#bgn.menu.ui_language', {

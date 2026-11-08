@@ -785,3 +785,4 @@ end
 hook.Add('OnScreenSizeChanged', 'BGN_Menu', Reopen)
 cvars.AddChangeCallback('gmod_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')
 cvars.AddChangeCallback('bgn_cl_ui_language', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu')
+cvars.AddChangeCallback('bgn_ghost_crowd', function() timer.Simple(0.2, Reopen) end, 'BGN_Menu') -- locks the client ghost rows
