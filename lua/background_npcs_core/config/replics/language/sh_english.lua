@@ -140,6 +140,13 @@ bgNPC.cfg.replics['police_officer_down'] = {
 	'Unit down, all units respond!',
 }
 
+bgNPC.cfg.replics['call_911'] = {
+	'Hello? Something terrible is happening here, please send someone!',
+	'Someone is attacking people here, we need help right now!',
+	'Please hurry, someone is hurt, I think it is serious!',
+	'I am out on the street, it is chaos here, send the police, please!',
+}
+
 bgNPC.cfg.replics['police_luggage_1'] = {
 	'Move along.',
 	'Hey! Keep moving.',

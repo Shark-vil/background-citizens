@@ -80,7 +80,10 @@ bgNPC.States.Register('calling_police', 'danger', {
 							WantedClass:UpdateWanted(enemy)
 						else
 							asset:AddWanted(enemy)
-							EmitSound(table_RandomBySeq(phone_911_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)
+							local operator = table_RandomBySeq(phone_911_sounnds)
+							EmitSound(operator, npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)
+							-- the caller answers the operator once the clip ends
+							timer.Simple(math.max(SoundDuration(operator), 2), function() actor:Voice('call_911') end)
 						end
 					end
 				end

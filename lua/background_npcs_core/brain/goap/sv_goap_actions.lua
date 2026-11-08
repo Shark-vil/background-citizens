@@ -155,7 +155,8 @@ GOAP.RegisterSet('citizen', {
 		-- an armed citizen keeps fighting until it is hurt, an armed enemy alone doesn't scare it off
 		return Has(ws, 'low_health') and 3 or 9
 	end,
-	report = function(ws) return Has(ws, 'enemy_close') and 0 or 6 end,
+	-- above survive with an armed enemy (8), so a far gunman gets reported; below an armed citizen's fight (9)
+	report = function(ws) return Has(ws, 'enemy_close') and 0 or 8.5 end,
 	hide = HideWhenWanted,
 })
 
@@ -208,6 +209,9 @@ bgNPC.Test.Add('goap.sets', function(check)
 	check(citizen.eliminate(ws) > citizen.survive(ws), 'armed citizen keeps fighting an armed enemy')
 	ws = bit.bor(ws, F('low_health'))
 	check(citizen.survive(ws) > citizen.eliminate(ws), 'hurt armed citizen runs')
+
+	ws = bit.bor(F('has_enemy'), F('enemy_armed'))
+	check(citizen.report(ws) > citizen.survive(ws), 'unarmed citizen reports a far armed enemy')
 
 	check(GOAP.actions.flee:Runs('run_from_danger'), 'running from danger is still fleeing')
 
