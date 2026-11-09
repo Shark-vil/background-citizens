@@ -1187,6 +1187,7 @@ vehicles.execute('''
     end
     near_player={valid=true,pos=Vector(),Health=function() return 100 end,Alive=function() return true end,GetPos=function(self) return self.pos end}
     near_player.IsPlayer=function() return true end
+    near_player.GetVehicle=function(self) return self.car end
     player.GetAll=function() return {near_player} end
 ''')
 load(vehicles, 'api/sh_actors.lua', 'actor/components/sh_vehicle.lua', 'actor/events/sv_self_damage.lua',
@@ -1217,6 +1218,14 @@ vehicles.execute('''
     assert(a:ShouldExitVehicle(), 'police also dismount for a nearby arrest target')
     a.state=nil; a.targets={}
     a.enemies={near_player}; assert(a:ShouldExitVehicle(), 'police dismount for a nearby actual enemy')
+    local speed2=90000
+    near_player.car={valid=true,GetParent=function() end,GetVelocity=function() return {LengthSqr=function() return speed2 end} end}
+    assert(not a:ShouldExitVehicle(), 'police stay seated while the enemy drives away')
+    speed2=0; now=100; assert(not a:ShouldExitVehicle())
+    now=101; assert(not a:ShouldExitVehicle(), 'a short stop is not enough')
+    now=103; a:ShouldExitVehicle(); now=105; a:ShouldExitVehicle(); now=107; a:ShouldExitVehicle()
+    now=108; assert(a:ShouldExitVehicle(), 'police dismount once the enemy car stands still')
+    near_player.car=nil; assert(a:ShouldExitVehicle(), 'and when the enemy leaves the car')
     near_player.pos=Vector(5000,0,0); p.car.maxhp=100; p.car.hp=20; assert(a:ShouldExitVehicle())
     p.car.hp=21; assert(not a:ShouldExitVehicle())
     a.enemies={}; near_player.pos=Vector(800,0,0)

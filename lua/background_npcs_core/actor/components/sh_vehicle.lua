@@ -153,6 +153,26 @@ local function FindVehicleExitPos(vehicle, saved, model)
 	end
 end
 
+-- A pursued target driving off: police stay seated until its car has stood still for a while or it gets out.
+local STILL_TIME = 6
+local function DrivesAway(target)
+	local car = target:IsPlayer() and target:GetVehicle()
+	if not car then
+		local target_actor = bgNPC.Actors.Get(target)
+		car = target_actor and target_actor:GetVehicle()
+	end
+	if not IsValid(car) then return false end
+	if IsValid(car:GetParent()) then car = car:GetParent() end
+	local now = CurTime()
+	if car:GetVelocity():LengthSqr() > 50 ^ 2 then
+		car.bgn_still_since = nil
+	elseif not car.bgn_still_since or now - (car.bgn_still_seen or 0) > 2 then
+		car.bgn_still_since = now
+	end
+	car.bgn_still_seen = now
+	return not car.bgn_still_since or now - car.bgn_still_since < STILL_TIME
+end
+
 function Actor:ShouldExitVehicle()
 	if not self:HasTeam('police') or not self.vehicle or not self.vehicle:IsValid() then return true end
 	local vehicle = self.vehicle:GetVehicle()
@@ -160,11 +180,13 @@ function Actor:ShouldExitVehicle()
 	local health = vehicle.GetCurHealth and vehicle:GetCurHealth() or vehicle:Health()
 	if max_health > 0 and health <= max_health * 0.2 then return true end
 	for _, enemy in ipairs(self.enemies) do
-		if IsValid(enemy) and enemy:Health() > 0 and enemy:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
+		if IsValid(enemy) and enemy:Health() > 0 and enemy:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2
+			and not DrivesAway(enemy) then return true end
 	end
 	if self:HasState('arrest') then
 		for _, target in ipairs(self.targets) do
-			if IsValid(target) and target:Health() > 0 and target:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
+			if IsValid(target) and target:Health() > 0 and target:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2
+				and not DrivesAway(target) then return true end
 		end
 	end
 	return false
