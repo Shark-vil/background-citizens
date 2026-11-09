@@ -88,13 +88,19 @@ function Nav.Resolve()
 end
 
 -- Loads the provider chosen by Nav.Resolve (or the given one).
-function Nav.Load(name)
+function Nav.Load(name, graph)
 	name = name or Nav.Resolve()
 	local cls = providers[name]
 	if not cls then return false end
 
 	local provider = cls()
-	local ok, err = provider:Load()
+	local ok, err
+	if name == 'custom' and graph then
+		provider.graph, provider.source = graph, 'dupe'
+		ok = true
+	else
+		ok, err = provider:Load()
+	end
 	if not ok then
 		bgNPC.Util.Warning('Navigation provider "' .. name .. '" failed: ' .. tostring(err))
 		provider = providers.custom()

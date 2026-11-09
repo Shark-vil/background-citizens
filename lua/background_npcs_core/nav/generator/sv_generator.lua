@@ -227,7 +227,7 @@ timer.Create('BGN_NavGenerator_Runtime', 10, 0, function()
 	if not GetConVar('bgn_enable'):GetBool() then return end
 
 	local provider = Nav.GetProvider()
-	if provider.name ~= 'custom' or provider.source == 'file' or provider.source == 'legacy' then return end
+	if provider.name ~= 'custom' or provider.source == 'file' or provider.source == 'legacy' or provider.source == 'dupe' then return end
 
 	local seeds = {}
 	for _, ply in ipairs(player.GetAll()) do
