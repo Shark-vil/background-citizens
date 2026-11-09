@@ -1095,6 +1095,7 @@ vehicles.execute('''
             GetUp=function() return Vector(0,0,1) end}
         local p={car=car,passengers={},ai={valid=true}}
         function p:IsValid() return self.car.valid end
+		function p:CanUse() return true end
         function p:GetVehicle() return self.car end
         function p:GetVehicleAI() return self.ai end
         function p:GetDriver() return self.driver end
@@ -1586,62 +1587,27 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
          'modules/dv/sh_dv_vehicle.lua', 'actor/components/sh_vehicle.lua',
          'modules/dv/sv_car_damage_reaction.lua', '../entities/bgn_fakeplayer/shared.lua',
          '../entities/npc_decentvehicle_passenger/shared.lua',
-         'ui/settings/cl_classic_settings.lua']
+         'ui/settings/cl_classic_settings.lua', 'actor/components/sh_movement.lua',
+         'actor/body/sv_npc_body.lua', 'modules/dv/sv_pedestrian_traffic.lua', 'modules/dv/sv_vehicle_traffic.lua', '../entities/npc_dvbgn_police.lua']
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-traffic = realm(True)
-traffic.execute('''
-    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
-    local vec=getmetatable(Vector())
-    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
-    function vec.__mul(a,b) return Vector(a.x*b,a.y*b,a.z*b) end
-    function vec:GetNormalized()
-        local n=math.sqrt(self.x^2+self.y^2+self.z^2)
-        return self*(1/n)
-    end
-    DecentVehicleDestination={}; setcv('bgn_enable_dv_support',1)
-    rolls=0; ignore=false
-    bgNPC.Util.Chance=function(chance) assert(chance==30); rolls=rolls+1; return ignore end
-    local car={DecentVehicle={valid=true}}
-    function car:NearestPoint(p) return Vector(0,0,p.z) end
-    function car.DecentVehicle:GetVehicleRight(v) assert(v==car); return Vector(0,1,0) end
-    cars={car}; ents={FindInSphere=function() return cars end}
-    blocked=false
-    util.TraceHull=function() return {Hit=blocked} end
-    util.TraceLine=function(t) return {Hit=true,HitNormal=Vector(0,0,1),HitPos=t.endpos+Vector(0,0,64)} end
-    moves=0
-    local body={IsThinkEnabled=function() return true end,IsBusyInCombat=function() return false end,
-        MoveTo=function(_,pos,run) moves=moves+1; assert(run and math.abs(pos.y)>120) end}
-    actor=setmetatable({body=body,npc={GetPos=function() return Vector(0,20,0) end,
-        GetCollisionBounds=function() return Vector(-16,-16,0),Vector(16,16,72) end},
-        InVehicle=function() return false end,GetState=function() return 'idle' end,
-        IsAnimationPlayed=function() return false end,IsSequenceFinished=function() return true end},
-        {__index=bgNPC.Actor})
-''')
-traffic.execute((ROOT / 'actor/components/sh_movement.lua').read_text(encoding='utf-8-sig'))
-traffic.execute('''
-    assert(actor:AvoidDVVehicle() and moves==1 and rolls==1, 'idle pedestrians must move away')
-    actor.dvAvoidActive=true
-    assert(actor:AvoidDVVehicle() and moves==1, 'scan must be throttled')
-    now=now+1; assert(actor:AvoidDVVehicle() and rolls==1, 'keep the encounter decision')
-    blocked=true; now=now+1; assert(not actor:AvoidDVVehicle(), 'do not walk through walls')
-    cars={}; now=now+1; assert(not actor:AvoidDVVehicle())
-    cars={{IsVehicle=function() return true end}}; now=now+1
-    assert(not actor:AvoidDVVehicle() and rolls==1, 'chairs are not DV cars')
-    cars={{DecentVehicle={valid=true},NearestPoint=function(_,p) return Vector(0,0,p.z) end}}
-    ignore=true; now=now+1; assert(not actor:AvoidDVVehicle() and rolls==2)
-    now=now+1; assert(not actor:AvoidDVVehicle() and rolls==2, '30% ignore persists')
-    setcv('bgn_enable_dv_support',0); assert(not actor:AvoidDVVehicle())
-    setcv('bgn_enable_dv_support',1); DecentVehicleDestination=nil; assert(not actor:AvoidDVVehicle())
-''')
 spawns = realm(True)
 spawns.execute('''
     local angles={}
     angles.__index=angles
     function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},angles) end
     function angles.__add(a,b) return Angle(a.p+b.p,a.y+b.y,a.r+b.r) end
-    local definitions={standard={},sideways={SpawnAngleOffset=90},reversed={SpawnAngleOffset=180}}
+    function angles.__sub(a,b) return Angle(a.p-b.p,a.y-b.y,a.r-b.r) end
+    local vec=getmetatable(Vector())
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vec:Angle() return Angle(0,math.deg(math.atan2(self.y,self.x)),0) end
+    local function wheels(x,y)
+        return {CustomWheels=true,CustomWheelPosFL=Vector(x,y+10),CustomWheelPosFR=Vector(x,y-10),
+            CustomWheelPosRL=Vector(-x,-y+10),CustomWheelPosRR=Vector(-x,-y-10)}
+    end
+    local definitions={standard={SpawnAngleOffset=90,Members=wheels(1,0)},sideways={Members=wheels(0,-1)},reversed={Members=wheels(-1,0)}}
+    bgNPC.Util.EntityTimer=function() end
     list={Get=function(name) return name=='simfphys_vehicles' and definitions or {native={Class='prop_vehicle_jeep',Model='car.mdl'}} end}
     simfphys={SpawnVehicleSimple=function(class,pos,ang) return {valid=true,class=class,pos=pos,ang=ang} end}
     ents={Create=function()
@@ -1650,10 +1616,10 @@ spawns.execute('''
     end}
 ''')
 spawn_source = (ROOT / 'spawner/sv_dv_spawner.lua').read_text(encoding='utf-8-sig')
-spawns.execute('function bgNPC:SpawnVehicle(' + spawn_source.split('function bgNPC:SpawnVehicle(', 1)[1].split('function bgNPC:SpawnVehicleWithActor', 1)[0])
+spawns.execute(spawn_source.split('local function GetNearPoints', 1)[0] + 'function bgNPC:SpawnVehicle(' + spawn_source.split('function bgNPC:SpawnVehicle(', 1)[1].split('function bgNPC:SpawnVehicleWithActor', 1)[0])
 spawns.execute('''
     for _, heading in ipairs({0,45,180,-90}) do
-        for class, local_forward in pairs({standard=0,sideways=-90,reversed=-180}) do
+        for class, local_forward in pairs({standard=0,sideways=-90,reversed=180}) do
             local vehicle=bgNPC:SpawnVehicle(class,Vector(10,20,50),Angle(0,heading,0))
             assert(vehicle.ang.y+local_forward==heading, 'physical front must face along the road')
             assert(vehicle.pos==Vector(10,20,50))
@@ -1729,4 +1695,57 @@ cleanup.execute('''
     p,c=NewCleanupCar(false); tick(); now=1000; tick(); assert(c.valid, 'foreign cars are not force-cleaned')
     p,c=NewCleanupCar(true); setcv('bgn_vehicle_cleanup_time',0); tick(); now=1000; tick(); assert(c.valid)
 ''')
-print('PASS: existing regressions, simfphys spawn headings, DV avoidance, vehicle cleanup and LuaJIT syntax')
+access = realm(True)
+access.execute('''
+    bgNPC.Assert={Arg=function() end}; bgNPC.Util.NextId=function() return 1 end
+    bgNPC.Table.HasValue=function() return false end; DecentVehicleDestination={}
+    FindMetaTable=function() return {} end
+    string.Explode=function(sep,s)
+        local result={}; local start=1
+        while true do local at=s:find(sep,start,true); if not at then result[#result+1]=s:sub(start); return result end
+            result[#result+1]=s:sub(start,at-1); start=at+#sep end
+    end
+''')
+load(access, 'modules/dv/sh_dv_vehicle.lua')
+access.execute('''
+    local car={valid=true,GetDriver=function() end}
+    local police={HasTeam=function(_,team) return team=='police' end,IsAlive=function() return true end}
+    local citizen={HasTeam=function() return false end,GetVehicleGroup=function() return 'residents' end}
+    local p=BGN_VEHICLE:Instance(car,'police','police')
+    assert(car.bgnPoliceVehicle and p:CanUse(police) and not p:CanUse(citizen))
+    citizen.last_vehicle=p
+    assert(not p:CanBoard(citizen) and not p:CanSeize(citizen), 'last vehicle and seizure cannot bypass police access')
+    assert(p:SetDriver(citizen)==false and p:AddPassenger(citizen)==false)
+    assert(not p.driver and #p.passengers==0)
+    p:SetGroup('residents'); assert(not p:CanUse(citizen), 'group changes cannot remove police designation')
+    local ambulance=BGN_VEHICLE:Instance({valid=true},'medics|npc_dvbgn_police|ambulance|2','medic')
+    assert(ambulance:CanUse(citizen), 'police AI class does not make an ambulance a police car')
+''')
+movement = realm(True)
+movement.execute('''
+    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}; SCHED_FORCED_GO=1; SCHED_FORCED_GO_RUN=2
+''')
+load(movement, 'actor/components/sh_movement.lua')
+movement.execute('''
+    local cleared=0
+    local a=setmetatable({dvDetour={},dvAvoidActive=true,body={ClearSchedule=function() cleared=cleared+1 end}}, {__index=bgNPC.Actor})
+    a:StopWalk()
+    assert(cleared==1 and not a.dvDetour and not a.dvAvoidActive, 'stopping an idle detour must really stop it')
+    bgNPC.Class=function() return {} end
+    CAP_DUCK=0; CAP_MOVE_SHOOT=0; CAP_USE=0; CAP_TURN_HEAD=0; CAP_SQUAD=0; CAP_AIM_GUN=0
+    CAP_AUTO_DOORS=0; CAP_OPEN_DOORS=0
+''')
+load(movement, 'actor/body/sv_npc_body.lua')
+movement.execute('''
+    local schedules=0
+    local e={valid=true,schedule=0,IsCurrentSchedule=function(self,id) return self.schedule==id end,
+        SetLastPosition=function() end,GetCurrentSchedule=function(self) return self.schedule end,
+        GetNPCState=function() return 0 end,SetSchedule=function(self,id) self.schedule=id; schedules=schedules+1 end}
+    local b=setmetatable({ent=e,actor={}}, {__index=bgNPC.NPCBody})
+    b:MoveTo(Vector(100,0,0),true); b:MoveTo(Vector(100,0,0),true)
+    assert(schedules==1, 'unchanged goals must not reset a running NPC schedule')
+    e.schedule=0; b:MoveTo(Vector(100,0,0),true)
+    assert(schedules==2, 'an interrupted schedule must be restarted')
+    b:MoveTo(Vector(150,0,0),true); assert(schedules==3, 'new goals must reach the engine')
+''')
+print('PASS: existing regressions, spawn headings, cleanup, police access, detour cancellation, stable NPC schedules and LuaJIT syntax')

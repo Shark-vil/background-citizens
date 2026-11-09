@@ -46,6 +46,8 @@ luac.out
 CHANGELOG.md
 PLANS.md
 REWRITE_PLAN.md
+DV_REWORK_PLAN.md
+MODLOG.md
 
 # Notes on things not understood or not tested (local only)
 NOTES_UNVERIFIED.md

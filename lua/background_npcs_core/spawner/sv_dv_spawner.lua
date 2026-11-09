@@ -1,5 +1,47 @@
 --
 
+local simfphys_forward = {}
+
+local function AlignSimfphysSpawn(vehicle, class, desired)
+	vehicle.bgnHeadingPending = true
+	local attempts = 0
+	bgNPC.Util.EntityTimer(vehicle, 'bgn_spawn_heading', .05, 40, function(car)
+		attempts = attempts + 1
+		local forward = car.VehicleData and car.VehicleData.LocalAngForward
+		if not forward then
+			if attempts == 40 then
+				bgNPC.Util.Log('Vehicle heading did not initialize: ' .. class, 'SpawnVehicle')
+				car:Remove()
+			end
+			return
+		end
+		simfphys_forward[class] = forward.y
+		local correction = math.AngleDifference(desired.y, car:LocalToWorldAngles(forward).y)
+		if math.abs(correction) > .5 then
+			local pivot, rotation = car:GetPos(), Angle(0, correction, 0)
+			local objects = {}
+			-- Rotate the constrained assembly from a snapshot, not just the chassis with its wheels left behind.
+			for ent in pairs(constraint.GetAllConstrainedEntities(car)) do
+				if IsValid(ent) then
+					for i = 0, ent:GetPhysicsObjectCount() - 1 do
+						local phys = ent:GetPhysicsObjectNum(i)
+						if IsValid(phys) then objects[#objects + 1] = { phys, phys:GetPos(), phys:GetAngles(), phys:GetVelocity() } end
+					end
+				end
+			end
+			car:SetAngles(car:GetAngles() + rotation)
+			for _, object in ipairs(objects) do
+				local phys, pos, ang, vel = unpack(object)
+				pos = pos - pivot; pos:Rotate(rotation)
+				ang:RotateAroundAxis(vector_up, correction); vel:Rotate(rotation)
+				phys:SetPos(pivot + pos); phys:SetAngles(ang); phys:SetVelocity(vel); phys:Wake()
+			end
+		end
+		car.bgnHeadingPending = nil
+		bgNPC.Util.RemoveEntityTimer(car, 'bgn_spawn_heading')
+	end)
+end
+
 local function GetNearPoints(center, radius)
 	radius = radius ^ 2
 	local dvd = DecentVehicleDestination
@@ -133,7 +175,7 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	for i = 1, #bgNPC.DVCars do
 		local vehicle_provider = bgNPC.DVCars[i]
 
-		if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() then
+		if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() and vehicle_provider:CanUse(actor) then
 			local vehicle = vehicle_provider:GetVehicle()
 			local driver = vehicle_provider:GetDriver()
 
@@ -213,10 +255,19 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	offset_ang = offset_ang or Angle(0, 0, 0)
 
 	if simfphys and simfphys_list[vehicle_class] then
-		-- SpawnVehicleSimple takes model angles; unlike the spawn menu it does not apply the model's heading offset.
-		local model_offset = Angle(0, simfphys_list[vehicle_class].SpawnAngleOffset or 0, 0)
-		local vehicle = simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos + offset_pos, spawn_ang + model_offset + offset_ang)
-		if IsValid(vehicle) then vehicle.isBgnVehicle = true end
+		local members = simfphys_list[vehicle_class].Members or {}
+		local heading = simfphys_forward[vehicle_class]
+		if heading == nil and members.CustomWheels and isvector(members.CustomWheelPosFL) and isvector(members.CustomWheelPosFR)
+			and isvector(members.CustomWheelPosRL) and isvector(members.CustomWheelPosRR) then
+			heading = (members.CustomWheelPosFL + members.CustomWheelPosFR - members.CustomWheelPosRL - members.CustomWheelPosRR):Angle().y
+		end
+		-- SpawnAngleOffset describes the spawn menu's presentation, not necessarily the physical front.
+		local desired = spawn_ang + offset_ang
+		local vehicle = simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos + offset_pos, desired - Angle(0, heading or 0, 0))
+		if IsValid(vehicle) then
+			vehicle.isBgnVehicle = true
+			AlignSimfphysSpawn(vehicle, vehicle_class, desired)
+		end
 		return vehicle
 	elseif vehicles_list[vehicle_class] then
 		local vehicle_data = vehicles_list[vehicle_class]

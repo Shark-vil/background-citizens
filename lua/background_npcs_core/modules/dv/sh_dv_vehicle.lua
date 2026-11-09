@@ -81,6 +81,7 @@ function VEHICLE:Initialize()
 	end
 
 	local provider = self
+	decentvehicle.bgnProvider = provider
 	decentvehicle:SetPos(vehicle:GetPos())
 	decentvehicle.DontUseSpawnEffect = true
 	decentvehicle.DoNotDuplicate = true -- runtime driver AI, not a second actor
@@ -92,6 +93,7 @@ function VEHICLE:Initialize()
 
 	decentvehicle:Spawn()
 	decentvehicle:Activate()
+	if vehicle.isBgnVehicle and bgNPC.VehicleTraffic then bgNPC.VehicleTraffic.Attach(decentvehicle) end
 
 	self.ai = decentvehicle
 end
@@ -101,6 +103,10 @@ function VEHICLE:GetDriver()
 	local driver = self.driver
 	if not driver or not driver:IsAlive() then return end
 	return driver
+end
+
+function VEHICLE:CanUse(actor)
+	return IsValid(self.vehicle) and (not self.vehicle.bgnPoliceVehicle or actor:HasTeam('police'))
 end
 
 -- Sets the driver actor. nil removes the driver and the AI.
@@ -116,6 +122,7 @@ function VEHICLE:SetDriver(actor)
 	end
 
 	if self.driver == actor then return end
+	if not self:CanUse(actor) then return false end
 
 	if self.driver then self:RemovePassenger(self.driver) end
 	self:RemovePassenger(actor)
@@ -126,6 +133,7 @@ function VEHICLE:SetDriver(actor)
 	if IsValid(self.ai) then self.ai:Remove() end
 	self.ai = nil
 	self:Initialize()
+	return true
 end
 
 local function FindFreeSeat(vehicle)
@@ -140,6 +148,7 @@ end
 -- @return boolean true on success
 function VEHICLE:AddPassenger(actor)
 	Assert.Arg(1, actor, 'actor', 'VEHICLE:AddPassenger')
+	if not self:CanUse(actor) then return false end
 
 	if table_HasValueBySeq(self.passengers, actor) then return false end
 	if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
@@ -208,6 +217,7 @@ end
 -- Not someone else's residents car: police and medics are residents too, and citizens keep to their own.
 function VEHICLE:CanBoard(actor)
 	local vehicle = self.vehicle
+	if not self:CanUse(actor) then return false end
 	if not IsValid(vehicle) or self:GetDriver() or IsValid(vehicle:GetDriver()) then return false end
 	if actor.last_vehicle == self then return true end
 	local group = string.Explode('|', self.type)[1]
@@ -218,6 +228,7 @@ end
 -- empty or driven by an actor, never by a player.
 function VEHICLE:CanSeize(actor)
 	local vehicle = self.vehicle
+	if not self:CanUse(actor) then return false end
 	if not IsValid(vehicle) or IsValid(vehicle:GetDriver()) then return false end
 	local group = string.Explode('|', self.type)[1]
 	if group == actor:GetVehicleGroup() then return false end
@@ -230,6 +241,7 @@ end
 function VEHICLE:SetGroup(vehicle_type)
 	self.type = vehicle_type or 'residents'
 	SetupVehicleGroup(self, vehicle_type)
+	if self.type == 'police' then self.vehicle.bgnPoliceVehicle = true end
 end
 
 -- Throws everyone out; they are scared of the one who did it.
@@ -314,6 +326,8 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	obj.passengers_limit = -1
 
 	SetupVehicleGroup(obj, vehicle_type)
+	-- Keep police ownership even if a later driver changes the provider's group.
+	if string.Explode('|', obj.type)[1] == 'police' then vehicle_entity.bgnPoliceVehicle = true end
 
 	return obj
 end
@@ -327,7 +341,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 		local limit = self.Waypoint and self.Waypoint.SpeedLimit
 		if not limit then return original_GetCurrentMaxSpeed(self) end
 
-		local provider = BGN_VEHICLE:GetVehicleProvider(self)
+		local provider = self.bgnProvider or BGN_VEHICLE:GetVehicleProvider(self)
 		local actor = provider and provider:GetDriver()
 		if not actor then return original_GetCurrentMaxSpeed(self) end
 

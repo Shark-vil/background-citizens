@@ -39,15 +39,21 @@ function Actor:EnterVehicle(vehicle)
 		if not vehicle_provider then return end
 		BGN_VEHICLE:AddToList(vehicle_provider)
 	end
+	if not vehicle_provider:CanUse(self) then return end
 
 	local npc = self.npc
 
 	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
 		if not IsValid(self_vehicle) or not self:IsAlive() then return end
 		if self:InVehicle() then return end
+		if not vehicle_provider:CanUse(self) then return end
+		if self_vehicle.bgnHeadingPending then
+			timer.Simple(.1, function() if IsValid(self_vehicle) and self:IsAlive() then self:EnterVehicle(self_vehicle) end end)
+			return
+		end
 
 		if not vehicle_provider:GetDriver() then
-			vehicle_provider:SetDriver(self)
+			if vehicle_provider:SetDriver(self) == false then return end
 		elseif not vehicle_provider:AddPassenger(self) then
 			return
 		end
