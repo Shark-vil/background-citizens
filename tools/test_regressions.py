@@ -1073,7 +1073,7 @@ vehicles.execute('''
     function vmeta:GetNormalized() local n=self:Distance(Vector()); return Vector(self.x/n,self.y/n,self.z/n) end
     util.IsInWorld=function() return true end
     util.TraceHull=function() return {StartSolid=blocked,Hit=blocked} end
-    util.TraceLine=function() return {Hit=true,StartSolid=exit_start_solid,HitNormal=Vector(0,0,1),HitPos=Vector(200,0,exit_floor or 0)} end
+    util.TraceLine=function(t) return {Hit=true,StartSolid=exit_start_solid,HitNormal=Vector(0,0,1),HitPos=Vector(t.start.x,t.start.y,exit_floor or 0)} end
     bgNPC.Util.EntityTimer=function(ent,name,_,__,fn) timers[name]=function() fn(ent) end end
     next_uid=0
     function NewEntity(class)
@@ -1231,12 +1231,51 @@ vehicles.execute('''
     hook.Add('OnNPCKilled','death_count',function() deaths=deaths+1 end)
     a:TakeVehicleDamage(100,near_player)
     assert(a.is_removed and deaths==1 and corpse, 'a lethal hit creates a corpse and reports one death')
-    assert(corpse.model=='original.mdl' and corpse.pos==Vector(200,0,2),
+    assert(corpse.model=='original.mdl' and corpse.pos.z==2 and math.abs(corpse.pos.y)==82,
         'the corpse preserves the model and is placed beside the car')
     a:TakeVehicleDamage(100,near_player); assert(deaths==1, 'death is only reported once')
     p=NewCar(); a=NewActor(); a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
     blocked=true; corpse=nil; a:TakeVehicleDamage(100,near_player)
     assert(a.is_removed and corpse and corpse.pos==a.npc.pos, 'a blocked exit still leaves a corpse at the seat')
+''')
+
+# Exit at the own seat's side, including actors whose collision is disabled.
+vehicles.execute('''
+    blocked=false
+    local p=NewCar(); p.car.pos=Vector(10000,0,0)
+    local a,b,c=NewActor(),NewActor(),NewActor()
+    for _,actor in ipairs({a,b,c}) do
+        actor:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..actor.uid]()
+    end
+    a.npc.seat=NewEntity('seat'); a.npc.seat.pos=Vector(10040,20,20)
+    b.npc.seat=NewEntity('seat'); b.npc.seat.pos=Vector(10040,-20,20)
+    c.npc.seat=NewEntity('seat'); c.npc.seat.pos=Vector(10040,-20,20)
+    assert(a:ExitVehicle(true) and a.npc.pos==Vector(10040,82,2), 'driver exits next to the driver seat')
+    assert(b:ExitVehicle(true) and b.npc.pos==Vector(10040,-82,2), 'passenger exits at its own side')
+    assert(c:ExitVehicle(true) and c.npc.pos~=b.npc.pos and c.npc.pos.y<0,
+        'a second exit cannot overlap an actor even when the physics trace misses it')
+    p=NewCar(); p.car.pos=Vector(20000,0,0); a=NewActor()
+    a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
+    a.npc.seat=NewEntity('seat'); a.npc.seat.pos=Vector(20040,-20,20)
+    p.car.Exitpoints={'far_door','own_door'}
+    function p.car:LookupAttachment(name) return name end
+    function p.car:GetAttachment(name)
+        return {Pos=name=='own_door' and Vector(20040,-90,0) or Vector(20040,90,0)}
+    end
+    assert(a:ExitVehicle(true) and a.npc.pos==Vector(20040,-90,2), 'prefer the nearest model exit attachment')
+    p=NewCar(); p.car.pos=Vector(30000,0,0); a=NewActor()
+    a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
+    a.npc.seat=NewEntity('seat'); a.npc.seat.pos=Vector(30020,40,20)
+    function a.npc:GetVehicleForward() return Vector(0,1,0) end
+    assert(a:ExitVehicle(true) and a.npc.pos==Vector(30132,40,2),
+        'side and clearance follow DV vehicle orientation when model forward differs')
+    p=NewCar(); p.car.pos=Vector(40000,0,0); a=NewActor()
+    a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
+    a.npc.seat=NewEntity('seat'); a.npc.seat.pos=Vector(40040,-20,20)
+    local trace=util.TraceHull
+    util.TraceHull=function(t) return {Hit=t.start.y<0,StartSolid=false} end
+    assert(a:ExitVehicle(true) and a.npc.pos.y==82, 'use the opposite side when the own side is blocked')
+    util.TraceHull=trace
 ''')
 
 # Actor health forwards to the attached body and safely handles missing methods.

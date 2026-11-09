@@ -89,13 +89,57 @@ function Actor:EnterVehicle(vehicle)
 	end)
 end
 
+local function IsExitOccupied(pos, saved, model)
+	local mins, maxs = pos + saved.mins, pos + saved.maxs
+	-- Non-colliding actors and newly spawned bodies may be missed by the engine trace.
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local npc = actor:GetNPC()
+		if npc ~= model and IsValid(npc) and not actor:InVehicle() then
+			local other_mins, other_maxs = npc:GetCollisionBounds()
+			other_mins, other_maxs = npc:GetPos() + other_mins, npc:GetPos() + other_maxs
+			if mins.x < other_maxs.x and maxs.x > other_mins.x
+				and mins.y < other_maxs.y and maxs.y > other_mins.y
+				and mins.z < other_maxs.z and maxs.z > other_mins.z then return true end
+		end
+	end
+	return false
+end
+
 local function FindVehicleExitPos(vehicle, saved, model)
 	local mins, maxs = vehicle:GetModelBounds()
-	local distance = mins:Distance(maxs) / 2 + 24
-	local pos, forward, right = vehicle:GetPos(), vehicle:GetForward(), vehicle:GetRight()
-	for i = 1, 8 do
-		local side = i % 2 == 0 and 1 or -1
-		local candidate = pos + right * distance * side + forward * (math.floor((i - 1) / 2) - 1) * 80 + Vector(0, 0, 80)
+	local pos = vehicle:GetPos()
+	local forward = model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
+	local right = forward:Cross(vehicle:GetUp()):GetNormalized()
+	local seat = model:GetNWEntity('Seat')
+	local seat_pos = IsValid(seat) and seat:GetPos() or model:GetPos()
+	if seat == vehicle then
+		local eyes = vehicle:GetAttachment(vehicle:LookupAttachment('vehicle_driver_eyes'))
+		if eyes then seat_pos = eyes.Pos end
+	end
+	local offset = seat_pos - pos
+	local preferred_side = offset:Dot(right) > 0 and 1 or -1
+	local left_edge, right_edge = math.huge, -math.huge
+	for _, x in ipairs({ mins.x, maxs.x }) do
+		for _, y in ipairs({ mins.y, maxs.y }) do
+			local edge = (vehicle:LocalToWorld(Vector(x, y, 0)) - pos):Dot(right)
+			left_edge, right_edge = math.min(left_edge, edge), math.max(right_edge, edge)
+		end
+	end
+	local clearance = math.max(math.abs(saved.mins.x), math.abs(saved.mins.y), saved.maxs.x, saved.maxs.y) + 16
+	local candidates = {}
+	for _, name in ipairs(vehicle.Exitpoints or {}) do
+		local attachment = vehicle:GetAttachment(vehicle:LookupAttachment(name))
+		if attachment then candidates[#candidates + 1] = attachment.Pos end
+	end
+	table.sort(candidates, function(a, b) return a:DistToSqr(seat_pos) < b:DistToSqr(seat_pos) end)
+	for _, side in ipairs({ preferred_side, -preferred_side }) do
+		for _, shift in ipairs({ 0, -80, 80, 160 }) do
+			local edge = side == 1 and right_edge + clearance or left_edge - clearance
+			candidates[#candidates + 1] = pos + right * edge + forward * (offset:Dot(forward) + shift)
+		end
+	end
+	for _, candidate in ipairs(candidates) do
+		candidate = candidate + Vector(0, 0, 80)
 		local ground = util.TraceLine({ start = candidate, endpos = candidate - Vector(0, 0, 500), filter = { model, vehicle } })
 		-- A free floor below a bridge is not an exit beside the car.
 		-- shortcut: the height bound assumes car-sized chassis; measure underbody ground height for tall vehicles.
@@ -103,7 +147,8 @@ local function FindVehicleExitPos(vehicle, saved, model)
 			candidate = ground.HitPos + Vector(0, 0, 2)
 			local hull = util.TraceHull({ start = candidate, endpos = candidate, mins = saved.mins, maxs = saved.maxs,
 				filter = model, mask = MASK_NPCSOLID })
-			if util.IsInWorld(candidate) and not hull.StartSolid and not hull.Hit then return candidate end
+			if util.IsInWorld(candidate) and not hull.StartSolid and not hull.Hit
+				and not IsExitOccupied(candidate, saved, model) then return candidate end
 		end
 	end
 end
