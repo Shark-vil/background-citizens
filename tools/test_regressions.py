@@ -846,8 +846,48 @@ rendering.execute('''
     assert(other.hidden,'culling must not clear hiding owned by another system')
 ''')
 
+speech = realm(False)
+speech.execute('''
+    bgNPC.cfg.replics={conv_greet={'hello','reply'},police_arrest_order={'down'}}
+    bgNPC.cfg.replics_language='english'
+    played={}; sound={Play=function(path) played[#played+1]=path end}
+    local npc={valid=true,GetPos=function() return Vector() end}
+    speaker={GetNPC=function() return npc end,HasTeam=function() return false end,
+        GetGenderByModel=function() return 'female' end}
+    CHAN_VOICE=2
+    bgNPC.Actors.GetByUid=function() return speaker end
+''')
+load(speech, 'actor/cl_actor_voice.lua')
+speech.execute('''
+    setcv('bgn_cl_voices',2)
+    assert(bgNPC.VoicePlay(speaker,'conv_greet',1))
+    assert(played[1]=='vo/npc/female01/question01.wav','classic dialogues need HL2 speech')
+    received.bgn_actor_voice.f(nil,1,'police_arrest_order','npc/metropolice/vo/getdown.wav')
+    assert(played[2]=='npc/metropolice/vo/getdown.wav','classic arrest orders retain the configured sound')
+    setcv('bgn_cl_voices',0)
+    assert(not bgNPC.VoicePlay(speaker,'conv_greet',1) and #played==2,'muting must still work')
+''')
+sync = realm(False)
+sync.execute('''
+    local actors={}
+    bgNPC.Actors.GetByUid=function(uid) return actors[uid] end
+    bgNPC.Actor={Create=function(npc,kind,uid)
+        local a={npc=npc,kind=kind,GetNPC=function(self) return self.npc end,
+            SetName=function() end,SetGender=function() end,SyncState=function(self,v) self.state=v end}
+        actors[uid]=a; return a
+    end}
+''')
+load(sync, 'actor/sync/cl_sync.lua')
+sync.execute('''
+    assert(received.bgn_actor_sync_data.opts.wait_entities)
+    received.bgn_actor_sync_data.f(nil,17,{npc={valid=true},actor_type='police',state='walk'})
+    local a=bgNPC.Actors.GetByUid(17)
+    assert(a and a.kind=='police' and a.state=='walk','state sync must recover a missed actor registration')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
+         'actor/sync/cl_sync.lua', 'actor/sync/sv_sync.lua', 'actor/cl_actor_voice.lua', 'actor/events/sv_self_damage.lua',
          'systems/wanted/cl_wanted_sync.lua', 'systems/arrest/sv_arrest.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
          'nav/providers/sv_custom_provider.lua', 'nav/io/sh_nav_editor.lua',

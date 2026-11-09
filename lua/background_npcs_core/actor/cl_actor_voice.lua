@@ -25,15 +25,26 @@ local function Emit(actor, path)
 	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 	-- police shout and use the radio: heard further than citizens talking
-	npc:EmitSound(path, actor:HasTeam('police') and 85 or 70, 100, 1, CHAN_VOICE)
+	-- Play locally at the speaker: the NPC's engine speech can interrupt its voice channel.
+	sound.Play(path, npc:GetPos(), actor:HasTeam('police') and 85 or 70, 100, 1)
 end
 
 -- @return boolean a clip was played
 local function Play(actor, line_id, index)
-	if not line_id or cvar_voices:GetInt() ~= 1 then return false end
+	local mode = cvar_voices:GetInt()
+	if not line_id or mode == 0 then return false end
 	local lines = bgNPC.cfg.replics[line_id]
 	if not lines or #lines == 0 then return false end
-	local path = Clip(actor, line_id, index or math.random(#lines))
+	index = index or math.random(#lines)
+	local path = mode == 1 and Clip(actor, line_id, index)
+	if not path and line_id:sub(1, 5) == 'conv_' then
+		if actor:HasTeam('police') then
+			path = 'npc/metropolice/vo/copy.wav'
+		else
+			local gender = actor:GetGenderByModel() == 'female' and 'female' or 'male'
+			path = 'vo/npc/' .. gender .. '01/' .. (index % 2 == 1 and 'question' or 'answer') .. '01.wav'
+		end
+	end
 	if not path then return false end
 	Emit(actor, path)
 	return true

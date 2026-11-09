@@ -1,5 +1,12 @@
 bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 	local actor = bgNPC.Actors.GetByUid(uid)
+	if actor and actor:GetNPC() ~= data.npc then
+		bgNPC.Actors.Unregister(actor:GetNPC())
+		actor = nil
+	end
+	if not actor and IsValid(data.npc) then
+		actor = bgNPC.Actor.Create(data.npc, data.actor_type, uid)
+	end
 	if not actor then return end
 
 	actor:SetName(data.name)
@@ -16,4 +23,4 @@ bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 	actor.npc_state = data.npc_state
 
 	-- bgNPC.Util.Log('Actor [' .. uid .. '] success synchronization')
-end)
+end, { wait_entities = true })
