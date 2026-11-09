@@ -114,6 +114,10 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 	end
 end)
 
+hook.Add('BGN_AddActorEnemy', 'BGN_ArrestedNotEnemy', function(_, ent)
+	if ent.bgn_arrested then return true end
+end)
+
 local function OnSetDefense(actor)
 	local target = actor:GetFirstTarget()
 	local TargetActor = bgNPC.Actors.Get(target)
@@ -220,6 +224,9 @@ bgNPC.States.Register('arrest', 'guarded', {
 						target:EmitSound('background_npcs/handcuffs_sound1.mp3')
 
 						if not target:IsPlayer() then
+							-- The body lingers for a few seconds: nobody may take it for a wanted enemy again.
+							target.bgn_arrested = true
+							WantedModule:RemoveWanted(target)
 							if TargetActor then
 								TargetActor:RemoveAllTargets()
 								TargetActor:RemoveAllEnemies()

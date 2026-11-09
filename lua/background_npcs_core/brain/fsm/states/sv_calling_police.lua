@@ -23,9 +23,29 @@ local function IsValidWantedMode()
 	return cvar_bgn_enable_wanted_mode:GetBool()
 end
 
+-- Within this distance of a player at most MAX_CALLERS actors phone the police at once.
+local MAX_CALLERS = 2
+local CALLER_RADIUS_SQR = 2500 ^ 2
+
+local function TooManyCallers(actor)
+	local pos = actor:GetPos()
+	for _, ply in ipairs(player.GetHumans()) do
+		if ply:GetPos():DistToSqr(pos) <= CALLER_RADIUS_SQR then
+			local callers = 0
+			for _, other in ipairs(bgNPC.Actors.GetAll()) do
+				if other ~= actor and other:HasState('calling_police') and other:GetPos():DistToSqr(ply:GetPos()) <= CALLER_RADIUS_SQR then
+					callers = callers + 1
+				end
+			end
+			if callers >= MAX_CALLERS then return true end
+		end
+	end
+	return false
+end
+
 bgNPC.States.Register('calling_police', 'danger', {
 	pre_start = function(actor)
-		if not IsValidWantedMode() then
+		if not IsValidWantedMode() or TooManyCallers(actor) then
 			return 'fear'
 		end
 	end,
