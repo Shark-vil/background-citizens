@@ -180,6 +180,34 @@ local function NeedsRecovery(ai)
 		or delta:GetNormalized():Dot(ai:GetVehicleForward()) < .5
 end
 
+-- A driver in fear gets away from the attacker by any means: no stops for lights, people or crashes, faster than the limit.
+local FLEE_STATES = { 'fear', 'run_from_danger', 'dyspnea_danger' }
+local FLEE_PREFS = { 'StopAtTL', 'StopInfrontofPerson', 'StopEmergency', 'ShouldGoback', 'GiveWay', 'WaitUntilNext' }
+local FLEE_SPEED = 1.5
+local FLEE_RANGE_SQR = 3000 ^ 2
+
+local function IsFleeing(provider)
+	local driver = provider:GetDriver()
+	if not driver or not driver:IsAlive() or driver:HasTeam('police') or not driver:HasState(FLEE_STATES) then return false end
+	local enemy = driver:GetNearEnemy()
+	return IsValid(enemy) and enemy:GetPos():DistToSqr(provider:GetVehicle():GetPos()) <= FLEE_RANGE_SQR
+end
+
+local function SetFleeing(ai, on)
+	ai.bgnFlee = on or nil
+	if on then
+		ai.bgnFleeSaved = {}
+		for _, key in ipairs(FLEE_PREFS) do ai.bgnFleeSaved[key], ai.Preference[key] = ai.Preference[key], false end
+	elseif ai.bgnFleeSaved then
+		for key, value in pairs(ai.bgnFleeSaved) do ai.Preference[key] = value end
+		ai.bgnFleeSaved = nil
+	end
+end
+
+hook.Add('Decent Vehicle: GetCurrentMaxSpeed', 'BGN_VehicleFlee', function(ai, speed)
+	if ai.bgnFlee then return speed * FLEE_SPEED end
+end)
+
 local function Update(provider, now)
 	local ai, car = provider:GetVehicleAI(), provider:GetVehicle()
 	if not IsValid(ai) or not IsValid(car) or not car.isBgnVehicle then return end
@@ -189,6 +217,9 @@ local function Update(provider, now)
 		state = { anchor = car:GetPos(), progressAt = now }
 		ai.bgnTraffic = state
 	end
+	local fleeing = IsFleeing(provider)
+	if fleeing ~= (ai.bgnFlee or false) then SetFleeing(ai, fleeing); Reset(ai, state, now) end
+	if fleeing then ai.Emergency, ai.WaitUntilNext, ai.WaitForCaller = 0, 0, false; return end
 	if state.retryLane and state.waypoint ~= ai.Waypoint then Reset(ai, state, now) end
 	if state.mode then
 		local driver = provider:GetDriver()

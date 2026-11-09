@@ -210,6 +210,16 @@ function Actor:ExitVehicle(forced)
 	end
 	if saved.active_weapon and npc.SelectWeapon then npc:SelectWeapon(saved.active_weapon) end
 	if saved.bot_clip then npc.clip = saved.bot_clip end
+	-- The new body knows nobody: restore the hostility the seated actor had.
+	local fear = self:HasState('fear')
+	for _, enemy in ipairs(self.enemies) do
+		if IsValid(enemy) then self.body:SetDisposition(enemy, fear and D_FR or D_HT) end
+	end
+	local enemy = self:GetNearEnemy()
+	if IsValid(enemy) then
+		self.body:SetAlertLevel(fear and 'alert' or 'combat')
+		self.body:SetEnemy(enemy)
+	end
 	if provider.driver == self then provider:SetDriver(nil) else provider:RemovePassenger(self) end
 	self.last_vehicle, self.vehicle_data = provider, {}
 	self.walkUpdatePathDelay, self.waitUpdateMovementDelay, self.next_lod, self.next_brain = 0, 0, 0, 0

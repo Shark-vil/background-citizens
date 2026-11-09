@@ -44,6 +44,24 @@ hook.Add('PlayerDeath', 'BGN_PoliceLethalThreat', function(victim, _, attacker)
 	RecordKill(victim, attacker)
 end)
 
+-- Is the entity in a real fight: it shot or hurt someone lately, or an actor shoots back at an enemy.
+local FIGHT_WINDOW = 10
+local FIGHT_STATES = { 'defense', 'killer', 'take_cover', 'retreat' }
+
+function Combat.IsFighting(ent)
+	if not IsValid(ent) then return false end
+	if CurTime() - (ent.bgn_last_attack or -FIGHT_WINDOW) < FIGHT_WINDOW then return true end
+	local actor = Actors.Get(ent)
+	return actor ~= nil and actor:EnemiesCount() > 0 and actor:HasState(FIGHT_STATES)
+end
+
+hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
+	local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+	if IsValid(attacker) and dmginfo:GetDamage() > 0 and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot()) then
+		attacker.bgn_last_attack = CurTime()
+	end
+end)
+
 hook.Add('EntityFireBullets', 'BGN_PoliceLastAttack', function(shooter)
 	shooter = Combat.ResolveVehicleAttacker(shooter)
 	if IsValid(shooter) and (shooter:IsPlayer() or shooter:IsNPC() or shooter:IsNextBot()) then
@@ -213,6 +231,8 @@ local function GetEntityType(ent)
 	if ent:IsNextBot() then return 'nextbot' end
 	if ent:IsNPC() then return 'npc' end
 	if ent:IsPlayer() then return 'player' end
+	-- a seated actor's body is a Decent Vehicle entity, neither NPC nor NextBot
+	if Actors.Get(ent) then return 'npc' end
 	return nil
 end
 
