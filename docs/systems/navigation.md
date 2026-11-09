@@ -27,6 +27,11 @@ The addon never starts the engine's NavMesh generation.
 | `bgn_compile` | pack route, seats and Decent Vehicle waypoints into a Lua file for the Workshop |
 | `bgn_save_map` | save the active movement graph to your duplications |
 
+**Save for the Workshop** (`bgn_compile`) also downloads the route pack to the calling admin's computer:
+`garrysmod/data/background_npcs/compile/bgn_compile_<map>.txt`. A result window shows the path and explains
+how to rename it to `.lua` and put it in the published addon's `lua/autorun/server` folder.
+The pack includes the current graph, including one loaded from a duplication.
+
 Old route files are converted automatically on load, so map packs made for older versions keep working.
 Unversioned routes and versions 1.0–1.2 are supported from `data/citizens_points/` and
 `data/background_npcs/nodes/` (`.dat` or `.json`). Loading leaves the original files intact.

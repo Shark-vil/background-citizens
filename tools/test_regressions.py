@@ -69,7 +69,15 @@ def realm(server):
             Base64Encode=function(s) return s end, Base64Decode=function(s) return s end,
             TraceLine=function() return {Hit=false} end}
         string.GetExtensionFromFilename=function(s) return s:match('%.([^.]*)$') end
+        string.GetPathFromFilename=function(s) return s:match('^(.*[/])') or '' end
         string.Trim=function(s) return s:match('^%s*(.-)%s*$') end
+        function table.Copy(value,seen)
+            if not istable(value) or isvector(value) then return value end
+            seen=seen or {}; if seen[value] then return seen[value] end
+            local copy={}; seen[value]=copy
+            for k,v in pairs(value) do copy[k]=table.Copy(v,seen) end
+            return copy
+        end
         file={Exists=function(p) return files[p]~=nil end, Size=function(p) return #(files[p] or '') end,
             Read=function(p) return files[p] end, Write=function(p,v) files[p]=v end, CreateDir=function() end}
         file.Find=function(pattern)
@@ -309,13 +317,118 @@ client.execute('''
     assert(#command.autocomplete('bgn_convert_legacy_nodes','')==0,'updated list removes converted maps')
 ''')
 
+# Exercise GMod's entity-copy callback with a body/brain reference cycle and rebuild actor identity on paste.
+server.execute('''
+    modifiers={}
+    duplicator={RegisterEntityModifier=function(name,f) modifiers[name]=f end}
+    bgNPC.Config={GetActor=function(name) if name=='citizen' then return {} end end}
+    bgNPC.Actors.Get=function(npc) return npc.BGN_ACTOR_OBJECT end
+    local npc={valid=true}
+    local actor={npc=npc,info={name='Saved citizen',gender='female'}}
+    actor.body={actor=actor}; actor.brain={actor=actor}
+    function actor:GetNPC() return self.npc end
+    function actor:GetType() return 'citizen' end
+    function actor:GetName() return self.info.name end
+    function actor:GetGender() return self.info.gender end
+    npc.BGN_ACTOR_OBJECT=actor
+    npc.EntityMods={other_addon={keep=true}}
+    npc.OnEntityCopyTableFinish=function(_,data) data.original_callback=true end
+    bgNPC.Actors.GetAll=function() return {actor} end
+    saved_npc=npc
+    bgNPC.Actor={Create=function(ent,actor_type)
+        local a={type=actor_type,info={}}
+        function a:SetName(name) self.info.name=name end
+        function a:SetGender(gender) self.info.gender=gender end
+        ent.BGN_ACTOR_OBJECT=a; return a
+    end}
+''')
+load(server, 'actor/events/sv_save_restore.lua')
+server.execute('''
+    local data={BGN_ACTOR_OBJECT=saved_npc.BGN_ACTOR_OBJECT,isBgnActor=true,EntityMods=saved_npc.EntityMods}
+    assert(not pcall(util.TableToJSON,data),'reproduce the actor body/brain cycle before filtering')
+    saved_npc:OnEntityCopyTableFinish(data)
+    assert(data.original_callback and data.EntityMods.other_addon.keep,'existing addon copy callback and modifiers preserved')
+    assert(not data.isBgnActor and not data.BGN_ACTOR_OBJECT,'runtime actor graph excluded from the save')
+    assert(saved_npc.BGN_ACTOR_OBJECT.body.actor==saved_npc.BGN_ACTOR_OBJECT,'saving does not modify the live actor')
+    assert(saved_npc.EntityMods.bgn_actor==nil,'copy metadata does not mutate the live entity modifiers')
+    local json=util.TableToJSON(data)
+    local restored={valid=true}
+    modifiers.bgn_actor(nil,restored,util.JSONToTable(json).EntityMods.bgn_actor)
+    local actor=restored.BGN_ACTOR_OBJECT
+    assert(actor.type=='citizen' and actor.info.name=='Saved citizen' and actor.info.gender=='female','actor identity rebuilt on paste/load')
+    modifiers.bgn_actor(nil,{valid=true},{type='missing'})
+    local callback=saved_npc.OnEntityCopyTableFinish
+    hook.Run('BGN_InitActor',saved_npc.BGN_ACTOR_OBJECT)
+    assert(saved_npc.OnEntityCopyTableFinish==callback,'copy hook is not wrapped twice')
+''')
+
+# Run the shared command's real client forwarding, server export, client download and generated route pack.
+load(server, 'nav/io/sh_compile.lua')
+server.execute('''
+    files={}
+    local graph=bgNPC.NodeGraph(); graph:AddNode(Vector(123,456,0))
+    bgNPC.Nav.Load('custom',graph)
+    files['background_npcs/graph/gm_test.dat']='stale file'
+    files['background_npcs/seats/gm_test.dat']='seats'
+    commands.bgn_compile(admin)
+    local result=sent[#sent]
+    assert(result[1]=='bgn_compile_result' and result[2]==admin and result[5]==2,'server sends route pack to the caller')
+    compiled_map,compiled_code,compiled_count=result[3],result[4],result[5]
+    assert(files['background_npcs/compile/bgn_compile_gm_test.txt']==compiled_code,'server export retained')
+    files={}; assert(loadstring(compiled_code))()
+    local copy=bgNPC.NodeGraph.Deserialize(files['background_npcs/graph/gm_test.dat'])
+    assert(copy and copy:GetPos(1).x==123,'export uses the active in-memory graph instead of a stale file')
+    assert(files['background_npcs/seats/gm_test.dat']=='seats','route pack restores seats too')
+''')
+client.execute('''
+    dialogs={}
+    function Derma_Message(text) dialogs[#dialogs+1]=text end
+''')
+load(client, 'core/sh_commands.lua', 'nav/io/sh_compile.lua')
+client.execute('''
+    commands.bgn_compile(admin,'bgn_compile',{})
+    assert(sent[#sent][1]=='bgn.command' and sent[#sent][2]=='bgn_compile','spawn menu command forwards to server')
+''')
+client.globals().received['bgn_compile_result']['f'](
+    None, server.globals().compiled_map, server.globals().compiled_code, server.globals().compiled_count)
+client.execute('''
+    assert(files['background_npcs/compile/bgn_compile_gm_test.txt'],'client gets a local copy of the export')
+    assert(#dialogs==1 and dialogs[1]:find('garrysmod/data/',1,true),'visible result shows the local output path')
+''')
+server.execute('''
+    notices={}
+    bgNPC.Util.Notify=function(_,text,kind) notices[#notices+1]={text,kind} end
+    local write=file.Write
+    file.Write=function() end
+    local count=#sent
+    commands.bgn_compile(admin)
+    file.Write=write
+    assert(#sent==count and #notices==1 and notices[1][2]==NOTIFY_ERROR,'server write failure is visible, no false success')
+    files={}; bgNPC.Nav.Load('custom',bgNPC.NodeGraph())
+    commands.bgn_compile(admin)
+    assert(#notices==2 and notices[2][2]==NOTIFY_ERROR,'nothing to export produces visible feedback')
+''')
+client.execute('''
+    local write=file.Write
+    files['background_npcs/compile/bgn_compile_gm_test.txt']=nil
+    file.Write=function() end
+    local failures=0
+    bgNPC.Util.Notify=function(_,_,kind) if kind==NOTIFY_ERROR then failures=failures+1 end end
+    received.bgn_compile_result.f(nil,'gm_test','export',1)
+    file.Write=write
+    assert(failures==1 and #dialogs==1,'client write failure does not show success')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
          'nav/providers/sv_custom_provider.lua',
+         'nav/io/sh_compile.lua', 'actor/events/sv_save_restore.lua',
+         'modules/dv/sh_dv_vehicle.lua', '../entities/bgn_fakeplayer/shared.lua',
+         '../entities/npc_decentvehicle_passenger/shared.lua',
          'ui/settings/cl_classic_settings.lua']
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: client/server CVars, wanted timers/settings/detection, legacy routes, duplications, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, LuaJIT syntax')

@@ -6,3 +6,4 @@ ENT.Contact = ''
 ENT.Purpose = ''
 ENT.Instructions = ''
 ENT.Spawnable = false
+ENT.DoNotDuplicate = true -- recreated by actors, not a scene object

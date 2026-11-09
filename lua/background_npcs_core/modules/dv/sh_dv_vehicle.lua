@@ -83,6 +83,7 @@ function VEHICLE:Initialize()
 	local provider = self
 	decentvehicle:SetPos(vehicle:GetPos())
 	decentvehicle.DontUseSpawnEffect = true
+	decentvehicle.DoNotDuplicate = true -- runtime driver AI, not a second actor
 	decentvehicle.bgn_type = self.ai_type
 	decentvehicle.isBgnActor = true
 	function decentvehicle:GetActor() return provider:GetDriver() end
@@ -153,6 +154,7 @@ function VEHICLE:AddPassenger(actor)
 	if not IsValid(passenger) then return false end
 
 	passenger.Seat = seat
+	passenger.DoNotDuplicate = true
 	passenger.SeatIndex = seat_index
 	passenger.actor = actor
 	passenger.vehicle_provider = self
