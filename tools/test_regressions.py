@@ -892,6 +892,90 @@ sync.execute('''
     assert(a and a.kind=='police' and a.state=='walk','state sync must recover a missed actor registration')
 ''')
 
+gesture = realm(True)
+gesture.execute('''
+    bgNPC.Actor={Helpers={}}; bgNPC.Assert={Arg=function() end,NonEmptyString=function() end}
+    function isbool(v) return type(v)=='boolean' end
+    bgNPC.Table.Random=function(t) return t[1] end
+    bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end,
+        HasAction=function(n,f) return bgNPC.States[n] and bgNPC.States[n][f]~=nil end,
+        Call=function(n,f,actor,...) local s=bgNPC.States[n]; if s and s[f] then return s[f](actor,...) end end}
+    playing=false
+    bgNPC.Animator={Play=function() playing=true; return {time=5} end,Stop=function() playing=false end}
+''')
+load(gesture, 'actor/components/sh_state.lua', 'brain/fsm/states/sv_random_gesture.lua')
+gesture.execute('''
+    actor=setmetatable({mechanics={states_controller=true},data={},state_delay=0,
+        state_data={state='walk',data={}},IsAlive=function() return true end,
+        GetNPC=function() return {} end,StopWalk=function() end,
+        ResetSequence=function() bgNPC.Animator.Stop() end}, {__index=bgNPC.Actor})
+    setcv('bgn_module_custom_gestures',1)
+    actor:SetState('random_gesture')
+    assert(playing and actor:GetState()=='random_gesture', 'state entry must not cancel the gesture it just started')
+    now=106
+    bgNPC.States.random_gesture.update(actor,'random_gesture',actor:GetStateData())
+    assert(not playing and actor:GetState()=='walk')
+    setcv('bgn_module_custom_gestures',0)
+    actor:SetState('random_gesture')
+    assert(not playing and actor:GetState()=='walk')
+    actor.is_animated=false
+    actor.IsAnimationPlayed=function() return true end
+    actor.IsSequenceFinished=function() return true end
+    actor.GetNPC=function() return {} end
+    actor.ResetSequence=function() error('static controller must not stop a custom gesture') end
+    bgNPC.Actors.GetAll=function() return {actor} end
+''')
+load(gesture, 'systems/sv_static_animation_controller.lua')
+gesture.execute('hooks.Think.BGN_ActorAnimationController()')
+gesture.execute('''
+    actor.is_animated=true
+    actor.IsLoopSequence=function() return false end
+    actor.PlayNextStaticSequence=function() return false end
+    actor.ResetSequence=function(self) self.reset=true end
+    hooks.Think.BGN_ActorAnimationController()
+    assert(actor.reset, 'ordinary static sequences must still finish normally')
+''')
+
+animation_client = realm(False)
+animation_client.execute('''
+    RENDERGROUP_OPAQUE=1; EF_BONEMERGE=1; EF_BONEMERGE_FASTCULL=2
+    function Model(v) return v end
+    function Prop()
+        return {valid=true,GetPos=function() return Vector() end,GetAngles=function() return {} end,
+            GetModel=function() return 'model' end,GetSkin=function() return 0 end,GetBodyGroups=function() return {} end,
+            LookupBone=function() return 1 end,SetPos=function() end,SetAngles=function() end,
+            SetParent=function() end,AddEffects=function() end,SetSkin=function() end,
+            SetNoDraw=function(self,v) self.hidden=v end,Remove=function(self) self.valid=false end}
+    end
+    ClientsideModel=function() return Prop() end
+    original=function() end
+    npc=Prop(); npc.RenderOverride=original
+    weapon=Prop(); npc.GetActiveWeapon=function() return weapon end
+    animator=Prop()
+''')
+load(animation_client, 'core/sh_animator.lua')
+animation_client.execute('''
+    local a=bgNPC.Animator
+    local start=received['bgn.anim_start'].f
+    start(nil,npc,animator,'dance',1,105)
+    assert(a.IsPlaying(npc) and npc.RenderOverride~=original and weapon.hidden)
+    a.Get(npc).model.valid=false
+    hooks.Think.BGN_Animator()
+    assert(not a.IsPlaying(npc) and npc.RenderOverride==original and not weapon.hidden,
+        'a vanished client model must never leave an invisible actor')
+    start(nil,npc,animator,'dance',1,105)
+    now=105; hooks.Think.BGN_Animator()
+    assert(not a.IsPlaying(npc) and npc.RenderOverride==original and not weapon.hidden,
+        'the deadline must restore rendering even if the stop message is missed')
+    start(nil,npc,animator,'dance',1,104)
+    assert(not a.IsPlaying(npc), 'a delayed expired start must not hide a walking actor')
+    start(nil,npc,animator,'dance',1,0)
+    now=1000; hooks.Think.BGN_Animator()
+    assert(a.IsPlaying(npc), 'looping animations have no automatic deadline')
+    received['bgn.anim_stop'].f(nil,npc)
+    assert(not a.IsPlaying(npc) and npc.RenderOverride==original)
+''')
+
 police_weapons = realm(True)
 police_weapons.execute('''
     bgNPC.Assert={Arg=function() end}
@@ -999,6 +1083,9 @@ police_weapons.execute('''
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
+         'core/sh_animator.lua',
+         'systems/sv_static_animation_controller.lua',
+         'brain/fsm/states/sv_random_gesture.lua',
          'actor/sync/cl_sync.lua', 'actor/sync/sv_sync.lua', 'actor/cl_actor_voice.lua', 'actor/events/sv_self_damage.lua',
          'systems/wanted/cl_wanted_sync.lua', 'systems/arrest/sv_arrest.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
@@ -1011,4 +1098,4 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, gesture lifecycle, animator visibility, LuaJIT syntax')
