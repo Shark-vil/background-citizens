@@ -620,16 +620,157 @@ arrest.execute('''
     end
 ''')
 
+# Vehicle exits must restore the real actor and must not skip or reboard passengers.
+vehicles = realm(True)
+vehicles.execute('''
+    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    DecentVehicleDestination={}; BGN_VEHICLE={}
+    COLLISION_GROUP_WORLD=20; SOLID_NONE=0; EFL_NO_THINK_FUNCTION=1
+    bgNPC.Util.Chance=function() return true end
+    bgNPC.Animator={Stop=function() end}
+    bgNPC.Util.EntityTimer=function(ent,name,delay,count,fn) boarding=function() fn(ent) end end
+    function Angle() return {} end
+    local vmeta=getmetatable(Vector())
+    function vmeta.__mul(v,n) return Vector(v.x*n,v.y*n,v.z*n) end
+    function vmeta.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    util.IsInWorld=function() return true end
+    ents={FindInSphere=function() return {} end}
+    function NewWeapon(hidden)
+        return {valid=true,hidden=hidden,GetNoDraw=function(w) return w.hidden end,
+            SetNoDraw=function(w,v) w.hidden=v end}
+    end
+    function NewActor()
+        local npc={valid=true,hidden=false,solid=2,pos=Vector(),weapon=NewWeapon(false)}
+        function npc:GetActiveWeapon() return self.weapon end
+        function npc:SetNoDraw(v) self.hidden=v end
+        function npc:SetNW2Bool(_,v) self.in_car=v end
+        function npc:SetCollisionGroup(v) self.collision=v end
+        function npc:GetSolid() return self.solid end
+        function npc:SetSolid(v) self.solid=v end
+        function npc:SetPos(v) self.pos=v end
+        function npc:GetPos() return self.pos end
+        function npc:GetAngles() return {y=0} end
+        function npc:SetAngles() end
+        function npc:AddEFlags() self.frozen=true end
+        function npc:RemoveEFlags() self.frozen=false end
+        function npc:PhysWake() end
+        local actor=setmetatable({npc=npc,mechanics={use_vehicle=true},collision_group=5}, {__index=bgNPC.Actor})
+        function actor:IsAlive() return true end
+        function actor:GetType() return 'police' end
+        function actor:HasTeam() return true end
+        function actor:GetNPC() return self.npc end
+        function actor:DropToFloor() self.dropped=true end
+        return actor
+    end
+    function NewCar()
+        local car={valid=true,IsVehicle=function() return true end,GetPos=function() return Vector() end,
+            GetModelBounds=function() return Vector(),Vector(100,100,100) end,
+            GetForward=function() return Vector(1,0,0) end,GetRight=function() return Vector(0,1,0) end,
+            GetUp=function() return Vector(0,0,1) end}
+        local p={car=car,passengers={},ai={valid=true}}
+        function p:IsValid() return self.car.valid end
+        function p:GetVehicle() return self.car end
+        function p:GetVehicleAI() return self.ai end
+        function p:GetDriver() return self.driver end
+        function p:GetPassengers() return self.passengers end
+        function p:SetDriver(a)
+            self.driver=a
+            if a then self.passengers[#self.passengers+1]=a else self.ai.valid=false; table.remove(self.passengers,1) end
+        end
+        function p:RemovePassenger(a)
+            for i,v in ipairs(self.passengers) do if v==a then table.remove(self.passengers,i); break end end
+        end
+        function p:AddPassenger(a) self.passengers[#self.passengers+1]=a; return true end
+        BGN_VEHICLE.GetVehicleProvider=function() return p end
+        return p
+    end
+''')
+load(vehicles, 'actor/components/sh_vehicle.lua', 'modules/dv/sv_car_damage_reaction.lua')
+vehicles.execute('''
+    local p=NewCar(); local actor=NewActor()
+    actor:EnterVehicle(p.car); boarding()
+    assert(actor:InVehicle() and actor.npc.hidden and actor.npc.weapon.hidden)
+    local first=actor.npc.weapon
+    actor.npc.weapon=NewWeapon(false)
+    hook.Run('BGN_OnSetActorWeapon',actor)
+    assert(actor.npc.weapon.hidden,'weapons drawn during combat must stay hidden in the car')
+    actor:ExitVehicle()
+    assert(not actor:InVehicle() and not actor.npc.in_car and not actor.npc.hidden)
+    assert(not first.hidden and not actor.npc.weapon.hidden and not actor.npc.frozen)
+    assert(actor.npc.solid==2 and actor.npc.collision==5 and actor.dropped)
+    actor:EnterVehicle(p.car); boarding()
+    p.car.valid=false; actor.mechanics.use_vehicle=false; DecentVehicleDestination=nil
+    actor:ExitVehicle()
+    assert(not actor.npc.hidden and not actor.npc.weapon.hidden and not actor.npc.frozen,
+        'cleanup must work even after the car or vehicle integration is gone')
+    DecentVehicleDestination={}
+
+    damage_car=NewCar(); damage_actors={NewActor(),NewActor(),NewActor()}
+    local count=0
+    for _,a in ipairs(damage_actors) do
+        a:EnterVehicle(damage_car.car); boarding()
+        function a.npc:TakeDamage() count=count+1 end
+    end
+    bgNPC.DVCars={damage_car}
+    local attacker={IsPlayer=function() return true end,GetPos=function() return Vector() end}
+    local info={GetAttacker=function() return attacker end, GetDamage=function() return 10 end,
+        GetInflictor=function() return attacker end}
+    hooks.EntityTakeDamage.BGN_DVCarsDamageReaction(damage_car.car,info)
+    assert(count==3 and #damage_car.passengers==0,'damage must reach every passenger even as the driver exits')
+    for _,a in ipairs(damage_actors) do assert(not a:InVehicle() and not a.npc.hidden) end
+
+    abandoned=NewCar()
+    abandoned_actors={NewActor(),NewActor(),NewActor()}
+    for _,a in ipairs(abandoned_actors) do a:EnterVehicle(abandoned.car); boarding() end
+    abandoned_actors[1]:ExitVehicle()
+    bgNPC.DVCars={abandoned}
+''')
+# GMod's continue skips the outer car loop; express that with LuaJIT's goto for this harness.
+movement = (ROOT / 'modules/dv/sv_move_to_target.lua').read_text(encoding='utf-8-sig')
+vehicles.execute(movement.replace('continue', 'goto next_car').replace('\n\tend\nend)', '\n\t::next_car::\n\tend\nend)'))
+vehicles.execute('''
+    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
+    assert(#abandoned.passengers==0,'passengers must leave a car after its driver and AI are gone')
+    for _,a in ipairs(abandoned_actors) do assert(not a.npc.hidden and not a.npc.weapon.hidden) end
+''')
+
+rendering = realm(False)
+rendering.execute('''
+    setcv('bgn_cl_field_view_optimization',1)
+    function tobool(v) return tonumber(v)~=0 end
+    function RenderNPC(in_car,owned)
+        local n={valid=true,hidden=true,bgn_render_optimization=owned}
+        function n:Health() return 100 end
+        function n:GetNW2Bool() return in_car end
+        function n:SetNoDraw(v) self.hidden=v end
+        n.bgn_hidden_weapon={valid=true,hidden=true,SetNoDraw=n.SetNoDraw}
+        return n
+    end
+    seated=RenderNPC(true,true); culled=RenderNPC(false,true); other=RenderNPC(false,false)
+    seated_weapon=seated.bgn_hidden_weapon; culled_weapon=culled.bgn_hidden_weapon
+    bgNPC.Actors.GetAllNPCs=function() return {seated,culled,other} end
+''')
+# Only the settings callback is needed here; the task below uses GMod's continue.
+render_source = (ROOT / 'systems/cl_render_optimization.lua').read_text(encoding='utf-8-sig')
+rendering.execute(render_source.split('bgNPC.Tasks.Add', 1)[0])
+rendering.execute('''
+    setcv('bgn_cl_field_view_optimization',0)
+    assert(seated.hidden and seated_weapon.hidden,'disabling culling must not reveal actors or weapons inside cars')
+    assert(not culled.hidden and not culled_weapon.hidden,'disabling culling must restore both NPC and weapon')
+    assert(other.hidden,'culling must not clear hiding owned by another system')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
          'nav/providers/sv_custom_provider.lua', 'nav/io/sh_nav_editor.lua',
          'nav/io/sh_compile.lua', 'actor/events/sv_save_restore.lua',
-         'modules/dv/sh_dv_vehicle.lua', '../entities/bgn_fakeplayer/shared.lua',
+         'modules/dv/sh_dv_vehicle.lua', 'actor/components/sh_vehicle.lua',
+         'modules/dv/sv_car_damage_reaction.lua', '../entities/bgn_fakeplayer/shared.lua',
          '../entities/npc_decentvehicle_passenger/shared.lua',
          'ui/settings/cl_classic_settings.lua']
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, vehicle exits, LuaJIT syntax')

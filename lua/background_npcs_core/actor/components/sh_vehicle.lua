@@ -18,6 +18,14 @@ function Actor:GetVehicleGroup()
 	return string.Explode('|', ResolveVehicleGroup(self) or 'residents')[1]
 end
 
+local function HideVehicleWeapon(actor)
+	local weapon = actor.npc:GetActiveWeapon()
+	if not IsValid(weapon) then return end
+	actor.vehicle_weapons = actor.vehicle_weapons or {}
+	if actor.vehicle_weapons[weapon] == nil then actor.vehicle_weapons[weapon] = weapon:GetNoDraw() end
+	weapon:SetNoDraw(true)
+end
+
 function Actor:EnterVehicle(vehicle)
 	Assert.Arg(1, vehicle, 'entity', 'ACTOR:EnterVehicle')
 
@@ -36,6 +44,7 @@ function Actor:EnterVehicle(vehicle)
 
 	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
 		if not IsValid(self_vehicle) or not self:IsAlive() then return end
+		if self:InVehicle() then return end
 
 		if not vehicle_provider:GetDriver() then
 			vehicle_provider:SetDriver(self)
@@ -52,6 +61,7 @@ function Actor:EnterVehicle(vehicle)
 		-- not sent at all; the actor update keeps it at the car (Actor:FollowVehicle).
 		bgNPC.Animator.Stop(npc)
 		npc:SetNoDraw(true)
+		HideVehicleWeapon(self)
 		npc:SetNW2Bool('bgn_vehicle_entered', true)
 		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
 		-- not solid: inside the car it blocked the car itself (DV saw an obstacle and rocked back and forth)
@@ -95,23 +105,27 @@ local function FindVehicleExitPos(vehicle, npc)
 end
 
 function Actor:ExitVehicle()
-	if not self.mechanics.use_vehicle then return end
-	if not DecentVehicleDestination then return end
-
 	local vehicle_provider = self.vehicle
 	local npc = self.npc
+	if not vehicle_provider then return end
 
-	if vehicle_provider and vehicle_provider:IsValid() and IsValid(npc) then
+	if IsValid(npc) then
 		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
 
 		npc:SetNW2Bool('bgn_vehicle_entered', false)
-		npc:SetPos(FindVehicleExitPos(vehicle_provider:GetVehicle(), npc))
+		if vehicle_provider:IsValid() then
+			npc:SetPos(FindVehicleExitPos(vehicle_provider:GetVehicle(), npc))
+		end
 		npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
 		npc:SetCollisionGroup(self.collision_group)
 		if self.vehicle_solid then npc:SetSolid(self.vehicle_solid) self.vehicle_solid = nil end
 		npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
 		npc:PhysWake()
 		npc:SetNoDraw(false)
+		for weapon, nodraw in pairs(self.vehicle_weapons or {}) do
+			if IsValid(weapon) then weapon:SetNoDraw(nodraw) end
+		end
+		self.vehicle_weapons = nil
 		self:DropToFloor()
 	end
 
@@ -132,7 +146,10 @@ end
 -- Keeps the hidden entity of an actor in a car at the car (it is not parented, see EnterVehicle).
 function Actor:FollowVehicle()
 	local vehicle = self:GetVehicle()
-	if IsValid(vehicle) and IsValid(self.npc) then self.npc:SetPos(vehicle:GetPos()) end
+	if IsValid(vehicle) and IsValid(self.npc) then
+		self.npc:SetPos(vehicle:GetPos())
+		HideVehicleWeapon(self)
+	end
 end
 
 function Actor:InVehicle()
@@ -151,3 +168,7 @@ function Actor:GetVehicleAI()
 	if not self.vehicle or not self:InVehicle() then return nil end
 	return self.vehicle:GetVehicleAI()
 end
+
+hook.Add('BGN_OnSetActorWeapon', 'BGN_HideVehicleWeapon', function(actor)
+	if actor:InVehicle() then HideVehicleWeapon(actor) end
+end)
