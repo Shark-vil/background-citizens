@@ -186,11 +186,16 @@ function Util.CanSeeEntity(ent, target, check_view)
 		eye_pos = ent:LocalToWorld(center)
 	end
 
-	local tr = util.TraceLine({ start = eye_pos, endpos = target_pos, filter = ent })
+	local actor = bgNPC.Actors.Get(ent)
+	local car = actor and actor:GetVehicle()
+	local tr = util.TraceLine({ start = eye_pos, endpos = target_pos, filter = IsValid(car) and { ent, car, ent.Seat } or ent })
 	if not tr.Hit then return false end
 
 	local hit = tr.Entity
-	return hit == target or (IsValid(hit) and hit:IsVehicle() and hit:GetDriver() == target)
+	local target_actor = bgNPC.Actors.Get(target)
+	local target_car = target_actor and target_actor:GetVehicle()
+	return hit == target or (IsValid(target_car) and hit == target_car)
+		or (IsValid(hit) and hit:IsVehicle() and hit:GetDriver() == target)
 end
 
 function Util.IsAnyPlayerLooking(pos)

@@ -117,6 +117,11 @@ function Actor:ShouldExitVehicle()
 	for _, enemy in ipairs(self.enemies) do
 		if IsValid(enemy) and enemy:Health() > 0 and enemy:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
 	end
+	if self:HasState('arrest') then
+		for _, target in ipairs(self.targets) do
+			if IsValid(target) and target:Health() > 0 and target:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
+		end
+	end
 	return false
 end
 
@@ -169,10 +174,19 @@ function Actor:ExitVehicle(forced)
 end
 
 -- Damage belongs to the stored character, never to the DV controller's health/lifetime.
-function Actor:TakeVehicleDamage(amount, attacker)
+function Actor:TakeVehicleDamage(amount, attacker, inflictor)
 	local saved = self.vehicle_body
-	if not saved or self.is_removed then return end
-	if amount > 0 and self:HasTeam('police') then self:AddEnemy(attacker) end
+	if not saved or self.is_removed or amount <= 0 then return end
+	attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker) or attacker
+	if IsValid(attacker) and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot())
+		and attacker ~= self.npc and not bgNPC.Combat.IsIgnored(attacker) and not attacker.bgNPCIgnore then
+		local damage = DamageInfo()
+		damage:SetDamage(amount)
+		damage:SetAttacker(attacker)
+		damage:SetInflictor(IsValid(inflictor) and inflictor or attacker)
+		if hook.Run('BGN_TakeDamageFromNPC', attacker, self.npc, damage) == true then return end
+		amount = damage:GetDamage()
+	end
 	saved.health = math.max(0, self:Health() - amount)
 	if IsValid(self.npc) then self.npc:SetHealth(saved.health) end
 	if saved.health <= 0 then

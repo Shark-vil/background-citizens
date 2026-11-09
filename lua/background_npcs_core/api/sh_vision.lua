@@ -15,10 +15,14 @@ function Vision.HasLineOfSight(watcher, ent)
 	-- a NextBot has no view offset, its EyePos is at the feet and low cover would block the view
 	trace_data.start = watcher.BGN_EyePos and watcher:BGN_EyePos() or watcher:EyePos()
 	trace_data.endpos = ent:WorldSpaceCenter()
-	trace_data.filter = watcher
+	local watcher_actor = Actors.Get(watcher)
+	local watcher_car = watcher_actor and watcher_actor:GetVehicle()
+	trace_data.filter = IsValid(watcher_car) and { watcher, watcher_car, watcher.Seat } or watcher
 
 	local tr = util.TraceLine(trace_data)
-	return tr.Hit and tr.Entity == ent, tr.Entity
+	local target_actor = Actors.Get(ent)
+	local target_car = target_actor and target_actor:GetVehicle()
+	return tr.Hit and (tr.Entity == ent or IsValid(target_car) and tr.Entity == target_car), tr.Entity
 end
 
 -- Checks whether the position is inside the NPC's field of view.

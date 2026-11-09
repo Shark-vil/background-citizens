@@ -1048,6 +1048,19 @@ ceasefire.execute('''
 vehicles = realm(True)
 vehicles.execute('''
     bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    bgNPC.Combat.ResolveVehicleAttacker=function(e) return e end
+    bgNPC.Table.FindWhere=function(t,f) for k,v in ipairs(t) do if f(k,v) then return k,v end end return -1 end
+    function isbool(v) return type(v)=='boolean' end
+    function DamageInfo()
+        local d={}
+        function d:SetDamage(v) self.amount=v end
+        function d:GetDamage() return self.amount end
+        function d:SetAttacker(v) self.attacker=v end
+        function d:GetAttacker() return self.attacker end
+        function d:SetInflictor(v) self.inflictor=v end
+        function d:GetInflictor() return self.inflictor end
+        return d
+    end
     DecentVehicleDestination={}; BGN_VEHICLE={}; bgNPC.Animator={Stop=function() end}
     bgNPC.Table.HasValue=function(t,v) for _,x in ipairs(t) do if x==v then return true end end return false end
     table.HasValue=bgNPC.Table.HasValue
@@ -1055,6 +1068,9 @@ vehicles.execute('''
     local vmeta=getmetatable(Vector())
     function vmeta.__mul(v,n) return Vector(v.x*n,v.y*n,v.z*n) end
     function vmeta.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vmeta:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    function vmeta:Cross(b) return Vector(self.y*b.z-self.z*b.y,self.z*b.x-self.x*b.z,self.x*b.y-self.y*b.x) end
+    function vmeta:GetNormalized() local n=self:Distance(Vector()); return Vector(self.x/n,self.y/n,self.z/n) end
     util.IsInWorld=function() return true end
     util.TraceHull=function() return {StartSolid=blocked,Hit=blocked} end
     util.TraceLine=function() return {Hit=true,StartSolid=exit_start_solid,HitNormal=Vector(0,0,1),HitPos=Vector(200,0,exit_floor or 0)} end
@@ -1063,6 +1079,10 @@ vehicles.execute('''
     function NewEntity(class)
         local e={valid=true,class=class,hp=37,maxhp=73,pos=Vector(),model='original.mdl',clip1=7,clip2=-1}
         function e:GetClass() return self.class end
+        function e:IsPlayer() return false end
+        function e:IsNPC() return self.class=='npc_citizen' end
+        function e:IsNextBot() return false end
+        function e:IsVehicle() return false end
         function e:EntIndex() return tostring(self) end
         function e:GetCollisionBounds() return Vector(-16,-16,0),Vector(16,16,72) end
         function e:GetSkin() return 1 end
@@ -1089,6 +1109,7 @@ vehicles.execute('''
         function e:GetActiveWeapon() return self.weapon end
         function e:Remove() self.valid=false; if self.weapon then self.weapon.valid=false end end
         function e:SetNW2Bool() end
+        function e:GetNWEntity() return self.seat end
         function e:SetAngles() end
         function e:SetSkin() end
         function e:SetModelScale() end
@@ -1112,7 +1133,15 @@ vehicles.execute('''
         function a:GetType() return 'police' end
         function a:GetActiveWeapon() return self.npc.weapon end
         function a:Health() return self.npc:Health() end
-        function a:HasTeam() return true end
+        function a:HasTeam(team) return team=='police' end
+        function a:HasState(s) return self.state==s end
+        function a:EqualStateGroup(g) return g=='calm' and (not self.state or self.state=='walk') end
+        function a:GetReactionForDamage() return self.civilian and 'fear' or 'defense' end
+        function a:SetReaction(r) self.reaction=r end
+        function a:GetLastReaction() return self.reaction end
+        function a:RemoveAllTargets() self.targets={} end
+        function a:SetState(s) self.state=s end
+        function a:EnemiesCount() return #self.enemies end
         function a:IsAlive() return not self.is_removed end
         function a:CreateFakePlayerMethodsForNPC() end
         function a:AddEnemy(e) self.enemies[#self.enemies+1]=e end
@@ -1123,15 +1152,20 @@ vehicles.execute('''
     function NewCar()
         local car=NewEntity('car')
         function car:IsVehicle() return true end
-        function car:GetModelBounds() return Vector(),Vector(100,100,100) end
+        function car:GetModelBounds() return Vector(-100,-50,0),Vector(100,50,80) end
         function car:GetForward() return Vector(1,0,0) end
         function car:GetRight() return Vector(0,1,0) end
+        function car:GetUp() return Vector(0,0,1) end
+        function car:LocalToWorld(v) return self.pos+v end
+        function car:LookupAttachment() return 0 end
+        function car:GetAttachment() end
         local p={car=car,passengers={}}
         function p:IsValid() return self.car.valid end
         function p:CanUse() return true end
         function p:GetVehicle() return self.car end
         function p:GetVehicleAI() return self.ai end
         function p:GetDriver() return self.driver end
+        function p:GetPassengers() return self.passengers end
         function p:SetDriver(a)
             self.driver=a
             if a then self.ai=NewEntity('npc_decentvehicle'); self.passengers[#self.passengers+1]=a; return true end
@@ -1149,9 +1183,11 @@ vehicles.execute('''
         return p
     end
     near_player={valid=true,pos=Vector(),Health=function() return 100 end,Alive=function() return true end,GetPos=function(self) return self.pos end}
+    near_player.IsPlayer=function() return true end
     player.GetAll=function() return {near_player} end
 ''')
-load(vehicles, 'api/sh_actors.lua', 'actor/components/sh_vehicle.lua')
+load(vehicles, 'api/sh_actors.lua', 'actor/components/sh_vehicle.lua', 'actor/events/sv_self_damage.lua',
+     'modules/dv/sv_car_damage_reaction.lua')
 vehicles.execute('''
     local p=NewCar(); local a,b=NewActor(),NewActor(); local old=a.npc
     b.enemies={old}; b.targets={old}; b.enemies_always_visible={old}; b.walkTarget=old
@@ -1174,6 +1210,9 @@ vehicles.execute('''
     p=NewCar(); a=NewActor(); a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
     near_player.pos=Vector(800.1,0,0); p.car.maxhp=0; assert(not a:ShouldExitVehicle())
     near_player.pos=Vector(800,0,0); assert(not a:ShouldExitVehicle(), 'neutral observers do not make police dismount')
+    a.targets={near_player}; a.state='arrest'
+    assert(a:ShouldExitVehicle(), 'police also dismount for a nearby arrest target')
+    a.state=nil; a.targets={}
     a.enemies={near_player}; assert(a:ShouldExitVehicle(), 'police dismount for a nearby actual enemy')
     near_player.pos=Vector(5000,0,0); p.car.maxhp=100; p.car.hp=20; assert(a:ShouldExitVehicle())
     p.car.hp=21; assert(not a:ShouldExitVehicle())
@@ -1275,6 +1314,86 @@ startup.execute('''
     bgNPC.Actors.GetInRadius=function() return {} end
     hooks.BGN_OnKilledActor.BGN_Offender(victim,npc)
     assert(actor.team[1]=='offenders' and wanted_added, 'witnessed civilian murder registers an offender without a missing module')
+''')
+
+# Vehicle hits use the same reactions and witness hook as hits on foot.
+vehicle_vision = realm(True)
+vehicle_vision.execute('''
+    ENT={}; bgNPC.Assert={Arg=function() end}
+    local vec=getmetatable(Vector())
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vec:Length() return math.sqrt(self.x^2+self.y^2+self.z^2) end
+    function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    car={valid=true}; target_car={valid=true}; wall={valid=true}
+    watcher={valid=true,vehicle_provider={GetVehicleAI=function() return driver end},
+        GetForward=function() return Vector(1,0,0) end,
+        EyePos=function() return Vector() end, Health=function() return 100 end}
+    driver={valid=true,GetVehicleForward=function() return Vector(0,1,0) end}
+    target={valid=true,Health=function() return 100 end,
+        OBBCenter=function() return Vector() end, LocalToWorld=function() return Vector(0,100,0) end,
+        WorldSpaceCenter=function() return Vector(0,100,0) end}
+    bgNPC.Actors.Get=function(e)
+        if e==watcher then return {GetVehicle=function() return car end} end
+        if e==target then return {GetVehicle=function() return target_car end} end
+    end
+    util.TraceLine=function(data)
+        assert(data.filter[1]==watcher and data.filter[2]==car, 'the own chassis must not hide a seated witness')
+        return {Hit=true,Entity=hit or target}
+    end
+''')
+load(vehicle_vision, '../entities/npc_decentvehicle_passenger/shared.lua', 'core/sh_util.lua', 'api/sh_vision.lua')
+vehicle_vision.execute('''
+    watcher.GetVehicleForward=ENT.GetVehicleForward
+    -- The method used by DV's playermeta.lua on passengers.
+    function watcher:GetAimVector() return self:GetVehicleForward() end
+    assert(watcher:GetAimVector()==Vector(0,1,0), 'passenger view uses the driver vehicle orientation')
+    assert(bgNPC.Util.CanSeeEntity(watcher,target,true))
+    assert(bgNPC.Vision.HasLineOfSight(watcher,target))
+    hit=target_car
+    assert(bgNPC.Util.CanSeeEntity(watcher,target,true) and bgNPC.Vision.HasLineOfSight(watcher,target),
+        'seeing a victim chassis counts as seeing its occupant')
+    hit=wall; wall.IsVehicle=function() return false end
+    assert(not bgNPC.Util.CanSeeEntity(watcher,target,true) and not bgNPC.Vision.HasLineOfSight(watcher,target),
+        'walls still block seated witnesses')
+    driver.valid=false
+    assert(watcher:GetAimVector()==Vector(1,0,0), 'passenger view survives driver removal')
+''')
+
+witness_source = (ROOT / 'actor/events/sv_damage_reaction.lua').read_text(encoding='utf-8-sig')
+witness_source = witness_source.replace('local actor = actors[i]', 'do local actor = actors[i]')
+witness_source = witness_source.replace('continue', 'goto next_witness').replace(
+    "\n\tend\nend)", "\n\tend ::next_witness::\n\tend\nend)")
+vehicles.execute(witness_source)
+vehicles.execute('''
+    blocked=false
+    list.Set('', 'wanted', {HasWanted=function() return false end})
+    bgNPC.Combat.ResolveEnemy=function(_,target,attacker) return attacker end
+    local p=NewCar(); local victim=NewActor(); local witness=NewActor()
+    victim.civilian=true
+    function victim:HasTeam() return false end
+    function witness:GetReactionForProtect() return 'defense' end
+    bgNPC.Actors.GetInRadius=function() return {witness} end
+    victim:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..victim.uid]()
+    local wcar=NewCar()
+    witness:EnterVehicle(wcar.car); timers['bgn_actor_enter_vehicle_'..witness.uid]()
+    local hit=DamageInfo(); hit:SetDamage(10); hit:SetAttacker(near_player); hit:SetInflictor(near_player)
+    bgNPC.DVCars={p}
+    hook.Run('EntityTakeDamage',p.car,hit)
+    assert(victim.state=='fear' and victim.enemies[1]==near_player, 'seated civilians remember the attacker')
+    assert(witness.state=='defense' and witness.enemies[1]==near_player, 'seated police witness an attack on another car')
+    if victim:InVehicle() then assert(victim:ExitVehicle(true)) end
+    assert(victim.enemies[1]==near_player and victim.state=='fear',
+        'exit retains the reaction and attacker')
+    bgNPC.Actors.GetInRadius=function() return {} end
+    local seated=witness.npc; local hp=witness:Health()
+    assert(hook.Run('EntityTakeDamage',seated,hit)==true)
+    assert(witness:Health()==hp-10, 'direct occupant hits apply damage exactly once')
+    hooks.BGN_PreReactionTakeDamage={block=function() return true end}
+    witness:TakeVehicleDamage(10,near_player)
+    assert(witness:Health()==hp-10, 'damage cancellation is respected in a seat')
+    hooks.BGN_PreReactionTakeDamage=nil
+    witness:TakeVehicleDamage(0,near_player)
+    assert(witness:Health()==hp-10, 'zero damage is ignored')
 ''')
 
 # Run the actual traffic task and attached Think with a stationary car.

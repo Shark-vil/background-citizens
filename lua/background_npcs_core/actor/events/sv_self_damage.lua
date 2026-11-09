@@ -4,6 +4,11 @@ local TeamParentModule
 local cvar_team_damage = GetConVar('bgn_team_damage')
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
+	local occupant = bgNPC.Actors.Get(target)
+	if occupant and occupant.vehicle_body then
+		occupant:TakeVehicleDamage(dmginfo:GetDamage(), dmginfo:GetAttacker(), dmginfo:GetInflictor())
+		return true
+	end
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
 	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
