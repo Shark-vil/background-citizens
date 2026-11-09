@@ -12,10 +12,8 @@ local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local FrameTime = FrameTime
 -- local LocalToWorld = LocalToWorld
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 local spawn_radius_sqrt = spawn_radius ^ 2
 local block_radius_sqrt = block_radius ^ 2
@@ -105,7 +103,6 @@ end
 
 local function FindSpawnLocationProcess(all_players, settings)
 	spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-	radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 	block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 	spawn_radius_sqrt = spawn_radius ^ 2
 	block_radius_sqrt = block_radius ^ 2
@@ -113,10 +110,6 @@ local function FindSpawnLocationProcess(all_players, settings)
 	local desired_position = settings.position
 	local teleport_radius = settings.radius or spawn_radius
 	local target_entity = settings.target
-
-	if teleport_radius and teleport_radius <= block_radius then
-		teleport_radius = radius_visibility
-	end
 
 	local points = bgNPC.Points.GetInRadius(desired_position, teleport_radius, 'walk')
 	local points_count = #points
@@ -129,7 +122,6 @@ local function FindSpawnLocationProcess(all_players, settings)
 		if nodePosition then return nodePosition end
 	elseif bgNPC.Points.Count() == 0 then
 		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
-		radius_visibility = math.Clamp(radius_visibility, 0, 1000)
 		block_radius = math.Clamp(block_radius, 0, 600)
 		spawn_radius_sqrt = spawn_radius ^ 2
 		block_radius_sqrt = block_radius ^ 2

@@ -26,8 +26,8 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
 ## Behaviour
 
 - **Where:** in a ring from 0.35 to 1.5 × `bgn_spawn_radius` around the player, never inside that inner
-  radius around any player (real actors live there, multiplayer included). They appear out of sight, or in
-  sight farther than `bgn_spawn_radius_visibility` (the real actors' rule), with a fade-in. At the limit a ghost
+  radius around any player (real actors live there, multiplayer included). They appear out of sight,
+  with a fade-in. At the limit a ghost
   behind the player moves into view, so open areas don't look empty.
 - **Looks:** model, skin and bodygroups of real actors you have seen; HL2 citizens until then.
   Models without a walk or an idle animation (vehicles, helicopters, some custom models) are skipped.
@@ -50,7 +50,7 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
   changes); every client computes the position from `CurTime()` and scales the animation to that speed.
   A client that starts drawing (joined, switched it on, mode changed) asks for all ghosts at once.
 - **Spawn, walk, leave:** the local rules, checked against every player: ring of each player, out of every
-  player's inner radius, out of everybody's sight or farther than `bgn_spawn_radius_visibility`. Mood (panic,
+  player's inner radius, out of everybody's sight. Mood (panic,
   idle share) is counted per player from the server's actor states; a ghost follows its nearest player's.
   Looks (type, model, skin, bodygroups) come from real actors on foot with walk and idle animations.
 - **Handoff:** a ghost someone sees, with a player inside its inner radius, becomes a real actor of the same type

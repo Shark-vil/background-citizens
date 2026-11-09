@@ -349,6 +349,72 @@ teleport.execute('''
     assert(callbacks==3 and not result and npc.pos.x==1000, 'roll back a blocked teleport within the same call')
 ''')
 
+recycle = realm(True)
+recycle.execute('''
+    setcv('bgn_actor_unseen_time',30); setcv('bgn_enable',1); setcv('bgn_actors_teleporter',0)
+    bgNPC.Tasks.Remove=function() end
+    bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 10 end}
+    bgNPC.Actors.GetNPCsByType=function() return {npc} end
+    bgNPC.Util.CanSeeEntity=function(ply) return ply.looking and not ply.blocked end
+    npc={valid=true}; viewers={{valid=true,looking=false},{valid=true,looking=false}}
+    player.GetHumans=function() return viewers end
+    actor={mechanics={},data={},GetNPC=function() return npc end,IsAlive=function() return true end,
+        InVehicle=function() return in_vehicle end,
+        GetData=function(self) return self.data end,
+        GetType=function() return 'citizen' end,HasState=function() return busy end,
+        Remove=function() removed=removed+1 end}
+    bgNPC.Actors.GetAll=function() return {actor} end
+    removed=0
+''')
+# LuaJIT supports goto; translate only GLua's continue in this actor loop for execution outside GMod.
+recycle_source = (ROOT / 'spawner/sv_actor_remover.lua').read_text(encoding='utf-8-sig')
+recycle_source = recycle_source.split("bgNPC.Tasks.Add('bgn_actors_remover_process'",1)[0]
+recycle_source = recycle_source.replace('continue', 'goto next_actor').replace(
+    '\n\t\tend\n\tend\nend\n', '\n\t\tend\n\t\t::next_actor::\n\tend\nend\n')
+recycle.execute(recycle_source + '\ncan_recycle=CanRecycle; run_recycle=run_remover_process_async')
+recycle.execute('''
+    hooks.BGN_InitActor.BGN_Recycle_LastSeen(actor)
+    assert(not can_recycle(actor,viewers))
+    now=129; assert(not can_recycle(actor,viewers))
+    now=130; assert(can_recycle(actor,viewers), 'recycle after N unseen seconds regardless of distance')
+    viewers[2].looking=true
+    assert(not can_recycle(actor,viewers) and actor.__last_player_interaction==130,
+        'any player seeing the actor resets the timer at final validation')
+    viewers[2].blocked=true
+    now=159; assert(not can_recycle(actor,viewers))
+    now=160; assert(can_recycle(actor,viewers), 'looking through a wall does not count as seeing')
+    local function pass() run_recycle(function() end,function() end,{actor},1) end
+    actor.eternal=true; pass(); assert(removed==0)
+    actor.eternal=false; in_vehicle=true; pass(); assert(removed==0, 'vehicle occupants have independent lifecycle')
+    timers.BGN_Actors_LastSeen(); assert(actor.__last_player_interaction==now)
+    in_vehicle=false; actor.__last_player_interaction=130
+    actor.eternal=false; actor.state_lock=true; pass(); assert(removed==0)
+    actor.state_lock=false; busy=true; pass(); assert(removed==0)
+    busy=false
+    hooks.BGN_PreRemoveNPC={test=function() return true end}; pass(); assert(removed==0)
+    hooks.BGN_PreRemoveNPC={}
+    viewers[2].blocked=false; pass(); assert(removed==0, 'fresh visibility prevents removal after timeout')
+    viewers[2].looking=false; now=190; pass(); assert(removed==1, 'unseen eligible actors are removed')
+    setcv('bgn_actors_teleporter',1)
+    bgNPC.Config.GetWantedLevel=function() end
+    bgNPC.EnterActorInExistVehicle=function() return false end
+    bgNPC.SpawnVehicleWithActor=function() return false end
+    bgNPC.FindSpawnPositionAsync=function() return Vector(1000,0,0) end
+    bgNPC.IsValidSpawnArea=function() return true end
+    bgNPC.IsHiddenSpawnPosition=function() return true end
+    actor.RandomState=function() end
+    moved=0
+    bgNPC.RespawnActor=function(_,_,_,callback) moved=moved+1; callback(true) end
+    pass()
+    assert(moved==1 and actor.__last_player_interaction==190, 'successful teleport restarts the unseen timer')
+    pass(); assert(moved==1, 'freshly teleported actors must not immediately teleport again')
+    now=220
+    run_recycle(function() viewers[1].looking=true end,function() end,{actor},1)
+    assert(moved==1, 'a player who sees the actor after the boundary yield must prevent teleport')
+    setcv('bgn_actor_unseen_time',0)
+    viewers[1].looking=true; assert(not can_recycle(actor,viewers), 'zero timeout never permits visible removal')
+''')
+
 client = realm(False)
 load(client, 'core/sh_cvars.lua')
 client.execute('''
@@ -389,7 +455,7 @@ server.execute('''
         bgNPC.CVars.Register(name,1)
     end
     bgNPC.CVars.Register('bgn_wanted_time',30)
-    setcv('bgn_wanted_impunity_limit',5); setcv('bgn_spawn_radius_visibility',2500)
+    setcv('bgn_wanted_impunity_limit',5); setcv('bgn_wanted_detection_radius',2500)
 ''')
 load(server, 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua')
 server.execute('''

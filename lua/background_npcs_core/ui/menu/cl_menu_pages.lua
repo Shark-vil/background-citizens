@@ -172,12 +172,15 @@ Menu.AddPage('spawn', {
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
-		page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
+		if istable(DecentVehicleDestination) then
+			page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
+		end
 		page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
 		page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, { decimals = 1 })
 
 		page:Section('#bgn.menu.section.teleport')
 		page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
+		page:Slider('bgn_actor_unseen_time', '#bgn.settings.spawn.actor_unseen_time', 0, 600)
 		page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
 		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
 
@@ -200,6 +203,7 @@ Menu.AddPage('wanted', {
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
+		page:Slider('bgn_wanted_detection_radius', '#bgn.settings.wanted.detection_radius', 0, 5000)
 		page:Toggle('bgn_wanted_level', '#bgn.settings.wanted.level')
 		page:Toggle('bgn_wanted_police_instantly', '#bgn.settings.wanted.police_instantly')
 		page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)

@@ -162,6 +162,7 @@ function Actor:ExitVehicle(forced)
 	self.last_vehicle = vehicle_provider -- it may come back to it (go_to_police_car)
 	self.vehicle = nil
 	self.vehicle_data = {}
+	self.__last_player_interaction = CurTime()
 end
 
 -- Keeps the hidden entity of an actor in a car at the car (it is not parented, see EnterVehicle).

@@ -8,7 +8,9 @@ bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
 bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
-bgNPC.cvar.bgn_spawn_radius_visibility = 2500
+bgNPC.cvar.bgn_spawn_radius_visibility = 2000
+bgNPC.cvar.bgn_actor_unseen_time = 30
+bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
 bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
@@ -147,11 +149,13 @@ bgNPC.CVars.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 'NPC spawn
 
 bgNPC.CVars.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
-bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Radius used when deciding whether existing actors may be removed or teleported. New spawns use bgn_spawn_block_radius and line-of-sight checks.')
+bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Minimum distance for DV vehicles to spawn in front of a player, even behind cover. Legacy cvar name; affects vehicles only.')
+bgNPC.CVars.Register('bgn_actor_unseen_time', bgNPC.cvar.bgn_actor_unseen_time, 'Seconds without any player seeing an actor before it can be removed or teleported. 0 allows immediate recycling out of sight.')
+bgNPC.CVars.Register('bgn_wanted_detection_radius', bgNPC.cvar.bgn_wanted_detection_radius, 'Distance at which residents can see a wanted target and keep the wanted timer active.')
 
 bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
 
-bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'The period between the spawn of the NPC. Changes require a server restart.')
+bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'Pause between actor spawner passes. Changes apply immediately.')
 
 bgNPC.CVars.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 'Height limit between points. Used to correctly define child points.')
 

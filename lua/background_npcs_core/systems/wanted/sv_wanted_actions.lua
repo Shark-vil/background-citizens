@@ -8,7 +8,7 @@ local impunity_limit = GetConVar('bgn_wanted_impunity_limit'):GetInt()
 local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction_period'):GetFloat()
 local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
+local cvar_detection_radius = GetConVar('bgn_wanted_detection_radius')
 
 hook.Add('BGN_PlayerReady', 'BGN_WantedSync', function(ply)
 	for _, wanted in ipairs(asset:GetAllWanted()) do
@@ -209,7 +209,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode then return end
 
 	-- local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-	local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
+	local detection_radius = cvar_detection_radius:GetFloat()
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
 
@@ -222,7 +222,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	-- 1500 ^ 2
 	-- local ray_distance_detect = 2250000
-	local ray_distance_detect = radius_visibility ^ 2
+	local ray_distance_detect = detection_radius ^ 2
 
 	for i = wanted_count, 1, -1 do
 		local WantedClass = wanted_list[i]

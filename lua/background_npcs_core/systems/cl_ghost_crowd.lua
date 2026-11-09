@@ -15,8 +15,7 @@
 	- They walk from point to point (server navigation, sv_ghost_crowd.lua) and never towards the player.
 	  Their feet follow the ground (a trace down a few times a second), points often hang above it.
 	- They keep out of the inner radius around every player: real actors live there (multiplayer too).
-	- They appear out of sight, or in sight farther than "bgn_spawn_radius_visibility" (the same rule as
-	  real actors). At the limit, a ghost behind the player moves into view, so open areas don't look empty.
+	- They appear out of sight. At the limit, a ghost behind the player moves into view.
 	- When the player comes close they leave: removed at once when out of sight, otherwise they run away
 	  and fade out only as a last resort. The real actors that spawn there take their place.
 --]]
@@ -333,7 +332,6 @@ end
 
 -- @return Vector|nil a spawn point, one in front of the player when possible
 local function FindSpawnPoint(ply_pos, eye, eye_dir, r_in, r_out)
-	local visible_from = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
 	local r_in_sqr = r_in * r_in
 	local fallback
 
@@ -343,9 +341,9 @@ local function FindSpawnPoint(ply_pos, eye, eye_dir, r_in, r_out)
 		if not pos then return end
 
 		local dist = pos:Distance(ply_pos)
-		-- in sight only farther than the real actors may appear in sight
+		-- Spawn only out of sight, regardless of distance.
 		if dist >= r_in * 1.2 and dist <= r_out and not NearOtherPlayer(pos, r_in_sqr)
-			and (dist > visible_from or not IsSeen(eye, eye_dir, pos + HEAD))
+			and not IsSeen(eye, eye_dir, pos + HEAD)
 		then
 			local dir = pos - eye
 			dir:Normalize()
