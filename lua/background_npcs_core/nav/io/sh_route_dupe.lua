@@ -6,7 +6,10 @@ function Editor.GraphFromDupe(dupe)
 	if not istable(dupe) or dupe.id ~= 'BGN_NODES' then return nil, 'not a route duplication' end
 	if dupe.map and dupe.map ~= game.GetMap() then return nil, 'route belongs to another map' end
 	local data = dupe.data
-	if isstring(data) then data = util.JSONToTable(data) end
+	if dupe.encoding == 'bgn_graph_base64' then
+		return bgNPC.NodeGraph.Deserialize(isstring(data) and util.Base64Decode(data) or nil)
+	end
+	if isstring(data) then data = util.JSONToTable(data, true) end
 	if istable(data) and data.format == bgNPC.NodeGraph.FORMAT then return bgNPC.NodeGraph.FromTable(data) end
 	return bgNPC.LegacyNodes.ToGraph(data)
 end
@@ -59,7 +62,8 @@ if SERVER then
 				return
 			end
 			Net.Send('bgn_route_dupe_save', ply, {
-				id = 'BGN_NODES', slibrary = true, map = game.GetMap(), data = provider:GetGraph():ToTable(),
+				id = 'BGN_NODES', slibrary = true, map = game.GetMap(), encoding = 'bgn_graph_base64',
+				data = util.Base64Encode(provider:GetGraph():Serialize(), true),
 			})
 		end,
 	})
@@ -101,7 +105,7 @@ local function InstallDupeCommand()
 	Editor.dupe_arm_wrapper = function(ply, cmd, args, ...)
 		local dupe = args[1] and engine.OpenDupe(args[1])
 		local json = dupe and util.Decompress(dupe.data, 5242880)
-		local data = json and util.JSONToTable(json)
+		local data = json and util.JSONToTable(json, true)
 		if istable(data) and data.id == 'BGN_NODES' then
 			if hook.Run('CanArmDupe', ply) == false then return end
 			LoadRouteDupe(ply, data)

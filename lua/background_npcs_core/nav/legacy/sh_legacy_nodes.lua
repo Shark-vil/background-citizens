@@ -55,7 +55,7 @@ end
 -- @param data string|table old JSON or its table
 -- @return NodeGraph|nil, string|nil error
 function LegacyNodes.ToGraph(data)
-	if isstring(data) then data = util.JSONToTable(data) end
+	if isstring(data) then data = util.JSONToTable(data, true) end
 	if not istable(data) then return nil, 'not an old route file' end
 	local nodes = data.nodes or (not data.version and data[1] and data)
 	if not istable(nodes) or #nodes > 200000 then return nil, 'invalid old route nodes' end
@@ -159,11 +159,15 @@ bgNPC.Commands.Register('bgn_convert_legacy_nodes', {
 	server = function(ply, _, args)
 		local map_name = args and args[1] or game.GetMap()
 		local graph, err = LegacyNodes.Convert(map_name)
+		if graph then
+			local provider = bgNPC.Nav.CustomProvider(graph)
+			local saved
+			saved, err = provider:Save(map_name)
+			if not saved then graph = nil end
+		end
 
 		local text
 		if graph then
-			file.CreateDir('background_npcs/graph')
-			file.Write(bgNPC.Nav.CustomProvider.GraphPath(map_name), graph:Serialize())
 			text = 'Converted ' .. graph:Count() .. ' points, ' .. graph:LinksCount() .. ' links for ' .. map_name
 			if map_name == game.GetMap() then bgNPC.Nav.Load() end
 			SendConvertibleMaps(ply)

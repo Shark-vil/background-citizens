@@ -227,11 +227,13 @@ bgNPC.States.Register('arrest', 'guarded', {
 								TargetActor:PlayStaticSequence('arrestcurious', true, 4, function()
 									TargetActor:PlayStaticSequence('arrestidle', true)
 									bgNPC.Util.FadeRemove(target, .5)
+									return true -- Keep the idle pose while fading; ResetSequence would release the NPC.
 								end)
 							elseif TargetActor and TargetActor:IsValidSequence('checkmale') then
 								TargetActor:PlayStaticSequence('checkmale', false, nil, function()
 									TargetActor:PlayStaticSequence('checkmalepost', true)
 									bgNPC.Util.FadeRemove(target, .5)
+									return true
 								end)
 							else
 								bgNPC.Util.FadeRemove(target)

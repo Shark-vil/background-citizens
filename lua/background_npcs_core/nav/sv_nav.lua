@@ -103,11 +103,17 @@ function Nav.Load(name, graph)
 	end
 	if not ok then
 		bgNPC.Util.Warning('Navigation provider "' .. name .. '" failed: ' .. tostring(err))
+		if name == 'custom' then return false end
 		provider = providers.custom()
-		provider:Load()
+		local fallback_ok, fallback_err = provider:Load()
+		if not fallback_ok then
+			bgNPC.Util.Warning('Fallback navigation failed: ' .. tostring(fallback_err))
+			return false
+		end
 	end
 
 	hook.Run('BGN_PreLoadRoutes', game.GetMap()) -- OUTDATED
+	if bgNPC.NavGenerator then bgNPC.NavGenerator.Stop() end
 	active = provider
 	MsgN('[Background NPCs] Navigation: ' .. active.name .. ' (' .. active:Count() .. ' points)')
 	hook.Run('BGN_NavProviderChanged', active)

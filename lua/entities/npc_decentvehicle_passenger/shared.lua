@@ -1,6 +1,7 @@
 ENT.Base = 'base_entity'
 ENT.Type = 'anim'
 ENT.PrintName = 'DV Passenger'
+ENT.DoNotDuplicate = true -- visual helper; its actor is saved separately
 ENT.Seat = NULL
 ENT.v = NULL
 ENT.SeatIndex = -1

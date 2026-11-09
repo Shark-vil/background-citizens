@@ -45,25 +45,47 @@ end
 if SERVER then
 	local function EditorGraph()
 		local provider = bgNPC.Nav.GetProvider()
+		if provider.source ~= 'dupe' and bgNPC.Nav.CustomProvider.HasSavedRoute() then
+			local saved = bgNPC.Nav.CustomProvider()
+			local ok, err = saved:Load()
+			if not ok then return nil, err end
+			return saved:GetGraph()
+		end
 		if provider.GetGraph then return provider:GetGraph() end
 		return NodeGraph()
 	end
 
 	Net.Receive('bgn_nav_editor_request', function(ply)
-		Net.Send('bgn_nav_editor_graph', ply, util.Base64Encode(EditorGraph():Serialize(), true))
+		local graph, err = EditorGraph()
+		if not graph then
+			bgNPC.Util.Notify(ply, 'Route was not loaded: ' .. tostring(err), NOTIFY_ERROR)
+			return
+		end
+		Net.Send('bgn_nav_editor_graph', ply, util.Base64Encode(graph:Serialize(), true))
 	end, { admin = true })
 
 	Net.Receive('bgn_nav_editor_save', function(ply, data)
 		local graph, err = NodeGraph.Deserialize(isstring(data) and util.Base64Decode(data) or nil)
 		if not graph then
+			Net.Send('bgn_nav_editor_saved', ply, false)
 			bgNPC.Util.Notify(ply, 'Route was not saved: ' .. tostring(err), NOTIFY_ERROR)
 			return
 		end
 
-		file.CreateDir('background_npcs/graph')
-		file.Write(bgNPC.Nav.CustomProvider.GraphPath(), graph:Serialize())
-		bgNPC.Nav.Load('custom')
-		bgNPC.Util.Notify(ply, 'Route saved: ' .. graph:Count() .. ' points', NOTIFY_GENERIC)
+		local provider = bgNPC.Nav.CustomProvider(graph)
+		local saved, save_error = provider:Save()
+		if not saved then
+			Net.Send('bgn_nav_editor_saved', ply, false)
+			bgNPC.Util.Notify(ply, 'Route was not saved: ' .. tostring(save_error), NOTIFY_ERROR)
+			return
+		end
+		if not bgNPC.Nav.Load('custom') then
+			Net.Send('bgn_nav_editor_saved', ply, false)
+			bgNPC.Util.Notify(ply, 'Route file was saved but could not be loaded.', NOTIFY_ERROR)
+			return
+		end
+		Net.Send('bgn_nav_editor_saved', ply, true)
+		bgNPC.Util.Notify(ply, 'Route saved: ' .. graph:Count() .. ' points, ' .. graph:LinksCount() .. ' links', NOTIFY_GENERIC)
 	end, { admin = true })
 
 	Net.Receive('bgn_nav_editor_remove', function(ply)
@@ -88,12 +110,26 @@ end
 NavEditor.graph = NavEditor.graph or NodeGraph()
 
 function NavEditor.RequestGraph()
+	if NavEditor.saving then
+		NavEditor.load_after_save = true
+		return
+	end
 	Net.SendToServer('bgn_nav_editor_request')
 end
 
 function NavEditor.SaveGraph()
+	if NavEditor.saving then return end
+	NavEditor.saving = true
 	Net.SendToServer('bgn_nav_editor_save', util.Base64Encode(NavEditor.graph:Serialize(), true))
 end
+
+-- A small load request can overtake the chunks of a large save.
+Net.Receive('bgn_nav_editor_saved', function(_, saved)
+	NavEditor.saving = nil
+	local load = NavEditor.load_after_save
+	NavEditor.load_after_save = nil
+	if saved and load then NavEditor.RequestGraph() end
+end, { admin = true })
 
 function NavEditor.ClearGraph()
 	NavEditor.graph = NodeGraph()
@@ -101,8 +137,12 @@ function NavEditor.ClearGraph()
 end
 
 Net.Receive('bgn_nav_editor_graph', function(_, data)
-	local graph = NodeGraph.Deserialize(util.Base64Decode(data or ''))
-	NavEditor.graph = graph or NodeGraph()
+	local graph, err = NodeGraph.Deserialize(isstring(data) and util.Base64Decode(data) or nil)
+	if not graph then
+		notification.AddLegacy('[Background NPCs] Route was not loaded: ' .. tostring(err), NOTIFY_ERROR, 4)
+		return
+	end
+	NavEditor.graph = graph
 	notification.AddLegacy('[Background NPCs] Loaded ' .. NavEditor.graph:Count() .. ' points', NOTIFY_GENERIC, 4)
 	hook.Run('BGN_NavEditorGraphLoaded', NavEditor.graph)
 	hook.Run('BGN_LoadingClientRoutes', NavEditor.graph) -- OUTDATED

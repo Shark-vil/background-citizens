@@ -16,12 +16,27 @@ def realm(server):
                 return v
             items = dict(v.items())
             if items and set(items) == set(range(1, len(items) + 1)):
-                return [convert(items[i]) for i in range(1, len(items) + 1)]
+                # Reproduce the observed engine truncation of wide numeric JSON arrays.
+                return [convert(items[i]) for i in range(1, min(len(items), 15000) + 1)]
             return {str(k): convert(x) for k, x in items.items()}
         return json.dumps(convert(value))
 
     lua.globals().json_encode = to_json
-    lua.globals().json_decode = lambda s: lua.table_from(json.loads(s), recursive=True)
+    def from_json(s, ignore_limits=False):
+        value = json.loads(s)
+
+        def keys(v):
+            if isinstance(v, dict):
+                return len(v) + sum(keys(x) for x in v.values())
+            if isinstance(v, list):
+                return len(v) + sum(keys(x) for x in v)
+            return 0
+
+        if not ignore_limits and keys(value) > 15000:
+            raise ValueError('engine JSON key limit exceeded')
+        return lua.table_from(value, recursive=True)
+
+    lua.globals().json_decode = from_json
     lua.globals().SERVER = server
     lua.globals().CLIENT = not server
     lua.execute('''
@@ -64,12 +79,20 @@ def realm(server):
             Run=function(name,...) for _,f in pairs(hooks[name] or {}) do local v=f(...); if v~=nil then return v end end end}
         timer={Create=function(name,_,__,f) timers[name]=f end, Simple=function(_,f) timers[#timers+1]=f end}
         game={GetMap=function() return 'gm_test' end}
-        util={TableToJSON=json_encode, JSONToTable=function(s) local ok,v=pcall(json_decode,s); if ok then return v end end,
+        util={TableToJSON=json_encode, JSONToTable=function(s,ignore) local ok,v=pcall(json_decode,s,ignore); if ok then return v end end,
             Compress=function(s) return s end, Decompress=function(s) return s end,
             Base64Encode=function(s) return s end, Base64Decode=function(s) return s end,
             TraceLine=function() return {Hit=false} end}
         string.GetExtensionFromFilename=function(s) return s:match('%.([^.]*)$') end
+        string.GetPathFromFilename=function(s) return s:match('^(.*[/])') or '' end
         string.Trim=function(s) return s:match('^%s*(.-)%s*$') end
+        function table.Copy(value,seen)
+            if not istable(value) or isvector(value) then return value end
+            seen=seen or {}; if seen[value] then return seen[value] end
+            local copy={}; seen[value]=copy
+            for k,v in pairs(value) do copy[k]=table.Copy(v,seen) end
+            return copy
+        end
         file={Exists=function(p) return files[p]~=nil end, Size=function(p) return #(files[p] or '') end,
             Read=function(p) return files[p] end, Write=function(p,v) files[p]=v end, CreateDir=function() end}
         file.Find=function(pattern)
@@ -92,7 +115,7 @@ def realm(server):
         bgNPC={Net={Receive=function(n,f,opts) received[n]={f=f,opts=opts} end,
             Send=function(...) sent[#sent+1]={...} end, SendToServer=function(...) sent[#sent+1]={...} end},
             Notice={Watch=function() end}, Test={Add=function(n,f) tests[n]=f end},
-            Util={Log=function() end, Notify=function() end, Lang=function(t) return t.default end},
+            Util={Log=function() end, Warning=function() end, Notify=function() end, Lang=function(t) return t.default end},
             Tasks={Budget=function() end}, Commands={list={}, Register=function(n,v)
                 commands[n]=v.server or function() end; bgNPC.Commands.list[n]=v
             end},
@@ -208,12 +231,20 @@ server.execute('''
     local newest=bgNPC.LegacyNodes.Convert()
     assert(newest:GetPos(1).x==10 and newest:IsLinked(1,2,'walk'),'compressed 1.2 route takes precedence')
     assert(bgNPC.Nav.Load() and bgNPC.Nav.Count()==2,'old directory participates in automatic provider selection')
+    local saved=files['background_npcs/graph/gm_test.dat']
+    local converted=bgNPC.NodeGraph.Deserialize(saved)
+    assert(converted and converted:Count()==2 and converted:IsLinked(1,2,'walk'),'automatic conversion writes the current graph format')
+    assert(bgNPC.Nav.GetProvider().source=='file','converted route is a saved graph')
+    local legacy=files['background_npcs/nodes/gm_test.dat']
+    files['background_npcs/nodes/gm_test.dat']='broken old file'
+    assert(bgNPC.Nav.Load() and files['background_npcs/graph/gm_test.dat']==saved,'a valid new graph takes precedence over legacy files')
+    files['background_npcs/nodes/gm_test.dat']=legacy
     commands.bgn_save_map(admin)
     local dupe=sent[#sent][3]
     assert(dupe.id=='BGN_NODES' and dupe.map=='gm_test','save produces a route duplication')
     received.bgn_route_dupe_load.f(admin,dupe)
     assert(bgNPC.Nav.GetProvider().source=='dupe' and bgNPC.Nav.Count()==2,'dupe activates navigation')
-    assert(files['background_npcs/graph/gm_test.dat']==nil,'loading a dupe does not overwrite saved routes')
+    assert(files['background_npcs/graph/gm_test.dat']==saved,'loading a dupe does not overwrite saved routes')
     assert(received.bgn_route_dupe_load.opts.admin,'server loading is admin only')
     local active=bgNPC.Nav.GetProvider()
     hooks.CanArmDupe={blocked=function() return false end}
@@ -223,6 +254,19 @@ server.execute('''
     assert(bgNPC.NodeGraph.FromTable(bad)==nil,'dangling graph link rejected')
     bad.links={}; bad.nodes={0,0,0/0}
     assert(bgNPC.NodeGraph.FromTable(bad)==nil,'non-finite graph position rejected')
+    files['background_npcs/graph/gm_test.dat']='broken graph'
+    local provider=bgNPC.Nav.CustomProvider()
+    assert(provider:Load(),'broken new graph can be recovered from the old directory')
+    assert(bgNPC.NodeGraph.Deserialize(files['background_npcs/graph/gm_test.dat']):Count()==2,'recovered graph is saved')
+    files['background_npcs/graph/gm_test.dat']=nil
+    local write=file.Write
+    file.Write=function() end
+    local ok,err=provider:Load()
+    local active=bgNPC.Nav.GetProvider()
+    assert(not bgNPC.Nav.Load(),'navigation reports conversion persistence failure')
+    assert(bgNPC.Nav.GetProvider()==active,'failed conversion keeps the previous active provider')
+    file.Write=write
+    assert(not ok and err:find('could not save graph',1,true),'conversion reports a failed disk write')
 ''')
 server.execute('''
     files={
@@ -288,12 +332,304 @@ client.execute('''
     assert(#command.autocomplete('bgn_convert_legacy_nodes','')==0,'updated list removes converted maps')
 ''')
 
+# Exercise GMod's entity-copy callback with a body/brain reference cycle and rebuild actor identity on paste.
+server.execute('''
+    modifiers={}
+    duplicator={RegisterEntityModifier=function(name,f) modifiers[name]=f end}
+    bgNPC.Config={GetActor=function(name) if name=='citizen' then return {} end end}
+    bgNPC.Actors.Get=function(npc) return npc.BGN_ACTOR_OBJECT end
+    local npc={valid=true}
+    local actor={npc=npc,info={name='Saved citizen',gender='female'}}
+    actor.body={actor=actor}; actor.brain={actor=actor}
+    function actor:GetNPC() return self.npc end
+    function actor:GetType() return 'citizen' end
+    function actor:GetName() return self.info.name end
+    function actor:GetGender() return self.info.gender end
+    npc.BGN_ACTOR_OBJECT=actor
+    npc.EntityMods={other_addon={keep=true}}
+    npc.OnEntityCopyTableFinish=function(_,data) data.original_callback=true end
+    bgNPC.Actors.GetAll=function() return {actor} end
+    saved_npc=npc
+    bgNPC.Actor={Create=function(ent,actor_type)
+        local a={type=actor_type,info={}}
+        function a:SetName(name) self.info.name=name end
+        function a:SetGender(gender) self.info.gender=gender end
+        ent.BGN_ACTOR_OBJECT=a; return a
+    end}
+''')
+load(server, 'actor/events/sv_save_restore.lua')
+server.execute('''
+    local data={BGN_ACTOR_OBJECT=saved_npc.BGN_ACTOR_OBJECT,isBgnActor=true,EntityMods=saved_npc.EntityMods}
+    assert(not pcall(util.TableToJSON,data),'reproduce the actor body/brain cycle before filtering')
+    saved_npc:OnEntityCopyTableFinish(data)
+    assert(data.original_callback and data.EntityMods.other_addon.keep,'existing addon copy callback and modifiers preserved')
+    assert(not data.isBgnActor and not data.BGN_ACTOR_OBJECT,'runtime actor graph excluded from the save')
+    assert(saved_npc.BGN_ACTOR_OBJECT.body.actor==saved_npc.BGN_ACTOR_OBJECT,'saving does not modify the live actor')
+    assert(saved_npc.EntityMods.bgn_actor==nil,'copy metadata does not mutate the live entity modifiers')
+    local json=util.TableToJSON(data)
+    local restored={valid=true}
+    modifiers.bgn_actor(nil,restored,util.JSONToTable(json).EntityMods.bgn_actor)
+    local actor=restored.BGN_ACTOR_OBJECT
+    assert(actor.type=='citizen' and actor.info.name=='Saved citizen' and actor.info.gender=='female','actor identity rebuilt on paste/load')
+    modifiers.bgn_actor(nil,{valid=true},{type='missing'})
+    local callback=saved_npc.OnEntityCopyTableFinish
+    hook.Run('BGN_InitActor',saved_npc.BGN_ACTOR_OBJECT)
+    assert(saved_npc.OnEntityCopyTableFinish==callback,'copy hook is not wrapped twice')
+''')
+
+# Run the shared command's real client forwarding, server export, client download and generated route pack.
+load(server, 'nav/io/sh_compile.lua')
+server.execute('''
+    files={}
+    local graph=bgNPC.NodeGraph(); graph:AddNode(Vector(123,456,0))
+    bgNPC.Nav.Load('custom',graph)
+    files['background_npcs/graph/gm_test.dat']='stale file'
+    files['background_npcs/seats/gm_test.dat']='seats'
+    commands.bgn_compile(admin)
+    local result=sent[#sent]
+    assert(result[1]=='bgn_compile_result' and result[2]==admin and result[5]==2,'server sends route pack to the caller')
+    compiled_map,compiled_code,compiled_count=result[3],result[4],result[5]
+    assert(files['background_npcs/compile/bgn_compile_gm_test.txt']==compiled_code,'server export retained')
+    files={}; assert(loadstring(compiled_code))()
+    local copy=bgNPC.NodeGraph.Deserialize(files['background_npcs/graph/gm_test.dat'])
+    assert(copy and copy:GetPos(1).x==123,'export uses the active in-memory graph instead of a stale file')
+    assert(files['background_npcs/seats/gm_test.dat']=='seats','route pack restores seats too')
+''')
+client.execute('''
+    dialogs={}
+    function Derma_Message(text) dialogs[#dialogs+1]=text end
+''')
+load(client, 'core/sh_commands.lua', 'nav/io/sh_compile.lua')
+client.execute('''
+    commands.bgn_compile(admin,'bgn_compile',{})
+    assert(sent[#sent][1]=='bgn.command' and sent[#sent][2]=='bgn_compile','spawn menu command forwards to server')
+''')
+client.globals().received['bgn_compile_result']['f'](
+    None, server.globals().compiled_map, server.globals().compiled_code, server.globals().compiled_count)
+client.execute('''
+    assert(files['background_npcs/compile/bgn_compile_gm_test.txt'],'client gets a local copy of the export')
+    assert(#dialogs==1 and dialogs[1]:find('garrysmod/data/',1,true),'visible result shows the local output path')
+''')
+server.execute('''
+    notices={}
+    bgNPC.Util.Notify=function(_,text,kind) notices[#notices+1]={text,kind} end
+    local write=file.Write
+    file.Write=function() end
+    local count=#sent
+    commands.bgn_compile(admin)
+    file.Write=write
+    assert(#sent==count and #notices==1 and notices[1][2]==NOTIFY_ERROR,'server write failure is visible, no false success')
+    files={}; bgNPC.Nav.Load('custom',bgNPC.NodeGraph())
+    commands.bgn_compile(admin)
+    assert(#notices==2 and notices[2][2]==NOTIFY_ERROR,'nothing to export produces visible feedback')
+''')
+client.execute('''
+    local write=file.Write
+    files['background_npcs/compile/bgn_compile_gm_test.txt']=nil
+    file.Write=function() end
+    local failures=0
+    bgNPC.Util.Notify=function(_,_,kind) if kind==NOTIFY_ERROR then failures=failures+1 end end
+    received.bgn_compile_result.f(nil,'gm_test','export',1)
+    file.Write=write
+    assert(failures==1 and #dialogs==1,'client write failure does not show success')
+''')
+
+server.execute('''
+    local nodes={}
+    for i=1,6002 do
+        nodes[i]={position=Vector(i+0.125,0,-0.03125),parents={},links={walk={}}}
+        if i>1 then nodes[i].parents[1]=i-1; nodes[i].links.walk[1]=i-1 end
+    end
+    local json=util.TableToJSON({version='1.2',nodes=nodes})
+    assert(util.JSONToTable(json)==nil,'fixture exceeds the default JSON reader key limit')
+    local graph=bgNPC.LegacyNodes.ToGraph(json)
+    assert(graph and graph:Count()==6002 and graph:LinksCount()==6001,'large legacy conversion ignores engine JSON limits')
+    bgNPC.Nav.Load('custom',graph)
+    commands.bgn_save_map(admin)
+    local dupe=sent[#sent][3]
+    assert(dupe.encoding=='bgn_graph_base64','route duplication uses an encoded graph instead of wide JSON arrays')
+    local copy=bgNPC.NavEditor.GraphFromDupe(util.JSONToTable(util.TableToJSON(dupe),true))
+    assert(copy and copy:Count()==6002 and copy:LinksCount()==6001,'large route duplication round trip')
+    for i=1,6002 do assert(copy:GetPos(i)==graph:GetPos(i),'duplication coordinates preserved') end
+    for i=2,6002 do assert(copy:IsLinked(i-1,i,'walk'),'duplication walk links preserved') end
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(sent[#sent][1]=='bgn_nav_editor_saved' and sent[#sent][3]==true,'save acknowledged after persistence')
+    received.bgn_nav_editor_request.f(admin)
+    local reloaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(reloaded and reloaded:Count()==6002 and reloaded:LinksCount()==6001,'large editor save/load preserves counts')
+    for i=1,6002 do assert(reloaded:GetPos(i)==graph:GetPos(i),'editor coordinates preserved') end
+    for i=2,6002 do assert(reloaded:IsLinked(i-1,i,'walk'),'editor walk links preserved') end
+''')
+
+server.execute('''
+    files={}; notices={}
+    bgNPC.Util.Notify=function(_,text,kind) notices[#notices+1]={text,kind} end
+    local vec=getmetatable(Vector())
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vec.__mul(a,b) return Vector(a.x*b,a.y*b,a.z*b) end
+    function vec:GetNormalized() local n=self:Distance(Vector()); return Vector(self.x/n,self.y/n,self.z/n) end
+    function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    bgNPC.Tasks.Add=function(id,f) tasks[id]=f end
+    bgNPC.Tasks.Remove=function(id) tasks[id]=nil end
+    bgNPC.Tasks.Exists=function(id) return tasks[id]~=nil end
+    tasks={}
+    util.TraceHull=function() return {Hit=false,StartSolid=false} end
+''')
+load(server, 'nav/generator/sv_generator.lua')
+server.execute('''
+    local graph=bgNPC.NodeGraph()
+    for i=1,4 do graph:AddNode(Vector((i-1)*100,0,0)) end
+    graph:RemoveNode(2); graph:Link(1,3,'walk'); graph:Link(3,4,'walk')
+    assert(bgNPC.Nav.Load('custom',graph))
+    bgNPC.NavGenerator.Start({seeds={}})
+    tasks.BGN_NavGenerator(function() end,function() end,function() end)
+    assert(graph:Count()==3 and graph:IsLinked(1,3,'walk') and graph:IsLinked(3,4,'walk'),
+        'generator simplification must preserve existing corridor points')
+    assert(bgNPC.NavGenerator.IsRunning())
+    bgNPC.NavGenerator.Stop()
+    setcv('bgn_runtime_generator_grid_offset',200); setcv('bgn_nav_generator_max_nodes',6)
+    util.PointContents=function() return 0 end; CONTENTS_WATER=1
+    util.TraceHull=function(tr)
+        if tr.start.x==tr.endpos.x and tr.start.y==tr.endpos.y and tr.start.y==0
+            and (tr.start.x==1000 or tr.start.x==1200 or tr.start.x==1400) then
+            return {Hit=true,StartSolid=false,HitNormal=Vector(0,0,1),HitPos=Vector(tr.start.x,0,0)}
+        end
+        return {Hit=false,StartSolid=false}
+    end
+    local generated=bgNPC.NodeGraph.FromTable(graph:ToTable())
+    assert(bgNPC.Nav.Load('custom',generated))
+    bgNPC.NavGenerator.Start({seeds={Vector(1000,0,0)}})
+    tasks.BGN_NavGenerator(function() end,function() end,function() end)
+    assert(generated:Count()==5 and generated:GetPos(2).x==200,'new corridors are simplified while old nodes survive')
+    assert(not generated:FindNearest(Vector(1200,0,0),1) and generated:IsLinked(4,6,'walk'),
+        'new middle point is merged into a walkable corridor')
+    assert(bgNPC.Nav.Load('custom',graph) and not bgNPC.NavGenerator.IsRunning())
+    bgNPC.NavGenerator.Start({seeds={}})
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(not bgNPC.NavGenerator.IsRunning(),'loading a saved graph stops tasks that could overwrite it')
+    assert(graph.max_id==4 and graph:Exists(4) and not graph:Exists(2),'save does not invalidate live editor or generator ids')
+    local path=bgNPC.Nav.CustomProvider.GraphPath()
+    local saved=files[path]
+    bgNPC.Nav.GetProvider():GetGraph():AddNode(Vector(999,0,0))
+    received.bgn_nav_editor_request.f(admin)
+    local loaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(loaded:Count()==3 and loaded:GetPos(3).x==300,'Load points reads disk instead of a mutated active graph')
+    assert(bgNPC.Nav.Load('custom',graph))
+    received.bgn_nav_editor_request.f(admin)
+    assert(bgNPC.NodeGraph.Deserialize(sent[#sent][3]):Count()==3,'unsaved route duplications remain editable')
+    local other=bgNPC.Class('OtherProvider',bgNPC.Nav.Provider)
+    other.IsAvailable=function() return true end
+    bgNPC.Nav.RegisterProvider('other',other); setcv('bgn_nav_provider','other')
+    assert(bgNPC.Nav.Load() and bgNPC.Nav.GetName()=='other')
+    received.bgn_nav_editor_request.f(admin)
+    loaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(loaded:Count()==3,'saved editor points load with another forced navigation provider')
+    local active=bgNPC.Nav.GetProvider()
+    received.bgn_nav_editor_save.f(admin,'broken')
+    assert(files[path]==saved and bgNPC.Nav.GetProvider()==active and notices[#notices][2]==NOTIFY_ERROR,
+        'invalid saves keep both the saved route and active provider')
+    assert(sent[#sent][1]=='bgn_nav_editor_saved' and sent[#sent][3]==false,'failed saves are acknowledged')
+    graph:AddNode(Vector(400,0,0))
+    local write=file.Write; file.Write=function() end
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(files[path]==saved and bgNPC.Nav.GetProvider()==active and notices[#notices][2]==NOTIFY_ERROR,
+        'disk write failure never reports success or replaces navigation')
+    local chat
+    admin.ChatPrint=function(_,text) chat=text end
+    files['background_npcs/nodes/gm_test.json']=util.TableToJSON({version='1.2',nodes={
+        {position=Vector(1000,0,0),parents={},links={}}}})
+    local sent_count=#sent
+    commands.bgn_convert_legacy_nodes(admin,'bgn_convert_legacy_nodes',{})
+    assert(chat:find('Conversion failed',1,true) and #sent==sent_count and files[path]==saved,
+        'explicit conversion reports a failed write and keeps the previous route')
+    file.Write=write
+    files['background_npcs/nodes/gm_test.json']=nil; files[path]='broken'
+    sent_count=#sent
+    received.bgn_nav_editor_request.f(admin)
+    assert(#sent==sent_count and notices[#notices][2]==NOTIFY_ERROR,'bad saved route produces an error instead of an empty graph')
+''')
+
+load(client, 'nav/io/sh_nav_editor.lua')
+client.execute('''
+    local editor=bgNPC.NavEditor
+    local graph=bgNPC.NodeGraph(); graph:AddNode(Vector(1,2,3)); editor.graph=graph
+    local loaded=0
+    hook.Add('BGN_NavEditorGraphLoaded','regression',function() loaded=loaded+1 end)
+    received.bgn_nav_editor_graph.f(nil,'broken')
+    assert(editor.graph==graph and loaded==0,'bad downloads preserve client edits and do not fire loaded hooks')
+    local count=#sent
+    editor.SaveGraph(); editor.RequestGraph(); editor.SaveGraph()
+    assert(#sent==count+1 and sent[#sent][1]=='bgn_nav_editor_save','immediate load waits for save completion, duplicate saves are ignored')
+    received.bgn_nav_editor_saved.f(nil,true)
+    assert(#sent==count+2 and sent[#sent][1]=='bgn_nav_editor_request' and not editor.saving,
+        'queued load starts only after successful persistence acknowledgement')
+    received.bgn_nav_editor_graph.f(nil,graph:Serialize())
+    assert(editor.graph:Count()==1 and loaded==1,'valid download replaces the graph and fires the loaded hook')
+    editor.SaveGraph(); editor.RequestGraph(); count=#sent
+    received.bgn_nav_editor_saved.f(nil,false)
+    assert(#sent==count and not editor.saving and not editor.load_after_save,'failed save keeps edits instead of loading the old route')
+''')
+
+# Arrest callbacks must retain the final pose until the fading entity is removed.
+arrest = realm(True)
+arrest.execute('''
+    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    bgNPC.Animator={Stop=function() error('arrest released the NPC during fade') end}
+    bgNPC.States={Register=function(name,_,state) bgNPC.States[name]=state end}
+''')
+load(arrest, 'actor/components/sh_animation.lua', 'brain/fsm/states/sv_arrest.lua')
+arrest.execute('''
+    for _,sequence in ipairs({'arrestcurious','checkmale'}) do
+        local component={detention=true,arrest_time=0,holders={}}
+        local module=bgNPC.Modules.Get('player_arrest')
+        module.GetTarget=function() return component end
+        module.CanArrest=function() return true end
+        local npc={valid=true}
+        function npc:IsPlayer() return false end
+        function npc:IsNPC() return false end
+        function npc:GetPos() return Vector() end
+        function npc:EyeAngles() return {} end
+        function npc:EmitSound() end
+        function npc:GetActiveWeapon() end
+        function npc:LookupSequence(name)
+            if name==sequence then return 1 end
+            if name=='arrestidle' or name=='checkmalepost' then return 2 end
+            return -1
+        end
+        function npc:SequenceDuration() return 1 end
+        local target=setmetatable({npc=npc,mechanics={animator_controller=true}}, {__index=bgNPC.Actor})
+        function target:HasState(state) return state=='arrest_surrender' end
+        function target:RemoveAllTargets() end
+        function target:RemoveAllEnemies() end
+        function target:StateLock() end
+        target.body={PlaySequence=function() end,
+            StopSequence=function() error('arrest body released during fade') end}
+        bgNPC.Actors.Get=function(ent) if ent==npc then return target end end
+        local police={GetNPC=function() return npc end, GetFirstTarget=function() return npc end,
+            TargetsCount=function() return 1 end, Voice=function() end}
+        local fades=0
+        bgNPC.Util.FadeRemove=function(ent) assert(ent==npc); fades=fades+1 end
+        bgNPC.States.arrest.update(police,'arrest',{})
+        assert(target:HasSequence(sequence) and fades==0,'arrest animation must precede fading')
+        now=now+5
+        assert(target:IsSequenceFinished())
+        target:ResetSequence()
+        local idle=sequence=='arrestcurious' and 'arrestidle' or 'checkmalepost'
+        assert(target:HasSequence(idle) and target:IsAnimationPlayed(), 'final arrest pose must survive the callback')
+        assert(not target:IsSequenceFinished() and fades==1, 'hold the final pose throughout the fade')
+    end
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
+         'nav/providers/sv_custom_provider.lua', 'nav/io/sh_nav_editor.lua',
+         'nav/io/sh_compile.lua', 'actor/events/sv_save_restore.lua',
+         'modules/dv/sh_dv_vehicle.lua', '../entities/bgn_fakeplayer/shared.lua',
+         '../entities/npc_decentvehicle_passenger/shared.lua',
          'ui/settings/cl_classic_settings.lua']
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: client/server CVars, wanted timers/settings/detection, legacy routes, duplications, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, LuaJIT syntax')
