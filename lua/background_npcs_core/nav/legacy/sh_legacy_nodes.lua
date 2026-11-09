@@ -55,7 +55,7 @@ end
 -- @param data string|table old JSON or its table
 -- @return NodeGraph|nil, string|nil error
 function LegacyNodes.ToGraph(data)
-	if isstring(data) then data = util.JSONToTable(data) end
+	if isstring(data) then data = util.JSONToTable(data, true) end
 	if not istable(data) then return nil, 'not an old route file' end
 	local nodes = data.nodes or (not data.version and data[1] and data)
 	if not istable(nodes) or #nodes > 200000 then return nil, 'invalid old route nodes' end

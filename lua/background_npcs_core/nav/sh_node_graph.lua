@@ -365,9 +365,9 @@ function NodeGraph:ToTable()
 	for id = 1, self.max_id do
 		local pos = self.pos[id]
 		local n = #nodes
-		nodes[n + 1] = math.Round(pos.x, 1)
-		nodes[n + 2] = math.Round(pos.y, 1)
-		nodes[n + 3] = math.Round(pos.z, 1)
+		nodes[n + 1] = pos.x
+		nodes[n + 2] = pos.y
+		nodes[n + 3] = pos.z
 	end
 
 	for a = 1, self.max_id do
@@ -379,12 +379,18 @@ function NodeGraph:ToTable()
 		end
 	end
 
-	return { format = NodeGraph.FORMAT, version = NodeGraph.VERSION, nodes = nodes, links = links }
+	return { format = NodeGraph.FORMAT, version = NodeGraph.VERSION, nodes = nodes, links = links,
+		node_count = self.count, link_count = #links / 3 }
 end
 
 -- @return string compressed data
 function NodeGraph:Serialize()
-	return util.Compress(util.TableToJSON(self:ToTable()))
+	local data = self:ToTable()
+	for i, value in ipairs(data.nodes) do data.nodes[i] = string.format('%.17g', value) end
+	-- Encode flat numeric arrays directly: engine JSON limits must never truncate a navigation graph.
+	local json = string.format('{"format":"%s","version":%d,"node_count":%d,"link_count":%d,"nodes":[%s],"links":[%s]}',
+		data.format, data.version, data.node_count, data.link_count, table.concat(data.nodes, ','), table.concat(data.links, ','))
+	return util.Compress(json)
 end
 
 -- @return NodeGraph|nil, string|nil error
@@ -395,6 +401,11 @@ function NodeGraph.FromTable(data, cell_size)
 	local nodes, links = data.nodes or {}, data.links or {}
 	if not istable(nodes) or not istable(links) or #nodes % 3 ~= 0 or #links % 3 ~= 0 or #nodes > 600000 then
 		return nil, 'invalid graph arrays'
+	end
+	if (data.node_count ~= nil and data.node_count ~= #nodes / 3)
+		or (data.link_count ~= nil and data.link_count ~= #links / 3)
+	then
+		return nil, 'graph counts do not match: data was truncated'
 	end
 	for _, value in ipairs(nodes) do
 		if not isnumber(value) or value ~= value or math.abs(value) == math.huge then return nil, 'invalid graph position' end
@@ -431,12 +442,32 @@ function NodeGraph.Deserialize(compressed, cell_size)
 	if not isstring(compressed) or compressed == '' then return nil, 'empty data' end
 	local json = util.Decompress(compressed)
 	if not json then return nil, 'decompression failed' end
-	return NodeGraph.FromTable(util.JSONToTable(json), cell_size)
+	return NodeGraph.FromTable(util.JSONToTable(json, true), cell_size)
 end
 
 -- ---------------------------------------------------------------------------
 -- Tests
 -- ---------------------------------------------------------------------------
+
+bgNPC.Test.Add('nav.large_round_trip', function(check)
+	local graph = NodeGraph()
+	for i = 1, 6002 do
+		graph:AddNode(Vector(i + 0.125, i % 10 + 0.0625, -0.03125))
+		if i > 1 then graph:Link(i - 1, i, 'walk') end
+	end
+	local data = graph:ToTable()
+	check(#data.nodes > 15000 and #data.links > 15000, 'both arrays exceed engine JSON limits')
+	local copy = NodeGraph.Deserialize(graph:Serialize())
+	check(copy and copy:Count() == 6002 and copy:LinksCount() == 6001, 'large graph counts survive serialization')
+	if copy then
+		for i = 1, 6002 do check(copy:GetPos(i) == graph:GetPos(i), 'point ' .. i .. ' keeps its coordinates') end
+		for i = 1, 6001 do check(copy:IsLinked(i, i + 1, 'walk'), 'walk link ' .. i .. ' survives') end
+	end
+	table.remove(data.links)
+	table.remove(data.links)
+	table.remove(data.links)
+	check(NodeGraph.FromTable(data) == nil, 'truncation of whole link triples is rejected')
+end)
 
 bgNPC.Test.Add('nav.node_graph', function(check)
 	local g = NodeGraph(256)

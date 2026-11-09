@@ -37,6 +37,8 @@ Unversioned routes and versions 1.0–1.2 are supported from `data/citizens_poin
 `data/background_npcs/nodes/` (`.dat` or `.json`). Loading leaves the original files intact.
 Automatic loading saves the converted route in the current format to `data/background_npcs/graph/<map>.dat`.
 A valid new graph takes precedence; a broken graph is rebuilt from a legacy route when available.
+Large graphs bypass JSON's 15,000-entry limits and keep their coordinates without rounding.
+Saved point and link counts are checked when loading; a mismatch is reported as corruption.
 Autocomplete for `bgn_convert_legacy_nodes` lists server maps with legacy routes and no new graph yet.
 Without an argument, the command converts the current map.
 

@@ -16,12 +16,27 @@ def realm(server):
                 return v
             items = dict(v.items())
             if items and set(items) == set(range(1, len(items) + 1)):
-                return [convert(items[i]) for i in range(1, len(items) + 1)]
+                # Reproduce the observed engine truncation of wide numeric JSON arrays.
+                return [convert(items[i]) for i in range(1, min(len(items), 15000) + 1)]
             return {str(k): convert(x) for k, x in items.items()}
         return json.dumps(convert(value))
 
     lua.globals().json_encode = to_json
-    lua.globals().json_decode = lambda s: lua.table_from(json.loads(s), recursive=True)
+    def from_json(s, ignore_limits=False):
+        value = json.loads(s)
+
+        def keys(v):
+            if isinstance(v, dict):
+                return len(v) + sum(keys(x) for x in v.values())
+            if isinstance(v, list):
+                return len(v) + sum(keys(x) for x in v)
+            return 0
+
+        if not ignore_limits and keys(value) > 15000:
+            raise ValueError('engine JSON key limit exceeded')
+        return lua.table_from(value, recursive=True)
+
+    lua.globals().json_decode = from_json
     lua.globals().SERVER = server
     lua.globals().CLIENT = not server
     lua.execute('''
@@ -64,7 +79,7 @@ def realm(server):
             Run=function(name,...) for _,f in pairs(hooks[name] or {}) do local v=f(...); if v~=nil then return v end end end}
         timer={Create=function(name,_,__,f) timers[name]=f end, Simple=function(_,f) timers[#timers+1]=f end}
         game={GetMap=function() return 'gm_test' end}
-        util={TableToJSON=json_encode, JSONToTable=function(s) local ok,v=pcall(json_decode,s); if ok then return v end end,
+        util={TableToJSON=json_encode, JSONToTable=function(s,ignore) local ok,v=pcall(json_decode,s,ignore); if ok then return v end end,
             Compress=function(s) return s end, Decompress=function(s) return s end,
             Base64Encode=function(s) return s end, Base64Decode=function(s) return s end,
             TraceLine=function() return {Hit=false} end}
@@ -417,6 +432,26 @@ client.execute('''
     received.bgn_compile_result.f(nil,'gm_test','export',1)
     file.Write=write
     assert(failures==1 and #dialogs==1,'client write failure does not show success')
+''')
+
+server.execute('''
+    local nodes={}
+    for i=1,6002 do
+        nodes[i]={position=Vector(i+0.125,0,-0.03125),parents={},links={walk={}}}
+        if i>1 then nodes[i].parents[1]=i-1; nodes[i].links.walk[1]=i-1 end
+    end
+    local json=util.TableToJSON({version='1.2',nodes=nodes})
+    assert(util.JSONToTable(json)==nil,'fixture exceeds the default JSON reader key limit')
+    local graph=bgNPC.LegacyNodes.ToGraph(json)
+    assert(graph and graph:Count()==6002 and graph:LinksCount()==6001,'large legacy conversion ignores engine JSON limits')
+    bgNPC.Nav.Load('custom',graph)
+    commands.bgn_save_map(admin)
+    local dupe=sent[#sent][3]
+    assert(dupe.encoding=='bgn_graph_base64','route duplication uses an encoded graph instead of wide JSON arrays')
+    local copy=bgNPC.NavEditor.GraphFromDupe(util.JSONToTable(util.TableToJSON(dupe),true))
+    assert(copy and copy:Count()==6002 and copy:LinksCount()==6001,'large route duplication round trip')
+    for i=1,6002 do assert(copy:GetPos(i)==graph:GetPos(i),'duplication coordinates preserved') end
+    for i=2,6002 do assert(copy:IsLinked(i-1,i,'walk'),'duplication walk links preserved') end
 ''')
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
