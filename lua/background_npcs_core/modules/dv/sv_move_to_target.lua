@@ -16,10 +16,13 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 		local vehiclePosition = vehicle:GetPos()
 		local passengers = {}
 		for k, actor in ipairs(vehicle_provider:GetPassengers()) do passengers[k] = actor end
+		for _, actor in ipairs(passengers) do
+			if actor:IsAlive() and actor:HasTeam('police') and actor:ShouldExitVehicle() then actor:ExitVehicle() end
+		end
 
 		-- A driver exiting removes the AI; the remaining passengers must still get out.
 		if not IsValid(decentvehicle) or not driver then
-			for _, actor in ipairs(passengers) do actor:ExitVehicle() end
+			for _, actor in ipairs(passengers) do actor:ExitVehicle(true) end
 			continue
 		end
 

@@ -104,10 +104,23 @@ local function FindVehicleExitPos(vehicle, npc)
 	return exit_pos
 end
 
-function Actor:ExitVehicle()
+function Actor:ShouldExitVehicle()
+	if not self:HasTeam('police') or not self.vehicle or not self.vehicle:IsValid() then return true end
+	local vehicle = self.vehicle:GetVehicle()
+	local max_health = vehicle:GetMaxHealth()
+	local health = vehicle.GetCurHealth and vehicle:GetCurHealth() or vehicle:Health()
+	if max_health > 0 and health <= max_health * 0.2 then return true end
+	for _, ply in ipairs(player.GetAll()) do
+		if ply:Alive() and ply:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
+	end
+	return false
+end
+
+function Actor:ExitVehicle(forced)
 	local vehicle_provider = self.vehicle
 	local npc = self.npc
 	if not vehicle_provider then return end
+	if not forced and not self:ShouldExitVehicle() then return end
 
 	if IsValid(npc) then
 		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)

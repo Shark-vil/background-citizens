@@ -165,6 +165,11 @@ With `bgn_corpse_cleanup 0` (the default) the flag is not set and npc_battle_cle
 
 ## Cars
 
+Police dismount when a living player is within 800 units or their vehicle has at most 20% health remaining.
+Simfphys health uses `GetCurHealth()` and `GetMaxHealth()`; vehicles without a positive maximum health do
+not trigger the damage condition. A hit alone no longer makes police dismount. Vehicle removal, forced
+ejection and releasing passengers left without a driver still detach them from the vehicle.
+
 Actors and Decent Vehicle cars; the state `go_to_police_car` (no longer police only) runs to the car and gets in.
 
 - **Back to the car** (`modules/dv/sv_return_to_vehicle.lua`, every 2 s): an actor within 1000 units of an empty

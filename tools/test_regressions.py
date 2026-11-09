@@ -714,6 +714,8 @@ vehicles.execute('''
     COLLISION_GROUP_WORLD=20; SOLID_NONE=0; EFL_NO_THINK_FUNCTION=1
     bgNPC.Util.Chance=function() return true end
     bgNPC.Animator={Stop=function() end}
+    near_player={pos=Vector(),Alive=function() return true end,GetPos=function(self) return self.pos end}
+    player.GetAll=function() return {near_player} end
     bgNPC.Util.EntityTimer=function(ent,name,delay,count,fn) boarding=function() fn(ent) end end
     function Angle() return {} end
     local vmeta=getmetatable(Vector())
@@ -750,6 +752,7 @@ vehicles.execute('''
     end
     function NewCar()
         local car={valid=true,IsVehicle=function() return true end,GetPos=function() return Vector() end,
+            GetMaxHealth=function() return 0 end,Health=function() return 0 end,
             GetModelBounds=function() return Vector(),Vector(100,100,100) end,
             GetForward=function() return Vector(1,0,0) end,GetRight=function() return Vector(0,1,0) end,
             GetUp=function() return Vector(0,0,1) end}
@@ -819,6 +822,51 @@ vehicles.execute('''
     assert(#abandoned.passengers==0,'passengers must leave a car after its driver and AI are gone')
     for _,a in ipairs(abandoned_actors) do assert(not a.npc.hidden and not a.npc.weapon.hidden) end
 ''')
+vehicles.execute('''
+    near_player.pos=Vector(5000,0,0)
+    local p=NewCar(); local officer=NewActor()
+    officer:EnterVehicle(p.car); boarding()
+    officer:ExitVehicle()
+    assert(officer:InVehicle(), 'distant events must not make police leave a car without health')
+    bgNPC.DVCars={p}
+    function officer:EqualStateGroup() return false end
+    function p.ai:GetELS() return false end
+    function officer:EnemiesCount() return 0 end
+    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
+    assert(officer:InVehicle())
+    local hits=0
+    officer.npc.TakeDamage=function() hits=hits+1 end
+    local attacker={IsPlayer=function() return false end,IsNPC=function() return true end}
+    local info={GetAttacker=function() return attacker end,GetDamage=function() return 1 end,
+        GetInflictor=function() return attacker end}
+    hooks.EntityTakeDamage.BGN_DVCarsDamageReaction(p.car,info)
+    assert(officer:InVehicle() and hits==1, 'NPC fire must retain passenger damage without forcing police out')
+    p.car.GetMaxHealth=function() return 1000 end
+    p.car.GetCurHealth=function() return 201 end
+    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
+    assert(officer:InVehicle(), 'above 20 percent the car is still usable')
+    p.car.GetCurHealth=function() return 200 end
+    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
+    assert(not officer:InVehicle(), 'low simfphys health must trigger exit even without an enemy')
+    p=NewCar(); officer=NewActor(); officer:EnterVehicle(p.car); boarding()
+    near_player.pos=Vector(800.1,0,0); assert(not officer:ShouldExitVehicle())
+    near_player.pos=Vector(800,0,0); assert(officer:ShouldExitVehicle())
+    near_player.Alive=function() return false end
+    assert(not officer:ShouldExitVehicle(), 'dead players must not trigger dismounts')
+    near_player.Alive=function() return true end
+    near_player.pos=Vector(5000,0,0)
+    p.car.GetMaxHealth=function() return 100 end
+    p.car.Health=function() return 20 end
+    assert(officer:ShouldExitVehicle(), 'vehicles with ordinary entity health must also support evacuation')
+    p.car.Health=function() return 21 end
+    assert(not officer:ShouldExitVehicle())
+    officer:ExitVehicle(true)
+    assert(not officer:InVehicle(), 'vehicle removal and ejection must still be able to detach passengers')
+    officer=NewActor(); p=NewCar(); officer:EnterVehicle(p.car); boarding()
+    officer.HasTeam=function() return false end
+    officer:ExitVehicle(); assert(not officer:InVehicle(), 'other actors keep their existing exit rules')
+''')
+
 rendering = realm(False)
 rendering.execute('''
     setcv('bgn_cl_field_view_optimization',1)
@@ -1190,13 +1238,9 @@ police_weapons.execute('''
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
-         'core/sh_animator.lua',
-         'systems/sv_static_animation_controller.lua',
-         'brain/fsm/states/sv_random_gesture.lua',
-         'cvars/sh_cvars.lua',
-         'systems/sv_medics.lua',
-         'brain/fsm/states/sv_medic_revive.lua',
-         'ui/menu/cl_menu_pages.lua',
+         'core/sh_animator.lua', 'cvars/sh_cvars.lua', 'systems/sv_medics.lua',
+         'systems/sv_static_animation_controller.lua', 'brain/fsm/states/sv_random_gesture.lua',
+         'brain/fsm/states/sv_medic_revive.lua', 'ui/menu/cl_menu_pages.lua',
          'actor/sync/cl_sync.lua', 'actor/sync/sv_sync.lua', 'actor/cl_actor_voice.lua', 'actor/events/sv_self_damage.lua',
          'systems/wanted/cl_wanted_sync.lua', 'systems/arrest/sv_arrest.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',

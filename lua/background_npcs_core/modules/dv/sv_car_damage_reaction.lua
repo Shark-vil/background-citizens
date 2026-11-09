@@ -11,15 +11,14 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 			-- Exiting removes actors from the provider's list.
 			local passengers = {}
 			for k, actor in ipairs(vehicle_provider:GetPassengers()) do passengers[k] = actor end
-			local vehiclePosition = vehicle_provider:GetVehicle():GetPos()
 
 			for k = 1, #passengers do
 				local actor = passengers[k]
 
 				if actor and actor:IsAlive() then
-					if math.random(0, 100) <= 5 then
+					if actor:HasTeam('police') then
 						actor:ExitVehicle()
-					elseif actor:HasTeam('police') and attacker:GetPos():DistToSqr(vehiclePosition) <= 640000 then
+					elseif math.random(0, 100) <= 5 then
 						actor:ExitVehicle()
 					end
 

@@ -237,7 +237,7 @@ function VEHICLE:Eject(by_actor)
 	local npc = by_actor:GetNPC()
 	for _, actor in ipairs(table.Copy(self:GetPassengers())) do
 		if actor ~= by_actor and actor:InVehicle() then
-			actor:ExitVehicle()
+			actor:ExitVehicle(true)
 			if not actor:HasTeam(by_actor) then
 				actor:AddEnemy(npc, 'fear')
 				actor:SetState('fear')
@@ -271,7 +271,7 @@ function VEHICLE:Remove()
 	for i = 1, #self.passengers do passengers[i] = self.passengers[i] end
 
 	for i = 1, #passengers do
-		passengers[i]:ExitVehicle()
+		passengers[i]:ExitVehicle(true)
 	end
 
 	local vehicle = self.vehicle
