@@ -126,7 +126,8 @@ def realm(server):
             Actors={Get=function() end, GetAll=function() return {} end, GetByTeam=function() return {} end},
             Vision={AnyActorSees=function() return true end, HasLineOfSight=function() return true end},
             Modes={IsPeaceful=function() return false end}}
-        modules.player_arrest={RemoveTarget=function() end, CanArrest=function() return false end}
+        modules.player_arrest={RemoveTarget=function() end, CanArrest=function() return false end,
+            IsProtected=function() return false end}
         modules.team_parent={HasParent=function() return false end}
     ''')
     return lua
@@ -620,6 +621,91 @@ arrest.execute('''
     end
 ''')
 
+ceasefire = realm(True)
+load(ceasefire, 'systems/arrest/sv_arrest.lua')
+ceasefire.execute('''
+    setcv('bgn_arrest_mode',1)
+    list.Set('BGN_Modules','wanted',{HasWanted=function() return false end})
+    local module=bgNPC.Modules.Get('player_arrest')
+    local player_target={valid=true,IsPlayer=function() return true end}
+    local npc_target={valid=true,IsPlayer=function() return false end,IsNPC=function() return true end}
+    local target=player_target
+    local all={}
+    local function Actor(team)
+        local a={team=team,state='defense',enemy=target,npc={},alive=true}
+        function a:IsAlive() return self.alive end
+        function a:HasTeam(t) return self.team==t end
+        function a:HasState(s) return self.state==s end
+        function a:HasTarget(t) return self.target==t end
+        function a:GetFirstTarget() return self.target end
+        function a:RemoveTarget(t) if self.target==t then self.target=nil end end
+        function a:GetNPC() return self.npc end
+        function a:IsStateLock() return self.locked or false end
+        function a:StateLock(v) self.locked=v end
+        function a:RemoveEnemy(t)
+            if self.enemy==t then
+                self.enemy=nil
+                if not self.locked then self.state='walk' end
+            end
+        end
+        function a:ClearSchedule() self.cleared=true end
+        a.body={GetEnemy=function() return a.enemy end}
+        function a:GetBody() return self.body end
+        all[#all+1]=a
+        return a
+    end
+    local police,citizen,partner,bandit=Actor('police'),Actor('residents'),Actor('police'),Actor('bandits')
+    bgNPC.Actors.GetAll=function() return all end
+    local suspect
+    bgNPC.Actors.Get=function(ent)
+        if ent==npc_target then return suspect end
+        for _,a in ipairs(all) do if a.npc==ent then return a end end
+    end
+    bgNPC.Combat.ResolveVehicleAttacker=function(ent) return ent end
+    assert(module:AddTarget(target,police))
+    assert(not module:IsProtected(target),'an arrest record alone must not create immunity')
+    police.state='arrest'; police.target=target
+    hook.Run('BGN_SetState',police,'arrest')
+    assert(module:IsProtected(target))
+    assert(police.state=='arrest' and not police.locked,'clearing the arresting officer must preserve its state')
+    assert(not citizen.enemy and citizen.cleared and not partner.enemy and partner.cleared)
+    assert(bandit.enemy==target,'hostile factions must not be disarmed by a police arrest')
+    assert(hook.Run('BGN_AddActorEnemy',citizen,target)==true,'citizens must not reacquire the suspect')
+    assert(hook.Run('BGN_AddActorEnemy',partner,target)==true,'police must not reacquire the suspect')
+    assert(hook.Run('BGN_AddActorEnemy',bandit,target)==nil)
+    local info={GetAttacker=function() return citizen.npc end}
+    assert(hooks.EntityTakeDamage.BGN_ArrestCeaseFire(target,info)==true,'allied bullets already fired must be stopped')
+    info.GetAttacker=function() return bandit.npc end
+    assert(hooks.EntityTakeDamage.BGN_ArrestCeaseFire(target,info)==nil)
+    partner.state='arrest'; partner.target=target
+    hook.Run('BGN_SetState',partner,'arrest')
+    police.state='walk'
+    assert(module:IsProtected(target),'another officer must maintain the ceasefire')
+    partner.alive=false
+    assert(not module:IsProtected(target),'a dead or absent officer must not leave permanent protection')
+    police.state='arrest'
+    module:GetTarget(target).warningTime=now-1
+    assert(not module:IsProtected(target),'refusal past the warning deadline must end protection')
+    module:UpdateArrest(target)
+    assert(module:IsProtected(target))
+    module:GetTarget(target).surrender=now
+    target.bgn_last_attack=now
+    assert(not module:IsProtected(target),'attacking after a second surrender chance must end protection')
+    module:RemoveTarget(target)
+    assert(not module:IsProtected(target),'a completed or cancelled arrest must release protection')
+
+    target=npc_target; suspect=Actor('bandits'); suspect.npc=target
+    police.target=target; police.state='arrest'
+    assert(module:AddTarget(target,police))
+    hook.Run('BGN_SetState',police,'arrest')
+    assert(not module:IsProtected(target),'an NPC still fighting must not be protected')
+    suspect.state='arrest_surrender'
+    hook.Run('BGN_SetState',police,'arrest')
+    assert(module:IsProtected(target) and suspect.state=='arrest_surrender')
+    suspect.state='defense'
+    assert(not module:IsProtected(target),'an NPC resuming combat must end protection')
+''')
+
 # Vehicle exits must restore the real actor and must not skip or reboard passengers.
 vehicles = realm(True)
 vehicles.execute('''
@@ -762,7 +848,7 @@ rendering.execute('''
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
-         'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
+         'systems/wanted/cl_wanted_sync.lua', 'systems/arrest/sv_arrest.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
          'nav/providers/sv_custom_provider.lua', 'nav/io/sh_nav_editor.lua',
          'nav/io/sh_compile.lua', 'actor/events/sv_save_restore.lua',
@@ -773,4 +859,4 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, vehicle exits, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, vehicle exits, LuaJIT syntax')

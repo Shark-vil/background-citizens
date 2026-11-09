@@ -166,7 +166,8 @@ end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
 	-- a wanted player given a second chance to give up (sv_surrender.lua): don't turn the arrest into a fight
-	if actor:HasState('arrest') and bgNPC.Modules.Get('player_arrest'):CanArrest(enemy) then return end
+	local arrest = bgNPC.Modules.Get('player_arrest')
+	if arrest:IsProtected(enemy) or (actor:HasState('arrest') and arrest:CanArrest(enemy)) then return end
 
 	local reaction
 
