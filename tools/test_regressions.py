@@ -892,6 +892,113 @@ sync.execute('''
     assert(a and a.kind=='police' and a.state=='walk','state sync must recover a missed actor registration')
 ''')
 
+medics = realm(True)
+medics.execute('''
+    function table.Empty(t) for k in pairs(t) do t[k]=nil end end
+    setcv('bgn_medic_danger_time',60); setcv('bgn_medic_danger_radius',1500)
+    bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 0 end}
+    bgNPC.Combat.ResolveVehicleAttacker=function(ent) return ent end
+    function Person(pos)
+        return {valid=true,pos=pos or Vector(),hp=100,Health=function(self) return self.hp end,
+            GetPos=function(self) return self.pos end,GetModel=function() return 'model' end,
+            GetSkin=function() return 0 end}
+    end
+    function Actor(npc,kind)
+        return {GetNPC=function() return npc end,GetType=function() return kind or 'medic' end,
+            InVehicle=function() return false end,IsAlive=function() return npc.hp>0 end,
+            EqualStateGroup=function() return false end,GetPos=function() return npc.pos end,
+            StopWalk=function(self) self.stopped=true end,
+            GetBody=function(self) return {StopMoving=function() self.body_stopped=true end} end}
+    end
+    killer=Person(); second_killer=Person()
+    victim=Actor(Person()); other_victim=Actor(Person(Vector(4000,0,0)))
+    find_requests=0; free_medics={}
+    bgNPC.Actors.GetByType=function() find_requests=find_requests+1; return free_medics end
+    bgNPC.Actors.GetNPCsByType=function() return {} end
+    bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end}
+''')
+load(medics, 'systems/sv_medics.lua', 'brain/fsm/states/sv_medic_revive.lua')
+medics.execute('''
+    local m=bgNPC.Medics
+    local death=hooks.BGN_OnKilledActor.BGN_Medics_Call
+    death(victim,killer)
+    assert(m.IsBlocked(Vector()) and m.IsBlocked(Vector(1500,0,0)))
+    assert(not m.IsBlocked(Vector(1501,0,0)))
+    local spawn=hooks.BGN_OnValidSpawnActor.BGN_Medics_DangerArea
+    assert(spawn('medic',nil,nil,Vector())==true)
+    assert(spawn('citizen',nil,nil,Vector())==nil)
+    assert(spawn('medic',nil,nil,Vector(1501,0,0))==nil)
+    local call=m.calls[1]
+    local responder,partner=Actor(Person()),Actor(Person())
+    call.medic=responder; call.partner=partner
+    responder.medic_call=call; partner.medic_call=call
+    responder.drive_target_pos=call.pos; partner.drive_target_pos=call.pos
+    timers.BGN_MedicsDispatch()
+    assert(not call.medic and not call.partner and not call.closed and find_requests==0)
+    for _,a in ipairs({responder,partner}) do
+        assert(not a.medic_call and not a.drive_target_pos and a.stopped and a.body_stopped)
+    end
+    call.ragdoll={valid=true,Remove=function() error('blocked revival must preserve the body') end}
+    m.Revive(call)
+    responder.state_data={call=call,give_up=now+40,revive_end=now-1}
+    responder.GetStateData=function(self) return self.state_data end
+    responder.StopStaticSequence=function(self) self.animation_stopped=true end
+    responder.RandomState=function(self) self.left=true end
+    call.medic=responder
+    bgNPC.States.medic_revive.update(responder)
+    assert(responder.animation_stopped and responder.left and not call.done,
+        'a medic must abandon revival immediately, before the dispatch timer catches up')
+    call.medic=nil
+    now=159.99; assert(m.IsBlocked(Vector()))
+    now=160; assert(not m.IsBlocked(Vector()), 'time alone must lift the restriction')
+    free_medics={responder}; timers.BGN_MedicsDispatch()
+    assert(call.medic==responder, 'a pending call must become available again')
+
+    death(victim,killer); death(other_victim,second_killer)
+    hooks.PlayerDeath.BGN_Medics_ClearDanger(killer)
+    assert(not m.IsBlocked(Vector()), 'death event must release a player even if already respawned')
+    assert(m.IsBlocked(Vector(4000,0,0)), 'another killer must keep its own restriction')
+    hooks.BGN_OnKilledActor.BGN_Medics_Call(Actor(second_killer,'gangster'),killer)
+    assert(not m.IsBlocked(Vector(4000,0,0)), 'actor/NextBot death must release its restriction')
+    death(victim,killer); hooks.OnNPCKilled.BGN_Medics_ClearDanger(killer)
+    assert(not m.IsBlocked(Vector()), 'ordinary NPC death must also lift the restriction')
+    death(victim,killer); death(victim,second_killer)
+    hooks.PlayerDeath.BGN_Medics_ClearDanger(killer)
+    assert(m.IsBlocked(Vector()), 'overlapping areas from other killers remain blocked')
+    hooks.PostCleanupMap.BGN_Medics_ClearCalls()
+    assert(not m.IsBlocked(Vector()) and #m.calls==0)
+    victim.InVehicle=function() return true end
+    death(victim,killer)
+    assert(m.IsBlocked(Vector()) and #m.calls==0, 'medics killed in cars must also create a danger area')
+    hooks.PostCleanupMap.BGN_Medics_ClearCalls()
+    setcv('bgn_medic_danger_time',0); death(victim,killer)
+    setcv('bgn_medic_danger_time',60)
+    assert(not m.IsBlocked(Vector()), 'disabled restriction must not accumulate new areas')
+''')
+# Isolate the vehicle spawn entry point; the unrelated boarding loop uses GMod's continue.
+vehicle_spawn_source = (ROOT / 'spawner/sv_dv_spawner.lua').read_text(encoding='utf-8-sig')
+medics.execute('function bgNPC:SpawnVehicleWithActor' + vehicle_spawn_source.split(
+    'function bgNPC:SpawnVehicleWithActor', 1)[1])
+medics.execute('''
+    setcv('bgn_enable_dv_support',1)
+    DecentVehicleDestination={Waypoints={{}}}
+    player.GetCount=function() return 1 end
+    player.GetAll=function() return {killer} end
+    bgNPC.Table.Random=function(t) return t[1] end
+    function Angle() return {} end
+    FindSpawnLocation=function() return {pos=Vector(),ang={}} end
+    local medic=Actor(Person())
+    medic.GetData=function() return {vehicles={'ambulance'}} end
+    local spawned=0
+    bgNPC.SpawnVehicle=function() spawned=spawned+1 end
+    hooks.BGN_OnKilledActor.BGN_Medics_Call(victim,killer)
+    assert(bgNPC:SpawnVehicleWithActor(medic,true)==false and spawned==0,
+        'an ambulance must not teleport its medic into a blocked spawn position')
+    hooks.PlayerDeath.BGN_Medics_ClearDanger(killer)
+    bgNPC:SpawnVehicleWithActor(medic,true)
+    assert(spawned==1, 'the ambulance spawn must become available after the killer dies')
+''')
+
 gesture = realm(True)
 gesture.execute('''
     bgNPC.Actor={Helpers={}}; bgNPC.Assert={Arg=function() end,NonEmptyString=function() end}
@@ -1086,6 +1193,10 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
          'core/sh_animator.lua',
          'systems/sv_static_animation_controller.lua',
          'brain/fsm/states/sv_random_gesture.lua',
+         'cvars/sh_cvars.lua',
+         'systems/sv_medics.lua',
+         'brain/fsm/states/sv_medic_revive.lua',
+         'ui/menu/cl_menu_pages.lua',
          'actor/sync/cl_sync.lua', 'actor/sync/sv_sync.lua', 'actor/cl_actor_voice.lua', 'actor/events/sv_self_damage.lua',
          'systems/wanted/cl_wanted_sync.lua', 'systems/arrest/sv_arrest.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
@@ -1098,4 +1209,4 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, gesture lifecycle, animator visibility, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, medic danger areas, gesture lifecycle, animator visibility, LuaJIT syntax')

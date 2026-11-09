@@ -37,6 +37,8 @@ bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
 bgNPC.cvar.bgn_corpse_cleanup = 0
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
+bgNPC.cvar.bgn_medic_danger_time = 60
+bgNPC.cvar.bgn_medic_danger_radius = 1500
 bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -176,6 +178,9 @@ bgNPC.CVars.Register('bgn_ghost_crowd_max', bgNPC.cvar.bgn_ghost_crowd_max, 'The
 bgNPC.CVars.Register('bgn_corpse_cleanup', bgNPC.cvar.bgn_corpse_cleanup, 'Bodies of dead actors fade out after bgn_corpse_cleanup_time seconds (a medic or an officer busy with a body gets their time first). npc_battle_cleanup leaves these bodies to this setting. 1 - enabled, 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_time, 'Seconds the body of a dead actor stays (bgn_corpse_cleanup).')
+
+bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 'Seconds medics avoid an area where a medic was killed, or until the killer dies. 0 disables the restriction.')
+bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
 
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 

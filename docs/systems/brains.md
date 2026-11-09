@@ -112,6 +112,14 @@ removed) and the medic returns to the car. A call closes when the body is gone (
 faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
 and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
 Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
+
+When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
+in that area pause: their responders stop heading to the body and return to their ambulance when possible.
+`bgn_medic_danger_time` defaults to 60 seconds (`0` disables the restriction), and
+`bgn_medic_danger_radius` defaults to 1500 units; both are in the behavior settings under Medics.
+The area reopens when the timer expires **or** the killer dies (player, NPC or NextBot actor).
+Areas belonging to other killers remain blocked. Pending calls can resume while their original 90-second
+lifetime remains; the restriction does not extend that lifetime.
 Hook: `BGN_ActorRevived(actor, call)`.
 
 - **Pairs:** a medic spawned for a call brings a partner when the limit allows (`medic_partner` on both). It rides

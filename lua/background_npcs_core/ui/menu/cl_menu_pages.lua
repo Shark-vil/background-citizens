@@ -265,6 +265,9 @@ Menu.AddPage('behavior', {
 		page:Section('#bgn.menu.section.corpses')
 		page:Toggle('bgn_corpse_cleanup', '#bgn.menu.corpse_cleanup')
 		page:Slider('bgn_corpse_cleanup_time', '#bgn.menu.corpse_cleanup_time', 10, 600)
+		page:Section('#bgn.menu.section.medics')
+		page:Slider('bgn_medic_danger_time', '#bgn.menu.medic_danger_time', 0, 600)
+		page:Slider('bgn_medic_danger_radius', '#bgn.menu.medic_danger_radius', 0, 5000)
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
