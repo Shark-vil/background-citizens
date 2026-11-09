@@ -621,6 +621,64 @@ arrest.execute('''
     end
 ''')
 
+refusal = realm(True)
+load(refusal, 'core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/arrest/sv_arrest.lua')
+refusal.execute('''
+    bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end}
+    setcv('bgn_arrest_mode',1); setcv('bgn_enable_wanted_mode',1)
+    suspect={valid=true,alive=true,IsPlayer=function() return true end,Alive=function(self) return self.alive end}
+    officer={GetFirstTarget=function(self) return self.target end,
+        RemoveAllTargets=function(self) self.target=nil end,AddEnemy=function(self,v) self.enemy=v end,
+        GetNPC=function() return {} end,TargetsCount=function() return 1 end,
+        SetState=function(self,v) self.state=v end}
+''')
+load(refusal, 'brain/fsm/states/sv_arrest.lua')
+refusal.execute('''
+    local arrest=bgNPC.Modules.Get('player_arrest')
+    local wanted=bgNPC.Modules.Get('wanted')
+    local function attempt(expired)
+        arrest:RemoveTarget(suspect)
+        arrest:AddTarget(suspect,officer)
+        officer.target=suspect; officer.enemy=nil
+        arrest:GetTarget(suspect).warningTime=now+(expired and -1 or 10)
+        return arrest:GetTarget(suspect)
+    end
+    officer.RemoveTarget=function() end
+    attempt(false)
+    assert(bgNPC.States.arrest.pre_start(officer)==nil and not wanted:HasWanted(suspect))
+    local component=attempt(true); component.detention=true
+    assert(bgNPC.States.arrest.pre_start(officer)==nil and not wanted:HasWanted(suspect),
+        'a cooperating player in detention must not become wanted when the warning time expires')
+    attempt(true)
+    bgNPC.States.arrest.update(officer,'arrest',{})
+    assert(officer.state=='defense' and wanted:HasWanted(suspect))
+    assert(officer.enemy==suspect and not officer.target)
+    local record=wanted:GetWanted(suspect); record:SetLevel(3); local deadline=record.time_reset
+    now=now+1; officer.target=suspect
+    bgNPC.States.arrest.pre_start(officer)
+    assert(wanted:GetWanted(suspect)==record and record.level==3 and record.time_reset==deadline,
+        'another officer must not refresh or reset an existing wanted record')
+    wanted:RemoveWanted(suspect)
+    for _,setting in ipairs({'bgn_enable_wanted_mode','bgn_arrest_mode'}) do
+        attempt(true); setcv(setting,0)
+        bgNPC.States.arrest.pre_start(officer)
+        assert(not wanted:HasWanted(suspect), 'disabled modes must not issue wanted status')
+        setcv(setting,1)
+    end
+    attempt(true); suspect.alive=false
+    bgNPC.States.arrest.pre_start(officer); assert(not wanted:HasWanted(suspect))
+    suspect.alive=true
+    attempt(true); bgNPC.Modes.IsPeaceful=function() return true end
+    bgNPC.States.arrest.pre_start(officer); assert(not wanted:HasWanted(suspect))
+    bgNPC.Modes.IsPeaceful=function() return false end
+    attempt(true); bgNPC.Combat.IsIgnored=function() return true end
+    bgNPC.States.arrest.pre_start(officer); assert(not wanted:HasWanted(suspect))
+    bgNPC.Combat.IsIgnored=function() return false end
+    arrest:RemoveTarget(suspect); officer.target=suspect
+    bgNPC.States.arrest.pre_start(officer)
+    assert(not wanted:HasWanted(suspect), 'a missing arrest record is not a refusal')
+''')
+
 ceasefire = realm(True)
 load(ceasefire, 'systems/arrest/sv_arrest.lua')
 ceasefire.execute('''

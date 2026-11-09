@@ -26,6 +26,10 @@ stays selected in the current combat state: closing in, the target switching wea
 does not bring back the baton. An already drawn pistol is also kept. Missed bullet shots count as attacks.
 An active arrest stops combat. Other law enforcement keeps its existing shooting and arrest rules.
 
+When a player refuses arrest and the officer abandons the arrest attempt, the player becomes wanted if
+`bgn_enable_wanted_mode` is enabled. An existing wanted record is neither reset nor extended. Disabling
+arrest mode does not count as a refusal.
+
 ## Car break-in
 
 `systems/arrest/sv_car_breakin.lua`: a player who stands still in a vehicle (rolling up to 64 units counts as

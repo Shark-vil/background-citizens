@@ -123,7 +123,15 @@ local function OnSetDefense(actor)
 		or (TargetActor and not TargetActor:HasState('arrest_surrender'))
 	then
 		actor:RemoveAllTargets()
-		if IsValid(target) then actor:AddEnemy(target) end
+		if IsValid(target) then
+			actor:AddEnemy(target)
+			if target:IsPlayer() and target:Alive() and ArrestModule:HasTarget(target)
+				and GetConVar('bgn_arrest_mode'):GetBool()
+				and GetConVar('bgn_enable_wanted_mode'):GetBool()
+				and not bgNPC.Modes.IsPeaceful() and not WantedModule:HasWanted(target) then
+				WantedModule:AddWanted(target)
+			end
+		end
 		return 'defense'
 	end
 end
