@@ -68,6 +68,29 @@ local function PlayerAheadPoints(ply)
 	return pos + shift * .5, pos + shift
 end
 
+-- A car is bigger than a spawn point: a hidden centre can still show a fender around a corner.
+-- shortcut: a fixed 260x260 grid covers any heading and most cars; thin gaps between samples are not checked.
+local HULL_OFFSETS = {}
+for _, x in ipairs({ -130, 0, 130 }) do
+	for _, y in ipairs({ -130, 0, 130 }) do
+		for _, z in ipairs({ 10, 100 }) do HULL_OFFSETS[#HULL_OFFSETS + 1] = Vector(x, y, z) end
+	end
+end
+
+-- @return boolean true when no part of a car standing at `base` can be seen by the player
+local function HullHiddenFrom(ply, base)
+	local eye, car = ply:EyePos(), ply:GetVehicle()
+	local filter = { ply, car, IsValid(car) and car:GetParent() or nil }
+	for _, offset in ipairs(HULL_OFFSETS) do
+		local point = base + offset
+		if bgNPC.Util.IsInView(ply, point) then
+			local tr = util.TraceLine({ start = eye, endpos = point, mask = MASK_VISIBLE, filter = filter })
+			if not tr.Hit or tr.HitPos:DistToSqr(point) < 64 then return false end
+		end
+	end
+	return true
+end
+
 local function FindSpawnLocation(center, radius)
 	local spawn_radius = radius or GetConVar('bgn_spawn_radius'):GetFloat()
 	local points = GetNearPoints(center, spawn_radius)
@@ -97,28 +120,31 @@ local function FindSpawnLocation(center, radius)
 				end
 
 				if bgNPC.Util.IsInView(ply, spawn_position) then
-					if distance <= visibility_radius then goto skip end
-
-					local tr = util.TraceLine({
-						start = ply:EyePos(),
-						endpos = spawn_position,
-						filter = function(ent)
-							if IsValid(ent) and ent ~= ply then
-								if IsValid(vehicle) then
-									if ent ~= vehicle and ent ~= vehicle:GetParent() then
-										return false
+					-- close to the player the whole car must be behind cover, not just its centre
+					if distance <= visibility_radius then
+						if not HullHiddenFrom(ply, spawn_position + Vector(0, 30, 0)) then goto skip end
+					else
+						local tr = util.TraceLine({
+							start = ply:EyePos(),
+							endpos = spawn_position,
+							filter = function(ent)
+								if IsValid(ent) and ent ~= ply then
+									if IsValid(vehicle) then
+										if ent ~= vehicle and ent ~= vehicle:GetParent() then
+											return false
+										end
+									else
+										return true
 									end
-								else
-									return true
 								end
 							end
-						end
-					})
+						})
 
-					if not tr.Hit then
-						goto skip
-					elseif tr.Entity:GetClass() ~= 'worldspawn' or spawn_position:DistToSqr(tr.HitPos) <= 250000 then
-						goto skip
+						if not tr.Hit then
+							goto skip
+						elseif tr.Entity:GetClass() ~= 'worldspawn' or spawn_position:DistToSqr(tr.HitPos) <= 250000 then
+							goto skip
+						end
 					end
 				end
 			end
