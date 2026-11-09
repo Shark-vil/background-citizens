@@ -247,21 +247,71 @@ spawn.execute('''
     assert(spawn_allowed(Vector(1000,0,0),{behind}), 'open spots behind the player must allow population')
     assert(traces==0, 'offscreen spots need no cover traces')
     assert(not spawn_allowed(Vector(600,0,0),{behind}), 'block radius still applies behind the player')
-    assert(not spawn_allowed(Vector(1000,0,0),{front}), 'near spots in view remain blocked')
+    assert(not spawn_allowed(Vector(1000,0,0),{front}), 'exposed spots in view remain blocked')
     assert(not spawn_allowed(Vector(1000,0,0),{behind,front}), 'every player must allow the spot')
     assert(not spawn_allowed(Vector(2800,0,0),{front}), 'distant visible bodies remain blocked')
     covered=true; traces=0
+    assert(spawn_allowed(Vector(1000,0,0),{front}) and traces==3,
+        'covered front spots inside visibility radius may spawn outside block radius')
+    assert(not spawn_allowed(Vector(600,0,0),{front}), 'cover cannot bypass block radius')
+    traces=0
     assert(spawn_allowed(Vector(2800,0,0),{front}) and traces==3, 'distant covered bodies may spawn')
     for _,height in ipairs({10,40,64}) do
         exposed_height=height
-        assert(not spawn_allowed(Vector(2800,0,0),{front}), 'any exposed body point blocks spawning')
+        assert(not spawn_allowed(Vector(1000,0,0),{front}), 'any exposed body point blocks nearby spawning')
+        assert(not spawn_allowed(Vector(2800,0,0),{front}), 'any exposed body point blocks distant spawning')
     end
     exposed_height=nil
     assert(spawn_allowed(Vector(1000,0,0),{behind}), 'initial offscreen search succeeds')
-    behind.in_view=true
+    behind.in_view=true; covered=false
     assert(not spawn_allowed(Vector(1000,0,0),{behind}), 'recheck rejects a player turning toward the spawn')
     behind.in_view=false; behind.sees_target=true
     assert(not spawn_allowed(Vector(1000,0,0),{behind},{valid=true}), 'visible actors must not teleport')
+''')
+
+priority = realm(True)
+priority.execute('''
+    prioritize=true; rolls=0; budgets=0; views=0; water_checks=0
+    bgNPC.Util.Chance=function(percent) assert(percent==50); rolls=rolls+1; return prioritize end
+    bgNPC.Tasks.Budget=function() budgets=budgets+1 end
+    bgNPC.Vision.PlayerCanSeePos=function(ply,pos) views=views+1; return ply.all or ply.front==pos.y end
+    bgNPC.Util.IsVectorInWater=function(pos) water_checks=water_checks+1; return wet or pos.y==1 end
+    bgNPC.Util.CanSeeEntity=function() return visible_target end
+    util.IsInWorld=function() return true end
+    util.TraceLine=function() return {Hit=true} end
+    setcv('bgn_spawn_radius_visibility',2500); setcv('bgn_spawn_block_radius',600)
+''')
+priority.execute(spawn_source.split('local function FindSpawnLocationProcess', 1)[0]
+                 + '\nfind_front = FindFrontSpawnPosition')
+priority.execute('''
+    local function watcher(front)
+        return {front=front,GetPos=function() return Vector() end,EyePos=function() return Vector(0,0,64) end}
+    end
+    local points={}
+    for i=1,1000 do
+        local pos=Vector(1000,i,0); points[i]={GetPos=function() return pos end}
+    end
+    local original=points[1]
+    local players={watcher(99),watcher(2)}
+    assert(find_front(points,players,nil,true)==points[2]:GetPos())
+    assert(rolls==1 and budgets==2, 'stop as soon as a valid front position is found')
+    assert(points[1]==original and #points==1000, 'fallback list remains intact')
+    prioritize=false
+    local before=views
+    local pos,checked=find_front(points,players)
+    assert(pos==nil and checked==nil and views==before, 'ordinary searches do no priority work')
+    prioritize=true; budgets=0; views=0
+    pos,checked=find_front(points,{watcher(33)},nil,true)
+    assert(pos==nil and next(checked)==nil and budgets==32 and views==32,
+        'priority examines at most 32 points regardless of graph size; other points remain fallbacks')
+    local all=watcher(); all.all=true; wet=true; water_checks=0
+    pos,checked=find_front(points,{all})
+    assert(pos==nil and water_checks==32 and checked[32] and not checked[33],
+        'failed priority candidates are marked to avoid repeating expensive validation')
+    wet=false; visible_target=true
+    pos,checked=find_front({points[2]},{all},{valid=true})
+    assert(pos==nil and checked[1], 'priority cannot teleport a visible actor')
+    assert(find_front({},players)==nil)
 ''')
 
 client = realm(False)

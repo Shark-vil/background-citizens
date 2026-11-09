@@ -147,7 +147,7 @@ bgNPC.CVars.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 'NPC spawn
 
 bgNPC.CVars.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
-bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
+bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Radius used when deciding whether existing actors may be removed or teleported. New spawns use bgn_spawn_block_radius and line-of-sight checks.')
 
 bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
 

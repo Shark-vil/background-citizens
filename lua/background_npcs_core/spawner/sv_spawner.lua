@@ -18,7 +18,6 @@ local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 local spawn_radius_sqrt = spawn_radius ^ 2
-local radius_visibility_sqrt = radius_visibility ^ 2
 local block_radius_sqrt = block_radius ^ 2
 --
 
@@ -62,7 +61,6 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 		end
 
 		local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
-		if in_view and distance <= radius_visibility_sqrt then return false end
 
 		-- Offscreen spots outside the block radius must stay available, as in 1.x.
 		if in_view then
@@ -81,12 +79,35 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 	return true
 end
 
+local function FindFrontSpawnPosition(points, all_players, target_entity, is_async)
+	if not Chance(50) then return end
+
+	local checked = {}
+	for i = 1, math.min(#points, 32) do
+		if is_async then bgNPC.Tasks.Budget() end
+		local pos = points[i]:GetPos()
+		local in_view = false
+		for p = 1, #all_players do
+			if bgNPC.Vision.PlayerCanSeePos(all_players[p], pos) then
+				in_view = true
+				break
+			end
+		end
+		if in_view then
+			checked[i] = true
+			if not bgNPC.Util.IsVectorInWater(pos) and IsNotBlockSpawnPosition(pos, all_players, target_entity) then
+				return pos
+			end
+		end
+	end
+	return nil, checked
+end
+
 local function FindSpawnLocationProcess(all_players, settings, is_async)
 	spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 	radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 	block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 	spawn_radius_sqrt = spawn_radius ^ 2
-	radius_visibility_sqrt = radius_visibility ^ 2
 	block_radius_sqrt = block_radius ^ 2
 
 	local desired_position = settings.position
@@ -101,17 +122,19 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	local points = bgNPC.Points.GetInRadius(desired_position, teleport_radius, 'walk')
 	local points_count = #points
 	local nodePosition
+	local checked
 
 	if points_count ~= 0 then
 		if is_async then AsyncYield() end
 		points = table_shuffle(points)
 		if is_async then AsyncYield() end
+		nodePosition, checked = FindFrontSpawnPosition(points, all_players, target_entity, is_async)
+		if nodePosition then return nodePosition end
 	elseif bgNPC.Points.Count() == 0 then
 		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
 		radius_visibility = math.Clamp(radius_visibility, 0, 1000)
 		block_radius = math.Clamp(block_radius, 0, 600)
 		spawn_radius_sqrt = spawn_radius ^ 2
-		radius_visibility_sqrt = radius_visibility ^ 2
 		block_radius_sqrt = block_radius ^ 2
 
 		local dist_x = math.random(block_radius, spawn_radius)
@@ -137,6 +160,8 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	end
 
 	for i = 1, points_count do
+		-- Failed priority candidates already passed through the same spawn checks.
+		if checked and checked[i] then continue end
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
 

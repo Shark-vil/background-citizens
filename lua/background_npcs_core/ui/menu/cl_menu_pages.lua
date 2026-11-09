@@ -196,7 +196,7 @@ Menu.AddPage('wanted', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.wanted',
 	icon = ICONS .. 'wanted.png',
-	order = 400,
+	order = 600,
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
@@ -226,7 +226,7 @@ Menu.AddPage('arrest', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.arrest',
 	icon = ICONS .. 'arrest.png',
-	order = 500,
+	order = 700,
 	build = function(page)
 		page:Toggle('bgn_arrest_mode', '#bgn.settings.arrest.arrest_mode')
 		page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, { decimals = 1 })
@@ -241,7 +241,7 @@ Menu.AddPage('behavior', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.behavior',
 	icon = ICONS .. 'behavior.png',
-	order = 600,
+	order = 500,
 	build = function(page)
 		page:Section('#bgn.menu.section.ai')
 		page:Choice('bgn_brain', '#bgn.menu.brain', {
@@ -281,7 +281,7 @@ Menu.AddPage('navigation', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.navigation',
 	icon = ICONS .. 'navigation.png',
-	order = 700,
+	order = 400,
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Choice('bgn_nav_provider', '#bgn.menu.nav_provider', {
