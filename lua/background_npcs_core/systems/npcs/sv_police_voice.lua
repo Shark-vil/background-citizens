@@ -9,7 +9,7 @@ local replics = {
 	'npc/metropolice/vo/level3civilprivacyviolator.wav'
 }
 
--- voice_id nil: the old sound only for players with voices off (the phrase itself is voiced)
+-- voice_id nil: an event sound without a matching voiced phrase.
 local function RandomPlay(actor, voice_id)
 	if not actor or not actor:IsAlive() or not actor:HasTeam('police') then return end
 	-- police_combat waits out its cooldown in Actor:Voice; the voiceless fallback (voice_id nil) shares it

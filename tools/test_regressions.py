@@ -850,8 +850,11 @@ speech = realm(False)
 speech.execute('''
     bgNPC.cfg.replics={conv_greet={'hello','reply'},police_arrest_order={'down'}}
     bgNPC.cfg.replics_language='english'
-    played={}; sound={Play=function(path) played[#played+1]=path end}
-    local npc={valid=true,GetPos=function() return Vector() end}
+    played={}
+    local npc={valid=true,EmitSound=function(self,path,level,pitch,volume,channel)
+        assert(channel==CHAN_VOICE and level==70 and pitch==100 and volume==1)
+        played[#played+1]=path
+    end}
     speaker={GetNPC=function() return npc end,HasTeam=function() return false end,
         GetGenderByModel=function() return 'female' end}
     CHAN_VOICE=2
@@ -859,13 +862,18 @@ speech.execute('''
 ''')
 load(speech, 'actor/cl_actor_voice.lua')
 speech.execute('''
-    setcv('bgn_cl_voices',2)
-    assert(bgNPC.VoicePlay(speaker,'conv_greet',1))
-    assert(played[1]=='vo/npc/female01/question01.wav','classic dialogues need HL2 speech')
+    local clip='background_npcs/vo/english/conv_greet/1_f.ogg'
+    files['sound/'..clip]='audio'
+    for _,value in ipairs({1,2}) do
+        setcv('bgn_cl_voices',value)
+        assert(bgNPC.VoicePlay(speaker,'conv_greet',1))
+        assert(played[#played]==clip,'both current and saved classic settings must play our conversation clip')
+    end
+    assert(not bgNPC.VoicePlay(speaker,'conv_greet',2),'missing conversation clips must not substitute unrelated HL2 speech')
     received.bgn_actor_voice.f(nil,1,'police_arrest_order','npc/metropolice/vo/getdown.wav')
-    assert(played[2]=='npc/metropolice/vo/getdown.wav','classic arrest orders retain the configured sound')
+    assert(played[3]=='npc/metropolice/vo/getdown.wav','individual events retain their configured fallback')
     setcv('bgn_cl_voices',0)
-    assert(not bgNPC.VoicePlay(speaker,'conv_greet',1) and #played==2,'muting must still work')
+    assert(not bgNPC.VoicePlay(speaker,'conv_greet',1) and #played==3,'muting must still work')
 ''')
 sync = realm(False)
 sync.execute('''

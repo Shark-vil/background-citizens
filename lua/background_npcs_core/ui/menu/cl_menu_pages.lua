@@ -337,9 +337,7 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
 		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
 		page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
-		page:Choice('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
-			{ 1, '#bgn.menu.voices.generated' }, { 2, '#bgn.menu.voices.classic' }, { 0, '#bgn.menu.voices.off' },
-		})
+		page:Toggle('bgn_cl_voices', '#bgn.settings.client.cl_voices')
 		page:Choice('bgn_cl_voice_language', '#bgn.menu.voice_language', {
 			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
 		})

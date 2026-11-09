@@ -119,11 +119,9 @@ local STEPS = {
 		end,
 	},
 	{
-		id = 'voices', modern = true, clip = 'voices', frames = 45,
+		id = 'voices', clip = 'voices', frames = 45,
 		build = function(page)
-			page:Choice('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
-				{ 1, '#bgn.menu.voices.generated' }, { 2, '#bgn.menu.voices.classic' }, { 0, '#bgn.menu.voices.off' },
-			}, { server = false })
+			page:Toggle('bgn_cl_voices', '#bgn.settings.client.cl_voices', { server = false })
 			page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound', { server = false })
 		end,
 	},

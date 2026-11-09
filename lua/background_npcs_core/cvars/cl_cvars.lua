@@ -28,7 +28,7 @@ CreateConVar('bgn_cl_ghost_crowd_max', bgNPC.cvar.bgn_cl_ghost_crowd_max,
 { FCVAR_ARCHIVE }, 'The most ghost crowd figures at once.')
 
 CreateConVar('bgn_cl_voices', bgNPC.cvar.bgn_cl_voices,
-{ FCVAR_ARCHIVE }, 'NPC voices: 1 - generated voiced lines (old Half-Life 2 sounds where there is no clip), 2 - only the old Half-Life 2 sounds, 0 - silent.')
+{ FCVAR_ARCHIVE }, 'NPC voices: 1 - enabled, 0 - silent. Applies to both Classic and New modes.')
 
 CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance,
 { FCVAR_ARCHIVE }, 'Distance to draw points in edit mode.')
