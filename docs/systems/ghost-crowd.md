@@ -16,9 +16,9 @@ The ghost crowd is **off by default** (`bgn_ghost_crowd 0`, `bgn_cl_ghost_crowd 
 
 | Cvar | Default | Meaning |
 |---|---|---|
-| `bgn_cl_ghost_crowd` (client) | `1` | local mode: enable the ghost crowd |
+| `bgn_cl_ghost_crowd` (client) | `0` | local mode: enable the ghost crowd |
 | `bgn_cl_ghost_crowd_max` (client) | `40` | local mode: the most ghosts at once |
-| `bgn_ghost_crowd` (server) | `1` | server mode |
+| `bgn_ghost_crowd` (server) | `0` | server mode |
 | `bgn_ghost_crowd_max` (server) | `40` | server mode: the most ghosts at once, shared fairly between the players |
 
 Settings window: **My settings → Experimental** (client), **Spawn → Experimental** (server).
@@ -56,11 +56,9 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
 - **Handoff:** a ghost someone sees, with a player inside its inner radius, becomes a real actor of the same type
   and look on its spot (dropped to the ground), facing its way. Clients keep drawing the ghost until the
   entity arrives (at most 2 s), so there is no gap and no double. An unseen ghost there just goes.
-  The handoff may go over the type limit: the actor remover then takes over-limit actors that no player sees
-  (never a seen one), so the count gets back within the limit without anyone vanishing in sight. On an overloaded
-  server (`core/sv_server_load.lua`: fewer than 80% of the tickrate's ticks per real second, held 3 s; or more
-  actors than twice the sum of the active types' limits) over-limit actors go at once, seen or not, and handoffs
-  stay within the limit. When the type
+  The handoff may go over the type limit: normal recycling removes eligible excess actors only after no player
+  has seen them for `bgn_actor_unseen_time` (default 30 s), including during server overload. On an overloaded
+  server, new handoffs stay within the type limit. When the type
   is off (or its limit is 0) or the spawn fails, the ghost runs away and fades like a local one.
 - Not in server mode: the "ghost behind the player moves into view" at the limit.
 

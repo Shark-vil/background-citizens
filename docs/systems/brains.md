@@ -183,15 +183,13 @@ With `bgn_corpse_cleanup 0` (the default) the flag is not set and npc_battle_cle
 
 ## Cars
 
-Police dismount when a living player is within 800 units or their vehicle has at most 20% health remaining.
+Police dismount when a living enemy (or their current arrest target) is within 800 units or their vehicle has at most 20% health remaining.
 Simfphys health uses `GetCurHealth()` and `GetMaxHealth()`; vehicles without a positive maximum health do
-not trigger the damage condition. A hit alone no longer makes police dismount. Vehicle removal, forced
-ejection and releasing passengers left without a driver still detach them from the vehicle.
+not trigger the damage condition. Neutral players do not trigger dismounts. Hits use the normal actor damage reactions, so a real attack can create an enemy and make police dismount. Direct vehicle removal removes its crew; forced ejection still requires a safe exit.
 
 Actors and Decent Vehicle cars; the state `go_to_police_car` (no longer police only) runs to the car and gets in.
 
-- **Back to the car** (`modules/dv/sv_return_to_vehicle.lua`, every 2 s): an actor within 1000 units of an empty
-  car, walking or in a fight with every player and enemy at least 1500 units away, gets back in.
+- **Back to the car** (`modules/dv/sv_return_to_vehicle.lua`, every 2 s): an actor within 1000 units of an allowed car returns when no enemy is within 1500 units. Neutral living players also delay civilians, but not police. Former crew may take free passenger seats after their driver returns. Police do not reboard critically damaged cars.
 - **The enemy drives off** (`sv_defense.lua`, every 2 s, 30 %): a player in a vehicle or an actor in a car; checked
   before the squad move, so squad members go too.
 - **Confiscation and carjacking** (`data.seize`): when no car of its own is near, the police take a car of another
@@ -207,5 +205,10 @@ sits in a car shoots the car (the enemy is the car then, which has no health of 
 
 Which car: `VEHICLE:CanBoard`: an empty one the actor left, or of its group (`police`, `bandits`, `medics`, ...),
 never someone else's `residents` car (police and medics are residents too, citizens keep to their own).
+Former crew may also rejoin an occupied car if a passenger seat is free. A police vehicle keeps its police designation even after a group change; only police actors may drive or ride in it. Players can still take an empty police car.
 `VEHICLE:CanSeize`: a car of another group, empty or driven by an actor (never a player), not driven by a
 teammate. Only the police and bandits seize.
+
+Boarding removes the physical NPC/NextBot and binds the same logical actor to a DV anim entity; exiting recreates its original body and equipment. Exit placement prefers the closest model exit or the side and row of its own seat, checking full body clearance and overlap even with non-colliding actors. If all positions are blocked, it stays aboard. Seated hits retain the attacker and notify nearby witnesses through the normal damage hooks. Witness traces exclude their own chassis/seat and recognize another occupant's chassis; walls still block sight.
+
+BGN traffic can plan bounded forward/reverse maneuvers around blockers and, after repeated failures, try another accessible road segment. Red lights, scheduled stops and taxi waits suppress recovery. Cars honk briefly only at an entity blocking their forward sensor. These changes apply to BGN-created vehicles; DV remains required. See [traffic checks and limitations](testing.md#dv-traffic-developer-checks).

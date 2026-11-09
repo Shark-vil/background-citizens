@@ -64,6 +64,12 @@ a bug report. The sentences follow the interface language; the log is always Eng
   the window). A check is a function that calls `Section(id)`, `Log(...)` and `Result(status, phrase, ...)`;
   phrases live in `resource/localization/<lang>/bgn_diag.properties`.
 
+## Actor overlay and regression checks
+
+Admins can enable `bgn_debug 1` to see actor bounds, labels, counts and recent spawn/teleport markers, including actors outside the normal visibility set. Server snapshots are sent only to ready admins; `bgn_debug 0` disables them.
+
+`python tools/test_regressions.py` (requires lupa) checks the Lua logic outside GMod. It covers safe actor health accessors in both realms, arrest module registration order, seated damage and police witnesses, passenger aim, exit placement by seat/model attachment, overlap rejection and blocked-side fallback. These checks do not verify live physics or every vehicle model.
+
 ## DV traffic developer checks
 
 Only BGN-created vehicles (`isBgnVehicle`) use the new recovery controller; the original DV remains a dependency. Police designation (`bgnPoliceVehicle`) persists across driver/group changes. Only actors on team `police` can drive or ride in these cars. Players may still take an empty police car.
