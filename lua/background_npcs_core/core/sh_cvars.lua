@@ -76,12 +76,19 @@ if SERVER then
 else
 	-- name -> value we are setting ourselves, so its change callback is not sent back
 	local expected = {}
+	local confirmed = {}
 
 	local function Apply(name, value)
 		local cvar = GetConVar(name)
-		if not cvar or cvar:GetString() == value then return end
-		expected[name] = value
-		RunConsoleCommand(name, value)
+		if not cvar then return end
+		local old_value = confirmed[name] or cvar:GetString()
+		confirmed[name] = value
+		if cvar:GetString() ~= value then
+			expected[name] = value
+			RunConsoleCommand(name, value)
+		end
+		-- The admin's local copy may already match; its listeners still need the server confirmation.
+		if old_value ~= value then Notify(name, old_value, value) end
 	end
 
 	function CVars.Register(name, default, help)
@@ -89,12 +96,12 @@ else
 		registered[name] = true
 
 		CreateConVar(name, tostring(default), FCVAR_NONE, help or '')
+		confirmed[name] = GetConVar(name):GetString()
 		cvars.AddChangeCallback(name, function(_, old_value, new_value)
 			if old_value == new_value then return end
 
 			if expected[name] == new_value then
 				expected[name] = nil
-				Notify(name, old_value, new_value)
 				return
 			end
 
@@ -104,7 +111,7 @@ else
 				return
 			end
 
-			Apply(name, old_value)
+			Apply(name, confirmed[name] or old_value)
 			notification.AddLegacy(bgNPC.Util.Lang({
 				default = 'Insufficient rights to make changes',
 				russian = 'Недостаточно прав для внесения изменений',
