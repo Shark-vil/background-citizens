@@ -92,7 +92,7 @@ def realm(server):
         bgNPC={Net={Receive=function(n,f,opts) received[n]={f=f,opts=opts} end,
             Send=function(...) sent[#sent+1]={...} end, SendToServer=function(...) sent[#sent+1]={...} end},
             Notice={Watch=function() end}, Test={Add=function(n,f) tests[n]=f end},
-            Util={Log=function() end, Notify=function() end, Lang=function(t) return t.default end},
+            Util={Log=function() end, Warning=function() end, Notify=function() end, Lang=function(t) return t.default end},
             Tasks={Budget=function() end}, Commands={list={}, Register=function(n,v)
                 commands[n]=v.server or function() end; bgNPC.Commands.list[n]=v
             end},
@@ -208,12 +208,20 @@ server.execute('''
     local newest=bgNPC.LegacyNodes.Convert()
     assert(newest:GetPos(1).x==10 and newest:IsLinked(1,2,'walk'),'compressed 1.2 route takes precedence')
     assert(bgNPC.Nav.Load() and bgNPC.Nav.Count()==2,'old directory participates in automatic provider selection')
+    local saved=files['background_npcs/graph/gm_test.dat']
+    local converted=bgNPC.NodeGraph.Deserialize(saved)
+    assert(converted and converted:Count()==2 and converted:IsLinked(1,2,'walk'),'automatic conversion writes the current graph format')
+    assert(bgNPC.Nav.GetProvider().source=='file','converted route is a saved graph')
+    local legacy=files['background_npcs/nodes/gm_test.dat']
+    files['background_npcs/nodes/gm_test.dat']='broken old file'
+    assert(bgNPC.Nav.Load() and files['background_npcs/graph/gm_test.dat']==saved,'a valid new graph takes precedence over legacy files')
+    files['background_npcs/nodes/gm_test.dat']=legacy
     commands.bgn_save_map(admin)
     local dupe=sent[#sent][3]
     assert(dupe.id=='BGN_NODES' and dupe.map=='gm_test','save produces a route duplication')
     received.bgn_route_dupe_load.f(admin,dupe)
     assert(bgNPC.Nav.GetProvider().source=='dupe' and bgNPC.Nav.Count()==2,'dupe activates navigation')
-    assert(files['background_npcs/graph/gm_test.dat']==nil,'loading a dupe does not overwrite saved routes')
+    assert(files['background_npcs/graph/gm_test.dat']==saved,'loading a dupe does not overwrite saved routes')
     assert(received.bgn_route_dupe_load.opts.admin,'server loading is admin only')
     local active=bgNPC.Nav.GetProvider()
     hooks.CanArmDupe={blocked=function() return false end}
@@ -223,6 +231,19 @@ server.execute('''
     assert(bgNPC.NodeGraph.FromTable(bad)==nil,'dangling graph link rejected')
     bad.links={}; bad.nodes={0,0,0/0}
     assert(bgNPC.NodeGraph.FromTable(bad)==nil,'non-finite graph position rejected')
+    files['background_npcs/graph/gm_test.dat']='broken graph'
+    local provider=bgNPC.Nav.CustomProvider()
+    assert(provider:Load(),'broken new graph can be recovered from the old directory')
+    assert(bgNPC.NodeGraph.Deserialize(files['background_npcs/graph/gm_test.dat']):Count()==2,'recovered graph is saved')
+    files['background_npcs/graph/gm_test.dat']=nil
+    local write=file.Write
+    file.Write=function() end
+    local ok,err=provider:Load()
+    local active=bgNPC.Nav.GetProvider()
+    assert(not bgNPC.Nav.Load(),'navigation reports conversion persistence failure')
+    assert(bgNPC.Nav.GetProvider()==active,'failed conversion keeps the previous active provider')
+    file.Write=write
+    assert(not ok and err:find('could not save graph',1,true),'conversion reports a failed disk write')
 ''')
 server.execute('''
     files={
@@ -292,6 +313,7 @@ client.execute('''
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
+         'nav/providers/sv_custom_provider.lua',
          'ui/settings/cl_classic_settings.lua']
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))

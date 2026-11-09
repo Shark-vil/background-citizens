@@ -30,6 +30,8 @@ The addon never starts the engine's NavMesh generation.
 Old route files are converted automatically on load, so map packs made for older versions keep working.
 Unversioned routes and versions 1.0–1.2 are supported from `data/citizens_points/` and
 `data/background_npcs/nodes/` (`.dat` or `.json`). Loading leaves the original files intact.
+Automatic loading saves the converted route in the current format to `data/background_npcs/graph/<map>.dat`.
+A valid new graph takes precedence; a broken graph is rebuilt from a legacy route when available.
 Autocomplete for `bgn_convert_legacy_nodes` lists server maps with legacy routes and no new graph yet.
 Without an argument, the command converts the current map.
 

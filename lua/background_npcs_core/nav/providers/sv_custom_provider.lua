@@ -1,7 +1,7 @@
 --[[
 	CustomProvider: our own node graph, saved in data/background_npcs/graph/<map>.dat.
 	Old route files (data/background_npcs/nodes/<map>.dat|.json, still shipped by map packs)
-	are converted in memory when no new file exists.
+	are converted and saved in the current format when no valid new graph exists.
 --]]
 
 local Nav = bgNPC.Nav
@@ -29,22 +29,25 @@ end
 
 function CustomProvider:Load()
 	local path = GraphPath()
+	local load_error
 
 	if HasData(path) then
 		local graph, err = NodeGraph.Deserialize(file.Read(path, 'DATA'))
-		if not graph then return false, 'broken graph file ' .. path .. ': ' .. tostring(err) end
-		self.graph = graph
-		self.source = 'file'
-		return true
+		if graph then
+			self.graph = graph
+			self.source = 'file'
+			return true
+		end
+		load_error = 'broken graph file ' .. path .. ': ' .. tostring(err)
 	end
 
 	if bgNPC.LegacyNodes.Exists() then
 		local graph, err = bgNPC.LegacyNodes.Convert()
 		if not graph then return false, 'old route file: ' .. tostring(err) end
 		self.graph = graph
-		self.source = 'legacy'
-		return true
+		return self:Save()
 	end
+	if load_error then return false, load_error end
 
 	self.graph = NodeGraph()
 	self.source = 'empty'
@@ -54,7 +57,9 @@ end
 -- @return boolean saved
 function CustomProvider:Save()
 	file.CreateDir('background_npcs/graph')
-	file.Write(GraphPath(), self.graph:Serialize())
+	local path, data = GraphPath(), self.graph:Serialize()
+	file.Write(path, data)
+	if file.Read(path, 'DATA') ~= data then return false, 'could not save graph ' .. path end
 	self.source = 'file'
 	return true
 end
