@@ -372,9 +372,19 @@ function Actor:GetGenderByModel()
 end
 
 function Actor:Health()
-	if self.vehicle_body and not IsValid(self.npc) then return self.vehicle_body.health end
 	local npc = self.npc
-	return IsValid(npc) and npc:Health() or 0
+	if IsValid(npc) and isfunction(npc.Health) then return npc:Health() end
+	return self.vehicle_body and self.vehicle_body.health or 0
+end
+
+function Actor:GetHealth()
+	return self:Health()
+end
+
+function Actor:GetMaxHealth()
+	local npc = self.npc
+	if IsValid(npc) and isfunction(npc.GetMaxHealth) then return npc:GetMaxHealth() end
+	return self.vehicle_body and self.vehicle_body.max_health or 0
 end
 
 -- ---------------------------------------------------------------------------
@@ -393,7 +403,7 @@ function Actor:IsAlive()
 		is_dead = self.body:IsDead()
 	else
 		local npc = self.npc
-		is_dead = not IsValid(npc) or npc:Health() <= 0
+		is_dead = not IsValid(npc) or self:Health() <= 0
 	end
 
 	if is_dead then

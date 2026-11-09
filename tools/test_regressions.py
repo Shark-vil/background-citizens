@@ -1200,6 +1200,47 @@ vehicles.execute('''
     assert(a.is_removed and corpse and corpse.pos==a.npc.pos, 'a blocked exit still leaves a corpse at the seat')
 ''')
 
+# Actor health forwards to the attached body and safely handles missing methods.
+for server_realm in (True, False):
+    health = realm(server_realm)
+    load(health, 'core/sh_class.lua', 'actor/sh_actor.lua')
+    health.execute('''
+        local npc={valid=true,Health=function() return 37 end,GetMaxHealth=function() return 73 end}
+        local actor=setmetatable({npc=npc},bgNPC.Actor)
+        assert(actor:Health()==37 and actor:GetHealth()==37 and actor:GetMaxHealth()==73)
+        actor.npc={valid=true,Health=function() return 9 end,GetMaxHealth=function() return 99 end}
+        assert(actor:GetHealth()==9 and actor:GetMaxHealth()==99, 'rebinding reads the current NPC or NextBot')
+        actor.npc={valid=true,Health=false,GetMaxHealth=123}
+        assert(actor:Health()==0 and actor:GetHealth()==0 and actor:GetMaxHealth()==0,
+            'missing or non-callable health methods return zero')
+        actor.vehicle_body={health=12,max_health=80}
+        assert(actor:GetHealth()==12 and actor:GetMaxHealth()==80, 'stored vehicle body supplies missing health methods')
+        actor.npc=npc
+        assert(actor:GetHealth()==37 and actor:GetMaxHealth()==73, 'valid entity methods take priority over stored values')
+        npc.valid=false
+        assert(actor:Health()==12 and actor:GetMaxHealth()==80, 'a missing vehicle visual retains stored character health')
+        actor.vehicle_body=nil; actor.npc=nil
+        assert(actor:GetHealth()==0 and actor:GetMaxHealth()==0, 'an absent body returns zero')
+    ''')
+
+# Medics read both their own and their partner's health through the actor API.
+medics = realm(True)
+load(medics, 'core/sh_class.lua', 'actor/sh_actor.lua', 'systems/sv_medics.lua')
+medics.execute('''
+    local npc={valid=true,Health=function() return 100 end,GetMaxHealth=function() return 100 end}
+    local partner=setmetatable({npc=npc,IsAlive=function() return true end,InVehicle=function() return false end,
+        HasState=function() return false end,SetState=function(self,s) self.state=s end},bgNPC.Actor)
+    local actor=setmetatable({npc=npc,GetType=function() return 'medic' end,medic_partner=partner},bgNPC.Actor)
+    actor.medic_call={medic=actor}
+    bgNPC.Actors.Get=function() return actor end
+    local attacker={IsPlayer=function() return true end}
+    hooks.BGN_PreReactionTakeDamage.BGN_Medics_Attacker(attacker,npc)
+    assert(partner.state=='brawl', 'a healthy partner protects the medic performing a revival')
+    partner.state=nil; partner.Health=function() return 20 end
+    hooks.BGN_PreReactionTakeDamage.BGN_Medics_Attacker(attacker,npc)
+    assert(partner.state==nil, 'a wounded partner must not be sent to fight')
+''')
+
 # Run the actual traffic task and attached Think with a stationary car.
 traffic = realm(True)
 traffic.execute('''

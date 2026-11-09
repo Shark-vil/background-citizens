@@ -129,8 +129,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_Medics_Attacker', function(attacker, 
 	actor.medic_attackers = actor.medic_attackers or setmetatable({}, { __mode = 'k' })
 	actor.medic_attackers[attacker] = true
 
-	local health = target:Health() - (dmginfo and dmginfo:GetDamage() or 0)
-	if health < target:GetMaxHealth() * LOW_HEALTH then Flee(actor, attacker) return false end
+	local health = actor:Health() - (dmginfo and dmginfo:GetDamage() or 0)
+	if health < actor:GetMaxHealth() * LOW_HEALTH then Flee(actor, attacker) return false end
 
 	-- fists against a player only (a brawl needs both sides; an armed actor is run from as usual)
 	if not attacker:IsPlayer() then return end
