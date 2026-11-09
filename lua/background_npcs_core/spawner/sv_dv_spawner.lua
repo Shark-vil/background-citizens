@@ -24,6 +24,7 @@ local function FindSpawnLocation(center)
 	points = bgNPC.Table.Shuffle(points)
 	local dvd = DecentVehicleDestination
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
+	local visibility_radius = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 	local all_players = player.GetAll()
 	local spawn_position = nil
 	local spawn_angle = nil
@@ -42,6 +43,8 @@ local function FindSpawnLocation(center)
 				end
 
 				if bgNPC.Util.IsInView(ply, spawn_position) then
+					if distance <= visibility_radius then goto skip end
+
 					local tr = util.TraceLine({
 						start = ply:EyePos(),
 						endpos = spawn_position,
