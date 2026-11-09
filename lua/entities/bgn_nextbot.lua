@@ -23,6 +23,7 @@ if CLIENT then return end
 
 local WALK_SPEED = 75
 local RUN_SPEED = 210
+local MIN_MOVE_SPEED = 30 -- units per second; slower than that stands in the idle pose
 local GOAL_TOLERANCE = 30
 local REPATH_PERIOD = 1
 local DOOR_CHECK_PERIOD = 0.5
@@ -328,12 +329,16 @@ function ENT:UpdateActivity()
 
 	local set = ACTIVITIES[self:HoldType()] or ACTIVITIES.none
 	local fighting = self.alert == 'combat' and IsValid(self.enemy)
-	local moving = self.loco:GetVelocity():Length2DSqr() > 100
+	-- Crowd pushing and sidesteps move a bot a few units per second; a walk or run cycle slowed down to that looks like
+	-- slow-motion running (people waiting in a dialogue), so only a real pace plays one, and a run needs a run pace.
+	local speed_sqr = self.loco:GetVelocity():Length2DSqr()
+	local moving = speed_sqr > MIN_MOVE_SPEED ^ 2
+	local running = self.move_run and speed_sqr > (WALK_SPEED * 1.4) ^ 2
 	local list
 	if not self:IsOnGround() then
 		list = AIR_ACTIVITIES
 	elseif moving then
-		list = self.move_run and (fighting and set.run_aim or set.run) or (fighting and set.walk_aim or set.walk)
+		list = running and (fighting and set.run_aim or set.run) or (fighting and set.walk_aim or set.walk)
 	else
 		list = fighting and set.aim or set.idle
 	end
