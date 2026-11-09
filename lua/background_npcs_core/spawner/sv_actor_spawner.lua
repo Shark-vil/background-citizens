@@ -83,7 +83,7 @@ local function InitActorsSpawner(delay)
 				end
 
 				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
-				if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) >= max_limit then
+				if max_limit == 0 or bgNPC.Actors.Count(npc_type) >= max_limit then
 					continue
 				end
 

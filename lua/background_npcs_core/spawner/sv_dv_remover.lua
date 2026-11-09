@@ -70,10 +70,7 @@ hook.Add('PostCleanupMap', 'BGN_CleanDvCarsCache', function()
 end)
 
 hook.Add('BGN_DvCarRemoved', 'BGN_DVCars_OnRemoved', function(vehicle_provider)
-	for _, actor in ipairs(vehicle_provider:GetPassengers()) do
-		local npc = actor:GetNPC()
-		if IsValid(npc) then npc:Remove() end
-	end
+	vehicle_provider:RemoveActors()
 end)
 
 timer.Create('BGN_Timer_DVCars_Remover', 1, 0, function()

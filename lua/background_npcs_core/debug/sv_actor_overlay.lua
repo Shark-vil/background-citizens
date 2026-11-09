@@ -20,14 +20,15 @@ timer.Create('BGN_Debug_ActorOverlay', 0.5, 0, function()
 	local rows, counts, types = {}, {}, {}
 	local now = CurTime()
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
-		if actor:IsAlive() then
+		if actor:IsAlive() and IsValid(actor:GetNPC()) then
 			local npc = actor:GetNPC()
 			local actor_type = actor:GetType()
 			counts[actor_type] = (counts[actor_type] or 0) + 1
 			rows[#rows + 1] = {
 				uid = actor.uid, type = actor_type, pos = npc:GetPos(), ang = npc:GetAngles(),
-				mins = npc:OBBMins(), maxs = npc:OBBMaxs(), hp = npc:Health(), state = actor:GetState(),
-				body = npc:IsNextBot() and 'nextbot' or 'npc', brain = bgNPC.Brain.Resolve(actor), lod = actor.lod,
+				mins = npc:OBBMins(), maxs = npc:OBBMaxs(), hp = actor:Health(), state = actor:GetState(),
+				in_vehicle = actor:InVehicle(),
+				body = actor:InVehicle() and 'vehicle' or (npc:IsNextBot() and 'nextbot' or 'npc'), brain = bgNPC.Brain.Resolve(actor), lod = actor.lod,
 				enemies = actor.enemies_count, targets = actor.targets_count,
 				spawn_age = actor.debug_spawn and now - actor.debug_spawn.time,
 				spawn_pos = actor.debug_spawn and now - actor.debug_spawn.time < 5 and actor.debug_spawn.pos or nil,

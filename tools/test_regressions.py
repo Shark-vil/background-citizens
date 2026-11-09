@@ -151,11 +151,12 @@ overlay.execute('''
     bgNPC.Points={Count=function() return 123 end}
     bgNPC.ServerLoad={IsLagging=function() return false end}
     bgNPC.Brain={Resolve=function() return 'fsm' end}
-    local npc={GetPos=function() return Vector(100,0,0) end,GetAngles=function() return {} end,
+    local npc={valid=true,GetPos=function() return Vector(100,0,0) end,GetAngles=function() return {} end,
         OBBMins=function() return Vector(-16,-16,0) end,OBBMaxs=function() return Vector(16,16,72) end,
         Health=function() return 30 end,IsNextBot=function() return false end}
     actor={uid=1,lod=1,GetNPC=function() return npc end,GetPos=npc.GetPos,
-        GetType=function() return 'citizen' end,GetState=function() return 'walk' end,IsAlive=function() return true end}
+        GetType=function() return 'citizen' end,GetState=function() return 'walk' end,IsAlive=function() return true end,
+        InVehicle=function() return false end,Health=function() return 30 end}
     bgNPC.Actors.GetAll=function() return {actor} end
 ''')
 load(overlay, 'debug/sv_actor_overlay.lua')
@@ -355,6 +356,7 @@ recycle.execute('''
     bgNPC.Tasks.Remove=function() end
     bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 10 end}
     bgNPC.Actors.GetNPCsByType=function() return {npc} end
+    bgNPC.Actors.Count=function() return 1 end
     bgNPC.Util.CanSeeEntity=function(ply) return ply.looking and not ply.blocked end
     npc={valid=true}; viewers={{valid=true,looking=false},{valid=true,looking=false}}
     player.GetHumans=function() return viewers end
@@ -623,6 +625,7 @@ server.execute('''
     function actor:GetType() return 'citizen' end
     function actor:GetName() return self.info.name end
     function actor:GetGender() return self.info.gender end
+    function actor:InVehicle() return false end
     npc.BGN_ACTOR_OBJECT=actor
     npc.EntityMods={other_addon={keep=true}}
     npc.OnEntityCopyTableFinish=function(_,data) data.original_callback=true end
@@ -851,7 +854,7 @@ client.execute('''
 # Arrest callbacks must retain the final pose until the fading entity is removed.
 arrest = realm(True)
 arrest.execute('''
-    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    bgNPC.Actor={InVehicle=function() return false end}; bgNPC.Assert={Arg=function() end}
     bgNPC.Animator={Stop=function() error('arrest released the NPC during fade') end}
     bgNPC.States={Register=function(name,_,state) bgNPC.States[name]=state end}
 ''')
@@ -1041,168 +1044,134 @@ ceasefire.execute('''
     assert(not module:IsProtected(target),'an NPC resuming combat must end protection')
 ''')
 
-# Vehicle exits must restore the real actor and must not skip or reboard passengers.
+# Vehicle lifecycle: a stable logical actor replaces its physical body at the seat boundary.
 vehicles = realm(True)
 vehicles.execute('''
     bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
-    DecentVehicleDestination={}; BGN_VEHICLE={}
-    COLLISION_GROUP_WORLD=20; SOLID_NONE=0; EFL_NO_THINK_FUNCTION=1
-    bgNPC.Util.Chance=function() return true end
-    bgNPC.Animator={Stop=function() end}
-    near_player={pos=Vector(),Alive=function() return true end,GetPos=function(self) return self.pos end}
-    player.GetAll=function() return {near_player} end
-    bgNPC.Util.EntityTimer=function(ent,name,delay,count,fn) boarding=function() fn(ent) end end
-    function Angle() return {} end
+    DecentVehicleDestination={}; BGN_VEHICLE={}; bgNPC.Animator={Stop=function() end}
+    bgNPC.Table.HasValue=function(t,v) for _,x in ipairs(t) do if x==v then return true end end return false end
+    table.HasValue=bgNPC.Table.HasValue
+    function Angle(_,y) return {y=y or 0} end
     local vmeta=getmetatable(Vector())
     function vmeta.__mul(v,n) return Vector(v.x*n,v.y*n,v.z*n) end
     function vmeta.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     util.IsInWorld=function() return true end
-    util.TraceHull=function() return {StartSolid=false} end
-    ents={FindInSphere=function() return {} end}
-    function NewWeapon(hidden)
-        return {valid=true,hidden=hidden,GetNoDraw=function(w) return w.hidden end,
-            SetNoDraw=function(w,v) w.hidden=v end}
+    util.TraceHull=function() return {StartSolid=blocked,Hit=blocked} end
+    util.TraceLine=function() return {Hit=true,HitNormal=Vector(0,0,1),HitPos=Vector(200,0,0)} end
+    bgNPC.Util.EntityTimer=function(ent,name,_,__,fn) timers[name]=function() fn(ent) end end
+    next_uid=0
+    function NewEntity(class)
+        local e={valid=true,class=class,hp=37,maxhp=73,pos=Vector(),model='original.mdl',clip1=7,clip2=-1}
+        function e:GetClass() return self.class end
+        function e:EntIndex() return tostring(self) end
+        function e:GetCollisionBounds() return Vector(-16,-16,0),Vector(16,16,72) end
+        function e:GetSkin() return 1 end
+        function e:GetModelScale() return 1 end
+        function e:GetColor() return {} end
+        function e:GetMaterial() return '' end
+        function e:GetCollisionGroup() return 5 end
+        function e:GetBodyGroups() return {} end
+        function e:GetKeyValues() return {} end
+        function e:GetModel() return self.model end
+        function e:SetModel(v) self.model=v end
+        function e:Health() return self.hp end
+        function e:GetMaxHealth() return self.maxhp end
+        function e:SetHealth(v) self.hp=v end
+        function e:SetMaxHealth(v) self.maxhp=v end
+        function e:GetPos() return self.pos end
+        function e:SetPos(v) self.pos=v end
+        function e:GetAngles() return {y=0} end
+        function e:Clip1() return self.clip1 end
+        function e:Clip2() return self.clip2 end
+        function e:SetClip1(v) self.clip1=v end
+        function e:SetClip2(v) self.clip2=v end
+        function e:GetActiveWeapon() return self.weapon end
+        function e:Remove() self.valid=false; if self.weapon then self.weapon.valid=false end end
+        function e:SetNW2Bool() end
+        function e:SetAngles() end
+        function e:SetSkin() end
+        function e:SetModelScale() end
+        function e:SetColor() end
+        function e:SetMaterial() end
+        function e:SetCollisionGroup() end
+        function e:Spawn() end
+        function e:Activate() end
+        return e
     end
+    ents={Create=NewEntity}
+    bgNPC.Body={For=function(actor,npc) return {GetEnemy=function() end,GiveWeapon=function(_,class)
+        npc.weapon=NewEntity(class); return npc.weapon end} end}
     function NewActor()
-        local npc={valid=true,hidden=false,solid=2,pos=Vector(),weapon=NewWeapon(false)}
-        function npc:GetActiveWeapon() return self.weapon end
-        function npc:SetNoDraw(v) self.hidden=v end
-        function npc:SetNW2Bool(_,v) self.in_car=v end
-        function npc:SetCollisionGroup(v) self.collision=v end
-        function npc:GetSolid() return self.solid end
-        function npc:SetSolid(v) self.solid=v end
-        function npc:SetPos(v) self.pos=v end
-        function npc:GetPos() return self.pos end
-        function npc:GetCollisionBounds() return Vector(-16,-16,0),Vector(16,16,72) end
-        function npc:GetAngles() return {y=0} end
-        function npc:SetAngles() end
-        function npc:AddEFlags() self.frozen=true end
-        function npc:RemoveEFlags() self.frozen=false end
-        function npc:PhysWake() end
-        local actor=setmetatable({npc=npc,mechanics={use_vehicle=true},collision_group=5}, {__index=bgNPC.Actor})
-        function actor:IsAlive() return true end
-        function actor:GetType() return 'police' end
-        function actor:HasTeam() return true end
-        function actor:GetNPC() return self.npc end
-        function actor:DropToFloor() self.dropped=true end
-        return actor
+        next_uid=next_uid+1
+        local npc=NewEntity('npc_citizen'); npc.weapon=NewEntity('weapon_pistol')
+        local a=setmetatable({uid=next_uid,npc=npc,mechanics={use_vehicle=true},enemies={},targets={},enemies_always_visible={},info={}}, {__index=bgNPC.Actor})
+        function a:GetNPC() return self.npc end
+        function a:GetType() return 'police' end
+        function a:GetActiveWeapon() return self.npc.weapon end
+        function a:Health() return self.npc:Health() end
+        function a:HasTeam() return true end
+        function a:IsAlive() return not self.is_removed end
+        function a:CreateFakePlayerMethodsForNPC() end
+        function a:Remove() self.is_removed=true; bgNPC.Actors.UnregisterActor(self) end
+        bgNPC.Actors.Register(a)
+        return a
     end
     function NewCar()
-        local car={valid=true,IsVehicle=function() return true end,GetPos=function() return Vector() end,
-            GetMaxHealth=function() return 0 end,Health=function() return 0 end,
-            GetModelBounds=function() return Vector(),Vector(100,100,100) end,
-            GetForward=function() return Vector(1,0,0) end,GetRight=function() return Vector(0,1,0) end,
-            GetUp=function() return Vector(0,0,1) end}
-        local p={car=car,passengers={},ai={valid=true}}
+        local car=NewEntity('car')
+        function car:IsVehicle() return true end
+        function car:GetModelBounds() return Vector(),Vector(100,100,100) end
+        function car:GetForward() return Vector(1,0,0) end
+        function car:GetRight() return Vector(0,1,0) end
+        local p={car=car,passengers={}}
         function p:IsValid() return self.car.valid end
-		function p:CanUse() return true end
+        function p:CanUse() return true end
         function p:GetVehicle() return self.car end
         function p:GetVehicleAI() return self.ai end
         function p:GetDriver() return self.driver end
-        function p:GetPassengers() return self.passengers end
         function p:SetDriver(a)
             self.driver=a
-            if a then self.passengers[#self.passengers+1]=a else self.ai.valid=false; table.remove(self.passengers,1) end
+            if a then self.ai=NewEntity('npc_decentvehicle'); self.passengers[#self.passengers+1]=a; return true end
+            if self.ai then self.ai:Remove() end
+            table.remove(self.passengers,1)
         end
         function p:RemovePassenger(a)
-            for i,v in ipairs(self.passengers) do if v==a then table.remove(self.passengers,i); break end end
+            for i,v in ipairs(self.passengers) do if v==a then table.remove(self.passengers,i); return end end
         end
-        function p:AddPassenger(a) self.passengers[#self.passengers+1]=a; return true end
+        function p:AddPassenger(a)
+            self.passengers[#self.passengers+1]=a
+            return true,NewEntity('npc_decentvehicle_passenger')
+        end
         BGN_VEHICLE.GetVehicleProvider=function() return p end
         return p
     end
+    near_player={pos=Vector(),Alive=function() return true end,GetPos=function(self) return self.pos end}
+    player.GetAll=function() return {near_player} end
 ''')
-load(vehicles, 'actor/components/sh_vehicle.lua', 'modules/dv/sv_car_damage_reaction.lua')
+load(vehicles, 'api/sh_actors.lua', 'actor/components/sh_vehicle.lua')
 vehicles.execute('''
-    local p=NewCar(); local actor=NewActor()
-    actor:EnterVehicle(p.car); boarding()
-    assert(actor:InVehicle() and actor.npc.hidden and actor.npc.weapon.hidden)
-    local first=actor.npc.weapon
-    actor.npc.weapon=NewWeapon(false)
-    hook.Run('BGN_OnSetActorWeapon',actor)
-    assert(actor.npc.weapon.hidden,'weapons drawn during combat must stay hidden in the car')
-    actor:ExitVehicle()
-    assert(not actor:InVehicle() and not actor.npc.in_car and not actor.npc.hidden)
-    assert(not first.hidden and not actor.npc.weapon.hidden and not actor.npc.frozen)
-    assert(actor.npc.solid==2 and actor.npc.collision==5 and actor.dropped)
-    actor:EnterVehicle(p.car); boarding()
-    p.car.valid=false; actor.mechanics.use_vehicle=false; DecentVehicleDestination=nil
-    actor:ExitVehicle()
-    assert(not actor.npc.hidden and not actor.npc.weapon.hidden and not actor.npc.frozen,
-        'cleanup must work even after the car or vehicle integration is gone')
-    DecentVehicleDestination={}
-
-    damage_car=NewCar(); damage_actors={NewActor(),NewActor(),NewActor()}
-    local count=0
-    for _,a in ipairs(damage_actors) do
-        a:EnterVehicle(damage_car.car); boarding()
-        function a.npc:TakeDamage() count=count+1 end
-    end
-    bgNPC.DVCars={damage_car}
-    local attacker={IsPlayer=function() return true end,GetPos=function() return Vector() end}
-    local info={GetAttacker=function() return attacker end, GetDamage=function() return 10 end,
-        GetInflictor=function() return attacker end}
-    hooks.EntityTakeDamage.BGN_DVCarsDamageReaction(damage_car.car,info)
-    assert(count==3 and #damage_car.passengers==0,'damage must reach every passenger even as the driver exits')
-    for _,a in ipairs(damage_actors) do assert(not a:InVehicle() and not a.npc.hidden) end
-
-    abandoned=NewCar()
-    abandoned_actors={NewActor(),NewActor(),NewActor()}
-    for _,a in ipairs(abandoned_actors) do a:EnterVehicle(abandoned.car); boarding() end
-    abandoned_actors[1]:ExitVehicle()
-    bgNPC.DVCars={abandoned}
-''')
-# GMod's continue skips the outer car loop; express that with LuaJIT's goto for this harness.
-movement = (ROOT / 'modules/dv/sv_move_to_target.lua').read_text(encoding='utf-8-sig')
-vehicles.execute(movement.replace('continue', 'goto next_car').replace('\n\tend\nend)', '\n\t::next_car::\n\tend\nend)'))
-vehicles.execute('''
-    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
-    assert(#abandoned.passengers==0,'passengers must leave a car after its driver and AI are gone')
-    for _,a in ipairs(abandoned_actors) do assert(not a.npc.hidden and not a.npc.weapon.hidden) end
-''')
-vehicles.execute('''
-    near_player.pos=Vector(5000,0,0)
-    local p=NewCar(); local officer=NewActor()
-    officer:EnterVehicle(p.car); boarding()
-    officer:ExitVehicle()
-    assert(officer:InVehicle(), 'distant events must not make police leave a car without health')
-    bgNPC.DVCars={p}
-    function officer:EqualStateGroup() return false end
-    function p.ai:GetELS() return false end
-    function officer:EnemiesCount() return 0 end
-    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
-    assert(officer:InVehicle())
-    local hits=0
-    officer.npc.TakeDamage=function() hits=hits+1 end
-    local attacker={IsPlayer=function() return false end,IsNPC=function() return true end}
-    local info={GetAttacker=function() return attacker end,GetDamage=function() return 1 end,
-        GetInflictor=function() return attacker end}
-    hooks.EntityTakeDamage.BGN_DVCarsDamageReaction(p.car,info)
-    assert(officer:InVehicle() and hits==1, 'NPC fire must retain passenger damage without forcing police out')
-    p.car.GetMaxHealth=function() return 1000 end
-    p.car.GetCurHealth=function() return 201 end
-    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
-    assert(officer:InVehicle(), 'above 20 percent the car is still usable')
-    p.car.GetCurHealth=function() return 200 end
-    timers.BGN_DVCars_ExitAnVhicleIfLowerDistance()
-    assert(not officer:InVehicle(), 'low simfphys health must trigger exit even without an enemy')
-    p=NewCar(); officer=NewActor(); officer:EnterVehicle(p.car); boarding()
-    near_player.pos=Vector(800.1,0,0); assert(not officer:ShouldExitVehicle())
-    near_player.pos=Vector(800,0,0); assert(officer:ShouldExitVehicle())
-    near_player.Alive=function() return false end
-    assert(not officer:ShouldExitVehicle(), 'dead players must not trigger dismounts')
-    near_player.Alive=function() return true end
-    near_player.pos=Vector(5000,0,0)
-    p.car.GetMaxHealth=function() return 100 end
-    p.car.Health=function() return 20 end
-    assert(officer:ShouldExitVehicle(), 'vehicles with ordinary entity health must also support evacuation')
-    p.car.Health=function() return 21 end
-    assert(not officer:ShouldExitVehicle())
-    officer:ExitVehicle(true)
-    assert(not officer:InVehicle(), 'vehicle removal and ejection must still be able to detach passengers')
-    officer=NewActor(); p=NewCar(); officer:EnterVehicle(p.car); boarding()
-    officer.HasTeam=function() return false end
-    officer:ExitVehicle(); assert(not officer:InVehicle(), 'other actors keep their existing exit rules')
+    local p=NewCar(); local a,b=NewActor(),NewActor(); local old=a.npc
+    b.enemies={old}; b.targets={old}; b.enemies_always_visible={old}; b.walkTarget=old
+    a:EnterVehicle(p.car); b:EnterVehicle(p.car)
+    assert(timers.bgn_actor_enter_vehicle_1 and timers.bgn_actor_enter_vehicle_2,'boarding timers are per actor')
+    timers.bgn_actor_enter_vehicle_1(); timers.bgn_actor_enter_vehicle_2()
+    assert(a:InVehicle() and b:InVehicle() and not old.valid)
+    assert(bgNPC.Actors.Count()==2 and bgNPC.Actors.GetByUid(a.uid)==a)
+    assert(b.enemies[1]==a.npc and b.targets[1]==a.npc and b.walkTarget==a.npc)
+    assert(not old.isBgnActor and not old.BGN_ACTOR_OBJECT,'intentional body removal cannot unregister or kill the actor')
+    assert(a.vehicle_body.health==37 and a.vehicle_body.weapons[1].clip1==7)
+    blocked=true; assert(not b:ExitVehicle(true) and b:InVehicle(),'blocked exit retains the seat')
+    blocked=false; local visual=b.npc
+    assert(b:ExitVehicle(true) and b.npc~=visual and b.npc.class=='npc_citizen')
+    assert(b.npc.hp==37 and b.npc.weapon.clip1==7 and not b:InVehicle())
+    assert(a:ExitVehicle(true) and bgNPC.Actors.GetByUid(a.uid)==a and bgNPC.Actors.Count()==2)
+    a:EnterVehicle(p.car); timers.bgn_actor_enter_vehicle_1()
+    p.car.valid=false; assert(not a:ExitVehicle(true) and a.is_removed and bgNPC.Actors.Count()==1,
+        'vehicle removal never resurrects a physical body')
+    p=NewCar(); a=NewActor(); a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
+    near_player.pos=Vector(800.1,0,0); p.car.maxhp=0; assert(not a:ShouldExitVehicle())
+    near_player.pos=Vector(800,0,0); assert(a:ShouldExitVehicle())
+    near_player.pos=Vector(5000,0,0); p.car.maxhp=100; p.car.hp=20; assert(a:ShouldExitVehicle())
+    p.car.hp=21; assert(not a:ShouldExitVehicle())
 ''')
 
 rendering = realm(False)
@@ -1262,20 +1231,35 @@ speech.execute('''
 ''')
 sync = realm(False)
 sync.execute('''
-    local actors={}
-    bgNPC.Actors.GetByUid=function(uid) return actors[uid] end
+    bgNPC.Assert={Arg=function() end}
+    bgNPC.Table.HasValue=function(t,v) for _,x in ipairs(t) do if x==v then return true end end return false end
+    function SyncEntity() return {valid=true,EntIndex=function(self) return tostring(self) end} end
     bgNPC.Actor={Create=function(npc,kind,uid)
-        local a={npc=npc,kind=kind,GetNPC=function(self) return self.npc end,
+        local a={uid=uid,npc=npc,kind=kind,mechanics={},enemies={},targets={},enemies_always_visible={},
+            GetNPC=function(self) return self.npc end,GetType=function(self) return self.kind end,
             SetName=function() end,SetGender=function() end,SyncState=function(self,v) self.state=v end}
-        actors[uid]=a; return a
+        return a
     end}
 ''')
-load(sync, 'actor/sync/cl_sync.lua')
+load(sync, 'api/sh_actors.lua', 'actor/sync/cl_sync.lua')
 sync.execute('''
     assert(received.bgn_actor_sync_data.opts.wait_entities)
-    received.bgn_actor_sync_data.f(nil,17,{npc={valid=true},actor_type='police',state='walk'})
+    local first,second=SyncEntity(),SyncEntity()
+    received.bgn_actor_sync_data.f(nil,17,{npc=first,actor_type='police',state='walk',entity_generation=0})
     local a=bgNPC.Actors.GetByUid(17)
-    assert(a and a.kind=='police' and a.state=='walk','state sync must recover a missed actor registration')
+    assert(a and a.kind=='police' and a.state=='walk','state sync recovers missed registration')
+    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',state='walk',entity_generation=1})
+    assert(bgNPC.Actors.GetByUid(17)==a and a.npc==second and bgNPC.Actors.Count()==1,'rebind retains identity without duplicate population')
+    received.bgn_add_actor_from_client.f(nil,first,'police',17,nil,0)
+    assert(a.npc==second,'late initial packet cannot revive the deleted body')
+    second.valid=false; bgNPC.Actors.ClearRemoved()
+    assert(bgNPC.Actors.GetByUid(17)==a,'a missing client body does not retire the server-owned identity')
+    local third=SyncEntity()
+    received.bgn_actor_sync_data.f(nil,17,{npc=third,actor_type='police',state='walk',entity_generation=2})
+    assert(bgNPC.Actors.GetByUid(17)==a and a.npc==third,'identity survives a gap between entity packets')
+    received.bgm_update_death_actors_on_client.f(nil,second,17)
+    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',entity_generation=1})
+    assert(not bgNPC.Actors.GetByUid(17),'late state sync cannot resurrect a removed actor')
 ''')
 
 medics = realm(True)
@@ -1301,6 +1285,7 @@ medics.execute('''
     find_requests=0; free_medics={}
     bgNPC.Actors.GetByType=function() find_requests=find_requests+1; return free_medics end
     bgNPC.Actors.GetNPCsByType=function() return {} end
+    bgNPC.Actors.Count=function() return 0 end
     bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end}
 ''')
 load(medics, 'systems/sv_medics.lua', 'brain/fsm/states/sv_medic_revive.lua')
@@ -1475,6 +1460,7 @@ police_weapons.execute('''
     bgNPC.Util.GetCVar=function(name) return GetConVar(name) end
     bgNPC.cfg.melee_weapons={'weapon_stunstick','weapon_crowbar','none'}
     bgNPC.Table.HasValue=function(t,v) for _,x in ipairs(t) do if x==v then return true end end return false end
+    table.HasValue=bgNPC.Table.HasValue
     list.GetForEdit=function() return {} end
     local protected=false
     list.Set('BGN_Modules','player_arrest',{IsProtected=function() return protected end})
@@ -1575,7 +1561,9 @@ police_weapons.execute('''
 ''')
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
-paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
+paths = ['actor/sh_actor.lua', 'api/sh_actors.lua', 'api/sh_statistics.lua',
+         'modules/sv_followers_mod.lua', '../entities/npc_decentvehicle_passenger/init.lua',
+         'core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'core/sh_animator.lua', 'cvars/sh_cvars.lua', 'systems/sv_medics.lua',
          'systems/sv_static_animation_controller.lua', 'brain/fsm/states/sv_random_gesture.lua',
          'brain/fsm/states/sv_medic_revive.lua', 'ui/menu/cl_menu_pages.lua',
@@ -1661,6 +1649,7 @@ cleanup.execute('''
         function provider:GetVehicle() return car end
         function provider:GetDriver() return self.driver end
         function provider:GetPassengers() return {} end
+        function provider:RemoveActors() end
         function provider:IsValidAI() return false end
         function provider:Remove() car.valid=false end
         bgNPC.DVCars={provider}
@@ -1708,7 +1697,7 @@ access.execute('''
 ''')
 load(access, 'modules/dv/sh_dv_vehicle.lua')
 access.execute('''
-    local car={valid=true,GetDriver=function() end}
+    local car={valid=true,GetDriver=function() end,CallOnRemove=function() end}
     local police={HasTeam=function(_,team) return team=='police' end,IsAlive=function() return true end}
     local citizen={HasTeam=function() return false end,GetVehicleGroup=function() return 'residents' end}
     local p=BGN_VEHICLE:Instance(car,'police','police')
@@ -1718,7 +1707,7 @@ access.execute('''
     assert(p:SetDriver(citizen)==false and p:AddPassenger(citizen)==false)
     assert(not p.driver and #p.passengers==0)
     p:SetGroup('residents'); assert(not p:CanUse(citizen), 'group changes cannot remove police designation')
-    local ambulance=BGN_VEHICLE:Instance({valid=true},'medics|npc_dvbgn_police|ambulance|2','medic')
+    local ambulance=BGN_VEHICLE:Instance({valid=true,CallOnRemove=function() end},'medics|npc_dvbgn_police|ambulance|2','medic')
     assert(ambulance:CanUse(citizen), 'police AI class does not make an ambulance a police car')
 ''')
 movement = realm(True)
@@ -1748,4 +1737,4 @@ movement.execute('''
     assert(schedules==2, 'an interrupted schedule must be restarted')
     b:MoveTo(Vector(150,0,0),true); assert(schedules==3, 'new goals must reach the engine')
 ''')
-print('PASS: existing regressions, spawn headings, cleanup, police access, detour cancellation, stable NPC schedules and LuaJIT syntax')
+print('PASS: existing regressions, vehicle body lifecycle/identity/sync, spawn headings, cleanup, police access, detours and LuaJIT syntax')

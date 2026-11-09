@@ -6,7 +6,7 @@ local Assert = bgNPC.Assert
 -- Static animations
 -- ---------------------------------------------------------------------------
 function Actor:IsValidSequence(sequence_name)
-	return isstring(sequence_name) and IsValid(self.npc) and self.npc:LookupSequence(sequence_name) ~= -1
+	return not self:InVehicle() and isstring(sequence_name) and IsValid(self.npc) and self.npc:LookupSequence(sequence_name) ~= -1
 end
 
 -- Plays a sequence, holding the NPC in a scripted state while it plays.

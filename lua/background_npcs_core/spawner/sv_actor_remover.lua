@@ -13,6 +13,14 @@ end)
 
 hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 	if not ent.isBgnActor then return end
+	local actor = bgNPC.Actors.Get(ent) or ent.BGN_ACTOR_OBJECT
+	if actor and actor.vehicle_body then
+		timer.Simple(0, function()
+			if actor.is_removed or actor:GetNPC() ~= ent then return end
+			if not actor:ExitVehicle(true) then actor:Remove() end
+		end)
+		return
+	end
 	bgNPC.Actors.Unregister(ent)
 end)
 
@@ -116,7 +124,7 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 			local over_limit = false
 			if not actor.mechanics.ignore_limit then
 				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
-				over_limit = max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) > max_limit
+				over_limit = max_limit == 0 or bgNPC.Actors.Count(npc_type) > max_limit
 			end
 
 			if over_limit or actor.toRemove or not bgn_actors_teleporter then

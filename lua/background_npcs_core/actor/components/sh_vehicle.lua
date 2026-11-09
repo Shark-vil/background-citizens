@@ -18,104 +18,92 @@ function Actor:GetVehicleGroup()
 	return string.Explode('|', ResolveVehicleGroup(self) or 'residents')[1]
 end
 
-local function HideVehicleWeapon(actor)
-	local weapon = actor.npc:GetActiveWeapon()
-	if not IsValid(weapon) then return end
-	actor.vehicle_weapons = actor.vehicle_weapons or {}
-	if actor.vehicle_weapons[weapon] == nil then actor.vehicle_weapons[weapon] = weapon:GetNoDraw() end
-	weapon:SetNoDraw(true)
+local function CaptureBody(actor)
+	-- shortcut: addon-private NPC state needs its own BGN_ActorEntityChanged handler when restored.
+	local npc = actor:GetNPC()
+	local mins, maxs = npc:GetCollisionBounds()
+	local saved = {
+		class = npc:GetClass(), npc_class = npc.bgn_npc_class, model = npc:GetModel(),
+		skin = npc:GetSkin(), scale = npc:GetModelScale(), color = npc:GetColor(), material = npc:GetMaterial(),
+		collision_group = npc:GetCollisionGroup(), mins = mins, maxs = maxs,
+		health = npc:Health(), max_health = npc:GetMaxHealth(), keyvalues = npc:GetKeyValues(),
+		bodygroups = {}, weapons = {}, eternal = actor.eternal,
+		proficiency = npc.GetCurrentWeaponProficiency and npc:GetCurrentWeaponProficiency(),
+		bot_clip = npc.IsBGNNextBot and npc.clip or nil,
+	}
+	for _, group in ipairs(npc:GetBodyGroups()) do saved.bodygroups[group.id] = npc:GetBodygroup(group.id) end
+	local active = actor:GetActiveWeapon()
+	saved.active_weapon = IsValid(active) and active:GetClass() or nil
+	local weapons = npc.GetWeapons and npc:GetWeapons() or { active }
+	if IsValid(active) and not table.HasValue(weapons, active) then weapons[#weapons + 1] = active end
+	for _, weapon in ipairs(weapons) do
+		if IsValid(weapon) then
+			saved.weapons[#saved.weapons + 1] = { class = weapon:GetClass(), clip1 = weapon:Clip1(), clip2 = weapon:Clip2() }
+		end
+	end
+	return saved
 end
 
 function Actor:EnterVehicle(vehicle)
 	Assert.Arg(1, vehicle, 'entity', 'ACTOR:EnterVehicle')
-
-	if not self.mechanics.use_vehicle then return end
-	if not DecentVehicleDestination then return end
-	if not IsValid(vehicle) or not vehicle:IsVehicle() then return end
-
-	local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
-	if not vehicle_provider then
-		vehicle_provider = BGN_VEHICLE:Instance(vehicle, ResolveVehicleGroup(self), self:GetType())
-		if not vehicle_provider then return end
-		BGN_VEHICLE:AddToList(vehicle_provider)
+	if not self.mechanics.use_vehicle or not DecentVehicleDestination then return end
+	if not IsValid(vehicle) or not vehicle:IsVehicle() or self:InVehicle() then return end
+	local provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
+	if not provider then
+		provider = BGN_VEHICLE:Instance(vehicle, ResolveVehicleGroup(self), self:GetType())
+		if not provider then return end
+		BGN_VEHICLE:AddToList(provider)
 	end
-	if not vehicle_provider:CanUse(self) then return end
+	if not provider:CanUse(self) then return end
 
-	local npc = self.npc
-
-	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle', 0.5, 1, function(self_vehicle)
-		if not IsValid(self_vehicle) or not self:IsAlive() then return end
-		if self:InVehicle() then return end
-		if not vehicle_provider:CanUse(self) then return end
-		if self_vehicle.bgnHeadingPending then
-			timer.Simple(.1, function() if IsValid(self_vehicle) and self:IsAlive() then self:EnterVehicle(self_vehicle) end end)
+	-- Each actor owns its pending request; simultaneous passenger requests must not replace each other.
+	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle_' .. self.uid, .5, 1, function(car)
+		if not self:IsAlive() or self:InVehicle() or not provider:CanUse(self) then return end
+		if car.bgnHeadingPending then
+			timer.Simple(.1, function() if IsValid(car) and self:IsAlive() then self:EnterVehicle(car) end end)
 			return
 		end
-
-		if not vehicle_provider:GetDriver() then
-			if vehicle_provider:SetDriver(self) == false then return end
-		elseif not vehicle_provider:AddPassenger(self) then
-			return
+		local npc = self:GetNPC()
+		local saved = CaptureBody(self)
+		local ok, model
+		if not provider:GetDriver() then
+			ok = provider:SetDriver(self)
+			model = provider:GetVehicleAI()
+		else
+			ok, model = provider:AddPassenger(self)
 		end
+		if not ok or not IsValid(model) then return end
 
-		self.eternal = true
-		self.vehicle = vehicle_provider
-		self.walkUpdatePathDelay = 0
-
-		-- Not parented: a child is sent to clients with its parent even when nodraw, and then it showed up
-		-- T-posed or with its animation copy stretched to the world origin. A nodraw entity without a parent is
-		-- not sent at all; the actor update keeps it at the car (Actor:FollowVehicle).
 		bgNPC.Animator.Stop(npc)
-		npc:SetNoDraw(true)
-		HideVehicleWeapon(self)
-		npc:SetNW2Bool('bgn_vehicle_entered', true)
-		npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
-		-- not solid: inside the car it blocked the car itself (DV saw an obstacle and rocked back and forth)
-		self.vehicle_solid = self.vehicle_solid or npc:GetSolid()
-		npc:SetSolid(SOLID_NONE)
-		npc:SetPos(self_vehicle:GetPos())
-		npc:AddEFlags(EFL_NO_THINK_FUNCTION)
-
-		hook.Run('BGN_OnEnterVehicle', self, vehicle_provider)
+		self.is_animated, self.anim_action, self.next_anim = false, nil, nil
+		self.vehicle_body, self.vehicle, self.eternal = saved, provider, true
+		self.model, self.skin, self.bodygroups, self.model_scale = saved.model, saved.skin, saved.bodygroups, saved.scale
+		self.walkUpdatePathDelay = 0
+		model:SetMaxHealth(saved.max_health)
+		model:SetHealth(saved.health)
+		model:SetNW2Bool('bgn_vehicle_entered', true)
+		-- DV already has an anim entity for the occupant. No hidden NPC/NextBot survives boarding.
+		bgNPC.Actors.Rebind(self, model)
+		npc:Remove()
+		hook.Run('BGN_OnEnterVehicle', self, provider)
 	end)
 end
 
-local EXIT_TRACE_OFFSET = Vector(0, 0, 500)
-local EXIT_FLOOR_OFFSET = Vector(0, 0, 15)
-
-local function FindVehicleExitPos(vehicle, npc)
-	local min, max = vehicle:GetModelBounds()
-	local side_dist = min:Distance(max) / 2
-	local pos = vehicle:GetPos()
-	local forward, right, up = vehicle:GetForward(), vehicle:GetRight(), vehicle:GetUp()
-	local side = bgNPC.Util.Chance(50) and -side_dist or side_dist
-	local exit_pos = pos + up * 50
-
-	local hull_mins, hull_maxs = npc:GetCollisionBounds()
-	for _ = 1, 8 do
-		exit_pos = pos + right * side + forward * math.random(-100, 100) + up * 50
-
-		-- the car is in the filter: the trace used to land on its roof or hood and the actor came out inside the body
-		local tr = util.TraceLine({
-			start = exit_pos,
-			endpos = exit_pos - EXIT_TRACE_OFFSET,
-			filter = { npc, vehicle },
-		})
-
-		if tr.Hit then exit_pos = tr.HitPos + EXIT_FLOOR_OFFSET end
-
-		-- the spot must be free for the whole body, and not inside the car
-		local hull = util.TraceHull({
-			start = exit_pos, endpos = exit_pos, mins = hull_mins, maxs = hull_maxs,
-			filter = npc, mask = MASK_PLAYERSOLID,
-		})
-		if util.IsInWorld(exit_pos) and not hull.StartSolid and #ents.FindInSphere(exit_pos, 15) <= 2 then
-			break
+local function FindVehicleExitPos(vehicle, saved, model)
+	local mins, maxs = vehicle:GetModelBounds()
+	local distance = mins:Distance(maxs) / 2 + 24
+	local pos, forward, right = vehicle:GetPos(), vehicle:GetForward(), vehicle:GetRight()
+	for i = 1, 8 do
+		local side = i % 2 == 0 and 1 or -1
+		local candidate = pos + right * distance * side + forward * (math.floor((i - 1) / 2) - 1) * 80 + Vector(0, 0, 80)
+		local ground = util.TraceLine({ start = candidate, endpos = candidate - Vector(0, 0, 500), filter = { model, vehicle } })
+		if ground.Hit and ground.HitNormal.z > .6 then
+			candidate = ground.HitPos + Vector(0, 0, 2)
+			local hull = util.TraceHull({ start = candidate, endpos = candidate, mins = saved.mins, maxs = saved.maxs,
+				filter = model, mask = MASK_NPCSOLID })
+			if util.IsInWorld(candidate) and not hull.StartSolid and not hull.Hit then return candidate end
 		end
-		side = -side
 	end
-
-	return exit_pos
 end
 
 function Actor:ShouldExitVehicle()
@@ -131,52 +119,62 @@ function Actor:ShouldExitVehicle()
 end
 
 function Actor:ExitVehicle(forced)
-	local vehicle_provider = self.vehicle
-	local npc = self.npc
-	if not vehicle_provider then return end
-	if not forced and not self:ShouldExitVehicle() then return end
-
-	if IsValid(npc) then
-		hook.Run('BGN_OnExitVehicle', self, vehicle_provider)
-
-		npc:SetNW2Bool('bgn_vehicle_entered', false)
-		if vehicle_provider:IsValid() then
-			npc:SetPos(FindVehicleExitPos(vehicle_provider:GetVehicle(), npc))
-		end
-		npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
-		npc:SetCollisionGroup(self.collision_group)
-		if self.vehicle_solid then npc:SetSolid(self.vehicle_solid) self.vehicle_solid = nil end
-		npc:RemoveEFlags(EFL_NO_THINK_FUNCTION)
-		npc:PhysWake()
-		npc:SetNoDraw(false)
-		for weapon, nodraw in pairs(self.vehicle_weapons or {}) do
-			if IsValid(weapon) then weapon:SetNoDraw(nodraw) end
-		end
-		self.vehicle_weapons = nil
-		self:DropToFloor()
+	local provider, saved = self.vehicle, self.vehicle_body
+	if not provider or not saved then return false end
+	if not provider:IsValid() or provider.removing then self:Remove() return false end
+	if not forced and not self:ShouldExitVehicle() then return false end
+	local old = self:GetNPC()
+	saved.health = self:Health()
+	local pos = FindVehicleExitPos(provider:GetVehicle(), saved, old)
+	if not pos then return false end -- Keep the seat when every exit is obstructed.
+	local npc = ents.Create(saved.class)
+	if not IsValid(npc) then return false end
+	for key, value in pairs(saved.keyvalues) do
+		if key ~= 'origin' and key ~= 'angles' then npc:SetKeyValue(key, tostring(value)) end
 	end
-
-	if vehicle_provider then
-		if vehicle_provider.driver == self then
-			vehicle_provider:SetDriver(nil)
-		else
-			vehicle_provider:RemovePassenger(self)
-		end
+	npc.bgn_npc_class = saved.npc_class
+	npc:SetModel(saved.model)
+	npc:SetPos(pos)
+	npc:SetAngles(Angle(0, provider:GetVehicle():GetAngles().y, 0))
+	npc:Spawn()
+	npc:Activate()
+	if not IsValid(npc) then return false end
+	npc:SetModel(saved.model)
+	npc:SetSkin(saved.skin)
+	npc:SetModelScale(saved.scale, 0)
+	npc:SetColor(saved.color)
+	npc:SetMaterial(saved.material)
+	for id, value in pairs(saved.bodygroups) do npc:SetBodygroup(id, value) end
+	npc:SetCollisionGroup(saved.collision_group)
+	npc:SetMaxHealth(saved.max_health)
+	npc:SetHealth(saved.health)
+	if saved.proficiency and npc.SetCurrentWeaponProficiency then npc:SetCurrentWeaponProficiency(saved.proficiency) end
+	self.vehicle, self.vehicle_body, self.eternal = nil, nil, saved.eternal
+	bgNPC.Actors.Rebind(self, npc)
+	self:CreateFakePlayerMethodsForNPC()
+	for _, weapon in ipairs(saved.weapons) do
+		local restored = self.body:GiveWeapon(weapon.class)
+		if IsValid(restored) then restored:SetClip1(weapon.clip1) restored:SetClip2(weapon.clip2) end
 	end
-
-	self.eternal = false
-	self.last_vehicle = vehicle_provider -- it may come back to it (go_to_police_car)
-	self.vehicle = nil
-	self.vehicle_data = {}
+	if saved.active_weapon and npc.SelectWeapon then npc:SelectWeapon(saved.active_weapon) end
+	if saved.bot_clip then npc.clip = saved.bot_clip end
+	if provider.driver == self then provider:SetDriver(nil) else provider:RemovePassenger(self) end
+	self.last_vehicle, self.vehicle_data = provider, {}
+	self.walkUpdatePathDelay, self.waitUpdateMovementDelay, self.next_lod, self.next_brain = 0, 0, 0, 0
 	self.__last_player_interaction = CurTime()
+	hook.Run('BGN_OnExitVehicle', self, provider)
+	return true
 end
 
--- Keeps the hidden entity of an actor in a car at the car (it is not parented, see EnterVehicle).
-function Actor:FollowVehicle()
-	local vehicle = self:GetVehicle()
-	if IsValid(vehicle) and IsValid(self.npc) then
-		self.npc:SetPos(vehicle:GetPos())
-		HideVehicleWeapon(self)
+-- Damage belongs to the stored character, never to the DV controller's health/lifetime.
+function Actor:TakeVehicleDamage(amount, attacker)
+	local saved = self.vehicle_body
+	if not saved or self.is_removed then return end
+	saved.health = math.max(0, self:Health() - amount)
+	if IsValid(self.npc) then self.npc:SetHealth(saved.health) end
+	if saved.health <= 0 then
+		hook.Run('OnNPCKilled', self.npc, attacker, attacker)
+		self:Remove()
 	end
 end
 
@@ -196,7 +194,3 @@ function Actor:GetVehicleAI()
 	if not self.vehicle or not self:InVehicle() then return nil end
 	return self.vehicle:GetVehicleAI()
 end
-
-hook.Add('BGN_OnSetActorWeapon', 'BGN_HideVehicleWeapon', function(actor)
-	if actor:InVehicle() then HideVehicleWeapon(actor) end
-end)

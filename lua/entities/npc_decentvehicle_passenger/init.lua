@@ -91,13 +91,6 @@ function ENT:Think()
 
 	if not IsValid(vehicle) or not actor or not actor:IsAlive() or not actor:InVehicle() then
 		self:Remove()
-	elseif self.vehicle_provider then
-		for _, actor_passenger in ipairs(self.vehicle_provider:GetPassengers()) do
-			local npc = actor_passenger:GetNPC()
-			if IsValid(npc) and not npc:GetNoDraw() then
-				npc:SetNoDraw(true)
-			end
-		end
 	end
 
 	self:NextThink(CurTime() + 1)

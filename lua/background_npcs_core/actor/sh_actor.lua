@@ -1,5 +1,5 @@
 --[[
-	Actor: a Background NPCs character bound to an NPC or NextBot entity.
+	Actor: a character with an NPC/NextBot body on foot and a DV visual while seated.
 
 	The class is split into partial files, each adds one group of methods:
 		actor/components/sh_state.lua      states and random reactions
@@ -368,10 +368,11 @@ end
 
 function Actor:GetGenderByModel()
 	if not IsValid(self.npc) then return 'unknown' end
-	return H.GenderByModel(self.npc:GetModel())
+	return H.GenderByModel(self:InVehicle() and self.model or self.npc:GetModel())
 end
 
 function Actor:Health()
+	if self.vehicle_body and not IsValid(self.npc) then return self.vehicle_body.health end
 	local npc = self.npc
 	return IsValid(npc) and npc:Health() or 0
 end
@@ -386,7 +387,9 @@ function Actor:IsAlive()
 	if self.is_removed then return false end
 
 	local is_dead
-	if self.body then
+	if self.vehicle_body then
+		is_dead = self:Health() <= 0 or not self.vehicle or not self.vehicle:IsValid()
+	elseif self.body then
 		is_dead = self.body:IsDead()
 	else
 		local npc = self.npc
@@ -394,7 +397,7 @@ function Actor:IsAlive()
 	end
 
 	if is_dead then
-		self:RemoveActor()
+		if SERVER then self:RemoveActor() end
 		return false
 	end
 
@@ -406,7 +409,12 @@ function Actor:RemoveActor()
 	if self.is_removed then return end
 	self.is_removed = true
 	if self.brain then self.brain:Stop() end
-	bgNPC.Actors.Unregister(self.npc)
+	bgNPC.Actors.UnregisterActor(self)
+	local provider = self.vehicle
+	self.vehicle, self.vehicle_body = nil, nil
+	if provider then
+		if provider.driver == self then provider:SetDriver(nil) else provider:RemovePassenger(self) end
+	end
 end
 
 -- Unregisters the actor and removes the entity.
@@ -427,7 +435,8 @@ function Actor:IsNextBot()
 	return IsValid(self.npc) and self.npc:IsNextBot()
 end
 
--- ! Can return NULL, use IsAlive before working with the entity.
+-- In a vehicle this is the DV anim entity, not an NPC/NextBot.
+-- ! Can return NULL during body replacement; validate before using the entity.
 function Actor:GetNPC()
 	return self.npc
 end

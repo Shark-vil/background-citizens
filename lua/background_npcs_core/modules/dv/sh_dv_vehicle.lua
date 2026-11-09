@@ -121,7 +121,7 @@ function VEHICLE:SetDriver(actor)
 		return
 	end
 
-	if self.driver == actor then return end
+	if self.driver == actor then return IsValid(self.ai) end
 	if not self:CanUse(actor) then return false end
 
 	if self.driver then self:RemovePassenger(self.driver) end
@@ -133,6 +133,11 @@ function VEHICLE:SetDriver(actor)
 	if IsValid(self.ai) then self.ai:Remove() end
 	self.ai = nil
 	self:Initialize()
+	if not IsValid(self.ai) then
+		table.RemoveByValue(self.passengers, actor)
+		self.driver = nil
+		return false
+	end
 	return true
 end
 
@@ -171,11 +176,12 @@ function VEHICLE:AddPassenger(actor)
 	passenger:SetPos(vehicle:GetPos())
 	passenger:Spawn()
 	passenger:Activate()
+	if not IsValid(passenger) then return false end
 
 	table.insert(self.passengers_models, passenger)
 	table.insert(self.passengers, actor)
 
-	return true
+	return true, passenger
 end
 
 function VEHICLE:RemovePassengerModel(actor)
@@ -204,7 +210,8 @@ function VEHICLE:PassengersRecalculate()
 	for i = #self.passengers, 1, -1 do
 		local actor = self.passengers[i]
 		if not actor or not actor:IsAlive() then
-			table.remove(self.passengers, i)
+			-- IsAlive may already detach a dead occupant.
+			if self.passengers[i] == actor then table.remove(self.passengers, i) end
 		end
 	end
 end
@@ -274,18 +281,20 @@ function VEHICLE:IsDestroyed()
 	return not self:IsValid()
 end
 
--- Drops all passengers out and removes the vehicle with its AI.
-function VEHICLE:Remove()
-	self:PassengersRecalculate()
-
-	-- ExitVehicle modifies the passengers list, iterate over a copy.
+-- Vehicle deletion removes its logical crew; it must never spawn bodies during cleanup.
+function VEHICLE:RemoveActors()
+	if self.removing then return end
+	self.removing = true
 	local passengers = {}
 	for i = 1, #self.passengers do passengers[i] = self.passengers[i] end
-
 	for i = 1, #passengers do
-		passengers[i]:ExitVehicle(true)
+		passengers[i]:Remove()
 	end
+	if self.driver then self.driver:Remove() end
+end
 
+function VEHICLE:Remove()
+	self:RemoveActors()
 	local vehicle = self.vehicle
 	if IsValid(vehicle) then
 		for _, child in ipairs(vehicle:GetChildren()) do
@@ -328,6 +337,11 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	SetupVehicleGroup(obj, vehicle_type)
 	-- Keep police ownership even if a later driver changes the provider's group.
 	if string.Explode('|', obj.type)[1] == 'police' then vehicle_entity.bgnPoliceVehicle = true end
+	if SERVER then
+		vehicle_entity:CallOnRemove('BGN_RemoveCrew', function()
+			obj:RemoveActors()
+		end)
+	end
 
 	return obj
 end

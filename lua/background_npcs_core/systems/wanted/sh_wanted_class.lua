@@ -21,6 +21,9 @@ function ASSET:Instance(ent)
 	public.level = 1
 	public.level_max = 5
 	public.next_kill_update = bgNPC.cfg.wanted.levels[1]
+	function public:Rebind(target)
+		ent, self.target = target, target
+	end
 
 	function public:UpdateWanted(time)
 		time = isnumber(time) and time or wanted_time
@@ -185,6 +188,16 @@ end
 function ASSET:GetAllWanted()
 	return wanted_list
 end
+
+hook.Add('BGN_ActorEntityChanged', 'BGN_WantedRebind', function(_, old, npc)
+	local wanted = ASSET:GetWanted(old)
+	if not wanted then return end
+	if ASSET:HasWanted(npc) then ASSET:RemoveWanted(old) else wanted:Rebind(npc) end
+	if SERVER then
+		bgNPC.Net.Send('bgn_module_wanted_AddWanted', nil, npc, math.max(0, wanted.time_reset - CurTime()))
+		bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', nil, npc, wanted.level)
+	end
+end)
 
 hook.Add('PostCleanupMap', 'BGN_WantedModule_ClearWantedListOnCleanupMap', function()
 	ASSET:ClearAll()

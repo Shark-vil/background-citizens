@@ -3,7 +3,7 @@ local Actors = bgNPC.Actors
 
 local function EnableSaving(actor)
 	local npc = actor:GetNPC()
-	if not IsValid(npc) then return end
+	if not IsValid(npc) or actor:InVehicle() then return end
 	local original = npc.OnEntityCopyTableFinish
 	if original and original == npc.bgn_copy_handler then return end
 	npc.OnEntityCopyTableFinish = function(ent, data)
@@ -30,4 +30,5 @@ duplicator.RegisterEntityModifier('bgn_actor', function(_, npc, data)
 end)
 
 hook.Add('BGN_InitActor', 'BGN_SaveRestore', EnableSaving)
+hook.Add('BGN_ActorEntityChanged', 'BGN_SaveRestore', EnableSaving)
 for _, actor in ipairs(Actors.GetAll()) do EnableSaving(actor) end

@@ -1,12 +1,6 @@
 bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
-	local actor = bgNPC.Actors.GetByUid(uid)
-	if actor and actor:GetNPC() ~= data.npc then
-		bgNPC.Actors.Unregister(actor:GetNPC())
-		actor = nil
-	end
-	if not actor and IsValid(data.npc) then
-		actor = bgNPC.Actor.Create(data.npc, data.actor_type, uid)
-	end
+	local actor = bgNPC.Actors.ReceiveBinding(data.npc, data.actor_type, uid, nil,
+		data.entity_generation, data.class, data.model)
 	if not actor then return end
 
 	actor:SetName(data.name)

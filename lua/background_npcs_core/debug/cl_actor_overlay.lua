@@ -39,7 +39,7 @@ local function DrawBounds()
 	cam.IgnoreZ(true)
 	render.SetColorMaterial()
 	for _, row in ipairs(rows) do
-		render.DrawWireframeBox(row.pos, row.ang, row.mins, row.maxs, ColorFor(row), true)
+		if not row.in_vehicle then render.DrawWireframeBox(row.pos, row.ang, row.mins, row.maxs, ColorFor(row), true) end
 		if row.spawn_pos and Age(row.spawn_age) < 5 then
 			render.DrawWireframeSphere(row.spawn_pos, 25, 8, 4, spawned, true)
 		end

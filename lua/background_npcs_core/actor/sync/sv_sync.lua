@@ -10,6 +10,9 @@ local function BuildSyncData(actor)
 	return {
 		npc = actor:GetNPC(),
 		actor_type = actor:GetType(),
+		entity_generation = actor.entity_generation or 0,
+		class = actor.class,
+		model = actor.model,
 		name = actor:GetName(),
 		gender = actor:GetGender(),
 		state = actor:GetState(),
@@ -39,7 +42,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 
 				for k = 1, #players do
 					local ply = players[k]
-					if IsValid(ply) and ply.bgn_ready and not npc:GetNoDraw() and ply:TestPVS(npc) then
+					if IsValid(ply) and ply.bgn_ready and (actor:InVehicle() or not npc:GetNoDraw()) and ply:TestPVS(npc) then
 						if not sync_hash then
 							sync_data = BuildSyncData(actor)
 							sync_hash = util.CRC(Serialize(sync_data))

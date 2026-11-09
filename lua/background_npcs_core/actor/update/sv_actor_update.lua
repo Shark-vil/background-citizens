@@ -74,13 +74,13 @@ local function RebuildFollowPath(actor, now)
 end
 
 local function UpdateActor(actor, now, players)
+	if not IsValid(actor:GetNPC()) then return end
 	if (actor.next_lod or 0) <= now then
 		actor.next_lod = now + LOD_PERIOD
 		SetLOD(actor, ComputeLOD(actor, players))
 	end
 
 	local lod = actor.lod or LOD_NEAR
-	if actor:InVehicle() then actor:FollowVehicle() end
 
 	if (actor.next_enemies or 0) <= now then
 		actor.next_enemies = now + ENEMIES_PERIOD

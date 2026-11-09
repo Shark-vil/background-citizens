@@ -31,3 +31,4 @@ end
 hook.Add('BGN_PreSetWalkPos', 'BGN_Module_FollowersMod', movement_handler)
 hook.Add('BGN_PreNPCStartAnimation', 'BGN_Module_FollowersMod', movement_handler)
 hook.Add('BGN_InitActor', 'BGN_Module_FollowersMod', created_actor_handler)
+hook.Add('BGN_ActorEntityChanged', 'BGN_Module_FollowersMod', created_actor_handler)

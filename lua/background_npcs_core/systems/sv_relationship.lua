@@ -183,8 +183,8 @@ end, 'bgn_friend_mode')
 -- 	RebuildActorsRelationship(actor)
 -- end)
 
-hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
-	if not actor:IsAlive() then return end
+local function SetPlayersRelationship(actor)
+	if not actor:IsAlive() or actor:InVehicle() then return end
 
 	local npc = actor:GetNPC()
 
@@ -205,18 +205,22 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 			-- end
 		end
 	end
-end)
+end
+hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', SetPlayersRelationship)
+hook.Add('BGN_ActorEntityChanged', 'BGN_SetPlayersRelationship', SetPlayersRelationship)
 
 -- Sets relationships for all existing NPCs and NextBots in the map
-hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', function(actor)
-	if not actor:IsAlive() then return end
+local function SetExistingNPCRelationships(actor)
+	if not actor:IsAlive() or actor:InVehicle() then return end
 
 	for _, npc in ipairs(ents.GetAll()) do
 		if IsValid(npc) and (npc:IsNPC() or npc:IsNextBot()) then
 			SetNPCRelationship(actor, npc)
 		end
 	end
-end)
+end
+hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
+hook.Add('BGN_ActorEntityChanged', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
 
 -- Sets relationships for newly created NPCs and NextBots
 hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
