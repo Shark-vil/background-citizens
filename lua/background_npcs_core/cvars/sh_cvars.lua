@@ -49,6 +49,7 @@ bgNPC.cvar.bgn_disable_halo_wanted = 0
 bgNPC.cvar.bgn_disable_halo_calling = 0
 bgNPC.cvar.bgn_cl_disable_self_halo_wanted = 1
 bgNPC.cvar.bgn_enable_dv_support = 1
+bgNPC.cvar.bgn_vehicle_cleanup_time = 120
 bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
@@ -199,6 +200,7 @@ bgNPC.CVars.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_cal
 bgNPC.CVars.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted, 'Disable halo for wanted entities.')
 
 bgNPC.CVars.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
+bgNPC.CVars.Register('bgn_vehicle_cleanup_time', bgNPC.cvar.bgn_vehicle_cleanup_time, 'Seconds without a driver or without moving beyond 128 units before an unseen BGN vehicle can be removed. 0 disables this cleanup.')
 
 bgNPC.CVars.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_system_support, 'Enables compatibility with the "Police System" addon and overrides the default arrest method.')
 

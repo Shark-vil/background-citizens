@@ -1642,8 +1642,12 @@ spawns.execute('''
     function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},angles) end
     function angles.__add(a,b) return Angle(a.p+b.p,a.y+b.y,a.r+b.r) end
     local definitions={standard={},sideways={SpawnAngleOffset=90},reversed={SpawnAngleOffset=180}}
-    list={Get=function(name) return name=='simfphys_vehicles' and definitions or {} end}
-    simfphys={SpawnVehicleSimple=function(class,pos,ang) return {class=class,pos=pos,ang=ang} end}
+    list={Get=function(name) return name=='simfphys_vehicles' and definitions or {native={Class='prop_vehicle_jeep',Model='car.mdl'}} end}
+    simfphys={SpawnVehicleSimple=function(class,pos,ang) return {valid=true,class=class,pos=pos,ang=ang} end}
+    ents={Create=function()
+        return {valid=true,SetModel=function() end,SetPos=function() end,SetAngles=function() end,
+            Spawn=function() end,Activate=function() end}
+    end}
 ''')
 spawn_source = (ROOT / 'spawner/sv_dv_spawner.lua').read_text(encoding='utf-8-sig')
 spawns.execute('function bgNPC:SpawnVehicle(' + spawn_source.split('function bgNPC:SpawnVehicle(', 1)[1].split('function bgNPC:SpawnVehicleWithActor', 1)[0])
@@ -1653,9 +1657,76 @@ spawns.execute('''
             local vehicle=bgNPC:SpawnVehicle(class,Vector(10,20,50),Angle(0,heading,0))
             assert(vehicle.ang.y+local_forward==heading, 'physical front must face along the road')
             assert(vehicle.pos==Vector(10,20,50))
+            assert(vehicle.isBgnVehicle, 'spawned cars must be marked independently of their AI')
         end
     end
     local vehicle=bgNPC:SpawnVehicle('sideways',Vector(10,20,50),Angle(0,45,0),Vector(0,0,5),Angle(0,10,0))
     assert(vehicle.ang.y==145 and vehicle.pos==Vector(10,20,55), 'actor offsets must also reach simfphys')
+    assert(bgNPC:SpawnVehicle('native').isBgnVehicle, 'Source vehicles must be marked too')
 ''')
-print('PASS: existing regressions, simfphys spawn headings, DV pedestrian avoidance and LuaJIT syntax')
+cleanup = realm(True)
+cleanup.execute('''
+    setcv('bgn_enable',1); setcv('bgn_enable_dv_support',1)
+    setcv('bgn_spawn_radius',3000); setcv('bgn_vehicle_cleanup_time',120)
+    bgNPC.Vision={PlayerCanSeePos=function(_,p) return visible and p.x==100 end}
+    local eye={valid=true,EyePos=function() return Vector(500,500,64) end}
+    function NewPlayer()
+        return {valid=true,GetPos=function() return Vector() end,GetVehicle=function(self) return self.seat end,
+            GetViewEntity=function() return eye end}
+    end
+    viewers={NewPlayer()}
+    player.GetAll=function() return viewers end; player.GetCount=function() return #viewers end
+    util.TraceLine=function(t)
+        assert(t.start==eye:EyePos(), 'trace from the active camera')
+        return {Hit=not (edge_clear and t.endpos.x==100),Entity=trace_entity}
+    end
+    function NewCleanupCar(marked)
+        now=0; visible=false; edge_clear=false; trace_entity=nil
+        viewers={NewPlayer()}; setcv('bgn_vehicle_cleanup_time',120)
+        local car={valid=true,isBgnVehicle=marked,pos=Vector()}
+        function car:GetPos() return self.pos end
+        function car:OBBMins() return Vector(-100,-40,0) end
+        function car:OBBMaxs() return Vector(100,40,60) end
+        function car:OBBCenter() return Vector(0,0,30) end
+        function car:LocalToWorld(p) return self.pos+p end
+        function car:NearestPoint() return self:LocalToWorld(Vector(100,40,60)) end
+        function car:GetParent() end
+        local provider={car=car,driver=true}
+        function provider:GetVehicle() return car end
+        function provider:GetDriver() return self.driver end
+        function provider:GetPassengers() return {} end
+        function provider:IsValidAI() return false end
+        function provider:Remove() car.valid=false end
+        bgNPC.DVCars={provider}
+        return provider,car
+    end
+''')
+load(cleanup, 'spawner/sv_dv_remover.lua')
+cleanup.execute('''
+    local tick=timers.BGN_Timer_DVCars_Remover
+    local p,c=NewCleanupCar(true); tick()
+    now=119; tick(); assert(c.valid, 'allow the full grace period')
+    now=120; tick(); assert(not c.valid and #bgNPC.DVCars==0, 'remove a hidden stuck car even near a player')
+    p,c=NewCleanupCar(true); tick(); c.pos=Vector(60,0,0); now=60; tick()
+    c.pos=Vector(-60,0,0); now=120; tick(); assert(not c.valid, 'rocking is not progress')
+    p,c=NewCleanupCar(true); tick(); c.pos=Vector(129,0,0); now=60; tick()
+    now=179; tick(); assert(c.valid, 'real progress resets the stuck timer')
+    now=180; tick(); assert(not c.valid)
+    p,c=NewCleanupCar(true); p.driver=nil; tick()
+    c.pos=Vector(200,0,0); now=60; tick(); c.pos=Vector(400,0,0); now=120; tick()
+    assert(not c.valid, 'a rolling driverless car must still expire')
+    p,c=NewCleanupCar(true); p.driver=nil; tick(); p.driver=true
+    c.pos=Vector(200,0,0); now=60; tick(); c.pos=Vector(400,0,0); now=120; tick()
+    assert(c.valid, 'a returning driver resets the empty timer')
+    p,c=NewCleanupCar(true); tick(); edge_clear=true; now=120; tick()
+    assert(c.valid, 'a clear ray to an edge protects a car even outside the field of view')
+    edge_clear=false; visible=true; tick(); assert(c.valid, 'FOV protection does not require a clear ray')
+    visible=false; viewers[2]=NewPlayer(); viewers[2].seat=c; tick()
+    assert(c.valid, 'any player inside the car prevents cleanup')
+    viewers[2].seat=nil; trace_entity={valid=true,GetParent=function() return c end}; tick()
+    assert(c.valid, 'hitting a child of the car counts as seeing it')
+    trace_entity=nil; tick(); assert(not c.valid)
+    p,c=NewCleanupCar(false); tick(); now=1000; tick(); assert(c.valid, 'foreign cars are not force-cleaned')
+    p,c=NewCleanupCar(true); setcv('bgn_vehicle_cleanup_time',0); tick(); now=1000; tick(); assert(c.valid)
+''')
+print('PASS: existing regressions, simfphys spawn headings, DV avoidance, vehicle cleanup and LuaJIT syntax')
