@@ -113,6 +113,9 @@ timer.Create('BGN_Timer_DVCars_Remover', 1, 0, function()
 				end
 			end
 
+			-- a police car chasing a wanted player is recreated near him (sv_police_pursuit.lua), not culled
+			if isRemove and bgNPC.IsPursuitCar(vehicle_provider) then isRemove = false end
+
 			if (isRemove or abandoned) and VehicleIsHidden(vehicle, players) then
 				hook.Run('BGN_DvCarRemoved', vehicle_provider)
 				vehicle_provider:Remove()

@@ -183,7 +183,9 @@ With `bgn_corpse_cleanup 0` (the default) the flag is not set and npc_battle_cle
 
 ## Cars
 
-Police dismount when a living enemy (or their current arrest target) is within 800 units or their vehicle has at most 20% health remaining.
+Police dismount when a living enemy (or their current arrest target) is within 800 units or their vehicle has at most 20% health remaining. They stay seated while that enemy is driving away: the dismount waits until the enemy's car has stood still for about 6 seconds or the enemy gets out.
+
+A police car chasing a wanted player that falls more than 2800 units behind and is out of every player's view is not culled: its crew steps out and the car is rebuilt (a fresh car, the same actors and enemies) on a hidden road point 600-2200 units from the player, at most once per 8 seconds per player and only while fewer than `1 + wanted level` chasing cars are close. See `spawner/sv_police_pursuit.lua`. Spawn points also keep clear of the road ahead of a moving player.
 Simfphys health uses `GetCurHealth()` and `GetMaxHealth()`; vehicles without a positive maximum health do
 not trigger the damage condition. Neutral players do not trigger dismounts. Hits use the normal actor damage reactions, so a real attack can create an enemy and make police dismount. Direct vehicle removal removes its crew; forced ejection still requires a safe exit.
 

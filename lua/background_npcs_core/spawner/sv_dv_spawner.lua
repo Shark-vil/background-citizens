@@ -58,8 +58,18 @@ local function GetNearPoints(center, radius)
 	return points
 end
 
-local function FindSpawnLocation(center)
-	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
+-- Where the player will be in a moment: a car that spawns on the road ahead lands on the hood.
+local function PlayerAheadPoints(ply)
+	local car = ply:GetVehicle()
+	if IsValid(car) and IsValid(car:GetParent()) then car = car:GetParent() end
+	local shift = (IsValid(car) and car or ply):GetVelocity() * 1.5
+	if shift:LengthSqr() > 1500 ^ 2 then shift = shift:GetNormalized() * 1500 end
+	local pos = ply:GetPos()
+	return pos + shift * .5, pos + shift
+end
+
+local function FindSpawnLocation(center, radius)
+	local spawn_radius = radius or GetConVar('bgn_spawn_radius'):GetFloat()
 	local points = GetNearPoints(center, spawn_radius)
 	if #points == 0 then return nil end
 
@@ -80,7 +90,9 @@ local function FindSpawnLocation(center)
 				local vehicle = ply:GetVehicle()
 				local distance = spawn_position:DistToSqr(ply:GetPos())
 
-				if distance <= block_radius then
+				local mid, ahead = PlayerAheadPoints(ply)
+				if distance <= block_radius or spawn_position:DistToSqr(mid) <= block_radius
+					or spawn_position:DistToSqr(ahead) <= block_radius then
 					goto skip
 				end
 
@@ -146,6 +158,8 @@ local function FindSpawnLocation(center)
 
 	return { pos = spawn_position, ang = Angle(0, spawn_angle.y, 0) }
 end
+
+bgNPC.FindVehicleSpawnLocation = FindSpawnLocation
 
 function bgNPC:CheckVehicleLimitFromActors(actor_type)
 	local limit = GetConVar('bgn_npc_vehicle_max_' .. actor_type):GetInt()
@@ -291,7 +305,8 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	end
 end
 
-function bgNPC:SpawnVehicleWithActor(actor, bypass)
+-- @param near Player|nil spawn close to this player (a pursuit) instead of a random one
+function bgNPC:SpawnVehicleWithActor(actor, bypass, near)
 	if not GetConVar('bgn_enable_dv_support'):GetBool() then return false end
 	local dvd = DecentVehicleDestination
 	if not dvd or not dvd.Waypoints or #dvd.Waypoints == 0 or player.GetCount() == 0 then return false end
@@ -303,8 +318,8 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local actor_type = actor:GetType()
 	if not bypass and not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
 
-	local ply = bgNPC.Table.Random(player.GetAll())
-	local data = FindSpawnLocation(ply:GetPos())
+	local ply = near or bgNPC.Table.Random(player.GetAll())
+	local data = FindSpawnLocation(ply:GetPos(), near and bgNPC.PURSUIT_SPAWN_RADIUS)
 	if not data then return false end
 
 	local npc = actor:GetNPC()
