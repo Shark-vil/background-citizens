@@ -147,6 +147,7 @@ local function ExecutableScripts()
 	-- Systems register modules (wanted, team_parent, ...) that states and integrations use.
 	Include('systems/sv_team_parent.lua')
 	IncludeDir('systems/wanted')
+	Include('systems/arrest/sv_arrest.lua')
 	IncludeDir('systems')
 	Include('brain/sv_brain.lua')
 	IncludeDir('brain')

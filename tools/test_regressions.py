@@ -1241,6 +1241,42 @@ medics.execute('''
     assert(partner.state==nil, 'a wounded partner must not be sent to fight')
 ''')
 
+# Run the actual entry point with the real directory order and module registration.
+startup = realm(True)
+startup.execute('''
+    resource={AddWorkshop=function() end}; AddCSLuaFile=function() end
+    bgNPC.Config={SaveDefaults=function() end}
+    list.Set('', 'wanted', {AddWanted=function() wanted_added=true end})
+    list.Set('', 'player_arrest', nil)
+''')
+def startup_find(pattern, _realm):
+    folder = ROOT / pattern.removeprefix('background_npcs_core/').removesuffix('/*')
+    if not folder.is_dir():
+        return startup.table(), startup.table()
+    return (startup.table_from(sorted(p.name for p in folder.iterdir() if p.is_file())),
+            startup.table_from(sorted(p.name for p in folder.iterdir() if p.is_dir())))
+
+def startup_include(path):
+    path = path.removeprefix('background_npcs_core/')
+    if path in ('systems/arrest/sv_arrest.lua', 'systems/sv_offender.lua'):
+        if path == 'systems/sv_offender.lua':
+            startup.execute("assert(bgNPC.Modules.Get('player_arrest'), 'arrest must register before offender captures the module')")
+        load(startup, path)
+
+startup.globals().file.Find = startup_find
+startup.globals().include = startup_include
+load(startup, 'sh_init.lua')
+startup.execute('''
+    local npc={valid=true,GetPos=function() return Vector() end}
+    local actor={data={team={'residents'}},IsAlive=function() return true end,IsCivilian=function() return true end,
+        GetNPC=function() return npc end,SetTeam=function(self,t) self.team=t end}
+    local victim={GetNPC=function() end,HasTeam=function() return true end}
+    bgNPC.Actors.Get=function() return actor end
+    bgNPC.Actors.GetInRadius=function() return {} end
+    hooks.BGN_OnKilledActor.BGN_Offender(victim,npc)
+    assert(actor.team[1]=='offenders' and wanted_added, 'witnessed civilian murder registers an offender without a missing module')
+''')
+
 # Run the actual traffic task and attached Think with a stationary car.
 traffic = realm(True)
 traffic.execute('''
