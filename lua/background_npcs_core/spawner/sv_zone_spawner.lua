@@ -260,8 +260,6 @@ if SERVER then
 						if not CanActorTypeSpawnNow(actorType, npc_data) then continue end
 						if CountAliveInArea(area, actorType) >= entry.count then continue end
 
-						yield()
-
 						local position = FindSpawnPositionInArea(area)
 						if position then
 							bgNPC:ActorSpawnOnPosition(actorType, position)

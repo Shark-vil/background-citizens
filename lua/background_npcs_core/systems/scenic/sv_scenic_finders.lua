@@ -14,7 +14,6 @@ bgNPC.Scenic = Scenic
 local Spots = {}
 Scenic.Spots = Spots
 
-local Budget = bgNPC.Tasks.Budget
 local Shuffle = bgNPC.Table.Shuffle
 --
 
@@ -114,7 +113,6 @@ function Spots.Seeds(place, players)
 
 	local ply = players[math.random(#players)]
 	local points = bgNPC.Points.GetInRadius(ply:GetPos(), radius, 'walk')
-	Budget()
 	for _, point in ipairs(Shuffle(points)) do
 		local pos = point:GetPos()
 		if InRing(pos, players, block, radius) then

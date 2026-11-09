@@ -59,8 +59,6 @@ local function IsValidRemovePositionAsync(actor, npc)
 		local ply = player_list[player_index]
 		if not IsValid(ply) then continue end
 
-		coroutine.yield()
-
 		local ply_pos = ply:GetPos()
 		local dist = npc_pos:DistToSqr(ply_pos)
 
@@ -77,13 +75,9 @@ local function IsValidRemovePositionAsync(actor, npc)
 				return false
 			end
 
-			coroutine.yield()
-
 			if not actor.toRemove then
 				return false
 			end
-
-			coroutine.yield()
 
 			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
 				return false
@@ -121,8 +115,6 @@ end)
 local function run_remover_process_async(yield, wait, actors, actors_count)
 	local WantedModule = bgNPC.Modules.Get('wanted')
 
-	yield()
-
 	fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
 	bgn_enable = GetConVar('bgn_enable'):GetBool()
 	bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
@@ -135,16 +127,13 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 	player_count = #player_list
 	local overloaded = bgNPC.ServerLoad.IsOverloaded()
 
-	yield()
-
 	for i = 1, actors_count do
 		yield()
+		if not fasted_teleport then yield() end
+		player_list = player.GetHumans()
+		player_count = #player_list
 
 		local actor = actors[i]
-
-		if not fasted_teleport then
-			yield()
-		end
 
 		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden then
 			continue
@@ -166,19 +155,16 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 					and (overloaded or not SeenByAnyPlayer(npc)))
 				then
 					actor:Remove()
-					yield()
 					continue
 				end
 			end
 
 			-- no teleport or removal mid-scene: they wait until it ends
 			if actor.conversation or actor:HasState(BUSY_STATES) then
-				yield()
 				continue
 			end
 
 			if not IsValidRemovePositionAsync(actor, npc) then
-				yield()
 				continue
 			end
 
@@ -186,7 +172,6 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 				if not hook.Run('BGN_PreRemoveNPC', npc) then
 					actor:Remove()
 				end
-				yield()
 			else
 				local data = actor:GetData()
 
@@ -216,7 +201,6 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 							break
 						end
 
-						yield()
 					end
 
 					if not desiredPosition then
@@ -236,11 +220,9 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 						end
 					end
 
-					yield()
 				end
 			end
 
-			yield()
 		end
 	end
 end

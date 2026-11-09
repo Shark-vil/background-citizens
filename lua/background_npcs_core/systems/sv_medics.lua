@@ -264,10 +264,10 @@ local function FindMedic(call)
 	if count >= limit then return end
 	local pos = bgNPC:FindSpawnPosition({ position = call.pos })
 	if not pos then return end
-	local medic = bgNPC:SpawnActor(MEDIC_TYPE, pos)
+	local medic = bgNPC:SpawnActor(MEDIC_TYPE, pos, false, true)
 	if not medic then return end
 
-	local partner = count + 2 <= limit and bgNPC:SpawnActor(MEDIC_TYPE, pos + Vector(40, 0, 0)) or nil
+	local partner = count + 2 <= limit and bgNPC:SpawnActor(MEDIC_TYPE, pos + Vector(40, 0, 0), false, true) or nil
 	if partner then
 		medic.medic_partner, partner.medic_partner = partner, medic
 	end

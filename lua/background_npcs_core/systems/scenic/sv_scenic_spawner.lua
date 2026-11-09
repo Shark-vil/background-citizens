@@ -12,7 +12,6 @@ local Scenic = bgNPC.Scenic or {}
 bgNPC.Scenic = Scenic
 local Spots = Scenic.Spots
 local Util = bgNPC.Util
-local Budget = bgNPC.Tasks.Budget
 --
 
 local cvar_enable = GetConVar('bgn_scenic')
@@ -189,6 +188,10 @@ function Scenic.Remove(item)
 end
 
 local function Start(item, plan, spot)
+	-- The delayed setup moves actors to their final scene positions: validate again now.
+	for _, member in ipairs(plan.members) do
+		if not bgNPC:IsHiddenSpawnPosition(member.pos) then Scenic.Remove(item) return end
+	end
 	item.started = true
 	if not item.actors[1] then return end
 
@@ -234,7 +237,7 @@ function Scenic.Create(id, scene, spot, plan)
 		for _, other in ipairs(item.actors) do
 			if other:GetNPC():GetPos():Distance(member.pos) < 40 then lift = lift + Vector(0, 0, 90) end
 		end
-		local actor = bgNPC:SpawnActor(member.def.type, member.pos + lift)
+		local actor = bgNPC:SpawnActor(member.def.type, member.pos + lift, false, true)
 		if not actor then
 			for _, spawned in ipairs(item.actors) do spawned:Remove() end
 			return
@@ -322,7 +325,6 @@ function Scenic.TrySpawn(id)
 
 	local seeds = Spots.Seeds(scene.place, players)
 	for i = 1, math.min(TRIES, #seeds) do
-		Budget()
 		local spot = Spots.Find(scene.place, seeds[i], scene)
 		if spot and IsFarFromScenes(spot.pos) then
 			local plan = Plan(scene, spot)

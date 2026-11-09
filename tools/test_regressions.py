@@ -233,8 +233,9 @@ spawn.execute('''
     MASK_VISIBLE=1
     util.IsInWorld=function() return true end
     util.TraceLine=function(data)
+        assert(data.filter~=nil, 'spawn traces must ignore the player whose eyes they start at')
         traces=traces+1
-        return {Hit=covered and data.endpos.z~=exposed_height}
+        return {Hit=covered and data.endpos.z~=exposed_height,StartSolid=trace_start_solid}
     end
 ''')
 # Exercise the actual shared spawn/teleport predicate without the unrelated GLua continue loops.
@@ -267,6 +268,13 @@ spawn.execute('''
     assert(not spawn_allowed(Vector(1000,0,0),{behind}), 'recheck rejects a player turning toward the spawn')
     behind.in_view=false; behind.sees_target=true
     assert(not spawn_allowed(Vector(1000,0,0),{behind},{valid=true}), 'visible actors must not teleport')
+    behind.sees_target=false
+    setcv('bgn_spawn_block_radius',1200)
+    assert(not spawn_allowed(Vector(1000,0,0),{behind}), 'final checks must read the current block radius')
+    setcv('bgn_spawn_block_radius',600)
+    assert(spawn_allowed(Vector(1000,0,0),{behind}), 'the current block radius is restored immediately')
+    covered=true; trace_start_solid=true
+    assert(not spawn_allowed(Vector(1000,0,0),{front}), 'starting inside geometry is not proof of cover')
 ''')
 
 priority = realm(True)
@@ -294,7 +302,7 @@ priority.execute('''
     local original=points[1]
     local players={watcher(99),watcher(2)}
     assert(find_front(points,players,nil,true)==points[2]:GetPos())
-    assert(rolls==1 and budgets==2, 'stop as soon as a valid front position is found')
+    assert(rolls==1 and budgets==0, 'stop at the first valid position without yielding')
     assert(points[1]==original and #points==1000, 'fallback list remains intact')
     prioritize=false
     local before=views
@@ -302,7 +310,7 @@ priority.execute('''
     assert(pos==nil and checked==nil and views==before, 'ordinary searches do no priority work')
     prioritize=true; budgets=0; views=0
     pos,checked=find_front(points,{watcher(33)},nil,true)
-    assert(pos==nil and next(checked)==nil and budgets==32 and views==32,
+    assert(pos==nil and next(checked)==nil and budgets==0 and views==32,
         'priority examines at most 32 points regardless of graph size; other points remain fallbacks')
     local all=watcher(); all.all=true; wet=true; water_checks=0
     pos,checked=find_front(points,{all})
@@ -312,6 +320,33 @@ priority.execute('''
     pos,checked=find_front({points[2]},{all},{valid=true})
     assert(pos==nil and checked[1], 'priority cannot teleport a visible actor')
     assert(find_front({},players)==nil)
+''')
+
+teleport = realm(True)
+teleport.execute('''
+    bgNPC.Animator={Stop=function() end}
+    allowed=true; stuck=false; callbacks=0
+    bgNPC.IsHiddenSpawnPosition=function() return allowed end
+    bgNPC.NPCIsStuck=function() return stuck end
+    timer.Simple=function() error('teleport validation must not defer to another tick') end
+    npc={pos=Vector(),GetPos=function(self) return self.pos end,
+        SetPos=function(self,pos) self.pos=pos end,PhysWake=function() end}
+    actor={IsAlive=function() return true end,GetNPC=function() return npc end,
+        CallStateAction=function() end,GetState=function() return 'walk' end,
+        GetStateData=function() return {} end,ResetSequence=function() end}
+''')
+teleport.execute((ROOT / 'spawner/sv_actor_spawner.lua').read_text(encoding='utf-8-sig')
+                 .split('local function InitActorsSpawner',1)[0])
+teleport.execute('''
+    local function done(success) callbacks=callbacks+1; result=success end
+    bgNPC:RespawnActor(actor,Vector(1000,0,0),done)
+    assert(callbacks==1 and result and npc.pos.x==1000, 'complete the entire teleport before returning')
+    allowed=false
+    bgNPC:RespawnActor(actor,Vector(2000,0,0),done)
+    assert(callbacks==2 and not result and npc.pos.x==1000, 'reject a now-visible destination without moving')
+    allowed=true; stuck=true
+    bgNPC:RespawnActor(actor,Vector(2000,0,0),done)
+    assert(callbacks==3 and not result and npc.pos.x==1000, 'roll back a blocked teleport within the same call')
 ''')
 
 client = realm(False)
