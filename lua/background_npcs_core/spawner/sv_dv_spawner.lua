@@ -213,7 +213,9 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	offset_ang = offset_ang or Angle(0, 0, 0)
 
 	if simfphys and simfphys_list[vehicle_class] then
-		return simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos, spawn_ang)
+		-- SpawnVehicleSimple takes model angles; unlike the spawn menu it does not apply the model's heading offset.
+		local model_offset = Angle(0, simfphys_list[vehicle_class].SpawnAngleOffset or 0, 0)
+		return simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos + offset_pos, spawn_ang + model_offset + offset_ang)
 	elseif vehicles_list[vehicle_class] then
 		local vehicle_data = vehicles_list[vehicle_class]
 		local vehicle = ents.Create(vehicle_data.Class)

@@ -205,10 +205,63 @@ local function UpdateVehicleMovement(actor, walk_pos)
 	end
 end
 
+-- A temporary body goal leaves the actor's route/target intact for after the car passes.
+function Actor:AvoidDVVehicle()
+	if not istable(DecentVehicleDestination) or not GetConVar('bgn_enable_dv_support'):GetBool()
+		or self:InVehicle() or self:GetState() == 'go_to_police_car' then return false end
+	local body, npc = self.body, self.npc
+	if not body or not body:IsThinkEnabled() or body:IsBusyInCombat()
+		or self:IsAnimationPlayed() or not self:IsSequenceFinished() then return false end
+	if (self.dvAvoidNextCheck or 0) > CurTime() then return self.dvAvoidActive end
+	self.dvAvoidNextCheck = CurTime() + MOVEMENT_UPDATE_PERIOD
+
+	local pos = npc:GetPos()
+	local car, distance
+	for _, ent in ipairs(ents.FindInSphere(pos, 400)) do
+		if IsValid(ent.DecentVehicle) then
+			local d = ent:NearestPoint(pos):DistToSqr(pos)
+			if d < 120 ^ 2 and (not distance or d < distance) then car, distance = ent, d end
+		end
+	end
+	if car ~= self.dvAvoidVehicle then
+		self.dvAvoidVehicle = car
+		-- 30% ignore traffic for this encounter so pedestrians can still run into the road and get hit.
+		self.dvIgnoreVehicle = car ~= nil and bgNPC.Util.Chance(30)
+	end
+	if not car or self.dvIgnoreVehicle then return false end
+
+	local mins, maxs = npc:GetCollisionBounds()
+	local best, clearance
+	for _, sign in ipairs({ -1, 1 }) do
+		local side = car.DecentVehicle:GetVehicleRight(car) * sign
+		side.z = 0
+		local target = pos + side:GetNormalized() * 160
+		local tr = util.TraceHull({ start = pos + Vector(0, 0, 4), endpos = target + Vector(0, 0, 4),
+			mins = mins, maxs = maxs, filter = npc, mask = MASK_NPCSOLID })
+		local ground = util.TraceLine({ start = target + Vector(0, 0, 32), endpos = target - Vector(0, 0, 64),
+			filter = npc, mask = MASK_NPCSOLID })
+		local d = car:NearestPoint(target):DistToSqr(target)
+		if not tr.Hit and not tr.StartSolid and ground.Hit and ground.HitNormal.z > .7
+			and d > distance and (not clearance or d > clearance) then
+			best, clearance = ground.HitPos, d
+		end
+	end
+	if not best then return false end
+	body:MoveTo(best, true)
+	return true
+end
+
 -- Moves the NPC along the current path. Called by the movement service.
 function Actor:UpdateMovement()
 	if not self.mechanics.movement_controller then return end
 	if self.is_animated or not self:IsAlive() then return end
+	local avoiding = self:AvoidDVVehicle()
+	if self.dvAvoidActive and not avoiding and self.body and not self:InVehicle()
+		and not self:IsAnimationPlayed() and self:IsSequenceFinished() and not self.body:IsBusyInCombat() then
+		self.body:StopMoving()
+	end
+	self.dvAvoidActive = avoiding
+	if avoiding then return end
 
 	local walk_target = self.walkTarget
 	local has_target = IsValid(walk_target)

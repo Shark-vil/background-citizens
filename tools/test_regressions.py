@@ -1057,6 +1057,7 @@ vehicles.execute('''
     function vmeta.__mul(v,n) return Vector(v.x*n,v.y*n,v.z*n) end
     function vmeta.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     util.IsInWorld=function() return true end
+    util.TraceHull=function() return {StartSolid=false} end
     ents={FindInSphere=function() return {} end}
     function NewWeapon(hidden)
         return {valid=true,hidden=hidden,GetNoDraw=function(w) return w.hidden end,
@@ -1072,6 +1073,7 @@ vehicles.execute('''
         function npc:SetSolid(v) self.solid=v end
         function npc:SetPos(v) self.pos=v end
         function npc:GetPos() return self.pos end
+        function npc:GetCollisionBounds() return Vector(-16,-16,0),Vector(16,16,72) end
         function npc:GetAngles() return {y=0} end
         function npc:SetAngles() end
         function npc:AddEFlags() self.frozen=true end
@@ -1588,4 +1590,72 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, medic danger areas, gesture lifecycle, animator visibility, LuaJIT syntax')
+traffic = realm(True)
+traffic.execute('''
+    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    local vec=getmetatable(Vector())
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vec.__mul(a,b) return Vector(a.x*b,a.y*b,a.z*b) end
+    function vec:GetNormalized()
+        local n=math.sqrt(self.x^2+self.y^2+self.z^2)
+        return self*(1/n)
+    end
+    DecentVehicleDestination={}; setcv('bgn_enable_dv_support',1)
+    rolls=0; ignore=false
+    bgNPC.Util.Chance=function(chance) assert(chance==30); rolls=rolls+1; return ignore end
+    local car={DecentVehicle={valid=true}}
+    function car:NearestPoint(p) return Vector(0,0,p.z) end
+    function car.DecentVehicle:GetVehicleRight(v) assert(v==car); return Vector(0,1,0) end
+    cars={car}; ents={FindInSphere=function() return cars end}
+    blocked=false
+    util.TraceHull=function() return {Hit=blocked} end
+    util.TraceLine=function(t) return {Hit=true,HitNormal=Vector(0,0,1),HitPos=t.endpos+Vector(0,0,64)} end
+    moves=0
+    local body={IsThinkEnabled=function() return true end,IsBusyInCombat=function() return false end,
+        MoveTo=function(_,pos,run) moves=moves+1; assert(run and math.abs(pos.y)>120) end}
+    actor=setmetatable({body=body,npc={GetPos=function() return Vector(0,20,0) end,
+        GetCollisionBounds=function() return Vector(-16,-16,0),Vector(16,16,72) end},
+        InVehicle=function() return false end,GetState=function() return 'idle' end,
+        IsAnimationPlayed=function() return false end,IsSequenceFinished=function() return true end},
+        {__index=bgNPC.Actor})
+''')
+traffic.execute((ROOT / 'actor/components/sh_movement.lua').read_text(encoding='utf-8-sig'))
+traffic.execute('''
+    assert(actor:AvoidDVVehicle() and moves==1 and rolls==1, 'idle pedestrians must move away')
+    actor.dvAvoidActive=true
+    assert(actor:AvoidDVVehicle() and moves==1, 'scan must be throttled')
+    now=now+1; assert(actor:AvoidDVVehicle() and rolls==1, 'keep the encounter decision')
+    blocked=true; now=now+1; assert(not actor:AvoidDVVehicle(), 'do not walk through walls')
+    cars={}; now=now+1; assert(not actor:AvoidDVVehicle())
+    cars={{IsVehicle=function() return true end}}; now=now+1
+    assert(not actor:AvoidDVVehicle() and rolls==1, 'chairs are not DV cars')
+    cars={{DecentVehicle={valid=true},NearestPoint=function(_,p) return Vector(0,0,p.z) end}}
+    ignore=true; now=now+1; assert(not actor:AvoidDVVehicle() and rolls==2)
+    now=now+1; assert(not actor:AvoidDVVehicle() and rolls==2, '30% ignore persists')
+    setcv('bgn_enable_dv_support',0); assert(not actor:AvoidDVVehicle())
+    setcv('bgn_enable_dv_support',1); DecentVehicleDestination=nil; assert(not actor:AvoidDVVehicle())
+''')
+spawns = realm(True)
+spawns.execute('''
+    local angles={}
+    angles.__index=angles
+    function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},angles) end
+    function angles.__add(a,b) return Angle(a.p+b.p,a.y+b.y,a.r+b.r) end
+    local definitions={standard={},sideways={SpawnAngleOffset=90},reversed={SpawnAngleOffset=180}}
+    list={Get=function(name) return name=='simfphys_vehicles' and definitions or {} end}
+    simfphys={SpawnVehicleSimple=function(class,pos,ang) return {class=class,pos=pos,ang=ang} end}
+''')
+spawn_source = (ROOT / 'spawner/sv_dv_spawner.lua').read_text(encoding='utf-8-sig')
+spawns.execute('function bgNPC:SpawnVehicle(' + spawn_source.split('function bgNPC:SpawnVehicle(', 1)[1].split('function bgNPC:SpawnVehicleWithActor', 1)[0])
+spawns.execute('''
+    for _, heading in ipairs({0,45,180,-90}) do
+        for class, local_forward in pairs({standard=0,sideways=-90,reversed=-180}) do
+            local vehicle=bgNPC:SpawnVehicle(class,Vector(10,20,50),Angle(0,heading,0))
+            assert(vehicle.ang.y+local_forward==heading, 'physical front must face along the road')
+            assert(vehicle.pos==Vector(10,20,50))
+        end
+    end
+    local vehicle=bgNPC:SpawnVehicle('sideways',Vector(10,20,50),Angle(0,45,0),Vector(0,0,5),Angle(0,10,0))
+    assert(vehicle.ang.y==145 and vehicle.pos==Vector(10,20,55), 'actor offsets must also reach simfphys')
+''')
+print('PASS: existing regressions, simfphys spawn headings, DV pedestrian avoidance and LuaJIT syntax')
