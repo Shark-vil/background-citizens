@@ -54,6 +54,8 @@ function Actor:CallForHelp(enemy)
 	if not self.mechanics.call_for_help then return end
 	if not IsValid(enemy) or not self:IsAlive() then return end
 	if hook.Run('BGN_PreCallForHelp', self, enemy) then return end
+	-- panic spreads only from a real fight; an officer's call needs no fight
+	if not self:HasTeam('police') and not bgNPC.Combat.IsFighting(enemy) then return end
 
 	self:FearScream()
 

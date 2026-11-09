@@ -9,6 +9,31 @@ local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction
 local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_detection_radius = GetConVar('bgn_wanted_detection_radius')
+-- A wanted actor nobody among the players sees for this long is dropped from the wanted list.
+local UNSEEN_RESET_TIME = 15
+
+local function SeenByPlayer(ent, radius_sqr)
+	for _, ply in ipairs(player.GetHumans()) do
+		if ply:Alive() and ply:GetPos():DistToSqr(ent:GetPos()) <= radius_sqr
+			and bgNPC.Vision.PlayerCanSeePos(ply, ent:WorldSpaceCenter()) and bgNPC.Vision.HasLineOfSight(ply, ent) then
+			return true
+		end
+	end
+	return false
+end
+
+-- @return boolean true if the actor was dropped from the wanted list
+local function DropIfUnseen(WantedClass, enemy, radius_sqr)
+	if enemy:IsPlayer() then return false end
+	if SeenByPlayer(enemy, radius_sqr) then
+		WantedClass.unseen_since = nil
+		return false
+	end
+	WantedClass.unseen_since = WantedClass.unseen_since or CurTime()
+	if CurTime() - WantedClass.unseen_since < UNSEEN_RESET_TIME then return false end
+	asset:RemoveWanted(enemy)
+	return true
+end
 
 hook.Add('BGN_PlayerReady', 'BGN_WantedSync', function(ply)
 	for _, wanted in ipairs(asset:GetAllWanted()) do
@@ -112,7 +137,7 @@ end)
 
 hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(target)
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
-		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
+		if IsValid(actor:GetNPC()) and actor:HasTeam('police') then
 			actor:AddEnemy(target)
 
 			if actor:HasState('idle') or actor:HasState('walk') then
@@ -139,7 +164,7 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 
 	if wanted_count == 0 then return end
 
-	if actor:HasTeam('residents') then
+	if actor:HasTeam('police') then
 		for i = 1, wanted_count do
 			local enemy = wanted_list[i].target
 			actor:AddEnemy(enemy)
@@ -229,7 +254,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 		local enemy = WantedClass.target
 		local is_update = false
 
-		if IsValid(enemy) then
+		if IsValid(enemy) and not DropIfUnseen(WantedClass, enemy, ray_distance_detect) then
 			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
 			WantedClass:UpdateWaitTime(wait_time)
@@ -249,7 +274,8 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 				end
 			end
 
-			if is_update then WantedClass:UpdateWanted() end
+			-- an actor's wanted status is renewed only while he fights
+			if is_update and (enemy:IsPlayer() or bgNPC.Combat.IsFighting(enemy)) then WantedClass:UpdateWanted() end
 
 			if WantedClass.time_reset < CurTime() then
 				asset:RemoveWanted(enemy)

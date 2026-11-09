@@ -144,6 +144,8 @@ local function RedirectEnemyToVehicle(body, enemy)
 end
 
 local ENEMY_FORGET_TIME = 20
+local CALM_ENEMY_FORGET_TIME = 15
+local FEAR_STATES = { 'fear', 'run_from_danger', 'dyspnea_danger' }
 
 -- Removes dead enemies, forgets enemies that were not seen for a long time
 -- and points the body at the nearest one.
@@ -172,6 +174,18 @@ function Actor:EnemiesRecalculate()
 		body:SetEnemy(enemy)
 		self.enemy_last_seen = self.enemy_last_seen or {}
 		self.enemy_last_seen[enemy] = CurTime()
+		-- A frightened actor stops fearing an actor that has not fought for a while, even in plain sight.
+		if not enemy:IsPlayer() and self:HasState(FEAR_STATES) and not bgNPC.Combat.IsFighting(enemy)
+			and not bgNPC.Modules.Get('wanted'):HasWanted(enemy) then
+			self.enemy_calm_since = self.enemy_calm_since or {}
+			self.enemy_calm_since[enemy] = self.enemy_calm_since[enemy] or CurTime()
+			if self.enemy_calm_since[enemy] + CALM_ENEMY_FORGET_TIME < CurTime() then
+				self.enemy_calm_since[enemy] = nil
+				self:RemoveEnemy(enemy)
+			end
+		elseif self.enemy_calm_since then
+			self.enemy_calm_since[enemy] = nil
+		end
 		return
 	end
 

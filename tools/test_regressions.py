@@ -855,6 +855,7 @@ client.execute('''
 arrest = realm(True)
 arrest.execute('''
     bgNPC.Actor={InVehicle=function() return false end}; bgNPC.Assert={Arg=function() end}
+    list.Set('BGN_Modules','wanted',{RemoveWanted=function() end,HasWanted=function() return false end})
     bgNPC.Animator={Stop=function() error('arrest released the NPC during fade') end}
     bgNPC.States={Register=function(name,_,state) bgNPC.States[name]=state end}
 ''')
@@ -1121,13 +1122,15 @@ vehicles.execute('''
         return e
     end
     ents={Create=NewEntity}
-    bgNPC.Body={For=function(actor,npc) return {GetEnemy=function() end,GiveWeapon=function(_,class)
+    bgNPC.Body={For=function(actor,npc) return {GetEnemy=function() end,SetDisposition=function() end,SetAlertLevel=function() end,SetEnemy=function() end,GiveWeapon=function(_,class)
         npc.weapon=NewEntity(class); return npc.weapon end} end}
     function NewActor()
         next_uid=next_uid+1
         local npc=NewEntity('npc_citizen'); npc.weapon=NewEntity('weapon_pistol')
         local a=setmetatable({uid=next_uid,npc=npc,mechanics={use_vehicle=true},enemies={},targets={},enemies_always_visible={},info={}}, {__index=bgNPC.Actor})
         function a:GetNPC() return self.npc end
+        function a:HasState() return false end
+        function a:GetNearEnemy() return self.enemies[1] end
         function a:GetPos() return self.npc:GetPos() end
         function a:GetAngles() return self.npc:GetAngles() end
         function a:GetType() return 'police' end
@@ -1454,7 +1457,7 @@ traffic.execute('''
         Think=function() end,DoTrace=function() end,IsValidVehicle=function() return true end,
         GetMaxSteeringAngle=function() return 30 end,AtTrafficLight=function(self) return self.red end,
         SetHorn=function(self,on) self.horn=on; if on then self.honks=(self.honks or 0)+1 end end}
-    bgNPC.DVCars={{GetVehicle=function() return car end,GetVehicleAI=function() return ai end}}
+    bgNPC.DVCars={{GetVehicle=function() return car end,GetVehicleAI=function() return ai end,GetDriver=function() end}}
     function ErrorNoHalt(err) error(err) end
 ''')
 load(traffic, 'modules/dv/sv_vehicle_traffic.lua')

@@ -17,7 +17,10 @@ local function Share(source)
 	local enemies = {}
 	for i = 1, source.enemies_count do
 		local enemy = source.enemies[i]
-		if IsValid(enemy) and enemy:Health() > 0 then enemies[#enemies + 1] = enemy end
+		-- only a real fight is worth passing on (an officer's enemy always is)
+		if IsValid(enemy) and enemy:Health() > 0 and (source:HasTeam('police') or bgNPC.Combat.IsFighting(enemy)) then
+			enemies[#enemies + 1] = enemy
+		end
 	end
 	if #enemies == 0 then return end
 
