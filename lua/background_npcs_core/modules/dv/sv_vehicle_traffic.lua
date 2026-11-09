@@ -16,17 +16,19 @@ local function Geometry(ai)
 	local half = (high - low) * .5
 	local filter = ai:GetTraceFilter()
 	local wheelbase = math.max(70, (math.abs(local_forward.x) * half.x + math.abs(local_forward.y) * half.y) * 1.3)
+	local axle_offset = wheelbase * .5
 	local wheels = car.Wheels
-	-- shortcut: other axle layouts use body length; calibrate their wheelbase when testing them.
+	-- shortcut: other axle layouts estimate spacing and rear offset from the body; calibrate when testing them.
 	if wheels and #wheels == 4 and IsValid(wheels[1]) and IsValid(wheels[2]) and IsValid(wheels[3]) and IsValid(wheels[4]) then
 		wheelbase = ((wheels[1]:GetPos() + wheels[2]:GetPos()) * .5):Distance((wheels[3]:GetPos() + wheels[4]:GetPos()) * .5)
+		axle_offset = (car:WorldSpaceCenter() - (wheels[3]:GetPos() + wheels[4]:GetPos()) * .5):Dot(forward)
 	end
 	local floor = util.TraceLine({ start = car:WorldSpaceCenter(), endpos = car:WorldSpaceCenter() - Vector(0, 0, 300),
 		filter = filter, mask = MASK_NPCSOLID })
 	return { half = half, bottom = math.min(low.z - center.z + 18, high.z - center.z - 4), top = high.z - center.z,
 		ride = car:WorldSpaceCenter().z - floor.HitPos.z, filter = filter,
 		offset = math.AngleDifference(car:GetAngles().y, forward:Angle().y),
-		wheelbase = math.max(wheelbase, 1) }
+		wheelbase = math.max(wheelbase, 1), axleOffset = axle_offset }
 end
 
 -- Sweep the whole footprint, conservatively enclosed in an AABB at the sampled yaw.
@@ -58,31 +60,36 @@ local function ClearPose(ai, g, a, b)
 	return true
 end
 
-local function Advance(ai, geometry, pose, steer, direction)
+local function Advance(ai, geometry, pose, steer, direction, axle_offset)
 	local yaw, pos = pose.yaw, pose.pos
 	local curvature = math.tan(math.rad(ai:GetMaxSteeringAngle() * .8)) / geometry.wheelbase * steer
 	for _ = 1, 3 do
 		local next_yaw = yaw + math.deg(25 * direction * curvature)
 		local heading = math.rad((yaw + next_yaw) * .5)
-		local next_pose = { pos = pos + Vector(math.cos(heading), math.sin(heading), 0) * (25 * direction), yaw = next_yaw }
+		-- The bicycle model turns about its rear axle; collision poses remain at the body center.
+		local rear = pos - Vector(math.cos(math.rad(yaw)), math.sin(math.rad(yaw)), 0) * axle_offset
+		local next_pos = rear + Vector(math.cos(heading), math.sin(heading), 0) * (25 * direction)
+			+ Vector(math.cos(math.rad(next_yaw)), math.sin(math.rad(next_yaw)), 0) * axle_offset
+		local next_pose = { pos = next_pos, yaw = next_yaw }
 		if not ClearPose(ai, geometry, { pos = pos, yaw = yaw }, next_pose) then return end
 		pos, yaw = next_pose.pos, next_yaw
 	end
 	return { pos = pos, yaw = yaw, dir = direction }
 end
 
-function Traffic.Plan(ai, goal, geometry)
+function Traffic.Plan(ai, goal, geometry, goal_direction)
 	local start = { pos = ai.v:WorldSpaceCenter(), yaw = ai:GetVehicleForward():Angle().y, dir = 1 }
 	local first = PoseKey(start)
 	local poses, costs, parents, closed = { [first] = start }, { [first] = 0 }, {}, {}
 	local heap = bgNPC.AStar.Heap()
 	heap:Push(first, start.pos:Distance(goal))
-	for iteration = 1, MAX_NODES do
+	for iteration = 1, goal_direction and MAX_NODES * 4 or MAX_NODES do
 		local key = heap:Pop()
 		if not key then return end
 		if not closed[key] then
 			local pose = poses[key]
-			if pose.pos:DistToSqr(goal) < 85 ^ 2 and pose.dir == 1 then
+			if pose.pos:DistToSqr(goal) < (goal_direction and 35 ^ 2 or 85 ^ 2) and pose.dir == 1
+				and (not goal_direction or Vector(math.cos(math.rad(pose.yaw)), math.sin(math.rad(pose.yaw)), 0):Dot(goal_direction) > .95) then
 				local path = {}
 				while key ~= first do table.insert(path, 1, poses[key]); key = parents[key] end
 				return path, iteration
@@ -90,7 +97,7 @@ function Traffic.Plan(ai, goal, geometry)
 			closed[key] = true
 			for _, direction in ipairs({ 1, -1 }) do
 				for _, steer in ipairs({ 0, -1, 1 }) do
-					local next_pose = Advance(ai, geometry, pose, steer, direction)
+					local next_pose = Advance(ai, geometry, pose, steer, direction, goal_direction and geometry.axleOffset or 0)
 					if next_pose then
 						local nk = PoseKey(next_pose)
 						local cost = costs[key] + 75 + (direction < 0 and 35 or 0) + (direction ~= pose.dir and 80 or 0)
@@ -123,10 +130,40 @@ local function Reserved(ai, path)
 	return false
 end
 
+function Traffic.AlternateLanes(ai)
+	local dvd, lanes = DecentVehicleDestination, {}
+	local origin = ai.v:WorldSpaceCenter()
+	local rejected = ai.bgnTraffic.rejectedLanes or {}
+	local direction = ai.PrevWaypoint and (ai.Waypoint.Target - ai.PrevWaypoint.Target):GetNormalized() or ai:GetVehicleForward()
+	for id, from in ipairs(dvd.Waypoints) do
+		if dvd.WaypointAvailable(id, ai.Group) then
+			for _, next_id in ipairs(from.Neighbors) do
+				local to = dvd.Waypoints[next_id]
+				if to and (rejected[to] or 0) <= CurTime() and dvd.WaypointAvailable(next_id, ai.Group) then
+					local heading = (to.Target - from.Target):GetNormalized()
+					local distance = origin:DistToSqr(to.Target)
+					if heading:LengthSqr() > .5 and heading:Dot(direction) < .5 and distance > 100 ^ 2 and distance < 650 ^ 2
+						and (to.Target - origin):Dot(heading) > 100
+						and math.abs(to.Target.z + ai.bgnTraffic.geometry.ride - origin.z) < 48 then
+						lanes[#lanes + 1] = { from = from, to = to, direction = heading, distance = distance }
+					end
+				end
+			end
+		end
+	end
+	table.sort(lanes, function(a, b) return a.distance < b.distance end)
+	return lanes
+end
+
 local function Reset(ai, state, now)
-	state.mode, state.path, state.safetyBlocked = nil, nil, nil
+	if state.lane then
+		state.rejectedLanes = state.rejectedLanes or {}
+		state.rejectedLanes[state.lane.to] = now + 30
+	end
+	state.mode, state.path, state.safetyBlocked, state.lane, state.retryLane = nil, nil, nil, nil, nil
 	state.mission, state.enemy, state.enemyPos = nil, nil, nil
 	state.blockedAt, state.nextSafety = nil, nil
+	state.moveIndex, state.bestDistance, state.moveAnchor = nil, nil, nil
 	state.anchor, state.progressAt = ai.v:GetPos(), now
 	state.hornUntil = nil
 	ai:SetHorn(false)
@@ -135,6 +172,12 @@ end
 local function ScheduledStop(ai, now)
 	return ai.WaitForCaller or now < ai.WaitUntilNext or now < ai.Emergency
 		or (ai.Preference.StopAtTL and ai:AtTrafficLight())
+end
+
+local function NeedsRecovery(ai)
+	local delta = ai.Waypoint.Target - ai.v:WorldSpaceCenter()
+	return (ai.Trace and ai.Trace.Hit) or (ai.TraceWaypoint and ai.TraceWaypoint.Hit)
+		or delta:GetNormalized():Dot(ai:GetVehicleForward()) < .5
 end
 
 local function Update(provider, now)
@@ -146,6 +189,7 @@ local function Update(provider, now)
 		state = { anchor = car:GetPos(), progressAt = now }
 		ai.bgnTraffic = state
 	end
+	if state.retryLane and state.waypoint ~= ai.Waypoint then Reset(ai, state, now) end
 	if state.mode then
 		local driver = provider:GetDriver()
 		if state.mission and (not driver or not isvector(driver.drive_target_pos) or driver.drive_target_pos:DistToSqr(state.mission) > 300 ^ 2) then
@@ -154,47 +198,77 @@ local function Update(provider, now)
 			or state.enemy:GetPos():DistToSqr(state.enemyPos) > 400 ^ 2) then
 			Reset(ai, state, now)
 		end
-		if state.waypoint ~= ai.Waypoint or (state.expires and now > state.expires) then Reset(ai, state, now) end
+		if state.waypoint ~= ai.Waypoint or (state.expires and now > state.expires) then
+			state.failedPlans = (state.failedPlans or 0) + 1; Reset(ai, state, now)
+		end
 		if state.path then
-			if not state.moveAnchor or state.moveAnchor:DistToSqr(car:GetPos()) > 20 ^ 2 then
-				state.moveAnchor, state.movedAt = car:GetPos(), now
+			local target = state.path[state.index]
+			local distance = target and car:WorldSpaceCenter():Distance(target.pos) or 0
+			local progress = state.lane and (state.moveIndex ~= state.index or not state.bestDistance or distance < state.bestDistance - 10)
+				or (not state.lane and (not state.moveAnchor or state.moveAnchor:DistToSqr(car:GetPos()) > 20 ^ 2))
+			if progress then
+				state.moveIndex, state.bestDistance, state.movedAt = state.index, distance, now
+				state.moveAnchor = car:GetPos()
 			elseif now - state.movedAt > 3 and not ScheduledStop(ai, now) then
-				Reset(ai, state, now - WAIT)
+				state.failedPlans = (state.failedPlans or 0) + 1
+				Reset(ai, state, now)
 			end
 		end
 		return
 	end
 	if not ai.Waypoint or ScheduledStop(ai, now) then Reset(ai, state, now); return end
-	if state.anchor:DistToSqr(car:GetPos()) > 64 ^ 2 then Reset(ai, state, now); return end
+	if state.anchor:DistToSqr(car:GetPos()) > 64 ^ 2 then state.failedPlans = 0; Reset(ai, state, now); return end
+	-- Slow progress is still progress; normal driving belongs to DV.
+	if car:GetVelocity():LengthSqr() >= 25 ^ 2 then Reset(ai, state, now); return end
 	local stuck = now - state.progressAt
-	if stuck > 2 and now > (state.nextHorn or 0) then
-		ai:SetHorn(true); state.hornUntil, state.nextHorn = now + .6, now + 3
+	local trace = ai.Trace
+	if stuck > 2 and car:GetVelocity():LengthSqr() < 25 ^ 2
+		and trace and trace.Hit and not trace.HitWorld and IsValid(trace.Entity)
+		and now > (state.nextHorn or 0) then
+		ai:SetHorn(true); state.hornUntil, state.nextHorn = now + .15, now + math.Rand(8, 14)
 	end
-	if stuck < WAIT or now < (state.nextPlan or 0) then return end
+	local retry = state.retryLane
+	if now < (state.nextPlan or 0) or (not retry and (stuck < WAIT or not NeedsRecovery(ai))) then return end
 	local obstacle = ai.Trace and ai.Trace.Entity
 	local leader = IsValid(obstacle) and obstacle.DecentVehicle
 	if IsValid(leader) and leader.bgnTraffic and leader.bgnTraffic.path then state.nextPlan = now + 1; return end
-	local goal = ai.Waypoint.Target
+	local goal = retry and retry.to.Target or ai.Waypoint.Target
 	state.advance = goal:DistToSqr(car:WorldSpaceCenter()) < 180 ^ 2 and ai.NextWaypoint ~= nil
 	if state.advance then goal = ai.NextWaypoint.Target end
 	local delta = goal - car:WorldSpaceCenter()
 	if delta:Length() > 650 then goal = car:WorldSpaceCenter() + delta:GetNormalized() * 650 end
-	state.mode, state.waypoint = 'planning', ai.Waypoint
+	state.mode, state.waypoint, state.lane, state.retryLane = 'planning', ai.Waypoint, retry, nil
 	local driver = provider:GetDriver()
 	state.mission = driver and driver.drive_target_pos
 	local enemy = driver and ai.IsTargetExists and not state.mission and driver:GetNearEnemy()
 	if IsValid(enemy) then state.enemy, state.enemyPos = enemy, enemy:GetPos() end
 	state.geometry = Geometry(ai)
-	local path, iterations = Traffic.Plan(ai, goal, state.geometry)
+	if retry then goal = retry.to.Target + Vector(0, 0, state.geometry.ride) end
+	local path, iterations = Traffic.Plan(ai, goal, state.geometry, retry and retry.direction)
 	if not IsValid(ai) or not IsValid(car) then return end
+	if not retry and (state.failedPlans or 0) >= 2 and not state.mission and not IsValid(state.enemy) then
+		local normal_path, normal_iterations = path, iterations
+		local lanes = Traffic.AlternateLanes(ai)
+		for i = 1, math.min(3, #lanes) do
+			local lane = lanes[i]
+			path, iterations = Traffic.Plan(ai, lane.to.Target + Vector(0, 0, state.geometry.ride), state.geometry, lane.direction)
+			if not IsValid(ai) or not IsValid(car) then return end
+			if state.mode ~= 'planning' then return end
+			if path and #path > 0 and not Reserved(ai, path) then state.lane = lane; break end
+			path = nil
+		end
+		if not state.lane then path, iterations = normal_path, normal_iterations end
+	end
 	state.nextPlan = CurTime() + 4
 	if path and #path > 0 and state.mode == 'planning' and not ScheduledStop(ai, CurTime())
 		and not Reserved(ai, path) and state.waypoint == ai.Waypoint then
 		state.mode, state.path, state.index = 'maneuver', path, 1
-		state.moveAnchor, state.movedAt = car:GetPos(), CurTime()
+		state.moveIndex, state.bestDistance, state.movedAt = nil, nil, CurTime()
+		state.moveAnchor = car:GetPos()
 		state.expires, state.iterations = CurTime() + 20, iterations
 	else
-		state.mode = nil
+		state.failedPlans = (state.failedPlans or 0) + 1
+		Reset(ai, state, CurTime())
 	end
 end
 
@@ -202,13 +276,34 @@ local function Drive(ai, state, now)
 	if state.mode == 'planning' or ScheduledStop(ai, now) then ai:StopDriving(); return end
 	local target = state.path and state.path[state.index]
 	if not target then
-		if state.advance and state.waypoint == ai.Waypoint then ai:SetupNextWaypoint() end
+		if state.lane and state.waypoint == ai.Waypoint then
+			ai.Waypoint, ai.NextWaypoint, ai.WaypointList = state.lane.from, state.lane.to, {}
+			ai:SetupNextWaypoint()
+			state.lane, state.rejectedLanes = nil, nil
+		elseif state.advance and state.waypoint == ai.Waypoint then ai:SetupNextWaypoint() end
+		state.failedPlans = 0
 		Reset(ai, state, now); ai:StopDriving(); return
 	end
 	local center = ai.v:WorldSpaceCenter()
-	if center:DistToSqr(target.pos) < 35 ^ 2 then state.index = state.index + 1; return end
 	local speed = ai.v:GetVelocity():Dot(ai:GetVehicleForward())
-	local delta = target.pos - center; delta.z = 0
+	local tolerance = state.lane and 15 or 35
+	local target_forward = target.yaw and Angle(0, target.yaw, 0):Forward() or ai:GetVehicleForward()
+	local passed = state.lane and (center - target.pos):Dot(target_forward) * target.dir > 0
+	if state.lane and ai:GetVehicleForward():Dot(target_forward) < .9 then passed = false end
+	if center:DistToSqr(target.pos) < tolerance ^ 2 or (passed and center:DistToSqr(target.pos) < 75 ^ 2) then
+		local next_target = state.path[state.index + 1]
+		if state.lane and next_target and next_target.dir ~= target.dir then
+			ai:StopDriving()
+			if math.abs(speed) > 10 then return end
+			-- Replan the gear change from the real pose, after braking drift has settled.
+			state.retryLane, state.lane, state.mode, state.path = state.lane, nil, nil, nil
+			state.anchor, state.progressAt, state.nextPlan = ai.v:GetPos(), now, 0
+			return
+		end
+		state.index = state.index + 1; return
+	end
+	local offset = state.lane and state.geometry.axleOffset or 0
+	local delta = target.pos - target_forward * offset - (center - ai:GetVehicleForward() * offset); delta.z = 0
 	local steering = math.deg(math.atan2(2 * state.geometry.wheelbase * ai:GetVehicleRight():Dot(delta), delta:LengthSqr()))
 	steering = math.Clamp(steering / math.abs(ai:GetMaxSteeringAngle()), -1, 1)
 	if now >= (state.nextSafety or 0) then
@@ -217,12 +312,17 @@ local function Drive(ai, state, now)
 		local distance = target.dir * math.max(25, math.abs(speed) * .3)
 		local turn = -distance * math.tan(math.rad(steering * math.abs(ai:GetMaxSteeringAngle()))) / state.geometry.wheelbase
 		local heading = math.rad(start.yaw) + turn * .5
-		local ahead = { pos = center + Vector(math.cos(heading), math.sin(heading), 0) * distance, yaw = start.yaw + math.deg(turn) }
+		local next_yaw = start.yaw + math.deg(turn)
+		local rear = center - ai:GetVehicleForward() * offset
+		local ahead = { pos = rear + Vector(math.cos(heading), math.sin(heading), 0) * distance
+			+ Angle(0, next_yaw, 0):Forward() * offset, yaw = next_yaw }
 		local clear, reason = ClearPose(ai, state.geometry, start, ahead)
 		state.safetyBlocked, state.blockReason = not clear, reason
 		if state.safetyBlocked then state.blockedAt = state.blockedAt or now else state.blockedAt = nil end
 	end
-	if state.blockedAt and now - state.blockedAt > 2 then Reset(ai, state, now - WAIT); ai:StopDriving(); return end
+	if state.blockedAt and now - state.blockedAt > 2 then
+		state.failedPlans = (state.failedPlans or 0) + 1; Reset(ai, state, now); ai:StopDriving(); return
+	end
 	local desired = (target.dir < 0 and 80 or 160) / (1 + math.abs(steering))
 	ai:SetHandbrake(state.safetyBlocked or speed * target.dir < -10 or math.abs(speed) > desired * 1.3)
 	ai:SetSteering(steering)
@@ -232,25 +332,27 @@ end
 function Traffic.Attach(ai)
 	if ai.bgnTrafficAttached then return end
 	ai.bgnTrafficAttached = true
-	local think, trace = ai.Think, ai.DoTrace
+	local think = ai.Think
 	function ai:Think()
 		local state = self.bgnTraffic
 		local now = CurTime()
 		if state and state.hornUntil and now > state.hornUntil then self:SetHorn(false); state.hornUntil = nil end
 		if state and state.mode and IsValid(self.v) and not self.v.isBgnVehicle then Reset(self, state, now) end
 		if state and state.mode and IsValid(self.v) and ScheduledStop(self, now) then Reset(self, state, now) end
+		if state and state.retryLane and IsValid(self.v) then
+			self:StopDriving(); self:DoLights(); self:SetDriverPosition(); self:NextThink(now)
+			return true
+		end
+		if state and state.mode and IsValid(self.v) and self.Waypoint then
+			self:DoTrace()
+			if not state.lane and not NeedsRecovery(self) then Reset(self, state, now) end
+		end
 		if state and state.mode and IsValid(self.v) and self.v.isBgnVehicle and self:IsValidVehicle() then
 			Drive(self, state, now)
 			self:DoLights(); self:SetDriverPosition(); self:NextThink(now)
 			return true
 		end
 		return think(self)
-	end
-	function ai:DoTrace()
-		if CurTime() < (self.bgnNextTrafficTrace or 0) then return end
-		local speed = IsValid(self.v) and self.v:GetVelocity():Length() or 0
-		self.bgnNextTrafficTrace = CurTime() + math.Clamp(40 / math.max(speed, 1), .05, .2)
-		return trace(self)
 	end
 end
 

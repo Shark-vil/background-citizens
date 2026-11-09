@@ -220,12 +220,22 @@ function VEHICLE:GetVehicle()
 	return self.vehicle
 end
 
--- An empty car the actor may take back: the one it left, or one of its group (police, bandits, ...).
+-- An empty car it may take back, or a free passenger seat after its former driver returned.
 -- Not someone else's residents car: police and medics are residents too, and citizens keep to their own.
 function VEHICLE:CanBoard(actor)
 	local vehicle = self.vehicle
 	if not self:CanUse(actor) then return false end
-	if not IsValid(vehicle) or self:GetDriver() or IsValid(vehicle:GetDriver()) then return false end
+	if not IsValid(vehicle) then return false end
+	if actor:HasTeam('police') and vehicle:GetMaxHealth() > 0 then
+		local health = vehicle.GetCurHealth and vehicle:GetCurHealth() or vehicle:Health()
+		if health <= vehicle:GetMaxHealth() * .2 then return false end
+	end
+	local seated = vehicle:GetDriver()
+	if IsValid(seated) and seated ~= self.ai then return false end
+	if self:GetDriver() then
+		return actor.last_vehicle == self and (self.passengers_limit == -1 or #self.passengers < self.passengers_limit)
+			and FindFreeSeat(vehicle) ~= nil
+	end
 	if actor.last_vehicle == self then return true end
 	local group = string.Explode('|', self.type)[1]
 	return group ~= 'residents' and actor:HasTeam(group)
@@ -371,7 +381,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 			new_limit = new_limit * actor.vehicle_multiply_speed[state_group]
 		end
 
-		if new_limit ~= limit then return new_limit end
+		if new_limit ~= limit then return original_GetCurrentMaxSpeed(self) * new_limit / math.max(limit, 1) end
 
 		return original_GetCurrentMaxSpeed(self)
 	end

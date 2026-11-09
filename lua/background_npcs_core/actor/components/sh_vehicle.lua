@@ -97,7 +97,9 @@ local function FindVehicleExitPos(vehicle, saved, model)
 		local side = i % 2 == 0 and 1 or -1
 		local candidate = pos + right * distance * side + forward * (math.floor((i - 1) / 2) - 1) * 80 + Vector(0, 0, 80)
 		local ground = util.TraceLine({ start = candidate, endpos = candidate - Vector(0, 0, 500), filter = { model, vehicle } })
-		if ground.Hit and ground.HitNormal.z > .6 then
+		-- A free floor below a bridge is not an exit beside the car.
+		-- shortcut: the height bound assumes car-sized chassis; measure underbody ground height for tall vehicles.
+		if ground.Hit and not ground.StartSolid and ground.HitNormal.z > .6 and math.abs(ground.HitPos.z - pos.z) <= 96 then
 			candidate = ground.HitPos + Vector(0, 0, 2)
 			local hull = util.TraceHull({ start = candidate, endpos = candidate, mins = saved.mins, maxs = saved.maxs,
 				filter = model, mask = MASK_NPCSOLID })
@@ -112,8 +114,8 @@ function Actor:ShouldExitVehicle()
 	local max_health = vehicle:GetMaxHealth()
 	local health = vehicle.GetCurHealth and vehicle:GetCurHealth() or vehicle:Health()
 	if max_health > 0 and health <= max_health * 0.2 then return true end
-	for _, ply in ipairs(player.GetAll()) do
-		if ply:Alive() and ply:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
+	for _, enemy in ipairs(self.enemies) do
+		if IsValid(enemy) and enemy:Health() > 0 and enemy:GetPos():DistToSqr(vehicle:GetPos()) <= 800 ^ 2 then return true end
 	end
 	return false
 end
@@ -170,9 +172,27 @@ end
 function Actor:TakeVehicleDamage(amount, attacker)
 	local saved = self.vehicle_body
 	if not saved or self.is_removed then return end
+	if amount > 0 and self:HasTeam('police') then self:AddEnemy(attacker) end
 	saved.health = math.max(0, self:Health() - amount)
 	if IsValid(self.npc) then self.npc:SetHealth(saved.health) end
 	if saved.health <= 0 then
+		-- The seated DV entity cannot produce the character's death ragdoll.
+		local ragdoll = ents.Create('prop_ragdoll')
+		if IsValid(ragdoll) then
+			local car = self:GetVehicle()
+			ragdoll:SetKeyValue('spawnflags', '4100') -- Debris, retired by the engine's ragdoll limit.
+			ragdoll:SetModel(saved.model)
+			ragdoll:SetPos(IsValid(car) and (FindVehicleExitPos(car, saved, self.npc) or car:GetPos()) or self:GetPos())
+			ragdoll:SetAngles(Angle(0, self:GetAngles().y, 0))
+			ragdoll:SetSkin(saved.skin)
+			ragdoll:SetModelScale(saved.scale, 0)
+			ragdoll:SetColor(saved.color)
+			ragdoll:SetMaterial(saved.material)
+			for id, value in pairs(saved.bodygroups) do ragdoll:SetBodygroup(id, value) end
+			ragdoll:Spawn()
+			ragdoll:Activate()
+		end
+		if IsValid(ragdoll) then hook.Run('CreateEntityRagdoll', self.npc, ragdoll) end
 		hook.Run('OnNPCKilled', self.npc, attacker, attacker)
 		self:Remove()
 	end

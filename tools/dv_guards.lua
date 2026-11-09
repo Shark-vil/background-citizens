@@ -54,8 +54,8 @@ timer.Simple(1, function()
                         wall:GetPhysicsObject():EnableMotion(false); walls[#walls + 1] = wall
                     end
                     report.no_path_calls = 0
-                    traffic.Plan = function(dv, goal, geometry)
-                        local path, iterations = plan(dv, goal, geometry)
+                    traffic.Plan = function(dv, goal, geometry, direction)
+                        local path, iterations = plan(dv, goal, geometry, direction)
                         if dv == ai then report.no_path_calls = report.no_path_calls + 1; report.no_path = path == nil end
                         return path, iterations
                     end

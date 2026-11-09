@@ -1057,7 +1057,7 @@ vehicles.execute('''
     function vmeta.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     util.IsInWorld=function() return true end
     util.TraceHull=function() return {StartSolid=blocked,Hit=blocked} end
-    util.TraceLine=function() return {Hit=true,HitNormal=Vector(0,0,1),HitPos=Vector(200,0,0)} end
+    util.TraceLine=function() return {Hit=true,StartSolid=exit_start_solid,HitNormal=Vector(0,0,1),HitPos=Vector(200,0,exit_floor or 0)} end
     bgNPC.Util.EntityTimer=function(ent,name,_,__,fn) timers[name]=function() fn(ent) end end
     next_uid=0
     function NewEntity(class)
@@ -1072,6 +1072,7 @@ vehicles.execute('''
         function e:GetCollisionGroup() return 5 end
         function e:GetBodyGroups() return {} end
         function e:GetKeyValues() return {} end
+        function e:SetKeyValue() end
         function e:GetModel() return self.model end
         function e:SetModel(v) self.model=v end
         function e:Health() return self.hp end
@@ -1106,12 +1107,15 @@ vehicles.execute('''
         local npc=NewEntity('npc_citizen'); npc.weapon=NewEntity('weapon_pistol')
         local a=setmetatable({uid=next_uid,npc=npc,mechanics={use_vehicle=true},enemies={},targets={},enemies_always_visible={},info={}}, {__index=bgNPC.Actor})
         function a:GetNPC() return self.npc end
+        function a:GetPos() return self.npc:GetPos() end
+        function a:GetAngles() return self.npc:GetAngles() end
         function a:GetType() return 'police' end
         function a:GetActiveWeapon() return self.npc.weapon end
         function a:Health() return self.npc:Health() end
         function a:HasTeam() return true end
         function a:IsAlive() return not self.is_removed end
         function a:CreateFakePlayerMethodsForNPC() end
+        function a:AddEnemy(e) self.enemies[#self.enemies+1]=e end
         function a:Remove() self.is_removed=true; bgNPC.Actors.UnregisterActor(self) end
         bgNPC.Actors.Register(a)
         return a
@@ -1144,7 +1148,7 @@ vehicles.execute('''
         BGN_VEHICLE.GetVehicleProvider=function() return p end
         return p
     end
-    near_player={pos=Vector(),Alive=function() return true end,GetPos=function(self) return self.pos end}
+    near_player={valid=true,pos=Vector(),Health=function() return 100 end,Alive=function() return true end,GetPos=function(self) return self.pos end}
     player.GetAll=function() return {near_player} end
 ''')
 load(vehicles, 'api/sh_actors.lua', 'actor/components/sh_vehicle.lua')
@@ -1169,9 +1173,146 @@ vehicles.execute('''
         'vehicle removal never resurrects a physical body')
     p=NewCar(); a=NewActor(); a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
     near_player.pos=Vector(800.1,0,0); p.car.maxhp=0; assert(not a:ShouldExitVehicle())
-    near_player.pos=Vector(800,0,0); assert(a:ShouldExitVehicle())
+    near_player.pos=Vector(800,0,0); assert(not a:ShouldExitVehicle(), 'neutral observers do not make police dismount')
+    a.enemies={near_player}; assert(a:ShouldExitVehicle(), 'police dismount for a nearby actual enemy')
     near_player.pos=Vector(5000,0,0); p.car.maxhp=100; p.car.hp=20; assert(a:ShouldExitVehicle())
     p.car.hp=21; assert(not a:ShouldExitVehicle())
+    a.enemies={}; near_player.pos=Vector(800,0,0)
+    a:TakeVehicleDamage(1,near_player)
+    assert(a.enemies[1]==near_player and a:ShouldExitVehicle(), 'actual damage still makes seated police react to their attacker')
+    exit_floor=-300
+    assert(not a:ExitVehicle(true) and a:InVehicle(), 'do not exit onto a lower road beneath a bridge')
+    exit_floor=0
+    exit_start_solid=true
+    assert(not a:ExitVehicle(true) and a:InVehicle(), 'a ground trace starting inside an object is not a safe floor')
+    exit_start_solid=false
+    local create=ents.Create
+    ents.Create=function(class) local e=create(class); if class=='prop_ragdoll' then corpse=e end; return e end
+    local deaths=0
+    hook.Add('OnNPCKilled','death_count',function() deaths=deaths+1 end)
+    a:TakeVehicleDamage(100,near_player)
+    assert(a.is_removed and deaths==1 and corpse, 'a lethal hit creates a corpse and reports one death')
+    assert(corpse.model=='original.mdl' and corpse.pos==Vector(200,0,2),
+        'the corpse preserves the model and is placed beside the car')
+    a:TakeVehicleDamage(100,near_player); assert(deaths==1, 'death is only reported once')
+    p=NewCar(); a=NewActor(); a:EnterVehicle(p.car); timers['bgn_actor_enter_vehicle_'..a.uid]()
+    blocked=true; corpse=nil; a:TakeVehicleDamage(100,near_player)
+    assert(a.is_removed and corpse and corpse.pos==a.npc.pos, 'a blocked exit still leaves a corpse at the seat')
+''')
+
+# Run the actual traffic task and attached Think with a stationary car.
+traffic = realm(True)
+traffic.execute('''
+    local vec=getmetatable(Vector())
+    function vec.__mul(v,n) return Vector(v.x*n,v.y*n,v.z*n) end
+    function vec:LengthSqr() return self:DistToSqr(Vector()) end
+    function vec:GetNormalized() local n=math.sqrt(self:LengthSqr()); return Vector(self.x/n,self.y/n,self.z/n) end
+    function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    math.Rand=function(a,b) return (a+b)/2 end
+    bgNPC.Tasks={Add=function(_,fn) traffic_task=fn end}
+    car={valid=true,isBgnVehicle=true,pos=Vector(),velocity=Vector(),
+        WorldSpaceCenter=function(self) return self.pos end,
+        GetPos=function(self) return self.pos end,GetVelocity=function(self) return self.velocity end}
+    ai={valid=true,v=car,WaitUntilNext=0,Emergency=0,Preference={StopAtTL=true},Waypoint={Target=Vector(500,0,0)},Trace={Hit=false},
+        GetVehicleForward=function() return Vector(1,0,0) end,
+        Think=function() end,DoTrace=function() end,IsValidVehicle=function() return true end,
+        GetMaxSteeringAngle=function() return 30 end,AtTrafficLight=function(self) return self.red end,
+        SetHorn=function(self,on) self.horn=on; if on then self.honks=(self.honks or 0)+1 end end}
+    bgNPC.DVCars={{GetVehicle=function() return car end,GetVehicleAI=function() return ai end}}
+    function ErrorNoHalt(err) error(err) end
+''')
+load(traffic, 'modules/dv/sv_vehicle_traffic.lua')
+traffic.execute('''
+    local trace=ai.DoTrace
+    bgNPC.VehicleTraffic.Attach(ai)
+    assert(ai.DoTrace==trace, 'keep DV trace cadence: its clear-road permission expires after 0.1 seconds')
+    local task=coroutine.create(traffic_task)
+    local function step(t)
+        now=t
+        local ok,err=coroutine.resume(task,function() end,coroutine.yield,function() end)
+        assert(ok,err)
+        ai:Think()
+    end
+    step(100); step(103); assert(not ai.horn, 'standing on an empty road is not a reason to honk')
+    ai.Trace={Hit=true,HitWorld=true,Entity={valid=true}}
+    step(103.1); assert(not ai.horn, 'do not honk at world geometry')
+    ai.Trace={Hit=true,Entity={valid=true}}; car.velocity=Vector(30,0,0)
+    step(103.2); assert(not ai.horn, 'normal movement must not trigger the stuck horn')
+    car.velocity=Vector(); step(106.3)
+    assert(ai.horn and ai.honks==1, 'a stalled car may ask a real blocker to move')
+    ai.bgnTraffic.nextPlan=200
+    now=106.46; ai:Think(); assert(not ai.horn, 'a honk is a short pulse')
+    step(107); assert(ai.honks==1, 'do not repeat honks every traffic update')
+    step(109.4); assert(ai.honks==1, 'the old three-second cycle must not repeat')
+    ai.red=true; step(110); assert(not ai.horn, 'a red light cancels the horn')
+    ai.red=false; ai.WaitForCaller=true; step(111); assert(not ai.horn)
+    ai.WaitForCaller=false; ai.WaitUntilNext=113; step(112); assert(not ai.horn)
+    ai.WaitUntilNext=0
+    -- Suppress path planning while advancing the cooldown clock.
+    ai.bgnTraffic.nextPlan=200
+    step(117.31); assert(ai.horn and ai.honks==2, 'a persistent blocker may be reminded after the longer pause')
+    ai.bgnTraffic.mode='planning'; ai.Trace={Hit=false}; ai:Think()
+    assert(not ai.bgnTraffic.mode, 'a cleared road immediately returns control to DV')
+    ai.bgnTraffic.geometry={ride=20}
+    local from={Target=Vector(100,100,-20),Neighbors={2}}
+    local to={Target=Vector(-200,100,-20),Neighbors={}}
+    DecentVehicleDestination={Waypoints={from,to,
+        {Target=Vector(100,200,-20),Neighbors={4}}, {Target=Vector(300,200,-20),Neighbors={}},
+        {Target=Vector(100,100,100),Neighbors={6}}, {Target=Vector(-200,100,100),Neighbors={}}},
+        WaypointAvailable=function() return true end}
+    local lanes=bgNPC.VehicleTraffic.AlternateLanes(ai)
+    assert(#lanes==1 and lanes[1].from==from and lanes[1].to==to,
+        'fallback selects another direction on the same road level, not the current lane or bridge')
+    ai.bgnTraffic.rejectedLanes={[to]=now+30}
+    assert(#bgNPC.VehicleTraffic.AlternateLanes(ai)==0, 'do not immediately retry a lane whose maneuver failed')
+    ai.bgnTraffic.rejectedLanes[to]=now-1
+    assert(#bgNPC.VehicleTraffic.AlternateLanes(ai)==1, 'a failed lane can be retried after its cooldown')
+    DecentVehicleDestination.WaypointAvailable=function() return false end
+    assert(#bgNPC.VehicleTraffic.AlternateLanes(ai)==0, 'lane changes respect DV waypoint access')
+    math.Clamp=function(v,a,b) return math.max(a,math.min(b,v)) end
+    ai.GetVehicleRight=function() return Vector(0,-1,0) end
+    ai.SetSteering=function(self,v) self.steering=v end
+    ai.SetThrottle=function(self,v) self.throttle=v end
+    ai.SetHandbrake=function() end
+    ai.DoLights=function() end; ai.SetDriverPosition=function() end; ai.NextThink=function() end
+    now=150; ai.Trace={Hit=true}
+    ai.bgnTraffic={mode='maneuver',path={{pos=Vector(50,-100,0),dir=-1}},index=1,
+        geometry={wheelbase=100},nextSafety=200}
+    ai:Think()
+    assert(ai.steering>0 and ai.throttle<0, 'reverse pure pursuit keeps curvature and reverses travel direction')
+    ai.bgnTraffic.path[1].dir=1; ai:Think()
+    assert(ai.steering>0 and ai.throttle>0, 'forward pursuit retains the normal steering sign')
+    ai.StopDriving=function(self) self.throttle=0 end
+    ai.bgnTraffic.mode='planning'; ai.Trace={Hit=false}; ai.TraceWaypoint={Hit=true}
+    ai:Think()
+    assert(ai.bgnTraffic.mode=='planning', 'a blocked waypoint trace still requires recovery when the forward trace is clear')
+    ai.TraceWaypoint.Hit=false; ai:Think()
+    assert(not ai.bgnTraffic.mode, 'release control only after both native DV traces clear')
+    ai.bgnTraffic={mode='maneuver',lane={},path={{pos=Vector(50,-100,0),dir=1}},index=1}
+    car.pos=Vector(90,-100,0); ai:Think()
+    assert(ai.bgnTraffic.index==2, 'a passed nearby path point must not make the car circle back')
+    local lane={}
+    ai.bgnTraffic={mode='maneuver',lane=lane,index=1,
+        path={{pos=car.pos,dir=-1},{pos=Vector(200,-100,0),dir=1}}}
+    car.velocity=Vector(20,0,0); ai:Think()
+    assert(ai.bgnTraffic.mode=='maneuver' and not ai.bgnTraffic.retryLane, 'brake before changing travel direction')
+    car.velocity=Vector(); ai:Think()
+    assert(ai.bgnTraffic.retryLane==lane and not ai.bgnTraffic.mode, 'replan a cusp from the stopped physical pose')
+    ai:Think(); assert(ai.throttle==0, 'hold the brake while the traffic task prepares the new plan')
+''')
+
+returning = realm(True)
+return_source = (ROOT / 'modules/dv/sv_return_to_vehicle.lua').read_text(encoding='utf-8-sig')
+returning.execute(return_source.split("timer.Create('BGN_ReturnToVehicle'", 1)[0] + '\nNearForReturn=IsAnyoneNear')
+returning.execute('''
+    local bystander={valid=true,Alive=function() return true end,GetPos=function() return Vector() end}
+    player.GetAll=function() return {bystander} end
+    local a={enemies={},HasTeam=function() return true end}
+    assert(not NearForReturn(a,Vector()), 'a neutral nearby observer does not strand police on foot')
+    a.enemies={bystander}; assert(NearForReturn(a,Vector()), 'an actual nearby enemy delays return')
+    a.enemies={}; a.HasTeam=function() return false end
+    assert(NearForReturn(a,Vector()), 'civilian return keeps its player-distance rule')
 ''')
 
 rendering = realm(False)
@@ -1697,7 +1838,16 @@ access.execute('''
 ''')
 load(access, 'modules/dv/sh_dv_vehicle.lua')
 access.execute('''
-    local car={valid=true,GetDriver=function() end,CallOnRemove=function() end}
+    local a={vehicle_speed={calm=250},GetStateGroupName=function() return 'calm' end}
+    local dv={Waypoint={SpeedLimit=400},GetCurrentMaxSpeed=function() return 200 end,
+        bgnProvider={GetDriver=function() return a end}}
+    BGN_VEHICLE:OverrideVehicle(dv)
+    assert(dv:GetCurrentMaxSpeed()==125, 'speed override retains the original DV corner slowdown')
+    a.vehicle_speed=nil; a.vehicle_multiply_speed={calm=2}
+    assert(dv:GetCurrentMaxSpeed()==400, 'state multiplier retains DV slowdown')
+    a.vehicle_multiply_speed=nil
+    assert(dv:GetCurrentMaxSpeed()==200, 'ordinary traffic uses the original DV speed')
+    local car={valid=true,GetDriver=function() end,CallOnRemove=function() end,GetMaxHealth=function() return 0 end}
     local police={HasTeam=function(_,team) return team=='police' end,IsAlive=function() return true end}
     local citizen={HasTeam=function() return false end,GetVehicleGroup=function() return 'residents' end}
     local p=BGN_VEHICLE:Instance(car,'police','police')
@@ -1709,6 +1859,20 @@ access.execute('''
     p:SetGroup('residents'); assert(not p:CanUse(citizen), 'group changes cannot remove police designation')
     local ambulance=BGN_VEHICLE:Instance({valid=true,CallOnRemove=function() end},'medics|npc_dvbgn_police|ambulance|2','medic')
     assert(ambulance:CanUse(citizen), 'police AI class does not make an ambulance a police car')
+    local seat={GetClass=function() return 'prop_vehicle_prisoner_pod' end,GetDriver=function() end}
+    car.GetChildren=function() return {seat} end
+    p.ai={valid=true}; p.driver=police; p.passengers={police}; p.passengers_limit=2
+    local crew={last_vehicle=p,HasTeam=police.HasTeam}
+    assert(p:CanBoard(crew), 'returning crew may use a free passenger seat after their driver boards')
+    car.GetMaxHealth=function() return 100 end; car.Health=function() return 20 end
+    assert(not p:CanBoard(crew), 'police do not reboard a critically damaged car and immediately exit again')
+    car.GetMaxHealth=function() return 0 end
+    car.GetDriver=function() return p.ai end
+    assert(p:CanBoard(crew), 'simfphys exposes the DV remote driver through GetDriver')
+    car.GetDriver=function() return {valid=true} end
+    assert(not p:CanBoard(crew), 'a player driver still blocks autonomous boarding')
+    car.GetDriver=function() end
+    p.passengers_limit=1; assert(not p:CanBoard(crew), 'full crew vehicles are not boardable')
 ''')
 movement = realm(True)
 movement.execute('''
