@@ -819,7 +819,6 @@ vehicles.execute('''
     assert(#abandoned.passengers==0,'passengers must leave a car after its driver and AI are gone')
     for _,a in ipairs(abandoned_actors) do assert(not a.npc.hidden and not a.npc.weapon.hidden) end
 ''')
-
 rendering = realm(False)
 rendering.execute('''
     setcv('bgn_cl_field_view_optimization',1)
@@ -893,6 +892,111 @@ sync.execute('''
     assert(a and a.kind=='police' and a.state=='walk','state sync must recover a missed actor registration')
 ''')
 
+police_weapons = realm(True)
+police_weapons.execute('''
+    bgNPC.Assert={Arg=function() end}
+    bgNPC.Util.GetCVar=function(name) return GetConVar(name) end
+    bgNPC.cfg.melee_weapons={'weapon_stunstick','weapon_crowbar','none'}
+    bgNPC.Table.HasValue=function(t,v) for _,x in ipairs(t) do if x==v then return true end end return false end
+    list.GetForEdit=function() return {} end
+    local protected=false
+    list.Set('BGN_Modules','player_arrest',{IsProtected=function() return protected end})
+    function protect(value) protected=value end
+    function Weapon(class)
+        return {valid=true,GetClass=function() return class end}
+    end
+    enemy={valid=true,pos=Vector(200,0,0),GetPos=function(self) return self.pos end,
+        GetActiveWeapon=function(self) return self.weapon end,
+        IsPlayer=function() return true end, IsNPC=function() return false end, IsNextBot=function() return false end,
+        IsVehicle=function() return false end}
+    npc={valid=true,pos=Vector(),weapons={},GetPos=function(self) return self.pos end,
+        GetActiveWeapon=function(self) return self.active end,
+        GetWeapon=function(self,class) return self.weapons[class] end,
+        Give=function(self,class) self.weapons[class]=Weapon(class); return self.weapons[class] end,
+        SelectWeapon=function(self,class) self.active=self.weapons[class] end,
+        GetClass=function() return 'npc_metropolice' end}
+    actor={class='npc_metropolice',state_data={},IsAlive=function() return true end,IsNPC=function() return true end,
+        GetType=function() return 'police' end,GetNPC=function() return npc end,
+        HasTeam=function(_,team) return team=='police' end,GetNearEnemy=function() return enemy end,
+        GetActorWeapon=function() return 'weapon_pistol' end,
+        GetStateData=function(self) return self.state_data end,
+        GetBody=function() return {RemoveActiveWeapon=function() npc.active=nil end} end}
+    function new_fight()
+        actor.state_data={}
+        npc.active=Weapon('weapon_stunstick')
+    end
+    function expect(class)
+        bgNPC.Combat.EquipActor(actor)
+        assert((npc.active and npc.active:GetClass())==class, 'unexpected police weapon: '..tostring(class))
+    end
+    setcv('bgn_disable_weapon_police',0)
+    setcv('bgn_arrest_safe_weapons','weapon_fists, gmod_tool,weapon_physgun')
+''')
+load(police_weapons, 'api/sv_combat.lua')
+police_weapons.execute('''
+    npc.active=Weapon('weapon_stunstick')
+    expect('weapon_stunstick') -- no attack, no kills
+    enemy.bgn_last_attack=now
+    expect('weapon_stunstick') -- an unarmed first offender
+    enemy.bgn_has_killed=true
+    expect('weapon_pistol') -- must switch away from an already equipped stick
+    enemy.pos=Vector(75,0,0)
+    expect('weapon_pistol') -- closing in must not downgrade a fight to melee
+    enemy.bgn_last_attack=now-30
+    expect('weapon_pistol') -- a pause in attacks must not downgrade the same fight either
+    new_fight(); expect('weapon_stunstick') -- state changes release the escalation
+    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_has_killed=nil
+    expect('weapon_pistol') -- an armed enemy needs no first kill or recorded recent hit, even nearby
+    enemy.weapon=Weapon('gmod_tool')
+    expect('weapon_pistol') -- changing the target's weapon must not reset the same fight
+    npc.active=Weapon('weapon_stunstick')
+    expect('weapon_pistol') -- restore the pistol if another controller selects the baton
+    enemy.pos=Vector(200,0,0)
+    for _,class in ipairs({'gmod_tool','weapon_physgun','weapon_fists','weapon_crowbar'}) do
+        new_fight()
+        enemy.weapon=Weapon(class); expect('weapon_stunstick')
+    end
+    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_last_attack=now-10
+    expect('weapon_pistol') -- a hostile ranged opponent must not be chased with a baton
+    enemy.bgn_last_attack=now-9.99; expect('weapon_pistol')
+    protect(true); expect(nil)
+    assert(not actor.state_data.police_firearm, 'arrest must release firearm escalation')
+    protect(false); expect('weapon_pistol')
+    actor.state_data={}; enemy.weapon=nil; enemy.bgn_last_attack=nil
+    expect('weapon_pistol') -- keep an already drawn pistol after reloading the addon
+    actor.class='npc_combine_s'; enemy.bgn_last_attack=nil
+    npc.active=nil; expect('weapon_pistol') -- other law enforcement keeps its existing rules
+    npc.active=Weapon('weapon_shotgun'); expect('weapon_shotgun')
+    actor.class='npc_metropolice'; enemy.weapon=nil; enemy.bgn_last_attack=now
+    hooks.OnNPCKilled.BGN_PoliceLethalThreat({},enemy)
+    assert(enemy.bgn_has_killed)
+    expect('weapon_pistol') -- wanted statistics can have been reset after the first kill
+    hooks.PlayerDeath.BGN_PoliceLethalThreat(enemy,nil,enemy)
+    assert(not enemy.bgn_has_killed and not enemy.bgn_last_attack)
+    new_fight()
+    expect('weapon_stunstick')
+''')
+# The damage hook precedes the GMod-only continue statements in the surrender timer.
+police_weapons.execute((ROOT / 'systems/arrest/sv_surrender.lua').read_text(encoding='utf-8-sig')
+                       .split("timer.Create('BGN_Surrender'", 1)[0])
+police_weapons.execute('''
+    local victim={IsPlayer=function() return false end,IsNPC=function() return true end}
+    local damage={GetAttacker=function() return enemy end,GetDamage=function() return 5 end}
+    local record=hooks.EntityTakeDamage.BGN_Surrender_LastAttack
+    record(victim,damage); assert(enemy.bgn_last_attack==now)
+    enemy.bgn_last_attack=nil; damage.GetDamage=function() return 0 end
+    record(victim,damage); assert(enemy.bgn_last_attack==nil)
+    damage.GetDamage=function() return 5 end
+    record(enemy,damage); assert(enemy.bgn_last_attack==nil)
+    enemy.IsPlayer=function() return false end; enemy.IsNextBot=function() return true end
+    record(victim,damage); assert(enemy.bgn_last_attack==now, 'NextBot attacks must count too')
+    enemy.bgn_last_attack=nil
+    hooks.EntityFireBullets.BGN_PoliceLastAttack(enemy)
+    assert(enemy.bgn_last_attack==now, 'a missed shot must still count as an attack')
+    enemy.GetActiveWeapon=nil
+    assert(not bgNPC.Combat.CanPoliceShoot(enemy), 'unarmed third-party NextBots may have no weapon API')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'actor/sync/cl_sync.lua', 'actor/sync/sv_sync.lua', 'actor/cl_actor_voice.lua', 'actor/events/sv_self_damage.lua',
@@ -907,4 +1011,4 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, vehicle exits, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, arrest ceasefire, police weapons, vehicle exits, LuaJIT syntax')

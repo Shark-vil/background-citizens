@@ -6,6 +6,50 @@ local Combat = bgNPC.Combat
 --
 
 local FirstAttackerModule, WantedModule
+local POLICE_MELEE_DISTANCE_SQR = 75 ^ 2
+local POLICE_ATTACK_WINDOW = 10
+
+local function HasRangedWeapon(enemy)
+	local weapon = enemy.GetActiveWeapon and enemy:GetActiveWeapon()
+	if not IsValid(weapon) then return false end
+	local class = weapon:GetClass()
+	if bgNPC.Table.HasValue(bgNPC.cfg.melee_weapons, class) then return false end
+	for safe in GetConVar('bgn_arrest_safe_weapons'):GetString():gmatch('[^,%s]+') do
+		if class == safe then return false end
+	end
+	return true
+end
+
+function Combat.CanPoliceShoot(enemy)
+	if not IsValid(enemy) then return false end
+	return (HasRangedWeapon(enemy) or enemy.bgn_has_killed or bgNPC.Statistics.GetSum(enemy) >= 1)
+		and enemy.bgn_last_attack ~= nil
+		and CurTime() - enemy.bgn_last_attack < POLICE_ATTACK_WINDOW
+		and not Modules.Get('player_arrest'):IsProtected(enemy)
+end
+
+local function RecordKill(victim, attacker)
+	attacker = Combat.ResolveVehicleAttacker(attacker)
+	-- Wanted statistics reset on escalation; that must not erase the first kill for weapon selection.
+	if IsValid(attacker) and attacker ~= victim then attacker.bgn_has_killed = true end
+end
+
+hook.Add('OnNPCKilled', 'BGN_PoliceLethalThreat', RecordKill)
+hook.Add('BGN_OnKilledActor', 'BGN_PoliceLethalThreat', function(actor, attacker)
+	RecordKill(actor:GetNPC(), attacker)
+end)
+hook.Add('PlayerDeath', 'BGN_PoliceLethalThreat', function(victim, _, attacker)
+	victim.bgn_has_killed = nil
+	victim.bgn_last_attack = nil
+	RecordKill(victim, attacker)
+end)
+
+hook.Add('EntityFireBullets', 'BGN_PoliceLastAttack', function(shooter)
+	shooter = Combat.ResolveVehicleAttacker(shooter)
+	if IsValid(shooter) and (shooter:IsPlayer() or shooter:IsNPC() or shooter:IsNextBot()) then
+		shooter.bgn_last_attack = CurTime()
+	end
+end)
 
 local function GetFirstAttackerModule()
 	FirstAttackerModule = FirstAttackerModule or Modules.Get('first_attacker')
@@ -69,6 +113,24 @@ function Combat.EquipActor(actor, weapon_class, switching)
 
 	local npc = actor:GetNPC()
 	local active_weapon = npc:GetActiveWeapon()
+	if not weapon_class and actor.class == 'npc_metropolice' and actor:HasTeam('police') then
+		local enemy = actor:GetNearEnemy()
+		if IsValid(enemy) then
+			local data = actor:GetStateData()
+			if Modules.Get('player_arrest'):IsProtected(enemy) then
+				data.police_firearm = nil
+				actor:GetBody():RemoveActiveWeapon()
+				return
+			end
+			local close = npc:GetPos():DistToSqr(enemy:GetPos()) <= POLICE_MELEE_DISTANCE_SQR
+			-- Once a fight escalates, distance and an expired attack timer must not bring the baton back.
+			data.police_firearm = data.police_firearm or HasRangedWeapon(enemy)
+				or (IsValid(active_weapon) and active_weapon:GetClass() == 'weapon_pistol')
+				or (not close and Combat.CanPoliceShoot(enemy))
+			weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'
+			switching = true
+		end
+	end
 
 	if weapon_class then
 		if IsValid(active_weapon) then

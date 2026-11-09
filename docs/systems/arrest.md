@@ -18,6 +18,14 @@ A player gives up by looking at the ground (pitch over 40°) near the officer. N
 give up, 5% on its first attack and 10% on each later one while at 50 health or less. The police stop arresting and shoot when the target kills someone, keeps attacking,
 refuses within the time limit or is wanted.
 
+Regular police (`npc_metropolice`) use the stunstick as an additional melee weapon. An already hostile
+target holding an unsafe ranged weapon makes the officer select a pistol immediately, even up close
+and before the first kill or hit. Against other targets, switching to the pistol requires at least one
+kill, an attack within the last 10 seconds and a distance greater than 75 units. Once selected, the pistol
+stays selected in the current combat state: closing in, the target switching weapons or a pause in attacks
+does not bring back the baton. An already drawn pistol is also kept. Missed bullet shots count as attacks.
+An active arrest stops combat. Other law enforcement keeps its existing shooting and arrest rules.
+
 ## Car break-in
 
 `systems/arrest/sv_car_breakin.lua`: a player who stands still in a vehicle (rolling up to 64 units counts as
