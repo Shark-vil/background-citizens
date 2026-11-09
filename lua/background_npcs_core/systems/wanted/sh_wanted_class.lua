@@ -115,6 +115,8 @@ function ASSET:AddWanted(ent, time)
 	if self:HasWanted(ent) then return end
 	-- every source (kills, police calls, damage) ends here: ignored players are never wanted
 	if SERVER and (ent.bgn_arrested or bgNPC.Combat.IsIgnored(ent)) then return end
+	local actor = SERVER and bgNPC.Actors.Get(ent)
+	if actor and actor:HasTeam('medics') then return end
 
 	if SERVER and not ent:IsPlayer() then
 		bgNPC.Modules.Get('player_arrest'):RemoveTarget(ent)

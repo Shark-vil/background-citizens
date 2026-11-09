@@ -55,16 +55,22 @@ end
 -- A civilian driver who rams an officer's car: no longer a teammate of the police, who then react to the hit as to an attack.
 function bgNPC.OffenderFromRamming(attacker)
 	local offender = bgNPC.Actors.Get(attacker)
-	if not offender or not offender:IsAlive() or not offender:IsCivilian() or not offender:HasTeam('residents') then return end
+	if not offender or not offender:IsAlive() or not offender:IsCivilian() or offender:HasTeam('medics') then return end
 	MakeOffender(offender)
 	if GetConVar('bgn_enable_wanted_mode'):GetBool() and not bgNPC.Modes.IsPeaceful() then WantedModule:AddWanted(attacker) end
 end
+
+-- Medics are untouchable for the police: never an enemy, whatever team the medic ends up with.
+hook.Add('BGN_AddActorEnemy', 'BGN_MedicsImmuneToPolice', function(actor, ent)
+	local target = bgNPC.Actors.Get(ent)
+	if target and target:HasTeam('medics') and actor:HasTeam('police') then return true end
+end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_Offender', function(victim, attacker)
 	if bgNPC.Modes.IsPeaceful() or not IsValid(attacker) or attacker == victim:GetNPC() then return end
 
 	local offender = bgNPC.Actors.Get(attacker)
-	if not offender or not offender:IsAlive() or not offender:IsCivilian() or not victim:HasTeam('residents') then return end
+	if not offender or not offender:IsAlive() or not offender:IsCivilian() or offender:HasTeam('medics') or not victim:HasTeam('residents') then return end
 
 	MakeOffender(offender)
 

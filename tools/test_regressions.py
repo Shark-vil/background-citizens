@@ -1360,7 +1360,7 @@ startup.globals().include = startup_include
 load(startup, 'sh_init.lua')
 startup.execute('''
     local npc={valid=true,GetPos=function() return Vector() end}
-    local actor={data={team={'residents'}},IsAlive=function() return true end,IsCivilian=function() return true end,
+    local actor={data={team={'residents'}},IsAlive=function() return true end,IsCivilian=function() return true end,HasTeam=function() return false end,
         GetNPC=function() return npc end,SetTeam=function(self,t) self.team=t end}
     local victim={GetNPC=function() end,HasTeam=function() return true end}
     bgNPC.Actors.Get=function() return actor end

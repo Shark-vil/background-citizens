@@ -249,6 +249,8 @@ function VEHICLE:CanSeize(actor)
 	if not IsValid(vehicle) or IsValid(vehicle:GetDriver()) then return false end
 	local group = string.Explode('|', self.type)[1]
 	if group == actor:GetVehicleGroup() then return false end
+	-- ambulances are untouchable: no confiscation, no carjacking
+	if group == 'medics' then return false end
 	-- not from its own people (everyone shares 'residents', so that team doesn't count)
 	local driver = self:GetDriver()
 	return not (driver and group ~= 'residents' and driver:HasTeam(actor))
