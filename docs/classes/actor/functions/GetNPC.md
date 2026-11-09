@@ -6,7 +6,7 @@
 ```
 
 ## Description
-Returns the NPC entity associated with the actor. Can return "NULL".
+Returns the entity currently associated with the actor: an NPC/NextBot on foot or a DV driver/passenger anim entity while seated. Can return "NULL". Boarding removes the old body and exiting recreates it; fetch this value again after either transition. The actor object and UID remain stable.
 
 ## Return
 1. **Entity** - entity associated with an actor, or NULL
