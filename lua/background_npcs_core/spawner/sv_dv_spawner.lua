@@ -251,6 +251,7 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local npc = actor:GetNPC()
 	local car_class = bgNPC.Table.Random(car_classes)
 	local spawn_pos = data.pos + Vector(0, 0, 50)
+	if actor_type == 'medic' and bgNPC.Medics and bgNPC.Medics.IsBlocked(spawn_pos) then return false end
 	local spawn_ang = data.ang
 	local spawn_pos_offest = Vector(0, 0, 0)
 	local spawn_ang_offest = Angle(0, 0, 0)

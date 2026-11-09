@@ -252,6 +252,8 @@ Menu.AddPage('behavior', {
 		})
 		page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
 		page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
+		page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
+		page:Slider('bgn_enemy_share_period', '#bgn.menu.enemy_share_period', 0, 10)
 
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
@@ -265,6 +267,9 @@ Menu.AddPage('behavior', {
 		page:Section('#bgn.menu.section.corpses')
 		page:Toggle('bgn_corpse_cleanup', '#bgn.menu.corpse_cleanup')
 		page:Slider('bgn_corpse_cleanup_time', '#bgn.menu.corpse_cleanup_time', 10, 600)
+		page:Section('#bgn.menu.section.medics')
+		page:Slider('bgn_medic_danger_time', '#bgn.menu.medic_danger_time', 0, 600)
+		page:Slider('bgn_medic_danger_radius', '#bgn.menu.medic_danger_radius', 0, 5000)
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
@@ -337,9 +342,7 @@ Menu.AddPage('client', {
 		page:Toggle('bgn_cl_field_view_optimization', '#bgn.settings.optimization.cl_field_view_optimization')
 		page:Slider('bgn_cl_field_view_optimization_range', '#bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000)
 		page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
-		page:Choice('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
-			{ 1, '#bgn.menu.voices.generated' }, { 2, '#bgn.menu.voices.classic' }, { 0, '#bgn.menu.voices.off' },
-		})
+		page:Toggle('bgn_cl_voices', '#bgn.settings.client.cl_voices')
 		page:Choice('bgn_cl_voice_language', '#bgn.menu.voice_language', {
 			{ 'auto', '#bgn.menu.auto' }, { 'english', 'English' }, { 'russian', 'Русский' },
 		})

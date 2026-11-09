@@ -44,7 +44,7 @@ function Actor:SayReplic(replic_id, replic_index, say_time, voice_sound, animati
 end
 
 -- A voice line without text. Each client plays a random clip of voice_id in its own language
--- (actor/cl_actor_voice.lua), or the fallback sound when it has voices off or no clip. voice_id nil: fallback only.
+-- (actor/cl_actor_voice.lua), or the event's fallback when no clip exists. voice_id nil: fallback only.
 local COMBAT_VOICES = { police_combat = true, police_contact = true }
 local COMBAT_VOICE_COOLDOWN = 20 -- shooting and getting hit fire these every moment: one line per actor this often
 

@@ -13,6 +13,12 @@ the weapon on death, like an HL2 NPC). Shots start at the bot's right hand. The 
 NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, good ×0.67, very good ×0.33,
 perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
+Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
+back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by
+default (`bgn_nextbot_jump`, behavior settings): a stuck bot waits and then teleports to the next path point, and a
+car hit only throws it. With the cvar on, a stuck bot jumps first and a hit adds a jump. An actor leaving a car is
+put at a spot free for its whole body, never inside the car.
+
 ## Weapons and teams
 
 - Only actors whose weapon roll passed (`getting_weapon_chance`, 10% of citizens) are armed.
@@ -22,6 +28,18 @@ perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
   up by its engine AI.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
+- **Offenders** (`systems/sv_offender.lua`): a civilian (`residents`, not `police`) who kills a `residents` actor
+  (a citizen, an officer, a medic) loses `residents` and gets the team `offenders`. Only this actor's `data.team`
+  changes (every actor holds its own copy of the config), so the team immunity no longer covers it. If wanted mode
+  is on and someone saw the kill, it is added to the wanted list: the residents take it as an enemy and react
+  as to a wanted player (arrest, defense, fear, calling the police). It then runs from the nearest resident
+  (`fear`) or, with an officer in sight and `bgn_arrest_mode` on, gives up (40%, `arrest_surrender`). The team is
+  not restored when the wanted time runs out. Not in peaceful mode.
+- **Shared enemies** (`systems/sv_enemy_sharing.lua`, `bgn_enemy_share_period`, default 2 s, `0` = off): an actor
+  with enemies (not in `fear`, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
+  the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a calm state
+  switches to its `GetReactionForProtect` reaction; a busy one only gets the enemy. This keeps the others from
+  walking around while an officer already shoots at a player who is not wanted yet.
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
   when the enemy is over 300 units away.
@@ -112,6 +130,14 @@ removed) and the medic returns to the car. A call closes when the body is gone (
 faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
 and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
 Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
+
+When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
+in that area pause: their responders stop heading to the body and return to their ambulance when possible.
+`bgn_medic_danger_time` defaults to 60 seconds (`0` disables the restriction), and
+`bgn_medic_danger_radius` defaults to 1500 units; both are in the behavior settings under Medics.
+The area reopens when the timer expires **or** the killer dies (player, NPC or NextBot actor).
+Areas belonging to other killers remain blocked. Pending calls can resume while their original 90-second
+lifetime remains; the restriction does not extend that lifetime.
 Hook: `BGN_ActorRevived(actor, call)`.
 
 - **Pairs:** a medic spawned for a call brings a partner when the limit allows (`medic_partner` on both). It rides
@@ -156,6 +182,11 @@ setting: server ragdolls get its `doNotRemove` flag, its client-side corpse clea
 With `bgn_corpse_cleanup 0` (the default) the flag is not set and npc_battle_cleanup, if installed, removes the bodies as usual; without it they stay until the engine's own ragdoll limits remove them.
 
 ## Cars
+
+Police dismount when a living player is within 800 units or their vehicle has at most 20% health remaining.
+Simfphys health uses `GetCurHealth()` and `GetMaxHealth()`; vehicles without a positive maximum health do
+not trigger the damage condition. A hit alone no longer makes police dismount. Vehicle removal, forced
+ejection and releasing passengers left without a driver still detach them from the vehicle.
 
 Actors and Decent Vehicle cars; the state `go_to_police_car` (no longer police only) runs to the car and gets in.
 

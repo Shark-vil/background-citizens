@@ -85,17 +85,19 @@ On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two win
    The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step
    without a visible row is skipped. Changes apply at once; closing the wizard does not roll them back.
 
-| Mode | `bgn_actor_body` | `bgn_brain` | `bgn_ghost_crowd` | `bgn_cl_ghost_crowd` | `bgn_cl_voices` |
-| --- | --- | --- | --- | --- | --- |
-| Classic | `npc` | `fsm` | 0 | 0 | 2 (only Half-Life 2 sounds) |
-| New | `nextbot` | `auto` | 1 | 1 | 1 (generated voices) |
+| Mode | `bgn_actor_body` | `bgn_brain` | `bgn_ghost_crowd` | `bgn_cl_ghost_crowd` |
+| --- | --- | --- | --- | --- |
+| Classic | `npc` | `fsm` | 0 | 0 |
+| New | `nextbot` | `auto` | 1 | 1 |
+
+Both modes use the same voiced conversations. Switching modes preserves the voice setting.
 
 Server settings are applied only for an admin; everybody gets the client ones. The choice is kept in `bgn_mode`
 (`classic` / `new`).
 
 Steps: crowd density, scenic scenes, wanted and arrest, voices and sound, vehicles. The *body*, *brain* and *ghost crowd* steps are
 `advanced`: the mode already decides them, so the wizard shows them only as `bgn_wizard all`. Steps with
-`modern = true` (body, brain, ghosts, scenic scenes, voices) are skipped in Classic, except for `bgn_wizard all`.
+`modern = true` (body, brain, ghosts, scenic scenes) are skipped in Classic, except for `bgn_wizard all`.
 The vehicles step has Workshop cards: Decent Vehicle (required) and a pack of three items (simfphys, GTA SA cars,
 Background NPCs support) that is subscribed at once.
 

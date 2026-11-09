@@ -11,7 +11,7 @@ who says which line, and each client plays it in its own language, or not at all
 
 | Cvar (client) | Default | Meaning |
 |---|---|---|
-| `bgn_cl_voices` | `1` | `1` voiced (the old Half-Life 2 sound where a line has no clip), `2` only the old Half-Life 2 sounds, `0` silent |
+| `bgn_cl_voices` | `1` | `1` voiced, `0` silent; the same conversation clips in both actor modes |
 | `bgn_cl_voice_language` | `auto` | language of the NPC phrases and voices: `auto` (the game language), `english`, `russian` |
 
 Settings window: **My settings**. The server's `bgn_module_replics_language` still forces one phrase language
@@ -42,9 +42,9 @@ language.
 ```lua
 -- text over the head + voice (the index must exist in the English table, the server's)
 actor:SayReplic('fear', 3)
--- voice only: each client picks a random line of the table; fallback: the sound for "Half-Life 2" mode
+-- voice only: each client picks a line; the event sound is a fallback if the clip is missing
 actor:Voice('police_arrest_order', 'npc/metropolice/vo/getdown.wav')
--- only the fallback (for players without voices)
+-- event sound only (also muted by bgn_cl_voices 0)
 actor:Voice(nil, 'npc/metropolice/vo/defender.wav')
 ```
 

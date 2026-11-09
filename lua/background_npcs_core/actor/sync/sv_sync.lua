@@ -8,6 +8,8 @@ local SYNC_PERIOD = 0.25
 
 local function BuildSyncData(actor)
 	return {
+		npc = actor:GetNPC(),
+		actor_type = actor:GetType(),
 		name = actor:GetName(),
 		gender = actor:GetGender(),
 		state = actor:GetState(),
@@ -37,7 +39,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 
 				for k = 1, #players do
 					local ply = players[k]
-					if IsValid(ply) and ply.bgn_ready and ply:TestPVS(npc) then
+					if IsValid(ply) and ply.bgn_ready and not npc:GetNoDraw() and ply:TestPVS(npc) then
 						if not sync_hash then
 							sync_data = BuildSyncData(actor)
 							sync_hash = util.CRC(Serialize(sync_data))
@@ -47,6 +49,8 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 							bgNPC.Net.Send('bgn_actor_sync_data', ply, actor.uid, sync_data)
 							actor.sync_players_hash[ply] = sync_hash
 						end
+					else
+						actor.sync_players_hash[ply] = nil
 					end
 				end
 			end

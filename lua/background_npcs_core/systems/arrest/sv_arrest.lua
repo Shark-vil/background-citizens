@@ -115,6 +115,57 @@ function ASSET:CanArrest(target)
 	return not bgNPC.Modules.Get('wanted'):HasWanted(target)
 end
 
+-- A valid arrest needs an officer actually handling it; an NPC must also have surrendered.
+function ASSET:IsProtected(target)
+	if not self:CanArrest(target) then return false end
+	local suspect = bgNPC.Actors.Get(target)
+	if suspect and not suspect:HasState('arrest_surrender') then return false end
+	local component = self:GetTarget(target)
+	for officer in pairs(component.officers or {}) do
+		if officer:IsAlive() and officer:HasState('arrest') and officer:HasTarget(target) then return true end
+	end
+	return false
+end
+
+local function IsLawAlly(actor)
+	return actor:HasTeam('residents') or actor:HasTeam('police')
+end
+
+hook.Add('BGN_SetState', 'BGN_ArrestCeaseFire', function(police, state)
+	if state ~= 'arrest' or not police:HasTeam('police') then return end
+	local target = police:GetFirstTarget()
+	local component = ASSET:GetTarget(target)
+	if not component then return end
+	component.officers = component.officers or {}
+	component.officers[police] = true
+	if not ASSET:IsProtected(target) then return end
+
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		if actor:IsAlive() and actor:GetNPC() ~= target and IsLawAlly(actor) then
+			local body = actor:GetBody()
+			local aiming = body and body:GetEnemy() == target
+			local arresting = actor:HasState('arrest')
+			local locked = actor:IsStateLock()
+			-- Removing the last enemy normally randomizes the state; keep officers on their arrest.
+			if arresting then actor:StateLock(true) end
+			actor:RemoveEnemy(target)
+			actor:StateLock(locked)
+			if aiming then actor:ClearSchedule() end
+		end
+	end
+end)
+
+hook.Add('BGN_AddActorEnemy', 'BGN_ArrestCeaseFire', function(actor, enemy)
+	if IsLawAlly(actor) and ASSET:IsProtected(enemy) then return true end
+end)
+
+hook.Add('EntityTakeDamage', 'BGN_ArrestCeaseFire', function(target, dmginfo)
+	if not ASSET:IsProtected(target) then return end
+	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+	local actor = bgNPC.Actors.Get(attacker)
+	if actor and IsLawAlly(actor) then return true end
+end)
+
 function ASSET:NotSubjectToArrest(target)
 	local ArrestComponent = self:GetTarget(target)
 	if ArrestComponent then

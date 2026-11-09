@@ -31,8 +31,10 @@ local function IsDisarmed(ply)
 end
 
 hook.Add('EntityTakeDamage', 'BGN_Surrender_LastAttack', function(target, dmginfo)
-	local attacker = dmginfo:GetAttacker()
-	if IsValid(attacker) and attacker:IsPlayer() and attacker ~= target then
+	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+	if IsValid(attacker) and attacker ~= target and dmginfo:GetDamage() > 0
+		and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot())
+		and (target:IsPlayer() or target:IsNPC() or target:IsNextBot()) then
 		attacker.bgn_last_attack = CurTime()
 	end
 end)

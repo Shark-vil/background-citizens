@@ -8,7 +8,7 @@
 | Custom module not loading | Check `lua/background_npcs_core/custom_modules/config/`, the `sh_` prefix and Lua errors in the console. Restart after creating a new addon directory. |
 | Old models or reactions remain | `EditActor` merges tables. Replace the field directly, as in the [examples](examples.md). |
 | No cars | Check Decent Vehicle, installed models listed in `vehicles`, a nonzero `max_vehicle` and DV waypoints. Pedestrian points do not replace DV routes. |
-| No voices | Check `bgn_cl_voices 1`, voice language and installed sound files. Mode `2` uses only old Half-Life 2 sounds. |
+| No voices | Check `bgn_cl_voices 1`, voice language and installed sound files. Both actor modes use the same conversation clips. |
 | Low FPS | Start with `bgn_crowd_density low`. High ghost counts cost client FPS too; see [ghost crowd](systems/ghost-crowd.md). |
 
 When reporting a bug, run the [testing mode](systems/testing.md) (`bgn_test`) and attach the copied log. If that is not enough, include the map, gamemode, `bgn_nav_info` output, Lua errors and reproduction steps. Built-in checks: `bgn_selftest` on the server and `bgn_selftest_cl` on the client; these do not replace testing behaviour in game.

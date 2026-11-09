@@ -7,7 +7,7 @@
 
 bgNPC.ClassicPreset = {
 	server = { bgn_actor_body = 'npc', bgn_brain = 'fsm', bgn_ghost_crowd = '0', bgn_scenic = '0', bgn_settings_rev = '1' },
-	client = { bgn_cl_ghost_crowd = '0', bgn_cl_voices = '2', bgn_cl_settings_rev = '1' },
+	client = { bgn_cl_ghost_crowd = '0', bgn_cl_settings_rev = '1' },
 }
 
 bgNPC.Commands.Register('bgn_classic', {

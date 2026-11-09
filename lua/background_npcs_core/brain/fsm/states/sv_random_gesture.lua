@@ -10,12 +10,12 @@ local gestures = {
 }
 
 bgNPC.States.Register('random_gesture', 'calm', {
-	pre_start = function(actor, state)
+	pre_start = function()
 		if not GetConVar('bgn_module_custom_gestures'):GetBool() then
 			return 'walk'
 		end
-
-		local data = {}
+	end,
+	start = function(actor, _, data)
 		data.dancing_time = 0
 
 		local npc = actor:GetNPC()
@@ -29,10 +29,9 @@ bgNPC.States.Register('random_gesture', 'calm', {
 			time = animation_time
 		})
 
-		if not anim_info then return 'walk' end
+		if not anim_info then return end
 
 		data.dancing_time = CurTime() + anim_info.time + 1
-		return state, data
 	end,
 	update = function(actor, state, data)
 		if data.dancing_time > CurTime() then return end

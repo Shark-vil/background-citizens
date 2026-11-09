@@ -1,7 +1,7 @@
 --[[
 	Voiced lines (cvar "bgn_cl_voices", this computer only). The server only says who speaks which line:
-	SayReplic (text + voice) and Actor:Voice (voice only). Modes: 1 the clip (or the old HL2 fallback when there
-	is none), 2 the old HL2 fallback only, 0 silent. The clip is
+	SayReplic (text + voice) and Actor:Voice (voice only). Enabled in both actor modes; 0 mutes voices.
+	Conversations use their own clips; individual events may supply a fallback sound. The clip is
 		sound/background_npcs/vo/<language>/<line id>/<index>[_f].ogg
 	in the language of the phrases (config/replics), index = the phrase's place in bgNPC.cfg.replics[line id],
 	_f = the female take when there is one. Made by tools/voices/make_voices.py.
@@ -30,10 +30,11 @@ end
 
 -- @return boolean a clip was played
 local function Play(actor, line_id, index)
-	if not line_id or cvar_voices:GetInt() ~= 1 then return false end
+	if not line_id or not cvar_voices:GetBool() then return false end
 	local lines = bgNPC.cfg.replics[line_id]
 	if not lines or #lines == 0 then return false end
-	local path = Clip(actor, line_id, index or math.random(#lines))
+	index = index or math.random(#lines)
+	local path = Clip(actor, line_id, index)
 	if not path then return false end
 	Emit(actor, path)
 	return true
@@ -43,6 +44,6 @@ bgNPC.VoicePlay = Play -- the phrases with text (cl_actor_text_say.lua)
 
 bgNPC.Net.Receive('bgn_actor_voice', function(_, actor_uid, voice_id, fallback)
 	local actor = bgNPC.Actors.GetByUid(actor_uid)
-	if not actor or Play(actor, voice_id) or not fallback or cvar_voices:GetInt() == 0 then return end
+	if not actor or Play(actor, voice_id) or not fallback or not cvar_voices:GetBool() then return end
 	Emit(actor, fallback)
 end)

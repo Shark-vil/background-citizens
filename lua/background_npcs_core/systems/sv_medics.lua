@@ -33,12 +33,55 @@ local REVIVE_OFFSETS = {
 
 local calls = {}
 Medics.calls = calls
+local danger_areas = {}
+
+function Medics.IsBlocked(pos)
+	local now = CurTime()
+	local radius = math.max(0, GetConVar('bgn_medic_danger_radius'):GetFloat())
+	if GetConVar('bgn_medic_danger_time'):GetFloat() <= 0 then return false end
+	for i = #danger_areas, 1, -1 do
+		local area = danger_areas[i]
+		if area.expires <= now or (area.attacker and (not IsValid(area.attacker) or area.attacker:Health() <= 0)) then
+			table.remove(danger_areas, i)
+		elseif area.pos:DistToSqr(pos) <= radius ^ 2 then
+			return true
+		end
+	end
+	return false
+end
+
+local function ClearDangerAreas(victim)
+	for i = #danger_areas, 1, -1 do
+		if danger_areas[i].attacker == victim then table.remove(danger_areas, i) end
+	end
+end
+
+hook.Add('PlayerDeath', 'BGN_Medics_ClearDanger', ClearDangerAreas)
+hook.Add('OnNPCKilled', 'BGN_Medics_ClearDanger', ClearDangerAreas)
+hook.Add('BGN_OnValidSpawnActor', 'BGN_Medics_DangerArea', function(npc_type, _, _, pos)
+	if npc_type == MEDIC_TYPE and Medics.IsBlocked(pos) then return true end
+end)
+hook.Add('PostCleanupMap', 'BGN_Medics_ClearCalls', function()
+	table.Empty(danger_areas)
+	table.Empty(calls)
+end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
+	local npc = actor:GetNPC()
+	ClearDangerAreas(npc)
+	if actor:GetType() == MEDIC_TYPE and IsValid(npc) then
+		local duration = GetConVar('bgn_medic_danger_time'):GetFloat()
+		attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker)
+		if duration > 0 then
+			danger_areas[#danger_areas + 1] = {
+				pos = npc:GetPos(), expires = CurTime() + duration,
+				attacker = IsValid(attacker) and attacker ~= npc and attacker:Health() > 0 and attacker or nil,
+			}
+		end
+	end
 	if not bgNPC.Config.IsTypeActive(MEDIC_TYPE) or actor:InVehicle() then return end
 	local killer = IsValid(attacker) and bgNPC.Actors.Get(attacker)
 	if killer and killer:HasTeam('police') then return end -- shot by the police: no ambulance
-	local npc = actor:GetNPC()
 	if not IsValid(npc) then return end
 	calls[#calls + 1] = {
 		pos = npc:GetPos(),
@@ -134,6 +177,7 @@ end)
 -- Brings the dead actor back: a new actor of the same type with the same look on the body's place,
 -- or next to it when the place is taken (a car, another actor). The body stays when nowhere fits.
 function Medics.Revive(call)
+	if Medics.IsBlocked(call.pos) then return end
 	if IsValid(call.ragdoll) then call.ragdoll:Remove() end
 	local actor
 	for _, offset in ipairs(REVIVE_OFFSETS) do
@@ -302,6 +346,15 @@ timer.Create('BGN_MedicsDispatch', 1, 0, function()
 			table.remove(calls, i)
 			if medic and medic.medic_call == call then Release(medic) end
 			if call.partner and call.partner.medic_call == call then Release(call.partner) end
+		elseif Medics.IsBlocked(call.pos) then
+			for _, responder in pairs({ call.medic, call.partner }) do
+				if responder:IsAlive() and responder.medic_call == call then
+					Release(responder)
+					responder:StopWalk()
+					responder:GetBody():StopMoving()
+				end
+			end
+			call.medic, call.partner = nil, nil
 		elseif not medic or not medic:IsAlive() then
 			medic = FindMedic(call)
 			if medic then Assign(medic, call) end

@@ -13,8 +13,14 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 		for i = 1, #entities do
 			local npc = entities[i]
 
-			if IsValid(npc) and npc:Health() > 0 then
-				npc:SetNoDraw(false)
+			if IsValid(npc) and npc:Health() > 0 and npc.bgn_render_optimization then
+				-- Release only our own hiding; the server still hides actors seated in cars.
+				if not npc:GetNW2Bool('bgn_vehicle_entered', false) then
+					npc:SetNoDraw(false)
+					if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(false) end
+				end
+				npc.bgn_render_optimization = false
+				npc.bgn_hidden_weapon = nil
 			end
 		end
 	end

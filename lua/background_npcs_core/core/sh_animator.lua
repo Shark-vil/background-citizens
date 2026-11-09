@@ -109,7 +109,7 @@ if SERVER then
 		}
 		active[entity] = info
 
-		Net.Send('bgn.anim_start', nil, entity, animator, name, sequence_id)
+		Net.Send('bgn.anim_start', nil, entity, animator, name, sequence_id, settings.loop and 0 or info.stop_time)
 		hook.Run('BGN_AnimationStarted', info)
 
 		return info
@@ -174,14 +174,16 @@ else
 		return ent
 	end
 
-	Net.Receive('bgn.anim_start', function(_, entity, animator, name)
+	Net.Receive('bgn.anim_start', function(_, entity, animator, name, _, stop_time)
 		if not IsValid(entity) or not IsValid(animator) then return end
+		if stop_time and stop_time ~= 0 and stop_time <= CurTime() then return end
 		Cleanup(entity)
 
 		local info = {
 			name = name,
 			entity = entity,
 			animator = animator,
+			stop_time = stop_time,
 			render_override = entity.RenderOverride,
 			r_hand_bone_index = animator:LookupBone('ValveBiped.Bip01_R_Hand'),
 			l_hand_bone_index = animator:LookupBone('ValveBiped.Bip01_L_Hand'),
@@ -210,7 +212,10 @@ else
 
 	hook.Add('Think', 'BGN_Animator', function()
 		for entity, info in pairs(active) do
-			if not IsValid(entity) or not IsValid(info.animator) then Cleanup(entity) end
+			if not IsValid(entity) or not IsValid(info.animator) or not IsValid(info.model)
+				or (info.stop_time and info.stop_time ~= 0 and info.stop_time <= CurTime()) then
+				Cleanup(entity)
+			end
 		end
 	end)
 end

@@ -64,15 +64,6 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
 					return
 				end
 				return true
-			elseif ActorTarget ~= nil then
-				local hp = target:Health() - dmginfo:GetDamage()
-				local max_hp = target:GetMaxHealth()
-				-- An HL2 NPC still reacts to these hits with its engine AI; a NextBot has none and would keep walking.
-				if hp > 0 and max_hp > 0 and hp > math.Round(max_hp / 2) and not ActorTarget:HasEnemy(attacker)
-					and not target:IsNextBot()
-				then
-					return
-				end
 			end
 		elseif ActorAttacker ~= nil then
 			if ActorTarget:HasTeam(ActorAttacker) then

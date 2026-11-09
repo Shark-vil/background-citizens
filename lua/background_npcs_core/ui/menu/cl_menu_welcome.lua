@@ -29,7 +29,7 @@ local MODES = {
 			{ true, '#bgn.mode.new.f4' }, { false, '#bgn.mode.new.f5' },
 		},
 		server = { bgn_actor_body = 'nextbot', bgn_brain = 'auto', bgn_ghost_crowd = '1', bgn_scenic = '1', bgn_settings_rev = '1' },
-		client = { bgn_cl_ghost_crowd = '1', bgn_cl_voices = '1', bgn_cl_settings_rev = '1' },
+		client = { bgn_cl_ghost_crowd = '1', bgn_cl_settings_rev = '1' },
 	},
 }
 

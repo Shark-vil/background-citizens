@@ -80,7 +80,8 @@ bgNPC.States.Register('medic_revive', 'calm', {
 
 		-- closed: revived, expired or the body is gone
 		local is_medic = call and call.medic == actor
-		if not call or call.done or call.closed or not (is_medic or call.partner == actor) or data.give_up < now then
+		if not call or call.done or call.closed or bgNPC.Medics.IsBlocked(call.pos)
+			or not (is_medic or call.partner == actor) or data.give_up < now then
 			if not data.returning then
 				data.returning = true
 				data.give_up = now + GIVE_UP_TIME -- the way back gets its own time

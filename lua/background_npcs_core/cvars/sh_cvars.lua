@@ -37,6 +37,8 @@ bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
 bgNPC.cvar.bgn_corpse_cleanup = 0
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
+bgNPC.cvar.bgn_medic_danger_time = 60
+bgNPC.cvar.bgn_medic_danger_radius = 1500
 bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -84,6 +86,8 @@ bgNPC.cvar.bgn_friend_mode = 0
 bgNPC.cvar.bgn_brain = 'fsm'
 bgNPC.cvar.bgn_actor_body = 'npc'
 bgNPC.cvar.bgn_pick_up_weapons = 0
+bgNPC.cvar.bgn_nextbot_jump = 0
+bgNPC.cvar.bgn_enemy_share_period = 2
 bgNPC.cvar.bgn_settings_rev = 0
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
@@ -177,6 +181,9 @@ bgNPC.CVars.Register('bgn_corpse_cleanup', bgNPC.cvar.bgn_corpse_cleanup, 'Bodie
 
 bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_time, 'Seconds the body of a dead actor stays (bgn_corpse_cleanup).')
 
+bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 'Seconds medics avoid an area where a medic was killed, or until the killer dies. 0 disables the restriction.')
+bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
+
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
@@ -229,6 +236,8 @@ bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime
 -- Created by their systems on the server too (same defaults); registered here so the settings window can change them.
 bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (fsm - the classic one, goap - smarter fights, auto - goap for armed actors)')
 bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (npc - regular game NPCs like the old versions, nextbot - smoother walking, needs a NavMesh; auto = npc)')
+bgNPC.CVars.Register('bgn_enemy_share_period', bgNPC.cvar.bgn_enemy_share_period, 'Every N seconds an actor that fights someone tells the teammates around it who see it about the enemy. 0 - disabled.')
+bgNPC.CVars.Register('bgn_nextbot_jump', bgNPC.cvar.bgn_nextbot_jump, 'NextBot actors jump when stuck and when a car hits them. 1 - enabled, 0 - disabled (they unstick by teleport instead).')
 bgNPC.CVars.Register('bgn_pick_up_weapons', bgNPC.cvar.bgn_pick_up_weapons, 'Unarmed actors in danger run to a dropped weapon, take it and fight (state pick_up_weapon). 1 - enabled, 0 - disabled (the old behavior).')
 -- Settings revision: 0 - the settings were never reset to the classic defaults (see systems/sv_settings_migration.lua)
 bgNPC.CVars.Register('bgn_settings_rev', bgNPC.cvar.bgn_settings_rev, 'Internal: settings revision. Do not change.')
