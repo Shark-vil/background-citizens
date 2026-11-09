@@ -570,6 +570,56 @@ client.execute('''
     assert(#sent==count and not editor.saving and not editor.load_after_save,'failed save keeps edits instead of loading the old route')
 ''')
 
+# Arrest callbacks must retain the final pose until the fading entity is removed.
+arrest = realm(True)
+arrest.execute('''
+    bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
+    bgNPC.Animator={Stop=function() error('arrest released the NPC during fade') end}
+    bgNPC.States={Register=function(name,_,state) bgNPC.States[name]=state end}
+''')
+load(arrest, 'actor/components/sh_animation.lua', 'brain/fsm/states/sv_arrest.lua')
+arrest.execute('''
+    for _,sequence in ipairs({'arrestcurious','checkmale'}) do
+        local component={detention=true,arrest_time=0,holders={}}
+        local module=bgNPC.Modules.Get('player_arrest')
+        module.GetTarget=function() return component end
+        module.CanArrest=function() return true end
+        local npc={valid=true}
+        function npc:IsPlayer() return false end
+        function npc:IsNPC() return false end
+        function npc:GetPos() return Vector() end
+        function npc:EyeAngles() return {} end
+        function npc:EmitSound() end
+        function npc:GetActiveWeapon() end
+        function npc:LookupSequence(name)
+            if name==sequence then return 1 end
+            if name=='arrestidle' or name=='checkmalepost' then return 2 end
+            return -1
+        end
+        function npc:SequenceDuration() return 1 end
+        local target=setmetatable({npc=npc,mechanics={animator_controller=true}}, {__index=bgNPC.Actor})
+        function target:HasState(state) return state=='arrest_surrender' end
+        function target:RemoveAllTargets() end
+        function target:RemoveAllEnemies() end
+        function target:StateLock() end
+        target.body={PlaySequence=function() end,
+            StopSequence=function() error('arrest body released during fade') end}
+        bgNPC.Actors.Get=function(ent) if ent==npc then return target end end
+        local police={GetNPC=function() return npc end, GetFirstTarget=function() return npc end,
+            TargetsCount=function() return 1 end, Voice=function() end}
+        local fades=0
+        bgNPC.Util.FadeRemove=function(ent) assert(ent==npc); fades=fades+1 end
+        bgNPC.States.arrest.update(police,'arrest',{})
+        assert(target:HasSequence(sequence) and fades==0,'arrest animation must precede fading')
+        now=now+5
+        assert(target:IsSequenceFinished())
+        target:ResetSequence()
+        local idle=sequence=='arrestcurious' and 'arrestidle' or 'checkmalepost'
+        assert(target:HasSequence(idle) and target:IsAnimationPlayed(), 'final arrest pose must survive the callback')
+        assert(not target:IsSequenceFinished() and fades==1, 'hold the final pose throughout the fade')
+    end
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
@@ -582,4 +632,4 @@ paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wan
 for path in paths:
     client.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
-print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, LuaJIT syntax')
+print('PASS: CVars, wanted, legacy routes, duplications, cyclic actor saves, Workshop export, arrest poses, LuaJIT syntax')
