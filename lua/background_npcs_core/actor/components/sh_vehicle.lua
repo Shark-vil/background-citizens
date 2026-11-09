@@ -85,20 +85,28 @@ local function FindVehicleExitPos(vehicle, npc)
 	local side = bgNPC.Util.Chance(50) and -side_dist or side_dist
 	local exit_pos = pos + up * 50
 
-	for _ = 1, 4 do
+	local hull_mins, hull_maxs = npc:GetCollisionBounds()
+	for _ = 1, 8 do
 		exit_pos = pos + right * side + forward * math.random(-100, 100) + up * 50
 
+		-- the car is in the filter: the trace used to land on its roof or hood and the actor came out inside the body
 		local tr = util.TraceLine({
 			start = exit_pos,
 			endpos = exit_pos - EXIT_TRACE_OFFSET,
-			filter = npc,
+			filter = { npc, vehicle },
 		})
 
 		if tr.Hit then exit_pos = tr.HitPos + EXIT_FLOOR_OFFSET end
 
-		if util.IsInWorld(exit_pos) and #ents.FindInSphere(exit_pos, 15) <= 2 then
+		-- the spot must be free for the whole body, and not inside the car
+		local hull = util.TraceHull({
+			start = exit_pos, endpos = exit_pos, mins = hull_mins, maxs = hull_maxs,
+			filter = npc, mask = MASK_PLAYERSOLID,
+		})
+		if util.IsInWorld(exit_pos) and not hull.StartSolid and #ents.FindInSphere(exit_pos, 15) <= 2 then
 			break
 		end
+		side = -side
 	end
 
 	return exit_pos

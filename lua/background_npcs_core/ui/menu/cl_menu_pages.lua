@@ -252,6 +252,7 @@ Menu.AddPage('behavior', {
 		})
 		page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
 		page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
+		page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
 
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')

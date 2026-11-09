@@ -86,6 +86,7 @@ bgNPC.cvar.bgn_friend_mode = 0
 bgNPC.cvar.bgn_brain = 'fsm'
 bgNPC.cvar.bgn_actor_body = 'npc'
 bgNPC.cvar.bgn_pick_up_weapons = 0
+bgNPC.cvar.bgn_nextbot_jump = 0
 bgNPC.cvar.bgn_settings_rev = 0
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
@@ -234,6 +235,7 @@ bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime
 -- Created by their systems on the server too (same defaults); registered here so the settings window can change them.
 bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (fsm - the classic one, goap - smarter fights, auto - goap for armed actors)')
 bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (npc - regular game NPCs like the old versions, nextbot - smoother walking, needs a NavMesh; auto = npc)')
+bgNPC.CVars.Register('bgn_nextbot_jump', bgNPC.cvar.bgn_nextbot_jump, 'NextBot actors jump when stuck and when a car hits them. 1 - enabled, 0 - disabled (they unstick by teleport instead).')
 bgNPC.CVars.Register('bgn_pick_up_weapons', bgNPC.cvar.bgn_pick_up_weapons, 'Unarmed actors in danger run to a dropped weapon, take it and fight (state pick_up_weapon). 1 - enabled, 0 - disabled (the old behavior).')
 -- Settings revision: 0 - the settings were never reset to the classic defaults (see systems/sv_settings_migration.lua)
 bgNPC.CVars.Register('bgn_settings_rev', bgNPC.cvar.bgn_settings_rev, 'Internal: settings revision. Do not change.')

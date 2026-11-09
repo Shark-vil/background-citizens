@@ -26,7 +26,7 @@ local function Hit(bot, vehicle, velocity, speed, now)
 	bot:TakeDamageInfo(dmg)
 
 	if bot:Health() > 0 and bot.loco then
-		bot.loco:Jump()
+		if GetConVar('bgn_nextbot_jump'):GetBool() then bot.loco:Jump() end
 		bot.loco:SetVelocity(velocity * 0.8 + Vector(0, 0, 200))
 	end
 end
