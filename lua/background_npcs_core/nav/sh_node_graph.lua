@@ -7,7 +7,7 @@
 		graph:Link(a, b, 'walk')
 		local path = graph:FindPath(a, b, 'walk') -- { a, b }
 
-	Nodes are integer ids. A removed id leaves a hole until Compact() (called by Serialize()).
+	Nodes are integer ids. A removed id leaves a hole until an explicit Compact().
 	Every link is two-way. A link has a type mask; a link with mask 0 only marks the nodes as
 	neighbours ("parents" in the old format), path finding over a type uses links that carry it.
 
@@ -359,22 +359,23 @@ function NodeGraph:Compact()
 end
 
 function NodeGraph:ToTable()
-	self:Compact()
-
-	local nodes, links = {}, {}
+	local nodes, links, remap = {}, {}, {}
 	for id = 1, self.max_id do
 		local pos = self.pos[id]
-		local n = #nodes
-		nodes[n + 1] = pos.x
-		nodes[n + 2] = pos.y
-		nodes[n + 3] = pos.z
+		if pos then
+			local n = #nodes
+			remap[id] = n / 3 + 1
+			nodes[n + 1] = pos.x
+			nodes[n + 2] = pos.y
+			nodes[n + 3] = pos.z
+		end
 	end
 
 	for a = 1, self.max_id do
-		for b, mask in pairs(self.links[a]) do
-			if a < b then
+		for b, mask in pairs(self.links[a] or {}) do
+			if a < b and remap[a] and remap[b] then
 				local n = #links
-				links[n + 1], links[n + 2], links[n + 3] = a, b, mask
+				links[n + 1], links[n + 2], links[n + 3] = remap[a], remap[b], mask
 			end
 		end
 	end
@@ -492,6 +493,7 @@ bgNPC.Test.Add('nav.node_graph', function(check)
 	check(not g:IsLinked(ids[4], ids[5]), 'links of removed node are gone')
 
 	local copy = NodeGraph.Deserialize(g:Serialize(), 256)
+	check(g.max_id == 10 and g:Exists(ids[9]) and not g:Exists(ids[5]), 'serialization keeps live ids and holes')
 	check(copy and copy:Count() == 9 and copy:LinksCount() == 8, 'serialize round trip')
 	check(copy and copy:FindPath(1, 5, 'walk') ~= nil, 'paths survive compaction')
 

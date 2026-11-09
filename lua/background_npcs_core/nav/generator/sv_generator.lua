@@ -70,9 +70,10 @@ local function Notify(ply, text)
 end
 
 -- Removes nodes in the middle of straight two-way corridors (the neighbours see each other).
-local function Simplify(graph, budget)
+local function Simplify(graph, first_new_id, budget)
 	local removed = 0
-	for id in pairs(table.Copy(graph.pos)) do
+	-- Existing route points belong to the editor; only simplify points from this run.
+	for id = first_new_id, graph.max_id do
 		local neighbours = graph:GetNeighbours(id)
 		if #neighbours == 2 then
 			local a, b = graph:GetPos(neighbours[1]), graph:GetPos(neighbours[2])
@@ -101,6 +102,7 @@ function Generator.Start(options)
 	end
 
 	local graph = provider:GetGraph()
+	local first_new_id = graph.max_id + 1
 	local step = math.max(64, cvar_step and cvar_step:GetFloat() or 200)
 	local merge_radius = step * 0.6
 	local max_nodes = cvar_max_nodes:GetInt()
@@ -158,7 +160,7 @@ function Generator.Start(options)
 			end
 		end
 
-		local removed = Simplify(graph, budget)
+		local removed = Simplify(graph, first_new_id, budget)
 		Notify(ply, 'Done: ' .. graph:Count() .. ' nodes (' .. added .. ' new, ' .. removed .. ' merged)')
 
 		if options.save then provider:Save() end

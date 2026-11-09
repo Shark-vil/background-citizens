@@ -55,9 +55,9 @@ function CustomProvider:Load()
 end
 
 -- @return boolean saved
-function CustomProvider:Save()
+function CustomProvider:Save(map_name)
 	file.CreateDir('background_npcs/graph')
-	local path, data = GraphPath(), self.graph:Serialize()
+	local path, data = GraphPath(map_name), self.graph:Serialize()
 	file.Write(path, data)
 	if file.Read(path, 'DATA') ~= data then return false, 'could not save graph ' .. path end
 	self.source = 'file'

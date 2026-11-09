@@ -113,6 +113,7 @@ function Nav.Load(name, graph)
 	end
 
 	hook.Run('BGN_PreLoadRoutes', game.GetMap()) -- OUTDATED
+	if bgNPC.NavGenerator then bgNPC.NavGenerator.Stop() end
 	active = provider
 	MsgN('[Background NPCs] Navigation: ' .. active.name .. ' (' .. active:Count() .. ' points)')
 	hook.Run('BGN_NavProviderChanged', active)

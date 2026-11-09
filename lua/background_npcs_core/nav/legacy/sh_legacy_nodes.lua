@@ -159,11 +159,15 @@ bgNPC.Commands.Register('bgn_convert_legacy_nodes', {
 	server = function(ply, _, args)
 		local map_name = args and args[1] or game.GetMap()
 		local graph, err = LegacyNodes.Convert(map_name)
+		if graph then
+			local provider = bgNPC.Nav.CustomProvider(graph)
+			local saved
+			saved, err = provider:Save(map_name)
+			if not saved then graph = nil end
+		end
 
 		local text
 		if graph then
-			file.CreateDir('background_npcs/graph')
-			file.Write(bgNPC.Nav.CustomProvider.GraphPath(map_name), graph:Serialize())
 			text = 'Converted ' .. graph:Count() .. ' points, ' .. graph:LinksCount() .. ' links for ' .. map_name
 			if map_name == game.GetMap() then bgNPC.Nav.Load() end
 			SendConvertibleMaps(ply)

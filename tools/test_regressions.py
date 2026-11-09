@@ -452,13 +452,129 @@ server.execute('''
     assert(copy and copy:Count()==6002 and copy:LinksCount()==6001,'large route duplication round trip')
     for i=1,6002 do assert(copy:GetPos(i)==graph:GetPos(i),'duplication coordinates preserved') end
     for i=2,6002 do assert(copy:IsLinked(i-1,i,'walk'),'duplication walk links preserved') end
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(sent[#sent][1]=='bgn_nav_editor_saved' and sent[#sent][3]==true,'save acknowledged after persistence')
+    received.bgn_nav_editor_request.f(admin)
+    local reloaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(reloaded and reloaded:Count()==6002 and reloaded:LinksCount()==6001,'large editor save/load preserves counts')
+    for i=1,6002 do assert(reloaded:GetPos(i)==graph:GetPos(i),'editor coordinates preserved') end
+    for i=2,6002 do assert(reloaded:IsLinked(i-1,i,'walk'),'editor walk links preserved') end
+''')
+
+server.execute('''
+    files={}; notices={}
+    bgNPC.Util.Notify=function(_,text,kind) notices[#notices+1]={text,kind} end
+    local vec=getmetatable(Vector())
+    function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
+    function vec.__mul(a,b) return Vector(a.x*b,a.y*b,a.z*b) end
+    function vec:GetNormalized() local n=self:Distance(Vector()); return Vector(self.x/n,self.y/n,self.z/n) end
+    function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    bgNPC.Tasks.Add=function(id,f) tasks[id]=f end
+    bgNPC.Tasks.Remove=function(id) tasks[id]=nil end
+    bgNPC.Tasks.Exists=function(id) return tasks[id]~=nil end
+    tasks={}
+    util.TraceHull=function() return {Hit=false,StartSolid=false} end
+''')
+load(server, 'nav/generator/sv_generator.lua')
+server.execute('''
+    local graph=bgNPC.NodeGraph()
+    for i=1,4 do graph:AddNode(Vector((i-1)*100,0,0)) end
+    graph:RemoveNode(2); graph:Link(1,3,'walk'); graph:Link(3,4,'walk')
+    assert(bgNPC.Nav.Load('custom',graph))
+    bgNPC.NavGenerator.Start({seeds={}})
+    tasks.BGN_NavGenerator(function() end,function() end,function() end)
+    assert(graph:Count()==3 and graph:IsLinked(1,3,'walk') and graph:IsLinked(3,4,'walk'),
+        'generator simplification must preserve existing corridor points')
+    assert(bgNPC.NavGenerator.IsRunning())
+    bgNPC.NavGenerator.Stop()
+    setcv('bgn_runtime_generator_grid_offset',200); setcv('bgn_nav_generator_max_nodes',6)
+    util.PointContents=function() return 0 end; CONTENTS_WATER=1
+    util.TraceHull=function(tr)
+        if tr.start.x==tr.endpos.x and tr.start.y==tr.endpos.y and tr.start.y==0
+            and (tr.start.x==1000 or tr.start.x==1200 or tr.start.x==1400) then
+            return {Hit=true,StartSolid=false,HitNormal=Vector(0,0,1),HitPos=Vector(tr.start.x,0,0)}
+        end
+        return {Hit=false,StartSolid=false}
+    end
+    local generated=bgNPC.NodeGraph.FromTable(graph:ToTable())
+    assert(bgNPC.Nav.Load('custom',generated))
+    bgNPC.NavGenerator.Start({seeds={Vector(1000,0,0)}})
+    tasks.BGN_NavGenerator(function() end,function() end,function() end)
+    assert(generated:Count()==5 and generated:GetPos(2).x==200,'new corridors are simplified while old nodes survive')
+    assert(not generated:FindNearest(Vector(1200,0,0),1) and generated:IsLinked(4,6,'walk'),
+        'new middle point is merged into a walkable corridor')
+    assert(bgNPC.Nav.Load('custom',graph) and not bgNPC.NavGenerator.IsRunning())
+    bgNPC.NavGenerator.Start({seeds={}})
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(not bgNPC.NavGenerator.IsRunning(),'loading a saved graph stops tasks that could overwrite it')
+    assert(graph.max_id==4 and graph:Exists(4) and not graph:Exists(2),'save does not invalidate live editor or generator ids')
+    local path=bgNPC.Nav.CustomProvider.GraphPath()
+    local saved=files[path]
+    bgNPC.Nav.GetProvider():GetGraph():AddNode(Vector(999,0,0))
+    received.bgn_nav_editor_request.f(admin)
+    local loaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(loaded:Count()==3 and loaded:GetPos(3).x==300,'Load points reads disk instead of a mutated active graph')
+    assert(bgNPC.Nav.Load('custom',graph))
+    received.bgn_nav_editor_request.f(admin)
+    assert(bgNPC.NodeGraph.Deserialize(sent[#sent][3]):Count()==3,'unsaved route duplications remain editable')
+    local other=bgNPC.Class('OtherProvider',bgNPC.Nav.Provider)
+    other.IsAvailable=function() return true end
+    bgNPC.Nav.RegisterProvider('other',other); setcv('bgn_nav_provider','other')
+    assert(bgNPC.Nav.Load() and bgNPC.Nav.GetName()=='other')
+    received.bgn_nav_editor_request.f(admin)
+    loaded=bgNPC.NodeGraph.Deserialize(sent[#sent][3])
+    assert(loaded:Count()==3,'saved editor points load with another forced navigation provider')
+    local active=bgNPC.Nav.GetProvider()
+    received.bgn_nav_editor_save.f(admin,'broken')
+    assert(files[path]==saved and bgNPC.Nav.GetProvider()==active and notices[#notices][2]==NOTIFY_ERROR,
+        'invalid saves keep both the saved route and active provider')
+    assert(sent[#sent][1]=='bgn_nav_editor_saved' and sent[#sent][3]==false,'failed saves are acknowledged')
+    graph:AddNode(Vector(400,0,0))
+    local write=file.Write; file.Write=function() end
+    received.bgn_nav_editor_save.f(admin,graph:Serialize())
+    assert(files[path]==saved and bgNPC.Nav.GetProvider()==active and notices[#notices][2]==NOTIFY_ERROR,
+        'disk write failure never reports success or replaces navigation')
+    local chat
+    admin.ChatPrint=function(_,text) chat=text end
+    files['background_npcs/nodes/gm_test.json']=util.TableToJSON({version='1.2',nodes={
+        {position=Vector(1000,0,0),parents={},links={}}}})
+    local sent_count=#sent
+    commands.bgn_convert_legacy_nodes(admin,'bgn_convert_legacy_nodes',{})
+    assert(chat:find('Conversion failed',1,true) and #sent==sent_count and files[path]==saved,
+        'explicit conversion reports a failed write and keeps the previous route')
+    file.Write=write
+    files['background_npcs/nodes/gm_test.json']=nil; files[path]='broken'
+    sent_count=#sent
+    received.bgn_nav_editor_request.f(admin)
+    assert(#sent==sent_count and notices[#notices][2]==NOTIFY_ERROR,'bad saved route produces an error instead of an empty graph')
+''')
+
+load(client, 'nav/io/sh_nav_editor.lua')
+client.execute('''
+    local editor=bgNPC.NavEditor
+    local graph=bgNPC.NodeGraph(); graph:AddNode(Vector(1,2,3)); editor.graph=graph
+    local loaded=0
+    hook.Add('BGN_NavEditorGraphLoaded','regression',function() loaded=loaded+1 end)
+    received.bgn_nav_editor_graph.f(nil,'broken')
+    assert(editor.graph==graph and loaded==0,'bad downloads preserve client edits and do not fire loaded hooks')
+    local count=#sent
+    editor.SaveGraph(); editor.RequestGraph(); editor.SaveGraph()
+    assert(#sent==count+1 and sent[#sent][1]=='bgn_nav_editor_save','immediate load waits for save completion, duplicate saves are ignored')
+    received.bgn_nav_editor_saved.f(nil,true)
+    assert(#sent==count+2 and sent[#sent][1]=='bgn_nav_editor_request' and not editor.saving,
+        'queued load starts only after successful persistence acknowledgement')
+    received.bgn_nav_editor_graph.f(nil,graph:Serialize())
+    assert(editor.graph:Count()==1 and loaded==1,'valid download replaces the graph and fires the loaded hook')
+    editor.SaveGraph(); editor.RequestGraph(); count=#sent
+    received.bgn_nav_editor_saved.f(nil,false)
+    assert(#sent==count and not editor.saving and not editor.load_after_save,'failed save keeps edits instead of loading the old route')
 ''')
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'systems/wanted/sv_wanted_actions.lua',
          'systems/wanted/cl_wanted_sync.lua', 'nav/sh_node_graph.lua', 'nav/sv_nav.lua',
          'nav/legacy/sh_legacy_nodes.lua', 'nav/io/sh_route_dupe.lua', 'nav/generator/sv_generator.lua',
-         'nav/providers/sv_custom_provider.lua',
+         'nav/providers/sv_custom_provider.lua', 'nav/io/sh_nav_editor.lua',
          'nav/io/sh_compile.lua', 'actor/events/sv_save_restore.lua',
          'modules/dv/sh_dv_vehicle.lua', '../entities/bgn_fakeplayer/shared.lua',
          '../entities/npc_decentvehicle_passenger/shared.lua',
