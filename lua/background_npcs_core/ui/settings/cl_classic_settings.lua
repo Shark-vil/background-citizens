@@ -140,7 +140,7 @@ function ITEMS.actors(panel)
 	end
 end
 
--- The highlighted button that opens the new settings window; on its own page and at the top of every classic page
+-- The highlighted button lives on its own settings page.
 local BUTTON_COLOR, BUTTON_HOVER = Color(46, 125, 214), Color(70, 150, 235)
 
 local function OpenNewMenuButton(panel)
@@ -163,7 +163,6 @@ hook.Add('PopulateToolMenu', 'BGN_TOOL_CreateMenu_Classic', function()
 	for _, page in ipairs(PAGES) do
 		spawnmenu.AddToolMenuOption('Options', 'Background NPCs', 'BGN_' .. page.id, Text(page.title), '', '', function(panel)
 			panel:ClearControls()
-			OpenNewMenuButton(panel)
 			if page.admin and not IsAdmin() then
 				panel:Help(Text('bgn.menu.admin_only'))
 				return

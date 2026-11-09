@@ -392,8 +392,25 @@ function NodeGraph.FromTable(data, cell_size)
 	if not istable(data) or data.format ~= NodeGraph.FORMAT then return nil, 'not a graph' end
 	if data.version ~= NodeGraph.VERSION then return nil, 'unsupported version ' .. tostring(data.version) end
 
-	local graph = NodeGraph(cell_size)
 	local nodes, links = data.nodes or {}, data.links or {}
+	if not istable(nodes) or not istable(links) or #nodes % 3 ~= 0 or #links % 3 ~= 0 or #nodes > 600000 then
+		return nil, 'invalid graph arrays'
+	end
+	for _, value in ipairs(nodes) do
+		if not isnumber(value) or value ~= value or math.abs(value) == math.huge then return nil, 'invalid graph position' end
+	end
+	for i = 1, #links, 3 do
+		for j = i, i + 2 do
+			local value = links[j]
+			if not isnumber(value) or value < 0 or value > 2147483647 or value % 1 ~= 0 then
+				return nil, 'invalid graph link'
+			end
+		end
+		if links[i] < 1 or links[i] > #nodes / 3 or links[i + 1] < 1 or links[i + 1] > #nodes / 3 then
+			return nil, 'graph link points to a missing node'
+		end
+	end
+	local graph = NodeGraph(cell_size)
 
 	for i = 1, #nodes - 2, 3 do
 		graph:AddNode(Vector(nodes[i], nodes[i + 1], nodes[i + 2]))

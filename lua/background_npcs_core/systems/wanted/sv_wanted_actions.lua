@@ -10,6 +10,15 @@ local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 
+hook.Add('BGN_PlayerReady', 'BGN_WantedSync', function(ply)
+	for _, wanted in ipairs(asset:GetAllWanted()) do
+		if IsValid(wanted.target) then
+			bgNPC.Net.Send('bgn_module_wanted_AddWanted', ply, wanted.target, math.max(0, wanted.time_reset - CurTime()))
+			bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', ply, wanted.target, wanted.level)
+		end
+	end
+end)
+
 
 cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 	enable_wanted_mode = tonumber(newValue) == 1
@@ -20,7 +29,7 @@ cvars.AddChangeCallback('bgn_enable_wanted_mode', function(_, _, newValue)
 	local wanted_count = #wanted_list
 	if wanted_count == 0 then return end
 
-	for i = 1, wanted_count do
+	for i = wanted_count, 1, -1 do
 		local WantedClass = wanted_list[i]
 		if WantedClass and WantedClass.target then
 			asset:RemoveWanted(WantedClass.target)
@@ -83,15 +92,15 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
 
 		local is_player = attacker:IsPlayer()
 		if is_player then
-			if impunity_limit ~= 0 then
-				local current_impunity = (attacker.bgn_wanted_module_impunity or 0)
-				if current_impunity >= impunity_limit or actor:HasTeam('police') then
-					attacker.bgn_wanted_module_impunity = 0
-					bgNPC.Statistics.Reset(attacker)
-					asset:AddWanted(attacker)
-				else
-					attacker.bgn_wanted_module_impunity = current_impunity + 1
-				end
+			local current_impunity = (attacker.bgn_wanted_module_impunity or 0) + 1
+			if (enable_wanted_police_instantly and actor:HasTeam('police'))
+				or (impunity_limit > 0 and current_impunity >= impunity_limit)
+			then
+				attacker.bgn_wanted_module_impunity = 0
+				bgNPC.Statistics.Reset(attacker)
+				asset:AddWanted(attacker)
+			elseif impunity_limit > 0 then
+				attacker.bgn_wanted_module_impunity = current_impunity
 			end
 		else
 			if enable_wanted_police_instantly and not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then
@@ -212,7 +221,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	-- 1500 ^ 2
 	-- local ray_distance_detect = 2250000
-	local ray_distance_detect = radius_visibility
+	local ray_distance_detect = radius_visibility ^ 2
 
 	for i = wanted_count, 1, -1 do
 		local WantedClass = wanted_list[i]

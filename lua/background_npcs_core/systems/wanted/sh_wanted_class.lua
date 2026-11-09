@@ -5,6 +5,9 @@ local wanted_time = GetConVar('bgn_wanted_time'):GetFloat()
 
 bgNPC.CVars.OnChange('bgn_wanted_time', function(_, _, newValue)
 	wanted_time = tonumber(newValue)
+	if SERVER then
+		for _, wanted in ipairs(wanted_list) do wanted:UpdateWanted() end
+	end
 
 	bgNPC.Util.Log('New value for "wanted_time" - ' .. tostring(wanted_time), 'Wanted Module Class')
 end, 'bgn_wanted_module_cvar_bgn_wanted_time')
@@ -19,23 +22,24 @@ function ASSET:Instance(ent)
 	public.level_max = 5
 	public.next_kill_update = bgNPC.cfg.wanted.levels[1]
 
-	function public:UpdateWanted()
-		self.time_reset = CurTime() + wanted_time
-		self.wait_time = wanted_time
+	function public:UpdateWanted(time)
+		time = isnumber(time) and time or wanted_time
+		self.time_reset = CurTime() + time
+		self.wait_time = time
 
 		if SERVER then
-			bgNPC.Net.Send('bgn_module_wanted_UpdateWanted', nil, ent)
+			bgNPC.Net.Send('bgn_module_wanted_UpdateWanted', nil, ent, time)
 		end
 	end
 
 	function public:UpdateWaitTime(time)
 		self.wait_time = math.Round(time)
 
-		if self.time_reset - CurTime() > wanted_time then
+		if SERVER and self.time_reset - CurTime() > wanted_time then
 			self.time_reset = CurTime() + wanted_time
 		end
 
-		if self.wait_time > wanted_time then
+		if SERVER and self.wait_time > wanted_time then
 			self.wait_time = math.Round(wanted_time)
 		end
 
@@ -80,10 +84,12 @@ function ASSET:Instance(ent)
 	end
 
 	function public:LevelDown()
-		if self.level - 1 > 0 then
+		if self.level > 0 then
 			self.level = self.level - 1
 			if self.level == 0 then
 				ASSET:RemoveWanted(ent)
+				hook.Run('BGN_WantedLevelDown', ent, 0)
+				return
 			elseif SERVER then
 				bgNPC.Net.Send('bgn_module_wanted_UpdateLevel', nil, ent, self.level)
 			end
@@ -95,14 +101,14 @@ function ASSET:Instance(ent)
 				self.next_kill_update = 0
 			end
 
-			hook.Run('BGN_WantedLevelDown', ent, self.next_kill_update)
+			hook.Run('BGN_WantedLevelDown', ent, self.level)
 		end
 	end
 
 	return public
 end
 
-function ASSET:AddWanted(ent)
+function ASSET:AddWanted(ent, time)
 	if self:HasWanted(ent) then return end
 	-- every source (kills, police calls, damage) ends here: ignored players are never wanted
 	if SERVER and bgNPC.Combat.IsIgnored(ent) then return end
@@ -112,10 +118,14 @@ function ASSET:AddWanted(ent)
 	end
 
 	local WantedClass = self:Instance(ent)
+	if isnumber(time) then
+		WantedClass.time_reset = CurTime() + time
+		WantedClass.wait_time = time
+	end
 	table.insert(wanted_list, WantedClass)
 
 	if SERVER then
-		bgNPC.Net.Send('bgn_module_wanted_AddWanted', nil, ent)
+		bgNPC.Net.Send('bgn_module_wanted_AddWanted', nil, ent, WantedClass.wait_time)
 	end
 
 	hook.Run('BGN_AddWantedTarget', ent)
