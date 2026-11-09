@@ -19,7 +19,8 @@ function Actor:AddEnemy(ent, reaction, always_visible)
 
 	if istable(ent) then ent = ent:GetNPC() end
 	if not IsValid(ent) or bgNPC.Combat.IsIgnored(ent) then return end
-	if not ent:IsNPC() and not ent:IsNextBot() and not ent:IsPlayer() then return end
+	-- also an actor seated in a car: its body is a Decent Vehicle entity
+	if not bgNPC.Combat.IsAttacker(ent) then return end
 	if not self:IsAlive() then return end
 
 	local npc = self.npc

@@ -1001,6 +1001,7 @@ ceasefire.execute('''
         for _,a in ipairs(all) do if a.npc==ent then return a end end
     end
     bgNPC.Combat.ResolveVehicleAttacker=function(ent) return ent end
+    bgNPC.Combat.IsAttacker=function(e) return e~=nil and e.valid~=false end
     assert(module:AddTarget(target,police))
     assert(not module:IsProtected(target),'an arrest record alone must not create immunity')
     police.state='arrest'; police.target=target
@@ -1050,6 +1051,7 @@ vehicles = realm(True)
 vehicles.execute('''
     bgNPC.Actor={}; bgNPC.Assert={Arg=function() end}
     bgNPC.Combat.ResolveVehicleAttacker=function(e) return e end
+    bgNPC.Combat.IsAttacker=function(e) return e~=nil and e.valid~=false end
     bgNPC.Table.FindWhere=function(t,f) for k,v in ipairs(t) do if f(k,v) then return k,v end end return -1 end
     function isbool(v) return type(v)=='boolean' end
     function DamageInfo()
@@ -1656,6 +1658,7 @@ medics.execute('''
     setcv('bgn_medic_danger_time',60); setcv('bgn_medic_danger_radius',1500)
     bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 0 end}
     bgNPC.Combat.ResolveVehicleAttacker=function(ent) return ent end
+    bgNPC.Combat.IsAttacker=function(e) return e~=nil and e.valid~=false end
     function Person(pos)
         return {valid=true,pos=pos or Vector(),hp=100,Health=function(self) return self.hp end,
             GetPos=function(self) return self.pos end,GetModel=function() return 'model' end,

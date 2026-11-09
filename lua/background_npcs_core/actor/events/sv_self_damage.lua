@@ -12,7 +12,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
 	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
-	if not IsValid(attacker) or not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
+	if not bgNPC.Combat.IsAttacker(attacker) then return end
 	if bgNPC.Combat.IsIgnored(attacker) or attacker.bgNPCIgnore or attacker == target then return end
 
 	local result

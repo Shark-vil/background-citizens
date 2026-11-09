@@ -255,7 +255,7 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
 	local saved = self.vehicle_body
 	if not saved or self.is_removed or amount <= 0 then return end
 	attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker) or attacker
-	if IsValid(attacker) and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot())
+	if bgNPC.Combat.IsAttacker(attacker)
 		and attacker ~= self.npc and not bgNPC.Combat.IsIgnored(attacker) and not attacker.bgNPCIgnore then
 		local damage = DamageInfo()
 		damage:SetDamage(amount)

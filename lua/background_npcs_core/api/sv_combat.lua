@@ -57,7 +57,7 @@ end
 
 hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
 	local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
-	if IsValid(attacker) and dmginfo:GetDamage() > 0 and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot()) then
+	if dmginfo:GetDamage() > 0 and Combat.IsAttacker(attacker) then
 		attacker.bgn_last_attack = CurTime()
 	end
 end)
@@ -195,6 +195,11 @@ function Combat.ResolveVehicleAttacker(attacker)
 		if not IsValid(attacker) then return end
 	end
 	return attacker
+end
+
+-- A player, an NPC/NextBot or an actor in a Decent Vehicle seat (its DV entity is none of the former).
+function Combat.IsAttacker(ent)
+	return IsValid(ent) and (ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() or Actors.Get(ent) ~= nil)
 end
 
 -- Is the attacker an enemy of the target actor or of any of its teammates.
