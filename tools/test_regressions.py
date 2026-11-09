@@ -138,6 +138,132 @@ def load(lua, *paths):
         lua.execute((ROOT / path).read_text(encoding='utf-8-sig'), name=path)
 
 
+overlay = realm(True)
+overlay.execute('''
+    function SortedPairs(t)
+        local keys={}; for k in pairs(t) do keys[#keys+1]=k end; table.sort(keys)
+        local i=0; return function() i=i+1; local k=keys[i]; if k then return k,t[k] end end
+    end
+    viewers={}; player.GetHumans=function() return viewers end
+    bgNPC.cfg.actors={citizen={},police={}}
+    bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 10 end}
+    bgNPC.Nav={GetName=function() return 'custom' end}
+    bgNPC.Points={Count=function() return 123 end}
+    bgNPC.ServerLoad={IsLagging=function() return false end}
+    bgNPC.Brain={Resolve=function() return 'fsm' end}
+    local npc={GetPos=function() return Vector(100,0,0) end,GetAngles=function() return {} end,
+        OBBMins=function() return Vector(-16,-16,0) end,OBBMaxs=function() return Vector(16,16,72) end,
+        Health=function() return 30 end,IsNextBot=function() return false end}
+    actor={uid=1,lod=1,GetNPC=function() return npc end,GetPos=npc.GetPos,
+        GetType=function() return 'citizen' end,GetState=function() return 'walk' end,IsAlive=function() return true end}
+    bgNPC.Actors.GetAll=function() return {actor} end
+''')
+load(overlay, 'debug/sv_actor_overlay.lua')
+overlay.execute('''
+    local tick=timers.BGN_Debug_ActorOverlay
+    setcv('bgn_debug',0); tick(); assert(#sent==0, 'debug off sends nothing')
+    setcv('bgn_debug',1)
+    viewers={{bgn_ready=true,IsAdmin=function() return false end,IsSuperAdmin=function() return false end}}
+    tick(); assert(#sent==0, 'ordinary players receive no debug positions')
+    admin.bgn_ready=true; viewers[2]=admin
+    hooks.BGN_InitActor.BGN_Debug_Spawn(actor)
+    now=102; hooks.BGN_RespawnActor.BGN_Debug_Teleport(actor,Vector(200,0,0))
+    tick()
+    local msg=sent[1]; local row=msg[3][1]
+    assert(msg[1]=='bgn.debug_actors' and #msg[2]==1 and msg[2][1]==admin)
+    assert(row.uid==1 and row.spawn_age==2 and row.teleport_age==0 and row.teleport_pos.x==200)
+    assert(row.pos.x==100 and row.maxs.z==72, 'bounds and positions need no client entity/PVS')
+    assert(msg[4].types[1].count==1 and msg[4].types[2].count==0 and msg[4].points==123)
+    now=110; tick()
+    assert(sent[2][3][1].spawn_pos==nil and sent[2][3][1].teleport_pos==nil, 'event markers expire')
+''')
+
+overlay_client = realm(False)
+overlay_client.execute('''
+    function Color(...) return {...} end
+    TEXT_ALIGN_LEFT=0; TEXT_ALIGN_CENTER=1; TEXT_ALIGN_TOP=0
+    hook.Remove=function(name,id) if hooks[name] then hooks[name][id]=nil end end
+    hook.Add('PostDrawTranslucentRenderables','BGN_Debug_ActorOverlay',function() error('old world pass') end)
+    hook.Add('HUDPaint','BGN_Debug_ActorOverlay',function() error('old HUD pass') end)
+    cam={Start3D=function() in3d=true end,IgnoreZ=function(value) ignorez=value end,
+        End3D=function() assert(not ignorez); in3d=false end}
+    render={SetColorMaterial=function() end,DrawWireframeBox=function(...)
+        assert(in3d and ignorez, 'bounds must draw over the map in the final HUD pass')
+        boxes=boxes+1; assert(select(6,...)==true) end,
+        DrawWireframeSphere=function() spheres=spheres+1 end}
+    draw={SimpleTextOutlined=function() labels=labels+1 end}
+    local mt=getmetatable(Vector())
+    function mt:ToScreen() return {visible=true,x=100,y=100} end
+    function EyePos() return Vector() end
+    function RealFrameTime() return 0.01 end
+    boxes=0; spheres=0; labels=0
+    setcv('bgn_debug',1)
+''')
+load(overlay_client, 'debug/cl_actor_overlay.lua')
+overlay_client.execute('''
+    received['bgn.debug_actors'].f(nil,{{uid=1,type='citizen',pos=Vector(100,0,0),ang={},mins=Vector(),
+        maxs=Vector(16,16,72),hp=30,state='walk',body='npc',brain='fsm',lod=1,spawn_age=0,spawn_pos=Vector()}},
+        {types={{name='citizen',count=1,limit=10}},nav='custom',points=123,tasks_ms=1,lagging=false})
+    assert(not hooks.PostDrawTranslucentRenderables.BGN_Debug_ActorOverlay and not hooks.HUDPaint.BGN_Debug_ActorOverlay,
+        'reload must remove old passes')
+    local hud=hooks.PostDrawHUD.BGN_Debug_ActorOverlay
+    hud(); assert(not in3d and not ignorez, 'restore rendering state')
+    assert(boxes==1 and spheres==1 and labels==7, 'bounds, spawn marker, labels and summary render without an entity')
+    now=103; hud(); assert(boxes==1, 'stale snapshots must not leave phantom actors')
+    now=100; admin.IsAdmin=function() return false end
+    hud(); assert(boxes==1, 'ordinary clients must not render debug positions')
+    received['bgn.debug_actors'].f(nil,{},{} )
+    admin.IsAdmin=function() return true end
+    hud(); assert(boxes==1, 'snapshots received without admin rights must be discarded')
+    setcv('bgn_debug',0); hud(); assert(boxes==1)
+''')
+
+spawn = realm(True)
+spawn.execute('''
+    setcv('bgn_spawn_radius',3000)
+    setcv('bgn_spawn_radius_visibility',2500)
+    setcv('bgn_spawn_block_radius',600)
+    bgNPC.Vision.PlayerCanSeePos=function(ply) return ply.in_view end
+    bgNPC.Util.CanSeeEntity=function(ply) return ply.sees_target end
+    function watcher(in_view)
+        return {in_view=in_view, GetPos=function() return Vector() end,
+            EyePos=function() return Vector(0,0,64) end}
+    end
+    covered=true; exposed_height=nil; traces=0
+    MASK_VISIBLE=1
+    util.IsInWorld=function() return true end
+    util.TraceLine=function(data)
+        traces=traces+1
+        return {Hit=covered and data.endpos.z~=exposed_height}
+    end
+''')
+# Exercise the actual shared spawn/teleport predicate without the unrelated GLua continue loops.
+spawn_source = (ROOT / 'spawner/sv_spawner.lua').read_text(encoding='utf-8-sig')
+spawn.execute(spawn_source.split('local function FindSpawnLocationProcess', 1)[0]
+              + '\nspawn_allowed = IsNotBlockSpawnPosition')
+spawn.execute('''
+    local behind,front=watcher(false),watcher(true)
+    covered=false
+    assert(spawn_allowed(Vector(1000,0,0),{behind}), 'open spots behind the player must allow population')
+    assert(traces==0, 'offscreen spots need no cover traces')
+    assert(not spawn_allowed(Vector(600,0,0),{behind}), 'block radius still applies behind the player')
+    assert(not spawn_allowed(Vector(1000,0,0),{front}), 'near spots in view remain blocked')
+    assert(not spawn_allowed(Vector(1000,0,0),{behind,front}), 'every player must allow the spot')
+    assert(not spawn_allowed(Vector(2800,0,0),{front}), 'distant visible bodies remain blocked')
+    covered=true; traces=0
+    assert(spawn_allowed(Vector(2800,0,0),{front}) and traces==3, 'distant covered bodies may spawn')
+    for _,height in ipairs({10,40,64}) do
+        exposed_height=height
+        assert(not spawn_allowed(Vector(2800,0,0),{front}), 'any exposed body point blocks spawning')
+    end
+    exposed_height=nil
+    assert(spawn_allowed(Vector(1000,0,0),{behind}), 'initial offscreen search succeeds')
+    behind.in_view=true
+    assert(not spawn_allowed(Vector(1000,0,0),{behind}), 'recheck rejects a player turning toward the spawn')
+    behind.in_view=false; behind.sees_target=true
+    assert(not spawn_allowed(Vector(1000,0,0),{behind},{valid=true}), 'visible actors must not teleport')
+''')
+
 client = realm(False)
 load(client, 'core/sh_cvars.lua')
 client.execute('''

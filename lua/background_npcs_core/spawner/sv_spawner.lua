@@ -64,8 +64,8 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 		local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
 		if in_view and distance <= radius_visibility_sqrt then return false end
 
-		-- close spots behind the player need cover too: one turn of the head and the actor stood right there
-		if in_view or distance <= radius_visibility_sqrt then
+		-- Offscreen spots outside the block radius must stay available, as in 1.x.
+		if in_view then
 			if not util.IsInWorld(node_position) then return false end
 
 			-- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
