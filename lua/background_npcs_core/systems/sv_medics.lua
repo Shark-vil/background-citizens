@@ -35,16 +35,20 @@ local calls = {}
 Medics.calls = calls
 
 -- What the last hit was, to tell a death the medics can still fight for from one they cannot.
-local HOPELESS_DAMAGE = bit.bor(DMG_BLAST, DMG_VEHICLE, DMG_CRUSH)
+-- Only an explosion or a point-blank shot is always fatal; a vehicle hit is saved with the ordinary chance.
+local POINT_BLANK_DIST_SQR = 150 ^ 2
+local SHOT_DAMAGE = bit.bor(DMG_BULLET, DMG_BUCKSHOT)
 hook.Add('EntityTakeDamage', 'BGN_Medics_LastDamage', function(target, dmginfo)
-	if target:IsNPC() or target:IsNextBot() then
-		target.bgn_last_damage_type, target.bgn_last_damage = dmginfo:GetDamageType(), dmginfo:GetDamage()
-	end
+	if not (target:IsNPC() or target:IsNextBot()) then return end
+	local attacker = dmginfo:GetAttacker()
+	local damage_type = dmginfo:GetDamageType()
+	target.bgn_last_damage_blast = bit.band(damage_type, DMG_BLAST) ~= 0
+	target.bgn_last_damage_point_blank = bit.band(damage_type, SHOT_DAMAGE) ~= 0 and IsValid(attacker)
+		and attacker:GetPos():DistToSqr(target:GetPos()) <= POINT_BLANK_DIST_SQR
 end)
 
 local function IsHopeless(npc)
-	if bit.band(npc.bgn_last_damage_type or 0, HOPELESS_DAMAGE) ~= 0 then return true end
-	if (npc.bgn_last_damage or 0) >= npc:GetMaxHealth() * 2 then return true end -- overkill
+	if npc.bgn_last_damage_blast or npc.bgn_last_damage_point_blank then return true end
 	return math.random(100) <= GetConVar('bgn_medic_hopeless_chance'):GetInt()
 end
 

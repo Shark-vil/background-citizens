@@ -545,6 +545,13 @@ function ENT:OpenDoorsAhead()
 	door:Fire('Open')
 end
 
+-- A bot teleported into a parked car or a prop stays inside it: only free spots are valid.
+local function IsSpotFree(bot, spot)
+	local hull = util.TraceHull({ start = spot + Vector(0, 0, 2), endpos = spot + Vector(0, 0, 2),
+		mins = HULL_MINS, maxs = HULL_MAXS, mask = MASK_NPCSOLID, filter = bot })
+	return not hull.StartSolid and not hull.Hit
+end
+
 -- Hops to a free nav spot a few steps away (closer to the goal when possible): the bot is wedged against a car, a prop
 -- or another body and the path follower cannot get it out. Short, so it does not need the "hidden from players" rule.
 -- @return boolean true if the bot was moved
@@ -557,10 +564,8 @@ function ENT:PullOut()
 			local spot = area:GetRandomPoint()
 			local away = spot:DistToSqr(pos)
 			if away >= PULL_OUT_MIN_SQR and away <= PULL_OUT_RADIUS ^ 2 then
-				local hull = util.TraceHull({ start = spot + Vector(0, 0, 2), endpos = spot + Vector(0, 0, 2),
-					mins = HULL_MINS, maxs = HULL_MAXS, mask = MASK_NPCSOLID, filter = self })
 				local dist = goal and spot:DistToSqr(goal) or away
-				if not hull.StartSolid and not hull.Hit and (not best_dist or dist < best_dist) then best, best_dist = spot, dist end
+				if (not best_dist or dist < best_dist) and IsSpotFree(self, spot) then best, best_dist = spot, dist end
 			end
 		end
 	end
@@ -581,7 +586,7 @@ function ENT:HandleStuck(path)
 	if CurTime() - self.stuck_since < STUCK_TELEPORT_TIME then return end
 	local goal = path:GetCurrentGoal()
 	-- a player who sees the bot or the goal gets no far teleport: pull out nearby instead
-	if goal and bgNPC:IsHiddenSpawnPosition(goal.pos, self) then
+	if goal and IsSpotFree(self, goal.pos) and bgNPC:IsHiddenSpawnPosition(goal.pos, self) then
 		self:SetPos(goal.pos)
 		self.loco:ClearStuck()
 		self.stuck_since = nil

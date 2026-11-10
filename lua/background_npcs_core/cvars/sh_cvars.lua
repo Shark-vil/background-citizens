@@ -194,7 +194,7 @@ bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 
 bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
 bgNPC.CVars.Register('bgn_gang_help_chance', bgNPC.cvar.bgn_gang_help_chance, 'Percent chance for each nearby member of the same gang to join a fight when it starts (the fight roster is capped at 2-6 members).')
 bgNPC.CVars.Register('bgn_gang_war_chance', bgNPC.cvar.bgn_gang_war_chance, 'Percent chance per 10 seconds that a calm gang member starts a fight with a rival gang member nearby. 0 disables gang wars.')
-bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions, vehicle hits and overkill damage are always hopeless.')
+bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions and point-blank shots are always hopeless.')
 
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 
