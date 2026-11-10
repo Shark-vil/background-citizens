@@ -1,12 +1,13 @@
 # GetName
 
-## SHARED
+Realm: **SHARED** (supported usage).
+
 ```lua
-	ACTOR:GetName()
+actor:GetName()
 ```
 
-## Description
-Gets the name of the actor (not the same as the name in the actor config!). The value is set with - [SetName](./SetName.md)
+Returns the stored display name.
 
-## Return
-1. **string** - Actor name
+Source: `lua/background_npcs_core/actor/sh_actor.lua`.
+
+[Realm reference](../../../reference/shared.md).

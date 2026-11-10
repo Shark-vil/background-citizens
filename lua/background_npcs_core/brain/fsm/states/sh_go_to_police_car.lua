@@ -39,6 +39,8 @@ local function Seize(actor, car)
 	end
 
 	vehicle_provider:Eject(actor)
+	-- someone could not get out: taking the seat beside them would only get the officer thrown out again
+	if vehicle_provider:GetDriver() then return false end
 	vehicle_provider:SetGroup(actor.data.vehicle_group or actor:GetVehicleGroup())
 	return true
 end

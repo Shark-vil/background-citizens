@@ -8,6 +8,13 @@ ENT.SeatIndex = -1
 ENT.original_VehicleGetPassengerFunction = nil
 ENT.original_VehicleGetDriverFunction = nil
 
+-- playermeta.lua uses this for both GetAimVector and eye traces.
+function ENT:GetVehicleForward()
+	local driver = self.vehicle_provider and self.vehicle_provider:GetVehicleAI()
+	if IsValid(driver) then return driver:GetVehicleForward() end
+	return self:GetForward()
+end
+
 -- list.Set('NPC', 'npc_decentvehicle_passenger', {
 -- 	Name = ENT.PrintName,
 -- 	Class = 'npc_decentvehicle_passenger',

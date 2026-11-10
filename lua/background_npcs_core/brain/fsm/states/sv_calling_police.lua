@@ -19,15 +19,45 @@ local phone_beep_sounnds = {
 	Sound('background_npcs/calling_police/bepp/8.wav'),
 }
 
+-- @return boolean at least one living officer already has this entity as an enemy or a target: no need to report it
+function bgNPC.PoliceKnows(enemy)
+	for _, police in ipairs(bgNPC.Actors.GetByTeam('police')) do
+		if police:IsAlive() and (police:HasEnemy(enemy) or police:HasTarget(enemy)) then return true end
+	end
+	return false
+end
+
 local function IsValidWantedMode()
 	return cvar_bgn_enable_wanted_mode:GetBool()
 end
 
+-- Within this distance of a player at most MAX_CALLERS actors phone the police at once.
+local MAX_CALLERS = 2
+local CALLER_RADIUS_SQR = 2500 ^ 2
+
+local function TooManyCallers(actor)
+	local pos = actor:GetPos()
+	for _, ply in ipairs(player.GetHumans()) do
+		if ply:GetPos():DistToSqr(pos) <= CALLER_RADIUS_SQR then
+			local callers = 0
+			for _, other in ipairs(bgNPC.Actors.GetAll()) do
+				if other ~= actor and other:HasState('calling_police') and other:GetPos():DistToSqr(ply:GetPos()) <= CALLER_RADIUS_SQR then
+					callers = callers + 1
+				end
+			end
+			if callers >= MAX_CALLERS then return true end
+		end
+	end
+	return false
+end
+
 bgNPC.States.Register('calling_police', 'danger', {
 	pre_start = function(actor)
-		if not IsValidWantedMode() then
+		if not IsValidWantedMode() or TooManyCallers(actor) then
 			return 'fear'
 		end
+		local enemy = actor:GetEnemy()
+		if IsValid(enemy) and bgNPC.PoliceKnows(enemy) then return 'fear' end
 	end,
 	stop = function(actor)
 		actor:StopStaticSequence()
@@ -74,7 +104,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 		else
 			if data.calling_time < CurTime() then
 				for _, enemy in pairs(actor.enemies) do
-					if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+					if IsValid(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
 						if asset:HasWanted(enemy) then
 							local WantedClass = asset:GetWanted(enemy)
 							WantedClass:UpdateWanted(enemy)

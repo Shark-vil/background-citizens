@@ -1,15 +1,13 @@
 # IsStateDelay
 
-## SERVER
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:IsStateDelay()
+actor:IsStateDelay()
 ```
 
-## Description
-Checks if the delay is currently active.
+Checks local state_delay; this deadline is not in the regular client snapshot. Use on the server.
 
-## Return
-1. **boolean** - will return true if the delay is active.
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
-## Example
-- [SetStateDelay](./SetStateDelay.md)
+[Realm reference](../../../reference/server.md).

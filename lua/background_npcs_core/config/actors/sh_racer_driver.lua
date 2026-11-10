@@ -11,6 +11,7 @@ bgNPC.cfg:SetActor('racer_driver', {
 	weapons = { 'weapon_pistol' },
 	getting_weapon_chance = 10,
 	limit = 1,
+	respawn_delay = 0, -- not a gang: no gangster respawn delay (false would break sv_killed_actor.lua)
 	max_vehicle = 1,
 	vehicle_speed = { ['calm'] = 25, ['danger'] = 40 },
 	enter_to_exist_vehicle_chance = 100,

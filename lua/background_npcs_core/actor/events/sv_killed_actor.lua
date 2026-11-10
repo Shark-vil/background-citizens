@@ -101,7 +101,7 @@ end)
 
 hook.Add('EntityRemoved', 'BGN_OnKilledActorByRemoved', function(npc)
 	local actor = bgNPC.Actors.Get(npc)
-	if not actor or actor.OnNPCKilled or not actor._onKilledActorLastDamageAttacker or EntityRemovedLock then
+	if not actor or actor.vehicle_body or actor.OnNPCKilled or not actor._onKilledActorLastDamageAttacker or EntityRemovedLock then
 		return
 	end
 

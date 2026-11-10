@@ -32,13 +32,17 @@ local PAGES = {
 	{ id = 'Spawn', title = 'bgn.settings.spawn', admin = true, items = {
 		{ 'slider', 'bgn_spawn_radius', 'bgn.settings.spawn.spawn_radius', 0, 5000 },
 		{ 'slider', 'bgn_spawn_radius_visibility', 'bgn.settings.spawn.spawn_radius_visibility', 0, 5000 },
+		{ 'slider', 'bgn_vehicle_spawn_visibility_radius', 'bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000 },
 		{ 'slider', 'bgn_spawn_block_radius', 'bgn.settings.spawn.spawn_block_radius', 0, 5000 },
 		{ 'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1 },
 		{ 'check', 'bgn_fasted_teleport', 'bgn.settings.spawn.fasted_teleport' },
+		{ 'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600 },
 	} },
 	{ id = 'Wanted', title = 'bgn.settings.wanted', admin = true, items = {
 		{ 'check', 'bgn_enable_wanted_mode', 'bgn.settings.wanted.enable_wanted_mode' },
+		{ 'slider', 'bgn_wanted_detection_radius', 'bgn.settings.wanted.detection_radius', 0, 5000 },
 		{ 'check', 'bgn_wanted_level', 'bgn.settings.wanted.level' },
+		{ 'slider', 'bgn_wanted_level_up_period', 'bgn.settings.wanted.level_up_period', 0, 600, 1 },
 		{ 'check', 'bgn_wanted_police_instantly', 'bgn.settings.wanted.police_instantly' },
 		{ 'slider', 'bgn_wanted_time', 'bgn.settings.wanted.time', 0, 600, 1 },
 		{ 'slider', 'bgn_wanted_impunity_limit', 'bgn.settings.wanted.impunity_limit', 0, 100 },
@@ -116,6 +120,7 @@ function ITEMS.check(panel, cvar, key)
 end
 
 function ITEMS.slider(panel, cvar, key, min, max, decimals)
+	if cvar == 'bgn_vehicle_spawn_visibility_radius' and not istable(DecentVehicleDestination) then return end
 	if not GetConVar(cvar) then return end
 	panel:NumSlider(Text(key), cvar, min, max, decimals or 0)
 	Help(panel, key)

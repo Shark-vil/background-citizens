@@ -18,23 +18,16 @@ Optional: [Decent Vehicle](https://steamcommunity.com/sharedfiles/filedetails/?i
 This is an addon that will automatically spawn NPCs on the map at predetermined movement points. NPCs can walk around the map, perform random actions, attack or defend.
 
 ### **Performance**
-The addon is quite optimized and almost does not generate lags. NPCs are removed when they disappear from the player's field of view, and appear with a certain delay. The spawn process is performed between server frames, which does not create unnecessary lags.
+Background work uses a shared scheduler with a per-tick budget. Spawning, visibility checks and unseen-actor recycling limit active population; actual performance depends on actor counts, the map and other addons.
 
 ### **Assignment**
 This addon can rather be considered a base for development. There is basic functionality here, but if you are a developer, you can fairly easily extend the system to suit your conditions and for any gamemode.
 
-## What's new in 2.0
-The core was rewritten from scratch:
-* **No SLibrary** - everything the addon needs is built in.
-* **NextBot actors** - on maps with a NavMesh actors are NextBots with HL2 models; on other maps they are HL2 NPCs
-  walking the map's nodegraph or the addon's own movement points.
-* **Two brains** - a light state machine for calm civilians and a GOAP planner for fights: taking cover, calling
-  backup, surrendering.
-* **Wanted levels** - police, civil defense and special forces get harder level by level; with the wanted mode off
-  they spawn like regular actors.
-* **Performance** - one scheduler with a per-tick time budget for all background work, simplified updates for far
-  actors.
-* **New settings window** with search.
+## Current code: 2.3.1
+
+The repository includes changes after tag 2.3.0: stable vehicle occupants, traffic recovery, gang rosters and pack walking, medic verdicts and corpse handling, policing and spawn fixes. See the [version history](docs/history.md) for release boundaries and the [architecture](docs/architecture.md) for files, loading and subsystem relationships. The current defaults are engine NPC bodies and FSM; NextBot bodies and GOAP are optional. SLibrary is no longer required.
+
+For developers: [server API](docs/reference/server.md), [client API](docs/reference/client.md), [shared API](docs/reference/shared.md). AI contributors start with [AGENTS.md](AGENTS.md) and [documentation rules](docs/ai.md).
 
 ## Documentation
 ***

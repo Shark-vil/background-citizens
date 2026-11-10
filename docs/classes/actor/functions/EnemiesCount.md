@@ -1,9 +1,13 @@
 # EnemiesCount
 
-## SERVER
+Realm: **SHARED** (supported usage).
+
 ```lua
-	ACTOR:EnemiesCount()
+actor:EnemiesCount()
 ```
 
-## Return
-1. **number** - enemies count.
+Returns the tracked enemy count.
+
+Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
+
+[Realm reference](../../../reference/shared.md).

@@ -4,11 +4,26 @@ local TeamParentModule
 local cvar_team_damage = GetConVar('bgn_team_damage')
 
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
+	local occupant = bgNPC.Actors.Get(target)
+	if occupant and occupant.vehicle_body then
+		local damage, attacker = dmginfo:GetDamage(), dmginfo:GetAttacker()
+		-- an actor can grind another one in a car for ages: its hits there double (50%) or triple (20%)
+		if bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(attacker)) then
+			local roll = math.random(100)
+			if roll <= 20 then damage = damage * 3 elseif roll <= 70 then damage = damage * 2 end
+		end
+		occupant:TakeVehicleDamage(damage, attacker, dmginfo:GetInflictor())
+		return true
+	end
 	if not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot() then return end
 
 	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
-	if not IsValid(attacker) or not attacker:IsPlayer() and not attacker:IsNPC() and not attacker:IsNextBot() then return end
+	if not bgNPC.Combat.IsAttacker(attacker) then return end
 	if bgNPC.Combat.IsIgnored(attacker) or attacker.bgNPCIgnore or attacker == target then return end
+
+	local hit_actor = bgNPC.Actors.Get(target)
+	-- the arrest state lets go only of an attacked officer; the fight roster never refuses whoever is being hit
+	if hit_actor then hit_actor.last_attacked_at, hit_actor.last_attacker = CurTime(), attacker end
 
 	local result
 

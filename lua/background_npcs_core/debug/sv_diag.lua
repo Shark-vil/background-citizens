@@ -314,7 +314,7 @@ local function TestNaturalSpawn()
 	elseif reason == 'nopoints' then
 		Fix('bgn.diag.fix.radius', { bgn_spawn_radius = D.bgn_spawn_radius })
 	elseif reason == 'nohidden' then
-		Fix('bgn.diag.fix.hidden', { bgn_spawn_block_radius = D.bgn_spawn_block_radius, bgn_spawn_radius_visibility = D.bgn_spawn_radius_visibility })
+		Fix('bgn.diag.fix.hidden', { bgn_spawn_block_radius = D.bgn_spawn_block_radius })
 	end
 end
 

@@ -53,13 +53,15 @@ local function GetPlayersDisposition(npc)
 	return D_NU
 end
 
-local function SetNPCRelationship(actor, another_npc)
+-- @param disposition number|nil precomputed GetPlayersDisposition(another_npc), it does not depend on the actor
+local function SetNPCRelationship(actor, another_npc, disposition)
 	if not actor:IsAlive() then return end
+	if another_npc.bgn_probe then return end -- sv_nextbot_hostility.lua
 
 	local actor_npc = actor:GetNPC()
 	local another_actor = bgNPC.Actors.Get(another_npc)
 	local is_ignore_another_npc = cvar_bgn_ignore_another_npc:GetBool()
-	local disposition = GetPlayersDisposition(another_npc)
+	disposition = disposition or GetPlayersDisposition(another_npc)
 
 	if another_actor then
 		if bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor) then
@@ -109,7 +111,8 @@ local function SetNPCRelationship(actor, another_npc)
 		elseif not is_ignore_another_npc then
 			local reaction = actor:GetReactionForProtect()
 			if actor:HasStateGroup(reaction, 'danger') then
-				actor:SetState(reaction, nil, true)
+				-- a forced restart of a running danger state for every new hostile NPC froze the server with many actors
+				if not actor:EqualStateGroup('danger') then actor:SetState(reaction, nil, true) end
 				actor:AddEnemy(another_npc)
 			end
 		end
@@ -183,8 +186,8 @@ end, 'bgn_friend_mode')
 -- 	RebuildActorsRelationship(actor)
 -- end)
 
-hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
-	if not actor:IsAlive() then return end
+local function SetPlayersRelationship(actor)
+	if not actor:IsAlive() or actor:InVehicle() then return end
 
 	local npc = actor:GetNPC()
 
@@ -205,15 +208,47 @@ hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', function(actor)
 			-- end
 		end
 	end
-end)
+end
+hook.Add('BGN_InitActor', 'BGN_SetPlayersRelationship', SetPlayersRelationship)
+hook.Add('BGN_ActorEntityChanged', 'BGN_SetPlayersRelationship', SetPlayersRelationship)
 
 -- Sets relationships for all existing NPCs and NextBots in the map
-hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', function(actor)
-	if not actor:IsAlive() then return end
+local function SetExistingNPCRelationships(actor)
+	if not actor:IsAlive() or actor:InVehicle() then return end
 
 	for _, npc in ipairs(ents.GetAll()) do
 		if IsValid(npc) and (npc:IsNPC() or npc:IsNextBot()) then
 			SetNPCRelationship(actor, npc)
+		end
+	end
+end
+hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
+hook.Add('BGN_ActorEntityChanged', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
+
+-- A seated officer's body is a Decent Vehicle entity without NPC senses, and the hooks above skip seated actors:
+-- hostile NPCs and NextBots near the car become its enemies here, so it steps out (modules/dv/sv_move_to_target.lua).
+local SEATED_SPOT_RADIUS = 1000
+
+-- An NPC hostile to players, or a NextBot (no Disposition) hunting a player or an actor.
+local function IsHostile(ent)
+	if ent:IsNPC() then return GetPlayersDisposition(ent) == D_HT end
+	local target = isfunction(ent.GetEnemy) and ent:GetEnemy()
+	return IsValid(target) and (target:IsPlayer() or bgNPC.Actors.Get(target) ~= nil)
+end
+
+timer.Create('BGN_SeatedPoliceSpotHostileNPC', 1, 0, function()
+	if bgNPC.Modes.IsPeaceful() or cvar_bgn_ignore_another_npc:GetBool() then return end
+
+	for _, actor in ipairs(bgNPC.Actors.GetByTeam('police')) do
+		local car = actor:IsAlive() and actor:GetVehicle()
+		if IsValid(car) then
+			for _, ent in ipairs(ents.FindInSphere(car:GetPos(), SEATED_SPOT_RADIUS)) do
+				if (ent:IsNPC() or ent:IsNextBot()) and not ent.isBgnActor and not ent.bgn_probe and ent:Health() > 0
+					and not actor:HasEnemy(ent) and IsHostile(ent) and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent)
+				then
+					SetNPCRelationship(actor, ent, D_HT)
+				end
+			end
 		end
 	end
 end)
@@ -225,9 +260,12 @@ hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
 	timer.Simple(.5, function()
 		if not IsValid(npc) or npc.isBgnActor then return end
 
-		for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local actors = bgNPC.Actors.GetAll()
+		local disposition = GetPlayersDisposition(npc)
+		for i = #actors, 1, -1 do -- backwards: IsAlive() unregisters dead actors from this live list
+			local actor = actors[i]
 			if actor and actor:IsAlive() then
-				SetNPCRelationship(actor, npc)
+				SetNPCRelationship(actor, npc, disposition)
 			end
 		end
 	end)

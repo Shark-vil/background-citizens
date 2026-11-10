@@ -20,6 +20,14 @@ local function HasRangedWeapon(enemy)
 	return true
 end
 
+-- A player in a vehicle, or an actor seated in a car (a baton cannot reach it)
+local function IsInVehicle(enemy)
+	if enemy:IsPlayer() then return enemy:InVehicle() end
+	if enemy:IsVehicle() then return true end
+	local actor = Actors.Get(enemy)
+	return actor ~= nil and actor:InVehicle()
+end
+
 function Combat.CanPoliceShoot(enemy)
 	if not IsValid(enemy) then return false end
 	return (HasRangedWeapon(enemy) or enemy.bgn_has_killed or bgNPC.Statistics.GetSum(enemy) >= 1)
@@ -42,6 +50,24 @@ hook.Add('PlayerDeath', 'BGN_PoliceLethalThreat', function(victim, _, attacker)
 	victim.bgn_has_killed = nil
 	victim.bgn_last_attack = nil
 	RecordKill(victim, attacker)
+end)
+
+-- Is the entity in a real fight: it shot or hurt someone lately, or an actor shoots back at an enemy.
+local FIGHT_WINDOW = 10
+local FIGHT_STATES = { 'defense', 'killer', 'take_cover', 'retreat' }
+
+function Combat.IsFighting(ent)
+	if not IsValid(ent) then return false end
+	if CurTime() - (ent.bgn_last_attack or -FIGHT_WINDOW) < FIGHT_WINDOW then return true end
+	local actor = Actors.Get(ent)
+	return actor ~= nil and actor:EnemiesCount() > 0 and actor:HasState(FIGHT_STATES)
+end
+
+hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
+	local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+	if dmginfo:GetDamage() > 0 and Combat.IsAttacker(attacker) then
+		attacker.bgn_last_attack = CurTime()
+	end
 end)
 
 hook.Add('EntityFireBullets', 'BGN_PoliceLastAttack', function(shooter)
@@ -93,6 +119,14 @@ local function EquipWeapon(actor, npc, weapon_class)
 	npc:SelectWeapon(weapon_class)
 	hook.Run('BGN_PostSelectWeapon', actor, npc, weapon_class)
 
+	-- A police actor with the stunstick (idle state) and the pistol shows both in its hands: keep only the selected one.
+	-- By team, not by NPC class: the config may give the police another class.
+	if actor:HasTeam('police') and npc.GetWeapons then
+		for _, other in ipairs(npc:GetWeapons()) do
+			if other ~= weapon then other:Remove() end
+		end
+	end
+
 	return true
 end
 
@@ -124,7 +158,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
 			end
 			local close = npc:GetPos():DistToSqr(enemy:GetPos()) <= POLICE_MELEE_DISTANCE_SQR
 			-- Once a fight escalates, distance and an expired attack timer must not bring the baton back.
-			data.police_firearm = data.police_firearm or HasRangedWeapon(enemy)
+			data.police_firearm = data.police_firearm or HasRangedWeapon(enemy) or IsInVehicle(enemy)
 				or (IsValid(active_weapon) and active_weapon:GetClass() == 'weapon_pistol')
 				or (not close and Combat.CanPoliceShoot(enemy))
 			weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'
@@ -179,6 +213,11 @@ function Combat.ResolveVehicleAttacker(attacker)
 	return attacker
 end
 
+-- A player, an NPC/NextBot or an actor in a Decent Vehicle seat (its DV entity is none of the former).
+function Combat.IsAttacker(ent)
+	return IsValid(ent) and (ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() or Actors.Get(ent) ~= nil)
+end
+
 -- Is the attacker an enemy of the target actor or of any of its teammates.
 function Combat.IsEnemyOfTeam(target_actor, attacker)
 	Assert.Arg(1, target_actor, 'actor', 'bgNPC.Combat.IsEnemyOfTeam')
@@ -213,6 +252,8 @@ local function GetEntityType(ent)
 	if ent:IsNextBot() then return 'nextbot' end
 	if ent:IsNPC() then return 'npc' end
 	if ent:IsPlayer() then return 'player' end
+	-- a seated actor's body is a Decent Vehicle entity, neither NPC nor NextBot
+	if Actors.Get(ent) then return 'npc' end
 	return nil
 end
 

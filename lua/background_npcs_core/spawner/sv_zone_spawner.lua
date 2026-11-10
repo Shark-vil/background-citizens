@@ -201,7 +201,7 @@ if SERVER then
 		if not bgNPC.Config.IsTypeActive(npc_type) or npc_data.hidden then return false end
 
 		local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
-		if max_limit == 0 or #bgNPC.Actors.GetNPCsByType(npc_type) >= max_limit then return false end
+		if max_limit == 0 or bgNPC.Actors.Count(npc_type) >= max_limit then return false end
 
 		local wanted_level = bgNPC.Config.GetWantedLevel(npc_data)
 		if wanted_level then
@@ -255,12 +255,10 @@ if SERVER then
 
 						if entry.mode ~= AREA_MODE_BOOSTED or entry.count <= 0 then continue end
 
-						local npc_data = bgNPC.cfg.actors[actorType]
+						local npc_data = bgNPC.Config.GetActor(actorType)
 						if not npc_data then continue end
 						if not CanActorTypeSpawnNow(actorType, npc_data) then continue end
 						if CountAliveInArea(area, actorType) >= entry.count then continue end
-
-						yield()
 
 						local position = FindSpawnPositionInArea(area)
 						if position then

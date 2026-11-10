@@ -1,7 +1,6 @@
 --[[
-	Server load. Normally actors over their type limit (a ghost handoff, a lowered limit) are removed only out of
-	every player's sight. When the server is overloaded they go at once, seen or not, and ghost handoffs stop
-	going over the limit:
+	Server load. Overload stops ghost handoffs from exceeding type limits. Existing actors still obey
+	the unseen timeout and protection flags in the remover:
 	- lagging: in a second of real time fewer than LAG_RATIO of the ticks the tickrate promises ran (the server
 	  can't keep up); counts LAG_HOLD seconds after the last slow second, so one hitch doesn't flicker it;
 	- critical mass: more actors than CRITICAL_FACTOR times the sum of the active types' limits.

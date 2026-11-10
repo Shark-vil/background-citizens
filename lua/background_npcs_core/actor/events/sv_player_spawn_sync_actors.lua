@@ -13,8 +13,9 @@ hook.Add('BGN_PlayerReady', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
 			actor:GetBody():SetDisposition(ply, D_NU)
 
 			timer.Simple(delay, function()
-				if not IsValid(ply) or not IsValid(npc) then return end
-				bgNPC.Net.Send('bgn_add_actor_from_client', ply, npc, npc_type, actor.uid, actor.info)
+				if not IsValid(ply) or not actor:IsAlive() or not IsValid(actor:GetNPC()) then return end
+				bgNPC.Net.Send('bgn_add_actor_from_client', ply, actor:GetNPC(), npc_type, actor.uid, actor.info,
+					actor.entity_generation or 0, actor.class, actor.model)
 			end)
 
 			delay = delay + 0.1

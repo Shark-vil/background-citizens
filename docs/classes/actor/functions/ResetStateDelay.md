@@ -1,12 +1,13 @@
 # ResetStateDelay
 
-## SERVER
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:ResetStateDelay()
+actor:ResetStateDelay()
 ```
 
-## Description
-Resets the delay.
+Clears the state-transition deadline.
 
-## Example
-- [SetStateDelay](./SetStateDelay.md)
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
+
+[Realm reference](../../../reference/server.md).

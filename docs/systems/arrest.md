@@ -11,12 +11,18 @@ Settings window: **Arrest**.
 | `bgn_arrest_surrender_delay` | `10` | the second chance (below); `0` off |
 | `bgn_arrest_car_wait` | `6` | car break-in: seconds standing still in a car with the police at it; `0` off |
 | `bgn_arrest_car_time` | `8` | car break-in: seconds it takes, then the arrest |
+| `bgn_police_car_kill_time` | `30` | an actor in a car: seconds from the first police hit, then their next hit kills; `0` off |
 | `bgn_arrest_safe_weapons` | `mlp_hoof,empty,weapon_card,...` | comma-separated weapon classes that don't count as being armed |
 
 A player gives up by looking at the ground (pitch over 40°) near the officer. NPC targets give up by the
 `arrest_surrender` state: an actor (an NPC or a NextBot body, e.g. a gangster) that attacks near the police may
-give up, 5% on its first attack and 10% on each later one while at 50 health or less. The police stop arresting and shoot when the target kills someone, keeps attacking,
-refuses within the time limit or is wanted.
+give up, 5% on its first attack and 10% on each later one, only while below half its maximum health. An actor on
+foot hit by an officer while it holds no active weapon and is not fighting (`defense`, `killer`, `zombie`,
+`take_cover`, `pick_up_weapon`, `brawl`) gives up with 30% per hit (`systems/arrest/sv_surrender.lua`). An NPC arrest is held while the target remains compliant; the player refusal/wanted/time-limit checks below do not automatically cancel it. An attacked officer may defend itself.
+
+A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
+officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
+it slips away (`retreat`); otherwise it just calms down.
 
 Regular police (`npc_metropolice`) use the stunstick as an additional melee weapon. An already hostile
 target holding an unsafe ranged weapon makes the officer select a pistol immediately, even up close
@@ -32,15 +38,24 @@ arrest mode does not count as a refusal.
 
 ## Car break-in
 
-`systems/arrest/sv_car_breakin.lua`: a player who stands still in a vehicle (rolling up to 64 units counts as
+`systems/arrest/sv_car_breakin.lua`: a suspect (a player, or an actor that is not an officer) who stands still in a vehicle (rolling up to 64 units counts as
 standing) for `bgn_arrest_car_wait` seconds while the police are after them (fighting or arresting, within 2000
 units). The officers then hold fire, get out of their cars and run to it (state `police_car_breakin`: their enemies
 are put aside and come back when it stops). Once one is within 300 units the break-in starts (`police_seize` line)
-and takes `bgn_arrest_car_time` seconds: the player sees a bar shrinking from both sides to the middle
+and takes `bgn_arrest_car_time` seconds: a player sees a bar shrinking from both sides to the middle
 (`cl_car_breakin.lua`, blinking in the last quarter). Driving 64 units away cancels it and the officers fight
 again. The officers can't be pulled away by anything else (`not_stop`; only forced states such as an arrest);
 an officer stepping away from the car only pauses the bar, it never starts over. At the end the player is pulled out and arrested
-like at the end of an arrest (`BGN_PlayerArrest`, or the fade and `KillSilent`).
+like at the end of an arrest (`BGN_PlayerArrest`, or the fade and `KillSilent`). An actor is pulled out of the car
+(the officers at the doors do not block the exit, only the world and props do; a blocked exit retries on the next tick) and gives up to the officer at the car (`ArrestModule:Surrender`): it goes
+to `arrest_surrender`, the officer to `arrest`, and the usual arrest finishes it. The progress is kept on the
+suspect's entity (`ent.bgn_still`); `ArrestModule:BreakinCar(ent)` returns the car of a called break-in.
+
+A shot at a car managed by the addon (any base: a `prop_vehicle_jeep` or a scripted simfphys/LVS/Glide chassis)
+hits every occupant for the full damage; a crash (`DMG_CRUSH`, `DMG_VEHICLE`) only for 1/2-1/10 of it
+(`modules/dv/sv_car_damage_reaction.lua`). When the police have not killed an actor in a car within
+`bgn_police_car_kill_time` seconds of their first hit on it, their next hit kills it (`Actor:TakeVehicleDamage`);
+60 seconds without a police hit, or stepping out, start the time over.
 
 ## Second chance
 
@@ -51,3 +66,8 @@ within the time limit, or any damage dealt, and they shoot again. The next chanc
 time limit + delay. Hook: `BGN_PlayerSurrenderChance(ply, police_actor)`.
 
 Fist fights never lead to shooting: the police arrest both fighters ([Conversations](./conversations.md)).
+
+
+## Holding an arrest
+
+An NPC arrest does not use the player wanted/time-limit checks in `CanArrest`. Officers hold the arrest unless attacked. Allied police damage to a protected active arrest target is suppressed; an attacked officer retains self-defense. Sources: `systems/arrest/sv_arrest.lua`, `brain/fsm/states/sv_arrest.lua`.

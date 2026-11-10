@@ -281,14 +281,12 @@ local function Decide(ghost, now, players, r_in, r_out)
 	SetSegment(ghost, pos, target, run, now)
 end
 
--- A point in the ring of player p, out of every player's inner radius, out of sight or farther than the real
--- actors may appear in sight (the same rule as the spawner)
+-- A point in the ring of player p, outside every player's inner radius and out of sight.
 local function TrySpawn(p, players, r_in, r_out, now)
 	if #looks == 0 then return end
 	local points = GetPoints(p.pos, math.Round(r_out * 1.2, -2))
 	if #points == 0 then return end
 
-	local visible_from = GetConVar('bgn_spawn_radius_visibility'):GetFloat()
 	local r_near_sqr = (r_in * 1.2) ^ 2
 
 	for _ = 1, SPAWN_TRIES do
@@ -298,7 +296,7 @@ local function TrySpawn(p, players, r_in, r_out, now)
 			if not ok then break end
 			local dist_sqr = pos:DistToSqr(q.pos)
 			ok = dist_sqr >= r_near_sqr
-				and (dist_sqr > visible_from * visible_from or not GhostCrowd.IsSeen(q.eye, q.dir, pos + GhostCrowd.HEAD))
+				and not GhostCrowd.IsSeen(q.eye, q.dir, pos + GhostCrowd.HEAD)
 		end
 
 		if ok then

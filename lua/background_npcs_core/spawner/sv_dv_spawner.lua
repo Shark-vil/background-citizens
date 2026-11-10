@@ -1,5 +1,47 @@
 --
 
+local simfphys_forward = {}
+
+local function AlignSimfphysSpawn(vehicle, class, desired)
+	vehicle.bgnHeadingPending = true
+	local attempts = 0
+	bgNPC.Util.EntityTimer(vehicle, 'bgn_spawn_heading', .05, 40, function(car)
+		attempts = attempts + 1
+		local forward = car.VehicleData and car.VehicleData.LocalAngForward
+		if not forward then
+			if attempts == 40 then
+				bgNPC.Util.Log('Vehicle heading did not initialize: ' .. class, 'SpawnVehicle')
+				car:Remove()
+			end
+			return
+		end
+		simfphys_forward[class] = forward.y
+		local correction = math.AngleDifference(desired.y, car:LocalToWorldAngles(forward).y)
+		if math.abs(correction) > .5 then
+			local pivot, rotation = car:GetPos(), Angle(0, correction, 0)
+			local objects = {}
+			-- Rotate the constrained assembly from a snapshot, not just the chassis with its wheels left behind.
+			for ent in pairs(constraint.GetAllConstrainedEntities(car)) do
+				if IsValid(ent) then
+					for i = 0, ent:GetPhysicsObjectCount() - 1 do
+						local phys = ent:GetPhysicsObjectNum(i)
+						if IsValid(phys) then objects[#objects + 1] = { phys, phys:GetPos(), phys:GetAngles(), phys:GetVelocity() } end
+					end
+				end
+			end
+			car:SetAngles(car:GetAngles() + rotation)
+			for _, object in ipairs(objects) do
+				local phys, pos, ang, vel = unpack(object)
+				pos = pos - pivot; pos:Rotate(rotation)
+				ang:RotateAroundAxis(vector_up, correction); vel:Rotate(rotation)
+				phys:SetPos(pivot + pos); phys:SetAngles(ang); phys:SetVelocity(vel); phys:Wake()
+			end
+		end
+		car.bgnHeadingPending = nil
+		bgNPC.Util.RemoveEntityTimer(car, 'bgn_spawn_heading')
+	end)
+end
+
 local function GetNearPoints(center, radius)
 	radius = radius ^ 2
 	local dvd = DecentVehicleDestination
@@ -16,14 +58,48 @@ local function GetNearPoints(center, radius)
 	return points
 end
 
-local function FindSpawnLocation(center)
-	local spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat()
+-- Where the player will be in a moment: a car that spawns on the road ahead lands on the hood.
+local function PlayerAheadPoints(ply)
+	local car = ply:GetVehicle()
+	if IsValid(car) and IsValid(car:GetParent()) then car = car:GetParent() end
+	local shift = (IsValid(car) and car or ply):GetVelocity() * 1.5
+	if shift:LengthSqr() > 1500 ^ 2 then shift = shift:GetNormalized() * 1500 end
+	local pos = ply:GetPos()
+	return pos + shift * .5, pos + shift
+end
+
+-- A car is bigger than a spawn point: a hidden centre can still show a fender around a corner.
+-- shortcut: a fixed 260x260 grid covers any heading and most cars; thin gaps between samples are not checked.
+local HULL_OFFSETS = {}
+for _, x in ipairs({ -130, 0, 130 }) do
+	for _, y in ipairs({ -130, 0, 130 }) do
+		for _, z in ipairs({ 10, 100 }) do HULL_OFFSETS[#HULL_OFFSETS + 1] = Vector(x, y, z) end
+	end
+end
+
+-- @return boolean true when no part of a car standing at `base` can be seen by the player
+local function HullHiddenFrom(ply, base)
+	local eye, car = ply:EyePos(), ply:GetVehicle()
+	local filter = { ply, car, IsValid(car) and car:GetParent() or nil }
+	for _, offset in ipairs(HULL_OFFSETS) do
+		local point = base + offset
+		if bgNPC.Util.IsInView(ply, point) then
+			local tr = util.TraceLine({ start = eye, endpos = point, mask = MASK_VISIBLE, filter = filter })
+			if not tr.Hit or tr.HitPos:DistToSqr(point) < 64 then return false end
+		end
+	end
+	return true
+end
+
+local function FindSpawnLocation(center, radius)
+	local spawn_radius = radius or GetConVar('bgn_spawn_radius'):GetFloat()
 	local points = GetNearPoints(center, spawn_radius)
 	if #points == 0 then return nil end
 
 	points = bgNPC.Table.Shuffle(points)
 	local dvd = DecentVehicleDestination
 	local block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
+	local visibility_radius = GetConVar('bgn_vehicle_spawn_visibility_radius'):GetFloat() ^ 2
 	local all_players = player.GetAll()
 	local spawn_position = nil
 	local spawn_angle = nil
@@ -37,31 +113,38 @@ local function FindSpawnLocation(center)
 				local vehicle = ply:GetVehicle()
 				local distance = spawn_position:DistToSqr(ply:GetPos())
 
-				if distance <= block_radius then
+				local mid, ahead = PlayerAheadPoints(ply)
+				if distance <= block_radius or spawn_position:DistToSqr(mid) <= block_radius
+					or spawn_position:DistToSqr(ahead) <= block_radius then
 					goto skip
 				end
 
 				if bgNPC.Util.IsInView(ply, spawn_position) then
-					local tr = util.TraceLine({
-						start = ply:EyePos(),
-						endpos = spawn_position,
-						filter = function(ent)
-							if IsValid(ent) and ent ~= ply then
-								if IsValid(vehicle) then
-									if ent ~= vehicle and ent ~= vehicle:GetParent() then
-										return false
+					-- close to the player the whole car must be behind cover, not just its centre
+					if distance <= visibility_radius then
+						if not HullHiddenFrom(ply, spawn_position + Vector(0, 30, 0)) then goto skip end
+					else
+						local tr = util.TraceLine({
+							start = ply:EyePos(),
+							endpos = spawn_position,
+							filter = function(ent)
+								if IsValid(ent) and ent ~= ply then
+									if IsValid(vehicle) then
+										if ent ~= vehicle and ent ~= vehicle:GetParent() then
+											return false
+										end
+									else
+										return true
 									end
-								else
-									return true
 								end
 							end
-						end
-					})
+						})
 
-					if not tr.Hit then
-						goto skip
-					elseif tr.Entity:GetClass() ~= 'worldspawn' or spawn_position:DistToSqr(tr.HitPos) <= 250000 then
-						goto skip
+						if not tr.Hit then
+							goto skip
+						elseif tr.Entity:GetClass() ~= 'worldspawn' or spawn_position:DistToSqr(tr.HitPos) <= 250000 then
+							goto skip
+						end
 					end
 				end
 			end
@@ -102,6 +185,8 @@ local function FindSpawnLocation(center)
 	return { pos = spawn_position, ang = Angle(0, spawn_angle.y, 0) }
 end
 
+bgNPC.FindVehicleSpawnLocation = FindSpawnLocation
+
 function bgNPC:CheckVehicleLimitFromActors(actor_type)
 	local limit = GetConVar('bgn_npc_vehicle_max_' .. actor_type):GetInt()
 	if limit <= 0 then return false end
@@ -130,7 +215,7 @@ function bgNPC:EnterActorInExistVehicle(actor, bypass)
 	for i = 1, #bgNPC.DVCars do
 		local vehicle_provider = bgNPC.DVCars[i]
 
-		if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() then
+		if vehicle_provider:IsValid() and vehicle_provider:IsValidAI() and vehicle_provider:CanUse(actor) then
 			local vehicle = vehicle_provider:GetVehicle()
 			local driver = vehicle_provider:GetDriver()
 
@@ -210,10 +295,24 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	offset_ang = offset_ang or Angle(0, 0, 0)
 
 	if simfphys and simfphys_list[vehicle_class] then
-		return simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos, spawn_ang)
+		local members = simfphys_list[vehicle_class].Members or {}
+		local heading = simfphys_forward[vehicle_class]
+		if heading == nil and members.CustomWheels and isvector(members.CustomWheelPosFL) and isvector(members.CustomWheelPosFR)
+			and isvector(members.CustomWheelPosRL) and isvector(members.CustomWheelPosRR) then
+			heading = (members.CustomWheelPosFL + members.CustomWheelPosFR - members.CustomWheelPosRL - members.CustomWheelPosRR):Angle().y
+		end
+		-- SpawnAngleOffset describes the spawn menu's presentation, not necessarily the physical front.
+		local desired = spawn_ang + offset_ang
+		local vehicle = simfphys.SpawnVehicleSimple(vehicle_class, spawn_pos + offset_pos, desired - Angle(0, heading or 0, 0))
+		if IsValid(vehicle) then
+			vehicle.isBgnVehicle = true
+			AlignSimfphysSpawn(vehicle, vehicle_class, desired)
+		end
+		return vehicle
 	elseif vehicles_list[vehicle_class] then
 		local vehicle_data = vehicles_list[vehicle_class]
 		local vehicle = ents.Create(vehicle_data.Class)
+		vehicle.isBgnVehicle = true
 		vehicle:SetModel(vehicle_data.Model)
 
 		if vehicle_data.KeyValues then
@@ -232,7 +331,8 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	end
 end
 
-function bgNPC:SpawnVehicleWithActor(actor, bypass)
+-- @param near Player|nil spawn close to this player (a pursuit) instead of a random one
+function bgNPC:SpawnVehicleWithActor(actor, bypass, near)
 	if not GetConVar('bgn_enable_dv_support'):GetBool() then return false end
 	local dvd = DecentVehicleDestination
 	if not dvd or not dvd.Waypoints or #dvd.Waypoints == 0 or player.GetCount() == 0 then return false end
@@ -244,8 +344,8 @@ function bgNPC:SpawnVehicleWithActor(actor, bypass)
 	local actor_type = actor:GetType()
 	if not bypass and not bgNPC:CheckVehicleLimitFromActors(actor_type) then return false end
 
-	local ply = bgNPC.Table.Random(player.GetAll())
-	local data = FindSpawnLocation(ply:GetPos())
+	local ply = near or bgNPC.Table.Random(player.GetAll())
+	local data = FindSpawnLocation(ply:GetPos(), near and bgNPC.PURSUIT_SPAWN_RADIUS)
 	if not data then return false end
 
 	local npc = actor:GetNPC()

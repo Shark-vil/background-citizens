@@ -122,8 +122,13 @@ bgNPC.States.Register('medic_revive', 'calm', {
 		if is_medic and now >= data.revive_end then
 			actor:StopStaticSequence()
 			call.done = true
-			bgNPC.Medics.Revive(call)
-			Voice(actor, math.random(2) == 1 and 'ok01' or 'ok02')
+			if call.hopeless then
+				call.verdict = true
+				actor:SayReplic('medic_cannot_save', math.random(#bgNPC.cfg.replics.medic_cannot_save))
+			else
+				bgNPC.Medics.Revive(call)
+				Voice(actor, math.random(2) == 1 and 'ok01' or 'ok02')
+			end
 		end
 	end,
 })

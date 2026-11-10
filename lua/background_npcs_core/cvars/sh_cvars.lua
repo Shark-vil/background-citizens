@@ -8,7 +8,10 @@ bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
 bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
-bgNPC.cvar.bgn_spawn_radius_visibility = 2500
+bgNPC.cvar.bgn_spawn_radius_visibility = 2000
+bgNPC.cvar.bgn_vehicle_spawn_visibility_radius = 2000
+bgNPC.cvar.bgn_actor_unseen_time = 30
+bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 1
 bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
@@ -18,6 +21,7 @@ bgNPC.cvar.bgn_point_z_limit = 100
 bgNPC.cvar.bgn_enable_wanted_mode = 1
 bgNPC.cvar.bgn_wanted_time = 30
 bgNPC.cvar.bgn_wanted_level = 1
+bgNPC.cvar.bgn_wanted_level_up_period = 60
 bgNPC.cvar.bgn_cl_disable_hud_local = 0
 bgNPC.cvar.bgn_wanted_hud_text = 1
 bgNPC.cvar.bgn_wanted_hud_stars = 1
@@ -30,6 +34,7 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_arrest_surrender_delay = 10
 bgNPC.cvar.bgn_arrest_car_wait = 6
 bgNPC.cvar.bgn_arrest_car_time = 8
+bgNPC.cvar.bgn_police_car_kill_time = 30
 bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
@@ -39,6 +44,9 @@ bgNPC.cvar.bgn_corpse_cleanup = 0
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
 bgNPC.cvar.bgn_medic_danger_time = 60
 bgNPC.cvar.bgn_medic_danger_radius = 1500
+bgNPC.cvar.bgn_medic_hopeless_chance = 25
+bgNPC.cvar.bgn_gang_help_chance = 1
+bgNPC.cvar.bgn_gang_war_chance = 0.5
 bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -47,6 +55,7 @@ bgNPC.cvar.bgn_disable_halo_wanted = 0
 bgNPC.cvar.bgn_disable_halo_calling = 0
 bgNPC.cvar.bgn_cl_disable_self_halo_wanted = 1
 bgNPC.cvar.bgn_enable_dv_support = 1
+bgNPC.cvar.bgn_vehicle_cleanup_time = 120
 bgNPC.cvar.bgn_enable_police_system_support = 1
 bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
@@ -88,6 +97,7 @@ bgNPC.cvar.bgn_actor_body = 'npc'
 bgNPC.cvar.bgn_pick_up_weapons = 0
 bgNPC.cvar.bgn_nextbot_jump = 0
 bgNPC.cvar.bgn_enemy_share_period = 2
+bgNPC.cvar.bgn_fight_cooldown = 60
 bgNPC.cvar.bgn_settings_rev = 0
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
@@ -131,6 +141,8 @@ bgNPC.CVars.Register('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time, 'The time yo
 
 bgNPC.CVars.Register('bgn_wanted_level', bgNPC.cvar.bgn_wanted_level, 'Enables or disables the boost wanted level mode.')
 
+bgNPC.CVars.Register('bgn_wanted_level_up_period', bgNPC.cvar.bgn_wanted_level_up_period, 'Every this many seconds a wanted NPC (not a player) gains a wanted level. Needs bgn_wanted_level. The value "0" disables the option.')
+
 bgNPC.CVars.Register('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text, 'Enables or disables the text about wanted time.')
 
 bgNPC.CVars.Register('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars, 'Enables or disables drawing of stars in wanted mode.')
@@ -147,11 +159,14 @@ bgNPC.CVars.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 'NPC spawn
 
 bgNPC.CVars.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
-bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Triggers an NPC visibility check within this radius to avoid spawning entities in front of the player.')
+bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Visibility radius of players. A wanted NPC (not a player) is dropped from the wanted list after 15 seconds outside the field of view of every player or farther than half of this radius from all of them; obstacles are not checked.')
+bgNPC.CVars.Register('bgn_vehicle_spawn_visibility_radius', bgNPC.cvar.bgn_vehicle_spawn_visibility_radius, 'Within this distance in front of a player DV vehicles spawn only when the whole car body is hidden behind cover. Affects vehicles only.')
+bgNPC.CVars.Register('bgn_actor_unseen_time', bgNPC.cvar.bgn_actor_unseen_time, 'Seconds without any player seeing an actor before it can be removed or teleported. 0 allows immediate recycling out of sight.')
+bgNPC.CVars.Register('bgn_wanted_detection_radius', bgNPC.cvar.bgn_wanted_detection_radius, 'Distance at which residents can see a wanted target and keep the wanted timer active.')
 
 bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
 
-bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'The period between the spawn of the NPC. Changes require a server restart.')
+bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'Pause between actor spawner passes. Changes apply immediately.')
 
 bgNPC.CVars.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 'Height limit between points. Used to correctly define child points.')
 
@@ -166,6 +181,8 @@ bgNPC.CVars.Register('bgn_arrest_surrender_delay', bgNPC.cvar.bgn_arrest_surrend
 bgNPC.CVars.Register('bgn_arrest_car_wait', bgNPC.cvar.bgn_arrest_car_wait, 'A player standing still in a car with the police at it for this many seconds: they start breaking into the car. 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_arrest_car_time', bgNPC.cvar.bgn_arrest_car_time, 'Seconds the police take to break into the car; the player still there is then arrested.')
+
+bgNPC.CVars.Register('bgn_police_car_kill_time', bgNPC.cvar.bgn_police_car_kill_time, 'Seconds the police may fail to kill an actor in a car, counted from their first hit; after that their next hit kills. 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_arrest_safe_weapons', bgNPC.cvar.bgn_arrest_safe_weapons, 'Comma-separated weapon classes that do not count as being armed (see bgn_arrest_surrender_delay).')
 
@@ -183,6 +200,9 @@ bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_ti
 
 bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 'Seconds medics avoid an area where a medic was killed, or until the killer dies. 0 disables the restriction.')
 bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
+bgNPC.CVars.Register('bgn_gang_help_chance', bgNPC.cvar.bgn_gang_help_chance, 'Percent chance for each nearby member of the same gang to join a fight when it starts (the fight roster is capped at 2-6 members).')
+bgNPC.CVars.Register('bgn_gang_war_chance', bgNPC.cvar.bgn_gang_war_chance, 'Percent chance per 10 seconds that a calm gang member starts a fight with a rival gang member nearby. 0 disables gang wars.')
+bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions and point-blank shots are always hopeless.')
 
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 
@@ -195,6 +215,7 @@ bgNPC.CVars.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_cal
 bgNPC.CVars.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted, 'Disable halo for wanted entities.')
 
 bgNPC.CVars.Register('bgn_enable_dv_support', bgNPC.cvar.bgn_enable_dv_support, 'Includes compatibility with the "DV" addon and forces NPCs to use vehicles.')
+bgNPC.CVars.Register('bgn_vehicle_cleanup_time', bgNPC.cvar.bgn_vehicle_cleanup_time, 'Seconds without a driver or without moving beyond 128 units before an unseen BGN vehicle can be removed. 0 disables this cleanup.')
 
 bgNPC.CVars.Register('bgn_enable_police_system_support', bgNPC.cvar.bgn_enable_police_system_support, 'Enables compatibility with the "Police System" addon and overrides the default arrest method.')
 
@@ -236,6 +257,7 @@ bgNPC.CVars.Register('bgn_runtime_generator_grid_offset', bgNPC.cvar.bgn_runtime
 -- Created by their systems on the server too (same defaults); registered here so the settings window can change them.
 bgNPC.CVars.Register('bgn_brain', bgNPC.cvar.bgn_brain, 'Background NPCs: actor brain type (fsm - the classic one, goap - smarter fights, auto - goap for armed actors)')
 bgNPC.CVars.Register('bgn_actor_body', bgNPC.cvar.bgn_actor_body, 'Background NPCs: actor body (npc - regular game NPCs like the old versions, nextbot - smoother walking, needs a NavMesh; auto = npc)')
+bgNPC.CVars.Register('bgn_fight_cooldown', bgNPC.cvar.bgn_fight_cooldown, 'Seconds after a skirmish starts during which actors nearby ignore calls to protect their own against another attacker (new events only; a player or a non-actor NPC/NextBot attacker is never blocked). Default 60, 0 - disabled.')
 bgNPC.CVars.Register('bgn_enemy_share_period', bgNPC.cvar.bgn_enemy_share_period, 'Every N seconds an actor that fights someone tells the teammates around it who see it about the enemy. 0 - disabled.')
 bgNPC.CVars.Register('bgn_nextbot_jump', bgNPC.cvar.bgn_nextbot_jump, 'NextBot actors jump when stuck and when a car hits them. 1 - enabled, 0 - disabled (they unstick by teleport instead).')
 bgNPC.CVars.Register('bgn_pick_up_weapons', bgNPC.cvar.bgn_pick_up_weapons, 'Unarmed actors in danger run to a dropped weapon, take it and fight (state pick_up_weapon). 1 - enabled, 0 - disabled (the old behavior).')

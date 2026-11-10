@@ -1,29 +1,17 @@
 # Actor API
 
-An actor wraps an NPC or NextBot entity. Get an existing actor with `bgNPC.Actors.GetFirst()` or the list with `bgNPC.Actors.GetAll()`. There may be none yet: check the actor before calling methods and check `GetNPC()` with `IsValid`.
+An actor is a stable character record associated with an engine entity. Bodies and brains exist on the server; the client receives presentation data.
 
-See [practical examples](../../examples.md). Low-level [Instance](Instance.md) binds an entity to an actor; do not bind an already registered NPC again.
+- [Server methods](../../reference/server.md): construction, state changes, movement, combat, vehicles, speech and removal.
+- [Client methods](../../reference/client.md): state snapshots and settings UI.
+- [Shared methods](../../reference/shared.md): identity, health, state/enemy/target queries and public namespaces.
 
-## Methods
+Get an actor using `bgNPC.Actors.Get(entity)`, `GetByUid(uid)` or `GetFirst()`. A lookup may return nil. Validate `actor:GetNPC()` with `IsValid`.
 
-This reference includes legacy compatibility methods. Check exact signatures in `lua/background_npcs_core/actor/components/`. Empty placeholder pages are omitted.
+Use `bgNPC.Actor.Create(npc, actor_type)` on the server to bind a new entity. [BGN_ACTOR:Instance](Instance.md) remains a compatibility alias. Do not register an entity twice.
 
-- [AddEnemy](functions/AddEnemy.md)
-- [AddTarget](functions/AddTarget.md)
-- [CallForHelp](functions/CallForHelp.md)
-- [CallStateAction](functions/CallStateAction.md)
-- [ClearSchedule](functions/ClearSchedule.md)
-- [EnemiesCount](functions/EnemiesCount.md)
-- [EnemiesRecalculate](functions/EnemiesRecalculate.md)
-- [GetLastReaction](functions/GetLastReaction.md)
-- [GetName](functions/GetName.md)
-- [GetNPC](functions/GetNPC.md)
-- [GetRandomState](functions/GetRandomState.md)
-- [IsAlive](functions/IsAlive.md)
-- [IsStateDelay](functions/IsStateDelay.md)
-- [RandomState](functions/RandomState.md)
-- [ResetStateDelay](functions/ResetStateDelay.md)
-- [SetName](functions/SetName.md)
-- [SetReaction](functions/SetReaction.md)
-- [SetStateDelay](functions/SetStateDelay.md)
-- [SyncFunction](functions/SyncFunction.md)
+Boarding a DV vehicle keeps the actor and UID, replaces the entity with a DV visual and recreates the saved NPC/NextBot on exit. Fetch the entity again after `BGN_ActorEntityChanged(actor, old, new)`; addon-private entity state needs its own integration. Use `Health()` / `GetMaxHealth()` instead of assuming the visual has NPC methods.
+
+Client snapshots are sent on a 0.25-second service cycle to ready players in PVS when data changes. They contain identity, entity generation, state name/group, enemies/targets and animation flags; server body/brain, full state data and configuration mutations are not mirrored in full.
+
+See [examples](../../examples.md) and [architecture](../../architecture.md).

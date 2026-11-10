@@ -1,9 +1,6 @@
 --
 local fasted_teleport
 local bgn_enable
-local bgn_spawn_radius
-local bgn_spawn_block_radius
-local bgn_spawn_radius_visibility
 local bgn_actors_teleporter
 local max_teleporter
 local current_teleport
@@ -16,6 +13,14 @@ end)
 
 hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
 	if not ent.isBgnActor then return end
+	local actor = bgNPC.Actors.Get(ent) or ent.BGN_ACTOR_OBJECT
+	if actor and actor.vehicle_body then
+		timer.Simple(0, function()
+			if actor.is_removed or actor:GetNPC() ~= ent then return end
+			if not actor:ExitVehicle(true) then actor:Remove() end
+		end)
+		return
+	end
 	bgNPC.Actors.Unregister(ent)
 end)
 
@@ -35,7 +40,7 @@ local function TeleportActor(actor, pos)
 	bgNPC:RespawnActor(actor, pos, function(success)
 		if not success or not actor:IsAlive() then return end
 		actor:RandomState()
-		actor.__last_player_interaction = CurTime() + 5
+		actor.__last_player_interaction = CurTime()
 	end)
 end
 
@@ -45,108 +50,62 @@ local BUSY_STATES = {
 	'scenic_npc',
 }
 
-local function SeenByAnyPlayer(npc)
-	for i = 1, #player_list do
-		if bgNPC.Util.CanSeeEntity(player_list[i], npc, true) then return true end
+local cvar_unseen_time = GetConVar('bgn_actor_unseen_time')
+
+local function UpdateLastSeen(actor, players)
+	local now = CurTime()
+	actor.__last_player_interaction = actor.__last_player_interaction or now
+	for _, ply in ipairs(players) do
+		if IsValid(ply) and bgNPC.Util.CanSeeEntity(ply, actor:GetNPC(), true) then
+			actor.__last_player_interaction = now
+			return true
+		end
 	end
 	return false
 end
 
-local function IsValidRemovePositionAsync(actor, npc)
-	local npc_pos = npc:GetPos()
+hook.Add('BGN_InitActor', 'BGN_Recycle_LastSeen', function(actor)
+	actor.__last_player_interaction = CurTime()
+end)
 
-	for player_index = 1, #player_list do
-		local ply = player_list[player_index]
-		if not IsValid(ply) then continue end
-
-		coroutine.yield()
-
-		local ply_pos = ply:GetPos()
-		local dist = npc_pos:DistToSqr(ply_pos)
-
-		if dist > bgn_spawn_radius then
-			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
-				return false
-			end
-		else
-			if dist <= bgn_spawn_block_radius then
-				return false
-			end
-
-			if dist >= bgn_spawn_radius_visibility and (not actor.__last_player_interaction or actor.__last_player_interaction > CurTime()) then
-				return false
-			end
-
-			coroutine.yield()
-
-			if not actor.toRemove then
-				return false
-			end
-
-			coroutine.yield()
-
-			if bgNPC.Util.CanSeeEntity(ply, npc, true) then
-				return false
-			end
+-- Remove the old observer task on script reload; observations never yield inside an actor check.
+bgNPC.Tasks.Remove('bgn_actors_last_player_interaction')
+timer.Create('BGN_Actors_LastSeen', 0.5, 0, function()
+	if not GetConVar('bgn_enable'):GetBool() then return end
+	local players = player.GetHumans()
+	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		if actor:IsAlive() then
+			if actor:InVehicle() then actor.__last_player_interaction = CurTime()
+			else UpdateLastSeen(actor, players) end
 		end
-	end
-
-	return true
-end
-
-bgNPC.Tasks.Add('bgn_actors_last_player_interaction', function(yield, wait)
-	while true do
-		local players = player.GetHumans()
-		local actors = bgNPC.Actors.GetAll()
-		for i = 1, #actors do
-			local actor = actors[i]
-			if actor and actor:IsAlive() then
-				local npc = actor:GetNPC()
-				if not IsValid(npc) then continue end
-				for k = 1, #players do
-					local ply = players[k]
-					if IsValid(ply) and bgNPC.Util.CanSeeEntity(ply, npc, true) then
-						actor.__last_player_interaction = CurTime() + 10
-						break
-					end
-					yield()
-				end
-			end
-			yield()
-		end
-		yield()
 	end
 end)
+
+local function CanRecycle(actor, players)
+	if UpdateLastSeen(actor, players) then return false end
+	return CurTime() - actor.__last_player_interaction >= math.max(0, cvar_unseen_time:GetFloat())
+end
 
 local function run_remover_process_async(yield, wait, actors, actors_count)
 	local WantedModule = bgNPC.Modules.Get('wanted')
 
-	yield()
-
 	fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
 	bgn_enable = GetConVar('bgn_enable'):GetBool()
-	bgn_spawn_radius = GetConVar('bgn_spawn_radius'):GetFloat() ^ 2
-	bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius'):GetFloat() ^ 2
-	bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility'):GetFloat() ^ 2
 	bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
 	max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
 	current_teleport = 0
 	player_list = player.GetHumans()
 	player_count = #player_list
-	local overloaded = bgNPC.ServerLoad.IsOverloaded()
-
-	yield()
 
 	for i = 1, actors_count do
 		yield()
+		if not fasted_teleport then yield() end
+		player_list = player.GetHumans()
+		player_count = #player_list
 
 		local actor = actors[i]
 
-		if not fasted_teleport then
-			yield()
-		end
-
-		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden then
+		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden or actor:InVehicle() then
 			continue
 		end
 
@@ -158,35 +117,18 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 				actor:Remove()
 			end
 		else
+			if actor.state_lock or actor.conversation or actor:HasState(BUSY_STATES) then continue end
+			if not CanRecycle(actor, player_list) then continue end
+			if hook.Run('BGN_PreRemoveNPC', npc) then continue end
+
+			local over_limit = false
 			if not actor.mechanics.ignore_limit then
-				-- over the limit (a ghost handoff, a lowered limit): only actors no player sees, the rest wait their turn;
-				-- an overloaded server (core/sv_server_load.lua) drops them at once
 				local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
-				if max_limit == 0 or (#bgNPC.Actors.GetNPCsByType(npc_type) > max_limit
-					and (overloaded or not SeenByAnyPlayer(npc)))
-				then
-					actor:Remove()
-					yield()
-					continue
-				end
+				over_limit = max_limit == 0 or bgNPC.Actors.Count(npc_type) > max_limit
 			end
 
-			-- no teleport or removal mid-scene: they wait until it ends
-			if actor.conversation or actor:HasState(BUSY_STATES) then
-				yield()
-				continue
-			end
-
-			if not IsValidRemovePositionAsync(actor, npc) then
-				yield()
-				continue
-			end
-
-			if actor.toRemove or not bgn_actors_teleporter then
-				if not hook.Run('BGN_PreRemoveNPC', npc) then
-					actor:Remove()
-				end
-				yield()
+			if over_limit or actor.toRemove or not bgn_actors_teleporter then
+				actor:Remove()
 			else
 				local data = actor:GetData()
 
@@ -216,13 +158,10 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 							break
 						end
 
-						yield()
 					end
 
 					if not desiredPosition then
-						if not hook.Run('BGN_PreRemoveNPC', npc) then
-							actor:Remove()
-						end
+						actor:Remove()
 					else
 						if max_teleporter == current_teleport then break end
 						current_teleport = current_teleport + 1
@@ -236,11 +175,9 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 						end
 					end
 
-					yield()
 				end
 			end
 
-			yield()
 		end
 	end
 end
@@ -267,8 +204,6 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 
 	local wanted_level = bgNPC.Config.GetWantedLevel(actor:GetData())
 	if wanted_level then
-		local npc = actor:GetNPC()
-
 		local asset = bgNPC.Modules.Get('wanted')
 		local wanted_list = asset:GetAllWanted()
 		local success = false
@@ -282,10 +217,7 @@ hook.Add('BGN_ResetEnemiesForActor', 'BGN_ClearLevelOnlyNPCs', function(actor)
 			end
 		end
 
-		if not success and not hook.Run('BGN_PreRemoveNPC', npc) then
-			bgNPC.Util.Log('Remove wanted npc (reset targets)', 'Wanted NPC')
-			actor:Remove()
-		end
+		if not success then actor.toRemove = true end
 	end
 end)
 
@@ -295,6 +227,41 @@ hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent,
 
 		if wanted_level ~= nil and level < wanted_level then
 			actor:RemoveTarget(ent)
+		end
+	end
+end)
+
+
+-- A body without a registered actor is a leak (no brain, no label, it would stand there forever, frozen when the
+-- LOD had turned its think off). Actor:RemoveActor leaves the entity to the engine, which is right for a death only.
+-- Health is not checked: an NPC killed while its think is off (LOD) or frozen by the animator never finishes dying
+-- and stands with 0 health. bgn_npc_class marks bodies from the spawner (kept when leaving a car); the body released
+-- on boarding is removed by Actor:EnterVehicle itself.
+local ORPHAN_GRACE = 3
+local developer = GetConVar('developer')
+
+local function IsOrphan(ent)
+	local actor = ent.BGN_ACTOR_OBJECT
+	if not actor and not ent.bgn_npc_class then return false end
+	if not ent:IsNPC() and not ent:IsNextBot() then return false end
+	return not actor or actor.is_removed or actor:GetNPC() ~= ent or bgNPC.Actors.GetByUid(actor.uid) ~= actor
+end
+
+timer.Create('BGN_RemoveOrphanBodies', 2, 0, function()
+	local now = CurTime()
+	for _, ent in ipairs(ents.GetAll()) do
+		if IsOrphan(ent) then
+			ent.bgn_orphan_since = ent.bgn_orphan_since or now
+			if now - ent.bgn_orphan_since >= ORPHAN_GRACE then
+				if developer:GetInt() > 0 then
+					local actor = ent.BGN_ACTOR_OBJECT
+					MsgN('[BGN] orphan body removed: ', ent:GetClass(), ' health ', ent:Health(), ' ',
+						actor and tostring(actor:GetType()) .. ' state ' .. tostring(actor:GetState()) or 'no actor')
+				end
+				ent:Remove()
+			end
+		else
+			ent.bgn_orphan_since = nil
 		end
 	end
 end)

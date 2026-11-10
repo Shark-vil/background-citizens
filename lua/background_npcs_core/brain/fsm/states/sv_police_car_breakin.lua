@@ -1,10 +1,11 @@
 --[[
-	An officer goes to break into the car of a player who stands still in it (systems/arrest/sv_car_breakin.lua
-	starts it and runs the break-in). It holds fire on the way: its enemies are put aside and come back when the
-	state stops, so driving off turns it back into a fight. The player is its target meanwhile.
-	data.target: the player.
+	An officer goes to break into the car of a suspect (a player or an actor) who stands still in it
+	(systems/arrest/sv_car_breakin.lua starts it and runs the break-in). It holds fire on the way: its enemies are put
+	aside and come back when the state stops, so driving off turns it back into a fight. The suspect is its target meanwhile.
+	data.target: the suspect's entity.
 --]]
 
+local ArrestModule = bgNPC.Modules.Get('player_arrest')
 local REACH_SQR = 120 ^ 2
 
 -- back to the fight (the enemies return in stop), or walk; never stay here
@@ -14,17 +15,11 @@ local function Leave(actor, data)
 	if actor:HasState('police_car_breakin') then actor:SetState('walk', nil, true) end
 end
 
-local function TargetCar(ply)
-	-- the player drove off: a new still table, not called yet
-	if not IsValid(ply) or not ply:Alive() or not ply:InVehicle() or not (ply.bgn_still and ply.bgn_still.called) then return end
-	local vehicle = ply:GetVehicle()
-	return IsValid(vehicle:GetParent()) and vehicle:GetParent() or vehicle
-end
-
 bgNPC.States.Register('police_car_breakin', 'guarded', {
 	pre_start = function(actor, state, data)
 		local ply = data.target
-		if not TargetCar(ply) then return true end
+		-- the suspect drove off, stepped out or died: no called break-in any more
+		if not ArrestModule:BreakinCar(ply) then return true end
 		if actor:InVehicle() then actor:ExitVehicle() end
 
 		local enemies = table.Copy(actor.enemies)
@@ -41,7 +36,7 @@ bgNPC.States.Register('police_car_breakin', 'guarded', {
 		return not data.leaving
 	end,
 	update = function(actor, state, data)
-		local car = TargetCar(data.target)
+		local car = ArrestModule:BreakinCar(data.target)
 		if not car then return Leave(actor, data) end
 
 		local npc = actor:GetNPC()

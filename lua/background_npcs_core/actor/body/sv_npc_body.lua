@@ -11,7 +11,7 @@ local COMBAT_SCHEDULES = {}
 for _, schedule in ipairs({
 	SCHED_HIDE_AND_RELOAD, SCHED_RELOAD, SCHED_ESTABLISH_LINE_OF_FIRE,
 	SCHED_RANGE_ATTACK1, SCHED_RANGE_ATTACK2, SCHED_SPECIAL_ATTACK1, SCHED_SPECIAL_ATTACK2,
-	SCHED_MELEE_ATTACK1, SCHED_MELEE_ATTACK2, SCHED_FAIL, SCHED_FAIL_ESTABLISH_LINE_OF_FIRE, SCHED_SLEEP, SCHED_NPC_FREEZE,
+	SCHED_MELEE_ATTACK1, SCHED_MELEE_ATTACK2, SCHED_SLEEP, SCHED_NPC_FREEZE,
 }) do
 	if schedule then COMBAT_SCHEDULES[schedule] = true end
 end
@@ -63,8 +63,11 @@ end
 function NPCBody:MoveTo(pos, run)
 	local ent = self.ent
 	if not IsValid(ent) or self:IsBusyInCombat() then return end
+	local schedule = run and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO
+	if self.moveGoal and self.moveGoal:DistToSqr(pos) < 1 and ent:IsCurrentSchedule(schedule) then return end
+	self.moveGoal = pos
 	ent:SetLastPosition(pos)
-	self:RunSchedule(run and SCHED_FORCED_GO_RUN or SCHED_FORCED_GO)
+	self:RunSchedule(schedule)
 end
 
 function NPCBody:StopMoving()

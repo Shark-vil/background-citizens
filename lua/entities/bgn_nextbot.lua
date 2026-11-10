@@ -30,6 +30,10 @@ local DOOR_CHECK_PERIOD = 0.5
 local STUCK_TELEPORT_TIME = 3
 local PROGRESS_PERIOD = 1.5
 local MIN_PROGRESS_SQR = 16 ^ 2
+local PULL_OUT_STALLS = 3      -- stalled progress checks in a row before the bot is pulled out
+local PULL_OUT_RADIUS = 220
+local PULL_OUT_MIN_SQR = 70 ^ 2
+local PULL_OUT_GOAL_SQR = 150 ^ 2 -- standing this close to its goal is not being stuck
 local SIDESTEP_TIME = 0.8
 local SIDESTEP_DIST = 80
 local CONTACT_PUSH = 60
@@ -159,6 +163,9 @@ function ENT:Initialize()
 	self:SetHealth(self.bgn_health or 100)
 	self:SetMaxHealth(self:Health())
 	self:BGN_ResetHull()
+	-- HL2 NPC senses look only at NPCs, players and FL_OBJECT entities (registered at spawn): without it an NPC
+	-- that hates the bot never "sees" it and only faces it, never shoots
+	self:AddFlags(FL_OBJECT)
 
 	self.loco:SetStepHeight(18)
 	self.loco:SetJumpHeight(58)
@@ -541,6 +548,38 @@ function ENT:OpenDoorsAhead()
 	door:Fire('Open')
 end
 
+-- A bot teleported into a parked car or a prop stays inside it: only free spots are valid.
+local function IsSpotFree(bot, spot)
+	local hull = util.TraceHull({ start = spot + Vector(0, 0, 2), endpos = spot + Vector(0, 0, 2),
+		mins = HULL_MINS, maxs = HULL_MAXS, mask = MASK_NPCSOLID, filter = bot })
+	return not hull.StartSolid and not hull.Hit
+end
+
+-- Hops to a free nav spot a few steps away (closer to the goal when possible): the bot is wedged against a car, a prop
+-- or another body and the path follower cannot get it out. Short, so it does not need the "hidden from players" rule.
+-- @return boolean true if the bot was moved
+function ENT:PullOut()
+	local pos = self:GetPos()
+	local goal = self.move_goal
+	local best, best_dist
+	for _, area in ipairs(navmesh.Find(pos, PULL_OUT_RADIUS, 40, 40)) do
+		for _ = 1, 2 do
+			local spot = area:GetRandomPoint()
+			local away = spot:DistToSqr(pos)
+			if away >= PULL_OUT_MIN_SQR and away <= PULL_OUT_RADIUS ^ 2 then
+				local dist = goal and spot:DistToSqr(goal) or away
+				if (not best_dist or dist < best_dist) and IsSpotFree(self, spot) then best, best_dist = spot, dist end
+			end
+		end
+	end
+	if not best then return false end
+	self:SetPos(best + Vector(0, 0, 2))
+	self.loco:ClearStuck()
+	self.stuck_since, self.progress_pos, self.stalls = nil, nil, 0
+	self.path_dirty = true
+	return true
+end
+
 function ENT:HandleStuck(path)
 	if not self.stuck_since then
 		self.stuck_since = CurTime()
@@ -549,26 +588,31 @@ function ENT:HandleStuck(path)
 
 	if CurTime() - self.stuck_since < STUCK_TELEPORT_TIME then return end
 	local goal = path:GetCurrentGoal()
-	-- a player who sees the bot or the goal gets no teleport: try again in a second
-	if goal and not bgNPC:IsHiddenSpawnPosition(goal.pos, self) then
+	-- a player who sees the bot or the goal gets no far teleport: pull out nearby instead
+	if goal and IsSpotFree(self, goal.pos) and bgNPC:IsHiddenSpawnPosition(goal.pos, self) then
+		self:SetPos(goal.pos)
+		self.loco:ClearStuck()
+		self.stuck_since = nil
+	elseif not self:PullOut() then
 		self.stuck_since = CurTime() - STUCK_TELEPORT_TIME + 1
-		return
 	end
-	if goal then self:SetPos(goal.pos) end
-	self.loco:ClearStuck()
-	self.stuck_since = nil
 end
 
 -- Bots pushing into each other in a crowd never become loco:IsStuck, they just stop making progress.
--- Then the bot steps aside for a moment and repaths.
+-- Then the bot steps aside for a moment and repaths; still no progress after that: it is pulled out.
 function ENT:CheckProgress()
 	local now = CurTime()
 	if now < (self.progress_check or 0) then return end
 	local pos = self:GetPos()
 	if self.progress_pos and pos:DistToSqr(self.progress_pos) < MIN_PROGRESS_SQR then
+		self.stalls = (self.stalls or 0) + 1
+		local goal = self.move_goal
+		if self.stalls >= PULL_OUT_STALLS and goal and pos:DistToSqr(goal) > PULL_OUT_GOAL_SQR and self:PullOut() then return end
 		self.sidestep_pos = pos + self:GetRight() * (math.random(2) == 1 and SIDESTEP_DIST or -SIDESTEP_DIST)
 		self.sidestep_until = now + SIDESTEP_TIME
 		self.path_dirty = true
+	else
+		self.stalls = 0
 	end
 	self.progress_pos = pos
 	self.progress_check = now + PROGRESS_PERIOD

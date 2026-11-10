@@ -1,9 +1,8 @@
-local dvd = DecentVehicleDestination
-if not dvd then return end
 if SERVER then util.AddNetworkString('BGN_DvPoliceDebugDrawPath') end
 AddCSLuaFile()
 ENT.Base = 'npc_decentvehicle'
-ENT.PrintName = dvd.Texts.npc_dvpolice
+ENT.Type = 'anim'
+ENT.PrintName = 'BGN DV Police'
 ENT.DV_Police = true
 -- Drives to the driver's enemy (police) or to actor.drive_target_pos (medics) by the shortest way:
 -- against the lane direction, across lanes, red lights ignored. Without a target it is a normal DV car.
@@ -86,6 +85,7 @@ local graph, graph_size
 -- Undirected waypoint graph: DV links both ways plus jumps to nearby waypoints in sight. Built once per waypoint set.
 -- shortcut: rebuilt only when the waypoint count changes, an edit that keeps the count keeps the old graph
 local function BuildGraph()
+    local dvd = DecentVehicleDestination
     local wps = dvd.Waypoints
     local adj, grid = {}, {}
     local function Cell(x, y) return math.floor(x / JUMP_DIST) .. ':' .. math.floor(y / JUMP_DIST) end
@@ -147,6 +147,7 @@ local function IsVisibleTarget(self, pos, enemy)
 end
 
 local function FindPath(self, target_pos, enemy)
+    local dvd = DecentVehicleDestination
     self.NextWaypoint = nil
     self.WaypointList = {}
     if IsVisibleTarget(self, target_pos, enemy) then
@@ -187,7 +188,7 @@ end
 -- @return Vector|nil, Entity|nil where to drive: the point the driver was sent to (an ambulance must not chase
 -- the medic's enemy), otherwise the driver's enemy
 local function GetTarget(self)
-    local provider = BGN_VEHICLE:GetVehicleProvider(self.v)
+    local provider = self.bgnProvider or BGN_VEHICLE:GetVehicleProvider(self.v)
     local actor = provider and provider:GetDriver()
     if not actor or not actor:IsAlive() then return end
     if actor.drive_target_pos then return actor.drive_target_pos end
@@ -202,7 +203,7 @@ function ENT:CarCollide(data)
         if dv.v == hitEnt then return end
     end
 
-    local vehicle_provider = BGN_VEHICLE:GetVehicleProvider(self)
+    local vehicle_provider = self.bgnProvider or BGN_VEHICLE:GetVehicleProvider(self)
     local actor = vehicle_provider and vehicle_provider:GetDriver()
     if not actor or not actor:IsAlive() or not actor:HasTeam('police') then return end
 
@@ -253,6 +254,7 @@ function ENT:Think()
     self.UpdateWaypointListDelay = self.UpdateWaypointListDelay or 0
 
     if target_pos then
+        self.TargetSeenAt = CurTime()
         if not self.IsTargetExists then
             self.IsTargetExists = true
             self.Preference.GiveWay = false
@@ -274,7 +276,8 @@ function ENT:Think()
             -- a moving target needs fresh paths, close to it more often
             self.UpdateWaypointListDelay = CurTime() + (self:GetPos():DistToSqr(target_pos) < 1000000 and 1 or 3)
         end
-    elseif self.IsTargetExists then
+    -- a target that blinks out for a moment (a car seat swap, a health read) must not toggle the siren
+    elseif self.IsTargetExists and CurTime() - (self.TargetSeenAt or 0) > 3 then
         self.IsTargetExists = false
         self.WaypointList = {}
         self.Waypoint = nil

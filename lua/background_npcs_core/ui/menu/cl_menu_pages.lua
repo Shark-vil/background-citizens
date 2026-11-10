@@ -173,11 +173,15 @@ Menu.AddPage('spawn', {
 		page:Section('#bgn.menu.section.main')
 		page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
 		page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
+		if istable(DecentVehicleDestination) then
+			page:Slider('bgn_vehicle_spawn_visibility_radius', '#bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000)
+		end
 		page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
 		page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, { decimals = 1 })
 
 		page:Section('#bgn.menu.section.teleport')
 		page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
+		page:Slider('bgn_actor_unseen_time', '#bgn.settings.spawn.actor_unseen_time', 0, 600)
 		page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
 		page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
 
@@ -196,11 +200,13 @@ Menu.AddPage('wanted', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.wanted',
 	icon = ICONS .. 'wanted.png',
-	order = 400,
+	order = 600,
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
+		page:Slider('bgn_wanted_detection_radius', '#bgn.settings.wanted.detection_radius', 0, 5000)
 		page:Toggle('bgn_wanted_level', '#bgn.settings.wanted.level')
+		page:Slider('bgn_wanted_level_up_period', '#bgn.settings.wanted.level_up_period', 0, 600)
 		page:Toggle('bgn_wanted_police_instantly', '#bgn.settings.wanted.police_instantly')
 		page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)
 		page:Slider('bgn_wanted_impunity_limit', '#bgn.settings.wanted.impunity_limit', 0, 50)
@@ -226,7 +232,7 @@ Menu.AddPage('arrest', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.arrest',
 	icon = ICONS .. 'arrest.png',
-	order = 500,
+	order = 700,
 	build = function(page)
 		page:Toggle('bgn_arrest_mode', '#bgn.settings.arrest.arrest_mode')
 		page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, { decimals = 1 })
@@ -234,6 +240,7 @@ Menu.AddPage('arrest', {
 		page:Slider('bgn_arrest_surrender_delay', '#bgn.settings.arrest.surrender_delay', 0, 120, { decimals = 1 })
 		page:Slider('bgn_arrest_car_wait', '#bgn.settings.arrest.car_wait', 0, 60, { decimals = 1 })
 		page:Slider('bgn_arrest_car_time', '#bgn.settings.arrest.car_time', 1, 60, { decimals = 1 })
+		page:Slider('bgn_police_car_kill_time', '#bgn.settings.arrest.car_kill_time', 0, 300, { decimals = 0 })
 	end,
 })
 
@@ -241,7 +248,7 @@ Menu.AddPage('behavior', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.behavior',
 	icon = ICONS .. 'behavior.png',
-	order = 600,
+	order = 500,
 	build = function(page)
 		page:Section('#bgn.menu.section.ai')
 		page:Choice('bgn_brain', '#bgn.menu.brain', {
@@ -254,6 +261,7 @@ Menu.AddPage('behavior', {
 		page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
 		page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
 		page:Slider('bgn_enemy_share_period', '#bgn.menu.enemy_share_period', 0, 10)
+		page:Slider('bgn_fight_cooldown', '#bgn.menu.fight_cooldown', 0, 120)
 
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
@@ -270,6 +278,7 @@ Menu.AddPage('behavior', {
 		page:Section('#bgn.menu.section.medics')
 		page:Slider('bgn_medic_danger_time', '#bgn.menu.medic_danger_time', 0, 600)
 		page:Slider('bgn_medic_danger_radius', '#bgn.menu.medic_danger_radius', 0, 5000)
+		page:Slider('bgn_medic_hopeless_chance', '#bgn.menu.medic_hopeless_chance', 0, 100)
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')
@@ -281,7 +290,7 @@ Menu.AddPage('navigation', {
 	group = SERVER_GROUP,
 	title = '#bgn.menu.page.navigation',
 	icon = ICONS .. 'navigation.png',
-	order = 700,
+	order = 400,
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Choice('bgn_nav_provider', '#bgn.menu.nav_provider', {

@@ -43,7 +43,7 @@ function Actor:SetWalkType(move_type)
 end
 
 function Actor:StopWalk()
-	if self.walkPos or IsValid(self.walkTarget) then
+	if self.walkPos or IsValid(self.walkTarget) or self.dvDetour then
 		self:ClearSchedule()
 	end
 
@@ -53,6 +53,7 @@ function Actor:StopWalk()
 	self.walkUpdatePathDelay = 0
 	self.pathType = nil
 	self.isChase = false
+	self.dvDetour, self.dvAvoidActive = nil, nil
 	self:SetWalkType()
 end
 
@@ -205,10 +206,32 @@ local function UpdateVehicleMovement(actor, walk_pos)
 	end
 end
 
+-- Local traffic navigation preserves the actor's state and original destination.
+function Actor:AvoidDVVehicle(goal)
+	if not istable(DecentVehicleDestination) or not GetConVar('bgn_enable_dv_support'):GetBool()
+		or self:InVehicle() or self:GetState() == 'go_to_police_car' then
+		self.dvDetour = nil
+		return false
+	end
+	if not self.body or not self.body:IsThinkEnabled() or self.body:IsBusyInCombat()
+		or self:IsAnimationPlayed() or not self:IsSequenceFinished() then return false end
+	return bgNPC.PedestrianTraffic and bgNPC.PedestrianTraffic.Update(self, goal) or false
+end
 -- Moves the NPC along the current path. Called by the movement service.
 function Actor:UpdateMovement()
 	if not self.mechanics.movement_controller then return end
 	if self.is_animated or not self:IsAlive() then return end
+	local goal = IsValid(self.walkTarget) and self.walkTarget:GetPos() or self.walkPos
+	for _, point in ipairs(self.walkPath) do
+		if self.npc:GetPos():DistToSqr(point) > MOVEMENT_FINISHED_DIST_SQR then goal = point; break end
+	end
+	local avoiding = self:AvoidDVVehicle(goal)
+	if self.dvAvoidActive and not avoiding and self.body and not self:InVehicle()
+		and not self:IsAnimationPlayed() and self:IsSequenceFinished() and not self.body:IsBusyInCombat() then
+		self.body:StopMoving()
+	end
+	self.dvAvoidActive = avoiding
+	if avoiding then return end
 
 	local walk_target = self.walkTarget
 	local has_target = IsValid(walk_target)

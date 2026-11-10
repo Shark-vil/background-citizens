@@ -1,5 +1,5 @@
 --[[
-	Actor: a Background NPCs character bound to an NPC or NextBot entity.
+	Actor: a character with an NPC/NextBot body on foot and a DV visual while seated.
 
 	The class is split into partial files, each adds one group of methods:
 		actor/components/sh_state.lua      states and random reactions
@@ -177,7 +177,8 @@ end
 -- Runs one tick after creation, when the entity is fully spawned.
 local function PostInitialize(actor, not_sync_actor_on_client, not_auto_added_to_list)
 	local npc = actor.npc
-	if not IsValid(npc) then return end
+	-- removed in its first tick: registering it would keep a dead actor in the lists and its limit slot taken
+	if not IsValid(npc) or actor.is_removed then return end
 
 	local data = actor.data
 
@@ -368,12 +369,23 @@ end
 
 function Actor:GetGenderByModel()
 	if not IsValid(self.npc) then return 'unknown' end
-	return H.GenderByModel(self.npc:GetModel())
+	return H.GenderByModel(self:InVehicle() and self.model or self.npc:GetModel())
 end
 
 function Actor:Health()
 	local npc = self.npc
-	return IsValid(npc) and npc:Health() or 0
+	if IsValid(npc) and isfunction(npc.Health) then return npc:Health() end
+	return self.vehicle_body and self.vehicle_body.health or 0
+end
+
+function Actor:GetHealth()
+	return self:Health()
+end
+
+function Actor:GetMaxHealth()
+	local npc = self.npc
+	if IsValid(npc) and isfunction(npc.GetMaxHealth) then return npc:GetMaxHealth() end
+	return self.vehicle_body and self.vehicle_body.max_health or 0
 end
 
 -- ---------------------------------------------------------------------------
@@ -386,15 +398,17 @@ function Actor:IsAlive()
 	if self.is_removed then return false end
 
 	local is_dead
-	if self.body then
+	if self.vehicle_body then
+		is_dead = self:Health() <= 0 or not self.vehicle or not self.vehicle:IsValid()
+	elseif self.body then
 		is_dead = self.body:IsDead()
 	else
 		local npc = self.npc
-		is_dead = not IsValid(npc) or npc:Health() <= 0
+		is_dead = not IsValid(npc) or self:Health() <= 0
 	end
 
 	if is_dead then
-		self:RemoveActor()
+		if SERVER then self:RemoveActor() end
 		return false
 	end
 
@@ -406,7 +420,12 @@ function Actor:RemoveActor()
 	if self.is_removed then return end
 	self.is_removed = true
 	if self.brain then self.brain:Stop() end
-	bgNPC.Actors.Unregister(self.npc)
+	bgNPC.Actors.UnregisterActor(self)
+	local provider = self.vehicle
+	self.vehicle, self.vehicle_body = nil, nil
+	if provider then
+		if provider.driver == self then provider:SetDriver(nil) else provider:RemovePassenger(self) end
+	end
 end
 
 -- Unregisters the actor and removes the entity.
@@ -427,7 +446,8 @@ function Actor:IsNextBot()
 	return IsValid(self.npc) and self.npc:IsNextBot()
 end
 
--- ! Can return NULL, use IsAlive before working with the entity.
+-- In a vehicle this is the DV anim entity, not an NPC/NextBot.
+-- ! Can return NULL during body replacement; validate before using the entity.
 function Actor:GetNPC()
 	return self.npc
 end

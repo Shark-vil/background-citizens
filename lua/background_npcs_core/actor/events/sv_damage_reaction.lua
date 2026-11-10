@@ -36,6 +36,8 @@ hook.Add('BGN_PostReactionTakeDamage', 'BGN_ActorsReactionToDamageAnotherActor',
 		if hook_result then continue end
 
 		reaction = actor:GetLastReaction()
+		-- blocked by the fight delay (Actor:GetReactionForProtect): no enemy, busy or not, like the other callers
+		if actor.protect_blocked_enemy == attacker then continue end
 
 		if actor:EqualStateGroup('calm') then
 			if reaction == 'ignore' or reaction == 'none' then continue end

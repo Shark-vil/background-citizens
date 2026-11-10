@@ -12,13 +12,10 @@ local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local FrameTime = FrameTime
 -- local LocalToWorld = LocalToWorld
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
 local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 local spawn_radius_sqrt = spawn_radius ^ 2
-local radius_visibility_sqrt = radius_visibility ^ 2
 local block_radius_sqrt = block_radius ^ 2
 --
 
@@ -39,6 +36,7 @@ end
 local BODY_POINTS = { Vector(0, 0, 10), Vector(0, 0, 40), Vector(0, 0, 64) } -- feet, chest, head
 
 local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
+	local block_radius_sqr = cvar_bgn_spawn_block_radius:GetFloat() ^ 2
 	-- local entities = ents_FindInSphere(node_position, 150)
 	-- for e = 1, #entities do
 	-- 	local ent = entities[e]
@@ -53,7 +51,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 		local ply_pos = ply:GetPos()
 		local distance = node_position:DistToSqr(ply_pos)
 
-		if distance <= block_radius_sqrt then
+		if distance <= block_radius_sqr then
 			return false
 		end
 
@@ -62,18 +60,17 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 		end
 
 		local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
-		if in_view and distance <= radius_visibility_sqrt then return false end
 
-		-- close spots behind the player need cover too: one turn of the head and the actor stood right there
-		if in_view or distance <= radius_visibility_sqrt then
+		-- Offscreen spots outside the block radius must stay available, as in 1.x.
+		if in_view then
 			if not util.IsInWorld(node_position) then return false end
 
 			-- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
 			-- and that counted as "hidden behind something" - actors appeared right in front of the player
 			local ply_eye_pos = ply:EyePos()
 			for b = 1, #BODY_POINTS do
-				local tr = util.TraceLine({ start = ply_eye_pos, endpos = node_position + BODY_POINTS[b], mask = MASK_VISIBLE })
-				if not tr.Hit then return false end
+				local tr = util.TraceLine({ start = ply_eye_pos, endpos = node_position + BODY_POINTS[b], mask = MASK_VISIBLE, filter = ply })
+				if not tr.Hit or tr.StartSolid then return false end
 			end
 		end
 	end
@@ -81,37 +78,52 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 	return true
 end
 
-local function FindSpawnLocationProcess(all_players, settings, is_async)
+local function FindFrontSpawnPosition(points, all_players, target_entity)
+	if not Chance(50) then return end
+
+	local checked = {}
+	for i = 1, math.min(#points, 32) do
+		local pos = points[i]:GetPos()
+		local in_view = false
+		for p = 1, #all_players do
+			if bgNPC.Vision.PlayerCanSeePos(all_players[p], pos) then
+				in_view = true
+				break
+			end
+		end
+		if in_view then
+			checked[i] = true
+			if not bgNPC.Util.IsVectorInWater(pos) and IsNotBlockSpawnPosition(pos, all_players, target_entity) then
+				return pos
+			end
+		end
+	end
+	return nil, checked
+end
+
+local function FindSpawnLocationProcess(all_players, settings)
 	spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-	radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
 	block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 	spawn_radius_sqrt = spawn_radius ^ 2
-	radius_visibility_sqrt = radius_visibility ^ 2
 	block_radius_sqrt = block_radius ^ 2
 
 	local desired_position = settings.position
 	local teleport_radius = settings.radius or spawn_radius
 	local target_entity = settings.target
-	local AsyncYield = bgNPC.Tasks.Budget
-
-	if teleport_radius and teleport_radius <= block_radius then
-		teleport_radius = radius_visibility
-	end
 
 	local points = bgNPC.Points.GetInRadius(desired_position, teleport_radius, 'walk')
 	local points_count = #points
 	local nodePosition
+	local checked
 
 	if points_count ~= 0 then
-		if is_async then AsyncYield() end
 		points = table_shuffle(points)
-		if is_async then AsyncYield() end
+		nodePosition, checked = FindFrontSpawnPosition(points, all_players, target_entity)
+		if nodePosition then return nodePosition end
 	elseif bgNPC.Points.Count() == 0 then
 		spawn_radius = math.Clamp(spawn_radius, 0, 1500)
-		radius_visibility = math.Clamp(radius_visibility, 0, 1000)
 		block_radius = math.Clamp(block_radius, 0, 600)
 		spawn_radius_sqrt = spawn_radius ^ 2
-		radius_visibility_sqrt = radius_visibility ^ 2
 		block_radius_sqrt = block_radius ^ 2
 
 		local dist_x = math.random(block_radius, spawn_radius)
@@ -137,6 +149,8 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 	end
 
 	for i = 1, points_count do
+		-- Failed priority candidates already passed through the same spawn checks.
+		if checked and checked[i] then continue end
 		local walkNode = points[i]
 		nodePosition = walkNode:GetPos()
 
@@ -144,8 +158,6 @@ local function FindSpawnLocationProcess(all_players, settings, is_async)
 			nodePosition = nil
 			continue
 		end
-
-		if is_async then AsyncYield() end
 
 		if not IsNotBlockSpawnPosition(nodePosition, all_players, target_entity) then
 			nodePosition = nil
@@ -200,7 +212,7 @@ function bgNPC:NPCIsStuck(npc, position)
 	return false
 end
 
--- re-check right before spawning: the async search yields for many ticks and the player turns meanwhile
+-- Recheck with current player positions and block radius immediately before spawning or moving.
 function bgNPC:IsHiddenSpawnPosition(pos, target)
 	return IsNotBlockSpawnPosition(pos, player.GetHumans(), target)
 end
@@ -216,6 +228,7 @@ function bgNPC:FindSpawnPosition(settings, is_async)
 		-- handled by the dedicated zone-boost spawner (sv_zone_spawner.lua), which
 		-- targets specific actor types instead of blindly pulling every spawn
 		-- toward whichever area happens to be nearby.
+		if #all_players == 0 then return end
 		local ply = table_RandomBySeq(all_players)
 		desired_position = ply:GetPos()
 	end
@@ -223,21 +236,22 @@ function bgNPC:FindSpawnPosition(settings, is_async)
 	settings.position = desired_position
 	if not settings.position then return end
 
-	local nodePosition = FindSpawnLocationProcess(all_players, settings, is_async)
+	local nodePosition = FindSpawnLocationProcess(all_players, settings)
 	if nodePosition and isvector(nodePosition) then
 		return nodePosition
 	end
 end
 
 function bgNPC:FindSpawnPositionAsync(settings)
-	return self:FindSpawnPosition(settings, true)
+	-- Legacy name: searches never yield between validation and the caller's spawn.
+	return self:FindSpawnPosition(settings)
 end
 
 do
 	local random_models_storage = {}
 	local table_HasValueBySeq = bgNPC.Table.HasValue
 
-	function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect)
+	function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden)
 		if player.GetCount() == 0 then return end
 		if bgNPC.Util.IsVectorInWater(desiredPosition) then return end
 
@@ -283,6 +297,12 @@ do
 				if not IsValid(npc) then return end
 				npc:Remove()
 			end)
+			return
+		end
+
+		-- Spawn hooks may move the entity (e.g. a helicopter is lifted above its ground point).
+		if require_hidden and not bgNPC:IsHiddenSpawnPosition(npc:GetPos()) then
+			npc:Remove()
 			return
 		end
 

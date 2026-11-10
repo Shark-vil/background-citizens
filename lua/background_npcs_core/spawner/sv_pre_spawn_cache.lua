@@ -21,7 +21,7 @@ local function spawn_npc(npc_class, models, spawn_position, spawn_angle)
 end
 
 local function spawn_vehicle(vehicle_class, spawn_position, spawn_angle)
-	local vehicle = bgNPC:SpawnVehicle(car_class, spawn_position, spawn_angle)
+	local vehicle = bgNPC:SpawnVehicle(vehicle_class, spawn_position, spawn_angle)
 	if not IsValid(vehicle) then return end
 	vehicle:Remove()
 end

@@ -81,6 +81,7 @@ function VEHICLE:Initialize()
 	end
 
 	local provider = self
+	decentvehicle.bgnProvider = provider
 	decentvehicle:SetPos(vehicle:GetPos())
 	decentvehicle.DontUseSpawnEffect = true
 	decentvehicle.DoNotDuplicate = true -- runtime driver AI, not a second actor
@@ -92,6 +93,7 @@ function VEHICLE:Initialize()
 
 	decentvehicle:Spawn()
 	decentvehicle:Activate()
+	if vehicle.isBgnVehicle and bgNPC.VehicleTraffic then bgNPC.VehicleTraffic.Attach(decentvehicle) end
 
 	self.ai = decentvehicle
 end
@@ -101,6 +103,10 @@ function VEHICLE:GetDriver()
 	local driver = self.driver
 	if not driver or not driver:IsAlive() then return end
 	return driver
+end
+
+function VEHICLE:CanUse(actor)
+	return IsValid(self.vehicle) and (not self.vehicle.bgnPoliceVehicle or actor:HasTeam('police'))
 end
 
 -- Sets the driver actor. nil removes the driver and the AI.
@@ -115,7 +121,8 @@ function VEHICLE:SetDriver(actor)
 		return
 	end
 
-	if self.driver == actor then return end
+	if self.driver == actor then return IsValid(self.ai) end
+	if not self:CanUse(actor) then return false end
 
 	if self.driver then self:RemovePassenger(self.driver) end
 	self:RemovePassenger(actor)
@@ -126,6 +133,12 @@ function VEHICLE:SetDriver(actor)
 	if IsValid(self.ai) then self.ai:Remove() end
 	self.ai = nil
 	self:Initialize()
+	if not IsValid(self.ai) then
+		table.RemoveByValue(self.passengers, actor)
+		self.driver = nil
+		return false
+	end
+	return true
 end
 
 local function FindFreeSeat(vehicle)
@@ -140,6 +153,9 @@ end
 -- @return boolean true on success
 function VEHICLE:AddPassenger(actor)
 	Assert.Arg(1, actor, 'actor', 'VEHICLE:AddPassenger')
+	if not self:CanUse(actor) then return false end
+	-- an officer rides only with its own, never beside a civilian or an offender at the wheel
+	if actor:HasTeam('police') and actor.last_vehicle ~= self and string.Explode('|', self.type)[1] ~= 'police' then return false end
 
 	if table_HasValueBySeq(self.passengers, actor) then return false end
 	if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
@@ -162,11 +178,12 @@ function VEHICLE:AddPassenger(actor)
 	passenger:SetPos(vehicle:GetPos())
 	passenger:Spawn()
 	passenger:Activate()
+	if not IsValid(passenger) then return false end
 
 	table.insert(self.passengers_models, passenger)
 	table.insert(self.passengers, actor)
 
-	return true
+	return true, passenger
 end
 
 function VEHICLE:RemovePassengerModel(actor)
@@ -195,7 +212,8 @@ function VEHICLE:PassengersRecalculate()
 	for i = #self.passengers, 1, -1 do
 		local actor = self.passengers[i]
 		if not actor or not actor:IsAlive() then
-			table.remove(self.passengers, i)
+			-- IsAlive may already detach a dead occupant.
+			if self.passengers[i] == actor then table.remove(self.passengers, i) end
 		end
 	end
 end
@@ -204,11 +222,22 @@ function VEHICLE:GetVehicle()
 	return self.vehicle
 end
 
--- An empty car the actor may take back: the one it left, or one of its group (police, bandits, ...).
+-- An empty car it may take back, or a free passenger seat after its former driver returned.
 -- Not someone else's residents car: police and medics are residents too, and citizens keep to their own.
 function VEHICLE:CanBoard(actor)
 	local vehicle = self.vehicle
-	if not IsValid(vehicle) or self:GetDriver() or IsValid(vehicle:GetDriver()) then return false end
+	if not self:CanUse(actor) then return false end
+	if not IsValid(vehicle) then return false end
+	if actor:HasTeam('police') and vehicle:GetMaxHealth() > 0 then
+		local health = vehicle.GetCurHealth and vehicle:GetCurHealth() or vehicle:Health()
+		if health <= vehicle:GetMaxHealth() * .2 then return false end
+	end
+	local seated = vehicle:GetDriver()
+	if IsValid(seated) and seated ~= self.ai then return false end
+	if self:GetDriver() then
+		return actor.last_vehicle == self and (self.passengers_limit == -1 or #self.passengers < self.passengers_limit)
+			and FindFreeSeat(vehicle) ~= nil
+	end
 	if actor.last_vehicle == self then return true end
 	local group = string.Explode('|', self.type)[1]
 	return group ~= 'residents' and actor:HasTeam(group)
@@ -218,9 +247,12 @@ end
 -- empty or driven by an actor, never by a player.
 function VEHICLE:CanSeize(actor)
 	local vehicle = self.vehicle
+	if not self:CanUse(actor) then return false end
 	if not IsValid(vehicle) or IsValid(vehicle:GetDriver()) then return false end
 	local group = string.Explode('|', self.type)[1]
 	if group == actor:GetVehicleGroup() then return false end
+	-- ambulances are untouchable: no confiscation, no carjacking
+	if group == 'medics' then return false end
 	-- not from its own people (everyone shares 'residents', so that team doesn't count)
 	local driver = self:GetDriver()
 	return not (driver and group ~= 'residents' and driver:HasTeam(actor))
@@ -230,6 +262,7 @@ end
 function VEHICLE:SetGroup(vehicle_type)
 	self.type = vehicle_type or 'residents'
 	SetupVehicleGroup(self, vehicle_type)
+	if self.type == 'police' then self.vehicle.bgnPoliceVehicle = true end
 end
 
 -- Throws everyone out; they are scared of the one who did it.
@@ -262,18 +295,20 @@ function VEHICLE:IsDestroyed()
 	return not self:IsValid()
 end
 
--- Drops all passengers out and removes the vehicle with its AI.
-function VEHICLE:Remove()
-	self:PassengersRecalculate()
-
-	-- ExitVehicle modifies the passengers list, iterate over a copy.
+-- Vehicle deletion removes its logical crew; it must never spawn bodies during cleanup.
+function VEHICLE:RemoveActors()
+	if self.removing then return end
+	self.removing = true
 	local passengers = {}
 	for i = 1, #self.passengers do passengers[i] = self.passengers[i] end
-
 	for i = 1, #passengers do
-		passengers[i]:ExitVehicle(true)
+		passengers[i]:Remove()
 	end
+	if self.driver then self.driver:Remove() end
+end
 
+function VEHICLE:Remove()
+	self:RemoveActors()
 	local vehicle = self.vehicle
 	if IsValid(vehicle) then
 		for _, child in ipairs(vehicle:GetChildren()) do
@@ -314,6 +349,13 @@ function BGN_VEHICLE:Instance(vehicle_entity, vehicle_type, actor_type)
 	obj.passengers_limit = -1
 
 	SetupVehicleGroup(obj, vehicle_type)
+	-- Keep police ownership even if a later driver changes the provider's group.
+	if string.Explode('|', obj.type)[1] == 'police' then vehicle_entity.bgnPoliceVehicle = true end
+	if SERVER then
+		vehicle_entity:CallOnRemove('BGN_RemoveCrew', function()
+			obj:RemoveActors()
+		end)
+	end
 
 	return obj
 end
@@ -327,7 +369,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 		local limit = self.Waypoint and self.Waypoint.SpeedLimit
 		if not limit then return original_GetCurrentMaxSpeed(self) end
 
-		local provider = BGN_VEHICLE:GetVehicleProvider(self)
+		local provider = self.bgnProvider or BGN_VEHICLE:GetVehicleProvider(self)
 		local actor = provider and provider:GetDriver()
 		if not actor then return original_GetCurrentMaxSpeed(self) end
 
@@ -343,7 +385,7 @@ function BGN_VEHICLE:OverrideVehicle(decentvehicle)
 			new_limit = new_limit * actor.vehicle_multiply_speed[state_group]
 		end
 
-		if new_limit ~= limit then return new_limit end
+		if new_limit ~= limit then return original_GetCurrentMaxSpeed(self) * new_limit / math.max(limit, 1) end
 
 		return original_GetCurrentMaxSpeed(self)
 	end

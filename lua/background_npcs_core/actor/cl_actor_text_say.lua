@@ -22,6 +22,11 @@ local ACCENTS = {
 	zombies = Color(150, 200, 60),
 }
 
+local GANG_ACCENTS = {
+	gang_crows = Color(160, 132, 236),
+	gang_wolves = Color(232, 64, 64),
+}
+
 local speaking_actors = {}
 
 local function RemoveSpeakByUid(uid)
@@ -31,6 +36,10 @@ local function RemoveSpeakByUid(uid)
 end
 
 local function Accent(actor)
+	-- a gang's own color first: every gang member is also a bandit
+	for team, color in pairs(GANG_ACCENTS) do
+		if actor:HasTeam(team) then return color end
+	end
 	for team, color in pairs(ACCENTS) do
 		if actor:HasTeam(team) then return color end
 	end

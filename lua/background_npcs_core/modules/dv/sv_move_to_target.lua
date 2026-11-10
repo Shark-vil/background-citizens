@@ -128,11 +128,5 @@ timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
 				end
 			end
 		end
-
-		if IsValid(decentvehicle) then
-			-- police chasing someone, or a car sent somewhere (ambulance)
-			local siren = driver.drive_target_pos ~= nil or (driver:HasTeam('police') and driver:EnemiesCount() > 0)
-			if decentvehicle:GetELS() ~= siren then decentvehicle:SetELS(siren) end
-		end
 	end
 end)

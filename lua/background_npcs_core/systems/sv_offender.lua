@@ -6,6 +6,7 @@
 
 local TEAM = 'offenders'
 local SURRENDER_CHANCE = 40
+local SURRENDER_HEALTH_FRACTION = 0.5 -- a healthy offender never gives up
 local FLEE_RADIUS = 1500
 
 local WantedModule = bgNPC.Modules.Get('wanted')
@@ -18,22 +19,6 @@ local function MakeOffender(actor)
 	end
 	team[#team + 1] = TEAM
 	actor:SetTeam(team)
-end
-
--- Same chain as the arrest in sv_arrest.lua: the officer arrests, the offender gives up.
-local function Surrender(offender, police)
-	local npc = offender:GetNPC()
-	if not ArrestModule:AddTarget(npc, police) then return false end
-
-	if police:InVehicle() then police:ExitVehicle() end
-	offender:RemoveAllTargets()
-	offender:AddTarget(police:GetNPC())
-	offender:SetState('arrest_surrender', nil, true)
-
-	police:RemoveAllTargets()
-	police:AddTarget(npc)
-	police:SetState('arrest', nil, true)
-	return true
 end
 
 local function RunAway(offender)
@@ -52,11 +37,25 @@ local function RunAway(offender)
 	offender:SetState('fear', nil, true)
 end
 
+-- A civilian driver who rams an officer's car: no longer a teammate of the police, who then react to the hit as to an attack.
+function bgNPC.OffenderFromRamming(attacker)
+	local offender = bgNPC.Actors.Get(attacker)
+	if not offender or not offender:IsAlive() or not offender:IsCivilian() or offender:HasTeam('medics') then return end
+	MakeOffender(offender)
+	if GetConVar('bgn_enable_wanted_mode'):GetBool() and not bgNPC.Modes.IsPeaceful() then WantedModule:AddWanted(attacker) end
+end
+
+-- Medics are untouchable for the police: never an enemy, whatever team the medic ends up with.
+hook.Add('BGN_AddActorEnemy', 'BGN_MedicsImmuneToPolice', function(actor, ent)
+	local target = bgNPC.Actors.Get(ent)
+	if target and target:HasTeam('medics') and actor:HasTeam('police') then return true end
+end)
+
 hook.Add('BGN_OnKilledActor', 'BGN_Offender', function(victim, attacker)
 	if bgNPC.Modes.IsPeaceful() or not IsValid(attacker) or attacker == victim:GetNPC() then return end
 
 	local offender = bgNPC.Actors.Get(attacker)
-	if not offender or not offender:IsAlive() or not offender:IsCivilian() or not victim:HasTeam('residents') then return end
+	if not offender or not offender:IsAlive() or not offender:IsCivilian() or offender:HasTeam('medics') or not victim:HasTeam('residents') then return end
 
 	MakeOffender(offender)
 
@@ -65,7 +64,8 @@ hook.Add('BGN_OnKilledActor', 'BGN_Offender', function(victim, attacker)
 	WantedModule:AddWanted(attacker)
 
 	local police = ArrestModule:FoundPoliceInRadius(attacker)
-	if police and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and Surrender(offender, police) then
+	local hurt = attacker:Health() < attacker:GetMaxHealth() * SURRENDER_HEALTH_FRACTION
+	if police and hurt and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and ArrestModule:Surrender(offender, police) then
 		return
 	end
 	RunAway(offender)

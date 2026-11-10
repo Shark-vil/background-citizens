@@ -33,6 +33,33 @@ local REVIVE_OFFSETS = {
 
 local calls = {}
 Medics.calls = calls
+
+-- What the last hit was, to tell a death the medics can still fight for from one they cannot.
+-- Only an explosion or a point-blank shot is always fatal; a vehicle hit is saved with the ordinary chance.
+local POINT_BLANK_DIST_SQR = 150 ^ 2
+local SHOT_DAMAGE = bit.bor(DMG_BULLET, DMG_BUCKSHOT)
+hook.Add('EntityTakeDamage', 'BGN_Medics_LastDamage', function(target, dmginfo)
+	if not (target:IsNPC() or target:IsNextBot()) then return end
+	local attacker = dmginfo:GetAttacker()
+	local damage_type = dmginfo:GetDamageType()
+	target.bgn_last_damage_blast = bit.band(damage_type, DMG_BLAST) ~= 0
+	target.bgn_last_damage_point_blank = bit.band(damage_type, SHOT_DAMAGE) ~= 0 and IsValid(attacker)
+		and attacker:GetPos():DistToSqr(target:GetPos()) <= POINT_BLANK_DIST_SQR
+end)
+
+local function IsHopeless(npc)
+	if npc.bgn_last_damage_blast or npc.bgn_last_damage_point_blank then return true end
+	return math.random(100) <= GetConVar('bgn_medic_hopeless_chance'):GetInt()
+end
+
+-- @return boolean a medic is on the way to (or at) the body at pos and has not given the verdict yet
+function Medics.IsHandling(pos)
+	for _, call in ipairs(calls) do
+		if call.medic and not call.verdict and not call.done and not call.closed
+			and call.pos:DistToSqr(pos) < BODY_GONE_DIST_SQR then return true end
+	end
+	return false
+end
 local danger_areas = {}
 
 function Medics.IsBlocked(pos)
@@ -90,6 +117,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
 		model = npc:GetModel(),
 		skin = npc:GetSkin(),
 		time = CurTime(),
+		hopeless = IsHopeless(npc), -- the medic only declares it (state medic_revive), then the police take the body
 	}
 end)
 
@@ -97,6 +125,9 @@ end)
 local function Release(medic)
 	medic.medic_call = nil
 	medic.drive_target_pos = nil
+	-- Respond marks the medic eternal even while it is fleeing or fighting; only medic_revive (and the car) resets it,
+	-- so a medic that never got to it stayed immune to the remover and piled up over the limit
+	if not medic:InVehicle() and not medic:HasState('medic_revive') then medic.eternal = false end
 end
 
 -- The medic reviving the body of a call (not its partner)
@@ -129,8 +160,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_Medics_Attacker', function(attacker, 
 	actor.medic_attackers = actor.medic_attackers or setmetatable({}, { __mode = 'k' })
 	actor.medic_attackers[attacker] = true
 
-	local health = target:Health() - (dmginfo and dmginfo:GetDamage() or 0)
-	if health < target:GetMaxHealth() * LOW_HEALTH then Flee(actor, attacker) return false end
+	local health = actor:Health() - (dmginfo and dmginfo:GetDamage() or 0)
+	if health < actor:GetMaxHealth() * LOW_HEALTH then Flee(actor, attacker) return false end
 
 	-- fists against a player only (a brawl needs both sides; an armed actor is run from as usual)
 	if not attacker:IsPlayer() then return end
@@ -264,10 +295,10 @@ local function FindMedic(call)
 	if count >= limit then return end
 	local pos = bgNPC:FindSpawnPosition({ position = call.pos })
 	if not pos then return end
-	local medic = bgNPC:SpawnActor(MEDIC_TYPE, pos)
+	local medic = bgNPC:SpawnActor(MEDIC_TYPE, pos, false, true)
 	if not medic then return end
 
-	local partner = count + 2 <= limit and bgNPC:SpawnActor(MEDIC_TYPE, pos + Vector(40, 0, 0)) or nil
+	local partner = count + 2 <= limit and bgNPC:SpawnActor(MEDIC_TYPE, pos + Vector(40, 0, 0), false, true) or nil
 	if partner then
 		medic.medic_partner, partner.medic_partner = partner, medic
 	end

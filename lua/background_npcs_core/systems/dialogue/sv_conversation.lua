@@ -189,8 +189,8 @@ function FINALS.flee(cast)
 		hunter:SetState('defense', nil, true)
 		hunter:Voice('police_combat')
 	end
-	prey:AddEnemy(hunter:GetNPC(), 'fear')
-	prey:SetState('fear', nil, true)
+	-- a threat that is not an arrest: the hunter chases the prey and fights with fists
+	Conv.BrawlStart(hunter, prey:GetNPC())
 end
 
 function FINALS.run_off(cast)

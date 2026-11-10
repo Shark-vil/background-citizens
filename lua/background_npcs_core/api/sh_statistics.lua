@@ -5,6 +5,10 @@ local Statistics = bgNPC.Statistics
 -- attacker -> { actor_type -> kills }
 local kills = {}
 
+hook.Add('BGN_ActorEntityChanged', 'BGN_KillingStatisticRebind', function(_, old, npc)
+	if kills[old] then kills[npc], kills[old] = kills[old], nil end
+end)
+
 function Statistics.Get(attacker, actor_type)
 	local attacker_kills = kills[attacker]
 

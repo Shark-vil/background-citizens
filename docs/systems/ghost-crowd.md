@@ -16,9 +16,9 @@ The ghost crowd is **off by default** (`bgn_ghost_crowd 0`, `bgn_cl_ghost_crowd 
 
 | Cvar | Default | Meaning |
 |---|---|---|
-| `bgn_cl_ghost_crowd` (client) | `1` | local mode: enable the ghost crowd |
+| `bgn_cl_ghost_crowd` (client) | `0` | local mode: enable the ghost crowd |
 | `bgn_cl_ghost_crowd_max` (client) | `40` | local mode: the most ghosts at once |
-| `bgn_ghost_crowd` (server) | `1` | server mode |
+| `bgn_ghost_crowd` (server) | `0` | server mode |
 | `bgn_ghost_crowd_max` (server) | `40` | server mode: the most ghosts at once, shared fairly between the players |
 
 Settings window: **My settings → Experimental** (client), **Spawn → Experimental** (server).
@@ -26,8 +26,8 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
 ## Behaviour
 
 - **Where:** in a ring from 0.35 to 1.5 × `bgn_spawn_radius` around the player, never inside that inner
-  radius around any player (real actors live there, multiplayer included). They appear out of sight, or in
-  sight farther than `bgn_spawn_radius_visibility` (the real actors' rule), with a fade-in. At the limit a ghost
+  radius around any player (real actors live there, multiplayer included). They appear out of sight,
+  with a fade-in. At the limit a ghost
   behind the player moves into view, so open areas don't look empty.
 - **Looks:** model, skin and bodygroups of real actors you have seen; HL2 citizens until then.
   Models without a walk or an idle animation (vehicles, helicopters, some custom models) are skipped.
@@ -50,17 +50,15 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
   changes); every client computes the position from `CurTime()` and scales the animation to that speed.
   A client that starts drawing (joined, switched it on, mode changed) asks for all ghosts at once.
 - **Spawn, walk, leave:** the local rules, checked against every player: ring of each player, out of every
-  player's inner radius, out of everybody's sight or farther than `bgn_spawn_radius_visibility`. Mood (panic,
+  player's inner radius, out of everybody's sight. Mood (panic,
   idle share) is counted per player from the server's actor states; a ghost follows its nearest player's.
   Looks (type, model, skin, bodygroups) come from real actors on foot with walk and idle animations.
 - **Handoff:** a ghost someone sees, with a player inside its inner radius, becomes a real actor of the same type
   and look on its spot (dropped to the ground), facing its way. Clients keep drawing the ghost until the
   entity arrives (at most 2 s), so there is no gap and no double. An unseen ghost there just goes.
-  The handoff may go over the type limit: the actor remover then takes over-limit actors that no player sees
-  (never a seen one), so the count gets back within the limit without anyone vanishing in sight. On an overloaded
-  server (`core/sv_server_load.lua`: fewer than 80% of the tickrate's ticks per real second, held 3 s; or more
-  actors than twice the sum of the active types' limits) over-limit actors go at once, seen or not, and handoffs
-  stay within the limit. When the type
+  The handoff may go over the type limit: normal recycling removes eligible excess actors only after no player
+  has seen them for `bgn_actor_unseen_time` (default 30 s), including during server overload. On an overloaded
+  server, new handoffs stay within the type limit. When the type
   is off (or its limit is 0) or the spawn fails, the ghost runs away and fades like a local one.
 - Not in server mode: the "ghost behind the player moves into view" at the limit.
 

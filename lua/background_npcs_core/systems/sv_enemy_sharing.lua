@@ -17,12 +17,16 @@ local function Share(source)
 	local enemies = {}
 	for i = 1, source.enemies_count do
 		local enemy = source.enemies[i]
-		if IsValid(enemy) and enemy:Health() > 0 then enemies[#enemies + 1] = enemy end
+		-- only a real fight is worth passing on (an officer's enemy always is)
+		if IsValid(enemy) and enemy:Health() > 0 and (source:HasTeam('police') or bgNPC.Combat.IsFighting(enemy)) then
+			enemies[#enemies + 1] = enemy
+		end
 	end
 	if #enemies == 0 then return end
 
 	for _, other in ipairs(bgNPC.Actors.GetInRadius(npc:GetPos(), RADIUS)) do
-		if other ~= source and other:IsAlive() and not other:InVehicle() and other:HasTeam(source) then
+		-- an officer in a car takes the enemy too: it steps out or fires from the car (modules/dv/sv_move_to_target.lua)
+		if other ~= source and other:IsAlive() and (not other:InVehicle() or other:HasTeam('police')) and other:HasTeam(source) then
 			local missing
 			for _, enemy in ipairs(enemies) do
 				if not other:HasEnemy(enemy) and not other:HasTeam(enemy) then
@@ -34,11 +38,13 @@ local function Share(source)
 			-- the trace only for those who have something to learn
 			if missing and bgNPC.Vision.HasLineOfSight(other:GetNPC(), npc) then
 				for _, enemy in ipairs(missing) do
-					if other:EqualStateGroup('calm') then
+					-- the blocked flag is only fresh for an actor asked just now (a calm one)
+					local asked = other:EqualStateGroup('calm')
+					if asked then
 						other:RemoveAllTargets()
 						other:SetState(other:GetReactionForProtect(enemy))
 					end
-					other:AddEnemy(enemy)
+					if not (asked and other.protect_blocked_enemy == enemy) then other:AddEnemy(enemy) end
 				end
 			end
 		end

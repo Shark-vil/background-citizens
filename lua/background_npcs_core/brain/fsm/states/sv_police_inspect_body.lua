@@ -9,6 +9,7 @@
 local SEARCH_DIST_SQR = 2000 ^ 2
 local BODY_TIME = 60
 local REACH_DIST_SQR = 90 ^ 2
+local RUN_DIST_SQR = 600 ^ 2 -- farther than this the officer runs to the body, closer it walks
 local REVIVED_DIST_SQR = 100 ^ 2
 local STAGE_TIME = 5
 local GIVE_UP_TIME = 30 -- can't reach the body
@@ -59,7 +60,7 @@ timer.Create('BGN_PoliceInspectBodies', 2, 0, function()
 		local body = bodies[i]
 		if body.done or body.time + BODY_TIME < now then
 			table.remove(bodies, i)
-		elseif not body.officer or not IsInspecting(body.officer, body) then
+		elseif not bgNPC.Medics.IsHandling(body.pos) and (not body.officer or not IsInspecting(body.officer, body)) then
 			body.officer = FindOfficer(body.pos)
 			if body.officer then body.officer:SetState('police_inspect_body', { body = body }) end
 		end
@@ -85,7 +86,7 @@ bgNPC.States.Register('police_inspect_body', 'calm', {
 
 		if not data.stage then
 			if actor:GetPos():DistToSqr(body.pos) > REACH_DIST_SQR then
-				bgNPC.MoveToPoint(actor, data, body.pos, false)
+				bgNPC.MoveToPoint(actor, data, body.pos, actor:GetPos():DistToSqr(body.pos) > RUN_DIST_SQR)
 				return
 			end
 
@@ -93,6 +94,7 @@ bgNPC.States.Register('police_inspect_body', 'calm', {
 			actor:GetBody():StopMoving()
 			local npc = actor:GetNPC()
 			npc:SetAngles(Angle(0, (body.pos - npc:GetPos()):Angle().y, 0))
+			actor:Voice('police_body_arrive')
 			data.stage = 1 -- 1 looks at the body, 2 reports on the radio, 3 writes it down
 			data.next_stage = now + STAGE_TIME
 			data.give_up = now + STAGE_TIME * 4

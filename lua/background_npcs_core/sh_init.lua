@@ -27,7 +27,7 @@ if SERVER then
 end
 
 bgNPC = bgNPC or {}
-bgNPC.VERSION = '2.3.0'
+bgNPC.VERSION = '2.3.1'
 
 -- Shared storage, filled by the API ----
 bgNPC.LANGUAGES = bgNPC.LANGUAGES or {}
@@ -147,6 +147,7 @@ local function ExecutableScripts()
 	-- Systems register modules (wanted, team_parent, ...) that states and integrations use.
 	Include('systems/sv_team_parent.lua')
 	IncludeDir('systems/wanted')
+	Include('systems/arrest/sv_arrest.lua')
 	IncludeDir('systems')
 	Include('brain/sv_brain.lua')
 	IncludeDir('brain')

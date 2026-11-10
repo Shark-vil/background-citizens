@@ -8,7 +8,36 @@ local impunity_limit = GetConVar('bgn_wanted_impunity_limit'):GetInt()
 local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction_period'):GetFloat()
 local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
-local cvar_bgn_spawn_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
+local cvar_detection_radius = GetConVar('bgn_wanted_detection_radius')
+local cvar_level_up_period = GetConVar('bgn_wanted_level_up_period')
+local cvar_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
+-- A wanted actor out of every player's view zone for this long is dropped from the wanted list.
+local UNSEEN_RESET_TIME = 15
+
+-- The view zone: the player's field of view within half of bgn_spawn_radius_visibility; obstacles don't matter.
+local function InPlayerViewZone(ent)
+	local radius_sqr = (cvar_radius_visibility:GetFloat() / 2) ^ 2
+	local center = ent:WorldSpaceCenter()
+	for _, ply in ipairs(player.GetHumans()) do
+		if ply:Alive() and ply:GetPos():DistToSqr(center) <= radius_sqr and bgNPC.Vision.PlayerCanSeePos(ply, center) then
+			return true
+		end
+	end
+	return false
+end
+
+-- @return boolean true if the actor was dropped from the wanted list
+local function DropIfUnseen(WantedClass, enemy)
+	if enemy:IsPlayer() then return false end
+	if InPlayerViewZone(enemy) then
+		WantedClass.unseen_since = nil
+		return false
+	end
+	WantedClass.unseen_since = WantedClass.unseen_since or CurTime()
+	if CurTime() - WantedClass.unseen_since < UNSEEN_RESET_TIME then return false end
+	asset:RemoveWanted(enemy)
+	return true
+end
 
 hook.Add('BGN_PlayerReady', 'BGN_WantedSync', function(ply)
 	for _, wanted in ipairs(asset:GetAllWanted()) do
@@ -112,7 +141,7 @@ end)
 
 hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(target)
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
-		if IsValid(actor:GetNPC()) and actor:HasTeam('residents') then
+		if IsValid(actor:GetNPC()) and actor:HasTeam('police') then
 			actor:AddEnemy(target)
 
 			if actor:HasState('idle') or actor:HasState('walk') then
@@ -139,7 +168,7 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
 
 	if wanted_count == 0 then return end
 
-	if actor:HasTeam('residents') then
+	if actor:HasTeam('police') then
 		for i = 1, wanted_count do
 			local enemy = wanted_list[i].target
 			actor:AddEnemy(enemy)
@@ -209,7 +238,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 	if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode then return end
 
 	-- local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
-	local radius_visibility = cvar_bgn_spawn_radius_visibility:GetFloat()
+	local detection_radius = cvar_detection_radius:GetFloat()
 	local wanted_list = asset:GetAllWanted()
 	local wanted_count = #wanted_list
 
@@ -222,14 +251,14 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 
 	-- 1500 ^ 2
 	-- local ray_distance_detect = 2250000
-	local ray_distance_detect = radius_visibility ^ 2
+	local ray_distance_detect = detection_radius ^ 2
 
 	for i = wanted_count, 1, -1 do
 		local WantedClass = wanted_list[i]
 		local enemy = WantedClass.target
 		local is_update = false
 
-		if IsValid(enemy) then
+		if IsValid(enemy) and not DropIfUnseen(WantedClass, enemy) then
 			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
 			WantedClass:UpdateWaitTime(wait_time)
@@ -249,7 +278,19 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 				end
 			end
 
+			-- seen by the hunters: the timer stays full
 			if is_update then WantedClass:UpdateWanted() end
+
+			-- a wanted actor (not a player) escalates on its own
+			local level_up_period = cvar_level_up_period:GetFloat()
+			if level_up_period > 0 and not enemy:IsPlayer() then
+				local now = CurTime()
+				WantedClass.next_auto_level = WantedClass.next_auto_level or now + level_up_period
+				if WantedClass.next_auto_level <= now then
+					WantedClass.next_auto_level = now + level_up_period
+					WantedClass:LevelUp()
+				end
+			end
 
 			if WantedClass.time_reset < CurTime() then
 				asset:RemoveWanted(enemy)

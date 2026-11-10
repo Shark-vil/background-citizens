@@ -4,11 +4,12 @@ local name = bgNPC.Util.Lang({
 })
 
 bgNPC.cfg:SetActor('gangster', {
-	enabled = true,
+	enabled = false, -- the street gangs (sh_gangs.lua) are the gangsters now; the type stays as their base
 	inherit = 'citizen',
 	class = 'npc_citizen',
 	name = name,
 	fullness = 10,
+	respawn_delay = 30, -- the gangs inherit it
 	team = { 'bandits' },
 	weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },
 	getting_weapon_chance = false, -- Overrides an inherited setting
