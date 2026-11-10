@@ -18,6 +18,14 @@ A player gives up by looking at the ground (pitch over 40°) near the officer. N
 give up, 5% on its first attack and 10% on each later one while at 50 health or less. The police stop arresting and shoot when the target kills someone, keeps attacking,
 refuses within the time limit or is wanted.
 
+A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
+officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
+it slips away (`retreat`); otherwise it just calms down.
+
+A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
+officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
+it slips away (`retreat`); otherwise it just calms down (`systems` `arrest_surrender` state).
+
 Regular police (`npc_metropolice`) use the stunstick as an additional melee weapon. An already hostile
 target holding an unsafe ranged weapon makes the officer select a pistol immediately, even up close
 and before the first kill or hit. Against other targets, switching to the pistol requires at least one
