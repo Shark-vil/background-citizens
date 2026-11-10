@@ -225,6 +225,34 @@ end
 hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
 hook.Add('BGN_ActorEntityChanged', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
 
+-- A seated officer's body is a Decent Vehicle entity without NPC senses, and the hooks above skip seated actors:
+-- hostile NPCs and NextBots near the car become its enemies here, so it steps out (modules/dv/sv_move_to_target.lua).
+local SEATED_SPOT_RADIUS = 1000
+
+-- An NPC hostile to players, or a NextBot (no Disposition) hunting a player or an actor.
+local function IsHostile(ent)
+	if ent:IsNPC() then return GetPlayersDisposition(ent) == D_HT end
+	local target = isfunction(ent.GetEnemy) and ent:GetEnemy()
+	return IsValid(target) and (target:IsPlayer() or bgNPC.Actors.Get(target) ~= nil)
+end
+
+timer.Create('BGN_SeatedPoliceSpotHostileNPC', 1, 0, function()
+	if bgNPC.Modes.IsPeaceful() or cvar_bgn_ignore_another_npc:GetBool() then return end
+
+	for _, actor in ipairs(bgNPC.Actors.GetByTeam('police')) do
+		local car = actor:IsAlive() and actor:GetVehicle()
+		if IsValid(car) then
+			for _, ent in ipairs(ents.FindInSphere(car:GetPos(), SEATED_SPOT_RADIUS)) do
+				if (ent:IsNPC() or ent:IsNextBot()) and not ent.isBgnActor and not ent.bgn_probe and ent:Health() > 0
+					and not actor:HasEnemy(ent) and IsHostile(ent) and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent)
+				then
+					SetNPCRelationship(actor, ent, D_HT)
+				end
+			end
+		end
+	end
+end)
+
 -- Sets relationships for newly created NPCs and NextBots
 hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
 	if not npc:IsNPC() and not npc:IsNextBot() then return end
