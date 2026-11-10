@@ -55,10 +55,15 @@ bgNPC.States.Register('sit_to_chair_2', 'calm', {
 				data.isSit = true
 				data.old_pos = npc:GetPos()
 				local sitTime = math.random(5, 120)
-				npc:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+				-- a physical nextbot inside the bench is pushed up onto it by the engine: no solid mask and no gravity while sitting
+				npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
+				if npc.loco then
+					data.oldSolidMask, data.oldGravity = npc:GetSolidMask(), npc.loco:GetGravity()
+					npc:SetSolidMask(0)
+					npc.loco:SetGravity(0)
+				end
 				npc:SetPos(seat:GetPos())
 				npc:SetAngles(seat:GetAngles())
-				npc:SetCollisionGroup(data.oldCollisionGroup)
 
 				actor:PlayStaticSequence('Idle_To_Sit_Chair', false, nil, function()
 					actor:PlayStaticSequence('Sit_Chair', true, sitTime, function()
@@ -75,6 +80,15 @@ bgNPC.States.Register('sit_to_chair_2', 'calm', {
 	end,
 	stop = function(actor, state, data)
 		local npc = actor:GetNPC()
+		if IsValid(npc) and data.isSit then
+			npc:SetCollisionGroup(data.oldCollisionGroup)
+			if data.oldSolidMask then
+				npc:SetSolidMask(data.oldSolidMask)
+				npc.loco:SetGravity(data.oldGravity)
+			end
+			-- in front of the bench, not inside it
+			if data.isStandAnimation then npc:SetPos(data.seat:GetStartSittingPos()) end
+		end
 		if IsValid(npc) and not data.isStandAnimation then
 			if data.old_pos then
 				npc:SetAngles(Angle(0, 0, 0))
