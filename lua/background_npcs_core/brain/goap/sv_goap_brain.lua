@@ -1,21 +1,20 @@
 --[[
-	GOAPBrain: plans what an actor does while it has enemies (see sv_goap.lua and sv_goap_actions.lua).
-	Without enemies it behaves exactly like FSMBrain (random calm states).
+	GOAPBrain: plans a fight (see sv_goap.lua and sv_goap_actions.lua). Everything else is FSMBrain: the config
+	reactions (at_damage / at_protect, weighted random) decide whether the actor fights at all, and the plan only
+	takes over once the actor is in "defense" or "retreat" (FIGHT_STATES). When the state leaves the plan's states on its own
+	(the fight ended, an arrest, a calm state) the fight is over for the plan: it does not pull the actor back in.
 
 	Loop: sensors refresh the world state (every SENSE_PERIOD, or right away on events), the goal with the
 	highest priority is picked, the cached plan for (state, goal) is executed action by action.
-	An action runs its FSM state; when the state leaves on its own (validator, pre_start redirect, lock)
+	An action runs its FSM state; when the state moves to another action's state without the action's effects
 	the action is blocked for a while and the brain replans.
-
-	Reactions: Actor:GetReactionForDamage/Protect ask the brain (PickReaction), so the event code that
-	sets reaction states uses the plan instead of a weighted random pick. "ignore" in the config still
-	keeps its chance.
 --]]
 
 local GOAP = bgNPC.GOAP
 local FSMBrain = bgNPC.FSMBrain
-local PickWeighted = bgNPC.Actor.Helpers.PickWeighted
 
+-- the fight reactions of the FSM: "retreat" is "defense" of a wanted actor (Actor:GetReactionForDamage)
+local FIGHT_STATES = { defense = true, retreat = true }
 local SENSE_PERIOD = 1
 local BLOCK_TIME = 5
 -- states the plan never interrupts: a surrendering actor keeps its enemies until the arrest ends
@@ -91,16 +90,36 @@ function GOAPBrain:Block(action)
 	self:ResetPlan()
 end
 
+function GOAPBrain:RunsAction(state)
+	for _, action in ipairs(self.actions) do
+		if action:Runs(state) then return true end
+	end
+	return false
+end
+
+function GOAPBrain:StopFight()
+	self.fighting = false
+	self:ResetPlan()
+end
+
 function GOAPBrain:Update()
 	local actor = self.actor
 
 	if actor:HasNoEnemies() then
-		if self.plan then self:ResetPlan() end
+		if self.fighting then self:StopFight() end
 		return FSMBrain.Update(self)
 	end
 
 	local state = actor:GetState()
 	if HOLD_STATES[state] then return FSMBrain.Update(self) end
+
+	if not self.fighting then
+		if not FIGHT_STATES[state] then return FSMBrain.Update(self) end
+		self.fighting = true
+	elseif not self:RunsAction(state) then
+		self:StopFight()
+		return FSMBrain.Update(self)
+	end
 
 	-- a state change may be an action's own effect (take_cover sets in_cover): judge the step on the new world state
 	self:Sense(state ~= self.sensed_state)
@@ -145,27 +164,12 @@ function GOAPBrain:Update()
 	return FSMBrain.Update(self)
 end
 
--- @param reactions table { state = weight } from the actor config
--- @param enemy entity|nil who the actor reacts to; without it the enemy facts come from the nearest enemy
--- @return string reaction state
-function GOAPBrain:PickReaction(reactions, enemy)
-	local roll = PickWeighted(reactions)
-	if roll == 'ignore' or roll == 'none' then return roll end
-
-	-- The enemy is added right after the reaction is picked, so plan as if it already exists.
-	local ws = bit.bor(GOAP.Sense(self.actor, enemy), GOAP.Fact('has_enemy'))
-	local first = (self:MakePlan(ws) or {})[1]
-	-- an action with prepare (surrender) acts when it starts: picking a reaction must not run it, Update does
-	if not first or first.prepare then return roll end
-	return first.state
-end
-
 function GOAPBrain:OnEvent(name)
 	if name == 'enemy_added' or name == 'damaged' then
 		self.next_sense = 0
 		self.actor.next_brain = 0 -- react on the next update pass, not after the LOD period
 	elseif name == 'enemies_cleared' then
-		self:ResetPlan()
+		self:StopFight()
 	end
 end
 

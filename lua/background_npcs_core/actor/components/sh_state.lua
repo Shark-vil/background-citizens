@@ -40,7 +40,8 @@ function Actor:GetRandomState()
 	return H.PickWeighted(self.data.at_random)
 end
 
--- A brain with PickReaction (GOAP) chooses by the situation, otherwise a weighted random pick.
+-- A weighted random pick, unless a custom brain implements PickReaction (the built-in FSM and GOAP do not:
+-- GOAP only plans the fight this pick starts).
 -- A wanted actor hides instead of fighting ("retreat" turns to defense only when cornered).
 local function PickReaction(actor, reactions, enemy)
 	local brain = actor.brain

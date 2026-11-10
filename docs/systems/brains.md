@@ -60,7 +60,13 @@ when the actor has none. Reactions to damage and threats are random picks from `
 
 ## GOAP brain
 
-Used while the actor has enemies; without enemies it behaves like the FSM brain.
+Plans only the fight; everything else is the FSM brain. The config reactions (`at_damage` / `at_protect`, a
+weighted random pick, the same as in FSM) decide whether the actor fights at all: an officer that rolled `arrest`
+arrests, a citizen that rolled `fear` runs. The plan takes over once the actor is in `defense` (or `retreat`, the
+`defense` of a wanted actor) and keeps it until the enemies are gone or the state leaves the plan's own states
+(the FSM ended the fight, an arrest, a calm state); it never pulls the actor back into a fight. Having an enemy
+alone (shared enemies, a wanted target) does not start one. Earlier 2.3.1 builds also picked the reactions from
+the plan and attacked whenever the actor had an enemy, which made fights much more frequent than with FSM.
 
 - **Facts** are measured by sensors once per second (and right after damage or a new enemy):
   `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `enemy_police`, `police_called`,
@@ -75,12 +81,10 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
   Any state change re-reads the facts at once, so an action that finished with its effects (`take_cover` sets
   `in_cover`, `call_backup` sets `backup_called`) moves the plan on instead of failing. An action whose state is
-  already running (also after a replan) counts as entered. An action that fails (its state ends or redirects on its
-  own without its effects) is blocked for 5 s, then the plan is made again. A `guarded` state that refuses to stop
-  (an officer holding an `arrest`) only makes the plan wait; nothing is blocked.
-- **Reactions** (`GetReactionForDamage` / `GetReactionForProtect`) take the state of the plan's first action. An
-  action with `prepare` (`surrender`) is never run while a reaction is picked: the config roll is returned and the
-  next brain update starts the action.
+  already running (also after a replan) counts as entered. An action whose state moves to another action's state
+  without its effects is blocked for 5 s, then the plan is made again; a state outside the plan ends the fight.
+- **Reactions** (`GetReactionForDamage` / `GetReactionForProtect`) are the config roll, as in FSM. In `fear` an
+  armed actor switches to `defense` (as in FSM) unless the plan itself sent it to flee.
 - **Chains.** Fighting an armed enemy costs more out of cover, and for the police without backup, so the plans are
   `take_cover → attack` and, for the police, `call_backup → take_cover → attack`:
   - `take_cover`: runs to the nearest nav point within 1000 units the enemy can't see at crouch height
@@ -192,19 +196,13 @@ members of the same gang within 1500 units the one with the lowest entity index 
 destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
 run), and recheck every 2 seconds.
 
-Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
-actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with
-`developer 1` the console names its type and last state). A medic marked `eternal` for a call is released together
-with the call, so it no longer escapes the limit and the remover.
-
-A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
-members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
-destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
-run), and recheck every 2 seconds.
-
-Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
-actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with
-`developer 1` the console names its type and last state). A medic marked `eternal` for a call is released together
+Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. Every 2 s an NPC or
+NextBot that is an actor body (`BGN_ACTOR_OBJECT`, or `bgn_npc_class` from the spawner) without a live registered
+actor is removed after 3 seconds, even with `bgn_enable 0` (`spawner/sv_actor_remover.lua`, with `developer 1` the
+console names its class, health, type and last state). Health is not checked: an NPC killed while the LOD had its
+think turned off, or frozen by the animator, never finishes dying and stands with 0 health, frozen, without a label;
+the old check (alive bodies only) left those on the map for good. An actor removed in its first tick is no longer
+registered afterwards (it kept a slot of the type limit). A medic marked `eternal` for a call is released together
 with the call, so it no longer escapes the limit and the remover.
 
 Calling the police is skipped when at least one living officer already has the target as an enemy or a target
