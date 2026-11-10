@@ -37,11 +37,13 @@ local function Share(source)
 			-- the trace only for those who have something to learn
 			if missing and bgNPC.Vision.HasLineOfSight(other:GetNPC(), npc) then
 				for _, enemy in ipairs(missing) do
-					if other:EqualStateGroup('calm') then
+					-- the blocked flag is only fresh for an actor asked just now (a calm one)
+					local asked = other:EqualStateGroup('calm')
+					if asked then
 						other:RemoveAllTargets()
 						other:SetState(other:GetReactionForProtect(enemy))
 					end
-					other:AddEnemy(enemy)
+					if not (asked and other.protect_blocked_enemy == enemy) then other:AddEnemy(enemy) end
 				end
 			end
 		end

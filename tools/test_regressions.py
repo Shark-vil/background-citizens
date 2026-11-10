@@ -2060,6 +2060,29 @@ roster.execute('''
     assert(bgNPC.Roster.Get('crows',lone).size==1, 'no chance, no helpers')
 ''')
 
+cooldown = realm(True)
+cooldown.execute('''
+    table.Empty=function(t) for k in pairs(t) do t[k]=nil end end
+    function IsValid(v) return v ~= nil and v.valid ~= false end
+    setcv('bgn_fight_cooldown',0)
+    function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end} end
+    function Foe(player) return {valid=true,IsPlayer=function() return player end} end
+''')
+load(cooldown, 'systems/sv_fight_cooldown.lua')
+cooldown.execute('''
+    local C=bgNPC.FightCooldown
+    local a,b,far=Foe(false),Foe(false),Foe(false)
+    assert(C.Allow(Who(0),a) and C.Allow(Who(0),b), 'off by default: nobody is blocked')
+    setcv('bgn_fight_cooldown',30)
+    assert(C.Allow(Who(0),a), 'the first skirmish opens the window')
+    assert(C.Allow(Who(100),a), 'joining the same skirmish is allowed')
+    assert(not C.Allow(Who(100),b), 'a new attacker nearby is blocked')
+    assert(C.Allow(Who(100),Foe(true)), 'a player attacker is never blocked')
+    assert(C.Allow(Who(9000),far), 'far away is a separate skirmish')
+    now=now+31
+    assert(C.Allow(Who(100),b), 'after the window the new event passes')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['actor/sh_actor.lua', 'api/sh_actors.lua', 'api/sh_statistics.lua',
          'modules/sv_followers_mod.lua', '../entities/npc_decentvehicle_passenger/init.lua',

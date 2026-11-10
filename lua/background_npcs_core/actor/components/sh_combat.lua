@@ -68,7 +68,7 @@ function Actor:CallForHelp(enemy)
 			and bgNPC.Vision.HasLineOfSight(near_actor.npc, enemy)
 		then
 			near_actor:SetState(near_actor:GetReactionForProtect(enemy))
-			near_actor:AddEnemy(enemy)
+			if near_actor.protect_blocked_enemy ~= enemy then near_actor:AddEnemy(enemy) end
 		end
 	end
 end

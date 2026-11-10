@@ -177,6 +177,15 @@ never helps the other one. Calm members of rival gangs within 700 units sight of
 `bgn_gang_war_chance` percent per 10 seconds (default 0.5, `0` disables); if the police or a player step in, each
 gang fights them (and each other) with its own roster. Actors outside gangs are not affected.
 
+## Delay between skirmishes
+
+`bgn_fight_cooldown` (Behavior > AI, 0-120 s, default 0 = off, the old behavior). With a delay, the first `defense`
+reaction of the `at_protect` table (actors protecting their own) opens a window of that many seconds around the
+place (2500 units). While it lasts, protecting against **another** attacker in that area is ignored: the actor takes
+the `ignore` reaction and a call for help or enemy sharing adds no enemy to it. Actors joining the skirmish that
+opened the window (same attacker), fights already going, places outside the area and the time after the window are
+not affected. A player as the attacker is never blocked (`systems/sv_fight_cooldown.lua`).
+
 ## Police at a body
 
 Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/states/sv_police_inspect_body.lua`).

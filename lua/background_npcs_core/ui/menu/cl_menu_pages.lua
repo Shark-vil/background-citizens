@@ -258,6 +258,7 @@ Menu.AddPage('behavior', {
 		page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
 		page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
 		page:Slider('bgn_enemy_share_period', '#bgn.menu.enemy_share_period', 0, 10)
+		page:Slider('bgn_fight_cooldown', '#bgn.menu.fight_cooldown', 0, 120)
 
 		page:Section('#bgn.menu.section.main')
 		page:Toggle('bgn_disable_dialogues', '#bgn.settings.extension.disable_dialogues')
