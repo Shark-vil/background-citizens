@@ -255,7 +255,7 @@ if SERVER then
 
 						if entry.mode ~= AREA_MODE_BOOSTED or entry.count <= 0 then continue end
 
-						local npc_data = bgNPC.cfg.actors[actorType]
+						local npc_data = bgNPC.Config.GetActor(actorType)
 						if not npc_data then continue end
 						if not CanActorTypeSpawnNow(actorType, npc_data) then continue end
 						if CountAliveInArea(area, actorType) >= entry.count then continue end

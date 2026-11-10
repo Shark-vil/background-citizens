@@ -40,7 +40,8 @@ put at a spot free for its whole body, never inside the car.
   not restored when the wanted time runs out. Not in peaceful mode.
 - **Shared enemies** (`systems/sv_enemy_sharing.lua`, `bgn_enemy_share_period`, default 2 s, `0` = off): an actor
   with enemies (not in `fear`, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
-  the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a calm state
+  the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
+  except an officer: it gets the enemy and steps out or fires from the car (`modules/dv/sv_move_to_target.lua`). A teammate in a calm state
   switches to its `GetReactionForProtect` reaction; a busy one only gets the enemy. This keeps the others from
   walking around while an officer already shoots at a player who is not wanted yet.
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
@@ -203,7 +204,8 @@ Calling the police is skipped when at least one living officer already has the t
 `bgn_fight_cooldown` (Behavior > AI, 0-120 s, default 60, `0` = off, the old behavior). With a delay, the first `defense`
 reaction of the `at_protect` table (actors protecting their own) opens a window of that many seconds around the
 place (2500 units). While it lasts, protecting against **another** attacker in that area is ignored: the actor takes
-the `ignore` reaction and a call for help or enemy sharing adds no enemy to it. Actors joining the skirmish that
+the `ignore` reaction and a call for help, enemy sharing or a witnessed hit adds no enemy to it. The police are never
+delayed, also an officer driving past in a car. Actors joining the skirmish that
 opened the window (same attacker), fights already going, places outside the area and the time after the window are
 not affected. A player, or an NPC / NextBot of another mod that is not one of our actors, as the attacker is never blocked (`systems/sv_fight_cooldown.lua`).
 

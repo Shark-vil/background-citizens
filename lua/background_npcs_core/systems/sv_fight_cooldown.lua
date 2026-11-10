@@ -5,7 +5,8 @@
 	is ignored (Actor:GetReactionForProtect returns 'ignore' and the call for help adds no enemy). Actors joining the
 	skirmish that opened the window (same attacker) are not blocked, nor is anything outside the area or after the
 	window. Only an attacker that is one of our actors is delayed: a player and any NPC or NextBot of another mod
-	(not an actor) always get their reaction, the delay only spaces out fights between actors.
+	(not an actor) always get their reaction, the delay only spaces out fights between actors. The police are never
+	delayed: stopping a fight is their job, also for an officer driving past.
 --]]
 
 local FightCooldown = {}
@@ -19,7 +20,7 @@ local windows = {}
 -- @return boolean false when a skirmish with another attacker started here less than "bgn_fight_cooldown" seconds ago
 function FightCooldown.Allow(actor, enemy)
 	local delay = cvar:GetFloat()
-	if delay <= 0 or enemy:IsPlayer() or not bgNPC.Actors.Get(enemy) then return true end
+	if delay <= 0 or actor:HasTeam('police') or enemy:IsPlayer() or not bgNPC.Actors.Get(enemy) then return true end
 
 	local now, pos = CurTime(), actor:GetNPC():GetPos()
 	local blocked

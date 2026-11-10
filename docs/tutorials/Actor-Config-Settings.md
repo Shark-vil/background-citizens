@@ -242,7 +242,7 @@ at_random = {
 
 ## respawn_delay
 - *number*
-- Set the spawn delay in seconds from the moment the actor dies.
+- Set the spawn delay in seconds from the moment the actor dies. Each death of the type queues one delayed spawn, so several deaths come back one per delay. Inherited through `inherit`; a child turns it off with `0` (not `false`).
 ```lua
 -- The actor will spawn 5 seconds after death if the global spawn delay is less than this limit.
 respawn_delay = 5

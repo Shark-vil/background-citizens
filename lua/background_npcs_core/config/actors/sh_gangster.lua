@@ -9,6 +9,7 @@ bgNPC.cfg:SetActor('gangster', {
 	class = 'npc_citizen',
 	name = name,
 	fullness = 10,
+	respawn_delay = 30, -- the gangs inherit it
 	team = { 'bandits' },
 	weapons = { 'weapon_pistol', 'weapon_shotgun', 'weapon_ar2', 'weapon_crowbar' },
 	getting_weapon_chance = false, -- Overrides an inherited setting

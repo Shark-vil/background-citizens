@@ -24,7 +24,7 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 | Character lifecycle | Stable actor/UID through DV entity replacement, safe health accessors, seat-specific exit hull checks and blocked-exit retention; seated damage goes through reaction/witness handling. [Actor API](classes/actor/index.md). |
 | Policing | Arrest module load order corrected, surrender no longer restarts a fight, officers hold arrest unless attacked; vehicle suspects are shot with ranged weapons. [Arrest](systems/arrest.md). |
 | Gangs | Black Raven/Red Wolf, light/heavy weapons/models, bounded initial rosters, rival wars, pack walking; direct victims still fight back outside roster caps. [Gangs](systems/gangs.md). |
-| Combat pacing | Regional 60-second protection cooldown applies only between actors, not player/foreign NPC attacks; existing skirmish participation and self-defense remain. [Gangs](systems/gangs.md). |
+| Combat pacing | Regional 60-second protection cooldown applies only between actors, not player/foreign NPC attacks, and never to the police; existing skirmish participation and self-defense remain. Officers in cars receive shared enemies. Gangsters respawn after 30 seconds. [Gangs](systems/gangs.md). |
 | Medics and bodies | Hopeless verdicts, body inspection/cleanup and completed-call release; vehicle collisions can be saved with normal chances; ambulance/medic protections. [Medics and bodies](systems/medics.md). |
 | NextBots / damage | Stuck recovery selects nearby free navigation space, avoids teleporting into vehicles; fixed custom-chair positioning. Actor hits on seated actors triple damage in 20% of rolls, double in 50%, remain unchanged in 30%. [Brains](systems/brains.md), [vehicles](systems/vehicles.md). |
 

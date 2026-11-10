@@ -25,7 +25,8 @@ local function Share(source)
 	if #enemies == 0 then return end
 
 	for _, other in ipairs(bgNPC.Actors.GetInRadius(npc:GetPos(), RADIUS)) do
-		if other ~= source and other:IsAlive() and not other:InVehicle() and other:HasTeam(source) then
+		-- an officer in a car takes the enemy too: it steps out or fires from the car (modules/dv/sv_move_to_target.lua)
+		if other ~= source and other:IsAlive() and (not other:InVehicle() or other:HasTeam('police')) and other:HasTeam(source) then
 			local missing
 			for _, enemy in ipairs(enemies) do
 				if not other:HasEnemy(enemy) and not other:HasTeam(enemy) then

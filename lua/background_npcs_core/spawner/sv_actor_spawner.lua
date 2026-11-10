@@ -75,8 +75,12 @@ local function InitActorsSpawner(delay)
 
 			bgNPC.Actors.ClearRemoved()
 
-			for npc_type, npc_data in pairs(bgNPC.cfg.actors) do
+			for npc_type in pairs(bgNPC.cfg.actors) do
 				yield()
+
+				-- resolved: an inherited field (respawn_delay of the gangs) counts like an own one
+				local npc_data = bgNPC.Config.GetActor(npc_type)
+				if not npc_data then continue end
 
 				if not bgNPC.Config.IsTypeActive(npc_type) or npc_data.hidden then
 					continue

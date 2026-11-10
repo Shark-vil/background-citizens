@@ -6,6 +6,8 @@ Server sources: `config/actors/sh_gangs.lua`, `systems/sv_fight_roster.lua`, `sy
 
 `gangster_crows` (Black Raven) and `gangster_wolves` (Red Wolf) inherit `gangster`. Each has `gang = 'crows'|'wolves'` and teams `bandits` plus `gang_<id>`. Both are enabled. Light members use pistols and citizen clothing; 35% heavy members use rebel equipment and SMG/AR2. Gang model selection also applies to NextBot bodies. Models/materials are shipped in the addon.
 
+Gangsters of every gang type (`gangster` and both gangs; `respawn_delay = 30` is inherited from `gangster`) come back no sooner than 30 seconds after a death of their type, one per 30 seconds. `racer_driver` also inherits `gangster` but sets `respawn_delay = 0`. Both spawners read the resolved (inherited) config.
+
 Gang alliance uses gang identity, not the common bandits tag: rivals do not join one another's protection calls. Police/car access still uses team rules.
 
 ## Fight roster
@@ -20,6 +22,6 @@ Walking members look for a same-gang walking leader within 1500 units: lowest en
 
 ## Protection cooldown
 
-`bgn_fight_cooldown` defaults to **60 seconds**, `0` disables. The first protection `defense` reaction opens a window within 2500 units. During it, protection against another actor attacker in that area is ignored, without adding that enemy. Joining against the same attacker is allowed. Player attacks and foreign NPC/NextBot attackers are never delayed; direct self-defense is unaffected. This is event pacing, not a global pause of ongoing combat.
+`bgn_fight_cooldown` defaults to **60 seconds**, `0` disables. The first protection `defense` reaction opens a window within 2500 units. During it, protection against another actor attacker in that area is ignored, without adding that enemy. Joining against the same attacker is allowed. Player attacks and foreign NPC/NextBot attackers are never delayed; direct self-defense is unaffected. Police are never delayed, including an officer driving past in a car. A blocked witness gets no enemy whether it was calm or already busy. This is event pacing, not a global pause of ongoing combat.
 
 These cvars are server settings; definitions: `cvars/sh_cvars.lua`. For baseline civilian/police reactions see [brains](brains.md).

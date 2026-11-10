@@ -23,7 +23,7 @@
 | `at_damage`, `at_protect` | table | Веса реакций на урон себе и союзнику |
 | `disable_states` | boolean | `true` отключает управление состояниями Background NPCs |
 | `replics` | table | Привязки реплик к `state_names` и `state_groups` |
-| `respawn_delay` | number | Задержка после смерти, секунды |
+| `respawn_delay` | number | Задержка после смерти, секунды. Каждая смерть типа ставит одно отложенное появление в очередь. Наследуется через `inherit`; потомок отключает её значением `0` (не `false`) |
 | `wanted_level` | number | Уровень появления при включённой системе розыска |
 | `money` | number / table | Сумма или диапазон; нужна интеграция денежной системы |
 | `vehicles` | table | Классы транспорта, нужны Decent Vehicle и модели |
