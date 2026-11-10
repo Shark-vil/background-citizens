@@ -20,6 +20,14 @@ local function HasRangedWeapon(enemy)
 	return true
 end
 
+-- A player in a vehicle, or an actor seated in a car (a baton cannot reach it)
+local function IsInVehicle(enemy)
+	if enemy:IsPlayer() then return enemy:InVehicle() end
+	if enemy:IsVehicle() then return true end
+	local actor = Actors.Get(enemy)
+	return actor ~= nil and actor:InVehicle()
+end
+
 function Combat.CanPoliceShoot(enemy)
 	if not IsValid(enemy) then return false end
 	return (HasRangedWeapon(enemy) or enemy.bgn_has_killed or bgNPC.Statistics.GetSum(enemy) >= 1)
@@ -150,7 +158,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
 			end
 			local close = npc:GetPos():DistToSqr(enemy:GetPos()) <= POLICE_MELEE_DISTANCE_SQR
 			-- Once a fight escalates, distance and an expired attack timer must not bring the baton back.
-			data.police_firearm = data.police_firearm or HasRangedWeapon(enemy)
+			data.police_firearm = data.police_firearm or HasRangedWeapon(enemy) or IsInVehicle(enemy)
 				or (IsValid(active_weapon) and active_weapon:GetClass() == 'weapon_pistol')
 				or (not close and Combat.CanPoliceShoot(enemy))
 			weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'

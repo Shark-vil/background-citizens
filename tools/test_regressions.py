@@ -1862,7 +1862,7 @@ police_weapons.execute('''
     enemy={valid=true,pos=Vector(200,0,0),GetPos=function(self) return self.pos end,
         GetActiveWeapon=function(self) return self.weapon end,
         IsPlayer=function() return true end, IsNPC=function() return false end, IsNextBot=function() return false end,
-        IsVehicle=function() return false end}
+        IsVehicle=function() return false end,InVehicle=function(self) return self.in_vehicle or false end}
     npc={valid=true,pos=Vector(),weapons={},GetPos=function(self) return self.pos end,
         GetActiveWeapon=function(self) return self.active end,
         GetWeapon=function(self,class) return self.weapons[class] end,
@@ -1929,6 +1929,8 @@ police_weapons.execute('''
     assert(not enemy.bgn_has_killed and not enemy.bgn_last_attack)
     new_fight()
     expect('weapon_stunstick')
+    enemy.in_vehicle=true; expect('weapon_pistol') -- a baton cannot reach a driver: shoot at the car
+    enemy.in_vehicle=nil
 ''')
 # The damage hook precedes the GMod-only continue statements in the surrender timer.
 police_weapons.execute((ROOT / 'systems/arrest/sv_surrender.lua').read_text(encoding='utf-8-sig')
