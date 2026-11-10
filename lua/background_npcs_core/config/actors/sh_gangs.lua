@@ -20,6 +20,7 @@ local function Gang(actor_type, name, gang)
 		class = 'npc_citizen',
 		name = name,
 		gang = gang,
+		fullness = 5, -- percent of bgn_max_npc per gang; Config.GetFullness does not read the inherited one
 		team = { 'bandits', 'gang_' .. gang },
 		heavy_chance = 35, -- percent of the gang that are heavy members
 		heavy_weapons = { 'weapon_smg1', 'weapon_ar2' },

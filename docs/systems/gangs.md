@@ -4,7 +4,7 @@ Server sources: `config/actors/sh_gangs.lua`, `systems/sv_fight_roster.lua`, `sy
 
 ## Gang identity
 
-`gangster_crows` (Black Raven) and `gangster_wolves` (Red Wolf) inherit `gangster`. Each has `gang = 'crows'|'wolves'` and teams `bandits` plus `gang_<id>`. Both are enabled. Light members use pistols and citizen clothing; 35% heavy members use rebel equipment and SMG/AR2. Gang model selection also applies to NextBot bodies. Models/materials are shipped in the addon.
+`gangster_crows` (Black Raven) and `gangster_wolves` (Red Wolf) inherit `gangster`. Each has `gang = 'crows'|'wolves'` and teams `bandits` plus `gang_<id>`. Both are enabled, each with `fullness = 5` (5% of `bgn_max_npc`). Light members use pistols and citizen clothing; 35% heavy members use rebel equipment and SMG/AR2. Gang model selection also applies to NextBot bodies. Models/materials are shipped in the addon.
 
 Gangsters of every gang type (`gangster` and both gangs; `respawn_delay = 30` is inherited from `gangster`) come back no sooner than 30 seconds after a death of their type, one per 30 seconds. `racer_driver` also inherits `gangster` but sets `respawn_delay = 0`. Both spawners read the resolved (inherited) config.
 
