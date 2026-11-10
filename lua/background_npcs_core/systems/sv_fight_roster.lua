@@ -87,6 +87,10 @@ hook.Add('BGN_AddActorEnemy', 'BGN_FightRoster', function(actor, enemy)
 		Form(actor, gang, enemy)
 		return
 	end
+	-- self-defence: an actor that was just hit by this enemy fights back whatever the roster says
+	if not roster.members[actor] and actor.last_attacker == enemy and CurTime() - (actor.last_attacked_at or 0) < 2 then
+		Join(roster, actor)
+	end
 	if roster.members[actor] then
 		roster.last = CurTime()
 		return
