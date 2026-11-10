@@ -67,7 +67,7 @@ function Actor:CallForHelp(enemy)
 			and near_actor:HasTeam(self)
 			and bgNPC.Vision.HasLineOfSight(near_actor.npc, enemy)
 		then
-			near_actor:SetState(near_actor:GetReactionForProtect())
+			near_actor:SetState(near_actor:GetReactionForProtect(enemy))
 			near_actor:AddEnemy(enemy)
 		end
 	end

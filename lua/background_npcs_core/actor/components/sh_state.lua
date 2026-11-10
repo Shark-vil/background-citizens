@@ -121,6 +121,8 @@ end
 -- @param enemy entity|nil who the actor reacts to
 function Actor:GetReactionForProtect(enemy)
 	local reaction = PickReaction(self, self.data.at_protect, enemy)
+	-- a gang member outside the fight roster stays out of it (systems/sv_fight_roster.lua)
+	if reaction == 'defense' and IsValid(enemy) and bgNPC.Roster and not bgNPC.Roster.IsMember(self, enemy) then return 'ignore' end
 	if reaction == 'defense' and (self:IsStayingOut() or ShouldStayOut(self, enemy)) then
 		self:StayOutOfFight()
 		return 'fear'

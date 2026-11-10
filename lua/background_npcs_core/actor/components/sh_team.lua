@@ -73,6 +73,9 @@ function Actor:HasTeam(value)
 
 	if value.isBgnClass then
 		local data = value:GetData()
+		-- rival gangs are not teammates (both keep the team "bandits" for the police and the cars)
+		local gang = self.data.gang
+		if gang and data and data.gang and data.gang ~= gang then return false end
 		value = data and data.team
 		if not istable(value) then return false end
 	end

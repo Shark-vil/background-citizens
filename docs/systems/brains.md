@@ -167,6 +167,16 @@ gang's recolor with `SetSubMaterial` (`materials/background_npcs/gangs/<gang>/<c
 the model, so it survives revival and leaving a car. The recolors are made from the game's own textures by
 `tools/make_gang_skins.py` (needs `vpk`, `srctools`, `pillow`, `numpy`); the game files are not shipped.
 
+**Fight rosters** (`systems/sv_fight_roster.lua`). Gang members help only their own gang, and a fight cannot grow
+without bound. When the first member of a gang takes an enemy (is attacked, sees a crime), the roster of that fight
+is formed at once: the initiator plus the nearest living members of the same gang within 1000 units, each joining
+with `bgn_gang_help_chance` percent (default 1), 2-6 members in total (random per fight). The chosen ones join
+immediately; every other member of the gang is refused that enemy and ignores calls for help. The police and the
+player therefore fight a capped group. Members of different gangs are not teammates (`Actor:HasTeam`), so a gang
+never helps the other one. Calm members of rival gangs within 700 units sight of each other start a fight with
+`bgn_gang_war_chance` percent per 10 seconds (default 0.5, `0` disables); if the police or a player step in, each
+gang fights them (and each other) with its own roster. Actors outside gangs are not affected.
+
 ## Police at a body
 
 Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/states/sv_police_inspect_body.lua`).

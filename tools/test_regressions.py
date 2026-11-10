@@ -2011,6 +2011,54 @@ gangs.execute('''
     assert(npc.subs[1]=='background_npcs/gangs/wolves/light_male', 'redressed after the body changes')
 ''')
 
+roster = realm(True)
+roster.execute('''
+    bgNPC.Modes={IsPeaceful=function() return false end}
+    setcv('bgn_gang_help_chance',100); setcv('bgn_gang_war_chance',0)
+    all={}
+    function Gang(gang,x)
+        local npc={valid=true,pos=Vector(x,0,0),GetPos=function(self) return self.pos end}
+        local a={data={gang=gang},npc=npc,enemies={},alive=true}
+        function a:IsAlive() return self.alive end
+        function a:InVehicle() return false end
+        function a:GetNPC() return npc end
+        function a:HasEnemy(e) return self.enemies[e] == true end
+        function a:AddEnemy(e) if hooks.BGN_AddActorEnemy.BGN_FightRoster(self,e) then return end self.enemies[e]=true end
+        function a:EqualStateGroup() return true end
+        function a:SetState(s) self.state=s end
+        all[#all+1]=a
+        return a
+    end
+    bgNPC.Actors={GetInRadius=function() return all end,GetAll=function() return all end}
+    function IsValid(v) return v ~= nil and v.valid ~= false end
+    function math.sqrt(x) return x^0.5 end
+''')
+load(roster, 'systems/sv_fight_roster.lua')
+roster.execute('''
+    local enemy={valid=true,Health=function() return 100 end}
+    local crowd={}
+    for i=1,12 do crowd[i]=Gang('crows',i*10) end
+    local wolf=Gang('wolves',50)
+    crowd[1]:AddEnemy(enemy)
+    local members=0
+    for _,a in ipairs(crowd) do if a.enemies[enemy] then members=members+1 end end
+    local r=bgNPC.Roster.Get('crows',enemy)
+    assert(members==r.size and r.size>=1 and r.size<=6, 'the roster caps the fight: '..members)
+    assert(bgNPC.Roster.IsMember(crowd[1],enemy))
+    local outsider
+    for _,a in ipairs(crowd) do if not a.enemies[enemy] then outsider=a break end end
+    assert(outsider and not bgNPC.Roster.IsMember(outsider,enemy), 'the rest of the gang stays out')
+    outsider:AddEnemy(enemy); assert(not outsider.enemies[enemy], 'the rest is refused the enemy')
+    assert(not bgNPC.Roster.Get('wolves',enemy), 'another gang has no roster here')
+    wolf:AddEnemy(enemy); assert(wolf.enemies[enemy] and bgNPC.Roster.Get('wolves',enemy).size==1, 'a rival gang forms its own roster')
+    local civilian={data={},IsAlive=function() return true end}
+    assert(bgNPC.Roster.IsMember(civilian,enemy) and hooks.BGN_AddActorEnemy.BGN_FightRoster(civilian,enemy)==nil, 'non-gang actors are untouched')
+    setcv('bgn_gang_help_chance',0)
+    local lone={valid=true,Health=function() return 100 end}
+    crowd[1].enemies[lone]=nil; crowd[1]:AddEnemy(lone)
+    assert(bgNPC.Roster.Get('crows',lone).size==1, 'no chance, no helpers')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['actor/sh_actor.lua', 'api/sh_actors.lua', 'api/sh_statistics.lua',
          'modules/sv_followers_mod.lua', '../entities/npc_decentvehicle_passenger/init.lua',
