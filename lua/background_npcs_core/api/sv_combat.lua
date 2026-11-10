@@ -111,8 +111,9 @@ local function EquipWeapon(actor, npc, weapon_class)
 	npc:SelectWeapon(weapon_class)
 	hook.Run('BGN_PostSelectWeapon', actor, npc, weapon_class)
 
-	-- A metropolice with the stunstick (idle state) and the pistol shows both in its hands: keep only the selected one.
-	if actor.class == 'npc_metropolice' and npc.GetWeapons then
+	-- A police actor with the stunstick (idle state) and the pistol shows both in its hands: keep only the selected one.
+	-- By team, not by NPC class: the config may give the police another class.
+	if actor:HasTeam('police') and npc.GetWeapons then
 		for _, other in ipairs(npc:GetWeapons()) do
 			if other ~= weapon then other:Remove() end
 		end
