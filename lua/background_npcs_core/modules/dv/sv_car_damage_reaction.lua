@@ -1,3 +1,5 @@
+local RAM_REACTION_CHANCE = 10 -- percent of rams by an actor-driven car that the police in the rammed car react to
+
 -- Not only IsVehicle(): simfphys/LVS/Glide chassis are scripted entities, and a hit on them must reach the occupants too.
 hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginfo)
 	if dmginfo:GetDamage() <= 0 then return end
@@ -11,7 +13,16 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 		if vehicle_provider and vehicle_provider:GetVehicle() == target then
 			-- Exiting removes actors from the provider's list.
 			local passengers = {}
-			for k, actor in ipairs(vehicle_provider:GetPassengers()) do passengers[k] = actor end
+			local police_inside = false
+			for k, actor in ipairs(vehicle_provider:GetPassengers()) do
+				passengers[k] = actor
+				police_inside = police_inside or actor:HasTeam('police')
+			end
+
+			-- another actor's car rams a police car: the officers react only now and then, otherwise the hit is ignored
+			local rammer = bgNPC.Actors.Get(attacker)
+			if police_inside and rammer and rammer:InVehicle() and not bgNPC.Util.Chance(RAM_REACTION_CHANCE)
+				and (dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE)) then return end
 
 			for k = 1, #passengers do
 				local actor = passengers[k]

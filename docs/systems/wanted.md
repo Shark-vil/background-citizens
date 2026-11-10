@@ -13,7 +13,7 @@ Sources: `systems/wanted/`, `systems/sv_offender.lua`, `config/states/sh_wanted.
 
 Kills, witnesses, police calls and arrest refusal feed wanted handling. Ignored/arrested players and medic actors are excluded from new wanted entries. Actor wanted identity survives DV body replacement. Non-player wanted actors unseen by players for 15 seconds are dropped; this is separate from player wanted expiry and population removal.
 
-A resident who kills a resident or damages a police car by ramming becomes an offender: it loses residents and gains offenders in its own configuration copy. The team is not automatically restored when wanted expires. Witnessed crimes can also create wanted state when enabled. See [brains](brains.md) for reactions and [arrest](arrest.md) for surrender/refusal.
+A resident who kills a resident or damages a police car by ramming becomes an offender (the officers react to a ram by an actor-driven car only with 10% per hit; otherwise it is ignored and does no damage to them, `modules/dv/sv_car_damage_reaction.lua`): it loses residents and gains offenders in its own configuration copy. The team is not automatically restored when wanted expires. Witnessed crimes can also create wanted state when enabled. See [brains](brains.md) for reactions and [arrest](arrest.md) for surrender/refusal.
 
 ## Integration
 
