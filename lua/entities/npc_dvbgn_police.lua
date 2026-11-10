@@ -254,6 +254,7 @@ function ENT:Think()
     self.UpdateWaypointListDelay = self.UpdateWaypointListDelay or 0
 
     if target_pos then
+        self.TargetSeenAt = CurTime()
         if not self.IsTargetExists then
             self.IsTargetExists = true
             self.Preference.GiveWay = false
@@ -275,7 +276,8 @@ function ENT:Think()
             -- a moving target needs fresh paths, close to it more often
             self.UpdateWaypointListDelay = CurTime() + (self:GetPos():DistToSqr(target_pos) < 1000000 and 1 or 3)
         end
-    elseif self.IsTargetExists then
+    -- a target that blinks out for a moment (a car seat swap, a health read) must not toggle the siren
+    elseif self.IsTargetExists and CurTime() - (self.TargetSeenAt or 0) > 3 then
         self.IsTargetExists = false
         self.WaypointList = {}
         self.Waypoint = nil
