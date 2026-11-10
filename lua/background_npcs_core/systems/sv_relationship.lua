@@ -53,14 +53,15 @@ local function GetPlayersDisposition(npc)
 	return D_NU
 end
 
-local function SetNPCRelationship(actor, another_npc)
+-- @param disposition number|nil precomputed GetPlayersDisposition(another_npc), it does not depend on the actor
+local function SetNPCRelationship(actor, another_npc, disposition)
 	if not actor:IsAlive() then return end
 	if another_npc.bgn_probe then return end -- sv_nextbot_hostility.lua
 
 	local actor_npc = actor:GetNPC()
 	local another_actor = bgNPC.Actors.Get(another_npc)
 	local is_ignore_another_npc = cvar_bgn_ignore_another_npc:GetBool()
-	local disposition = GetPlayersDisposition(another_npc)
+	disposition = disposition or GetPlayersDisposition(another_npc)
 
 	if another_actor then
 		if bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor) then
@@ -110,7 +111,8 @@ local function SetNPCRelationship(actor, another_npc)
 		elseif not is_ignore_another_npc then
 			local reaction = actor:GetReactionForProtect()
 			if actor:HasStateGroup(reaction, 'danger') then
-				actor:SetState(reaction, nil, true)
+				-- a forced restart of a running danger state for every new hostile NPC froze the server with many actors
+				if not actor:EqualStateGroup('danger') then actor:SetState(reaction, nil, true) end
 				actor:AddEnemy(another_npc)
 			end
 		end
@@ -230,9 +232,12 @@ hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
 	timer.Simple(.5, function()
 		if not IsValid(npc) or npc.isBgnActor then return end
 
-		for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+		local actors = bgNPC.Actors.GetAll()
+		local disposition = GetPlayersDisposition(npc)
+		for i = #actors, 1, -1 do -- backwards: IsAlive() unregisters dead actors from this live list
+			local actor = actors[i]
 			if actor and actor:IsAlive() then
-				SetNPCRelationship(actor, npc)
+				SetNPCRelationship(actor, npc, disposition)
 			end
 		end
 	end)
