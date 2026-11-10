@@ -118,7 +118,7 @@ bgNPC.States.Register('defense', 'danger', {
 		-- Police may confiscate one and bandits carjack one when none of their own is near (go_to_police_car).
 		if (data.next_car_check or 0) <= now then
 			data.next_car_check = now + CAR_CHECK_PERIOD
-			if IsEnemyInVehicle(enemy) and bgNPC.Util.Chance(CAR_CHANCE) then
+			if IsEnemyInVehicle(enemy) and bgNPC.Actor.DrivesAway(enemy) and bgNPC.Util.Chance(CAR_CHANCE) then
 				actor:SetState('go_to_police_car', { seize = actor:HasTeam('police') or actor:HasTeam('bandits') })
 				if actor:HasState('go_to_police_car') then return end
 			end

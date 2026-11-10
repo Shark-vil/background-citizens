@@ -173,6 +173,8 @@ local function DrivesAway(target)
 	return not car.bgn_still_since or now - car.bgn_still_since < STILL_TIME
 end
 
+Actor.DrivesAway = DrivesAway -- also used by the fight: no point in boarding a car after a target that stands still
+
 function Actor:ShouldExitVehicle()
 	if not self:HasTeam('police') or not self.vehicle or not self.vehicle:IsValid() then return true end
 	local vehicle = self.vehicle:GetVehicle()

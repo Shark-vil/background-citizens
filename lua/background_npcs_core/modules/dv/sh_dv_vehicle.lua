@@ -154,6 +154,8 @@ end
 function VEHICLE:AddPassenger(actor)
 	Assert.Arg(1, actor, 'actor', 'VEHICLE:AddPassenger')
 	if not self:CanUse(actor) then return false end
+	-- an officer rides only with its own, never beside a civilian or an offender at the wheel
+	if actor:HasTeam('police') and actor.last_vehicle ~= self and string.Explode('|', self.type)[1] ~= 'police' then return false end
 
 	if table_HasValueBySeq(self.passengers, actor) then return false end
 	if self.passengers_limit ~= -1 and #self.passengers >= self.passengers_limit then return false end
