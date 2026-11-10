@@ -2000,7 +2000,8 @@ gangs.execute('''
     data.heavy_chance=0
     hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,'gangster_crows',data)
     assert(npc.model:find('group01'), 'a light member wears citizen clothes')
-    hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,'gangster',{})
+    hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,"gangster",{})
+    assert(hooks.BGN_PreSetActorModel.BGN_Gangs_KeepModel(nil,nil,nil,{gang="crows"})==true and hooks.BGN_PreSetActorModel.BGN_Gangs_KeepModel(nil,nil,nil,{})==nil)
     local actor={weapon='weapon_shotgun',GetData=function() return {gang='wolves',heavy_weapons={'weapon_smg1'},light_weapons={'weapon_pistol'}} end,
         GetNPC=function() return npc end}
     npc.model='models/humans/group03/female_02.mdl'

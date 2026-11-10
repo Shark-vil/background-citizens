@@ -29,12 +29,18 @@ local function Dress(npc, gang)
 	end
 end
 
--- The class is the model: picked before the spawn, "unique" (4) keeps it on an npc_citizen.
+-- The class is the model: picked before the spawn, "unique" (4) keeps it on an npc_citizen. A NextBot body
+-- picks its own model when it spawns, so the model is set again right after the spawn.
 hook.Add('BGN_PreSpawnActor', 'BGN_Gangs_Model', function(npc, npc_type, data)
 	if not data.gang then return end
 	local models = math.random(100) <= (data.heavy_chance or 0) and HEAVY or LIGHT
+	npc.bgn_gang_model = models[math.random(#models)]
 	npc:SetKeyValue('citizentype', 4)
-	npc:SetModel(models[math.random(#models)])
+	npc:SetModel(npc.bgn_gang_model)
+end)
+
+hook.Add('BGN_PostSpawnActor', 'BGN_Gangs_Model', function(npc)
+	if npc.bgn_gang_model and npc:GetModel() ~= npc.bgn_gang_model then npc:SetModel(npc.bgn_gang_model) end
 end)
 
 hook.Add('BGN_InitActor', 'BGN_Gangs_Weapon', function(actor)
@@ -49,4 +55,9 @@ end)
 hook.Add('BGN_ActorEntityChanged', 'BGN_Gangs_Dress', function(actor, _, npc)
 	local gang = actor:GetData().gang
 	if gang then Dress(npc, gang) end
+end)
+
+-- the spawner's own model from the (inherited) citizen list must not replace the gang's
+hook.Add('BGN_PreSetActorModel', 'BGN_Gangs_KeepModel', function(_, _, _, data)
+	if data.gang then return true end
 end)
