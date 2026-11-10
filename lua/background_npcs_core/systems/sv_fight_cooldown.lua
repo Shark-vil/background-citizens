@@ -1,5 +1,5 @@
 --[[
-	Delay between skirmishes (cvar "bgn_fight_cooldown", seconds, 0 = off: every witness may step in, as before).
+	Delay between skirmishes (cvar "bgn_fight_cooldown", seconds, default 60, 0 = off: every witness may step in, as before).
 	The first "defense" reaction of the at_protect table (actors protecting their own) opens a window of that length
 	around the place of the skirmish (RADIUS). While it lasts, an at_protect call against ANOTHER attacker in that area
 	is ignored (Actor:GetReactionForProtect returns 'ignore' and the call for help adds no enemy). Actors joining the
