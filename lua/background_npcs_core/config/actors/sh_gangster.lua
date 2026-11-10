@@ -4,7 +4,7 @@ local name = bgNPC.Util.Lang({
 })
 
 bgNPC.cfg:SetActor('gangster', {
-	enabled = true,
+	enabled = false, -- the street gangs (sh_gangs.lua) are the gangsters now; the type stays as their base
 	inherit = 'citizen',
 	class = 'npc_citizen',
 	name = name,

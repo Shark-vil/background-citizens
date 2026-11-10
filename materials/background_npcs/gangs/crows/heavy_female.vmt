@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "background_npcs/gangs/crows/heavy_female"
+	"$halflambert" 1
+}

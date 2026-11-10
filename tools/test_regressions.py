@@ -1980,6 +1980,37 @@ police_weapons.execute('''
     assert(not bgNPC.Combat.CanPoliceShoot(enemy), 'unarmed third-party NextBots may have no weapon API')
 ''')
 
+gangs = realm(True)
+load(gangs, 'systems/npcs/sv_gang_models.lua')
+gangs.execute('''
+    function IsValid(v) return v ~= nil end
+    local function body(model)
+        local n={model=model,subs={}}
+        function n:GetModel() return self.model end
+        function n:SetModel(m) self.model=m end
+        function n:SetKeyValue(k,v) self[k]=v end
+        function n:GetMaterials() return {'models/humans/x/face','models/humans/x/citizen_sheet'} end
+        function n:SetSubMaterial(i,m) self.subs[i]=m end
+        return n
+    end
+    local data={gang='crows',heavy_chance=100}
+    local npc=body('models/humans/group01/male_01.mdl')
+    hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,'gangster_crows',data)
+    assert(npc.model:find('group03') and npc.citizentype==4, 'a heavy member wears rebel gear')
+    data.heavy_chance=0
+    hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,'gangster_crows',data)
+    assert(npc.model:find('group01'), 'a light member wears citizen clothes')
+    hooks.BGN_PreSpawnActor.BGN_Gangs_Model(npc,'gangster',{})
+    local actor={weapon='weapon_shotgun',GetData=function() return {gang='wolves',heavy_weapons={'weapon_smg1'},light_weapons={'weapon_pistol'}} end,
+        GetNPC=function() return npc end}
+    npc.model='models/humans/group03/female_02.mdl'
+    hooks.BGN_InitActor.BGN_Gangs_Weapon(actor)
+    assert(actor.weapon=='weapon_smg1' and npc.subs[1]=='background_npcs/gangs/wolves/heavy_female', 'class from the model')
+    npc.model='models/humans/group01/male_03.mdl'
+    hooks.BGN_ActorEntityChanged.BGN_Gangs_Dress(actor,nil,npc)
+    assert(npc.subs[1]=='background_npcs/gangs/wolves/light_male', 'redressed after the body changes')
+''')
+
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.
 paths = ['actor/sh_actor.lua', 'api/sh_actors.lua', 'api/sh_statistics.lua',
          'modules/sv_followers_mod.lua', '../entities/npc_decentvehicle_passenger/init.lua',

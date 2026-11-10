@@ -156,6 +156,17 @@ Hook: `BGN_ActorRevived(actor, call)`.
   takes it over) and runs, by its car when one is near (`go_to_police_car`, then `fear`). Attacked by an actor,
   it runs as before.
 
+## Gangs
+
+Two street gangs replace the plain `gangster` actor (kept disabled as their config base): **Black Raven**
+(`gangster_crows`, team `gang_crows`) and **Red Wolf** (`gangster_wolves`, team `gang_wolves`)
+(`config/actors/sh_gangs.lua`). Both keep the team `bandits` (police reactions, carjacking). A member is light
+(35 % are heavy, `heavy_chance`): light members wear HL2 citizen clothes and carry a pistol, heavy ones wear rebel gear
+and carry an SMG or a rifle (`systems/npcs/sv_gang_models.lua`). The clothes sheet of the model is replaced by the
+gang's recolor with `SetSubMaterial` (`materials/background_npcs/gangs/<gang>/<class>_<sex>`); the class is read from
+the model, so it survives revival and leaving a car. The recolors are made from the game's own textures by
+`tools/make_gang_skins.py` (needs `vpk`, `srctools`, `pillow`, `numpy`); the game files are not shipped.
+
 ## Police at a body
 
 Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/states/sv_police_inspect_body.lua`).
