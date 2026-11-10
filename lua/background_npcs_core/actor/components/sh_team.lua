@@ -73,11 +73,14 @@ function Actor:HasTeam(value)
 
 	if value.isBgnClass then
 		local data = value:GetData()
-		-- rival gangs are not teammates (both keep the team "bandits" for the police and the cars)
+		-- "bandits" is only for the police and the cars: loners, thieves and rival gangs are not teammates,
+		-- members of one gang are (through their "gang_*" team)
 		local gang = self.data.gang
-		if gang and data and data.gang and data.gang ~= gang then return false end
 		value = data and data.team
 		if not istable(value) then return false end
+		if bgNPC.Table.HasValue(own_team, 'bandits') and bgNPC.Table.HasValue(value, 'bandits') and (not gang or data.gang ~= gang) then
+			return false
+		end
 	end
 
 	if not bgNPC.Table.IsArray(value) then return false end

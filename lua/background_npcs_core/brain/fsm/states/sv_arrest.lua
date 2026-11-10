@@ -59,6 +59,13 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 
 		local enemy = bgNPC.Combat.ResolveEnemy(PoliceActor, target, attacker)
 		if enemy ~= attacker then
+			-- the officer shot a non-police actor (a gangster): the arrest below skips its damage reaction, so it answers here
+			if TargetActor and TargetActor ~= PoliceActor and not TargetActor:HasTeam('police')
+				and reaction and TargetActor:EqualStateGroup('calm')
+			then
+				TargetActor:AddEnemy(attacker)
+				TargetActor:SetState(reaction, nil, true)
+			end
 			target = attacker
 			attacker = enemy
 
