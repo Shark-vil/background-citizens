@@ -230,3 +230,28 @@ hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent,
 		end
 	end
 end)
+
+
+-- A body that lost its actor but is alive is a leak (no brain, no label, it would stand there forever).
+-- Actor:RemoveActor leaves the entity to the engine, which is right for a death only. A body the actor released
+-- on purpose (boarding a car) has BGN_ACTOR_OBJECT cleared by Actors.Rebind, so it never matches.
+local ORPHAN_GRACE = 3
+local developer = GetConVar('developer')
+
+timer.Create('BGN_RemoveOrphanBodies', 2, 0, function()
+	local now = CurTime()
+	for _, ent in ipairs(ents.GetAll()) do
+		local actor = ent.BGN_ACTOR_OBJECT
+		if actor and ent.isBgnActor == false and actor.is_removed and (ent:IsNPC() or ent:IsNextBot()) and ent:Health() > 0 then
+			ent.bgn_orphan_since = ent.bgn_orphan_since or now
+			if now - ent.bgn_orphan_since >= ORPHAN_GRACE then
+				if developer:GetInt() > 0 then
+					MsgN('[BGN] orphan body removed: ', ent:GetClass(), ' ', tostring(actor:GetType()), ' state ', tostring(actor:GetState()))
+				end
+				ent:Remove()
+			end
+		else
+			ent.bgn_orphan_since = nil
+		end
+	end
+end)

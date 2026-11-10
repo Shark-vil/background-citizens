@@ -75,8 +75,10 @@ local function UpdateActorTargetPointAsync(actor, data)
 	local position = GetNextMovePosition(actor)
 	if not position then return end
 
+	local delay
+	if bgNPC.GangPack then position, delay = bgNPC.GangPack.Destination(actor, position) end -- a gang walks as a pack
 	actor:WalkToPos(position, data.schedule, 'walk')
-	data.updateTargetPointDelay = GetRandomDelayForUpdateWalkTarget()
+	data.updateTargetPointDelay = delay and CurTime() + delay or GetRandomDelayForUpdateWalkTarget()
 end
 
 bgNPC.States.Register('walk', 'calm', {

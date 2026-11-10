@@ -1668,7 +1668,7 @@ medics.execute('''
     function Actor(npc,kind)
         return {GetNPC=function() return npc end,GetType=function() return kind or 'medic' end,
             InVehicle=function() return false end,IsAlive=function() return npc.hp>0 end,
-            EqualStateGroup=function() return false end,GetPos=function() return npc.pos end,
+            HasState=function() return false end,EqualStateGroup=function() return false end,GetPos=function() return npc.pos end,
             StopWalk=function(self) self.stopped=true end,
             GetBody=function(self) return {StopMoving=function() self.body_stopped=true end} end}
     end
@@ -2084,6 +2084,32 @@ cooldown.execute('''
     assert(C.Allow(Who(9000),far), 'far away is a separate skirmish')
     now=now+31
     assert(C.Allow(Who(100),b), 'after the window the new event passes')
+''')
+
+pack = realm(True)
+pack.execute('''
+    all={}
+    function Member(idx,gang,state)
+        local npc={valid=true,idx=idx,pos=Vector(idx*10,0,0),EntIndex=function(self) return self.idx end,GetPos=function(self) return self.pos end}
+        local a={data={gang=gang},GetNPC=function() return npc end,IsAlive=function() return true end,GetState=function() return state end}
+        all[#all+1]=a
+        return a
+    end
+    bgNPC.Actors={GetInRadius=function() return all end}
+    function IsValid(v) return v ~= nil and v.valid ~= false end
+''')
+load(pack, 'systems/npcs/sv_gang_pack.lua')
+pack.execute('''
+    local P=bgNPC.GangPack
+    local lead,f1,f2=Member(5,'crows','walk'),Member(7,'crows','walk'),Member(9,'crows','walk')
+    local other=Member(2,'wolves','walk')
+    local idle=Member(1,'crows','idle')
+    local dest=Vector(1000,0,0)
+    local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and lead.pack_dest==dest, 'the leader picks its own way')
+    d,delay=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-1000)<=250 and math.abs(d.y)<=250, 'a follower walks near the leader destination')
+    local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the spot stays while the leader destination does')
+    d,delay=P.Destination(other,Vector(3,0,0)); assert(delay==nil and d.x==3, 'another gang is its own pack')
+    d,delay=P.Destination({data={},GetNPC=lead.GetNPC},Vector(4,0,0)); assert(d.x==4 and delay==nil, 'actors outside gangs are not touched')
 ''')
 
 # Parse every changed/new Lua module with the same LuaJIT language version as GMod.

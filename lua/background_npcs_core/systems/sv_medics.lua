@@ -121,6 +121,9 @@ end)
 local function Release(medic)
 	medic.medic_call = nil
 	medic.drive_target_pos = nil
+	-- Respond marks the medic eternal even while it is fleeing or fighting; only medic_revive (and the car) resets it,
+	-- so a medic that never got to it stayed immune to the remover and piled up over the limit
+	if not medic:InVehicle() and not medic:HasState('medic_revive') then medic.eternal = false end
 end
 
 -- The medic reviving the body of a call (not its partner)

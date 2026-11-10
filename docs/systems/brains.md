@@ -177,9 +177,27 @@ never helps the other one. Calm members of rival gangs within 700 units sight of
 `bgn_gang_war_chance` percent per 10 seconds (default 0.5, `0` disables); if the police or a player step in, each
 gang fights them (and each other) with its own roster. Actors outside gangs are not affected.
 
+A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
+members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
+destination as usual, the others walk to a spot 100-250 units from it and recheck every 8 seconds.
+
+Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
+actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with
+`developer 1` the console names its type and last state). A medic marked `eternal` for a call is released together
+with the call, so it no longer escapes the limit and the remover.
+
+A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
+members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
+destination as usual, the others walk to a spot 100-250 units from it and recheck every 8 seconds.
+
+Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
+actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with
+`developer 1` the console names its type and last state). A medic marked `eternal` for a call is released together
+with the call, so it no longer escapes the limit and the remover.
+
 ## Delay between skirmishes
 
-`bgn_fight_cooldown` (Behavior > AI, 0-120 s, default 0 = off, the old behavior). With a delay, the first `defense`
+`bgn_fight_cooldown` (Behavior > AI, 0-120 s, default 60, `0` = off, the old behavior). With a delay, the first `defense`
 reaction of the `at_protect` table (actors protecting their own) opens a window of that many seconds around the
 place (2500 units). While it lasts, protecting against **another** attacker in that area is ignored: the actor takes
 the `ignore` reaction and a call for help or enemy sharing adds no enemy to it. Actors joining the skirmish that
