@@ -16,6 +16,7 @@ local F = GOAP.Fact
 local ENEMY_CLOSE_DIST_SQR = 700 ^ 2
 local LOW_HEALTH_FRACTION = 0.35
 local SURRENDER_HEALTH_FRACTION = 0.5 -- below this an actor may give up, above it never
+local SURRENDER_CHANCE = 8 -- percent per attempt (one per BLOCK_TIME while the conditions hold)
 local NOT_WEAPONS = {
 	weapon_physgun = true, weapon_physcannon = true, gmod_tool = true, gmod_camera = true,
 	weapon_fists = true, none = true,
@@ -138,14 +139,15 @@ GOAP.RegisterAction('call_backup', {
 local ArrestModule
 GOAP.RegisterAction('surrender', {
 	state = 'arrest_surrender',
-	trait = true,
-	chance = 0.5, -- half of the actors with this set ever give up
+	always = true, -- no config weight; whether it happens is a roll per attempt (prepare)
 	pre = { has_enemy = true, enemy_police = true, can_surrender = true, is_police = false },
 	effects = { surrendered = true },
 	cost = 1,
 	prepare = function(actor)
 		ArrestModule = ArrestModule or bgNPC.Modules.Get('player_arrest')
 		if not ArrestModule or not GetConVar('bgn_arrest_mode'):GetBool() then return false end
+		-- a failed roll blocks the action for BLOCK_TIME, so this is the chance per attempt, not a condition
+		if not bgNPC.Util.Chance(SURRENDER_CHANCE) then return false end
 		local npc = actor:GetNPC()
 		local police = ArrestModule:FoundPoliceInRadius(npc)
 		if not police then return false end

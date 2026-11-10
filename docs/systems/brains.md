@@ -69,9 +69,9 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   `hide` → `retreat` (wanted actors only), `take_cover` → `take_cover`, `call_backup` → `call_backup`,
   `surrender` → `arrest_surrender`.
   An actor can only use actions whose state appears in its `at_damage` / `at_protect` config with a weight
-  above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`).
-  A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%), `surrender`
-  with its `chance` (50%).
+  above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`, `surrender`).
+  A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%). `surrender` is
+  not a trait: it is rolled at every attempt (8%, see below).
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
   Any state change re-reads the facts at once, so an action that finished with its effects (`take_cover` sets
   `in_cover`, `call_backup` sets `backup_called`) moves the plan on instead of failing. An action whose state is
@@ -89,7 +89,8 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   - `call_backup`: the officer calls on the radio (`police_backup`); up to 3 free officers on foot within 4000
     units take the enemy and come. Once per officer per minute.
   - `surrender`: a hurt gangster (`low_health`) facing the police gives up (goal `give_up`, above hiding) when an
-    officer within 700 units sees it and `bgn_arrest_mode` is on: it says `give_up`, the officer (stepping out of
+    officer within 700 units sees it and `bgn_arrest_mode` is on, and only with an 8% roll per attempt (a failed roll
+    blocks the action for 5 s, so the roll repeats every few seconds while the conditions hold): it says `give_up`, the officer (stepping out of
     its car if needed) arrests it through `ArrestModule:Surrender` (`systems/arrest`). The plan never interrupts
     `arrest_surrender`.
 - Arrests are not planned: the arrest system (`systems/arrest`, `ArrestModule:CanArrest`) owns them, and it
