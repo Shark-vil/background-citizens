@@ -163,6 +163,9 @@ function ENT:Initialize()
 	self:SetHealth(self.bgn_health or 100)
 	self:SetMaxHealth(self:Health())
 	self:BGN_ResetHull()
+	-- HL2 NPC senses look only at NPCs, players and FL_OBJECT entities (registered at spawn): without it an NPC
+	-- that hates the bot never "sees" it and only faces it, never shoots
+	self:AddFlags(FL_OBJECT)
 
 	self.loco:SetStepHeight(18)
 	self.loco:SetJumpHeight(58)

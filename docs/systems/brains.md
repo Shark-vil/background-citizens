@@ -14,7 +14,7 @@ NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, 
 perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
 
-In `nextbot` mode regular HL2 NPCs have no relationship with the bodies (the engine only knows NPC classes), so `systems/sv_nextbot_hostility.lua` once per second gives every NPC within 2500 units the relationship it has with the actor's original class, measured on a hidden probe NPC of that class: an Enemy Rebel attacks nextbot actors as it did real NPCs. Skipped in peaceful mode and with `bgn_ignore_another_npc`.
+In `nextbot` mode regular HL2 NPCs have no relationship with the bodies (the engine only knows NPC classes), so `systems/sv_nextbot_hostility.lua` once per second gives every NPC within 2500 units the relationship it has with the actor's original class, measured on a hidden probe NPC of that class (flagged no-target, so nobody hunts it): an Enemy Rebel attacks nextbot actors as it did real NPCs. An NPC also hates a bot that hates it (the actor fights it). HL2 NPC senses look only at NPCs, players and `FL_OBJECT` entities, so `bgn_nextbot` sets `FL_OBJECT` in `Initialize` (it must be set before the engine registers the entity at spawn): without it an NPC that hates the bot only faces it and never shoots. Skipped in peaceful mode and with `bgn_ignore_another_npc`.
 
 Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
 back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by

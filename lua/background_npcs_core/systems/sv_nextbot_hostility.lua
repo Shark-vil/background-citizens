@@ -1,7 +1,8 @@
 --[[
 	Regular HL2 NPCs have no relationship with a NextBot body: the engine only knows classes of NPCs and players,
 	so an "Enemy Rebel" walks past a nextbot actor. The NPC gets the relationship it has with the actor's original
-	NPC class, measured on a hidden probe NPC of that class (works for modded NPC classes too).
+	NPC class, measured on a hidden probe NPC of that class (works for modded NPC classes too). NPC senses see the
+	bot because it carries FL_OBJECT (entities/bgn_nextbot.lua); without it an NPC only faces it, never shoots.
 --]]
 
 local PERIOD = 1
@@ -22,6 +23,7 @@ local function Probe(class)
 	probe:Spawn()
 	probe:SetNoDraw(true)
 	probe:SetNotSolid(true)
+	probe:AddFlags(FL_NOTARGET) -- hostile NPCs must not hunt the hidden probe
 	probe:AddEFlags(EFL_NO_THINK_FUNCTION)
 	probes[class] = probe
 	return probe
@@ -39,19 +41,14 @@ timer.Create('BGN_Timer_NextBotHostility', PERIOD, 0, function()
 
 	for _, npc in ipairs(ents.GetAll()) do
 		if IsValid(npc) and npc:IsNPC() and not npc.isBgnActor and not npc.bgn_probe and npc:Health() > 0 then
-			local pos, enemy = npc:GetPos(), npc:GetEnemy()
+			local pos = npc:GetPos()
 			for _, actor in ipairs(bots) do
 				local body = actor:GetNPC()
-				if pos:DistToSqr(body:GetPos()) <= RANGE_SQR then
+				-- already hated: the actor fights this NPC (NextBotBody:SetDisposition) or an earlier pass.
+				-- The NPC's own senses do the rest: the bot carries FL_OBJECT (entities/bgn_nextbot.lua).
+				if pos:DistToSqr(body:GetPos()) <= RANGE_SQR and npc:Disposition(body) ~= D_HT then
 					local probe = Probe(actor.class)
-					if probe and npc:Disposition(probe) == D_HT then
-						npc:AddEntityRelationship(body, D_HT, 100)
-						if not IsValid(enemy) and npc:Visible(body) then
-							npc:SetEnemy(body)
-							npc:UpdateEnemyMemory(body, body:GetPos())
-							enemy = body
-						end
-					end
+					if probe and npc:Disposition(probe) == D_HT then npc:AddEntityRelationship(body, D_HT, 100) end
 				end
 			end
 		end
