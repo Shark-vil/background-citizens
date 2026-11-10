@@ -189,7 +189,8 @@ gang fights them (and each other) with its own roster. Actors outside gangs are 
 
 A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
 members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
-destination as usual, the others walk to a spot 100-250 units from it and recheck every 8 seconds.
+destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
+run), and recheck every 2 seconds.
 
 Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
 actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with
@@ -198,7 +199,8 @@ with the call, so it no longer escapes the limit and the remover.
 
 A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
 members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
-destination as usual, the others walk to a spot 100-250 units from it and recheck every 8 seconds.
+destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
+run), and recheck every 2 seconds.
 
 Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. A body that lost its
 actor while still alive (no label, no brain) is removed after 3 seconds (`spawner/sv_actor_remover.lua`, with

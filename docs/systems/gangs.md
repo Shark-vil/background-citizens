@@ -18,7 +18,7 @@ A calm member can start a rival-gang fight within 700 units, checked every 10 se
 
 ## Pack walking
 
-Walking members look for a same-gang walking leader within 1500 units: lowest entity index among eligible members. Followers aim 100–250 units around its destination and recheck after 8 seconds. Other actor types keep normal walking.
+Walking members look for a same-gang walking leader within 1500 units: lowest entity index among eligible members. Followers walk with the leader itself, 80–180 units around its current position, at its pace (walk or run), and recheck every 2 seconds. Other actor types keep normal walking.
 
 ## Protection cooldown
 
