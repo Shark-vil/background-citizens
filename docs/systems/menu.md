@@ -30,7 +30,8 @@ The **Spawn** page separates pedestrian settings from vehicle visibility. Server
 | --- | --- | --- |
 | `bgn_spawn_radius` | 3000 | Radius used to find spawn points around players. |
 | `bgn_spawn_block_radius` | 600 | No pedestrian spawns this close to any player. |
-| `bgn_spawn_radius_visibility` | 2000 | Within this distance in a player's view direction vehicles spawn only when the whole car body (a grid of points over its size) is hidden behind cover; affects vehicles only. |
+| `bgn_spawn_radius_visibility` | 2000 | Visibility radius of players. Used only by [wanted](wanted.md): a wanted NPC/actor (not a player) is dropped after 15 s outside every player's field of view or farther than half of this radius; obstacles are not checked. |
+| `bgn_vehicle_spawn_visibility_radius` | 2000 | Within this distance in a player's view direction vehicles spawn only when the whole car body (a grid of points over its size) is hidden behind cover; affects vehicles only. |
 | `bgn_actor_unseen_time` | 30 | Seconds unseen by every player before an eligible actor can be removed or teleported; `0` permits immediate recycling out of sight. |
 | `bgn_vehicle_cleanup_time` | 120 | Cleanup timeout for an unseen BGN car left without a driver or failing to move more than 128 units from its anchor; `0` disables this additional cleanup. |
 

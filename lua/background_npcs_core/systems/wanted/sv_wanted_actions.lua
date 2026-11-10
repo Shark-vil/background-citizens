@@ -9,13 +9,17 @@ local impunity_limit_reduction_period = GetConVar('bgn_wanted_impunity_reduction
 local impunity_last_reduction_period = 0
 -- local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_detection_radius = GetConVar('bgn_wanted_detection_radius')
--- A wanted actor nobody among the players sees for this long is dropped from the wanted list.
+local cvar_level_up_period = GetConVar('bgn_wanted_level_up_period')
+local cvar_radius_visibility = GetConVar('bgn_spawn_radius_visibility')
+-- A wanted actor out of every player's view zone for this long is dropped from the wanted list.
 local UNSEEN_RESET_TIME = 15
 
-local function SeenByPlayer(ent, radius_sqr)
+-- The view zone: the player's field of view within half of bgn_spawn_radius_visibility; obstacles don't matter.
+local function InPlayerViewZone(ent)
+	local radius_sqr = (cvar_radius_visibility:GetFloat() / 2) ^ 2
+	local center = ent:WorldSpaceCenter()
 	for _, ply in ipairs(player.GetHumans()) do
-		if ply:Alive() and ply:GetPos():DistToSqr(ent:GetPos()) <= radius_sqr
-			and bgNPC.Vision.PlayerCanSeePos(ply, ent:WorldSpaceCenter()) and bgNPC.Vision.HasLineOfSight(ply, ent) then
+		if ply:Alive() and ply:GetPos():DistToSqr(center) <= radius_sqr and bgNPC.Vision.PlayerCanSeePos(ply, center) then
 			return true
 		end
 	end
@@ -23,9 +27,9 @@ local function SeenByPlayer(ent, radius_sqr)
 end
 
 -- @return boolean true if the actor was dropped from the wanted list
-local function DropIfUnseen(WantedClass, enemy, radius_sqr)
+local function DropIfUnseen(WantedClass, enemy)
 	if enemy:IsPlayer() then return false end
-	if SeenByPlayer(enemy, radius_sqr) then
+	if InPlayerViewZone(enemy) then
 		WantedClass.unseen_since = nil
 		return false
 	end
@@ -254,7 +258,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 		local enemy = WantedClass.target
 		local is_update = false
 
-		if IsValid(enemy) and not DropIfUnseen(WantedClass, enemy, ray_distance_detect) then
+		if IsValid(enemy) and not DropIfUnseen(WantedClass, enemy) then
 			local wait_time = WantedClass.time_reset - CurTime()
 			if wait_time < 0 then wait_time = 0 end
 			WantedClass:UpdateWaitTime(wait_time)
@@ -274,8 +278,19 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
 				end
 			end
 
-			-- an actor's wanted status is renewed only while he fights
-			if is_update and (enemy:IsPlayer() or bgNPC.Combat.IsFighting(enemy)) then WantedClass:UpdateWanted() end
+			-- seen by the hunters: the timer stays full
+			if is_update then WantedClass:UpdateWanted() end
+
+			-- a wanted actor (not a player) escalates on its own
+			local level_up_period = cvar_level_up_period:GetFloat()
+			if level_up_period > 0 and not enemy:IsPlayer() then
+				local now = CurTime()
+				WantedClass.next_auto_level = WantedClass.next_auto_level or now + level_up_period
+				if WantedClass.next_auto_level <= now then
+					WantedClass.next_auto_level = now + level_up_period
+					WantedClass:LevelUp()
+				end
+			end
 
 			if WantedClass.time_reset < CurTime() then
 				asset:RemoveWanted(enemy)

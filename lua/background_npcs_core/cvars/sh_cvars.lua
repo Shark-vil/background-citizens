@@ -9,6 +9,7 @@ bgNPC.cvar.bgn_dynamic_nodes_radius = 1000
 bgNPC.cvar.bgn_spawn_radius = 3000
 bgNPC.cvar.bgn_disable_logic_radius = 500
 bgNPC.cvar.bgn_spawn_radius_visibility = 2000
+bgNPC.cvar.bgn_vehicle_spawn_visibility_radius = 2000
 bgNPC.cvar.bgn_actor_unseen_time = 30
 bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
@@ -20,6 +21,7 @@ bgNPC.cvar.bgn_point_z_limit = 100
 bgNPC.cvar.bgn_enable_wanted_mode = 1
 bgNPC.cvar.bgn_wanted_time = 30
 bgNPC.cvar.bgn_wanted_level = 1
+bgNPC.cvar.bgn_wanted_level_up_period = 60
 bgNPC.cvar.bgn_cl_disable_hud_local = 0
 bgNPC.cvar.bgn_wanted_hud_text = 1
 bgNPC.cvar.bgn_wanted_hud_stars = 1
@@ -139,6 +141,8 @@ bgNPC.CVars.Register('bgn_wanted_time', bgNPC.cvar.bgn_wanted_time, 'The time yo
 
 bgNPC.CVars.Register('bgn_wanted_level', bgNPC.cvar.bgn_wanted_level, 'Enables or disables the boost wanted level mode.')
 
+bgNPC.CVars.Register('bgn_wanted_level_up_period', bgNPC.cvar.bgn_wanted_level_up_period, 'Every this many seconds a wanted NPC (not a player) gains a wanted level. Needs bgn_wanted_level. The value "0" disables the option.')
+
 bgNPC.CVars.Register('bgn_wanted_hud_text', bgNPC.cvar.bgn_wanted_hud_text, 'Enables or disables the text about wanted time.')
 
 bgNPC.CVars.Register('bgn_wanted_hud_stars', bgNPC.cvar.bgn_wanted_hud_stars, 'Enables or disables drawing of stars in wanted mode.')
@@ -155,7 +159,8 @@ bgNPC.CVars.Register('bgn_spawn_radius', bgNPC.cvar.bgn_spawn_radius, 'NPC spawn
 
 bgNPC.CVars.Register('bgn_disable_logic_radius', bgNPC.cvar.bgn_disable_logic_radius, 'Determines at what distance the NPC will disable logic for optimization purposes')
 
-bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Within this distance in front of a player DV vehicles spawn only when the whole car body is hidden behind cover. Legacy cvar name; affects vehicles only.')
+bgNPC.CVars.Register('bgn_spawn_radius_visibility', bgNPC.cvar.bgn_spawn_radius_visibility, 'Visibility radius of players. A wanted NPC (not a player) is dropped from the wanted list after 15 seconds outside the field of view of every player or farther than half of this radius from all of them; obstacles are not checked.')
+bgNPC.CVars.Register('bgn_vehicle_spawn_visibility_radius', bgNPC.cvar.bgn_vehicle_spawn_visibility_radius, 'Within this distance in front of a player DV vehicles spawn only when the whole car body is hidden behind cover. Affects vehicles only.')
 bgNPC.CVars.Register('bgn_actor_unseen_time', bgNPC.cvar.bgn_actor_unseen_time, 'Seconds without any player seeing an actor before it can be removed or teleported. 0 allows immediate recycling out of sight.')
 bgNPC.CVars.Register('bgn_wanted_detection_radius', bgNPC.cvar.bgn_wanted_detection_radius, 'Distance at which residents can see a wanted target and keep the wanted timer active.')
 

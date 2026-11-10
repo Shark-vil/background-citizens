@@ -172,8 +172,9 @@ Menu.AddPage('spawn', {
 	build = function(page)
 		page:Section('#bgn.menu.section.main')
 		page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
+		page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
 		if istable(DecentVehicleDestination) then
-			page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
+			page:Slider('bgn_vehicle_spawn_visibility_radius', '#bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000)
 		end
 		page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
 		page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, { decimals = 1 })
@@ -205,6 +206,7 @@ Menu.AddPage('wanted', {
 		page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
 		page:Slider('bgn_wanted_detection_radius', '#bgn.settings.wanted.detection_radius', 0, 5000)
 		page:Toggle('bgn_wanted_level', '#bgn.settings.wanted.level')
+		page:Slider('bgn_wanted_level_up_period', '#bgn.settings.wanted.level_up_period', 0, 600)
 		page:Toggle('bgn_wanted_police_instantly', '#bgn.settings.wanted.police_instantly')
 		page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)
 		page:Slider('bgn_wanted_impunity_limit', '#bgn.settings.wanted.impunity_limit', 0, 50)
