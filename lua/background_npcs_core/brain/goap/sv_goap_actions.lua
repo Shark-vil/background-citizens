@@ -14,6 +14,7 @@ local GOAP = bgNPC.GOAP
 local F = GOAP.Fact
 
 local ENEMY_CLOSE_DIST_SQR = 700 ^ 2
+local OUTNUMBERED_DIST_SQR = 2000 ^ 2
 local LOW_HEALTH_FRACTION = 0.35
 local SURRENDER_HEALTH_FRACTION = 0.5 -- below this an actor may give up, above it never
 local SURRENDER_CHANCE = 8 -- percent per attempt (one per BLOCK_TIME while the conditions hold)
@@ -49,6 +50,21 @@ GOAP.sensors = {
 	enemy_police = function(actor, npc, enemy)
 		local enemy_actor = IsValid(enemy) and bgNPC.Actors.Get(enemy)
 		return enemy_actor and enemy_actor:HasTeam('police') or false
+	end,
+	-- more living enemies than officers within OUTNUMBERED_DIST (only the police plan around it)
+	outnumbered = function(actor, npc)
+		if actor.enemies_count < 2 or not actor:HasTeam('police') then return false end
+		local pos, enemies, officers = npc:GetPos(), 0, 0
+		for _, enemy in ipairs(actor.enemies) do
+			if IsValid(enemy) and enemy:Health() > 0 and enemy:GetPos():DistToSqr(pos) < OUTNUMBERED_DIST_SQR then
+				enemies = enemies + 1
+			end
+		end
+		if enemies < 2 then return false end
+		for _, officer in ipairs(bgNPC.Actors.GetByTeam('police')) do
+			if officer:IsAlive() and officer:GetPos():DistToSqr(pos) < OUTNUMBERED_DIST_SQR then officers = officers + 1 end
+		end
+		return enemies > officers
 	end,
 	surrendered = function(actor) return actor:HasState('arrest_surrender') end,
 	police_called = function(actor, npc, enemy)
@@ -92,10 +108,10 @@ GOAP.RegisterAction('attack', {
 	cost = function(ws)
 		local cost = 2
 		if Has(ws, 'low_health') then cost = cost + 4 end
-		-- an armed enemy is cheaper to fight from cover, and for the police with backup on the way
-		if Has(ws, 'enemy_armed') then
+		-- an armed enemy or a crowd is cheaper to fight from cover; an outnumbered officer also wants backup
+		if Has(ws, 'enemy_armed') or Has(ws, 'outnumbered') then
 			if not Has(ws, 'in_cover') then cost = cost + 3 end
-			if Has(ws, 'is_police') and not Has(ws, 'backup_called') then cost = cost + 2 end
+			if Has(ws, 'outnumbered') and Has(ws, 'is_police') and not Has(ws, 'backup_called') then cost = cost + 3 end
 		end
 		return cost
 	end,
@@ -118,11 +134,12 @@ GOAP.RegisterAction('hide', {
 	cost = 1,
 })
 
--- attack chains: [call_backup ->] take_cover -> attack against an armed enemy (see the attack cost)
+-- attack chains: take_cover [-> call_backup] -> attack against an armed enemy or, for an outnumbered officer,
+-- a crowd. Cover is picked only when the attack cost makes it cheaper, so it needs no enemy_armed itself.
 GOAP.RegisterAction('take_cover', {
 	state = 'take_cover',
 	always = true,
-	pre = { has_enemy = true, armed = true, enemy_armed = true, in_cover = false },
+	pre = { has_enemy = true, armed = true, in_cover = false },
 	effects = { in_cover = true },
 	cost = 2,
 })
@@ -130,9 +147,10 @@ GOAP.RegisterAction('take_cover', {
 GOAP.RegisterAction('call_backup', {
 	state = 'call_backup',
 	always = true,
-	pre = { has_enemy = true, is_police = true, enemy_armed = true, backup_called = false, in_cover = false },
+	pre = { has_enemy = true, is_police = true, outnumbered = true, backup_called = false },
 	effects = { backup_called = true },
-	cost = 1,
+	-- from cover first; in the open only when no cover is found (take_cover blocked)
+	cost = function(ws) return Has(ws, 'in_cover') and 1 or 2 end,
 })
 
 -- A hurt gangster facing the police may give up (systems/arrest): it surrenders and the officer arrests it.
@@ -277,9 +295,15 @@ bgNPC.Test.Add('goap.sets', function(check)
 	local fight = { A.attack, A.take_cover, A.call_backup }
 	ws = bit.bor(F('has_enemy'), F('armed'), F('enemy_armed'), F('is_police'))
 	plan = GOAP.Plan(ws, GOAP.goals.eliminate, fight)
-	check(plan and #plan == 3 and plan[1] == A.call_backup and plan[2] == A.take_cover and plan[3] == A.attack,
-		'police vs an armed enemy: backup, cover, attack')
-	plan = GOAP.Plan(bit.bor(ws, F('backup_called'), F('in_cover')), GOAP.goals.eliminate, fight)
+	check(plan and #plan == 2 and plan[1] == A.take_cover and plan[2] == A.attack,
+		'police vs one armed enemy: cover, attack, no backup')
+	local crowd = bit.bor(F('has_enemy'), F('armed'), F('is_police'), F('outnumbered'))
+	plan = GOAP.Plan(crowd, GOAP.goals.eliminate, fight)
+	check(plan and #plan == 3 and plan[1] == A.take_cover and plan[2] == A.call_backup and plan[3] == A.attack,
+		'outnumbered police: cover, backup, attack')
+	plan = GOAP.Plan(crowd, GOAP.goals.eliminate, { A.attack, A.call_backup })
+	check(plan and #plan == 2 and plan[1] == A.call_backup, 'outnumbered, no cover: backup in the open')
+	plan = GOAP.Plan(bit.bor(crowd, F('backup_called'), F('in_cover')), GOAP.goals.eliminate, fight)
 	check(plan and #plan == 1 and plan[1] == A.attack, 'in cover with backup: attack')
 	plan = GOAP.Plan(bit.bor(F('has_enemy'), F('armed')), GOAP.goals.eliminate, fight)
 	check(plan and #plan == 1 and plan[1] == A.attack, 'unarmed enemy: attack right away')

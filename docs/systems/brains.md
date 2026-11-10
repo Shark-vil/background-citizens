@@ -70,7 +70,8 @@ the plan and attacked whenever the actor had an enemy, which made fights much mo
 
 - **Facts** are measured by sensors once per second (and right after damage or a new enemy):
   `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `enemy_police`, `police_called`,
-  `wanted`, `in_cover`, `backup_called`, `surrendered`.
+  `wanted`, `in_cover`, `backup_called`, `outnumbered`, `surrendered`. `outnumbered` is police only: two or more
+  living enemies of the officer within 2000 units, and more of them than living officers there (itself included).
 - **Actions** run states: `attack` → `defense`, `flee` → `fear`, `call_police` → `calling_police`,
   `hide` → `retreat` (wanted actors only), `take_cover` → `take_cover`, `call_backup` → `call_backup`,
   `surrender` → `arrest_surrender`.
@@ -85,13 +86,16 @@ the plan and attacked whenever the actor had an enemy, which made fights much mo
   without its effects is blocked for 5 s, then the plan is made again; a state outside the plan ends the fight.
 - **Reactions** (`GetReactionForDamage` / `GetReactionForProtect`) are the config roll, as in FSM. In `fear` an
   armed actor switches to `defense` (as in FSM) unless the plan itself sent it to flee.
-- **Chains.** Fighting an armed enemy costs more out of cover, and for the police without backup, so the plans are
-  `take_cover → attack` and, for the police, `call_backup → take_cover → attack`:
+- **Chains.** Fighting an armed enemy or, for an outnumbered officer, a crowd costs more out of cover, and an
+  outnumbered officer without backup pays more again, so the plans are `take_cover → attack` and, for an
+  outnumbered officer, `take_cover → call_backup → attack` (no cover found: `call_backup → attack` in the open):
   - `take_cover`: runs to the nearest nav point within 1000 units the enemy can't see at crouch height
     (`bgNPC.FindCover`), crouches 3 s, then fights 10 s (`in_cover`) before the next cover. No cover found: it
     fights.
-  - `call_backup`: the officer calls on the radio (`police_backup`); up to 3 free officers on foot within 4000
-    units take the enemy and come. Once per officer per minute.
+  - `call_backup`: the outnumbered officer calls on the radio (`police_backup`); up to 3 free officers on foot
+    within 4000 units take the enemy and come, and with `bgn_enable_wanted_mode` on every enemy of the officer
+    (except police) becomes wanted, which sends all the police after it. Once per officer per minute.
+    Earlier 2.3.1 builds called backup against any armed enemy, without the wanted status.
   - `surrender`: a hurt gangster (`low_health`) facing the police gives up (goal `give_up`, above hiding) when an
     officer within 700 units sees it and `bgn_arrest_mode` is on, and only with an 8% roll per attempt (a failed roll
     blocks the action for 5 s, so the roll repeats every few seconds while the conditions hold): it says `give_up`, the officer (stepping out of
