@@ -50,7 +50,7 @@ GOAP.sensors = {
 	surrendered = function(actor) return actor:HasState('arrest_surrender') end,
 	police_called = function(actor, npc, enemy)
 		wanted = wanted or bgNPC.Modules.Get('wanted')
-		return IsValid(enemy) and wanted ~= nil and wanted:HasWanted(enemy)
+		return IsValid(enemy) and ((wanted ~= nil and wanted:HasWanted(enemy)) or bgNPC.PoliceKnows(enemy)) -- the police already know of it
 	end,
 }
 

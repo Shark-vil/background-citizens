@@ -19,6 +19,14 @@ local phone_beep_sounnds = {
 	Sound('background_npcs/calling_police/bepp/8.wav'),
 }
 
+-- @return boolean at least one living officer already has this entity as an enemy or a target: no need to report it
+function bgNPC.PoliceKnows(enemy)
+	for _, police in ipairs(bgNPC.Actors.GetByTeam('police')) do
+		if police:IsAlive() and (police:HasEnemy(enemy) or police:HasTarget(enemy)) then return true end
+	end
+	return false
+end
+
 local function IsValidWantedMode()
 	return cvar_bgn_enable_wanted_mode:GetBool()
 end
@@ -48,6 +56,8 @@ bgNPC.States.Register('calling_police', 'danger', {
 		if not IsValidWantedMode() or TooManyCallers(actor) then
 			return 'fear'
 		end
+		local enemy = actor:GetEnemy()
+		if IsValid(enemy) and bgNPC.PoliceKnows(enemy) then return 'fear' end
 	end,
 	stop = function(actor)
 		actor:StopStaticSequence()
@@ -94,7 +104,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 		else
 			if data.calling_time < CurTime() then
 				for _, enemy in pairs(actor.enemies) do
-					if IsValid(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+					if IsValid(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
 						if asset:HasWanted(enemy) then
 							local WantedClass = asset:GetWanted(enemy)
 							WantedClass:UpdateWanted(enemy)

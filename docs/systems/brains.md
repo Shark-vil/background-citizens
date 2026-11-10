@@ -195,6 +195,9 @@ actor while still alive (no label, no brain) is removed after 3 seconds (`spawne
 `developer 1` the console names its type and last state). A medic marked `eternal` for a call is released together
 with the call, so it no longer escapes the limit and the remover.
 
+Calling the police is skipped when at least one living officer already has the target as an enemy or a target
+(`bgNPC.PoliceKnows`, `calling_police` state and the GOAP `police_called` sensor).
+
 ## Delay between skirmishes
 
 `bgn_fight_cooldown` (Behavior > AI, 0-120 s, default 60, `0` = off, the old behavior). With a delay, the first `defense`
