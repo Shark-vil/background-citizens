@@ -132,6 +132,9 @@ lines and medkit sounds (state `medic_revive`), the actor comes back (same type,
 removed) and the medic returns to the car. A call closes when the body is gone (a client reports its ragdoll
 faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
 and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
+Some deaths cannot be saved: explosions, vehicle hits and overkill damage always, any other death with the chance
+`bgn_medic_hopeless_chance` (25 %; Behavior > Medics). For those the medic still comes and kneels over the body, but
+instead of reviving says `medic_cannot_save` and leaves (`call.verdict`); only then does an officer take the body.
 Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
 
 When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
@@ -157,9 +160,9 @@ Hook: `BGN_ActorRevived(actor, call)`.
 
 Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/states/sv_police_inspect_body.lua`).
 The nearest officer within 2000 units who walks or idles without enemies takes it (state `police_inspect_body`):
-walks to the body, crouches over it, reports it on the radio (`police_body_report`) and writes it down
+runs to the body when it is farther than 600 units (walks when closer), says `police_body_arrive`, crouches over it, reports it on the radio (`police_body_report`) and writes it down
 (`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
-calm down; a body revived by a medic is dropped.
+calm down; a body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.
 
 ## Onlookers
 

@@ -41,6 +41,7 @@ bgNPC.cvar.bgn_corpse_cleanup = 0
 bgNPC.cvar.bgn_corpse_cleanup_time = 60
 bgNPC.cvar.bgn_medic_danger_time = 60
 bgNPC.cvar.bgn_medic_danger_radius = 1500
+bgNPC.cvar.bgn_medic_hopeless_chance = 25
 bgNPC.cvar.bgn_ghost_crowd = 0
 bgNPC.cvar.bgn_ghost_crowd_max = 40
 bgNPC.cvar.bgn_shot_sound_mode = 0
@@ -188,6 +189,7 @@ bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_ti
 
 bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 'Seconds medics avoid an area where a medic was killed, or until the killer dies. 0 disables the restriction.')
 bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
+bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions, vehicle hits and overkill damage are always hopeless.')
 
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 

@@ -57,6 +57,7 @@ def realm(server):
         function IsValid(v) return type(v)=='table' and v.valid == true end
         FCVAR_NONE=0; FCVAR_ARCHIVE=1; NOTIFY_ERROR=1; NOTIFY_GENERIC=0
         MASK_NPCWORLDSTATIC=1
+        DMG_CRUSH=1; DMG_VEHICLE=16; DMG_BLAST=64; DMG_BULLET=2
         cv={}; changes={}; received={}; sent={}; commands={}; hooks={}; timers={}; tests={}; files={}
         function setcv(name,value)
             local c=GetConVar(name); local old=c.value; c.value=tostring(value)
@@ -1662,7 +1663,7 @@ medics.execute('''
     function Person(pos)
         return {valid=true,pos=pos or Vector(),hp=100,Health=function(self) return self.hp end,
             GetPos=function(self) return self.pos end,GetModel=function() return 'model' end,
-            GetSkin=function() return 0 end}
+            GetSkin=function() return 0 end,GetMaxHealth=function() return 100 end}
     end
     function Actor(npc,kind)
         return {GetNPC=function() return npc end,GetType=function() return kind or 'medic' end,
@@ -1759,6 +1760,32 @@ medics.execute('''
     hooks.PlayerDeath.BGN_Medics_ClearDanger(killer)
     bgNPC:SpawnVehicleWithActor(medic,true)
     assert(spawned==1, 'the ambulance spawn must become available after the killer dies')
+''')
+
+medics.execute('''
+    local m=bgNPC.Medics
+    local function hit(npc,kind,dmg)
+        hooks.EntityTakeDamage.BGN_Medics_LastDamage(npc,{GetDamageType=function() return kind end,GetDamage=function() return dmg end})
+    end
+    local function die(kind,dmg)
+        local npc=Person(Vector(9000,9000,0)); npc.IsNPC=function() return true end
+        npc.IsNextBot=function() return false end; npc.GetMaxHealth=function() return 100 end
+        hit(npc,kind,dmg)
+        hooks.BGN_OnKilledActor.BGN_Medics_Call(Actor(npc,'citizen'),killer)
+        return m.calls[#m.calls]
+    end
+    setcv('bgn_medic_hopeless_chance',0)
+    assert(not die(DMG_BULLET,30).hopeless, 'an ordinary death can be saved')
+    assert(die(DMG_BLAST,30).hopeless and die(DMG_VEHICLE,30).hopeless and die(DMG_CRUSH,30).hopeless, 'explosions and cars cannot be fixed')
+    assert(die(DMG_BULLET,250).hopeless, 'overkill cannot be saved')
+    setcv('bgn_medic_hopeless_chance',100)
+    assert(die(DMG_BULLET,30).hopeless, 'the chance makes any death hopeless')
+    local call=m.calls[#m.calls]
+    assert(not m.IsHandling(call.pos), 'no medic assigned yet: the police may take the body')
+    call.medic=Actor(Person())
+    assert(m.IsHandling(call.pos), 'a medic on the way keeps the police off the body')
+    call.verdict=true
+    assert(not m.IsHandling(call.pos), 'after the verdict the police take it')
 ''')
 
 gesture = realm(True)

@@ -274,6 +274,7 @@ Menu.AddPage('behavior', {
 		page:Section('#bgn.menu.section.medics')
 		page:Slider('bgn_medic_danger_time', '#bgn.menu.medic_danger_time', 0, 600)
 		page:Slider('bgn_medic_danger_radius', '#bgn.menu.medic_danger_radius', 0, 5000)
+		page:Slider('bgn_medic_hopeless_chance', '#bgn.menu.medic_hopeless_chance', 0, 100)
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_module_custom_gestures', '#bgn.settings.extension.custom_gestures')

@@ -161,6 +161,20 @@ bgNPC.cfg.replics['police_body_notes'] = {
 	'Logging the incident. Case number to follow.',
 }
 
+bgNPC.cfg.replics['medic_cannot_save'] = {
+	"I'm sorry, there is nothing we can do.",
+	'No pulse. We were too late.',
+	'He is gone. The injuries are too severe.',
+	"We can't save this one. Call the police.",
+}
+
+bgNPC.cfg.replics['police_body_arrive'] = {
+	'Officer on scene, securing the area.',
+	'Arriving at the location. Stand back, please.',
+	"I'm at the body. Nobody touches anything.",
+	'On site. Checking the victim.',
+}
+
 bgNPC.cfg.replics['police_backup'] = {
 	'Officer needs assistance, shots fired!',
 	'Dispatch, armed suspect, requesting backup now!',

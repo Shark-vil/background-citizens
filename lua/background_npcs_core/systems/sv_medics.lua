@@ -33,6 +33,29 @@ local REVIVE_OFFSETS = {
 
 local calls = {}
 Medics.calls = calls
+
+-- What the last hit was, to tell a death the medics can still fight for from one they cannot.
+local HOPELESS_DAMAGE = bit.bor(DMG_BLAST, DMG_VEHICLE, DMG_CRUSH)
+hook.Add('EntityTakeDamage', 'BGN_Medics_LastDamage', function(target, dmginfo)
+	if target:IsNPC() or target:IsNextBot() then
+		target.bgn_last_damage_type, target.bgn_last_damage = dmginfo:GetDamageType(), dmginfo:GetDamage()
+	end
+end)
+
+local function IsHopeless(npc)
+	if bit.band(npc.bgn_last_damage_type or 0, HOPELESS_DAMAGE) ~= 0 then return true end
+	if (npc.bgn_last_damage or 0) >= npc:GetMaxHealth() * 2 then return true end -- overkill
+	return math.random(100) <= GetConVar('bgn_medic_hopeless_chance'):GetInt()
+end
+
+-- @return boolean a medic is on the way to (or at) the body at pos and has not given the verdict yet
+function Medics.IsHandling(pos)
+	for _, call in ipairs(calls) do
+		if call.medic and not call.verdict and not call.done and not call.closed
+			and call.pos:DistToSqr(pos) < BODY_GONE_DIST_SQR then return true end
+	end
+	return false
+end
 local danger_areas = {}
 
 function Medics.IsBlocked(pos)
@@ -90,6 +113,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
 		model = npc:GetModel(),
 		skin = npc:GetSkin(),
 		time = CurTime(),
+		hopeless = IsHopeless(npc), -- the medic only declares it (state medic_revive), then the police take the body
 	}
 end)
 
