@@ -99,9 +99,12 @@ function GOAPBrain:Update()
 		return FSMBrain.Update(self)
 	end
 
-	if HOLD_STATES[actor:GetState()] then return FSMBrain.Update(self) end
+	local state = actor:GetState()
+	if HOLD_STATES[state] then return FSMBrain.Update(self) end
 
-	self:Sense()
+	-- a state change may be an action's own effect (take_cover sets in_cover): judge the step on the new world state
+	self:Sense(state ~= self.sensed_state)
+	self.sensed_state = state
 
 	if self.replan_at and self.replan_at <= CurTime() then
 		self.replan_at = nil
@@ -121,17 +124,21 @@ function GOAPBrain:Update()
 	end
 
 	if action then
-		local state = actor:GetState()
-		if self.entered == action and not action:Runs(state) then
-			-- the state ended or redirected on its own
+		if action:Runs(state) then
+			-- already doing it (also after a replan): its end is judged like any entered action's
+			self.entered = action
+		elseif self.entered == action then
+			-- the state ended or redirected on its own without the action's effects
 			self:Block(action)
-		elseif not action:Runs(state) then
+		else
 			if not action.prepare or action.prepare(actor) then actor:SetState(action.state) end
-			if action:Runs(actor:GetState()) then
+			local new_state = actor:GetState()
+			if action:Runs(new_state) then
 				self.entered = action
-			else
+			elseif new_state ~= state or not actor:EqualStateGroup('guarded') then
 				self:Block(action)
 			end
+			-- otherwise a guarded state (arrest) refused to stop: the plan waits for it, nothing is blocked
 		end
 	end
 
@@ -148,7 +155,8 @@ function GOAPBrain:PickReaction(reactions, enemy)
 	-- The enemy is added right after the reaction is picked, so plan as if it already exists.
 	local ws = bit.bor(GOAP.Sense(self.actor, enemy), GOAP.Fact('has_enemy'))
 	local first = (self:MakePlan(ws) or {})[1]
-	if not first or (first.prepare and not first.prepare(self.actor)) then return roll end
+	-- an action with prepare (surrender) acts when it starts: picking a reaction must not run it, Update does
+	if not first or first.prepare then return roll end
 	return first.state
 end
 

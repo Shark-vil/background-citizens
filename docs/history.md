@@ -27,6 +27,7 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 | Combat pacing | Regional 60-second protection cooldown applies only between actors, not player/foreign NPC attacks, and never to the police; existing skirmish participation and self-defense remain. Officers in cars receive shared enemies. Gangsters respawn after 30 seconds. [Gangs](systems/gangs.md). |
 | Medics and bodies | Hopeless verdicts, body inspection/cleanup and completed-call release; vehicle collisions can be saved with normal chances; ambulance/medic protections. [Medics and bodies](systems/medics.md). |
 | NextBots / damage | Stuck recovery selects nearby free navigation space, avoids teleporting into vehicles; fixed custom-chair positioning. Actor hits on seated actors triple damage in 20% of rolls, double in 50%, remain unchanged in 30%. [Brains](systems/brains.md), [vehicles](systems/vehicles.md). |
+| GOAP | Finished actions (cover, backup) advance the plan instead of being blocked; no endless cover loop; an officer holding an arrest makes the plan wait; picking a reaction never starts a surrender. [Brains](systems/brains.md#goap-brain). |
 
 ## Reproduce the comparison
 

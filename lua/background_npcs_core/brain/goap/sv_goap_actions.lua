@@ -148,21 +148,11 @@ GOAP.RegisterAction('surrender', {
 		if not ArrestModule or not GetConVar('bgn_arrest_mode'):GetBool() then return false end
 		local npc = actor:GetNPC()
 		local police = ArrestModule:FoundPoliceInRadius(npc)
-		if not police or police:InVehicle() then return false end
+		if not police then return false end
 
-		if ArrestModule:HasTarget(npc) then
-			ArrestModule:GetTarget(npc).policeActor = police
-			ArrestModule:UpdateArrest(npc)
-		else
-			ArrestModule:AddTarget(npc, police)
-		end
-		-- the surrender first: the arrest state shoots a target that isn't giving up
-		actor:AddTarget(police:GetNPC())
-		actor:SetState('arrest_surrender', nil, true)
+		ArrestModule:RemoveTarget(npc) -- a fresh arrest with this officer
+		if not ArrestModule:Surrender(actor, police) then return false end
 		actor:Voice('give_up')
-		police:RemoveAllTargets()
-		police:AddTarget(npc)
-		police:SetState('arrest', nil, true)
 		return true
 	end,
 })

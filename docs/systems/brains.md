@@ -73,7 +73,14 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%), `surrender`
   with its `chance` (50%).
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
-  An action that fails (its state ends or redirects on its own) is blocked for 5 s, then the plan is made again.
+  Any state change re-reads the facts at once, so an action that finished with its effects (`take_cover` sets
+  `in_cover`, `call_backup` sets `backup_called`) moves the plan on instead of failing. An action whose state is
+  already running (also after a replan) counts as entered. An action that fails (its state ends or redirects on its
+  own without its effects) is blocked for 5 s, then the plan is made again. A `guarded` state that refuses to stop
+  (an officer holding an `arrest`) only makes the plan wait; nothing is blocked.
+- **Reactions** (`GetReactionForDamage` / `GetReactionForProtect`) take the state of the plan's first action. An
+  action with `prepare` (`surrender`) is never run while a reaction is picked: the config roll is returned and the
+  next brain update starts the action.
 - **Chains.** Fighting an armed enemy costs more out of cover, and for the police without backup, so the plans are
   `take_cover → attack` and, for the police, `call_backup → take_cover → attack`:
   - `take_cover`: runs to the nearest nav point within 1000 units the enemy can't see at crouch height
@@ -82,8 +89,9 @@ Used while the actor has enemies; without enemies it behaves like the FSM brain.
   - `call_backup`: the officer calls on the radio (`police_backup`); up to 3 free officers on foot within 4000
     units take the enemy and come. Once per officer per minute.
   - `surrender`: a hurt gangster (`low_health`) facing the police gives up (goal `give_up`, above hiding) when an
-    officer within 700 units sees it and `bgn_arrest_mode` is on: it says `give_up`, the officer arrests it
-    (`systems/arrest`). The plan never interrupts `arrest_surrender`.
+    officer within 700 units sees it and `bgn_arrest_mode` is on: it says `give_up`, the officer (stepping out of
+    its car if needed) arrests it through `ArrestModule:Surrender` (`systems/arrest`). The plan never interrupts
+    `arrest_surrender`.
 - Arrests are not planned: the arrest system (`systems/arrest`, `ArrestModule:CanArrest`) owns them, and it
   only works on police without enemies.
 - **Goals** (`eliminate`, `survive`, `report`, `hide`) get a priority from the actor's **set**: `police`,
