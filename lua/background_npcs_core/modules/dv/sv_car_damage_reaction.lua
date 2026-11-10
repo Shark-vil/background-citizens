@@ -1,5 +1,5 @@
+-- Not only IsVehicle(): simfphys/LVS/Glide chassis are scripted entities, and a hit on them must reach the occupants too.
 hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginfo)
-	if not target:IsVehicle() then return end
 	if dmginfo:GetDamage() <= 0 then return end
 	local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
 	if not bgNPC.Combat.IsAttacker(attacker) then return end
@@ -19,7 +19,9 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 				if actor and actor:IsAlive() and actor:HasTeam('police') then bgNPC.OffenderFromRamming(attacker) end
 
 				if actor and actor:IsAlive() then
-					local damage = dmginfo:GetDamage() / math.random(2, 10)
+					-- a shot through the car hits the occupant in full; a crash only shakes them
+					local damage = dmginfo:GetDamage()
+					if dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE) then damage = damage / math.random(2, 10) end
 					if actor:InVehicle() then
 						actor:TakeVehicleDamage(damage, attacker, dmginfo:GetInflictor())
 					else

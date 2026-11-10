@@ -105,7 +105,8 @@ local function IsExitOccupied(pos, saved, model)
 	return false
 end
 
-local function FindVehicleExitPos(vehicle, saved, model)
+-- squeeze: other actors (the officers at the door) do not block the exit, only the world and props do
+local function FindVehicleExitPos(vehicle, saved, model, squeeze)
 	local mins, maxs = vehicle:GetModelBounds()
 	local pos = vehicle:GetPos()
 	local forward = model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
@@ -146,9 +147,9 @@ local function FindVehicleExitPos(vehicle, saved, model)
 		if ground.Hit and not ground.StartSolid and ground.HitNormal.z > .6 and math.abs(ground.HitPos.z - pos.z) <= 96 then
 			candidate = ground.HitPos + Vector(0, 0, 2)
 			local hull = util.TraceHull({ start = candidate, endpos = candidate, mins = saved.mins, maxs = saved.maxs,
-				filter = model, mask = MASK_NPCSOLID })
+				filter = model, mask = squeeze and MASK_NPCSOLID_BRUSHONLY or MASK_NPCSOLID })
 			if util.IsInWorld(candidate) and not hull.StartSolid and not hull.Hit
-				and not IsExitOccupied(candidate, saved, model) then return candidate end
+				and (squeeze or not IsExitOccupied(candidate, saved, model)) then return candidate end
 		end
 	end
 end
@@ -194,14 +195,15 @@ function Actor:ShouldExitVehicle()
 	return false
 end
 
-function Actor:ExitVehicle(forced)
+-- @param squeeze boolean|nil step out even when actors stand at every door (an arrest pulls the suspect out)
+function Actor:ExitVehicle(forced, squeeze)
 	local provider, saved = self.vehicle, self.vehicle_body
 	if not provider or not saved then return false end
 	if not provider:IsValid() or provider.removing then self:Remove() return false end
 	if not forced and not self:ShouldExitVehicle() then return false end
 	local old = self:GetNPC()
 	saved.health = self:Health()
-	local pos = FindVehicleExitPos(provider:GetVehicle(), saved, old)
+	local pos = FindVehicleExitPos(provider:GetVehicle(), saved, old, squeeze)
 	if not pos then return false end -- Keep the seat when every exit is obstructed.
 	local npc = ents.Create(saved.class)
 	if not IsValid(npc) then return false end
@@ -252,6 +254,8 @@ function Actor:ExitVehicle(forced)
 	return true
 end
 
+local POLICE_HIT_GAP = 60 -- a pause in police hits this long ends the attempt to kill the driver
+
 -- Damage belongs to the stored character, never to the DV controller's health/lifetime.
 function Actor:TakeVehicleDamage(amount, attacker, inflictor)
 	local saved = self.vehicle_body
@@ -265,6 +269,16 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
 		damage:SetInflictor(IsValid(inflictor) and inflictor or attacker)
 		if hook.Run('BGN_TakeDamageFromNPC', attacker, self.npc, damage) == true then return end
 		amount = damage:GetDamage()
+	end
+	-- The police fail to kill a driver for bgn_police_car_kill_time seconds: their next hit kills.
+	-- The time runs from their first hit in this seat; POLICE_HIT_GAP seconds without one start it over.
+	local police = bgNPC.Actors.Get(attacker)
+	local kill_time = GetConVar('bgn_police_car_kill_time'):GetFloat()
+	if kill_time > 0 and police and police:HasTeam('police') then
+		local now = CurTime()
+		if now - (saved.police_hit_last or -math.huge) > POLICE_HIT_GAP then saved.police_hit_since = now end
+		saved.police_hit_last = now
+		if now - saved.police_hit_since >= kill_time then amount = math.max(amount, self:Health()) end
 	end
 	saved.health = math.max(0, self:Health() - amount)
 	if IsValid(self.npc) then self.npc:SetHealth(saved.health) end

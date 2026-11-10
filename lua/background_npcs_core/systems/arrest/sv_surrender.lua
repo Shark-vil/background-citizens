@@ -39,6 +39,20 @@ hook.Add('EntityTakeDamage', 'BGN_Surrender_LastAttack', function(target, dmginf
 	end
 end)
 
+-- An actor on foot the police hit while it holds no weapon and is not fighting gives up with this chance
+local UNARMED_SURRENDER_CHANCE = 30
+local COMBAT_STATES = { defense = true, killer = true, zombie = true, take_cover = true, pick_up_weapon = true, brawl = true }
+
+hook.Add('EntityTakeDamage', 'BGN_Surrender_Unarmed', function(target, dmginfo)
+	if not cvar_mode:GetBool() or dmginfo:GetDamage() <= 0 or dmginfo:GetDamage() >= target:Health() then return end
+	local suspect = bgNPC.Actors.Get(target)
+	local police = bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker()))
+	if not suspect or not police or not police:HasTeam('police') or suspect:HasTeam('police')
+		or not suspect:IsAlive() or suspect:InVehicle() or IsValid(suspect:GetActiveWeapon())
+		or COMBAT_STATES[suspect:GetState()] or not bgNPC.Util.Chance(UNARMED_SURRENDER_CHANCE) then return end
+	ArrestModule:Surrender(suspect, police)
+end)
+
 timer.Create('BGN_Surrender', 1, 0, function()
 	local delay = cvar_delay:GetFloat()
 	if delay <= 0 or not cvar_mode:GetBool() then return end

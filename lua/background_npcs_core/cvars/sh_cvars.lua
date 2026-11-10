@@ -32,6 +32,7 @@ bgNPC.cvar.bgn_arrest_time_limit = 20
 bgNPC.cvar.bgn_arrest_surrender_delay = 10
 bgNPC.cvar.bgn_arrest_car_wait = 6
 bgNPC.cvar.bgn_arrest_car_time = 8
+bgNPC.cvar.bgn_police_car_kill_time = 30
 bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
 bgNPC.cvar.bgn_team_damage = 0
@@ -175,6 +176,8 @@ bgNPC.CVars.Register('bgn_arrest_surrender_delay', bgNPC.cvar.bgn_arrest_surrend
 bgNPC.CVars.Register('bgn_arrest_car_wait', bgNPC.cvar.bgn_arrest_car_wait, 'A player standing still in a car with the police at it for this many seconds: they start breaking into the car. 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_arrest_car_time', bgNPC.cvar.bgn_arrest_car_time, 'Seconds the police take to break into the car; the player still there is then arrested.')
+
+bgNPC.CVars.Register('bgn_police_car_kill_time', bgNPC.cvar.bgn_police_car_kill_time, 'Seconds the police may fail to kill an actor in a car, counted from their first hit; after that their next hit kills. 0 - disabled.')
 
 bgNPC.CVars.Register('bgn_arrest_safe_weapons', bgNPC.cvar.bgn_arrest_safe_weapons, 'Comma-separated weapon classes that do not count as being armed (see bgn_arrest_surrender_delay).')
 

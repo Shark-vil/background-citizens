@@ -74,7 +74,8 @@ end
 -- An actor is pulled out and gives up to the officer at the car; the arrest state takes it from there
 local function ArrestActor(suspect, actor)
 	local old = suspect:GetNPC()
-	if not suspect:ExitVehicle(true) then return end -- an obstructed exit: the full bar tries again next tick
+	-- the officers stand at the doors, so they do not block it; a wall or a car does: the full bar tries again next tick
+	if not suspect:ExitVehicle(true, true) then return end
 	Reset(old)
 	ArrestModule:RemoveTarget(old)
 	ArrestModule:Surrender(suspect, actor)
