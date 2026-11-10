@@ -2066,6 +2066,7 @@ cooldown.execute('''
     function IsValid(v) return v ~= nil and v.valid ~= false end
     setcv('bgn_fight_cooldown',0)
     function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end} end
+    bgNPC.Actors={Get=function(e) if not e.foreign then return e end end}
     function Foe(player) return {valid=true,IsPlayer=function() return player end} end
 ''')
 load(cooldown, 'systems/sv_fight_cooldown.lua')
@@ -2078,6 +2079,8 @@ cooldown.execute('''
     assert(C.Allow(Who(100),a), 'joining the same skirmish is allowed')
     assert(not C.Allow(Who(100),b), 'a new attacker nearby is blocked')
     assert(C.Allow(Who(100),Foe(true)), 'a player attacker is never blocked')
+    local foreign=Foe(false); foreign.foreign=true
+    assert(C.Allow(Who(100),foreign), 'an NPC or NextBot of another mod is never blocked')
     assert(C.Allow(Who(9000),far), 'far away is a separate skirmish')
     now=now+31
     assert(C.Allow(Who(100),b), 'after the window the new event passes')

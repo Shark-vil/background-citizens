@@ -184,7 +184,7 @@ reaction of the `at_protect` table (actors protecting their own) opens a window 
 place (2500 units). While it lasts, protecting against **another** attacker in that area is ignored: the actor takes
 the `ignore` reaction and a call for help or enemy sharing adds no enemy to it. Actors joining the skirmish that
 opened the window (same attacker), fights already going, places outside the area and the time after the window are
-not affected. A player as the attacker is never blocked (`systems/sv_fight_cooldown.lua`).
+not affected. A player, or an NPC / NextBot of another mod that is not one of our actors, as the attacker is never blocked (`systems/sv_fight_cooldown.lua`).
 
 ## Police at a body
 

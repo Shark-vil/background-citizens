@@ -4,7 +4,8 @@
 	around the place of the skirmish (RADIUS). While it lasts, an at_protect call against ANOTHER attacker in that area
 	is ignored (Actor:GetReactionForProtect returns 'ignore' and the call for help adds no enemy). Actors joining the
 	skirmish that opened the window (same attacker) are not blocked, nor is anything outside the area or after the
-	window. A player as the attacker is never blocked: the delay only spaces out fights between actors.
+	window. Only an attacker that is one of our actors is delayed: a player and any NPC or NextBot of another mod
+	(not an actor) always get their reaction, the delay only spaces out fights between actors.
 --]]
 
 local FightCooldown = {}
@@ -18,7 +19,7 @@ local windows = {}
 -- @return boolean false when a skirmish with another attacker started here less than "bgn_fight_cooldown" seconds ago
 function FightCooldown.Allow(actor, enemy)
 	local delay = cvar:GetFloat()
-	if delay <= 0 or enemy:IsPlayer() then return true end
+	if delay <= 0 or enemy:IsPlayer() or not bgNPC.Actors.Get(enemy) then return true end
 
 	local now, pos = CurTime(), actor:GetNPC():GetPos()
 	local blocked
