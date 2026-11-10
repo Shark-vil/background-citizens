@@ -232,21 +232,31 @@ hook.Add('BGN_WantedLevelDown', 'BGN_ClearCurrentlyLevelOnlyNPCs', function(ent,
 end)
 
 
--- A body that lost its actor but is alive is a leak (no brain, no label, it would stand there forever).
--- Actor:RemoveActor leaves the entity to the engine, which is right for a death only. A body the actor released
--- on purpose (boarding a car) has BGN_ACTOR_OBJECT cleared by Actors.Rebind, so it never matches.
+-- A body without a registered actor is a leak (no brain, no label, it would stand there forever, frozen when the
+-- LOD had turned its think off). Actor:RemoveActor leaves the entity to the engine, which is right for a death only.
+-- Health is not checked: an NPC killed while its think is off (LOD) or frozen by the animator never finishes dying
+-- and stands with 0 health. bgn_npc_class marks bodies from the spawner (kept when leaving a car); the body released
+-- on boarding is removed by Actor:EnterVehicle itself.
 local ORPHAN_GRACE = 3
 local developer = GetConVar('developer')
+
+local function IsOrphan(ent)
+	local actor = ent.BGN_ACTOR_OBJECT
+	if not actor and not ent.bgn_npc_class then return false end
+	if not ent:IsNPC() and not ent:IsNextBot() then return false end
+	return not actor or actor.is_removed or actor:GetNPC() ~= ent or bgNPC.Actors.GetByUid(actor.uid) ~= actor
+end
 
 timer.Create('BGN_RemoveOrphanBodies', 2, 0, function()
 	local now = CurTime()
 	for _, ent in ipairs(ents.GetAll()) do
-		local actor = ent.BGN_ACTOR_OBJECT
-		if actor and ent.isBgnActor == false and actor.is_removed and (ent:IsNPC() or ent:IsNextBot()) and ent:Health() > 0 then
+		if IsOrphan(ent) then
 			ent.bgn_orphan_since = ent.bgn_orphan_since or now
 			if now - ent.bgn_orphan_since >= ORPHAN_GRACE then
 				if developer:GetInt() > 0 then
-					MsgN('[BGN] orphan body removed: ', ent:GetClass(), ' ', tostring(actor:GetType()), ' state ', tostring(actor:GetState()))
+					local actor = ent.BGN_ACTOR_OBJECT
+					MsgN('[BGN] orphan body removed: ', ent:GetClass(), ' health ', ent:Health(), ' ',
+						actor and tostring(actor:GetType()) .. ' state ' .. tostring(actor:GetState()) or 'no actor')
 				end
 				ent:Remove()
 			end

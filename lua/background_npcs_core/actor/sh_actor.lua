@@ -177,7 +177,8 @@ end
 -- Runs one tick after creation, when the entity is fully spawned.
 local function PostInitialize(actor, not_sync_actor_on_client, not_auto_added_to_list)
 	local npc = actor.npc
-	if not IsValid(npc) then return end
+	-- removed in its first tick: registering it would keep a dead actor in the lists and its limit slot taken
+	if not IsValid(npc) or actor.is_removed then return end
 
 	local data = actor.data
 
