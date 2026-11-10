@@ -13,6 +13,9 @@ the weapon on death, like an HL2 NPC). Shots start at the bot's right hand. The 
 NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, good ×0.67, very good ×0.33,
 perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
+
+In `nextbot` mode regular HL2 NPCs have no relationship with the bodies (the engine only knows NPC classes), so `systems/sv_nextbot_hostility.lua` once per second gives every NPC within 2500 units the relationship it has with the actor's original class, measured on a hidden probe NPC of that class: an Enemy Rebel attacks nextbot actors as it did real NPCs. Skipped in peaceful mode and with `bgn_ignore_another_npc`.
+
 Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
 back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by
 default (`bgn_nextbot_jump`, behavior settings): a stuck bot waits and then teleports to the next path point, and a

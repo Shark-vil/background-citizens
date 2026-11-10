@@ -55,6 +55,7 @@ end
 
 local function SetNPCRelationship(actor, another_npc)
 	if not actor:IsAlive() then return end
+	if another_npc.bgn_probe then return end -- sv_nextbot_hostility.lua
 
 	local actor_npc = actor:GetNPC()
 	local another_actor = bgNPC.Actors.Get(another_npc)
