@@ -180,6 +180,24 @@ function ASSET:NotSubjectToArrest(target)
 	end
 end
 
+-- An actor gives up to the officer: the same chain as the arrest state (the suspect surrenders, the officer arrests).
+-- Both must be on foot, the officer steps out of its car here.
+-- @return boolean false when the suspect is already an arrest target
+function ASSET:Surrender(suspect, police)
+	local npc = suspect:GetNPC()
+	if not self:AddTarget(npc, police) then return false end
+
+	if police:InVehicle() then police:ExitVehicle() end
+	suspect:RemoveAllTargets()
+	suspect:AddTarget(police:GetNPC())
+	suspect:SetState('arrest_surrender', nil, true)
+
+	police:RemoveAllTargets()
+	police:AddTarget(npc)
+	police:SetState('arrest', nil, true)
+	return true
+end
+
 hook.Add('PlayerDeath', 'BGN_ArrestModule_ClearDataOnPlayerDeath', function(victim, inflictor, attacker)
 	ASSET:RemoveTarget(victim)
 end)

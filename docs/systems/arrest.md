@@ -35,15 +35,18 @@ arrest mode does not count as a refusal.
 
 ## Car break-in
 
-`systems/arrest/sv_car_breakin.lua`: a player who stands still in a vehicle (rolling up to 64 units counts as
+`systems/arrest/sv_car_breakin.lua`: a suspect (a player, or an actor that is not an officer) who stands still in a vehicle (rolling up to 64 units counts as
 standing) for `bgn_arrest_car_wait` seconds while the police are after them (fighting or arresting, within 2000
 units). The officers then hold fire, get out of their cars and run to it (state `police_car_breakin`: their enemies
 are put aside and come back when it stops). Once one is within 300 units the break-in starts (`police_seize` line)
-and takes `bgn_arrest_car_time` seconds: the player sees a bar shrinking from both sides to the middle
+and takes `bgn_arrest_car_time` seconds: a player sees a bar shrinking from both sides to the middle
 (`cl_car_breakin.lua`, blinking in the last quarter). Driving 64 units away cancels it and the officers fight
 again. The officers can't be pulled away by anything else (`not_stop`; only forced states such as an arrest);
 an officer stepping away from the car only pauses the bar, it never starts over. At the end the player is pulled out and arrested
-like at the end of an arrest (`BGN_PlayerArrest`, or the fade and `KillSilent`).
+like at the end of an arrest (`BGN_PlayerArrest`, or the fade and `KillSilent`). An actor is pulled out of the car
+(a blocked exit retries on the next tick) and gives up to the officer at the car (`ArrestModule:Surrender`): it goes
+to `arrest_surrender`, the officer to `arrest`, and the usual arrest finishes it. The progress is kept on the
+suspect's entity (`ent.bgn_still`); `ArrestModule:BreakinCar(ent)` returns the car of a called break-in.
 
 ## Second chance
 

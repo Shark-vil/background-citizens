@@ -21,22 +21,6 @@ local function MakeOffender(actor)
 	actor:SetTeam(team)
 end
 
--- Same chain as the arrest in sv_arrest.lua: the officer arrests, the offender gives up.
-local function Surrender(offender, police)
-	local npc = offender:GetNPC()
-	if not ArrestModule:AddTarget(npc, police) then return false end
-
-	if police:InVehicle() then police:ExitVehicle() end
-	offender:RemoveAllTargets()
-	offender:AddTarget(police:GetNPC())
-	offender:SetState('arrest_surrender', nil, true)
-
-	police:RemoveAllTargets()
-	police:AddTarget(npc)
-	police:SetState('arrest', nil, true)
-	return true
-end
-
 local function RunAway(offender)
 	local npc = offender:GetNPC()
 	local nearest, nearest_dist
@@ -81,7 +65,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_Offender', function(victim, attacker)
 
 	local police = ArrestModule:FoundPoliceInRadius(attacker)
 	local hurt = attacker:Health() < attacker:GetMaxHealth() * SURRENDER_HEALTH_FRACTION
-	if police and hurt and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and Surrender(offender, police) then
+	if police and hurt and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and ArrestModule:Surrender(offender, police) then
 		return
 	end
 	RunAway(offender)
