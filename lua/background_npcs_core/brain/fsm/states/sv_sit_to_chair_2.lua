@@ -49,8 +49,8 @@ bgNPC.States.Register('sit_to_chair_2', 'calm', {
 			local start_pos = seat:GetStartSittingPos()
 			actor:WalkToPos(start_pos)
 
-			-- 40 ^ 2 
-			if npc:GetPos():DistToSqr(start_pos) <= 1600 then
+			-- the walk counts as finished within 150 units (sh_movement), so sit from that distance too
+			if npc:GetPos():DistToSqr(start_pos) <= 22500 then
 				actor:WalkToPos(nil)
 				data.isSit = true
 				data.old_pos = npc:GetPos()

@@ -137,10 +137,13 @@ end
 
 -- Stops the current static animation and returns the NPC to AI control.
 function Actor:ResetSequence()
+	local started_at = self.anim_time
 	if self.anim_action and self.anim_action(self) then
 		bgNPC.Util.Log('Reject: ACTOR:ResetSequence')
 		return
 	end
+	-- the action chained the next animation: resetting now would wipe it
+	if self.anim_time ~= started_at then return end
 
 	self.anim_name = ''
 	self.is_animated = false
