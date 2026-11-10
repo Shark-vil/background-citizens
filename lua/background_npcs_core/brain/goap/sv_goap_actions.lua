@@ -15,6 +15,7 @@ local F = GOAP.Fact
 
 local ENEMY_CLOSE_DIST_SQR = 700 ^ 2
 local LOW_HEALTH_FRACTION = 0.35
+local SURRENDER_HEALTH_FRACTION = 0.5 -- below this an actor may give up, above it never
 local NOT_WEAPONS = {
 	weapon_physgun = true, weapon_physcannon = true, gmod_tool = true, gmod_camera = true,
 	weapon_fists = true, none = true,
@@ -36,6 +37,7 @@ GOAP.sensors = {
 	armed = function(actor) return actor.weapon ~= nil end,
 	is_police = function(actor) return actor:HasTeam('police') end,
 	low_health = function(actor, npc) return npc:Health() < npc:GetMaxHealth() * LOW_HEALTH_FRACTION end,
+	can_surrender = function(actor, npc) return npc:Health() < npc:GetMaxHealth() * SURRENDER_HEALTH_FRACTION end,
 	enemy_close = function(actor, npc, enemy)
 		return IsValid(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) < ENEMY_CLOSE_DIST_SQR
 	end,
@@ -138,7 +140,7 @@ GOAP.RegisterAction('surrender', {
 	state = 'arrest_surrender',
 	trait = true,
 	chance = 0.5, -- half of the actors with this set ever give up
-	pre = { has_enemy = true, enemy_police = true, low_health = true, is_police = false },
+	pre = { has_enemy = true, enemy_police = true, can_surrender = true, is_police = false },
 	effects = { surrendered = true },
 	cost = 1,
 	prepare = function(actor)
@@ -204,7 +206,7 @@ GOAP.RegisterSet('gangster', {
 	survive = function(ws) return Has(ws, 'low_health') and 8 or 2 end,
 	hide = HideWhenWanted,
 	-- above hiding: the police chase a wanted gangster, and a hurt one may stop running
-	give_up = function(ws) return Has(ws, 'low_health') and Has(ws, 'enemy_police') and 25 or 0 end,
+	give_up = function(ws) return Has(ws, 'can_surrender') and Has(ws, 'enemy_police') and 25 or 0 end,
 })
 
 GOAP.RegisterSet('citizen', {
@@ -296,7 +298,7 @@ bgNPC.Test.Add('goap.sets', function(check)
 	plan = GOAP.Plan(ws, GOAP.goals.hide, { GOAP.actions.attack, GOAP.actions.hide })
 	check(plan and plan[1] == GOAP.actions.hide, 'hiding runs retreat')
 
-	ws = bit.bor(F('has_enemy'), F('armed'), F('wanted'), F('low_health'), F('enemy_police'))
+	ws = bit.bor(F('has_enemy'), F('armed'), F('wanted'), F('can_surrender'), F('enemy_police'))
 	check(gangster.give_up(ws) > gangster.hide(ws), 'a hurt gangster facing the police gives up before hiding')
 	plan = GOAP.Plan(ws, GOAP.goals.give_up, { A.attack, A.hide, A.surrender })
 	check(plan and #plan == 1 and plan[1] == A.surrender, 'giving up runs the surrender')

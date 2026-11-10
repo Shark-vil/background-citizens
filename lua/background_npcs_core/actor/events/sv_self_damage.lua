@@ -15,6 +15,9 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
 	if not bgNPC.Combat.IsAttacker(attacker) then return end
 	if bgNPC.Combat.IsIgnored(attacker) or attacker.bgNPCIgnore or attacker == target then return end
 
+	local hit_actor = bgNPC.Actors.Get(target)
+	if hit_actor then hit_actor.last_attacked_at = CurTime() end -- the arrest state lets go only of an attacked officer
+
 	local result
 
 	if target:IsNPC() or target:IsNextBot() then

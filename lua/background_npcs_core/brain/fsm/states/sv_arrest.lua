@@ -1,6 +1,27 @@
 local WantedModule = bgNPC.Modules.Get('wanted')
 local ArrestModule = bgNPC.Modules.Get('player_arrest')
 
+-- An actor gives up only below half of its health, before that it never does.
+local function IsHurt(ent)
+	return ent:Health() < ent:GetMaxHealth() * 0.5
+end
+
+-- An officer in the arrest state stays in it. The only way out is being attacked right now; the state's own exits
+-- (target gone, arrest done, the target cannot be arrested) go through Leave().
+local ATTACKED_WINDOW = 1.5
+
+local function Leave(actor, change_state)
+	actor.arrest_release = true
+	change_state()
+	actor.arrest_release = nil
+end
+
+hook.Add('BGN_PreSetState', 'BGN_ArrestHold', function(actor, state)
+	if state == 'arrest' or not actor:HasState('arrest') or actor.arrest_release then return end
+	if CurTime() - (actor.last_attacked_at or -ATTACKED_WINDOW) <= ATTACKED_WINDOW then return end
+	return true
+end)
+
 hook.Add('BGN_PreCallForHelp', 'BGN_PlayerArrest', function(actor, enemy)
 	if not ArrestModule:HasTarget(enemy) then return end
 	return ArrestModule:GetTarget(enemy).arrested
@@ -52,7 +73,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 		end
 
 		-- the surrender first: the arrest state checks it on start and shoots a target that isn't giving up
-		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and bgNPC.Util.Chance(5) then
+		if AttackerActor and not AttackerActor:HasState('arrest_surrender') and IsHurt(attacker) and bgNPC.Util.Chance(5) then
 			AttackerActor:AddTarget(PoliceActor:GetNPC())
 			AttackerActor:SetState('arrest_surrender', nil, true)
 		end
@@ -77,7 +98,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
 
 		if AttackerActor and not AttackerActor:HasState('arrest_surrender')
 			and bgNPC.Util.Chance(10)
-			and AttackerActor:Health() <= 50
+			and IsHurt(attacker)
 		then
 			ArrestModule:UpdatePolice(attacker)
 
@@ -162,13 +183,13 @@ bgNPC.States.Register('arrest', 'guarded', {
 		local ArrestComponent = ArrestModule:GetTarget(target)
 
 		if not IsValid(target) or actor:TargetsCount() == 0 or not ArrestComponent then
-			actor:RandomState()
+			Leave(actor, function() actor:RandomState() end)
 			return
 		end
 
 		local defense = OnSetDefense(actor)
 		if defense then
-			actor:SetState(defense)
+			Leave(actor, function() actor:SetState(defense) end)
 			return
 		end
 

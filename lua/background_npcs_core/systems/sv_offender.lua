@@ -6,6 +6,7 @@
 
 local TEAM = 'offenders'
 local SURRENDER_CHANCE = 40
+local SURRENDER_HEALTH_FRACTION = 0.5 -- a healthy offender never gives up
 local FLEE_RADIUS = 1500
 
 local WantedModule = bgNPC.Modules.Get('wanted')
@@ -79,7 +80,8 @@ hook.Add('BGN_OnKilledActor', 'BGN_Offender', function(victim, attacker)
 	WantedModule:AddWanted(attacker)
 
 	local police = ArrestModule:FoundPoliceInRadius(attacker)
-	if police and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and Surrender(offender, police) then
+	local hurt = attacker:Health() < attacker:GetMaxHealth() * SURRENDER_HEALTH_FRACTION
+	if police and hurt and GetConVar('bgn_arrest_mode'):GetBool() and bgNPC.Util.Chance(SURRENDER_CHANCE) and Surrender(offender, police) then
 		return
 	end
 	RunAway(offender)
