@@ -1,12 +1,13 @@
 # SetName
 
-## SERVER
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:SetName(string name)
+actor:SetName(name)
 ```
 
-## Description
-Sets the name of the actor (not the same as the name in the actor config!). It is set automatically using a random value from the config [sh_names.lua](https://github.com/Shark-vil/background-citizens/blob/master/lua/background_npcs_core/config/sh_names.lua).
+Sets the actor name string; nil leaves it unchanged. Regular server sync propagates it.
 
-## Arguments
-1. **name** string - Actor name
+Source: `lua/background_npcs_core/actor/sh_actor.lua`.
+
+[Realm reference](../../../reference/server.md).

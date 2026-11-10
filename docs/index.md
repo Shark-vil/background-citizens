@@ -21,3 +21,17 @@ Keep changes in a separate addon: [create an actor](tutorials/Creating-Custom-NP
 - [Scenic scenes](systems/scenic.md)
 
 Use the header to switch English / Русский or light / dark theme. These website choices do not change the game settings.
+
+## Project and API
+
+- [Architecture and file layout](architecture.md)
+- [Version history and 2.3.1 baseline](history.md)
+- [Server methods](reference/server.md)
+- [Client methods](reference/client.md)
+- [Shared methods](reference/shared.md)
+- [Vehicles](systems/vehicles.md)
+- [Gangs](systems/gangs.md)
+- [Medics and bodies](systems/medics.md)
+- [AI documentation rules](ai.md)
+
+- [Wanted levels and offenders](systems/wanted.md)

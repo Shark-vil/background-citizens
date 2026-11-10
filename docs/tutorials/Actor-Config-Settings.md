@@ -386,4 +386,22 @@ bsmod_damage_animation_disable = false
 
 ---
 
-**Not all options are presented in this article. Expect updates...**
+
+
+## Current behavior and gang fields
+
+Configs resolve through `bgNPC.Config.GetActor`, are cached and copied into each actor. New values do not change existing actors. Vehicle/brain behavior runs on the server; type definitions should exist in both realms.
+
+| Field | Value | Purpose |
+|---|---|---|
+| `brain` | `fsm / goap` | Brain under bgn_brain=auto; a forced cvar takes precedence. |
+| `goap_set` | `police / gangster / citizen` | GOAP goal set; otherwise derived from teams. |
+| `gang` | `string` | Gang identity for alliance, roster and pack walking. |
+| `heavy_chance` | `35` | Heavy member percentage for built-in gangs. |
+| `light_weapons` | `table` | Light member weapon classes. |
+| `heavy_weapons` | `table` | Heavy member weapon classes. |
+| `mechanics` | `table` | Per-actor subsystem flags; see below. |
+
+Built-in `mechanics` flags default to true: `movement_controller`, `use_vehicle`, `call_for_help`, `fear`, `fear_scream`, `enemies_controller`, `targets_controller`, `states_controller`, `animator_controller`, `enhanced_npc_ignore`, `inpc_ignore`.
+
+Fight limits, cvar defaults and models: [gangs](../systems/gangs.md). Sources: `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.

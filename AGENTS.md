@@ -1,0 +1,7 @@
+# Background NPCs: entry point for AI contributors
+
+Read [documentation maintenance rules](docs/ai.md) ([по-русски](docs/ai.ru.md)) before changing documentation or public behavior. Start with [project architecture](docs/architecture.md) and [version history](docs/history.md).
+
+Keep EN/RU pages aligned, preserve existing documentation URLs, and distinguish SERVER, CLIENT and SHARED usage by implementation and synchronization behavior. Update the affected docs with public API/default/behavior changes. Validate documentation with `python -m mkdocs build --strict` and `git diff --check`.
+
+Keep changes within the user’s task, preserve unrelated work and prefer the smallest complete solution. Do not edit generated `site/` or launch in-game lab fixtures for a docs-only task. State verification limits. A requested local commit does not authorize a push or deployment.

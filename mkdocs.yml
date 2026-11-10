@@ -45,6 +45,16 @@ plugins:
           name: Русский
           build: true
           nav_translations:
+            Architecture: Архитектура
+            Version history: История версий
+            AI documentation rules: Правила документации для ИИ
+            Server API: Серверный API
+            Client API: Клиентский API
+            Shared API: Общий API
+            Vehicles: Транспорт
+            Wanted: Розыск
+            Gangs: Банды
+            Medics and bodies: Медики и тела
             Home: Главная
             Guide: Руководство
             Quick start: Быстрый старт
@@ -85,10 +95,20 @@ nav:
       - Testing mode: systems/testing.md
       - Conversations: systems/conversations.md
       - Arrest: systems/arrest.md
+      - Vehicles: systems/vehicles.md
+      - Wanted: systems/wanted.md
+      - Gangs: systems/gangs.md
+      - Medics and bodies: systems/medics.md
       - Voices: systems/voices.md
       - Scenic scenes: systems/scenic.md
   - Reference:
+      - Architecture: architecture.md
+      - Version history: history.md
       - Actor API: classes/actor/index.md
+      - Server API: reference/server.md
+      - Client API: reference/client.md
+      - Shared API: reference/shared.md
+      - AI documentation rules: ai.md
       - Building the docs: contributing.md
 markdown_extensions:
   - admonition

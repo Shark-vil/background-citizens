@@ -22,3 +22,5 @@ Paint the NPC.
 	if not IsValid(npc) then return end
 	npc:SetColor(npc_color)
 ```
+
+[Realm reference](../../../reference/shared.md).

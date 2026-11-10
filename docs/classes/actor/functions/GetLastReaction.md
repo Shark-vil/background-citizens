@@ -1,15 +1,13 @@
 # GetLastReaction
 
-## SERVER
+Realm: **SHARED** (supported usage).
+
 ```lua
-	ACTOR:GetLastReaction()
+actor:GetLastReaction()
 ```
 
-## Description
-Gets the last installed reaction. If the reaction has not been set previously, an empty string will be returned.
+Returns the last stored reaction.
 
-## Return
-1. **string** - any reaction *(state)* name or empty string
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
-## Example
-- [SetReaction](./SetReaction.md)
+[Realm reference](../../../reference/shared.md).

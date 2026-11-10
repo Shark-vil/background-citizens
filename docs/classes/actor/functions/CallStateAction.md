@@ -1,9 +1,13 @@
 # CallStateAction
 
-## SERVER
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:CallStateAction(string|nil current_state, string func_name, args ...)
+actor:CallStateAction(state_name, func_name, ...)
 ```
 
-## Return
-1. **any** - any result calling state function.
+Calls a registered callback with this actor and extra arguments; nil state_name uses the current state.
+
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
+
+[Realm reference](../../../reference/server.md).

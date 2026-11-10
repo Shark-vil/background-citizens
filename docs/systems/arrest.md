@@ -15,16 +15,11 @@ Settings window: **Arrest**.
 
 A player gives up by looking at the ground (pitch over 40°) near the officer. NPC targets give up by the
 `arrest_surrender` state: an actor (an NPC or a NextBot body, e.g. a gangster) that attacks near the police may
-give up, 5% on its first attack and 10% on each later one while at 50 health or less. The police stop arresting and shoot when the target kills someone, keeps attacking,
-refuses within the time limit or is wanted.
+give up, 5% on its first attack and 10% on each later one, only while below half its maximum health. An NPC arrest is held while the target remains compliant; the player refusal/wanted/time-limit checks below do not automatically cancel it. An attacked officer may defend itself.
 
 A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
 officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
 it slips away (`retreat`); otherwise it just calms down.
-
-A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
-officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
-it slips away (`retreat`); otherwise it just calms down (`systems` `arrest_surrender` state).
 
 Regular police (`npc_metropolice`) use the stunstick as an additional melee weapon. An already hostile
 target holding an unsafe ranged weapon makes the officer select a pistol immediately, even up close
@@ -59,3 +54,8 @@ within the time limit, or any damage dealt, and they shoot again. The next chanc
 time limit + delay. Hook: `BGN_PlayerSurrenderChance(ply, police_actor)`.
 
 Fist fights never lead to shooting: the police arrest both fighters ([Conversations](./conversations.md)).
+
+
+## Holding an arrest
+
+An NPC arrest does not use the player wanted/time-limit checks in `CanArrest`. Officers hold the arrest unless attacked. Allied police damage to a protected active arrest target is suppressed; an attacked officer retains self-defense. Sources: `systems/arrest/sv_arrest.lua`, `brain/fsm/states/sv_arrest.lua`.

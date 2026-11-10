@@ -1,22 +1,13 @@
 # GetRandomState
 
-## SHARED
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:GetRandomState()
+actor:GetRandomState()
 ```
 
-## Description
-Gets a random actor state.
+Returns a weighted at_random state name or none for empty/zero weights.
 
-**Attention!** The state *"none"* is considered systemic, and means the absence of a state. It is recommended to add a check for the *"none"* state if you are going to use this method.
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
-## Return
-1. **string** - any state name or "none" string
-
-## Example
-```lua
-	local actor = bgNPC:GetFirstActorInList()
-	local new_state = actor:GetRandomState()
-	if new_state == "none" then return end
-	actor:SetState(new_state)
-```
+[Realm reference](../../../reference/server.md).

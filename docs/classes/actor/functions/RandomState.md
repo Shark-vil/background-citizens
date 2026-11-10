@@ -1,15 +1,13 @@
 # RandomState
 
-## SERVER
+Realm: **SERVER** (supported usage).
+
 ```lua
-	ACTOR:RandomState()
+actor:RandomState()
 ```
 
-## Description
-Sets the random state of the actor, which are specified in the config settings.
+Chooses and applies a weighted at_random state unless PreRandomState cancels; returns the resulting state name.
 
-## Example
-```lua
-	local actor = bgNPC:GetFirstActorInList()
-	actor:RandomState()
-```
+Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
+
+[Realm reference](../../../reference/server.md).

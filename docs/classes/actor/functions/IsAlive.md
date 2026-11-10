@@ -18,3 +18,5 @@ Checks if the NPC who is attached to the actor is alive. Calling this check on t
 	local npc = actor:GetNPC()
 	npc:SetHealth(100)
 ```
+
+[Realm reference](../../../reference/shared.md).

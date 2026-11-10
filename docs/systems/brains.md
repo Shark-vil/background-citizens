@@ -271,3 +271,8 @@ teammate. Only the police and bandits seize.
 Boarding removes the physical NPC/NextBot and binds the same logical actor to a DV anim entity; exiting recreates its original body and equipment. Exit placement prefers the closest model exit or the side and row of its own seat, checking full body clearance and overlap even with non-colliding actors. If all positions are blocked, it stays aboard. Seated hits retain the attacker and notify nearby witnesses through the normal damage hooks. Witness traces exclude their own chassis/seat and recognize another occupant's chassis; walls still block sight.
 
 BGN traffic can plan bounded forward/reverse maneuvers around blockers and, after repeated failures, try another accessible road segment. Red lights, scheduled stops and taxi waits suppress recovery. Cars honk briefly only at an entity blocking their forward sensor. These changes apply to BGN-created vehicles; DV remains required. See [traffic checks and limitations](testing.md#dv-traffic-developer-checks).
+
+
+## Related systems
+
+[Gangs](gangs.md) limit fight rosters and new protection events; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
