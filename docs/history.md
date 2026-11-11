@@ -58,6 +58,8 @@ Prop-chair seating now finishes the close approach below the route completion di
 
 Ghost carried items were removed in both modes; server-ghost materialization suppresses automatic carry selection. The briefcase hangs upright from the finger grip; the newspaper follows the fingertips at its lower edge, has upright text and leans away from the face by 15 degrees. Render bounds include hand positions so close-up views do not cull the props.
 
+The entity-cache warm-up on first player spawn has been removed: BGN no longer temporarily spawns configured NPCs and vehicles to warm their resources. NextBot relationships now use the most frequent disposition of each foreign NPC towards server players, with neutral ties, instead of hidden NPC probes. Ordinary HL2 NPC body relationships retain their existing rules. See [brains](systems/brains.md).
+
 ## Reproduce the comparison
 
 ```text
