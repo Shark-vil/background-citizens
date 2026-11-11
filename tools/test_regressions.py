@@ -2404,3 +2404,36 @@ doors.execute('''
 for path in ('systems/sv_door_hold.lua', 'brain/fsm/states/sv_hold_door.lua', 'brain/fsm/states/sh_knocked_down.lua'):
     doors.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
 print('PASS: existing regressions, vehicle lifecycle, door decisions/planner/ownership, cleanup and LuaJIT syntax')
+
+# Direct attackers must be remembered on their first hit during an existing fight.
+damage = realm(True)
+damage.execute("""
+    function isbool(v) return type(v)=='boolean' end
+    local npc={valid=true}; local attacker={valid=true,IsPlayer=function() return false end}
+    local old_enemy={valid=true}
+    local victim={enemies={old_enemy},HasTeam=function() return shared end,
+        HasState=function() return false end,IsCivilian=function() return false end,
+        GetReactionForDamage=function() return 'defense' end,
+        SetReaction=function(self,r) self.reaction=r end,GetLastReaction=function(self) return self.reaction end,
+        EqualStateGroup=function() return false end,
+        AddEnemy=function(self,e) self.enemies[#self.enemies+1]=e end,
+        RemoveEnemy=function() end}
+    local shooter={GetNearEnemy=function() end,HasTeam=function() return false end,EnemiesCount=function() return 1 end,
+        HasEnemy=function() return true end,RemoveEnemy=function() end}
+    bgNPC.Actors.Get=function(e) if e==npc then return victim elseif e==attacker then return shooter end end
+    damage_npc=npc; damage_attacker=attacker; damage_victim=victim
+""")
+load(damage, 'actor/events/sv_self_damage.lua')
+damage.execute("""
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==2 and damage_victim.enemies[2]==damage_attacker,
+        'a new attacker is remembered on the first hit while another enemy exists')
+    damage_victim.enemies={}; shared=true
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==0, 'shared teams still prevent retaliation')
+    shared=false
+    hook.Add('BGN_PreReactionTakeDamage','cancel',function() return true end)
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==0, 'reaction cancellation still prevents adding enemies')
+""")
+print('PASS: first-hit enemy registration, shared-team immunity and reaction cancellation')

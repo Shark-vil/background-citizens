@@ -53,6 +53,8 @@ HL2 NPCs keep ordinary locomotion with only a clientside briefcase on their righ
 replaces a hidden driving parcel and follows both hands; no extracted or new game assets are shipped. Small items can be stowed;
 dropped suitcases collide only with the world and expire after 30 seconds by default.
 
+Direct attackers without a shared team are now added as enemies on the first hit, including during an existing fight.
+
 ## Reproduce the comparison
 
 ```text

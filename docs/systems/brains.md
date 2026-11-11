@@ -29,6 +29,7 @@ put at a spot free for its whole body, never inside the car.
   fights with it. It was spawned without a weapon, so it always shoots with `WEAPON_PROFICIENCY_POOR`
   (`actor.novice_shooter`, `bgNPC.Combat.ApplyWeaponSkill`). The same goes for an HL2 NPC that picked a weapon
   up by its engine AI.
+- A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
 - **Offenders** (`systems/sv_offender.lua`): a civilian (`residents`, not `police`) who rams a police car (a hit with damage) or kills a `residents` actor
