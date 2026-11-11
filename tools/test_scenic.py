@@ -170,14 +170,14 @@ lua.execute('''
     assert(spawns==count, 'manual door scenes must reject an opening door or a non-door')
     blocked=true; d.class='prop_door_rotating'; d.state=0
     assert(not spots.Find('door',d,scene), 'no scene inside an obstructed hull')
-    local manual_only={sky_watch=true,door_brace=true,luggage=true,ration=true}
+    local manual_only={sky_watch=true,door_brace=true,luggage=true,ration=true,newspaper=true}
     local automatic,total=0,0
     for id,def in pairs(bgNPC.cfg.scenic) do
         total=total+1
         assert((def.weight==0)==(manual_only[id]==true), 'only sky/brace and walking carry previews are manual-only')
         if def.weight>0 then automatic=automatic+1 end
     end
-    assert(total==27 and automatic==23 and not bgNPC.cfg.scenic.cowering)
+    assert(total==28 and automatic==23 and not bgNPC.cfg.scenic.cowering)
     for _,id in ipairs({'plaza','ground_sit','tired','ration','luggage'}) do
         assert(not bgNPC.cfg.scenic[id].group and #bgNPC.cfg.scenic[id].members==1, 'solitary citizens must not expand into groups')
     end

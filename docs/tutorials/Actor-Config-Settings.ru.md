@@ -48,7 +48,7 @@
 | Поле | Значение | Назначение |
 |---|---|---|
 | `brain` | `fsm / goap` | Мозг при bgn_brain=auto; принудительная cvar имеет приоритет. |
-| `carry_items` | `false / table` | `{ chance = 5, items = { 'ration', 'suitcase' }, drop_lifetime = 30 }`: редкие предметы у невооружённых акторов; добавляет чекбокс типа. См. [правила переноски](Modification-of-Existing-NPCs.md). |
+| `carry_items` | `false / table` | `{ chance = 5, items = { 'ration', 'suitcase', 'newspaper' }, drop_lifetime = 30 }`: редкие предметы у невооружённых акторов; добавляет чекбокс типа. См. [правила переноски](Modification-of-Existing-NPCs.md). |
 | `goap_set` | `police / gangster / citizen` | Набор целей GOAP; иначе определяется по команде. |
 | `gang` | `string` | Идентификатор банды; учитывается союзами, составом боя и групповой ходьбой. |
 | `heavy_chance` | `35` | Процент тяжёлых участников для штатных банд. |

@@ -1,7 +1,7 @@
 # Scenic scenes
 
 Staged scenes that appear on the map by themselves: a food line, a cop knocking on a door, a couple on a couch,
-someone sitting on a chair, an arrest at a wall. 27 scene definitions, 23 enabled for automatic spawning;
+someone sitting on a chair, an arrest at a wall. 28 scene definitions, 23 enabled for automatic spawning;
 all data is in `config/states/sh_scenic.lua`.
 The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC body and with a NextBot body.
 
@@ -20,13 +20,12 @@ Manual placement by an administrator allows spawning in sight and nearby, while 
 placement and actor-model checks. Automatic spawning still requires hidden positions.
 Each automatic scene has its own checkbox on the Spawn page (also in Classic settings), backed by
 `bgn_scenic_<id>`; it affects future automatic selection, not existing scenes or manual Tool placement.
-`sky_watch`, `door_brace`, `luggage` and `ration` have `weight = 0` and stay manual-only. Luggage/ration previews
-create one walking carrier; ordinary citizens get these items through their [actor config](../tutorials/Modification-of-Existing-NPCs.md).
+`sky_watch`, `door_brace`, `luggage`, `ration` and `newspaper` have `weight = 0` and stay manual-only. Carry previews create one walking carrier (ration/newspaper require NextBots, luggage uses a client-only briefcase on HL2 NPCs); ordinary citizens get these items through their [actor config](../tutorials/Modification-of-Existing-NPCs.md).
 
 ## Scene debugger Tool
 
-Open **Q → Tools → Background NPCs → Scene debugger** (administrators only). The panel lists all 27 scene
-IDs, including four manual-only previews, plus a **GOAP: hold, breach, recover** test.
+Open **Q → Tools → Background NPCs → Scene debugger** (administrators only). The panel lists all 28 scene
+IDs, including five manual-only previews, plus a **GOAP: hold, breach, recover** test.
 
 | Control | Action |
 |---|---|

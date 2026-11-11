@@ -29,7 +29,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 `actor:GetActiveWeapon()`
 
 Returns a weapon entity or NULL; a seated visual may have no active weapon.
-Carried parcels and suitcases return NULL through this actor API; the native entity can still expose them.
+Carried parcels, suitcases/briefcases and newspapers return NULL through this actor API; the native entity can still expose them.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 

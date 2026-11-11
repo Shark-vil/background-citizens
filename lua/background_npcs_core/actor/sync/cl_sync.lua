@@ -12,6 +12,7 @@ bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data)
 	actor.anim_name = data.anim_name
 	actor.is_animated = data.is_animated
 	actor.state_lock = data.state_lock
+	actor.carry_visual = data.carry_visual or nil
 	actor.reaction = data.reaction
 	actor.npc_schedule = data.npc_schedule
 	actor.npc_state = data.npc_state

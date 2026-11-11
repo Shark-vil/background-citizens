@@ -22,6 +22,7 @@ local function BuildSyncData(actor)
 		anim_name = actor.anim_name,
 		is_animated = actor.is_animated,
 		state_lock = actor.state_lock,
+		carry_visual = actor.carry_visual or false,
 		reaction = actor.reaction,
 		npc_schedule = actor.npc_schedule,
 		npc_state = actor.npc_state,

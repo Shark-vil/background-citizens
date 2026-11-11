@@ -48,7 +48,9 @@ actors are excluded from automatic population recycling/removal and scenic lifet
 The scenic overhaul returns couches/radio to automatic indoor-only placement, removes cowering, splits wall
 fatigue from floor poses, adds ledge seating and solitary pose variants, and makes couch pairs atomic.
 Per-scene switches and per-actor `carry_items` settings control future spawning. Citizens have a combined 5%
-carried-item chance, with walking/idle support for NPCs, NextBots and both ghost modes. Small items can be stowed;
+carried-item chance. A follow-up confines two-handed ration/newspaper poses to NextBots and visual ghosts;
+HL2 NPCs keep ordinary locomotion with only a clientside briefcase on their right-hand bone. The stock newspaper
+replaces a hidden driving parcel and follows both hands; no extracted or new game assets are shipped. Small items can be stowed;
 dropped suitcases collide only with the world and expire after 30 seconds by default.
 
 ## Reproduce the comparison

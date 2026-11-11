@@ -17,7 +17,8 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 				-- Release only our own hiding; the server still hides actors seated in cars.
 				if not npc:GetNW2Bool('bgn_vehicle_entered', false) and not npc:GetNW2Bool('bgn_knocked_down', false) then
 					npc:SetNoDraw(false)
-					if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(false) end
+					local actor = bgNPC.Actors.Get(npc)
+					if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(actor and actor.carry_visual == 'newspaper' or false) end
 				end
 				npc.bgn_render_optimization = false
 				npc.bgn_hidden_weapon = nil
@@ -70,7 +71,7 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
 						-- the weapon would then stay hidden in its hands for good.
 						npc:SetNoDraw(false)
 						npc.bgn_render_optimization = false
-						if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(false) end
+						if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(actor.carry_visual == 'newspaper') end
 						npc.bgn_hidden_weapon = nil
 					end
 

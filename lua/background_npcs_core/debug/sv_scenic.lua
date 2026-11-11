@@ -6,6 +6,7 @@ Scenic.Debug = Debug
 local errors = {
 	admin = { default = 'This tool requires administrator rights.', russian = 'Инструмент доступен только администратору.' },
 	scene = { default = 'Unknown scene.', russian = 'Неизвестная сцена.' },
+	carry_body = { default = 'Rations and newspapers require a NextBot body. HL2 NPCs support only the client-side briefcase.', russian = 'Паёк и газета требуют тела NextBot. Обычные HL2 NPC поддерживают только клиентский кейс.' },
 	surface = { default = 'Aim at a surface, not the sky.', russian = 'Наведитесь на поверхность, а не на небо.' },
 	door_target = { default = 'Aim directly at the door panel, not the floor or wall beside it.', russian = 'Наведитесь прямо на полотно двери, а не на пол или стену рядом.' },
 	door_closed = { default = 'The selected door is open or moving. Close it; knocking does not require a lock.', russian = 'Выбранная дверь открыта или движется. Закройте её; запирать для стука не нужно.' },
@@ -61,6 +62,11 @@ function Debug.Spawn(ply, id, tr)
 	if not Debug.Allowed(ply) then return nil, 'admin' end
 	local scene = bgNPC.cfg.scenic[id]
 	if not scene then return nil, 'scene' end
+	for _, member in ipairs(scene.members) do
+		if member.carry and not bgNPC.CarryItems.items[member.carry].npc_model and GetConVar('bgn_actor_body'):GetString() ~= 'nextbot' then
+			return nil, 'carry_body'
+		end
+	end
 	if not tr.Hit or tr.HitSky then return nil, 'surface' end
 	local spots, spot = Scenic.Spots
 	if scene.place == 'door' then

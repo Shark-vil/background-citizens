@@ -141,7 +141,7 @@ end
 local function RememberLook(actor, npc)
 	local look = { type = actor:GetType(), model = npc:GetModel(), skin = npc:GetSkin(),
 		bodygroups = GhostCrowd.BodygroupsOf(npc), carry_support = {} }
-	for kind in pairs(bgNPC.CarryItems.items) do look.carry_support[kind] = bgNPC.CarryItems.Supports(npc, kind) end
+	for kind in pairs(bgNPC.CarryItems.items) do look.carry_support[kind] = bgNPC.CarryItems.Supports(npc, kind, true) end
 	local key = look.type .. look.model .. look.skin .. look.bodygroups
 	if looks_index[key] then return end
 

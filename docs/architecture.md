@@ -87,8 +87,10 @@ standing requires a free hull. Client synchronization/render optimization preser
 
 `systems/sh_carry_items.lua` shares item definitions, model/animation checks and chance selection. SERVER owns
 real actors' carried weapons and dropped physics props; body adapters exclude these props from combat weapon
-queries. Native NPC activities and NextBot activity tables supply carrying locomotion. CLIENT owns only ghost
-visuals/local decoration; server ghost mode synchronizes the selected item and preserves it during handoff.
+queries. Only NextBot activity tables supply carrying locomotion. HL2 NPC movement is unchanged; CLIENT
+attaches its briefcase to the hand bone. `systems/cl_carry_items.lua` manages real actors' client props from
+`carry_visual` in existing PVS snapshots. The newspaper hides the NextBot's driving parcel and fits the stock
+paper model between both hand bones. CLIENT also owns ghost visuals/local decoration; handoff retains only body-compatible items.
 Scenic placement remains SERVER-owned, including room/ledge traces, furniture bounds and atomic couch pairs.
 
 `debug/sv_scenic.lua` owns admin scene placement, test ownership/Undo and the one-cycle GOAP door test.

@@ -1586,9 +1586,11 @@ rendering.execute('''
         n.bgn_hidden_weapon={valid=true,hidden=true,SetNoDraw=n.SetNoDraw}
         return n
     end
-    seated=RenderNPC(true,true); culled=RenderNPC(false,true); other=RenderNPC(false,false)
+    seated=RenderNPC(true,true); culled=RenderNPC(false,true); other=RenderNPC(false,false); newspaper=RenderNPC(false,true)
+    newspaper_weapon=newspaper.bgn_hidden_weapon
     seated_weapon=seated.bgn_hidden_weapon; culled_weapon=culled.bgn_hidden_weapon
-    bgNPC.Actors.GetAllNPCs=function() return {seated,culled,other} end
+    bgNPC.Actors.GetAllNPCs=function() return {seated,culled,other,newspaper} end
+    bgNPC.Actors.Get=function(npc) if npc==newspaper then return {carry_visual='newspaper'} end end
 ''')
 # Only the settings callback is needed here; the task below uses GMod's continue.
 render_source = (ROOT / 'systems/cl_render_optimization.lua').read_text(encoding='utf-8-sig')
@@ -1598,6 +1600,7 @@ rendering.execute('''
     assert(seated.hidden and seated_weapon.hidden,'disabling culling must not reveal actors or weapons inside cars')
     assert(not culled.hidden and not culled_weapon.hidden,'disabling culling must restore both NPC and weapon')
     assert(other.hidden,'culling must not clear hiding owned by another system')
+    assert(not newspaper.hidden and newspaper_weapon.hidden,'disabling culling must keep the newspaper driving parcel hidden')
 ''')
 
 speech = realm(False)

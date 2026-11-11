@@ -27,7 +27,7 @@ police, medics, gangsters, thieves and taxi drivers override the inherited field
 ```lua
 bgNPC.cfg.actors.citizen.carry_items = {
     chance = 5,
-    items = { 'ration', 'suitcase' },
+    items = { 'ration', 'suitcase', 'newspaper' },
     drop_lifetime = 30,
 }
 -- Set carry_items = false to disable this capability for a custom type.
@@ -35,11 +35,15 @@ bgNPC.cfg.actors.citizen.carry_items = {
 
 Types with this table expose **Spawn with carried items** in both actor settings menus
 (`bgn_carry_items_<type>`, server-owned, default `1`). The switch affects new actors and both ghost modes.
-Models must support the item's idle and walk sequences; no model is replaced. NPC and NextBot bodies walk
-normally and keep the item during compatible actions. A parcel is stowed for occupied-hand actions and can
-return afterwards; a suitcase is dropped instead. Dropped objects collide only with the world and disappear
+NextBots and visual ghosts require the item's idle/walk sequences. `newspaper` uses the two-handed parcel pose
+with the parcel hidden and the stock HL2 newspaper fitted between both hands. No models/assets are replaced.
+Ordinary HL2 NPCs support only `suitcase`: a CLIENT-only `briefcase001a` follows the right-hand bone, without
+giving the NPC a carry weapon or overriding its movement/activity. Other item kinds are excluded before selection.
+A parcel/newspaper is stowed for occupied-hand actions or a NextBot's run and can return afterwards; a suitcase/briefcase is dropped instead. Dropped objects collide only with the world and disappear
 after `drop_lifetime` seconds (default 30, minimum 1). Local ghosts use a non-colliding client decoration.
-Server ghosts synchronize their item and preserve the choice when becoming a real actor, without another roll.
+Server ghosts synchronize their item and preserve compatible choices when becoming a real actor, without another
+roll. A two-handed item is discarded when the destination body is an HL2 NPC; a suitcase becomes its briefcase.
+Real actors' client-only props use existing PVS actor snapshots, hide with the parent and are removed when stowed or deleted.
 
 Carry equipment is excluded from `actor:GetActiveWeapon()` / `HasActiveWeapon()` and threat checks; it does
 not replace the actor's intended combat weapon. The native entity may still expose its carry weapon.

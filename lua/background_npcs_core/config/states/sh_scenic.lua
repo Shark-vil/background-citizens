@@ -22,7 +22,7 @@
 		          pos     Vector(forward, right, up) from the scene spot, yaw - turn from the spot angle
 		          seq_offsets local Vector per lowercase sequence name, applied after floor placement
 		          weapon  weapon equipped for the pose
-		          carry   ration / suitcase walking preview instead of a static pose
+		          carry   ration / suitcase / newspaper walking preview instead of a static pose
 		          seat    placed on the chair of the spot (place = 'chair')
 		props   decor created with the scene: model, pos, yaw, solid (default true)
 --]]
@@ -53,6 +53,10 @@ bgNPC.cfg.scenic = {
 	ration = {
 		place = 'floor', weight = 0,
 		members = { { type = 'citizen', carry = 'ration' } },
+	},
+	newspaper = {
+		place = 'floor', weight = 0,
+		members = { { type = 'citizen', carry = 'newspaper' } },
 	},
 	wounded = {
 		place = 'floor', weight = 6, ttl = 420,
@@ -181,7 +185,8 @@ local names = {
 	tired_wall = { 'Tired citizen at a wall', 'Уставший у стены' },
 	ledge_sitting = { 'Sitting on a ledge', 'Сидящий на уступе' },
 	cheering = { 'Cheering', 'Радующиеся жители' }, food_line = { 'Food queue', 'Очередь за едой' },
-	plaza = { 'Standing citizen', 'Стоящий житель' }, luggage = { 'Citizen with a suitcase', 'Житель с чемоданом' },
+	plaza = { 'Standing citizen', 'Стоящий житель' }, luggage = { 'Citizen with a suitcase / briefcase', 'Житель с чемоданом / кейсом' },
+	newspaper = { 'Citizen with a newspaper', 'Житель с газетой' },
 	ration = { 'Citizen with a ration box', 'Житель с пайком' }, wounded = { 'Wounded citizen', 'Раненый житель' },
 	healing = { 'Medic helping a citizen', 'Помощь медика' }, ground_sit = { 'Sitting on the ground', 'Сидящий на земле' },
 	tired = { 'Tired citizen', 'Уставший житель' }, kneeling = { 'Kneeling', 'Житель на коленях' },
