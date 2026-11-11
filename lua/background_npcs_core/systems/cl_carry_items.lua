@@ -1,4 +1,4 @@
--- Real actor visuals use the existing PVS actor snapshots; ghosts own their separate props.
+-- Real actor visuals use the existing PVS actor snapshots.
 local Carry = bgNPC.CarryItems
 for _, prop in pairs(Carry.visuals or {}) do if IsValid(prop) then prop:Remove() end end
 Carry.visuals = {}
@@ -20,7 +20,7 @@ hook.Add('Think', 'BGN_CarryVisuals', function()
 			if IsValid(weapon) and weapon:GetClass() == 'weapon_citizenpackage' then weapon:SetNoDraw(true) end
 		end
 		if actor:IsAlive() and kind and not IsValid(Carry.visuals[actor]) and Carry.Supports(npc, kind) then
-			local prop = Carry.CreateVisual(npc, kind, npc:IsNPC())
+			local prop = Carry.CreateVisual(npc, kind, kind == 'suitcase')
 			if IsValid(prop) then prop.bgn_kind = kind Carry.visuals[actor] = prop end
 		end
 	end

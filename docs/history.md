@@ -50,10 +50,13 @@ fatigue from floor poses, adds ledge seating and solitary pose variants, and mak
 Per-scene switches and per-actor `carry_items` settings control future spawning. Citizens have a combined 5%
 carried-item chance. A follow-up confines two-handed ration/newspaper poses to NextBots and visual ghosts;
 HL2 NPCs keep ordinary locomotion with only a clientside briefcase on their right-hand bone. The stock newspaper
-replaces a hidden driving parcel and follows both hands; no extracted or new game assets are shipped. Small items can be stowed;
-dropped suitcases collide only with the world and expire after 30 seconds by default.
+replaces a hidden driving parcel and follows both hands; no extracted or new game assets are shipped. Small items can be stowed. Briefcases on both body types stay attached until a combat state, never drop as physical objects, and need no luggage sequences. The admin carried-item debugger can force an item onto a calm unarmed actor.
 
 Direct attackers without a shared team are now added as enemies on the first hit, including during an existing fight. Police no longer use door holding; door breaching remains available.
+
+Prop-chair seating now finishes the close approach below the route completion distance. Seated scenic NextBots no longer rise or drift under physics; ledge placement additionally checks direct pelvis support.
+
+Ghost carried items were removed in both modes; server-ghost materialization suppresses automatic carry selection. The briefcase hangs upright from the finger grip; the newspaper follows the fingertips at its lower edge, has upright text and leans away from the face by 15 degrees. Render bounds include hand positions so close-up views do not cull the props.
 
 ## Reproduce the comparison
 

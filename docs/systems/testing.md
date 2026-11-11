@@ -14,18 +14,25 @@ blocked stand-up, forced-state rejection, holder/ragdoll removal and damage/deat
 Report: `data/bgn_door_lab/doors.json`.
 It creates stock test rigs and doors, briefly moves the observer, pauses automatic spawners and cleans up its
 objects/restores tasks and observer afterward. Run it in a lab, not an ongoing play session.
+`tools/seating_lab.lua` checks 32 seating cases on both bodies: two stock chair props at four headings,
+close and distant approach, BigCity custom bench seats, scenic chairs/benches and both ledge poses on male
+and female rigs. It checks direct pelvis support, facing the drop, stable placement and physics/seat restoration
+on exit. Run only in an isolated SP lab on port 27025; report: `data/bgn_seat_lab/seating.json`.
+
 Additional opt-in fixtures through the same temporary SP bridge:
 
 | Fixture | Native checks | Report under `data/bgn_scenic_overhaul_lab/` |
 |---|---|---|
 | `tools/scenic_poses.lua` | NPC/NextBot poses, wall/door contact, indoor rejection, both couch sexes, complete pairs and brush ledges | `poses.json` |
 | `tools/carry_items.lua` | Tool/ordinary spawns: HL2 briefcase without a weapon/activity override, NextBot ration/suitcase/newspaper walk, hidden parcel, stowing, drop/expiry | `carry.json` |
-| `tools/ghost_carry.lua` | Run SERVER and CLIENT separately: local/synchronized visuals, panic and NPC/NextBot materialization without reroll | `ghost-server.json`, `ghost-client.json` |
+| `tools/ghost_carry.lua` | Run SERVER and CLIENT separately: empty hands in both ghost modes and NPC/NextBot materialization without carried items | `ghost-server.json`, `ghost-client.json` |
 | `tools/ragdoll_identity.lua` | Same actor/entity, latest health/max health, weapon/clip, incoming/outgoing relationships and wanted record after recovery | `identity.json` |
 
 Fixtures use stock animation rigs for repeatability, clean up their own entities and restore changed settings.
 They do not establish support for every custom model or multiplayer behavior. `scenic_poses` uses real BSP
 geometry for its ledge test; it does not replace engine traces with stub results.
+`tools/carry_alignment.lua` is an opt-in CLIENT render-frame check in an isolated SP lab. It measures the newspaper lower grip against the fingertips, the 15-degree outward tilt and the upright briefcase handle against the index-finger grip. Inspect front and side screenshots for male/female rigs at idle and during actual walking; measurements do not replace the visual check. Reports: `data/bgn_paper_lab/alignment-idle.json` and `alignment-walk.json`.
+
 Offline checks (lupa): `python tools/test_regressions.py`, `python tools/test_scenic.py`, `python tools/test_carry_items.py`.
 
 A one-minute check that answers "nothing spawns" and "I'm an admin but can't change the settings" with facts.
@@ -123,3 +130,5 @@ Keep DV's native `DoTrace` interval: clear traces renew `StopByTrace` for only 0
 Vehicle occupants keep the same actor object and UID in the population registry. Boarding removes the real NPC/NextBot and its weapons; the existing DV driver/passenger anim entity represents the occupant. Exiting recreates the original body kind, appearance, health and equipment at a free hull-tested position. A blocked exit retains the seat. Removing a car removes its crew, including direct entity removal. Addon-private NPC data requires a `BGN_ActorEntityChanged(actor, old, new)` integration.
 
 `dv_lifecycle.lua` checks simultaneous boarding, NPC/NextBot removal and recreation, stable identities/counts/targets, health/equipment, blocked exits, repeat boarding and direct car removal. `dv_lifecycle_guards.lua` checks lost/failed controllers, full seats, wanted/kill history and provider cleanup. Reports: `lifecycle.json` and `lifecycle_guards.json`. Both scenarios clean up their test entities.
+
+The admin **Carried item debugger** (`bgn_carry_debug`) issues a selected briefcase, parcel or newspaper with LMB and removes it with RMB. Aim at a living unarmed actor on foot in a calm state; model/body compatibility remains enforced. Test briefcases on male/female NPCs and NextBots through calm actions, running and combat: no physical briefcase should spawn.

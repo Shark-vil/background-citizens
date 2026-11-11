@@ -36,10 +36,10 @@ if CLIENT then
 		for _, kind in ipairs({ 'ration', 'suitcase', 'newspaper' }) do
 			config.carry_items = { chance = 100, items = { kind } }
 			local ghost = assert(CreateGhost(LocalPlayer():GetPos() + Vector(300, 0, 0)))
-			assert(ghost.carry == kind and IsValid(ghost.carry_prop), 'local ghost uses the actor carry config')
-			assert(ghost.carry_prop:GetParent() == ghost.ent, 'client carried model follows its ghost')
+			assert(not ghost.carry and not IsValid(ghost.carry_prop), 'local ghosts ignore carry configuration')
+
 			SetActivity(ghost, ACT_WALK)
-			assert(ghost.ent:GetSequence() == bgNPC.CarryItems.Sequence(ghost.ent, kind, true), 'client walking animation carries the item')
+
 			report.cases[#report.cases + 1] = { name = 'local_' .. kind, passed = true }
 		end
 		local receivers = Up(bgNPC.Net.Receive, 'receivers')
@@ -50,7 +50,7 @@ if CLIENT then
 				carry = kind, look = looks[1] }, CurTime())
 			local ghosts = Up(Apply, 'server_ghosts')
 			local ghost = assert(ghosts[-i])
-			assert(ghost.carry == kind and IsValid(ghost.carry_prop), 'server-selected carried item reaches the client')
+			assert(not ghost.carry and not IsValid(ghost.carry_prop), 'server ghosts ignore carried-item payloads')
 			Apply({ id = -i, from = pos, to = pos, speed = 0, t0 = CurTime(), carry = false }, CurTime())
 			assert(not ghost.carry and not IsValid(ghost.carry_prop), 'explicit false removes the synchronized item')
 			report.cases[#report.cases + 1] = { name = 'server_visual_' .. kind, passed = true }
@@ -64,17 +64,15 @@ end
 
 local task = assert(bgNPC.Tasks.list.bgn_ghost_crowd_server).func
 local Decide = Up(task, 'Decide')
-local Handoff, SetSegment = Up(Decide, 'Handoff'), Up(Decide, 'SetSegment')
+local Handoff = Up(Decide, 'Handoff')
 local SegmentOp = Up(Up(task, 'TrySpawn'), 'SegmentOp')
 local old_body = GetConVar('bgn_actor_body'):GetString()
 local base = assert(bgNPC.Scenic.Spots.Floor(Vector(-800, 1000, -11140)))
 local actor
-local drops = {}
 local jobs = { { 'npc', 'ration' }, { 'npc', 'suitcase' }, { 'npc', 'newspaper' }, { 'nextbot', 'ration' }, { 'nextbot', 'suitcase' }, { 'nextbot', 'newspaper' } }
 local index = 0
 local function Finish()
 	if actor then actor:Remove() end
-	for _, ent in ipairs(drops) do if IsValid(ent) then ent:Remove() end end
 	GetConVar('bgn_actor_body'):SetString(old_body)
 	report.done, report.passed = true, #report.errors == 0 Write()
 end
@@ -92,28 +90,7 @@ Next = function()
 	GetConVar('bgn_actor_body'):SetString(job[1])
 	local ghost = { id = -100 - index, look = { type = 'citizen', model = 'models/humans/group01/male_07.mdl', skin = 0, bodygroups = '' },
 		carry = job[2], seg = { speed = 0 } }
-	if index <= 2 then
-		local panic = { id = -1000 - index, look = ghost.look, carry = job[2] }
-		local old_props = {}
-		for _, ent in ipairs(ents.FindByClass('prop_physics')) do old_props[ent] = true end
-		local panic_pos = base + Vector(300, 0, 0)
-		SetSegment(panic, panic_pos, panic_pos + Vector(100, 0, 0), true, CurTime())
-		assert(not panic.carry and SegmentOp(panic, true).carry == false, 'panic explicitly synchronizes empty hands')
-		if job[2] == 'ration' then
-			assert(panic.stowed_carry == 'ration', 'ghost parcel is stowed')
-			SetSegment(panic, panic_pos, nil, false, CurTime(), 2)
-			assert(panic.carry == 'ration' and not panic.stowed_carry, 'ghost parcel returns after panic')
-		else
-			local found
-			for _, ent in ipairs(ents.FindByClass('prop_physics')) do
-				if not old_props[ent] then found = ent drops[#drops + 1] = ent end
-			end
-			assert(IsValid(found) and found:GetCollisionGroup() == COLLISION_GROUP_WORLD, 'ghost suitcase drops as a non-blocking prop')
-			assert(not panic.stowed_carry, 'ghost suitcase is not pocketed')
-		end
-		report.cases[#report.cases + 1] = { name = 'panic_' .. job[2], passed = true }
-	end
-	assert(SegmentOp(ghost, true).carry == job[2], 'snapshot includes the server-selected item')
+	assert(SegmentOp(ghost, true).carry == nil, 'snapshots contain no carried item')
 	local before = {}
 	for _, a in ipairs(bgNPC.Actors.GetAll()) do before[a] = true end
 	assert(Handoff(ghost, spawn_pos), 'seen ghost materializes')
@@ -125,8 +102,8 @@ Next = function()
 			if a and not before[a] and not a.is_removed then actor = a break end
 		end
 	end
-	local expected = (job[1] ~= 'npc' or job[2] == 'suitcase') and job[2] or nil
-	assert(actor and actor.carry_initialized and actor.carry_item == expected, 'handoff retains compatible items without rerolling and discards unsupported two-handed items')
+	local expected = nil
+	assert(actor and actor.carry_initialized and actor.carry_item == expected, 'handoff never equips a carried item')
 	actor.eternal, actor.data.at_random = true, nil
 	timer.Simple(0.4, function() Protect(function()
 		assert(actor:IsAlive() and actor.carry_item == expected and (not expected or bgNPC.CarryItems.active[actor]), 'body eligibility survives initialization')
