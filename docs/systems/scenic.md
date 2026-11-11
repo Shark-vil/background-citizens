@@ -99,7 +99,10 @@ This conservative check can reject a real room with an open doorway/window; it a
 `plaza`, `ground_sit` and `tired` create one citizen with a supported pose selected from a list. `plaza` has
 standing poses only; `cowering` was removed. The raised-arm tired pose is `tired_wall`, facing its support.
 `ledge_sitting` needs a flat lip at least 32 units wide, 28 units of support behind it, clear standing room,
-and a 24–56 unit drop in front. Thin rails, ordinary stair steps and deep falls are rejected.
+and a 24–56 unit drop in front. Short downward traces also require support directly below the pelvis
+and 10 units to either side; the actor faces the lower surface. Thin rails, ordinary stair steps and deep falls are rejected.
+Seated NextBots temporarily stop locomotion and disable the solid mask and gravity, preventing physics from
+lifting them above a chair, custom bench seat or ledge. Stopping the body clears both desired speed and velocity; leaving the scene restores the original mask and gravity.
 
 Member `pos.z` and per-sequence `seq_offsets` are retained; spawning uses a separate safe standing position.
 Leaving the pose restores that standing position, so below-origin seated animations do not strand the actor

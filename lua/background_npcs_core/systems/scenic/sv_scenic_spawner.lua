@@ -165,7 +165,7 @@ local function Sit(actor, spot)
 	npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	npc:SetPos(pos)
 	npc:SetAngles(ang)
-	npc:SetParent(chair)
+	if not npc.loco then npc:SetParent(chair) end -- NextBot locomotion must remain unparented.
 	local phys = chair:GetPhysicsObject()
 	if IsValid(phys) then phys:EnableMotion(false) end
 	back.chair = chair
@@ -254,7 +254,7 @@ local function Start(item, plan, spot)
 			elseif seq and (back or not member.def.seat) then
 				if member.def.weapon then actor:PrepareWeapon(member.def.weapon, true) end
 				state = actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door,
-					exit_pos = not back and member.stand or nil }, true)
+					exit_pos = not back and member.stand or nil, seated = spot.ledge or member.def.seat }, true)
 			end
 			if state and (member.def.carry or (actor:HasState('scenic_npc') and actor:IsAnimationPlayed())) then
 				playing = playing + 1

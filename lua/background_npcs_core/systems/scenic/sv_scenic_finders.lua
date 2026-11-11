@@ -186,7 +186,14 @@ local function LedgeAt(top)
 					if not back or not rear or not front or math.abs(back.z - top.z) > 2 or math.abs(rear.z - top.z) > 2
 						or math.abs(front.z - lower.z) > 4 then wide = false break end
 				end
-				local hip = edge - dir * 6
+				local hip = edge - dir * 12
+				-- The pelvis itself must be supported, not just the points behind the edge.
+				for _, shift in ipairs({ -10, 0, 10 }) do
+					local from = hip + side * shift + Vector(0, 0, 3)
+					local under = util.TraceLine({ start = from, endpos = from - Vector(0, 0, 6), mask = MASK_SOLID_BRUSHONLY })
+					if not under.Hit or under.StartSolid or under.HitNormal.z < 0.95
+						or math.abs(under.HitPos.z - top.z) > 2 then wide = false break end
+				end
 				local room = util.TraceHull({ start = hip + Vector(0, 0, 3), endpos = hip + Vector(0, 0, 3),
 					mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 70), mask = MASK_SOLID_BRUSHONLY })
 				if wide and not room.Hit and not room.StartSolid then

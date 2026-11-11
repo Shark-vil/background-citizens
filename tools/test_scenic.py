@@ -311,6 +311,12 @@ lua.execute('''
     assert(ledge.ledge and ledge.pos.z==40 and ledge.ang:Forward().x>0.9)
     local old_trace=util.TraceLine
     util.TraceLine=function(t)
+        if t.start.z-t.endpos.z==6 then return {Hit=false} end
+        return old_trace(t)
+    end
+    assert(not S.Find('ledge',Vector(0,0,40),{}), 'support behind a lip cannot replace support directly under the pelvis')
+    util.TraceLine=old_trace
+    util.TraceLine=function(t)
         if math.abs(t.start.y)>10 then return {Hit=true,HitPos=Vector(t.start.x,t.start.y,0),HitNormal=Vector(0,0,1)} end
         return old_trace(t)
     end
@@ -337,3 +343,30 @@ lua.execute('''
     assert(not registered_scenes.bgn_scenic_manual, 'manual previews have no automatic-spawn switch')
 ''')
 print('PASS: scenic placement/lifecycle/models, debug permissions/visibility/ownership/Undo, Tool controls and seat release')
+
+lua.execute("""
+    local mask,gravity=123,600
+    local npc={valid=true,loco={GetGravity=function() return gravity end,
+        SetGravity=function(_,v) gravity=v end},
+        GetSolidMask=function() return mask end,SetSolidMask=function(_,v) mask=v end}
+    local actor={GetNPC=function() return npc end,PlayStaticSequence=function() return true end}
+    local data={seq='Sit_Chair',seated=true}
+    bgNPC.States.Call('scenic_npc','start',actor,'scenic_npc',data)
+    assert(mask==0 and gravity==0, 'seated NextBots cannot drift or be pushed above the seat')
+    bgNPC.States.Call('scenic_npc','stop',actor,'scenic_npc',data)
+    assert(mask==123 and gravity==600, 'leaving a seated scene restores collisions and gravity')
+""")
+print('PASS: pelvis support and seated NextBot physics restoration')
+
+stop = (ROOT.parent / 'entities/bgn_nextbot.lua').read_text(encoding='utf-8')
+stop = stop[stop.index('function ENT:BGN_Stop()'):stop.index('function ENT:BGN_IsMoving()')]
+lua.execute("ENT={}; desired_speed=75; velocity=Vector(75,0,0); invalidated=false")
+lua.execute(stop)
+lua.execute("""
+    local bot={move_goal=Vector(100,0,0),loco={SetDesiredSpeed=function(_,v) desired_speed=v end,
+        SetVelocity=function(_,v) velocity=v end},path={Invalidate=function() invalidated=true end}}
+    ENT.BGN_Stop(bot)
+    assert(not bot.move_goal and invalidated and desired_speed==0 and velocity.x==0,
+        'stopping a NextBot clears the locomotor desired speed as well as residual velocity')
+""")
+print('PASS: NextBot stop cancels desired speed and velocity')

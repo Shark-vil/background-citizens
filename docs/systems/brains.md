@@ -49,6 +49,10 @@ put at a spot free for its whole body, never inside the car.
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
   when the enemy is over 300 units away.
 
+Prop-chair seating (`sit_to_chair`) uses the configured chair models and offsets. The route handles the distant
+approach; within 300 units the body finishes moving to the chair, and seating begins within 60 units.
+This applies to both HL2 NPC and NextBot bodies. Custom map seats use `sit_to_chair_2`.
+
 ## Choosing a brain
 
 `bgn_brain auto|fsm|goap` (default `fsm`, the classic brain). In `auto` an actor gets the brain from its config field

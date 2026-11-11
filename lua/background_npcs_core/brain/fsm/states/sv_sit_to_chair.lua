@@ -60,7 +60,6 @@ bgNPC.States.Register('sit_to_chair', 'calm', {
 				chairDataId = cahirId,
 				delay = CurTime() + math.random(10, 30),
 				isSit = false,
-				isMove = false,
 				isStand = false,
 				oldCollisionGroup = npc:GetCollisionGroup()
 			}
@@ -99,14 +98,19 @@ bgNPC.States.Register('sit_to_chair', 'calm', {
 		else
 			local phys = chair:GetPhysicsObject()
 
-			if not data.isMove then
-				actor:WalkToPos(chair:GetPos() + (chair:GetForward() * 35))
-				data.isMove = true
+			if not data.isSit then
+				bgNPC.MoveToPoint(actor, data, chair:GetPos() + chair:GetForward() * 35, false)
 			end
 
 			-- 60 ^ 2 
 			if not data.isSit and npc:GetPos():DistToSqr(chair:GetPos()) <= 3600 then
 				actor:WalkToPos(nil)
+				actor:GetBody():StopMoving()
+				if npc.loco then
+					data.oldSolidMask, data.oldGravity = npc:GetSolidMask(), npc.loco:GetGravity()
+					npc:SetSolidMask(0)
+					npc.loco:SetGravity(0)
+				end
 				data.isSit = true
 				local sitTime = math.random(5, 120)
 				local new_pos = chair:GetPos() + (chair:GetForward() * 35)
@@ -123,7 +127,7 @@ bgNPC.States.Register('sit_to_chair', 'calm', {
 				npc:SetCollisionGroup(COLLISION_GROUP_WORLD)
 				npc:SetPos(new_pos)
 				npc:SetAngles(new_angle)
-				npc:SetParent(chair)
+				if not npc.loco then npc:SetParent(chair) end -- NextBot locomotion must remain unparented.
 
 				if IsValid(phys) then
 					phys:EnableMotion(false)
@@ -150,6 +154,10 @@ bgNPC.States.Register('sit_to_chair', 'calm', {
 
 		if IsValid(npc) then
 			npc:SetParent(nil)
+			if data.oldSolidMask then
+				npc:SetSolidMask(data.oldSolidMask)
+				npc.loco:SetGravity(data.oldGravity)
+			end
 			if isValidChair then
 				npc:SetAngles(Angle(0, chair:GetAngles().y, 0))
 			else

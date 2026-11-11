@@ -208,6 +208,8 @@ end
 
 function ENT:BGN_Stop()
 	self.move_goal = nil
+	self.loco:SetDesiredSpeed(0)
+	self.loco:SetVelocity(vector_origin)
 	if self.path then self.path:Invalidate() end
 end
 

@@ -8,6 +8,11 @@ if SERVER then
 	bgNPC.States.Register('scenic_npc', 'calm', {
 		start = function(actor, state, data)
 			local npc = actor:GetNPC()
+			if data.seated and npc.loco then
+				data.old_solid_mask, data.old_gravity = npc:GetSolidMask(), npc.loco:GetGravity()
+				npc:SetSolidMask(0)
+				npc.loco:SetGravity(0)
+			end
 			if data.door and npc.CapabilitiesRemove then npc:CapabilitiesRemove(DOOR_CAPABILITIES) end
 			actor:PlayStaticSequence(data.seq, true)
 		end,
@@ -22,6 +27,10 @@ if SERVER then
 		stop = function(actor, state, data)
 			local npc = actor:GetNPC()
 			local back = data.back
+			if data.old_solid_mask and IsValid(npc) then
+				npc:SetSolidMask(data.old_solid_mask)
+				npc.loco:SetGravity(data.old_gravity)
+			end
 			if not back and data.exit_pos and IsValid(npc) then npc:SetPos(data.exit_pos) end
 			if data.door and IsValid(npc) and npc.CapabilitiesAdd and GetConVar('bgn_npc_open_doors'):GetBool() then
 				npc:CapabilitiesAdd(DOOR_CAPABILITIES)
