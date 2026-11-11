@@ -60,6 +60,8 @@ Ghost carried items were removed in both modes; server-ghost materialization sup
 
 The entity-cache warm-up on first player spawn has been removed: BGN no longer temporarily spawns configured NPCs and vehicles to warm their resources. NextBot relationships now use the most frequent disposition of each foreign NPC towards server players, with neutral ties, instead of hidden NPC probes. Ordinary HL2 NPC body relationships retain their existing rules. See [brains](systems/brains.md).
 
+Local gang behavior change after the baseline above: walking packs of up to three; the capped random fight roster is replaced by support for all visible same-gang allies, including late arrivals. `bgn_gang_help_chance` is no longer used; `bgn_enemy_share_period` controls the support interval. See [gangs](systems/gangs.md).
+
 ## Reproduce the comparison
 
 ```text

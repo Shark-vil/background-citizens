@@ -50,7 +50,7 @@
 | `brain` | `fsm / goap` | Мозг при bgn_brain=auto; принудительная cvar имеет приоритет. |
 | `carry_items` | `false / table` | `{ chance = 5, items = { 'ration', 'suitcase', 'newspaper' }, drop_lifetime = 30 }`: редкие предметы у невооружённых акторов; добавляет чекбокс типа. См. [правила переноски](Modification-of-Existing-NPCs.md). |
 | `goap_set` | `police / gangster / citizen` | Набор целей GOAP; иначе определяется по команде. |
-| `gang` | `string` | Идентификатор банды; учитывается союзами, составом боя и групповой ходьбой. |
+| `gang` | `string` | Идентификатор банды; учитывается союзами, помощью видимым союзникам и групповой ходьбой. |
 | `heavy_chance` | `35` | Процент тяжёлых участников для штатных банд. |
 | `light_weapons` | `table` | Классы оружия лёгких участников. |
 | `heavy_weapons` | `table` | Классы оружия тяжёлых участников. |
@@ -58,4 +58,4 @@
 
 Штатные флаги `mechanics` по умолчанию включены: `movement_controller`, `use_vehicle`, `call_for_help`, `fear`, `fear_scream`, `enemies_controller`, `targets_controller`, `states_controller`, `animator_controller`, `enhanced_npc_ignore`, `inpc_ignore`.
 
-Ограничения боя, значения cvars и модели: [банды](../systems/gangs.md). Источники — `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.
+Помощь в бою, значения cvars и модели: [банды](../systems/gangs.md). Источники — `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.

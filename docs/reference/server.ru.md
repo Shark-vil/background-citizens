@@ -10,7 +10,7 @@
 
 `actor:AddEnemy(ent, reaction, always_visible)`
 
-Добавляет сущность/актора с необязательными reaction и always_visible; хуки, команды и состав боя могут запретить добавление.
+Добавляет сущность/актора с необязательными reaction и always_visible; хуки и команды могут запретить добавление.
 
 Исходник: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
@@ -46,7 +46,7 @@
 
 `actor:CallForHelp(enemy)`
 
-Просит соседних акторов отреагировать на врага; действуют видимость, команды, состав боя и пауза.
+Просит соседних акторов отреагировать на врага; действуют видимость, команды и пауза.
 
 Исходник: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -252,7 +252,7 @@
 
 `actor:GetReactionForProtect(enemy)`
 
-Выбирает реакцию at_protect с проверкой состава боя, паузы и участия жителей.
+Выбирает реакцию at_protect с проверкой паузы и участия жителей.
 
 Исходник: `lua/background_npcs_core/actor/components/sh_state.lua`.
 

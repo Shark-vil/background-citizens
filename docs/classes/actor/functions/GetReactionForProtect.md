@@ -6,7 +6,7 @@ Realm: **SERVER** (supported usage).
 actor:GetReactionForProtect(enemy)
 ```
 
-Chooses at_protect reaction with roster, cooldown and civilian participation checks.
+Chooses at_protect reaction with cooldown and civilian participation checks.
 
 Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 

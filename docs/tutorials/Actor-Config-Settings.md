@@ -397,7 +397,7 @@ Configs resolve through `bgNPC.Config.GetActor`, are cached and copied into each
 | `brain` | `fsm / goap` | Brain under bgn_brain=auto; a forced cvar takes precedence. |
 | `carry_items` | `false / table` | `{ chance = 5, items = { 'ration', 'suitcase', 'newspaper' }, drop_lifetime = 30 }`: rare items on unarmed actors; enables a per-type checkbox. See [carry rules](Modification-of-Existing-NPCs.md#carried-items). |
 | `goap_set` | `police / gangster / citizen` | GOAP goal set; otherwise derived from teams. |
-| `gang` | `string` | Gang identity for alliance, roster and pack walking. |
+| `gang` | `string` | Gang identity for alliance, visible-ally support and pack walking. |
 | `heavy_chance` | `35` | Heavy member percentage for built-in gangs. |
 | `light_weapons` | `table` | Light member weapon classes. |
 | `heavy_weapons` | `table` | Heavy member weapon classes. |
@@ -405,4 +405,4 @@ Configs resolve through `bgNPC.Config.GetActor`, are cached and copied into each
 
 Built-in `mechanics` flags default to true: `movement_controller`, `use_vehicle`, `call_for_help`, `fear`, `fear_scream`, `enemies_controller`, `targets_controller`, `states_controller`, `animator_controller`, `enhanced_npc_ignore`, `inpc_ignore`.
 
-Fight limits, cvar defaults and models: [gangs](../systems/gangs.md). Sources: `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.
+Combat support, cvar defaults and models: [gangs](../systems/gangs.md). Sources: `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.

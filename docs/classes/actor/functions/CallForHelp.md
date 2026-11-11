@@ -6,7 +6,7 @@ Realm: **SERVER** (supported usage).
 actor:CallForHelp(enemy)
 ```
 
-Asks nearby actors to react to enemy; visibility, teams, fight rosters and cooldown still apply.
+Asks nearby actors to react to enemy; visibility, teams and cooldown still apply.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 

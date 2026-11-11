@@ -44,7 +44,7 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | `nav/` | Provider facade, graph/A*, custom/navmesh/nodegraph providers; `generator/` incremental route building, `io/` editor/save/compile/dupes, `legacy/` conversion. |
 | `brain/fsm/`, `brain/goap/` | State execution and combat planning. States call Actor methods; bodies perform engine actions. |
 | `spawner/` | Visibility-safe population placement/recycling, separate vehicle ranges, pursuit reinforcement and cleanup. |
-| `systems/` | Wanted/arrest, offenders, medics/corpses, teams/enemy sharing, gang roster/cooldown/packs, dialogue, seats, scenic, ghost crowd, modes. |
+| `systems/` | Wanted/arrest, offenders, medics/corpses, teams/enemy sharing, gang wars/support/packs and combat cooldown, dialogue, seats, scenic, ghost crowd, modes. |
 | `modules/` | Optional integrations: DV, DarkRP, StormFox and NPC mods. `dv/` owns provider access, traffic recovery, pedestrian detours, return and vehicle damage. |
 | `ui/` | Settings window, Classic panels, wizard/welcome, spawnmenu, update display, translations. |
 | `debug/` | Admin actor overlay, diagnostic report/camera, movement visualization and automated in-game checks. |

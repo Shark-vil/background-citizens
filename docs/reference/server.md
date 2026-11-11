@@ -10,7 +10,7 @@ Run gameplay changes on SERVER. Many methods are declared in sh_ files for compa
 
 `actor:AddEnemy(ent, reaction, always_visible)`
 
-Adds an entity enemy with optional reaction and always_visible flag; hooks, team/roster rules may reject it.
+Adds an entity enemy with optional reaction and always_visible flag; hooks, team rules may reject it.
 
 Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
@@ -46,7 +46,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 
 `actor:CallForHelp(enemy)`
 
-Asks nearby actors to react to enemy; visibility, teams, fight rosters and cooldown still apply.
+Asks nearby actors to react to enemy; visibility, teams and cooldown still apply.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -252,7 +252,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
 `actor:GetReactionForProtect(enemy)`
 
-Chooses at_protect reaction with roster, cooldown and civilian participation checks.
+Chooses at_protect reaction with cooldown and civilian participation checks.
 
 Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 

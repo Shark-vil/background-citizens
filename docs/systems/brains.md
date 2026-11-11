@@ -46,7 +46,7 @@ put at a spot free for its whole body, never inside the car.
   the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
   except an officer: it gets the enemy and steps out or fires from the car (`modules/dv/sv_move_to_target.lua`). A teammate in a calm state
   switches to its `GetReactionForProtect` reaction; a busy one only gets the enemy. This keeps the others from
-  walking around while an officer already shoots at a player who is not wanted yet.
+  walking around while an officer already shoots at a player who is not wanted yet. Gang exceptions (all visible allies, without a distance cap or reaction roll) are described under [gangs](gangs.md).
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
   when the enemy is over 300 units away.
@@ -223,20 +223,7 @@ gang's recolor with `SetSubMaterial` (`materials/background_npcs/gangs/<gang>/<c
 the model, so it survives revival and leaving a car. The recolors are made from the game's own textures by
 `tools/make_gang_skins.py` (needs `vpk`, `srctools`, `pillow`, `numpy`); the game files are not shipped.
 
-**Fight rosters** (`systems/sv_fight_roster.lua`). Gang members help only their own gang, and a fight cannot grow
-without bound. When the first member of a gang takes an enemy (is attacked, sees a crime), the roster of that fight
-is formed at once: the initiator plus the nearest living members of the same gang within 1000 units, each joining
-with `bgn_gang_help_chance` percent (default 1), 2-6 members in total (random per fight). The chosen ones join
-immediately; every other member of the gang is refused that enemy and ignores calls for help. The police and the
-player therefore fight a capped group. Members of different gangs are not teammates (`Actor:HasTeam`), so a gang
-never helps the other one. Calm members of rival gangs within 700 units sight of each other start a fight with
-`bgn_gang_war_chance` percent per 10 seconds (default 0.5, `0` disables); if the police or a player step in, each
-gang fights them (and each other) with its own roster. Actors outside gangs are not affected.
-
-A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
-members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
-destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
-run), and recheck every 2 seconds.
+**Gang support and walking.** Members walk in packs of up to three; all visible same-gang allies receive a threat without a chance roll or roster cap, including late arrivals. Combat support is independent of walking packs. See [gangs](gangs.md) for visibility, sharing interval and war rules.
 
 Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. Every 2 s an NPC or
 NextBot that is an actor body (`BGN_ACTOR_OBJECT`, or `bgn_npc_class` from the spawner) without a live registered
@@ -328,4 +315,4 @@ BGN traffic can plan bounded forward/reverse maneuvers around blockers and, afte
 
 ## Related systems
 
-[Gangs](gangs.md) limit fight rosters and new protection events; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
+[Gangs](gangs.md) walk in packs of three and support visible allies; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
