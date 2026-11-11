@@ -70,6 +70,8 @@ lua.execute('''
     function bgNPC:SpawnActor(_,pos)
         spawns=spawns+1
         local npc={valid=true,pos=pos,SetAngles=function(self,a) self.ang=a end,
+            GetModel=function() return 'custom_actor_model.mdl' end,
+            SetModel=function() error('scenic must preserve normal actor model selection') end,
             SetPos=function(self,p) self.pos=p end,GetPos=function(self) return self.pos end}
         local a=setmetatable({mechanics={states_controller=true},data={},state_delay=0,
             state_data={state='none',data={}},GetNPC=function() return npc end,
@@ -80,6 +82,11 @@ lua.execute('''
         return a
     end
     local scene=bgNPC.cfg.scenic.door_knock
+    for _,def in pairs(bgNPC.cfg.scenic) do
+        for _,member in ipairs(def.members) do assert(not member.models, 'built-in scenes must use actor models') end
+    end
+    -- A legacy custom scene must not bypass normal spawn/model hooks either.
+    scene.members[1].models={'forced_scene_model.mdl'}
     local spots=bgNPC.Scenic.Spots
     for _,class in ipairs({'prop_door_rotating','func_door_rotating'}) do
         for _,yaw in ipairs({0,90,180,270,37}) do
@@ -96,6 +103,7 @@ lua.execute('''
                 local item=assert(bgNPC.Scenic.Create('door_knock',scene,spot))
                 table.remove(pending,1)()
                 local a=item.actors[1]
+                assert(a:GetNPC():GetModel()=='custom_actor_model.mdl')
                 assert(a:GetStateData().door==d and a.playing, 'delayed start must retain the actual door')
                 assert(not a:SetState('walk') and a:HasState('scenic_npc'), 'calm transitions cannot end a closed-door scene')
                 for _,state in ipairs({0,1,2,3}) do
@@ -143,5 +151,19 @@ lua.execute('''
     assert(spawns==count, 'manual door scenes must reject an opening door or a non-door')
     blocked=true; d.class='prop_door_rotating'; d.state=0
     assert(not spots.Find('door',d,scene), 'no scene inside an obstructed hull')
+    local manual_only={sky_watch=true,door_brace=true,couch_couple=true,couch_lying=true,radio_operator=true}
+    local automatic,total=0,0
+    for id,def in pairs(bgNPC.cfg.scenic) do
+        total=total+1
+        assert((def.weight==0)==(manual_only[id]==true), 'only the agreed five scenes are manual-only')
+        if def.weight>0 then automatic=automatic+1 end
+    end
+    assert(total==26 and automatic==21)
+    bgNPC.cfg.scenic={manual={weight=0}}
+    player={GetHumans=function() return {{}} end}
+    spots.Seeds=function() error('an empty automatic pool must not select manual scenes, even at random roll zero') end
+    local random=math.random; math.random=function() return 0 end
+    assert(not bgNPC.Scenic.TrySpawn())
+    math.random=random
 ''')
-print('PASS: scenic door alignment, closed-door placement, release/cleanup and admin spawn')
+print('PASS: scenic door alignment/lifecycle, actor models, manual-only scenes and admin spawn')

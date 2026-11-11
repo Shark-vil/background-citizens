@@ -34,6 +34,8 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 Working-tree fix after this baseline (version string 2.4.0, publication not verified): door scenes use fully
 closed doors, knocking faces the panel, and opening/removing the linked door returns participants to normal AI.
 The admin spawn command also uses the door finder. See [scenic scenes](systems/scenic.md).
+Five context-dependent scenes (both couches, radio operator, sky watch and door brace) are now manual-only;
+all scenic actors keep ordinary spawn/model-hook selection rather than overriding their models.
 
 ## Reproduce the comparison
 

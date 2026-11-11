@@ -8,7 +8,7 @@
 		          wall   flat wall, the actors stand with their backs to it (yaw 180 - face it)
 		          door   a closed door, the actors stand in front of it facing it (yaw 180 - turn away)
 		          chair  a chair prop of bgNPC.cfg.sit_chairs or a custom seat
-		weight  relative chance (default 10)
+		weight  relative chance (default 10), 0 = manual spawn only
 		gap     distance to the wall or to the door (default 22 / 40)
 		ttl     seconds before the unseen scene is cleaned up (default 600)
 		group   the first member is repeated min..max times: step = Vector shift of every next copy
@@ -17,7 +17,6 @@
 		          type    actor type of the config (any body: an NPC and a NextBot play the same sequences)
 		          seq     sequence or a list of them; the first the model has is played, a looped one
 		          pos     Vector(forward, right, up) from the scene spot, yaw - turn from the spot angle
-		          models  model list (default: the actor config)
 		          weapon  item taken in hand (a suitcase, a ration box)
 		          seat    placed on the chair of the spot (place = 'chair')
 		props   decor created with the scene: model, pos, yaw, solid (default true)
@@ -26,21 +25,6 @@
 local function V(forward, right, up)
 	return Vector(forward or 0, right or 0, up or 0)
 end
-
--- the couch sequences exist on the standard rigs only (the config models may be custom ones)
-local COUPLE_MALE = {
-	'models/humans/group01/male_09.mdl', 'models/humans/group02/male_09.mdl',
-	'models/humans/group03/male_09.mdl', 'models/humans/group03m/male_09.mdl',
-}
-local COUPLE_FEMALE = {
-	'models/humans/group01/female_01.mdl', 'models/humans/group02/female_01.mdl',
-	'models/humans/group03/female_01.mdl', 'models/humans/group03m/female_01.mdl',
-}
-
-local FEMALE_MEDIC = {
-	'models/humans/group03m/female_01.mdl', 'models/humans/group03m/female_02.mdl',
-	'models/humans/group03m/female_03.mdl', 'models/humans/group03m/female_04.mdl',
-}
 
 bgNPC.cfg.scenic = {
 	cheering = {
@@ -76,7 +60,7 @@ bgNPC.cfg.scenic = {
 		place = 'floor', weight = 5, ttl = 420,
 		members = {
 			{ type = 'citizen', seq = 'd1_town05_Wounded_Idle_1' },
-			{ type = 'medic', seq = { 'd1_town05_Jacobs_Heal', 'd1_town05_Jacobs_Heal_Entry' }, models = FEMALE_MEDIC,
+			{ type = 'medic', seq = { 'd1_town05_Jacobs_Heal', 'd1_town05_Jacobs_Heal_Entry' },
 				pos = V(0, -28), yaw = 90 },
 		},
 	},
@@ -99,7 +83,7 @@ bgNPC.cfg.scenic = {
 		members = { { type = 'citizen', seq = { 'wave', 'wave_close' } } },
 	},
 	sky_watch = {
-		place = 'sky', weight = 6,
+		place = 'sky', weight = 0,
 		group = { min = 1, max = 3, ring = 80 },
 		members = { { type = 'citizen', weapon = 'weapon_smg1',
 			seq = { 'd2_coast03_prebattle_scan_skies', 'd2_coast03_prebattle_scan_skies02', 'd2_coast03_prebattle_scan_skies03' } } },
@@ -154,25 +138,25 @@ bgNPC.cfg.scenic = {
 		members = { { type = 'police', seq = 'adoorknock', yaw = -90 } },
 	},
 	door_brace = {
-		place = 'door', weight = 6, gap = 34,
+		place = 'door', weight = 0, gap = 34,
 		members = { { type = 'citizen', seq = { 'doorbracer_closed', 'doorbracer_struggle' } } },
 	},
 	couch_couple = {
-		place = 'floor', weight = 5, ttl = 420,
+		place = 'floor', weight = 0, ttl = 420,
 		members = {
-			{ type = 'citizen', seq = 'd1_t03_sit_couch_consoling', models = COUPLE_MALE, pos = V(0, -11, 1), yaw = -20 },
-			{ type = 'citizen', seq = 'd1_t03_sit_couch', models = COUPLE_FEMALE, pos = V(-3, 12, 1) },
+			{ type = 'citizen', seq = 'd1_t03_sit_couch_consoling', pos = V(0, -11, 1), yaw = -20 },
+			{ type = 'citizen', seq = 'd1_t03_sit_couch', pos = V(-3, 12, 1) },
 		},
 		props = { { model = { 'models/props_c17/FurnitureCouch001a.mdl', 'models/props_interiors/Furniture_Couch01a.mdl' },
 			pos = V(-19, -18, 16), solid = false } },
 	},
 	couch_lying = {
-		place = 'floor', weight = 6, ttl = 420,
+		place = 'floor', weight = 0, ttl = 420,
 		members = { { type = 'citizen', seq = 'laycouch1' } },
 		props = { { model = 'models/props_c17/FurnitureCouch001a.mdl', pos = V(-2, 11, 16), solid = false } },
 	},
 	radio_operator = {
-		place = 'floor', weight = 5, ttl = 480,
+		place = 'floor', weight = 0, ttl = 480,
 		members = { { type = 'citizen', seq = 'd1_town05_leon_lean_table_idle' } },
 		props = {
 			{ model = 'models/props_wasteland/controlroom_desk001b.mdl', pos = V(33, 20, 16.7), yaw = 180 },

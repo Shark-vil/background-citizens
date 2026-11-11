@@ -1,7 +1,8 @@
 # Scenic scenes
 
 Staged scenes that appear on the map by themselves: a food line, a cop knocking on a door, a couple on a couch,
-someone sitting on a chair, an arrest at a wall. 26 scenes, all data in `config/states/sh_scenic.lua`.
+someone sitting on a chair, an arrest at a wall. 26 scene definitions, 21 enabled for automatic spawning;
+all data is in `config/states/sh_scenic.lua`.
 The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC body and with a NextBot body.
 
 | Cvar (server) | Default | Meaning |
@@ -13,6 +14,9 @@ The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC bo
 Menu: **Spawn** page, section "Scenic scenes", and the *Scenic scenes* step of the wizard (New mode on, Classic off).
 Console: `bgn_scenic_clear` removes every scene, `bgn_scenic_spawn <id>` (admin) makes one near you.
 For door scenes, aim at a fully closed door; the command uses the same placement finder as automatic spawning.
+`couch_couple`, `couch_lying`, `radio_operator`, `sky_watch` and `door_brace` have `weight = 0`: they remain
+available for manual spawning but are never selected automatically, avoiding furniture and context-dependent
+poses appearing at arbitrary locations.
 
 ## How a scene is placed
 
@@ -41,5 +45,8 @@ Offline door placement/lifecycle checks: `python tools/test_scenic.py` (requires
 
 Add an entry to `bgNPC.cfg.scenic`; the fields are described at the top of `sh_scenic.lua`. A model that lacks
 a sequence plays the next one of the list; a scene whose sequences no model has is skipped.
+Models, skins and bodygroups come from ordinary actor spawning, including actor config and model hooks.
+Scenes do not override models (`members.models` is ignored); participants without a supported sequence are
+skipped instead of being given a different model. Set `weight = 0` to keep a scene manual-only.
 
 Not ported: scenes with custom sounds, rappel, APC, binoculars and characters of the original addon.

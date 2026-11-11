@@ -245,10 +245,6 @@ function Scenic.Create(id, scene, spot, plan)
 
 		local npc = actor:GetNPC()
 		npc:SetAngles(member.ang)
-		if member.def.models then
-			local model = table.Random(member.def.models)
-			if util.IsValidModel(model) then npc:SetModel(model) end
-		end
 
 		actor.mechanics.ignore_limit = true
 		actor.data.start_random_state, actor.data.start_state = false, nil
@@ -277,8 +273,10 @@ local function PickScene()
 		local wait = cooldown[id]
 		if not (wait and wait.till > now) then
 			local weight = scene.weight or 10
-			list[#list + 1] = { id = id, weight = weight }
-			total = total + weight
+			if weight > 0 then
+				list[#list + 1] = { id = id, weight = weight }
+				total = total + weight
+			end
 		end
 	end
 
