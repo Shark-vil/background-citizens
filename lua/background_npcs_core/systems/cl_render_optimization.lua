@@ -15,7 +15,7 @@ cvars.AddChangeCallback('bgn_cl_field_view_optimization', function(convar_name, 
 
 			if IsValid(npc) and npc:Health() > 0 and npc.bgn_render_optimization then
 				-- Release only our own hiding; the server still hides actors seated in cars.
-				if not npc:GetNW2Bool('bgn_vehicle_entered', false) then
+				if not npc:GetNW2Bool('bgn_vehicle_entered', false) and not npc:GetNW2Bool('bgn_knocked_down', false) then
 					npc:SetNoDraw(false)
 					if IsValid(npc.bgn_hidden_weapon) then npc.bgn_hidden_weapon:SetNoDraw(false) end
 				end
@@ -51,7 +51,7 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
 				if not bgNPC.Animator.IsPlaying(npc) then
 					local pos = npc:GetPos()
 					local weapon = npc:GetActiveWeapon()
-					local in_vehicle = actor:InVehicle()
+					local in_vehicle = actor:InVehicle() or npc:GetNW2Bool('bgn_knocked_down', false)
 					local past_set_no_draw = (npc.bgn_render_optimization or false)
 
 					if in_vehicle or (

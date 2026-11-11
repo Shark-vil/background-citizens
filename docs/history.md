@@ -36,6 +36,9 @@ closed doors, knocking faces the panel, and opening/removing the linked door ret
 The admin spawn command also uses the door finder. See [scenic scenes](systems/scenic.md).
 Five context-dependent scenes (both couches, radio operator, sky watch and door brace) are now manual-only;
 all scenic actors keep ordinary spawn/model-hook selection rather than overriding their models.
+GOAP actors in a hopeless fight can close and hold an open rotating door; police can kick it open, throwing
+the holder into a temporary ragdoll without extra damage. Recovery preserves the original actor/entity and
+health, requires free standing space, and restores its previous fight/flee behavior. See [brains](systems/brains.md).
 
 ## Reproduce the comparison
 

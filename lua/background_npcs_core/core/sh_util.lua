@@ -151,6 +151,7 @@ end
 -- An actor may open the door: "bgn_npc_open_doors", and "bgn_npc_open_locked_doors" for a locked one.
 function Util.CanActorOpenDoor(ent)
 	if not Util.IsDoor(ent) or not GetConVar('bgn_npc_open_doors'):GetBool() then return false end
+	if SERVER and bgNPC.Doors and bgNPC.Doors.held[ent] then return false end
 	return not Util.IsDoorLocked(ent) or GetConVar('bgn_npc_open_locked_doors'):GetBool()
 end
 

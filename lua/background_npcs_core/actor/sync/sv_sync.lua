@@ -42,7 +42,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 
 				for k = 1, #players do
 					local ply = players[k]
-					if IsValid(ply) and ply.bgn_ready and (actor:InVehicle() or not npc:GetNoDraw()) and ply:TestPVS(npc) then
+					if IsValid(ply) and ply.bgn_ready and (actor:InVehicle() or actor:HasState('knocked_down') or not npc:GetNoDraw()) and ply:TestPVS(npc) then
 						if not sync_hash then
 							sync_data = BuildSyncData(actor)
 							sync_hash = util.CRC(Serialize(sync_data))

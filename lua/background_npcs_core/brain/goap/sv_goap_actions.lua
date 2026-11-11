@@ -71,6 +71,9 @@ GOAP.sensors = {
 		wanted = wanted or bgNPC.Modules.Get('wanted')
 		return IsValid(enemy) and ((wanted ~= nil and wanted:HasWanted(enemy)) or bgNPC.PoliceKnows(enemy)) -- the police already know of it
 	end,
+	desperate = function(actor, _, enemy) return bgNPC.Doors.Desperate(actor, enemy) end,
+	can_hold_door = function(actor, _, enemy) return bgNPC.Doors.Find(actor, enemy) ~= nil end,
+	enemy_bracing = function(actor, _, enemy) return bgNPC.Doors.Blocker(actor, enemy) ~= nil end,
 }
 
 -- @param enemy entity|nil enemy to sense against, the nearest enemy by default
@@ -134,6 +137,18 @@ GOAP.RegisterAction('hide', {
 	cost = 1,
 })
 
+GOAP.RegisterAction('hold_door', {
+	state = 'hold_door', always = true,
+	pre = { has_enemy = true, desperate = true, can_hold_door = true },
+	effects = { door_held = true }, cost = 1,
+})
+
+GOAP.RegisterAction('breach_door', {
+	state = 'breach_door', always = true,
+	pre = { has_enemy = true, is_police = true, enemy_bracing = true },
+	effects = { threat_handled = true }, cost = 1,
+})
+
 -- attack chains: take_cover [-> call_backup] -> attack against an armed enemy or, for an outnumbered officer,
 -- a crowd. Cover is picked only when the attack cost makes it cheaper, so it needs no enemy_armed itself.
 GOAP.RegisterAction('take_cover', {
@@ -195,9 +210,13 @@ GOAP.goals = {
 	report = GOAP.Goal('report', { want = { police_called = true } }),
 	hide = GOAP.Goal('hide', { want = { hidden = true } }),
 	give_up = GOAP.Goal('give_up', { want = { surrendered = true } }),
+	shelter = GOAP.Goal('shelter', { want = { door_held = true } }),
 }
 
 local function HideWhenWanted(ws) return Has(ws, 'wanted') and 20 or 0 end
+local function ShelterWhenDesperate(ws)
+	return Has(ws, 'desperate') and Has(ws, 'can_hold_door') and 30 or 0
+end
 
 -- set name -> { goal name -> priority function(ws) }
 GOAP.sets = GOAP.sets or {}
@@ -207,11 +226,13 @@ function GOAP.RegisterSet(name, priorities)
 end
 
 GOAP.RegisterSet('police', {
+	shelter = ShelterWhenDesperate,
 	eliminate = function() return 10 end,
 	survive = function(ws) return Has(ws, 'low_health') and 4 or 0 end,
 })
 
 GOAP.RegisterSet('gangster', {
+	shelter = ShelterWhenDesperate,
 	eliminate = function() return 6 end,
 	survive = function(ws) return Has(ws, 'low_health') and 8 or 2 end,
 	hide = HideWhenWanted,
@@ -220,6 +241,7 @@ GOAP.RegisterSet('gangster', {
 })
 
 GOAP.RegisterSet('citizen', {
+	shelter = ShelterWhenDesperate,
 	survive = function(ws)
 		local priority = 5
 		if Has(ws, 'enemy_armed') then priority = priority + 3 end
@@ -318,4 +340,16 @@ bgNPC.Test.Add('goap.sets', function(check)
 	check(gangster.give_up(ws) > gangster.hide(ws), 'a hurt gangster facing the police gives up before hiding')
 	plan = GOAP.Plan(ws, GOAP.goals.give_up, { A.attack, A.hide, A.surrender })
 	check(plan and #plan == 1 and plan[1] == A.surrender, 'giving up runs the surrender')
+
+	ws = bit.bor(F('has_enemy'), F('desperate'), F('can_hold_door'))
+	plan = GOAP.Plan(ws, GOAP.goals.shelter, { A.hold_door, A.flee })
+	check(plan and #plan == 1 and plan[1] == A.hold_door, 'a desperate actor can close and hold an open door')
+	check(citizen.shelter(ws) > citizen.survive(ws), 'an available door takes priority in a hopeless fight')
+	plan = GOAP.Plan(F('has_enemy'), GOAP.goals.shelter, { A.hold_door })
+	check(plan == nil, 'a normal fight or absent open door cannot start holding')
+	ws = bit.bor(F('has_enemy'), F('is_police'), F('enemy_bracing'), F('armed'))
+	plan = GOAP.Plan(ws, GOAP.goals.eliminate, { A.attack, A.breach_door })
+	check(plan and #plan == 1 and plan[1] == A.breach_door, 'police breach a held door before attacking')
+	plan = GOAP.Plan(bit.bor(F('has_enemy'), F('enemy_bracing')), GOAP.goals.eliminate, { A.breach_door })
+	check(plan == nil, 'a civilian cannot choose the police breach action')
 end)

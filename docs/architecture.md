@@ -80,6 +80,11 @@ server Actor -> PVS snapshots + generation -> client registry -> UI / sound / re
 
 The actor and UID survive vehicle boarding; its entity and body adapter do not. Registries, enemy/target references, wanted state and statistics follow the replacement. Addons must follow `BGN_ActorEntityChanged(actor, old, new)` for their own entity-local data.
 
+Door shelter is server-owned (`systems/sv_door_hold.lua`, `brain/fsm/states/sv_hold_door.lua`); GOAP chooses
+the action. Temporary `knocked_down` keeps the original entity and body adapter, hides/freezes them and uses
+a server ragdoll for physics and forwarded damage. The actor update loop runs only recovery while down;
+standing requires a free hull. Client synchronization/render optimization preserves the server's hidden-body flag.
+
 ## Configuration and stored data
 
 Cvar defaults are defined in `cvars/sh_cvars.lua`, `sv_cvars.lua`, `cl_cvars.lua`; registration and permissions are in `core/sh_cvars.lua`. Server settings are admin-controlled; client voice/UI options stay local. Actor definitions resolve `inherit` and `@type` references, cache the result and copy it on creation. After editing definitions, clear the config cache; existing actors retain their copy.

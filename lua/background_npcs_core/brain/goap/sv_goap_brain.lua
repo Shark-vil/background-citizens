@@ -3,6 +3,7 @@
 	reactions (at_damage / at_protect, weighted random) decide whether the actor fights at all, and the plan only
 	takes over once the actor is in "defense" or "retreat" (FIGHT_STATES). When the state leaves the plan's states on its own
 	(the fight ended, an arrest, a calm state) the fight is over for the plan: it does not pull the actor back in.
+	A flee reaction may borrow the planner solely for an available door shelter, then resumes fleeing.
 
 	Loop: sensors refresh the world state (every SENSE_PERIOD, or right away on events), the goal with the
 	highest priority is picked, the cached plan for (state, goal) is executed action by action.
@@ -18,7 +19,7 @@ local FIGHT_STATES = { defense = true, retreat = true }
 local SENSE_PERIOD = 1
 local BLOCK_TIME = 5
 -- states the plan never interrupts: a surrendering actor keeps its enemies until the arrest ends
-local HOLD_STATES = { arrest_surrender = true }
+local HOLD_STATES = { arrest_surrender = true, hold_door = true, breach_door = true, knocked_down = true }
 
 local GOAPBrain = bgNPC.Class('BGN_GOAPBrain', FSMBrain)
 bgNPC.GOAPBrain = GOAPBrain
@@ -99,6 +100,7 @@ end
 
 function GOAPBrain:StopFight()
 	self.fighting = false
+	self.door_escape = nil
 	self:ResetPlan()
 end
 
@@ -111,10 +113,19 @@ function GOAPBrain:Update()
 	end
 
 	local state = actor:GetState()
+	if self.door_escape and state ~= 'hold_door' then
+		self:StopFight()
+		return FSMBrain.Update(self)
+	end
 	if HOLD_STATES[state] then return FSMBrain.Update(self) end
 
 	if not self.fighting then
-		if not FIGHT_STATES[state] then return FSMBrain.Update(self) end
+		if not FIGHT_STATES[state] then
+			if state ~= 'fear' and state ~= 'run_from_danger' then return FSMBrain.Update(self) end
+			self:Sense()
+			if not GOAP.Has(self.ws, 'desperate') or not GOAP.Has(self.ws, 'can_hold_door') then return FSMBrain.Update(self) end
+			self.door_escape = true -- borrowing the planner for shelter must not turn a flee reaction into an attack
+		end
 		self.fighting = true
 	elseif not self:RunsAction(state) then
 		self:StopFight()

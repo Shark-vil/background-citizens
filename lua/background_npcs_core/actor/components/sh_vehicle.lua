@@ -58,7 +58,7 @@ function Actor:EnterVehicle(vehicle)
 
 	-- Each actor owns its pending request; simultaneous passenger requests must not replace each other.
 	bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle_' .. self.uid, .5, 1, function(car)
-		if not self:IsAlive() or self:InVehicle() or not provider:CanUse(self) then return end
+		if not self:IsAlive() or not self.mechanics.use_vehicle or self:InVehicle() or not provider:CanUse(self) then return end
 		if car.bgnHeadingPending then
 			timer.Simple(.1, function() if IsValid(car) and self:IsAlive() then self:EnterVehicle(car) end end)
 			return

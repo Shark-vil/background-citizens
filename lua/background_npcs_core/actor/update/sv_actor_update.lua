@@ -75,6 +75,10 @@ end
 
 local function UpdateActor(actor, now, players)
 	if not IsValid(actor:GetNPC()) then return end
+	if actor:HasState('knocked_down') then
+		actor:CallStateAction(nil, 'update', actor:GetState(), actor:GetStateData())
+		return
+	end
 	if (actor.next_lod or 0) <= now then
 		actor.next_lod = now + LOD_PERIOD
 		SetLOD(actor, ComputeLOD(actor, players))
