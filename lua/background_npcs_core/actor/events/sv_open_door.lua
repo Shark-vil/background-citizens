@@ -30,6 +30,7 @@ local function OpenDoor(actor, door)
 end
 
 hook.Add('BGN_ActorLookAtObject', 'BGN_NPCDoorOpeningEvent', function(actor, ent, distance)
+	if actor:HasState('scenic_npc') then return end
 	if distance > 80 then return end
 	local entities = ents.FindInSphere(ent:GetPos(), 150)
 	for i = 1, #entities do
@@ -46,7 +47,8 @@ cvars.AddChangeCallback('bgn_npc_open_doors', function(_, _, value)
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
 		local npc = actor:GetNPC()
 		if IsValid(npc) and npc:IsNPC() then
-			if enable then npc:CapabilitiesAdd(DOOR_CAPABILITIES) else npc:CapabilitiesRemove(DOOR_CAPABILITIES) end
+			local posing = actor:HasState('scenic_npc') and actor:GetStateData().door
+			if enable and not posing then npc:CapabilitiesAdd(DOOR_CAPABILITIES) else npc:CapabilitiesRemove(DOOR_CAPABILITIES) end
 		end
 	end
 end, 'BGN_NPCOpenDoors')

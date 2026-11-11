@@ -153,6 +153,9 @@ Menu.AddPage('actors', {
 				} or nil
 				page:Toggle('bgn_npc_type_' .. actor_type, '#bgn.menu.actor.enabled', wanted)
 				page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.menu.actor.max', 0, 200)
+				if istable(bgNPC.Config.GetActor(actor_type).carry_items) then
+					page:Toggle('bgn_carry_items_' .. actor_type, '#bgn.menu.actor.carry_items')
+				end
 				if istable(data.weapons) and #data.weapons ~= 0 then
 					page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.menu.actor.no_weapons')
 				end
@@ -189,6 +192,9 @@ Menu.AddPage('spawn', {
 		page:Toggle('bgn_scenic', '#bgn.menu.scenic')
 		page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
 		page:Slider('bgn_scenic_period', '#bgn.menu.scenic_period', 5, 300)
+		for id, scene in SortedPairs(bgNPC.cfg.scenic) do
+			if (scene.weight or 10) > 0 then page:Toggle('bgn_scenic_' .. id, bgNPC.Util.Lang(scene.name or { default = id })) end
+		end
 
 		page:Section('#bgn.menu.section.experimental')
 		page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')

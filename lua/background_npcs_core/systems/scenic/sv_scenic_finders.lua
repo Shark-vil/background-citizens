@@ -39,6 +39,40 @@ local function Floor(pos)
 end
 Spots.Floor = Floor
 
+-- Reject outdoor courtyards and roofs: a room needs a nearby solid ceiling and walls on every side.
+function Spots.InRoom(pos)
+	local from = pos + Vector(0, 0, 48)
+	for _, dir in ipairs({ Vector(0, 0, 1), Vector(1, 0, 0), Vector(-1, 0, 0), Vector(0, 1, 0), Vector(0, -1, 0) }) do
+		local tr = util.TraceLine({ start = from, endpos = from + dir * (dir.z == 1 and 384 or 512), mask = MASK_SOLID_BRUSHONLY })
+		if not tr.Hit or tr.HitSky or tr.StartSolid or not tr.HitWorld then return false end
+		if dir.z == 1 and tr.HitNormal.z > -0.7 then return false end
+		if dir.z == 0 and math.abs(tr.HitNormal.z) > 0.2 then return false end
+	end
+	return true
+end
+
+local prop_bounds = {}
+function Spots.PropFits(model, pos, ang)
+	local bounds = prop_bounds[model]
+	if not bounds then
+		local probe = ents.Create('prop_dynamic')
+		if not IsValid(probe) then return false end
+		probe:SetModel(model)
+		local mins, maxs = probe:GetModelBounds()
+		probe:Remove()
+		bounds = { mins, maxs }
+		prop_bounds[model] = bounds
+	end
+	local mins, maxs = bounds[1], bounds[2]
+	local half, center = (maxs - mins) * 0.5, (maxs + mins) * 0.5
+	local forward, right = ang:Forward(), ang:Right()
+	local extent = Vector(math.abs(forward.x) * half.x + math.abs(right.x) * half.y,
+		math.abs(forward.y) * half.x + math.abs(right.y) * half.y, half.z)
+	local origin = pos + forward * center.x - right * center.y + Vector(0, 0, center.z + 1)
+	local tr = util.TraceHull({ start = origin, endpos = origin, mins = -extent, maxs = extent, mask = MASK_SOLID_BRUSHONLY })
+	return not tr.Hit and not tr.StartSolid
+end
+
 -- Room for a standing body (brushes only, props are the spawner's business).
 function Spots.HasRoom(pos)
 	local tr = util.TraceHull({
@@ -129,10 +163,53 @@ end
 
 local Finders = {}
 
-function Finders.floor(pos)
+function Finders.floor(pos, scene)
 	local floor = Floor(pos)
 	if not floor or not Spots.HasRoom(floor) or bgNPC.Util.IsVectorInWater(floor) then return end
+	if scene and scene.indoors and not Spots.InRoom(floor) then return end
 	return { pos = floor, ang = Angle(0, math.random(0, 359), 0) }
+end
+
+-- A wide, flat lip with a knee-height drop, support behind the hips and clear space for hanging legs.
+local function LedgeAt(top)
+	for _, dir in ipairs(Shuffle(WALL_DIRECTIONS)) do
+		for distance = 8, 64, 8 do
+			local edge = top + dir * distance
+			local lower = Floor(edge + dir * 8)
+			local support = Floor(edge - dir * 12)
+			if lower and support and math.abs(support.z - top.z) <= 2 and top.z - lower.z >= 24 and top.z - lower.z <= 56 then
+				local side, wide = Vector(-dir.y, dir.x, 0), true
+				for _, shift in ipairs({ -16, 16 }) do
+					local back = Floor(edge - dir * 12 + side * shift)
+					local rear = Floor(edge - dir * 28 + side * shift)
+					local front = Floor(edge + dir * 8 + side * shift)
+					if not back or not rear or not front or math.abs(back.z - top.z) > 2 or math.abs(rear.z - top.z) > 2
+						or math.abs(front.z - lower.z) > 4 then wide = false break end
+				end
+				local hip = edge - dir * 6
+				local room = util.TraceHull({ start = hip + Vector(0, 0, 3), endpos = hip + Vector(0, 0, 3),
+					mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 70), mask = MASK_SOLID_BRUSHONLY })
+				if wide and not room.Hit and not room.StartSolid then
+					return { pos = hip, ang = dir:Angle(), ledge = true }
+				end
+			end
+		end
+	end
+end
+
+function Finders.ledge(pos)
+	local floor = Floor(pos)
+	if not floor or bgNPC.Util.IsVectorInWater(floor) then return end
+	local spot = LedgeAt(floor)
+	if spot then return spot end
+	-- Navigation normally runs beside a sill, not on top of it.
+	for _, dir in ipairs(Shuffle(WALL_DIRECTIONS)) do
+		local top = Floor(floor + dir * 48 + Vector(0, 0, 32))
+		if top and top.z - floor.z >= 24 and top.z - floor.z <= 56 then
+			spot = LedgeAt(top)
+			if spot then return spot end
+		end
+	end
 end
 
 function Finders.sky(pos)

@@ -74,6 +74,12 @@ provider returns 64 points by default.
 
 Self-test: `bgn_selftest` / `bgn_selftest_cl` → `ghost_crowd_rules`.
 
+Carried ration boxes/suitcases use the same actor `carry_items` config and per-type switch as real citizens.
+Local mode chooses a supported item on the client; server mode chooses once and sends `carry` with each
+segment/snapshot. Clients use matching walk/idle sequences and attached non-colliding models. Panic stows a
+small parcel or drops a suitcase for `carry_items.drop_lifetime` seconds (default 30); local drops are client decoration. Server handoff preserves
+the selected/stowed item without another probability roll. See [carry configuration](../tutorials/Modification-of-Existing-NPCs.md#carried-items).
+
 ## Known limits
 
 - Every ghost animates every frame; 100+ ghosts may cost noticeable FPS.

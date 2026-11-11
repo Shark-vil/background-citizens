@@ -6,6 +6,7 @@ local name = bgNPC.Util.Lang({
 bgNPC.cfg:SetActor('police', {
 	enabled = true,
 	inherit = 'citizen',
+	carry_items = false,
 	class = 'npc_metropolice',
 	name = name,
 	fullness = 6,

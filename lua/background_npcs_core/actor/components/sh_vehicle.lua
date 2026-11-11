@@ -37,7 +37,7 @@ local function CaptureBody(actor)
 	local weapons = npc.GetWeapons and npc:GetWeapons() or { active }
 	if IsValid(active) and not table.HasValue(weapons, active) then weapons[#weapons + 1] = active end
 	for _, weapon in ipairs(weapons) do
-		if IsValid(weapon) then
+		if IsValid(weapon) and not weapon.bgn_carried_item then
 			saved.weapons[#saved.weapons + 1] = { class = weapon:GetClass(), clip1 = weapon:Clip1(), clip2 = weapon:Clip2() }
 		end
 	end

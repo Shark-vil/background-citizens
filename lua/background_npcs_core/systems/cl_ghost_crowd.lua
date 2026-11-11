@@ -50,6 +50,7 @@ local FALLBACK_MODELS = {
 
 -- Script reload: drop the old ghosts, their models would leak otherwise
 for _, ghost in ipairs(bgNPC.ghost_crowd or {}) do
+	if IsValid(ghost.carry_prop) then ghost.carry_prop:Remove() end
 	if IsValid(ghost.ent) then ghost.ent:Remove() end
 end
 
@@ -82,15 +83,15 @@ end
 -- Looks and mood, taken from the real actors around
 -- ---------------------------------------------------------------------------
 
-local function RememberLook(npc)
-	local look = { model = npc:GetModel(), skin = npc:GetSkin(), bodygroups = GhostCrowd.BodygroupsOf(npc) }
+local function RememberLook(npc, actor_type)
+	local look = { type = actor_type, model = npc:GetModel(), skin = npc:GetSkin(), bodygroups = GhostCrowd.BodygroupsOf(npc) }
 	if not look.model then return end
-	local key = look.model .. look.skin .. look.bodygroups
+	local key = (look.type or '') .. look.model .. look.skin .. look.bodygroups
 	if looks_index[key] then return end
 
 	if #looks >= MAX_LOOKS then
 		local old = table.remove(looks, 1)
-		looks_index[old.model .. old.skin .. old.bodygroups] = nil
+		looks_index[(old.type or '') .. old.model .. old.skin .. old.bodygroups] = nil
 	end
 	looks[#looks + 1] = look
 	looks_index[key] = true
@@ -100,7 +101,7 @@ local function ForgetLook(look)
 	for i = 1, #looks do
 		if looks[i] == look then
 			table.remove(looks, i)
-			looks_index[look.model .. look.skin .. look.bodygroups] = nil
+			looks_index[(look.type or '') .. look.model .. look.skin .. look.bodygroups] = nil
 			return
 		end
 	end
@@ -134,7 +135,7 @@ local function UpdateMood()
 			total = total + 1
 			if PANIC_GROUPS[actor.state_group] or state == 'retreat' then danger = danger + 1 end
 			if state == 'idle' then idle = idle + 1 end
-			if not actor:InVehicle() then RememberLook(npc) end
+			if not actor:InVehicle() then RememberLook(npc, actor:GetType()) end
 		end
 	end
 
@@ -161,6 +162,7 @@ local server_mode = false
 
 local function RemoveGhost(i)
 	local ghost = ghosts[i]
+	if IsValid(ghost.carry_prop) then ghost.carry_prop:Remove() end
 	if IsValid(ghost.ent) then ghost.ent:Remove() end
 	if ghost.id then server_ghosts[ghost.id] = nil end
 	table.remove(ghosts, i)
@@ -186,6 +188,7 @@ local function SetActivity(ghost, act)
 	local ent = ghost.ent
 	if not IsValid(ent) then return end
 	local seq = ent:SelectWeightedSequence(act)
+	if ghost.carry and (act == ACT_IDLE or act == ACT_WALK) then seq = bgNPC.CarryItems.Sequence(ent, ghost.carry, act == ACT_WALK) end
 	if seq < 0 and act == ACT_PANIC then seq = ent:SelectWeightedSequence(ACT_RUN) end
 	if seq < 0 then return end
 
@@ -201,7 +204,7 @@ end
 
 -- @param server_look table|nil the look the server picked, a random seen one otherwise
 -- @return table|nil the ghost
-local function CreateGhost(pos, server_look)
+local function CreateGhost(pos, server_look, carried)
 	local look = server_look or looks[math.random(#looks)]
 		or { model = FALLBACK_MODELS[math.random(#FALLBACK_MODELS)], skin = 0, bodygroups = '' }
 	local ent = ClientsideModel(look.model)
@@ -223,7 +226,11 @@ local function CreateGhost(pos, server_look)
 	ent.bgn_ghost_alpha = 0
 	ent.RenderOverride = DrawGhost
 
-	local ghost = { ent = ent, pos = pos, z = pos.z, next_ground = 0, alpha = 0, cycle = math.random(), yaw = ent:GetAngles().y }
+	local ghost = { ent = ent, type = look.type or 'citizen', pos = pos, z = pos.z, next_ground = 0, alpha = 0, cycle = math.random(), yaw = ent:GetAngles().y }
+	local kind = server_look and carried or (not server_look and bgNPC.CarryItems.Roll(ent, look.type or 'citizen'))
+	if kind and bgNPC.CarryItems.Supports(ent, kind) then
+		ghost.carry, ghost.carry_prop = kind, bgNPC.CarryItems.CreateVisual(ent, kind)
+	end
 	SetActivity(ghost, ACT_IDLE)
 	ghosts[#ghosts + 1] = ghost
 	return ghost
@@ -237,7 +244,7 @@ local function ApplyServerOp(op, now)
 	local ghost = server_ghosts[op.id]
 	if not ghost then
 		if not op.look or op.remove or op.ent then return end -- a ghost this client never got
-		ghost = CreateGhost(op.from, op.look)
+		ghost = CreateGhost(op.from, op.look, op.carry)
 		if not ghost then return end
 		ghost.id = op.id
 		server_ghosts[op.id] = ghost
@@ -256,6 +263,13 @@ local function ApplyServerOp(op, now)
 	end
 	if op.fade then ghost.fading = true end
 	if not op.from then return end
+	local carried = op.carry or nil
+	if carried and not bgNPC.CarryItems.Supports(ghost.ent, carried) then carried = nil end
+	if carried ~= ghost.carry then
+		if IsValid(ghost.carry_prop) then ghost.carry_prop:Remove() end
+		ghost.carry, ghost.act = carried, nil
+		ghost.carry_prop = carried and bgNPC.CarryItems.CreateVisual(ghost.ent, carried) or nil
+	end
 
 	ghost.seg = { from = op.from, to = op.to, t0 = op.t0, speed = op.speed }
 	if op.speed > 0 then
@@ -314,6 +328,19 @@ local function Decide(ghost, now, ply_pos, eye, eye_dir, r_in, r_out)
 	ghost.idle_until = nil
 
 	local run = mood.panic or ghost.fleeing
+	if run and ghost.carry then
+		if bgNPC.CarryItems.items[ghost.carry].pocket then ghost.stowed_carry = ghost.carry
+		else
+			local data = bgNPC.Config.GetActor(ghost.type)
+			bgNPC.CarryItems.Drop(ghost.carry, ghost.pos + Vector(0, 0, 40), Angle(0, ghost.yaw, 0),
+				data and istable(data.carry_items) and data.carry_items.drop_lifetime or nil)
+		end
+		if IsValid(ghost.carry_prop) then ghost.carry_prop:Remove() end
+		ghost.carry, ghost.act = nil, nil
+	elseif not run and ghost.stowed_carry then
+		ghost.carry, ghost.stowed_carry, ghost.act = ghost.stowed_carry, nil, nil
+		ghost.carry_prop = bgNPC.CarryItems.CreateVisual(ghost.ent, ghost.carry)
+	end
 	if not run and math.random() < mood.idle * 0.5 then
 		SetActivity(ghost, ACT_IDLE)
 		ghost.idle_until = now + math.Rand(3, 8)

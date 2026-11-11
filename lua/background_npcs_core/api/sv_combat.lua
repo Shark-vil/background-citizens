@@ -11,7 +11,7 @@ local POLICE_ATTACK_WINDOW = 10
 
 local function HasRangedWeapon(enemy)
 	local weapon = enemy.GetActiveWeapon and enemy:GetActiveWeapon()
-	if not IsValid(weapon) then return false end
+	if not IsValid(weapon) or weapon.bgn_carried_item then return false end
 	local class = weapon:GetClass()
 	if bgNPC.Table.HasValue(bgNPC.cfg.melee_weapons, class) then return false end
 	for safe in GetConVar('bgn_arrest_safe_weapons'):GetString():gmatch('[^,%s]+') do
@@ -141,6 +141,9 @@ function Combat.EquipActor(actor, weapon_class, switching)
 	Assert.Arg(3, switching, 'boolean|nil', 'bgNPC.Combat.EquipActor')
 
 	if not actor:IsAlive() or not (actor:IsNPC() or actor:IsNextBot()) then return end
+	if actor.carry_item and bgNPC.CarryItems and (weapon_class or actor.weapon) then
+		bgNPC.CarryItems.Suspend(actor)
+	end
 
 	local cvar_disable_weapon = Util.GetCVar('bgn_disable_weapon_' .. actor:GetType())
 	if cvar_disable_weapon and cvar_disable_weapon:GetBool() then return end

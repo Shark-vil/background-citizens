@@ -21,6 +21,7 @@ bgNPC.cfg:SetActor('citizen', {
 	},
 	vehicle_multiply_speed = { ['danger'] = 4 },
 	getting_weapon_chance = 10,
+	carry_items = { chance = 5, items = { 'ration', 'suitcase' } },
 	money = { 0, 100 },
 	health = 30,
 	weapon_skill = WEAPON_PROFICIENCY_POOR,

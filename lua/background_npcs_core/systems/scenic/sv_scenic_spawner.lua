@@ -27,6 +27,8 @@ local CHECK_PERIOD = 5
 local DEFAULT_TTL = 600
 local MAX_COOLDOWN = 600
 local SPAWN_LIFT = Vector(0, 0, 4)
+local STAGE_OFFSETS = { Vector(), Vector(48, 0, 0), Vector(-48, 0, 0), Vector(0, 48, 0), Vector(0, -48, 0),
+	Vector(48, 48, 0), Vector(-48, 48, 0), Vector(48, -48, 0), Vector(-48, -48, 0) }
 
 local active = Scenic.active or {}
 Scenic.active = active
@@ -79,9 +81,13 @@ local function Plan(scene, spot)
 	for _, item in ipairs(Roster(scene)) do
 		local def = item.def
 		local pos, ang = ToWorld(spot, item.offset, item.yaw)
+		local stand = pos
 
-		if def.seat then
+		if spot.ledge then
+			pos = pos + Vector(0, 0, -20)
+		elseif def.seat then
 			pos, ang = spot.stage, spot.ang
+			stand = pos
 		else
 			local floor = Spots.Floor(pos)
 			-- one level for the whole scene: no member on the floor below or on a ledge
@@ -92,17 +98,22 @@ local function Plan(scene, spot)
 			then
 				return
 			end
-			pos = floor
+			pos = floor + Vector(0, 0, item.offset.z)
+			stand = floor
 		end
 
 		if not bgNPC:IsValidSpawnArea(def.type, pos) then return end
-		members[#members + 1] = { def = def, pos = pos, ang = ang }
+		members[#members + 1] = { def = def, pos = pos, stand = stand, ang = ang }
+	end
+	if scene.indoors then
+		for _, member in ipairs(members) do if not Spots.InRoom(member.pos) then return end end
 	end
 
 	local props = {}
 	for _, prop in ipairs(scene.props or {}) do
 		local pos, ang = ToWorld(spot, prop.pos, prop.yaw)
 		local model = istable(prop.model) and table.Random(prop.model) or prop.model
+		if scene.indoors and not Spots.PropFits(model, pos, ang) then return end
 		props[#props + 1] = { model = model, pos = pos, ang = ang, solid = prop.solid ~= false }
 	end
 
@@ -116,6 +127,7 @@ Scenic.Plan = Plan
 -- ---------------------------------------------------------------------------
 
 local function PickSequence(actor, list)
+	if not list then return end
 	if isstring(list) then list = { list } end
 	for _, name in ipairs(bgNPC.Table.Shuffle(list)) do
 		if actor:IsValidSequence(name) then return name end
@@ -205,12 +217,25 @@ local function Start(item, plan, spot)
 	item.started = true
 	if not item.actors[1] then return end
 
+	local sequences = {}
+	for i, actor in ipairs(item.actors) do
+		local member = plan.members[i]
+		if actor:IsAlive() then sequences[i] = PickSequence(actor, member.def.seq) end
+		if item.scene.atomic and not sequences[i] then
+			local npc = actor:GetNPC()
+			item.failures[#item.failures + 1] = { type = member.def.type, model = IsValid(npc) and npc:GetModel() or 'removed', sequences = member.def.seq, reason = 'sequence' }
+			for _, other in ipairs(item.actors) do other:Remove() end
+			Scenic.Remove(item)
+			return
+		end
+	end
+
 	local playing = 0
 	for i, actor in ipairs(item.actors) do
 		local npc = actor:GetNPC()
 		local member = plan.members[i]
 		if actor:IsAlive() and IsValid(npc) then
-			local seq = PickSequence(actor, member.def.seq)
+			local seq = sequences[i]
 			-- A brain may start sitting during the setup delay; release its old seat before placing the scene.
 			actor:SetState('none', nil, true)
 			local back
@@ -219,25 +244,46 @@ local function Start(item, plan, spot)
 			else
 				npc:SetPos(member.pos)
 				npc:SetAngles(member.ang)
+				local offset = seq and member.def.seq_offsets and member.def.seq_offsets[seq:lower()]
+				if offset then npc:SetPos(member.pos + member.ang:Forward() * offset.x + member.ang:Right() * offset.y + Vector(0, 0, offset.z)) end
 			end
 
 			local state
-			if seq and (back or not member.def.seat) then
+			if member.def.carry and bgNPC.CarryItems.Attach(actor, member.def.carry) then
+				state = actor:SetState('walk', nil, true)
+			elseif seq and (back or not member.def.seat) then
 				if member.def.weapon then actor:PrepareWeapon(member.def.weapon, true) end
-				state = actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door }, true)
+				state = actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door,
+					exit_pos = not back and member.stand or nil }, true)
 			end
-			if state then
+			if state and (member.def.carry or (actor:HasState('scenic_npc') and actor:IsAnimationPlayed())) then
 				playing = playing + 1
 			else
+				local carry = member.def.carry and bgNPC.CarryItems.items[member.def.carry]
 				item.failures[#item.failures + 1] = { type = member.def.type, model = npc:GetModel(),
-					sequences = member.def.seq, reason = not seq and 'sequence' or 'setup' }
-				if back then bgNPC.States.Call('scenic_npc', 'stop', actor, 'scenic_npc', { back = back }) end
+					sequences = member.def.seq or (carry and { carry.idle, carry.walk }), reason = not seq and 'sequence' or 'setup' }
+				if actor:HasState('scenic_npc') then actor:SetState('none', nil, true)
+				elseif back then bgNPC.States.Call('scenic_npc', 'stop', actor, 'scenic_npc', { back = back }) end
 				actor:Remove() -- no sequence for this model, or the chair is gone
 			end
 		end
 	end
 
-	if playing == 0 then Scenic.Remove(item) end
+	if playing == 0 or (item.scene.atomic and playing < #item.actors) then Scenic.Remove(item) end
+end
+
+local function SpawnPosition(member, actors)
+	for _, offset in ipairs(STAGE_OFFSETS) do
+		local floor = Spots.Floor((member.stand or member.pos) + offset)
+		if floor and math.abs(floor.z - (member.stand or member.pos).z) < 20 and Spots.HasRoom(floor)
+			and bgNPC:IsValidSpawnArea(member.def.type, floor) then
+			local free = true
+			for _, other in ipairs(actors) do
+				if other:GetNPC():GetPos():Distance(floor) < 40 then free = false break end
+			end
+			if free then return floor + SPAWN_LIFT end
+		end
+	end
 end
 
 -- Spawns the scene at the spot.
@@ -250,13 +296,9 @@ function Scenic.Create(id, scene, spot, plan, debug_owner)
 	local item = { id = id, scene = scene, pos = spot.pos, actors = {}, props = {}, failures = {}, born = CurTime(), debug_owner = debug_owner }
 
 	for _, member in ipairs(plan.members) do
-		-- a hull exactly on the floor counts as stuck: the spawner gets a little height; a member that stands closer
-		-- than a body to an earlier one is spawned higher (the spawner refuses overlapping bodies), Start puts all in place
-		local lift = SPAWN_LIFT
-		for _, other in ipairs(item.actors) do
-			if other:GetNPC():GetPos():Distance(member.pos) < 40 then lift = lift + Vector(0, 0, 90) end
-		end
-		local actor = bgNPC:SpawnActor(member.def.type, member.pos + lift, false, not debug_owner)
+		-- Use nearby floor for close partners; stacking them upward can put the second one inside a room's ceiling.
+		local spawn_pos = SpawnPosition(member, item.actors)
+		local actor = spawn_pos and bgNPC:SpawnActor(member.def.type, spawn_pos, false, not debug_owner)
 		if not actor then
 			for _, spawned in ipairs(item.actors) do spawned:Remove() end
 			return
@@ -266,6 +308,7 @@ function Scenic.Create(id, scene, spot, plan, debug_owner)
 		npc:SetAngles(member.ang)
 
 		actor.mechanics.ignore_limit = true
+		actor.skip_auto_carry = true
 		actor.data.start_random_state, actor.data.start_state = false, nil
 		item.actors[#item.actors + 1] = actor
 	end
@@ -290,7 +333,8 @@ local function PickScene()
 	local now = CurTime()
 	for id, scene in pairs(bgNPC.cfg.scenic) do
 		local wait = cooldown[id]
-		if not (wait and wait.till > now) then
+		local enabled = GetConVar('bgn_scenic_' .. id)
+		if (not enabled or enabled:GetBool()) and not (wait and wait.till > now) then
 			local weight = scene.weight or 10
 			if weight > 0 then
 				list[#list + 1] = { id = id, weight = weight }

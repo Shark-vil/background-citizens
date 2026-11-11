@@ -6,7 +6,7 @@ from lupa.luajit21 import LuaRuntime
 ROOT = Path(__file__).resolve().parents[1] / 'lua/background_npcs_core'
 lua = LuaRuntime()
 lua.execute('''
-    SERVER=true; CLIENT=false; MASK_SOLID_BRUSHONLY=1
+    SERVER=true; CLIENT=false; MASK_SOLID_BRUSHONLY=1; CAP_AUTO_DOORS=1; CAP_OPEN_DOORS=2
     function isstring(v) return type(v)=='string' end
     function isnumber(v) return type(v)=='number' end
     function istable(v) return type(v)=='table' end
@@ -37,7 +37,8 @@ lua.execute('''
     bgNPC.Doors={held={},Release=function() end,IsClosed=function(d) return d.state==0 end}
     bgNPC.Net={Send=function() end,ToolRPC=function(_,_,text) last_report=text end}
     bgNPC.Actors={Get=function(n) return n and n.actor end}
-    function GetConVar() return {GetFloat=function() return 3000 end} end
+    disabled_cvars={}
+    function GetConVar(name) return {GetFloat=function() return 3000 end,GetBool=function() return not disabled_cvars[name] end} end
     function MsgN() end
     util={TraceHull=function() return {Hit=blocked} end,TraceLine=function(t)
         if t.start.x==t.endpos.x and t.start.y==t.endpos.y then
@@ -87,7 +88,8 @@ lua.execute('''
             Health=function() return 50 end,IsAlive=function(self) return not self.removed end,
             IsValidSequence=function() return sequence_supported~=false end,
             StopWalk=function() end,ResetSequence=function(self) self.playing=false end,
-            PlayStaticSequence=function(self) self.playing=true end,Remove=function(self) self.removed=true end},
+            PlayStaticSequence=function(self) self.playing=true end,IsAnimationPlayed=function(self) return self.playing end,
+            Remove=function(self) self.removed=true end},
             {__index=bgNPC.Actor})
         npc.actor=a; return a
     end
@@ -168,14 +170,20 @@ lua.execute('''
     assert(spawns==count, 'manual door scenes must reject an opening door or a non-door')
     blocked=true; d.class='prop_door_rotating'; d.state=0
     assert(not spots.Find('door',d,scene), 'no scene inside an obstructed hull')
-    local manual_only={sky_watch=true,door_brace=true,couch_couple=true,couch_lying=true,radio_operator=true}
+    local manual_only={sky_watch=true,door_brace=true,luggage=true,ration=true}
     local automatic,total=0,0
     for id,def in pairs(bgNPC.cfg.scenic) do
         total=total+1
-        assert((def.weight==0)==(manual_only[id]==true), 'only the agreed five scenes are manual-only')
+        assert((def.weight==0)==(manual_only[id]==true), 'only sky/brace and walking carry previews are manual-only')
         if def.weight>0 then automatic=automatic+1 end
     end
-    assert(total==26 and automatic==21)
+    assert(total==27 and automatic==23 and not bgNPC.cfg.scenic.cowering)
+    for _,id in ipairs({'plaza','ground_sit','tired','ration','luggage'}) do
+        assert(not bgNPC.cfg.scenic[id].group and #bgNPC.cfg.scenic[id].members==1, 'solitary citizens must not expand into groups')
+    end
+    for _,id in ipairs({'couch_couple','couch_lying','radio_operator'}) do
+        assert(bgNPC.cfg.scenic[id].indoors and bgNPC.cfg.scenic[id].weight>0, 'indoor scenes return to automatic spawning')
+    end
     scenic_definitions=bgNPC.cfg.scenic
     bgNPC.cfg.scenic={manual={weight=0}}
     player={GetHumans=function() return {{}} end}
@@ -265,5 +273,67 @@ lua.execute('''
     local chair={valid=true,occupied=true}
     bgNPC.States.Call('scenic_npc','stop',{GetNPC=function() return {valid=false} end},'scenic_npc',{back={chair=chair}})
     assert(not chair.occupied, 'removed scenic bodies must still release chair occupancy')
+''')
+lua.execute('''
+    local S=bgNPC.Scenic.Spots
+    local trace=util.TraceLine
+    local open,sky=false,false
+    util.TraceLine=function(t)
+        local delta=t.endpos-t.start
+        if delta.z<0 then return {Hit=true,HitWorld=true,HitPos=Vector(t.start.x,t.start.y,0),HitNormal=Vector(0,0,1)} end
+        return {Hit=not open,HitWorld=true,HitSky=sky,HitNormal=delta.z>0 and Vector(0,0,-1) or Vector(-1,0,0)}
+    end
+    assert(S.InRoom(Vector()))
+    open=true; assert(not S.InRoom(Vector()), 'an outdoor street is not a room')
+    open=false; sky=true; assert(not S.InRoom(Vector()), 'a sky brush cannot count as a ceiling')
+    sky=false
+    local scene={indoors=true,members={{type='citizen',seq='pose',pos=Vector(0,0,-5)}}}
+    local spot={pos=Vector(),ang=Angle()}
+    local plan=assert(bgNPC.Scenic.Plan(scene,spot))
+    assert(plan.members[1].pos.z==-5 and plan.members[1].stand.z==0, 'authored height is separate from the safe standing/spawn position')
+    open=true; assert(not bgNPC.Scenic.Plan(scene,spot), 'indoor checks apply to manual plans too')
+    util.TraceLine=trace
+    scene={atomic=true,members={{type='citizen',seq='pose'},{type='citizen',seq='pose',pos=Vector(20,0,0)}}}
+    local item=assert(bgNPC.Scenic.Create('pair',scene,spot,nil,admin))
+    assert(item.actors[2]:GetNPC():GetPos().z==4, 'close partners are staged beside each other, not stacked into a low ceiling')
+    item.actors[2].IsValidSequence=function() return false end
+    table.remove(pending,1)()
+    assert(item.removed and #item.failures==1 and not item.actors[1]:IsAlive() and not item.actors[2]:IsAlive(), 'a pair never starts partially when either model lacks its pose')
+    item=assert(bgNPC.Scenic.Create('pair',scene,spot,nil,admin))
+    item.actors[2].PlayStaticSequence=function() return false end
+    table.remove(pending,1)()
+    assert(item.removed and not item.actors[1]:IsAlive() and not item.actors[2]:IsAlive(), 'a rejected animation setup cancels the complete pair too')
+    util.TraceLine=function(t)
+        local z=t.start.x>=24 and 0 or 40
+        return {Hit=true,HitPos=Vector(t.start.x,t.start.y,z),HitNormal=Vector(0,0,1)}
+    end
+    local ledge=assert(S.Find('ledge',Vector(0,0,40),{}))
+    assert(ledge.ledge and ledge.pos.z==40 and ledge.ang:Forward().x>0.9)
+    local old_trace=util.TraceLine
+    util.TraceLine=function(t)
+        if math.abs(t.start.y)>10 then return {Hit=true,HitPos=Vector(t.start.x,t.start.y,0),HitNormal=Vector(0,0,1)} end
+        return old_trace(t)
+    end
+    assert(not S.Find('ledge',Vector(0,0,40),{}), 'a narrow pillar is not a seat')
+    util.TraceLine=trace
+    bgNPC.cfg.scenic={enabled={weight=1},disabled={weight=1}}
+    disabled_cvars.bgn_scenic_disabled=true
+    S.Seeds=function(place,players) error('selected:'..place) end
+    -- The selected scene passes its place to Seeds, making the cvar gate observable.
+    bgNPC.cfg.scenic.enabled.place='enabled'; bgNPC.cfg.scenic.disabled.place='disabled'
+    local ok,err=pcall(bgNPC.Scenic.TrySpawn)
+    assert(not ok and tostring(err):find('selected:enabled',1,true), 'disabled scenes are absent from the automatic lottery')
+''')
+lua.execute('''
+    registered_scenes={}
+    bgNPC.CVars={Register=function(name) registered_scenes[name]=true end}
+    bgNPC.cfg.scenic={default_weight={},manual={weight=0},enabled={weight=5}}
+''')
+cvars = (ROOT / 'cvars/sh_cvars.lua').read_text(encoding='utf-8-sig')
+lua.execute(cvars[cvars.index('for id, scene in pairs(bgNPC.cfg.scenic)'):cvars.index('for actor_type in pairs(bgNPC.cfg.actors)')])
+lua.execute('''
+    assert(registered_scenes.bgn_scenic_default_weight and registered_scenes.bgn_scenic_enabled,
+        'custom scenes retain the documented default weight when registering their switches')
+    assert(not registered_scenes.bgn_scenic_manual, 'manual previews have no automatic-spawn switch')
 ''')
 print('PASS: scenic placement/lifecycle/models, debug permissions/visibility/ownership/Undo, Tool controls and seat release')

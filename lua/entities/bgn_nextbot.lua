@@ -56,6 +56,8 @@ local DEFAULT_MODELS = {
 
 -- class -> { damage, delay, spread, num, range, clip, melee, sound, hold }
 local WEAPONS = {
+	weapon_citizenpackage = { hold = 'package', carry = true },
+	weapon_citizensuitcase = { hold = 'suitcase', carry = true },
 	weapon_pistol = { damage = 6, delay = 0.45, spread = 0.04, clip = 18, range = 2000, sound = 'Weapon_Pistol.NPC_Single', hold = 'pistol' },
 	weapon_357 = { damage = 35, delay = 1.1, spread = 0.02, clip = 6, range = 2500, sound = 'Weapon_357.Single', hold = 'pistol' },
 	weapon_smg1 = { damage = 4, delay = 0.1, spread = 0.07, clip = 45, range = 1800, sound = 'Weapon_SMG1.NPC_Single', hold = 'rifle' },
@@ -135,6 +137,8 @@ local UNARMED = {
 }
 local ACTIVITIES = {
 	none = UNARMED,
+	package = { idle = { ACT_IDLE_PACKAGE }, walk = { ACT_WALK_PACKAGE }, run = UNARMED.run },
+	suitcase = { idle = { ACT_IDLE_SUITCASE }, walk = { ACT_WALK_SUITCASE }, run = UNARMED.run },
 	pistol = {
 		idle = { ACT_IDLE_PISTOL, ACT_IDLE }, walk = { ACT_WALK_PISTOL, ACT_WALK }, run = { ACT_RUN_PISTOL, ACT_RUN },
 		aim = { ACT_IDLE_ANGRY_PISTOL, ACT_RANGE_ATTACK_PISTOL, ACT_IDLE_PISTOL, ACT_IDLE },
@@ -335,7 +339,7 @@ function ENT:UpdateActivity()
 	if self.sequence_lock then return end
 
 	local set = ACTIVITIES[self:HoldType()] or ACTIVITIES.none
-	local fighting = self.alert == 'combat' and IsValid(self.enemy)
+	local fighting = self.alert == 'combat' and IsValid(self.enemy) and not (self.weapon_stats and self.weapon_stats.carry)
 	-- Crowd pushing and sidesteps move a bot a few units per second; a walk or run cycle slowed down to that looks like
 	-- slow-motion running (people waiting in a dialogue), so only a real pace plays one, and a run needs a run pace.
 	local speed_sqr = self.loco:GetVelocity():Length2DSqr()
@@ -492,7 +496,7 @@ function ENT:UpdateCombat()
 	local enemy = self.enemy
 	local stats = self.weapon_stats
 	self.enemy_visible = false
-	if self.alert ~= 'combat' or not stats or not IsValid(enemy) or not IsValid(self.weapon) then return end
+	if self.alert ~= 'combat' or not stats or stats.carry or not IsValid(enemy) or not IsValid(self.weapon) then return end
 	-- a player in a car: the enemy is the car (RedirectEnemyToVehicle), which mostly has no health of its own
 	if (enemy:Health() <= 0 and not enemy:IsVehicle() and not enemy.IsSimfphyscar) or self.sequence_lock then return end
 

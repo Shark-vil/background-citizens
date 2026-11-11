@@ -37,6 +37,7 @@ local PAGES = {
 		{ 'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1 },
 		{ 'check', 'bgn_fasted_teleport', 'bgn.settings.spawn.fasted_teleport' },
 		{ 'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600 },
+		{ 'scenes' },
 	} },
 	{ id = 'Wanted', title = 'bgn.settings.wanted', admin = true, items = {
 		{ 'check', 'bgn_enable_wanted_mode', 'bgn.settings.wanted.enable_wanted_mode' },
@@ -138,10 +139,20 @@ function ITEMS.actors(panel)
 			panel:Help(Text(data.name or actor_type))
 			ITEMS.check(panel, 'bgn_npc_type_' .. actor_type, 'bgn.menu.actor.enabled')
 			ITEMS.slider(panel, 'bgn_npc_type_max_' .. actor_type, 'bgn.menu.actor.max', 0, 200)
+			if istable(bgNPC.Config.GetActor(actor_type).carry_items) then
+				ITEMS.check(panel, 'bgn_carry_items_' .. actor_type, 'bgn.menu.actor.carry_items')
+			end
 			if istable(data.weapons) and #data.weapons ~= 0 then
 				ITEMS.check(panel, 'bgn_disable_weapon_' .. actor_type, 'bgn.menu.actor.no_weapons')
 			end
 		end
+	end
+end
+
+function ITEMS.scenes(panel)
+	ITEMS.check(panel, 'bgn_scenic', 'bgn.menu.scenic')
+	for id, scene in SortedPairs(bgNPC.cfg.scenic) do
+		if (scene.weight or 10) > 0 then panel:CheckBox(bgNPC.Util.Lang(scene.name or { default = id }), 'bgn_scenic_' .. id) end
 	end
 end
 

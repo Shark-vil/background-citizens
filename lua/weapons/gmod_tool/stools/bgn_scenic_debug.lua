@@ -15,6 +15,8 @@ local labels = {
 	door_help = { default = 'GOAP door test: aim at a closed unlocked door. Creates two normal actors; gives this pair GOAP, lowers the holder health, runs one kick and recovery. Server body/brain settings stay unchanged.',
 		russian = 'Тест двери GOAP: наведитесь на закрытую незапертую дверь. Создаёт двух обычных акторов, включает GOAP для этой пары, снижает здоровье удерживающего и проверяет один удар и подъём. Настройки тела и мозга сервера не меняются.' },
 	manual = { default = 'manual only', russian = 'только вручную' },
+	placement = { default = 'Couches and the radio desk require an enclosed room. Ledge seating needs a wide, flat edge with room for the legs.',
+		russian = 'Диваны и радист требуют закрытого помещения. Для сидения на уступе нужен широкий ровный край с местом для ног.' },
 	goap_door = { default = 'GOAP: hold, breach, recover', russian = 'GOAP: удерживание, выбивание, подъём' },
 	inspect = { default = 'Inspection', russian = 'Осмотр' },
 	state = { default = 'State', russian = 'Состояние' },
@@ -39,21 +41,7 @@ local function L(ply, key)
 	return bgNPC.Util.Lang(labels[key] or { default = key }, ply)
 end
 
-local scene_names = {
-	cheering = { 'Cheering', 'Радующиеся жители' }, food_line = { 'Food queue', 'Очередь за едой' },
-	plaza = { 'Idle gathering', 'Стоящие жители' }, luggage = { 'Luggage', 'Жители с чемоданами' },
-	ration = { 'Ration boxes', 'Жители с пайками' }, wounded = { 'Wounded citizen', 'Раненый житель' },
-	healing = { 'Medic helping a citizen', 'Помощь медика' }, ground_sit = { 'Sitting on the ground', 'Сидящие на земле' },
-	tired = { 'Tired citizens', 'Уставшие жители' }, kneeling = { 'Kneeling', 'Житель на коленях' },
-	waving = { 'Waving', 'Житель машет рукой' }, sky_watch = { 'Watching the sky', 'Наблюдение за небом' },
-	cowering = { 'Cowering at a wall', 'Испуганные у стены' }, hiding = { 'Hiding at a wall', 'Прячущийся у стены' },
-	lean_back = { 'Leaning back', 'Опирающиеся спиной на стену' }, lean_side = { 'Leaning sideways', 'Опирающиеся боком на стену' },
-	arrest_wall = { 'Wall search', 'Обыск у стены' }, arrest_ground = { 'Ground arrest', 'Задержанный на земле' },
-	interrogation = { 'Interrogation', 'Допрос' }, entrance_block = { 'Guarding an entrance', 'Полицейский у входа' },
-	door_knock = { 'Knocking on a door', 'Стук в дверь' }, door_brace = { 'Door brace pose', 'Поза удерживания двери' },
-	couch_couple = { 'Couple on a couch', 'Пара на диване' }, couch_lying = { 'Lying on a couch', 'Лежащий на диване' },
-	radio_operator = { 'Radio operator', 'Радист' }, chair_sitting = { 'Sitting on a chair', 'Сидящий на стуле' },
-}
+
 
 if SERVER then
 	local function ActorLines(ply, actor, detailed)
@@ -160,11 +148,11 @@ function TOOL.BuildCPanel(panel)
 	panel:Help(L(nil, 'help'))
 	local choices = panel:ComboBox(L(nil, 'choose'), 'bgn_scenic_debug_scene')
 	for id, scene in SortedPairs(bgNPC.cfg.scenic) do
-		local names = scene_names[id]
-		local name = names and bgNPC.Util.Lang({ default = names[1], russian = names[2] }) or id
+		local name = bgNPC.Util.Lang(scene.name or { default = id })
 		choices:AddChoice(name .. ' (' .. id .. ')' .. (scene.weight == 0 and ' [' .. L(nil, 'manual') .. ']' or ''), id)
 	end
 	choices:AddChoice(L(nil, 'goap_door'), 'goap_door')
 	panel:Help(L(nil, 'door_help'))
+	panel:Help(L(nil, 'placement'))
 	panel:Help(L(nil, 'right') .. '. ' .. L(nil, 'reload') .. '.')
 end

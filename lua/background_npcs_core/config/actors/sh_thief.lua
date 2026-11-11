@@ -6,6 +6,7 @@ local name = bgNPC.Util.Lang({
 bgNPC.cfg:SetActor('thief', {
 	enabled = true,
 	inherit = 'citizen',
+	carry_items = false,
 	class = 'npc_citizen',
 	name = name,
 	fullness = 8,

@@ -113,7 +113,8 @@ function NextBotBody:GiveWeapon(weapon_class)
 end
 
 function NextBotBody:GetActiveWeapon()
-	return IsValid(self.ent) and self.ent:GetActiveWeapon() or NULL
+	local weapon = IsValid(self.ent) and self.ent:GetActiveWeapon() or NULL
+	return IsValid(weapon) and not weapon.bgn_carried_item and weapon or NULL
 end
 
 function NextBotBody:RemoveActiveWeapon()

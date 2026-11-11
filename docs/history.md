@@ -34,7 +34,7 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 Working-tree fix after this baseline (version string 2.4.0, publication not verified): door scenes use fully
 closed doors, knocking faces the panel, and opening/removing the linked door returns participants to normal AI.
 The admin spawn command also uses the door finder. See [scenic scenes](systems/scenic.md).
-Five context-dependent scenes (both couches, radio operator, sky watch and door brace) are now manual-only;
+Five context-dependent scenes (both couches, radio operator, sky watch and door brace) were initially made manual-only;
 all scenic actors keep ordinary spawn/model-hook selection rather than overriding their models.
 GOAP actors in a hopeless fight can close and hold an open rotating door; police can kick it open, throwing
 the holder into a temporary ragdoll without extra damage. Recovery preserves the original actor/entity and
@@ -45,6 +45,11 @@ are released when scenic bodies are removed; previous seating states finish befo
 See [scenic debugging](systems/scenic.md#scene-debugger-tool).
 Scene debugger errors distinguish a missed door from an open/moving door or blocked floor space. Owned test
 actors are excluded from automatic population recycling/removal and scenic lifetime/distance cleanup.
+The scenic overhaul returns couches/radio to automatic indoor-only placement, removes cowering, splits wall
+fatigue from floor poses, adds ledge seating and solitary pose variants, and makes couch pairs atomic.
+Per-scene switches and per-actor `carry_items` settings control future spawning. Citizens have a combined 5%
+carried-item chance, with walking/idle support for NPCs, NextBots and both ghost modes. Small items can be stowed;
+dropped suitcases collide only with the world and expire after 30 seconds by default.
 
 ## Reproduce the comparison
 

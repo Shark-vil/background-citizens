@@ -22,6 +22,10 @@ server still checks the rights.
 
 **Tools → Testing** runs the [testing mode](testing.md): spawn, vehicle, state and settings checks with a copyable log.
 
+**Spawn → Scenic scenes** has a checkbox for each automatically eligible scene (`bgn_scenic_<id>`).
+**Actors** shows **Spawn with carried items** (`bgn_carry_items_<type>`) only for types with a `carry_items`
+config table. Both controls also exist in Classic settings and affect future spawning, including ghost items.
+
 ## Spawn and recycling settings
 
 The **Spawn** page separates pedestrian settings from vehicle visibility. Server defaults:

@@ -3,6 +3,7 @@ bgNPC.States.Register('idle', 'calm', {
 	start = function(actor, state, data)
 		local delay = math.random(10, 30)
 		data.delay = CurTime() + delay
+		if actor.carry_item then return end -- let the native carried-item idle keep the hands occupied
 
 		if actor.class == 'npc_metropolice' then
 			actor:GetBody():GiveWeapon('weapon_stunstick')

@@ -8,6 +8,7 @@ local name = bgNPC.Util.Lang({
 bgNPC.cfg:SetActor('medic', {
 	enabled = true,
 	inherit = 'citizen',
+	carry_items = false,
 	class = 'npc_citizen',
 	name = name,
 	limit = 4, -- two pairs (systems/sv_medics.lua)

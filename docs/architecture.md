@@ -85,6 +85,12 @@ the action. Temporary `knocked_down` keeps the original entity and body adapter,
 a server ragdoll for physics and forwarded damage. The actor update loop runs only recovery while down;
 standing requires a free hull. Client synchronization/render optimization preserves the server's hidden-body flag.
 
+`systems/sh_carry_items.lua` shares item definitions, model/animation checks and chance selection. SERVER owns
+real actors' carried weapons and dropped physics props; body adapters exclude these props from combat weapon
+queries. Native NPC activities and NextBot activity tables supply carrying locomotion. CLIENT owns only ghost
+visuals/local decoration; server ghost mode synchronizes the selected item and preserves it during handoff.
+Scenic placement remains SERVER-owned, including room/ledge traces, furniture bounds and atomic couch pairs.
+
 `debug/sv_scenic.lua` owns admin scene placement, test ownership/Undo and the one-cycle GOAP door test.
 `lua/weapons/gmod_tool/stools/bgn_scenic_debug.lua` supplies the selector and live inspection HUD through the
 existing server-to-client Tool RPC. Manual placement validates the admin owner in both creation and delayed

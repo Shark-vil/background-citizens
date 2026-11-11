@@ -21,6 +21,7 @@ local SURRENDER_CHANCE = 8 -- percent per attempt (one per BLOCK_TIME while the 
 local NOT_WEAPONS = {
 	weapon_physgun = true, weapon_physcannon = true, gmod_tool = true, gmod_camera = true,
 	weapon_fists = true, none = true,
+	weapon_citizenpackage = true, weapon_citizensuitcase = true,
 }
 
 -- ---------------------------------------------------------------------------

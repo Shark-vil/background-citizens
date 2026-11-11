@@ -142,6 +142,7 @@ end
 function NPCBody:GetActiveWeapon()
 	if not IsValid(self.ent) then return NULL end
 	local weapon = self.ent:GetActiveWeapon()
+	if IsValid(weapon) and weapon.bgn_carried_item then return NULL end
 	return IsValid(weapon) and weapon or NULL
 end
 

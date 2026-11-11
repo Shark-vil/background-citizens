@@ -1,7 +1,7 @@
 # Scenic scenes
 
 Staged scenes that appear on the map by themselves: a food line, a cop knocking on a door, a couple on a couch,
-someone sitting on a chair, an arrest at a wall. 26 scene definitions, 21 enabled for automatic spawning;
+someone sitting on a chair, an arrest at a wall. 27 scene definitions, 23 enabled for automatic spawning;
 all data is in `config/states/sh_scenic.lua`.
 The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC body and with a NextBot body.
 
@@ -18,14 +18,15 @@ Knocking does not require a lock: both unlocked and locked doors work. The scene
 as soon as it starts opening, the actor leaves the pose and resumes normal behavior.
 Manual placement by an administrator allows spawning in sight and nearby, while keeping floor, room, scene
 placement and actor-model checks. Automatic spawning still requires hidden positions.
-`couch_couple`, `couch_lying`, `radio_operator`, `sky_watch` and `door_brace` have `weight = 0`: they remain
-available for manual spawning but are never selected automatically, avoiding furniture and context-dependent
-poses appearing at arbitrary locations.
+Each automatic scene has its own checkbox on the Spawn page (also in Classic settings), backed by
+`bgn_scenic_<id>`; it affects future automatic selection, not existing scenes or manual Tool placement.
+`sky_watch`, `door_brace`, `luggage` and `ration` have `weight = 0` and stay manual-only. Luggage/ration previews
+create one walking carrier; ordinary citizens get these items through their [actor config](../tutorials/Modification-of-Existing-NPCs.md).
 
 ## Scene debugger Tool
 
-Open **Q → Tools → Background NPCs → Scene debugger** (administrators only). The panel lists all 26 scene
-IDs, including the five manual-only scenes, plus a **GOAP: hold, breach, recover** test.
+Open **Q → Tools → Background NPCs → Scene debugger** (administrators only). The panel lists all 27 scene
+IDs, including four manual-only previews, plus a **GOAP: hold, breach, recover** test.
 
 | Control | Action |
 |---|---|
@@ -60,9 +61,9 @@ distance/visibility/lifetime cleanup, even after leaving their pose. R, Undo, ex
 1. The `bgn_scenic` task (`systems/scenic/sv_scenic_spawner.lua`) picks a scene by weight, with a back-off
    cooldown per scene that failed to find a place (20 s doubling up to 600 s).
 2. `sv_scenic_finders.lua` takes seeds by the `place` of the scene: navigation points of the spawn ring
-   (`floor`, `sky`, `wall`) or doors and chairs from an entity index cached for 30 s (`door`, `chair`).
+   (`floor`, `sky`, `wall`, `ledge`) or doors and chairs from an entity index cached for 30 s (`door`, `chair`).
 3. A finder checks the seed: flat floor, room for a hull, open sky above (`sky`), a flat wall (`wall`), a closed
-   door with a clear side (`door`, opening/closing doors are rejected), a free chair (`chair`).
+   door with a clear side (`door`, opening/closing doors are rejected), a free chair (`chair`), or a wide ledge with a knee-height drop (`ledge`).
 4. `Plan` checks the floor, the level and the room of every member. Scenes keep 400 units from each other and out
    of sight of players (`IsHiddenSpawnPosition`).
 
@@ -74,7 +75,7 @@ Door scenes (`door_knock`, `door_brace`, `entrance_block`) also end for each par
 starts opening or is removed. The server stops the animation and returns the actor to normal AI; the actor
 is kept alive and is no longer removed with the scene. `door_knock` aligns its sideways-authored animation
 with the door so the raised hand reaches the panel.
-A scene that nobody sees is removed after `ttl` seconds (default 600).
+An automatic scene that nobody sees is removed after `ttl` seconds (default 600).
 
 Offline door placement/lifecycle checks: `python tools/test_scenic.py` (requires lupa).
 
@@ -84,6 +85,23 @@ Add an entry to `bgNPC.cfg.scenic`; the fields are described at the top of `sh_s
 a sequence plays the next one of the list; a scene whose sequences no model has is skipped.
 Models, skins and bodygroups come from ordinary actor spawning, including actor config and model hooks.
 Scenes do not override models (`members.models` is ignored); participants without a supported sequence are
-skipped instead of being given a different model. Set `weight = 0` to keep a scene manual-only.
+skipped instead of being given a different model. An `atomic = true` scene (the couch pair) is cancelled
+as a whole if either participant lacks a usable pose. Set `weight = 0` to keep a scene manual-only.
 
 Not ported: scenes with custom sounds, rappel, APC, binoculars and characters of the original addon.
+
+## Placement and pose rules
+
+Both couches and the radio desk are automatic again, with `indoors = true`. Placement requires a solid
+ceiling within 384 units and walls in all four horizontal directions within 512 units, plus a dry flat floor.
+Sky ceilings, open courtyards and furniture whose rotated bounds intersect brush geometry are rejected.
+This conservative check can reject a real room with an open doorway/window; it also applies to the Tool.
+
+`plaza`, `ground_sit` and `tired` create one citizen with a supported pose selected from a list. `plaza` has
+standing poses only; `cowering` was removed. The raised-arm tired pose is `tired_wall`, facing its support.
+`ledge_sitting` needs a flat lip at least 32 units wide, 28 units of support behind it, clear standing room,
+and a 24–56 unit drop in front. Thin rails, ordinary stair steps and deep falls are rejected.
+
+Member `pos.z` and per-sequence `seq_offsets` are retained; spawning uses a separate safe standing position.
+Leaving the pose restores that standing position, so below-origin seated animations do not strand the actor
+in the floor or ledge. Couch seating uses one calibrated furniture model; normal actor model selection is retained.

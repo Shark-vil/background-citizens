@@ -96,11 +96,22 @@ end
 local function SegmentOp(ghost, with_look)
 	local seg = ghost.seg
 	return { id = ghost.id, from = seg.from, to = seg.to, t0 = seg.t0, speed = seg.speed, run = seg.run,
-		look = with_look and ghost.look or nil, fade = ghost.fade_at ~= nil or nil }
+		look = with_look and ghost.look or nil, carry = ghost.carry or false, fade = ghost.fade_at ~= nil or nil }
 end
 
 -- @param to Vector|nil nil stands still for duration seconds
 local function SetSegment(ghost, from, to, run, now, duration)
+	if run and ghost.carry then
+		if bgNPC.CarryItems.items[ghost.carry].pocket then ghost.stowed_carry = ghost.carry
+		else
+			local data = bgNPC.Config.GetActor(ghost.look.type)
+			bgNPC.CarryItems.Drop(ghost.carry, from + Vector(0, 0, 40), nil,
+				data and istable(data.carry_items) and data.carry_items.drop_lifetime or nil)
+		end
+		ghost.carry = nil
+	elseif not run and ghost.stowed_carry then
+		ghost.carry, ghost.stowed_carry = ghost.stowed_carry, nil
+	end
 	local speed = to and (run and GhostCrowd.RUN_SPEED or GhostCrowd.WALK_SPEED) or 0
 	ghost.seg = { from = from, to = to or from, t0 = now, speed = speed, run = run or nil }
 	ghost.seg_end = now + (to and from:Distance(to) / speed or duration)
@@ -129,7 +140,8 @@ end
 
 local function RememberLook(actor, npc)
 	local look = { type = actor:GetType(), model = npc:GetModel(), skin = npc:GetSkin(),
-		bodygroups = GhostCrowd.BodygroupsOf(npc) }
+		bodygroups = GhostCrowd.BodygroupsOf(npc), carry_support = {} }
+	for kind in pairs(bgNPC.CarryItems.items) do look.carry_support[kind] = bgNPC.CarryItems.Supports(npc, kind) end
 	local key = look.type .. look.model .. look.skin .. look.bodygroups
 	if looks_index[key] then return end
 
@@ -219,6 +231,11 @@ local function Handoff(ghost, pos)
 	npc:SetModel(look.model)
 	npc:SetSkin(look.skin)
 	npc:SetBodyGroups(look.bodygroups)
+	actor.carry_initialized = true -- the ghost's choice survives materialization without another chance roll
+	if ghost.carry or ghost.stowed_carry then
+		actor.weapon = nil
+		bgNPC.CarryItems.Attach(actor, ghost.carry or ghost.stowed_carry)
+	end
 	if ghost.seg.speed > 0 then npc:SetAngles(Angle(0, (ghost.seg.to - ghost.seg.from):Angle().y, 0)) end
 
 	ghosts[ghost.id] = nil
@@ -302,6 +319,7 @@ local function TrySpawn(p, players, r_in, r_out, now)
 		if ok then
 			next_id = next_id + 1
 			local ghost = { id = next_id, look = looks[math.random(#looks)] }
+			ghost.carry = bgNPC.CarryItems.Roll(nil, ghost.look.type, nil, ghost.look.carry_support)
 			ghosts[next_id] = ghost
 			ghost.seg = { from = pos, to = pos, t0 = now, speed = 0 }
 			ghost.seg_end = now -- picks a goal on the next think

@@ -13,6 +13,8 @@ local errors = {
 	chair = { default = 'Aim at a supported, unoccupied chair.', russian = 'Наведитесь на подходящий свободный стул.' },
 	wall = { default = 'Aim near the bottom of a wide, flat wall.', russian = 'Наведитесь на нижнюю часть широкой ровной стены.' },
 	floor = { default = 'No flat, dry floor with room for the scene.', russian = 'Нет ровного сухого пола с местом для сцены.' },
+	room = { default = 'This scene needs an enclosed room with solid walls and ceiling, not an outdoor area.', russian = 'Для этой сцены нужна комната со стенами и твёрдым потолком, а не улица.' },
+	room_space = { default = 'The room has insufficient space for every participant and the furniture.', russian = 'В комнате недостаточно места для всех участников и мебели.' },
 	sky = { default = 'This scene needs an unobstructed sky above it.', russian = 'Для сцены нужно открытое небо над местом спавна.' },
 	spawn = { default = 'The scene is blocked, outside an allowed area, or actor spawning was rejected.', russian = 'Место занято, спавн запрещён в этой зоне или создание актора отклонено.' },
 	door_test = { default = 'Aim at a closed, unlocked rotating door not held by another actor.', russian = 'Нужна закрытая незапертая распашная дверь, не занятая другим актором.' },
@@ -73,8 +75,10 @@ function Debug.Spawn(ply, id, tr)
 		if seed then spot = spots.Find(scene.place, seed, scene) end
 		if spot and scene.place ~= 'wall' then spot.ang = Angle(0, ply:EyeAngles().y + 180, 0) end
 	end
-	if not spot then return nil, scene.place end
-	local item = Scenic.Create(id, scene, spot, nil, ply)
+	if not spot then return nil, scene.indoors and 'room' or scene.place end
+	local plan = Scenic.Plan(scene, spot)
+	if not plan then return nil, scene.indoors and 'room_space' or 'spawn' end
+	local item = Scenic.Create(id, scene, spot, plan, ply)
 	if not item then return nil, 'spawn' end
 	item.debug_chair, item.debug_seat = spot.chair, spot.seat
 	return Register(ply, item)
@@ -123,6 +127,7 @@ function Debug.DoorTest(ply, tr)
 		local actor = bgNPC:SpawnActor(kind, pos + Vector(0, 0, 4), false, false)
 		if not actor then Debug.Remove(ply, item) return nil, 'spawn' end
 		actor.data.start_random_state, actor.data.start_state, actor.data.at_random = false, nil, nil
+		actor.skip_auto_carry = true
 		actor.mechanics.ignore_limit, actor.mechanics.use_vehicle, actor.mechanics.call_for_help = true, false, false
 		actor.data.regeneration = false
 		item.actors[#item.actors + 1] = actor

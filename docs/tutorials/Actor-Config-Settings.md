@@ -395,6 +395,7 @@ Configs resolve through `bgNPC.Config.GetActor`, are cached and copied into each
 | Field | Value | Purpose |
 |---|---|---|
 | `brain` | `fsm / goap` | Brain under bgn_brain=auto; a forced cvar takes precedence. |
+| `carry_items` | `false / table` | `{ chance = 5, items = { 'ration', 'suitcase' }, drop_lifetime = 30 }`: rare items on unarmed actors; enables a per-type checkbox. See [carry rules](Modification-of-Existing-NPCs.md#carried-items). |
 | `goap_set` | `police / gangster / citizen` | GOAP goal set; otherwise derived from teams. |
 | `gang` | `string` | Gang identity for alliance, roster and pack walking. |
 | `heavy_chance` | `35` | Heavy member percentage for built-in gangs. |

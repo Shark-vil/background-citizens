@@ -111,6 +111,7 @@ end
 function Actor:GetActiveWeapon()
 	if not self.body or not self:IsAlive() then
 		local weapon = IsValid(self.npc) and self.npc.GetActiveWeapon and self.npc:GetActiveWeapon()
+		if IsValid(weapon) and (weapon:GetClass() == 'weapon_citizenpackage' or weapon:GetClass() == 'weapon_citizensuitcase') then return NULL end
 		return IsValid(weapon) and weapon or NULL
 	end
 	return self.body:GetActiveWeapon()

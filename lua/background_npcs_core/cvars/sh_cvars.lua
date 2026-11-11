@@ -271,6 +271,16 @@ bgNPC.CVars.Register('bgn_scenic', bgNPC.cvar.bgn_scenic, 'Staged scenes (people
 bgNPC.CVars.Register('bgn_scenic_max', bgNPC.cvar.bgn_scenic_max, 'The most scenic scenes on the map at once.')
 bgNPC.CVars.Register('bgn_scenic_period', bgNPC.cvar.bgn_scenic_period, 'Seconds between two tries to put a new scenic scene on the map.')
 
+for id, scene in pairs(bgNPC.cfg.scenic) do
+	if (scene.weight or 10) > 0 then bgNPC.CVars.Register('bgn_scenic_' .. id, 1, 'Allow automatic spawning of scenic scene: ' .. id) end
+end
+
+for actor_type in pairs(bgNPC.cfg.actors) do
+	if istable(bgNPC.Config.GetActor(actor_type).carry_items) then
+		bgNPC.CVars.Register('bgn_carry_items_' .. actor_type, 1, 'Allow carried items on newly spawned actors: ' .. actor_type)
+	end
+end
+
 for npcType, v in pairs(bgNPC.cfg.actors) do
 	local enabled = 0
 	if v.enabled then enabled = 1 end
