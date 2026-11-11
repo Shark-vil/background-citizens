@@ -39,6 +39,10 @@ all scenic actors keep ordinary spawn/model-hook selection rather than overridin
 GOAP actors in a hopeless fight can close and hold an open rotating door; police can kick it open, throwing
 the holder into a temporary ragdoll without extra damage. Recovery preserves the original actor/entity and
 health, requires free standing space, and restores its previous fight/flee behavior. See [brains](systems/brains.md).
+The admin Scene debugger Tool adds visible manual placement, model/state/animation inspection, owned cleanup/Undo
+and a one-cycle GOAP door check. The console scene spawner shares its placement/Undo path. Chair reservations
+are released when scenic bodies are removed; previous seating states finish before scene placement.
+See [scenic debugging](systems/scenic.md#scene-debugger-tool).
 
 ## Reproduce the comparison
 

@@ -85,6 +85,11 @@ the action. Temporary `knocked_down` keeps the original entity and body adapter,
 a server ragdoll for physics and forwarded damage. The actor update loop runs only recovery while down;
 standing requires a free hull. Client synchronization/render optimization preserves the server's hidden-body flag.
 
+`debug/sv_scenic.lua` owns admin scene placement, test ownership/Undo and the one-cycle GOAP door test.
+`lua/weapons/gmod_tool/stools/bgn_scenic_debug.lua` supplies the selector and live inspection HUD through the
+existing server-to-client Tool RPC. Manual placement validates the admin owner in both creation and delayed
+setup; only that path bypasses hidden-position checks. Normal spawner model hooks still decide all actor models.
+
 ## Configuration and stored data
 
 Cvar defaults are defined in `cvars/sh_cvars.lua`, `sv_cvars.lua`, `cl_cvars.lua`; registration and permissions are in `core/sh_cvars.lua`. Server settings are admin-controlled; client voice/UI options stay local. Actor definitions resolve `inherit` and `@type` references, cache the result and copy it on creation. After editing definitions, clear the config cache; existing actors retain their copy.

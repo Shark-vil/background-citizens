@@ -19,14 +19,17 @@ if SERVER then
 		stop = function(actor, state, data)
 			local npc = actor:GetNPC()
 			local back = data.back
-			if not IsValid(npc) or not back then return end
+			if not back then return end
 
 			-- off the chair or the seat, the way the sit_to_chair states do it
-			npc:SetParent(nil)
-			npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
-			npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
-			npc:SetCollisionGroup(back.old_collision)
-			npc:PhysWake()
+			if IsValid(npc) then
+				npc:RemoveCallOnRemove('BGN_ScenicSeat')
+				npc:SetParent(nil)
+				npc:SetAngles(Angle(0, npc:GetAngles().y, 0))
+				npc:SetPos(npc:GetPos() + npc:GetForward() * 15)
+				npc:SetCollisionGroup(back.old_collision)
+				npc:PhysWake()
+			end
 
 			if IsValid(back.chair) then
 				back.chair.occupied = false

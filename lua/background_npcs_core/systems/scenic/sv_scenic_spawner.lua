@@ -127,6 +127,9 @@ end
 local function Sit(actor, spot)
 	local npc = actor:GetNPC()
 	local back = { old_collision = npc:GetCollisionGroup() }
+	npc:CallOnRemove('BGN_ScenicSeat', function()
+		bgNPC.States.Call('scenic_npc', 'stop', actor, 'scenic_npc', { back = back })
+	end)
 
 	if spot.seat then
 		spot.seat:SetSitting(npc)
@@ -177,9 +180,14 @@ end
 -- ---------------------------------------------------------------------------
 
 function Scenic.Remove(item)
+	if item.removed then return end
+	item.removed = true
 	for _, actor in ipairs(item.actors) do
 		-- only those still on the stage: the ones that left are usual residents now and the remover's business
-		if actor:HasState('scenic_npc') or not item.started then actor:Remove() end
+		if actor:HasState('scenic_npc') then
+			if actor:IsAlive() then actor:SetState('none', nil, true) end
+			actor:Remove()
+		elseif not item.started then actor:Remove() end
 	end
 	for _, prop in ipairs(item.props) do
 		if IsValid(prop) then prop:Remove() end
@@ -188,9 +196,11 @@ function Scenic.Remove(item)
 end
 
 local function Start(item, plan, spot)
+	if item.removed then return end
+	if item.debug_owner and (not IsValid(item.debug_owner) or not item.debug_owner:IsAdmin()) then Scenic.Remove(item) return end
 	-- The delayed setup moves actors to their final scene positions: validate again now.
 	for _, member in ipairs(plan.members) do
-		if not bgNPC:IsHiddenSpawnPosition(member.pos) then Scenic.Remove(item) return end
+		if not item.debug_owner and not bgNPC:IsHiddenSpawnPosition(member.pos) then Scenic.Remove(item) return end
 	end
 	item.started = true
 	if not item.actors[1] then return end
@@ -201,19 +211,27 @@ local function Start(item, plan, spot)
 		local member = plan.members[i]
 		if actor:IsAlive() and IsValid(npc) then
 			local seq = PickSequence(actor, member.def.seq)
+			-- A brain may start sitting during the setup delay; release its old seat before placing the scene.
+			actor:SetState('none', nil, true)
 			local back
-			if member.def.seat then
+			if seq and member.def.seat then
 				back = Sit(actor, spot)
 			else
 				npc:SetPos(member.pos)
 				npc:SetAngles(member.ang)
 			end
 
+			local state
 			if seq and (back or not member.def.seat) then
 				if member.def.weapon then actor:PrepareWeapon(member.def.weapon, true) end
-				actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door }, true)
+				state = actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door }, true)
+			end
+			if state then
 				playing = playing + 1
 			else
+				item.failures[#item.failures + 1] = { type = member.def.type, model = npc:GetModel(),
+					sequences = member.def.seq, reason = not seq and 'sequence' or 'setup' }
+				if back then bgNPC.States.Call('scenic_npc', 'stop', actor, 'scenic_npc', { back = back }) end
 				actor:Remove() -- no sequence for this model, or the chair is gone
 			end
 		end
@@ -224,11 +242,12 @@ end
 
 -- Spawns the scene at the spot.
 -- @return table|nil the scene
-function Scenic.Create(id, scene, spot, plan)
+function Scenic.Create(id, scene, spot, plan, debug_owner)
+	if debug_owner ~= nil and (not IsValid(debug_owner) or not debug_owner:IsPlayer() or not debug_owner:IsAdmin()) then return end
 	plan = plan or Plan(scene, spot)
 	if not plan then return end
 
-	local item = { id = id, scene = scene, pos = spot.pos, actors = {}, props = {}, born = CurTime() }
+	local item = { id = id, scene = scene, pos = spot.pos, actors = {}, props = {}, failures = {}, born = CurTime(), debug_owner = debug_owner }
 
 	for _, member in ipairs(plan.members) do
 		-- a hull exactly on the floor counts as stuck: the spawner gets a little height; a member that stands closer
@@ -237,7 +256,7 @@ function Scenic.Create(id, scene, spot, plan)
 		for _, other in ipairs(item.actors) do
 			if other:GetNPC():GetPos():Distance(member.pos) < 40 then lift = lift + Vector(0, 0, 90) end
 		end
-		local actor = bgNPC:SpawnActor(member.def.type, member.pos + lift, false, true)
+		local actor = bgNPC:SpawnActor(member.def.type, member.pos + lift, false, not debug_owner)
 		if not actor then
 			for _, spawned in ipairs(item.actors) do spawned:Remove() end
 			return
@@ -415,20 +434,8 @@ bgNPC.Commands.Register('bgn_scenic_spawn', {
 	end,
 	server = function(ply, _, args)
 		local id = args[1]
-		local scene = id and bgNPC.cfg.scenic[id]
-		if not IsValid(ply) or not scene then return MsgN('[Background NPCs] Unknown scene: ' .. tostring(id)) end
-
-		local tr = ply:GetEyeTrace()
-		if scene.place == 'door' then
-			local spot = Spots.Find('door', tr.Entity, scene)
-			if not spot or not Scenic.Create(id, scene, spot) then
-				MsgN('[Background NPCs] The scene does not fit here: ' .. id)
-			end
-			return
-		end
-		local pos = Spots.Floor(tr.HitPos + tr.HitNormal * 4) or tr.HitPos
-		local spot = { pos = pos, ang = Angle(0, ply:EyeAngles().y + 180, 0) }
-		if scene.place == 'wall' then spot.ang = tr.HitNormal:Angle() end
-		if not Scenic.Create(id, scene, spot) then MsgN('[Background NPCs] The scene does not fit here: ' .. id) end
+		if not IsValid(ply) then return end
+		local item, reason = Scenic.Debug.Spawn(ply, id, ply:GetEyeTrace())
+		if not item then bgNPC.Util.Notify(ply, Scenic.Debug.Message(ply, reason), 'error', 6) end
 	end,
 })
