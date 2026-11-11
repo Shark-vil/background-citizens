@@ -28,9 +28,9 @@ lua.execute('''
     function ang:Right() local y=math.rad(self.y); return Vector(math.sin(y),-math.cos(y)) end
     vector_origin=Vector()
     bgNPC={Actor={Helpers={}},States={},cfg={},Assert={Arg=function() end,NonEmptyString=function() end},
-        Tasks={Add=function() end},Commands={Register=function(n,v) commands[n]=v end},
+        Tasks={Add=function(n,f) tasks[n]=f end},Commands={Register=function(n,v) commands[n]=v end},
         Util={Log=function() end}}
-    commands={}; pending={}; hooks={}; undos={}
+    commands={}; pending={}; hooks={}; undos={}; tasks={}
     timer={Simple=function(_,f) pending[#pending+1]=f end}
     hook={Run=function() end,Add=function(n,id,f) hooks[n]=hooks[n] or {}; hooks[n][id]=f end}
     undo={Create=function() end,SetPlayer=function() end,AddFunction=function(f) undos[#undos+1]=f end,Finish=function() end}
@@ -61,6 +61,7 @@ lua.execute('''
         function d:GetClass() return self.class end
         function d:EntIndex() return 1 end
         function d:GetInternalVariable(key)
+            if key=='m_bLocked' then return self.locked or false end
             if key==(self.class=='prop_door_rotating' and 'm_eDoorState' or 'm_toggle_state') then return self.state end
         end
         function d:OBBMins() return thin_y and Vector(-24,-6,0) or Vector(-6,-1,0) end
@@ -130,6 +131,12 @@ lua.execute('''
     end
     local d=Door('prop_door_rotating',0,false)
     local spot=assert(spots.Find('door',d,scene))
+    for _,locked in ipairs({false,true}) do
+        d.locked=locked
+        assert(bgNPC.Util.IsDoorLocked(d)==locked)
+        assert(spots.Find('door',d,scene), 'knocking must support both unlocked and locked closed doors')
+    end
+    d.locked=false
     local a=bgNPC:SpawnActor('police',spot.pos)
     a:SetState('scenic_npc',{seq='adoorknock',door=d},true)
     d.valid=false
@@ -191,6 +198,15 @@ lua.execute('''
     assert(not D.DoorTest(admin,trace) and spawns==count, 'door tests also enforce admin rights')
     admin.admin=true
     assert(not D.Spawn(admin,'unknown',trace) and spawns==count, 'scene IDs are validated before spawning')
+    local _,reason=D.Spawn(admin,'door_knock',{Hit=true})
+    assert(reason=='door_target', 'aiming at the floor must say to aim directly at the door')
+    trace.Entity.state=1
+    _,reason=D.Spawn(admin,'door_knock',trace)
+    assert(reason=='door_closed', 'moving doors have a separate diagnostic')
+    trace.Entity.state=0; blocked=true
+    _,reason=D.Spawn(admin,'door_knock',trace)
+    assert(reason=='door', 'closed doors without free floor space have a separate diagnostic')
+    blocked=false
     bgNPC.IsHiddenSpawnPosition=function() return false end
     local spot=assert(bgNPC.Scenic.Spots.Find('door',trace.Entity,bgNPC.cfg.scenic.door_knock))
     item=assert(bgNPC.Scenic.Create('door_knock',bgNPC.cfg.scenic.door_knock,spot))
@@ -235,6 +251,17 @@ lua.execute('''
     assert(TOOL:RightClick({Entity=TOOL.LastItem.actors[1]:GetNPC()}))
     assert(TOOL.SelectedActor==TOOL.LastItem.actors[1], 'right click selects the actual actor')
     assert(TOOL:Reload() and TOOL.LastItem.debug_removed, 'reload removes only the last owned test')
+    bgNPC.Scenic.Clear()
+    item=assert(D.Spawn(admin,'door_knock',trace)); table.remove(pending,1)()
+    local actor=item.actors[1]
+    assert(actor.scenic_debug_item==item, 'test ownership supplies the remover exclusion')
+    local runner=coroutine.create(tasks.bgn_scenic)
+    assert(coroutine.resume(runner,coroutine.yield,coroutine.yield))
+    now=10000
+    assert(coroutine.resume(runner), 'owned tests must bypass distance, visibility and TTL cleanup')
+    assert(not item.removed and actor:IsAlive() and item.actors[1]==actor)
+    actor:SetState('none',nil,true)
+    assert(D.Remove(admin,item) and not actor:IsAlive(), 'explicit cleanup still removes protected actors after leaving the scene')
     local chair={valid=true,occupied=true}
     bgNPC.States.Call('scenic_npc','stop',{GetNPC=function() return {valid=false} end},'scenic_npc',{back={chair=chair}})
     assert(not chair.occupied, 'removed scenic bodies must still release chair occupancy')

@@ -388,6 +388,13 @@ recycle.execute('''
     now=159; assert(not can_recycle(actor,viewers))
     now=160; assert(can_recycle(actor,viewers), 'looking through a wall does not count as seeing')
     local function pass() run_recycle(function() end,function() end,{actor},1) end
+    actor.scenic_debug_item={}
+    pass(); assert(removed==0, 'owned scenic tests are never removed or recycled')
+    setcv('bgn_enable',0); pass(); assert(removed==0, 'test exclusion also applies when the population is disabled')
+    local humans=player.GetHumans; player.GetHumans=function() return {} end
+    pass(); assert(removed==0, 'no-player cleanup cannot remove an owned test')
+    player.GetHumans=humans; setcv('bgn_enable',1)
+    actor.scenic_debug_item=nil
     actor.eternal=true; pass(); assert(removed==0)
     actor.eternal=false; in_vehicle=true; pass(); assert(removed==0, 'vehicle occupants have independent lifecycle')
     timers.BGN_Actors_LastSeen(); assert(actor.__last_player_interaction==now)

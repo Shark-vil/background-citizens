@@ -7,7 +7,9 @@ local errors = {
 	admin = { default = 'This tool requires administrator rights.', russian = 'Инструмент доступен только администратору.' },
 	scene = { default = 'Unknown scene.', russian = 'Неизвестная сцена.' },
 	surface = { default = 'Aim at a surface, not the sky.', russian = 'Наведитесь на поверхность, а не на небо.' },
-	door = { default = 'Aim at a fully closed door with room beside it.', russian = 'Нужна полностью закрытая дверь со свободным местом рядом.' },
+	door_target = { default = 'Aim directly at the door panel, not the floor or wall beside it.', russian = 'Наведитесь прямо на полотно двери, а не на пол или стену рядом.' },
+	door_closed = { default = 'The selected door is open or moving. Close it; knocking does not require a lock.', russian = 'Выбранная дверь открыта или движется. Закройте её; запирать для стука не нужно.' },
+	door = { default = 'No free floor space beside the selected door.', russian = 'Рядом с выбранной дверью нет свободного места на полу.' },
 	chair = { default = 'Aim at a supported, unoccupied chair.', russian = 'Наведитесь на подходящий свободный стул.' },
 	wall = { default = 'Aim near the bottom of a wide, flat wall.', russian = 'Наведитесь на нижнюю часть широкой ровной стены.' },
 	floor = { default = 'No flat, dry floor with room for the scene.', russian = 'Нет ровного сухого пола с местом для сцены.' },
@@ -59,7 +61,12 @@ function Debug.Spawn(ply, id, tr)
 	if not scene then return nil, 'scene' end
 	if not tr.Hit or tr.HitSky then return nil, 'surface' end
 	local spots, spot = Scenic.Spots
-	if scene.place == 'door' or scene.place == 'chair' then
+	if scene.place == 'door' then
+		local door = tr.Entity
+		if not bgNPC.Util.IsDoor(door) then return nil, 'door_target' end
+		if not bgNPC.Doors.IsClosed(door) then return nil, 'door_closed' end
+		spot = spots.Find('door', door, scene)
+	elseif scene.place == 'chair' then
 		spot = spots.Find(scene.place, tr.Entity, scene)
 	else
 		local seed = spots.Floor(tr.HitPos + tr.HitNormal * (scene.place == 'wall' and 32 or 4))
@@ -100,7 +107,8 @@ end
 function Debug.DoorTest(ply, tr)
 	if not Debug.Allowed(ply) then return nil, 'admin' end
 	local door, spots = tr.Entity, Scenic.Spots
-	if not bgNPC.Util.IsDoor(door) or bgNPC.Doors.held[door] or bgNPC.Util.IsDoorLocked(door) then return nil, 'door_test' end
+	if not bgNPC.Util.IsDoor(door) then return nil, 'door_target' end
+	if bgNPC.Doors.held[door] or bgNPC.Util.IsDoorLocked(door) then return nil, 'door_test' end
 	if door:GetClass() ~= 'prop_door_rotating' and door:GetClass() ~= 'func_door_rotating' then return nil, 'door_test' end
 	local spot = spots.Find('door', door, { gap = 100 })
 	if not spot then return nil, 'door_test' end

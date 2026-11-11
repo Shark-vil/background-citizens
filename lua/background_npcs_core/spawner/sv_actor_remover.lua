@@ -74,7 +74,7 @@ timer.Create('BGN_Actors_LastSeen', 0.5, 0, function()
 	if not GetConVar('bgn_enable'):GetBool() then return end
 	local players = player.GetHumans()
 	for _, actor in ipairs(bgNPC.Actors.GetAll()) do
-		if actor:IsAlive() then
+		if actor:IsAlive() and not actor.scenic_debug_item then
 			if actor:InVehicle() then actor.__last_player_interaction = CurTime()
 			else UpdateLastSeen(actor, players) end
 		end
@@ -105,7 +105,7 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
 
 		local actor = actors[i]
 
-		if not actor or not actor:IsAlive() or actor.eternal or actor.debugger or actor.data.hidden or actor:InVehicle() then
+		if not actor or not actor:IsAlive() or actor.scenic_debug_item or actor.eternal or actor.debugger or actor.data.hidden or actor:InVehicle() then
 			continue
 		end
 

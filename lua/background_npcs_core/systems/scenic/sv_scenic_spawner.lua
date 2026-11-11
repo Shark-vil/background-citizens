@@ -380,6 +380,7 @@ local function IsFarFromPlayers(pos)
 end
 
 local function Check(item)
+	if item.debug_owner then return end -- Owned tests live until manual cleanup or the owner disconnects.
 	local staying = 0
 	for i = #item.actors, 1, -1 do
 		local actor = item.actors[i]

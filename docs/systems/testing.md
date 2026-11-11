@@ -4,6 +4,8 @@ For interactive scenic and GOAP door checks, use the admin [Scene debugger Tool]
 `tools/scenic_tool.lua` exercises the real server Tool, native Undo, chair cleanup, model diagnostics and the
 one-cycle door test on both NPC and NextBot bodies through a temporary single-player bridge. Use an isolated
 `gm_bigcity_improved` lab with a NavMesh. Report: `data/bgn_scenic_tool_lab/tool.json`.
+Keep actor-remover and scenic maintenance tasks running: the cleanup cases verify that owned tests survive
+while an ordinary control actor is removed with `bgn_enable 0`; the fixture restores that setting afterwards.
 
 `tools/door_hold.lua` is an opt-in fixture for an isolated single-player `gm_bigcity_improved` session through
 a temporary Lua bridge, not an addon autorun. It tests actual GOAP holding/breaching with all four NPC/NextBot

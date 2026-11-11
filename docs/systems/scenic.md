@@ -14,6 +14,8 @@ The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC bo
 Menu: **Spawn** page, section "Scenic scenes", and the *Scenic scenes* step of the wizard (New mode on, Classic off).
 Console: `bgn_scenic_clear` removes every scene, `bgn_scenic_spawn <id>` (admin) makes one near you.
 For door scenes, aim at a fully closed door; the command uses the same placement finder as automatic spawning.
+Knocking does not require a lock: both unlocked and locked doors work. The scene never locks the door;
+as soon as it starts opening, the actor leaves the pose and resumes normal behavior.
 Manual placement by an administrator allows spawning in sight and nearby, while keeping floor, room, scene
 placement and actor-model checks. Automatic spawning still requires hidden positions.
 `couch_couple`, `couch_lying`, `radio_operator`, `sky_watch` and `door_brace` have `weight = 0`: they remain
@@ -36,6 +38,8 @@ IDs, including the five manual-only scenes, plus a **GOAP: hold, breach, recover
 For walls, aim near the floor so the finder can find the ground; sky scenes need open sky. A rejected placement
 shows its reason. If a normally selected actor model lacks the animation, the HUD reports its model and requested
 sequences; the model is never replaced. Removing a chair test frees the chair for immediate retesting.
+For a door scene, aim directly at the door panel. Wrong targets, open/moving doors, and insufficient floor
+space have separate error messages; pointing at the floor beside a door does not select it.
 
 The door test starts at a **closed, unlocked rotating door** with free space on both sides. It spawns a citizen
 and an officer using normal model selection and the current server body setting, gives only this pair GOAP,
@@ -48,6 +52,8 @@ To compare bodies, change `bgn_actor_body npc` / `bgn_actor_body nextbot` in the
 create a new test; NextBots require a NavMesh. The Tool does not change global body/brain settings. AI around
 the test remains active, so use a quiet test area. Placement and diagnostics are server-authoritative;
 the client only selects a scene and displays the report. Tests are owned by their creator and removed on disconnect.
+Actors from this Tool or `bgn_scenic_spawn` are excluded from automatic removal/recycling and scenic
+distance/visibility/lifetime cleanup, even after leaving their pose. R, Undo, explicit cleanup and death still work.
 
 ## How a scene is placed
 

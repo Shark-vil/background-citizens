@@ -43,6 +43,8 @@ The admin Scene debugger Tool adds visible manual placement, model/state/animati
 and a one-cycle GOAP door check. The console scene spawner shares its placement/Undo path. Chair reservations
 are released when scenic bodies are removed; previous seating states finish before scene placement.
 See [scenic debugging](systems/scenic.md#scene-debugger-tool).
+Scene debugger errors distinguish a missed door from an open/moving door or blocked floor space. Owned test
+actors are excluded from automatic population recycling/removal and scenic lifetime/distance cleanup.
 
 ## Reproduce the comparison
 

@@ -4,10 +4,11 @@ assert(game.GetMap() == 'gm_bigcity_improved', 'fixture coordinates require gm_b
 local ply = player.GetHumans()[1]
 local tool = assert(ply:GetTool('bgn_scenic_debug'), 'scene Tool must be available')
 local old_info, old_body = tool.GetClientInfo, GetConVar('bgn_actor_body'):GetString()
+local old_enable = GetConVar('bgn_enable'):GetString()
 local old_pos, old_ang, old_move = ply:GetPos(), ply:EyeAngles(), ply:GetMoveType()
 local report = { cases = {}, errors = {}, started = CurTime() }
 BGNScenicToolTest = report
-local choice, item, prop, model_mode
+local choice, item, prop, model_mode, control
 local base = Vector(-800, 1000, -11140)
 local ground = util.TraceLine({ start = base + Vector(0, 0, 100), endpos = base - Vector(0, 0, 100), mask = MASK_SOLID_BRUSHONLY })
 assert(ground.Hit, 'lab floor')
@@ -28,6 +29,8 @@ local function Write()
 end
 local function Clear()
 	if item then bgNPC.Scenic.Debug.Remove(ply, item) end
+	if control then control:Remove() control = nil end
+	GetConVar('bgn_enable'):SetString(old_enable)
 	if IsValid(prop) then prop:Remove() end
 	item, prop = nil, nil
 end
@@ -52,7 +55,7 @@ end
 
 local jobs = {}
 for _, body in ipairs({ 'npc', 'nextbot' }) do
-	for _, test in ipairs({ 'knock', 'pending_undo', 'chair', 'chair_body_removed', 'missing_model', 'goap' }) do jobs[#jobs + 1] = { body = body, test = test } end
+	for _, test in ipairs({ 'knock', 'pending_undo', 'chair', 'chair_body_removed', 'missing_model', 'goap', 'cleanup' }) do jobs[#jobs + 1] = { body = body, test = test } end
 end
 local index = 0
 local Next
@@ -83,6 +86,13 @@ Next = function()
 	ply:SetPos(base + Vector(140, 180, 15))
 	ply:SetEyeAngles((prop:WorldSpaceCenter() - ply:EyePos()):Angle())
 	local tr = { Hit = true, Entity = prop, HitPos = prop:WorldSpaceCenter(), HitNormal = prop:GetForward() }
+	if job.test == 'knock' then
+		local floor_trace = { Hit = true, Entity = game.GetWorld(), HitPos = base, HitNormal = Vector(0, 0, 1) }
+		local failed, reason = bgNPC.Scenic.Debug.Spawn(ply, 'door_knock', floor_trace)
+		assert(not failed and reason == 'door_target', 'aiming at the floor reports a wrong target, not a closed-door/space error')
+		tool.NextSpawn = 0
+		assert(not tool:LeftClick(floor_trace), 'Tool placement still requires clicking the actual door')
+	end
 	tool.NextSpawn = 0
 	assert(tool:LeftClick(tr), job.body .. '/' .. job.test .. ': Tool placement')
 	item = tool.LastItem
@@ -129,6 +139,20 @@ Next = function()
 			return
 		end
 		assert(actor:HasState('scenic_npc'), 'scene starts while the player watches')
+		if job.test == 'cleanup' then
+			control = assert(bgNPC:SpawnActor('citizen', base + Vector(300, -300, 4), false, false))
+			actor:SetState('idle', nil, true)
+			item.born = CurTime() - 1000
+			ply:SetPos(base + Vector(8000, 8000, 15))
+			GetConVar('bgn_enable'):SetString('0')
+			timer.Simple(6, function() Protect(function()
+				assert(not control:IsAlive(), 'ordinary actors are still removed while the population is disabled')
+				assert(actor:IsAlive() and not item.removed and item.actors[1] == actor, 'owned actor survives population and scenic cleanup after leaving its pose')
+				assert(tool:Reload() and not actor:IsAlive(), 'manual removal still removes a protected test')
+				Passed(job)
+			end) end)
+			return
+		end
 		tool:RightClick({ Entity = npc })
 		assert(tool.SelectedActor == actor, 'right-click selects the actual actor')
 		if chair then
