@@ -150,7 +150,8 @@ bgNPC.cfg.scenic = {
 	},
 	door_knock = {
 		place = 'door', weight = 7, gap = 36,
-		members = { { type = 'police', seq = 'adoorknock' } },
+		-- adoorknock reaches along the model's left axis, not its forward axis.
+		members = { { type = 'police', seq = 'adoorknock', yaw = -90 } },
 	},
 	door_brace = {
 		place = 'door', weight = 6, gap = 34,

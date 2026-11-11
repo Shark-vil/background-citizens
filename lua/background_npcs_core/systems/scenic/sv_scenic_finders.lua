@@ -178,7 +178,10 @@ end
 
 -- The thin axis of the door model is its normal; the actor stands on the side with a floor and a clear view of the door.
 function Finders.door(door, scene)
-	if not IsValid(door) or bgNPC.Util.IsDoorOpen(door) then return end
+	if not bgNPC.Util.IsDoor(door) then return end
+	local state = door:GetInternalVariable('m_eDoorState') or door:GetInternalVariable('m_toggle_state')
+	local closed = door:GetClass() == 'prop_door_rotating' and 0 or 1
+	if state ~= closed then return end
 
 	local size = door:OBBMaxs() - door:OBBMins()
 	local normal = size.x < size.y and door:GetForward() or door:GetRight()

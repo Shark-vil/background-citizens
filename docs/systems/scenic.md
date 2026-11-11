@@ -12,6 +12,7 @@ The actors are ordinary actors (`bgNPC:SpawnActor`), so they work with an NPC bo
 
 Menu: **Spawn** page, section "Scenic scenes", and the *Scenic scenes* step of the wizard (New mode on, Classic off).
 Console: `bgn_scenic_clear` removes every scene, `bgn_scenic_spawn <id>` (admin) makes one near you.
+For door scenes, aim at a fully closed door; the command uses the same placement finder as automatic spawning.
 
 ## How a scene is placed
 
@@ -20,7 +21,7 @@ Console: `bgn_scenic_clear` removes every scene, `bgn_scenic_spawn <id>` (admin)
 2. `sv_scenic_finders.lua` takes seeds by the `place` of the scene: navigation points of the spawn ring
    (`floor`, `sky`, `wall`) or doors and chairs from an entity index cached for 30 s (`door`, `chair`).
 3. A finder checks the seed: flat floor, room for a hull, open sky above (`sky`), a flat wall (`wall`), a closed
-   door with a clear side (`door`), a free chair (`chair`).
+   door with a clear side (`door`, opening/closing doors are rejected), a free chair (`chair`).
 4. `Plan` checks the floor, the level and the room of every member. Scenes keep 400 units from each other and out
    of sight of players (`IsHiddenSpawnPosition`).
 
@@ -28,7 +29,13 @@ Console: `bgn_scenic_clear` removes every scene, `bgn_scenic_spawn <id>` (admin)
 
 Members play a looped sequence in the `scenic_npc` state (calm group). Calm states do not pull them out; a
 reaction to danger (shot, hit, wanted) does, then they are normal actors again. Conversations skip them.
+Door scenes (`door_knock`, `door_brace`, `entrance_block`) also end for each participant when the linked door
+starts opening or is removed. The server stops the animation and returns the actor to normal AI; the actor
+is kept alive and is no longer removed with the scene. `door_knock` aligns its sideways-authored animation
+with the door so the raised hand reaches the panel.
 A scene that nobody sees is removed after `ttl` seconds (default 600).
+
+Offline door placement/lifecycle checks: `python tools/test_scenic.py` (requires lupa).
 
 ## Adding a scene
 

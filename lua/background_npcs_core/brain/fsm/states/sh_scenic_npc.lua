@@ -8,6 +8,11 @@ if SERVER then
 		start = function(actor, state, data)
 			actor:PlayStaticSequence(data.seq, true)
 		end,
+		update = function(actor, state, data)
+			if data.door and (not IsValid(data.door) or bgNPC.Util.IsDoorOpen(data.door)) then
+				actor:SetState('none', nil, true)
+			end
+		end,
 		not_stop = function(actor, state, data, new_state)
 			return new_state == 'none' or bgNPC.States.GetGroup(new_state) == 'calm'
 		end,

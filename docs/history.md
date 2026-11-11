@@ -31,6 +31,10 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 | Wanted | As in 1.x, the timer stays full while residents see the target, an actor too (not only while it fights); a target in a car is seen through its car body. A wanted NPC gains a level every `bgn_wanted_level_up_period` seconds. A wanted NPC is dropped after 15 s outside every player's field of view or farther than half of `bgn_spawn_radius_visibility` (obstacles ignored); the vehicle spawn exclusion moved to `bgn_vehicle_spawn_visibility_radius`. [Wanted](systems/wanted.md), [menu](systems/menu.md). |
 | Lifecycle cleanup | Actor bodies without a live registered actor are removed after 3 s regardless of health (frozen bodies killed while dormant), also with `bgn_enable 0`. [Brains](systems/brains.md#gangs). |
 
+Working-tree fix after this baseline (version string 2.4.0, publication not verified): door scenes use fully
+closed doors, knocking faces the panel, and opening/removing the linked door returns participants to normal AI.
+The admin spawn command also uses the door finder. See [scenic scenes](systems/scenic.md).
+
 ## Reproduce the comparison
 
 ```text

@@ -211,7 +211,7 @@ local function Start(item, plan, spot)
 
 			if seq and (back or not member.def.seat) then
 				if member.def.weapon then actor:PrepareWeapon(member.def.weapon, true) end
-				actor:SetState('scenic_npc', { seq = seq, scene = item, back = back }, true)
+				actor:SetState('scenic_npc', { seq = seq, scene = item, back = back, door = spot.door }, true)
 				playing = playing + 1
 			else
 				actor:Remove() -- no sequence for this model, or the chair is gone
@@ -409,7 +409,7 @@ bgNPC.Commands.Register('bgn_scenic_clear', { admin = true, server = Scenic.Clea
 
 bgNPC.Commands.Register('bgn_scenic_spawn', {
 	admin = true,
-	help = 'bgn_scenic_spawn <scene id>: a scene where you look (the finder place rules do not apply)',
+	help = 'bgn_scenic_spawn <scene id>: a scene where you look (door scenes require a closed door)',
 	autocomplete = function(_, args)
 		local list = {}
 		for id in pairs(bgNPC.cfg.scenic) do list[#list + 1] = 'bgn_scenic_spawn ' .. id end
@@ -421,9 +421,16 @@ bgNPC.Commands.Register('bgn_scenic_spawn', {
 		if not IsValid(ply) or not scene then return MsgN('[Background NPCs] Unknown scene: ' .. tostring(id)) end
 
 		local tr = ply:GetEyeTrace()
+		if scene.place == 'door' then
+			local spot = Spots.Find('door', tr.Entity, scene)
+			if not spot or not Scenic.Create(id, scene, spot) then
+				MsgN('[Background NPCs] The scene does not fit here: ' .. id)
+			end
+			return
+		end
 		local pos = Spots.Floor(tr.HitPos + tr.HitNormal * 4) or tr.HitPos
 		local spot = { pos = pos, ang = Angle(0, ply:EyeAngles().y + 180, 0) }
-		if scene.place == 'wall' or scene.place == 'door' then spot.ang = tr.HitNormal:Angle() end
+		if scene.place == 'wall' then spot.ang = tr.HitNormal:Angle() end
 		if not Scenic.Create(id, scene, spot) then MsgN('[Background NPCs] The scene does not fit here: ' .. id) end
 	end,
 })
