@@ -56,12 +56,16 @@ end
 -- @param disposition number|nil precomputed GetPlayersDisposition(another_npc), it does not depend on the actor
 local function SetNPCRelationship(actor, another_npc, disposition)
 	if not actor:IsAlive() then return end
-	if another_npc.bgn_probe then return end -- sv_nextbot_hostility.lua
 
 	local actor_npc = actor:GetNPC()
 	local another_actor = bgNPC.Actors.Get(another_npc)
 	local is_ignore_another_npc = cvar_bgn_ignore_another_npc:GetBool()
-	disposition = disposition or GetPlayersDisposition(another_npc)
+	local nextbot_disposition = actor_npc:IsNextBot() and another_npc:IsNPC() and not another_actor
+	if nextbot_disposition then
+		disposition = bgNPC.NextBotBody.GetPlayersDisposition(another_npc, player.GetAll())
+	else
+		disposition = disposition or GetPlayersDisposition(another_npc)
+	end
 
 	if another_actor then
 		if bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor) then
@@ -104,7 +108,9 @@ local function SetNPCRelationship(actor, another_npc, disposition)
 			end
 
 			if isfunction(another_npc.AddEntityRelationship) then
-				another_npc:AddEntityRelationship(actor_npc, D_NU, 99)
+				local relation = nextbot_disposition and not bgNPC.Modes.IsPeaceful() and not is_ignore_another_npc
+					and disposition or D_NU
+				another_npc:AddEntityRelationship(actor_npc, relation, 99)
 			end
 
 			actor:RemoveEnemy(another_npc)
@@ -243,7 +249,7 @@ timer.Create('BGN_SeatedPoliceSpotHostileNPC', 1, 0, function()
 		local car = actor:IsAlive() and actor:GetVehicle()
 		if IsValid(car) then
 			for _, ent in ipairs(ents.FindInSphere(car:GetPos(), SEATED_SPOT_RADIUS)) do
-				if (ent:IsNPC() or ent:IsNextBot()) and not ent.isBgnActor and not ent.bgn_probe and ent:Health() > 0
+				if (ent:IsNPC() or ent:IsNextBot()) and not ent.isBgnActor and ent:Health() > 0
 					and not actor:HasEnemy(ent) and IsHostile(ent) and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent)
 				then
 					SetNPCRelationship(actor, ent, D_HT)

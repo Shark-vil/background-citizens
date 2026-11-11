@@ -1,33 +1,39 @@
---[[
-	Regular HL2 NPCs have no relationship with a NextBot body: the engine only knows classes of NPCs and players,
-	so an "Enemy Rebel" walks past a nextbot actor. The NPC gets the relationship it has with the actor's original
-	NPC class, measured on a hidden probe NPC of that class (works for modded NPC classes too). NPC senses see the
-	bot because it carries FL_OBJECT (entities/bgn_nextbot.lua); without it an NPC only faces it, never shoots.
---]]
+-- Foreign NPCs use their most common disposition towards server players for NextBot bodies.
+-- FL_OBJECT on bgn_nextbot lets HL2 NPC senses detect them without helper NPCs.
 
 local PERIOD = 1
 local RANGE_SQR = 2500 ^ 2
 local cvar_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
-local probes = {}
 
--- shortcut: the probe sits at the first nav area; a map without a NavMesh has no nextbot actors anyway.
-local function Probe(class)
-	local probe = probes[class]
-	if IsValid(probe) then return probe end
+local function GetPlayersDisposition(npc, players)
+	local counts = {}
+	for _, ply in ipairs(players) do
+		local disposition = npc:Disposition(ply)
+		counts[disposition] = (counts[disposition] or 0) + 1
+	end
 
-	local area = navmesh.GetAllNavAreas()[1]
-	probe = ents.Create(class)
-	if not IsValid(probe) then return end
-	probe.bgn_probe = true
-	probe:SetPos(area and area:GetCenter() or vector_origin)
-	probe:Spawn()
-	probe:SetNoDraw(true)
-	probe:SetNotSolid(true)
-	probe:AddFlags(FL_NOTARGET) -- hostile NPCs must not hunt the hidden probe
-	probe:AddEFlags(EFL_NO_THINK_FUNCTION)
-	probes[class] = probe
-	return probe
+	local result, highest = D_NU, 0
+	for disposition, count in pairs(counts) do
+		if count > highest then
+			result, highest = disposition, count
+		elseif count == highest then
+			result = D_NU
+		end
+	end
+	return result
 end
+bgNPC.NextBotBody.GetPlayersDisposition = GetPlayersDisposition
+
+bgNPC.Test.Add('nextbot.players_disposition', function(check)
+	local npc = { Disposition = function(_, relation) return relation end }
+	for _, relation in ipairs({ D_HT, D_FR, D_LI, D_NU, D_ER }) do
+		check(GetPlayersDisposition(npc, { relation, D_HT, relation }) == relation, 'most frequent disposition ' .. relation)
+	end
+	check(GetPlayersDisposition(npc, {}) == D_NU, 'no players')
+	check(GetPlayersDisposition(npc, { D_HT, D_LI }) == D_NU, 'tie is neutral')
+	check(GetPlayersDisposition(npc, { D_LI, D_HT, D_LI, D_FR, D_FR }) == D_NU, 'tie after an early leader')
+	check(GetPlayersDisposition(npc, { D_HT, D_LI, D_FR, D_FR }) == D_FR, 'plurality without absolute majority')
+end)
 
 timer.Create('BGN_Timer_NextBotHostility', PERIOD, 0, function()
 	if bgNPC.Modes.IsPeaceful() or cvar_ignore_another_npc:GetBool() then return end
@@ -38,17 +44,16 @@ timer.Create('BGN_Timer_NextBotHostility', PERIOD, 0, function()
 		if IsValid(body) and body:IsNextBot() and not actor:InVehicle() then bots[#bots + 1] = actor end
 	end
 	if #bots == 0 then return end
+	local players = player.GetAll()
 
 	for _, npc in ipairs(ents.GetAll()) do
-		if IsValid(npc) and npc:IsNPC() and not npc.isBgnActor and not npc.bgn_probe and npc:Health() > 0 then
+		if IsValid(npc) and npc:IsNPC() and not npc.isBgnActor and npc:Health() > 0 then
 			local pos = npc:GetPos()
+			local disposition = GetPlayersDisposition(npc, players)
 			for _, actor in ipairs(bots) do
 				local body = actor:GetNPC()
-				-- already hated: the actor fights this NPC (NextBotBody:SetDisposition) or an earlier pass.
-				-- The NPC's own senses do the rest: the bot carries FL_OBJECT (entities/bgn_nextbot.lua).
-				if pos:DistToSqr(body:GetPos()) <= RANGE_SQR and npc:Disposition(body) ~= D_HT then
-					local probe = Probe(actor.class)
-					if probe and npc:Disposition(probe) == D_HT then npc:AddEntityRelationship(body, D_HT, 100) end
+				if pos:DistToSqr(body:GetPos()) <= RANGE_SQR and npc:Disposition(body) ~= disposition then
+					npc:AddEntityRelationship(body, disposition, 100)
 				end
 			end
 		end
