@@ -312,6 +312,8 @@ function bgNPC:SpawnVehicle(vehicle_class, spawn_pos, spawn_ang, offset_pos, off
 	elseif vehicles_list[vehicle_class] then
 		local vehicle_data = vehicles_list[vehicle_class]
 		local vehicle = ents.Create(vehicle_data.Class)
+		bgNPC.Assert.True(IsValid(vehicle), 'Vehicle creation failed')
+
 		vehicle.isBgnVehicle = true
 		vehicle:SetModel(vehicle_data.Model)
 

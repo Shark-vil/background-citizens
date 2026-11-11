@@ -20,6 +20,7 @@ hook.Add('BGN_DropMoney', 'BGN_n2MoneyNPCDropMoney', function(actor, pos, money)
 	end
 
 	local dropped_ent = ents.Create('ent_money')
+	if not IsValid(dropped_ent) then return end
 	dropped_ent:SetPos(pos)
 	dropped_ent:Spawn()
 	dropped_ent:SetNWString('DroppedMoneyAmount', tostring(money))
