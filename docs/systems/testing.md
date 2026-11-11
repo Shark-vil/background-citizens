@@ -14,7 +14,19 @@ blocked stand-up, forced-state rejection, holder/ragdoll removal and damage/deat
 Report: `data/bgn_door_lab/doors.json`.
 It creates stock test rigs and doors, briefly moves the observer, pauses automatic spawners and cleans up its
 objects/restores tasks and observer afterward. Run it in a lab, not an ongoing play session.
-Offline checks: `python tools/test_regressions.py` and `python tools/test_scenic.py` (lupa).
+Additional opt-in fixtures through the same temporary SP bridge:
+
+| Fixture | Native checks | Report under `data/bgn_scenic_overhaul_lab/` |
+|---|---|---|
+| `tools/scenic_poses.lua` | NPC/NextBot poses, wall/door contact, indoor rejection, both couch sexes, complete pairs and brush ledges | `poses.json` |
+| `tools/carry_items.lua` | Tool previews and ordinary actor initialization, actual carrying walk/idle, stowing/restoring, non-blocking suitcase drops and expiry | `carry.json` |
+| `tools/ghost_carry.lua` | Run SERVER and CLIENT separately: local/synchronized visuals, panic and NPC/NextBot materialization without reroll | `ghost-server.json`, `ghost-client.json` |
+| `tools/ragdoll_identity.lua` | Same actor/entity, latest health/max health, weapon/clip, incoming/outgoing relationships and wanted record after recovery | `identity.json` |
+
+Fixtures use stock animation rigs for repeatability, clean up their own entities and restore changed settings.
+They do not establish support for every custom model or multiplayer behavior. `scenic_poses` uses real BSP
+geometry for its ledge test; it does not replace engine traces with stub results.
+Offline checks (lupa): `python tools/test_regressions.py`, `python tools/test_scenic.py`, `python tools/test_carry_items.py`.
 
 A one-minute check that answers "nothing spawns" and "I'm an admin but can't change the settings" with facts.
 Open **Settings → Tools → Testing** (admins) or type a console command:

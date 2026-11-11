@@ -62,6 +62,7 @@ local function Spawn(body, police, pos, yaw)
 	npc:Spawn()
 	npc:Activate()
 	local actor = bgNPC.Actor.Create(npc, police and 'police' or 'citizen')
+	actor.skip_auto_carry = true
 	actors[#actors + 1] = actor
 	actor.data.start_random_state, actor.data.start_state, actor.data.at_random = false, nil, nil
 	actor.data.regeneration = false
