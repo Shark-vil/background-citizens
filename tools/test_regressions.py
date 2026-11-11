@@ -57,7 +57,7 @@ def realm(server):
         function IsValid(v) return type(v)=='table' and v.valid == true end
         FCVAR_NONE=0; FCVAR_ARCHIVE=1; NOTIFY_ERROR=1; NOTIFY_GENERIC=0
         MASK_NPCWORLDSTATIC=1
-        DMG_CRUSH=1; DMG_VEHICLE=16; DMG_BLAST=64; DMG_BULLET=2
+        DMG_CRUSH=1; DMG_VEHICLE=16; DMG_BLAST=64; DMG_BULLET=2; DMG_BUCKSHOT=536870912
         cv={}; changes={}; received={}; sent={}; commands={}; hooks={}; timers={}; tests={}; files={}
         function setcv(name,value)
             local c=GetConVar(name); local old=c.value; c.value=tostring(value)
@@ -125,6 +125,7 @@ def realm(server):
             Combat={IsIgnored=function() return false end}, cfg={wanted={levels={5,5,10,10,15}}},
             Statistics={GetSum=function() return 0 end, Reset=function() end},
             Actors={Get=function() end, GetAll=function() return {} end, GetByTeam=function() return {} end},
+            Doors={held={},Desperate=function() return false end,Find=function() end,Blocker=function() end},
             Vision={AnyActorSees=function() return true end, HasLineOfSight=function() return true end},
             Modes={IsPeaceful=function() return false end}}
         modules.player_arrest={RemoveTarget=function() end, CanArrest=function() return false end,
@@ -1063,6 +1064,7 @@ vehicles.execute('''
         function d:GetAttacker() return self.attacker end
         function d:SetInflictor(v) self.inflictor=v end
         function d:GetInflictor() return self.inflictor end
+        function d:IsDamageType() return false end
         return d
     end
     DecentVehicleDestination={}; BGN_VEHICLE={}; bgNPC.Animator={Stop=function() end}
@@ -1360,7 +1362,7 @@ startup.globals().file.Find = startup_find
 startup.globals().include = startup_include
 load(startup, 'sh_init.lua')
 startup.execute('''
-    local npc={valid=true,GetPos=function() return Vector() end}
+    local npc={valid=true,GetPos=function() return Vector() end,Health=function() return 100 end,GetMaxHealth=function() return 100 end}
     local actor={data={team={'residents'}},IsAlive=function() return true end,IsCivilian=function() return true end,HasTeam=function() return false end,
         GetNPC=function() return npc end,SetTeam=function(self,t) self.team=t end}
     local victim={GetNPC=function() end,HasTeam=function() return true end}
@@ -1378,12 +1380,12 @@ vehicle_vision.execute('''
     function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     function vec:Length() return math.sqrt(self.x^2+self.y^2+self.z^2) end
     function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
-    car={valid=true}; target_car={valid=true}; wall={valid=true}
+    car={valid=true,GetParent=function() end}; target_car={valid=true,GetParent=function() end}; wall={valid=true}
     watcher={valid=true,vehicle_provider={GetVehicleAI=function() return driver end},
-        GetForward=function() return Vector(1,0,0) end,
+        GetForward=function() return Vector(1,0,0) end,IsPlayer=function() return false end,
         EyePos=function() return Vector() end, Health=function() return 100 end}
     driver={valid=true,GetVehicleForward=function() return Vector(0,1,0) end}
-    target={valid=true,Health=function() return 100 end,
+    target={valid=true,Health=function() return 100 end,IsPlayer=function() return false end,
         OBBCenter=function() return Vector() end, LocalToWorld=function() return Vector(0,100,0) end,
         WorldSpaceCenter=function() return Vector(0,100,0) end}
     bgNPC.Actors.Get=function(e)
@@ -1764,8 +1766,10 @@ medics.execute('''
 
 medics.execute('''
     local m=bgNPC.Medics
+    local shooter={valid=true,GetPos=function() return Vector(20000,20000,0) end}
     local function hit(npc,kind,dmg)
-        hooks.EntityTakeDamage.BGN_Medics_LastDamage(npc,{GetDamageType=function() return kind end,GetDamage=function() return dmg end})
+        hooks.EntityTakeDamage.BGN_Medics_LastDamage(npc,{GetDamageType=function() return kind end,GetDamage=function() return dmg end,
+            GetAttacker=function() return shooter end})
     end
     local function die(kind,dmg)
         local npc=Person(Vector(9000,9000,0)); npc.IsNPC=function() return true end
@@ -1776,8 +1780,12 @@ medics.execute('''
     end
     setcv('bgn_medic_hopeless_chance',0)
     assert(not die(DMG_BULLET,30).hopeless, 'an ordinary death can be saved')
-    assert(die(DMG_BLAST,30).hopeless and die(DMG_VEHICLE,30).hopeless and die(DMG_CRUSH,30).hopeless, 'explosions and cars cannot be fixed')
-    assert(die(DMG_BULLET,250).hopeless, 'overkill cannot be saved')
+    assert(die(DMG_BLAST,30).hopeless, 'explosions cannot be saved')
+    assert(not die(DMG_VEHICLE,30).hopeless and not die(DMG_CRUSH,30).hopeless, 'vehicle deaths use the ordinary save chance')
+    assert(not die(DMG_BULLET,250).hopeless, 'distant shots use the ordinary save chance even on overkill')
+    shooter.GetPos=function() return Vector(9000,9000,0) end
+    assert(die(DMG_BULLET,30).hopeless and die(DMG_BUCKSHOT,30).hopeless, 'point-blank shots cannot be saved')
+    shooter.GetPos=function() return Vector(20000,20000,0) end
     setcv('bgn_medic_hopeless_chance',100)
     assert(die(DMG_BULLET,30).hopeless, 'the chance makes any death hopeless')
     local call=m.calls[#m.calls]
@@ -2065,7 +2073,7 @@ cooldown.execute('''
     table.Empty=function(t) for k in pairs(t) do t[k]=nil end end
     function IsValid(v) return v ~= nil and v.valid ~= false end
     setcv('bgn_fight_cooldown',0)
-    function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end} end
+    function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end,HasTeam=function() return false end} end
     bgNPC.Actors={Get=function(e) if not e.foreign then return e end end}
     function Foe(player) return {valid=true,IsPlayer=function() return player end} end
 ''')
@@ -2091,7 +2099,8 @@ pack.execute('''
     all={}
     function Member(idx,gang,state)
         local npc={valid=true,idx=idx,pos=Vector(idx*10,0,0),EntIndex=function(self) return self.idx end,GetPos=function(self) return self.pos end}
-        local a={data={gang=gang},GetNPC=function() return npc end,IsAlive=function() return true end,GetState=function() return state end}
+        local a={data={gang=gang},GetNPC=function() return npc end,GetPos=function() return npc.pos end,
+            GetStateData=function() return {schedule='run'} end,IsAlive=function() return true end,GetState=function() return state end}
         all[#all+1]=a
         return a
     end
@@ -2105,9 +2114,10 @@ pack.execute('''
     local other=Member(2,'wolves','walk')
     local idle=Member(1,'crows','idle')
     local dest=Vector(1000,0,0)
-    local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and lead.pack_dest==dest, 'the leader picks its own way')
-    d,delay=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-1000)<=250 and math.abs(d.y)<=250, 'a follower walks near the leader destination')
-    local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the spot stays while the leader destination does')
+    local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and not lead.pack_leader, 'the leader picks its own way')
+    local schedule
+    d,delay,schedule=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-lead:GetPos().x)<=180 and math.abs(d.y)<=180 and schedule=='run', 'a follower stays near its leader and uses its pace')
+    local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the offset stays while the leader stays the same')
     d,delay=P.Destination(other,Vector(3,0,0)); assert(delay==nil and d.x==3, 'another gang is its own pack')
     d,delay=P.Destination({data={},GetNPC=lead.GetNPC},Vector(4,0,0)); assert(d.x==4 and delay==nil, 'actors outside gangs are not touched')
 ''')
@@ -2312,4 +2322,75 @@ movement.execute('''
     assert(schedules==2, 'an interrupted schedule must be restarted')
     b:MoveTo(Vector(150,0,0),true); assert(schedules==3, 'new goals must reach the engine')
 ''')
-print('PASS: existing regressions, vehicle body lifecycle/identity/sync, spawn headings, cleanup, police access, detours and LuaJIT syntax')
+vehicles.execute('''
+    local p=NewCar(); local a=NewActor()
+    a:EnterVehicle(p.car)
+    a.mechanics.use_vehicle=false
+    timers['bgn_actor_enter_vehicle_'..a.uid]()
+    assert(not a:InVehicle(), 'a pending boarding request must respect mechanics disabled by knockdown')
+''')
+
+# Door decisions use the real planner and keep flee reactions out of ordinary attack planning.
+doors = realm(True)
+doors.execute('''
+    function table.Count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
+    function SortedPairs(t)
+        local keys={}; for k in pairs(t) do keys[#keys+1]=k end; table.sort(keys)
+        local i=0; return function() i=i+1; local k=keys[i]; if k then return k,t[k] end end
+    end
+    function string.StartWith(s,p) return s:sub(1,#p)==p end
+    bgNPC.States={Call=function() end}; bgNPC.PoliceKnows=function() return false end
+    list.Set('', 'wanted', {HasWanted=function() return false end})
+''')
+load(doors, 'core/sh_class.lua', 'nav/sh_astar.lua', 'brain/goap/sv_goap.lua',
+     'brain/goap/sv_goap_actions.lua', 'systems/sv_door_hold.lua', 'brain/sv_brain.lua',
+     'brain/fsm/sv_fsm_brain.lua', 'brain/goap/sv_goap_brain.lua')
+doors.execute('''
+    for _,name in ipairs({'goap.planner','goap.sets'}) do tests[name](function(ok,message) assert(ok,message) end) end
+    local position=Vector()
+    local npc={valid=true,Health=function() return 100 end,GetMaxHealth=function() return 100 end,GetPos=function() return position end}
+    local weapon={valid=true,GetClass=function() return weapon_class end}
+    weapon_class='weapon_pistol'
+    local enemy={valid=true,GetActiveWeapon=function() return weapon end,GetPos=function() return Vector(200,0,0) end,Health=function() return 100 end}
+    local actor={data={at_damage={fear=1}},mechanics={states_controller=true},enemies={enemy},enemies_count=1,state='fear',
+        GetNPC=function() return npc end,GetPos=function() return position end,GetNearEnemy=function() return enemy end,
+        GetHealth=function() return hp or 100 end,GetMaxHealth=function() return 100 end,
+        InVehicle=function() return false end,HasTeam=function() return false end,HasEnemy=function() return false end,
+        IsWanted=function() return false end,HasNoEnemies=function() return false end,
+        GetState=function(self) return self.state end,HasState=function(self,state) return self.state==state end,
+        GetStateData=function() return {} end,SetState=function(self,state) self.state=state end}
+    local D=bgNPC.Doors
+    assert(D.Desperate(actor,enemy), 'unarmed versus a real weapon is desperate')
+    weapon_class='gmod_tool'
+    assert(not D.Desperate(actor,enemy), 'a tool alone does not make a hopeless fight')
+    actor.weapon='weapon_pistol'; weapon_class='weapon_pistol'
+    assert(not D.Desperate(actor,enemy), 'healthy, equally armed actors do not shelter automatically')
+    hp=34; assert(D.Desperate(actor,enemy), 'below 35 percent is desperate'); hp=100
+    actor.enemies={enemy,enemy}; actor.enemies_count=2
+    assert(D.Desperate(actor,enemy), 'two enemies against one actor is desperate')
+    bgNPC.Actors.GetAll=function() return {{weapon='weapon_pistol',IsAlive=function() return true end,GetPos=function() return position end,GetNPC=function() return npc end}} end
+    actor.HasTeam=function() return true end
+    assert(not D.Desperate(actor,enemy), 'an armed teammate balances two enemies')
+    actor.HasTeam=function() return false end; bgNPC.Actors.GetAll=function() return {} end
+    actor.enemies={enemy}; actor.enemies_count=1; actor.weapon=nil
+    local door={valid=true,Fire=function(self,input) self.last_input=input end}
+    local spot={door=door}
+    assert(D.Reserve(actor,spot) and not D.Reserve({},spot), 'only one holder may reserve a door')
+    D.Release(actor); assert(door.last_input==nil, 'cancel before closing does not unlock an unrelated door')
+    spot.locked=true; assert(D.Reserve(actor,spot)); D.Release(actor)
+    assert(door.last_input=='Unlock' and not D.held[door], 'owned temporary lock is released')
+    D.Find=function() end
+    local brain=bgNPC.GOAPBrain(actor)
+    brain:Update()
+    assert(actor.state=='fear' and not brain.fighting, 'fear without an available shelter must stay fear')
+    D.Find=function() return {} end; brain.next_sense=0
+    brain:Update()
+    assert(actor.state=='hold_door' and brain.door_escape, 'fear can borrow GOAP for door shelter')
+    actor.state='fear'; brain:Update()
+    assert(actor.state=='fear' and not brain.fighting, 'leaving shelter resumes fear rather than selecting attack')
+    actor.state='walk'; brain:Update()
+    assert(actor.state=='walk' and not brain.fighting, 'an enemy alone still cannot start combat or holding')
+''')
+for path in ('systems/sv_door_hold.lua', 'brain/fsm/states/sv_hold_door.lua', 'brain/fsm/states/sh_knocked_down.lua'):
+    doors.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
+print('PASS: existing regressions, vehicle lifecycle, door decisions/planner/ownership, cleanup and LuaJIT syntax')

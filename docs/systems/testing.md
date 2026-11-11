@@ -1,5 +1,14 @@
 # Testing mode
 
+`tools/door_hold.lua` is an opt-in fixture for an isolated single-player `gm_bigcity_improved` session through
+a temporary Lua bridge, not an addon autorun. It tests actual GOAP holding/breaching with all four NPC/NextBot
+body pairings and four door headings, physical knockback, stable actor/entity/health, restored door settings,
+blocked stand-up, forced-state rejection, holder/ragdoll removal and damage/death while down.
+Report: `data/bgn_door_lab/doors.json`.
+It creates stock test rigs and doors, briefly moves the observer, pauses automatic spawners and cleans up its
+objects/restores tasks and observer afterward. Run it in a lab, not an ongoing play session.
+Offline checks: `python tools/test_regressions.py` and `python tools/test_scenic.py` (lupa).
+
 A one-minute check that answers "nothing spawns" and "I'm an admin but can't change the settings" with facts.
 Open **Settings → Tools → Testing** (admins) or type a console command:
 
