@@ -19,7 +19,7 @@ Additional opt-in fixtures through the same temporary SP bridge:
 | Fixture | Native checks | Report under `data/bgn_scenic_overhaul_lab/` |
 |---|---|---|
 | `tools/scenic_poses.lua` | NPC/NextBot poses, wall/door contact, indoor rejection, both couch sexes, complete pairs and brush ledges | `poses.json` |
-| `tools/carry_items.lua` | Tool previews and ordinary actor initialization, actual carrying walk/idle, stowing/restoring, non-blocking suitcase drops and expiry | `carry.json` |
+| `tools/carry_items.lua` | Tool/ordinary spawns: HL2 briefcase without a weapon/activity override, NextBot ration/suitcase/newspaper walk, hidden parcel, stowing, drop/expiry | `carry.json` |
 | `tools/ghost_carry.lua` | Run SERVER and CLIENT separately: local/synchronized visuals, panic and NPC/NextBot materialization without reroll | `ghost-server.json`, `ghost-client.json` |
 | `tools/ragdoll_identity.lua` | Same actor/entity, latest health/max health, weapon/clip, incoming/outgoing relationships and wanted record after recovery | `identity.json` |
 

@@ -33,7 +33,7 @@ if CLIENT then
 	local function Run()
 		table.Empty(looks)
 		looks[1] = { type = 'citizen', model = 'models/humans/group01/male_07.mdl', skin = 0, bodygroups = '' }
-		for _, kind in ipairs({ 'ration', 'suitcase' }) do
+		for _, kind in ipairs({ 'ration', 'suitcase', 'newspaper' }) do
 			config.carry_items = { chance = 100, items = { kind } }
 			local ghost = assert(CreateGhost(LocalPlayer():GetPos() + Vector(300, 0, 0)))
 			assert(ghost.carry == kind and IsValid(ghost.carry_prop), 'local ghost uses the actor carry config')
@@ -44,7 +44,7 @@ if CLIENT then
 		end
 		local receivers = Up(bgNPC.Net.Receive, 'receivers')
 		local Apply = Up(receivers.bgn_ghost_crowd.func, 'ApplyServerOp')
-		for i, kind in ipairs({ 'ration', 'suitcase' }) do
+		for i, kind in ipairs({ 'ration', 'suitcase', 'newspaper' }) do
 			local pos = LocalPlayer():GetPos() + Vector(300, 100 * i, 0)
 			Apply({ id = -i, from = pos, to = pos + Vector(100, 0, 0), t0 = CurTime(), speed = 75,
 				carry = kind, look = looks[1] }, CurTime())
@@ -70,7 +70,7 @@ local old_body = GetConVar('bgn_actor_body'):GetString()
 local base = assert(bgNPC.Scenic.Spots.Floor(Vector(-800, 1000, -11140)))
 local actor
 local drops = {}
-local jobs = { { 'npc', 'ration' }, { 'npc', 'suitcase' }, { 'nextbot', 'ration' }, { 'nextbot', 'suitcase' } }
+local jobs = { { 'npc', 'ration' }, { 'npc', 'suitcase' }, { 'npc', 'newspaper' }, { 'nextbot', 'ration' }, { 'nextbot', 'suitcase' }, { 'nextbot', 'newspaper' } }
 local index = 0
 local function Finish()
 	if actor then actor:Remove() end
@@ -88,7 +88,7 @@ Next = function()
 	index = index + 1
 	local job = jobs[index]
 	if not job then Finish() return end
-	local spawn_pos = base + Vector(0, index * 80, 0)
+	local spawn_pos = base + Vector(-80 * math.floor((index - 1) / 3), 80 * ((index - 1) % 3 + 1), 0)
 	GetConVar('bgn_actor_body'):SetString(job[1])
 	local ghost = { id = -100 - index, look = { type = 'citizen', model = 'models/humans/group01/male_07.mdl', skin = 0, bodygroups = '' },
 		carry = job[2], seg = { speed = 0 } }
@@ -125,10 +125,11 @@ Next = function()
 			if a and not before[a] and not a.is_removed then actor = a break end
 		end
 	end
-	assert(actor and actor.carry_initialized and actor.carry_item == job[2], 'handoff retains the chosen item without rerolling')
+	local expected = (job[1] ~= 'npc' or job[2] == 'suitcase') and job[2] or nil
+	assert(actor and actor.carry_initialized and actor.carry_item == expected, 'handoff retains compatible items without rerolling and discards unsupported two-handed items')
 	actor.eternal, actor.data.at_random = true, nil
 	timer.Simple(0.4, function() Protect(function()
-		assert(actor:IsAlive() and actor.carry_item == job[2] and bgNPC.CarryItems.active[actor], 'carry survives actor initialization')
+		assert(actor:IsAlive() and actor.carry_item == expected and (not expected or bgNPC.CarryItems.active[actor]), 'body eligibility survives initialization')
 		report.cases[#report.cases + 1] = { name = job[1] .. '_handoff_' .. job[2], passed = true }
 		Write() Next()
 	end) end)

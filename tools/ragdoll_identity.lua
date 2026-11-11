@@ -56,7 +56,10 @@ Next = function()
 		local wanted = assert(Wanted:AddWanted(npc, 25)) wanted:SetLevel(2)
 		assert(actor:SetState('knocked_down', { velocity = vector_origin, resume = 'none' }, true))
 		local rag = actor:GetStateData().ragdoll
-		timer.Simple(0.5, function() Protect(function()
+		-- Foreign NPC relationship initialization runs after 0.5s; change the latest values after it while down.
+		timer.Simple(0.7, function() Protect(function()
+			body:SetDisposition(observer, D_FR)
+			observer:AddEntityRelationship(npc, D_HT, 99)
 			local damage = DamageInfo() damage:SetDamage(5) damage:SetDamageType(DMG_BULLET)
 			damage:SetAttacker(game.GetWorld()) damage:SetInflictor(game.GetWorld())
 			rag:TakeDamageInfo(damage)
