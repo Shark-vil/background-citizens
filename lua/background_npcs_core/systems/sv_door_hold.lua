@@ -61,7 +61,7 @@ function Doors.Sequence(actor)
 end
 
 function Doors.Find(actor, enemy)
-	if not Doors.Desperate(actor, enemy) or (actor.door_hold_cooldown or 0) > CurTime() or not Doors.Sequence(actor) then return end
+	if actor:HasTeam('police') or not Doors.Desperate(actor, enemy) or (actor.door_hold_cooldown or 0) > CurTime() or not Doors.Sequence(actor) then return end
 	local candidates, origin = {}, actor:GetPos()
 	for _, door in ipairs(ents.FindInSphere(origin, RADIUS)) do
 		if bgNPC.Util.IsDoor(door) and not held[door] and bgNPC.Util.IsDoorOpen(door) and not bgNPC.Util.IsDoorLocked(door) then

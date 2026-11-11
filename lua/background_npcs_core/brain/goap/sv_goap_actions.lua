@@ -140,7 +140,7 @@ GOAP.RegisterAction('hide', {
 
 GOAP.RegisterAction('hold_door', {
 	state = 'hold_door', always = true,
-	pre = { has_enemy = true, desperate = true, can_hold_door = true },
+	pre = { has_enemy = true, desperate = true, can_hold_door = true, is_police = false },
 	effects = { door_held = true }, cost = 1,
 })
 
@@ -227,7 +227,6 @@ function GOAP.RegisterSet(name, priorities)
 end
 
 GOAP.RegisterSet('police', {
-	shelter = ShelterWhenDesperate,
 	eliminate = function() return 10 end,
 	survive = function(ws) return Has(ws, 'low_health') and 4 or 0 end,
 })
@@ -346,6 +345,9 @@ bgNPC.Test.Add('goap.sets', function(check)
 	plan = GOAP.Plan(ws, GOAP.goals.shelter, { A.hold_door, A.flee })
 	check(plan and #plan == 1 and plan[1] == A.hold_door, 'a desperate actor can close and hold an open door')
 	check(citizen.shelter(ws) > citizen.survive(ws), 'an available door takes priority in a hopeless fight')
+	check(GOAP.sets.police.shelter == nil, 'police have no door shelter goal')
+	plan = GOAP.Plan(bit.bor(ws, F('is_police')), GOAP.goals.shelter, { A.hold_door })
+	check(plan == nil, 'police cannot plan to hold a door')
 	plan = GOAP.Plan(F('has_enemy'), GOAP.goals.shelter, { A.hold_door })
 	check(plan == nil, 'a normal fight or absent open door cannot start holding')
 	ws = bit.bor(F('has_enemy'), F('is_police'), F('enemy_bracing'), F('armed'))

@@ -118,7 +118,7 @@ Debug: `bgn_goap_debug` prints the set, goal, plan and facts of the actor you lo
 
 ### Door shelter and breaching
 
-These are server-driven actions for both NPC and NextBot bodies, not random scenic poses. Any GOAP actor
+These are server-driven actions for both NPC and NextBot bodies, not random scenic poses. Any non-police GOAP actor
 already fighting or fleeing can seek an open door when below 35% health, unarmed against an armed enemy,
 or facing more living enemies within 1000 units than itself plus nearby armed teammates. An ordinary flee
 reaction only borrows GOAP to seek shelter; it does not become an attack if no door fits or shelter ends.

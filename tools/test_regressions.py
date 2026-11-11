@@ -2389,6 +2389,9 @@ doors.execute('''
     D.Release(actor); assert(door.last_input==nil, 'cancel before closing does not unlock an unrelated door')
     spot.locked=true; assert(D.Reserve(actor,spot)); D.Release(actor)
     assert(door.last_input=='Unlock' and not D.held[door], 'owned temporary lock is released')
+    actor.HasTeam=function(_,team) return team=='police' end
+    assert(D.Find(actor,enemy)==nil, 'police cannot seek a door to hold')
+    actor.HasTeam=function() return false end
     D.Find=function() end
     local brain=bgNPC.GOAPBrain(actor)
     brain:Update()
