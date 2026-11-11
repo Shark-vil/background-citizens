@@ -1,10 +1,5 @@
---[[
-	Gang members like to walk in a pack, fight or no fight. In the "walk" state a gang member does not pick its own
-	destination when a member of the same gang that is walking too is within RADIUS: the one with the lowest entity
-	index is the leader and walks where it wants, the others follow the leader itself (a spot SPREAD_MIN-SPREAD_MAX
-	units around its current position) at the leader's pace (walk or run), rechecking every FOLLOW_DELAY seconds.
-	Used by the walk state (BGN walk destination); actors outside gangs are not touched.
---]]
+-- Living gang members form packs of up to three, ordered by entity index.
+-- Followers stay near their leader at its pace; combat support is independent of packs.
 
 local GangPack = {}
 bgNPC.GangPack = GangPack
@@ -14,15 +9,31 @@ local FOLLOW_DELAY = 2
 local SPREAD_MIN, SPREAD_MAX = 80, 180
 
 local function Leader(actor)
-	local npc = actor:GetNPC()
-	local gang, leader = actor.data.gang, actor
-	for _, other in ipairs(bgNPC.Actors.GetInRadius(npc:GetPos(), RADIUS)) do
-		if other ~= actor and other.data.gang == gang and other:IsAlive() and other:GetState() == 'walk'
-			and other:GetNPC():EntIndex() < leader:GetNPC():EntIndex() then
-			leader = other
+	local members = {}
+	for _, other in ipairs(bgNPC.Actors.GetAll()) do
+		if other.data.gang == actor.data.gang and other:IsAlive() then
+			members[#members + 1] = other
 		end
 	end
-	return leader
+	table.sort(members, function(a, b) return a:GetNPC():EntIndex() < b:GetNPC():EntIndex() end)
+
+	local packs = {}
+	for _, member in ipairs(members) do
+		local selected
+		for _, pack in ipairs(packs) do
+			if pack.size < 3 and member:GetPos():DistToSqr(pack.leader:GetPos()) <= RADIUS * RADIUS then
+				selected = pack
+				break
+			end
+		end
+		if not selected then
+			selected = { leader = member, size = 0 }
+			packs[#packs + 1] = selected
+		end
+		selected.size = selected.size + 1
+		if member == actor then return selected.leader end
+	end
+	return actor
 end
 
 -- @param position Vector the destination the walk state has picked

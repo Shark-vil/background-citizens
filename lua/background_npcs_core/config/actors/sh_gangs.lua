@@ -1,5 +1,5 @@
 --[[
-	Two street gangs, both built on the "gangster" actor: they help only their own gang (systems/sv_fight_roster.lua),
+	Two street gangs, both built on the "gangster" actor: they help visible members of their own gang (systems/sv_enemy_sharing.lua),
 	and each has a light member (a pistol, citizen clothes) and a heavy one (an SMG or a rifle, rebel gear),
 	see systems/npcs/sv_gang_models.lua. Both keep the team "bandits" (police, carjacking), plus their own gang team.
 --]]

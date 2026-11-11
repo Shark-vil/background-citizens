@@ -123,8 +123,6 @@ end
 function Actor:GetReactionForProtect(enemy)
 	self.protect_blocked_enemy = nil
 	local reaction = PickReaction(self, self.data.at_protect, enemy)
-	-- a gang member outside the fight roster stays out of it (systems/sv_fight_roster.lua)
-	if reaction == 'defense' and IsValid(enemy) and bgNPC.Roster and not bgNPC.Roster.IsMember(self, enemy) then return 'ignore' end
 	-- the delay between skirmishes (systems/sv_fight_cooldown.lua); the callers add no enemy for a blocked actor
 	if reaction == 'defense' and IsValid(enemy) and bgNPC.FightCooldown and not bgNPC.FightCooldown.Allow(self, enemy) then
 		self.protect_blocked_enemy = enemy

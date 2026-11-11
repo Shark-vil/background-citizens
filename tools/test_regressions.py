@@ -2030,52 +2030,83 @@ gangs.execute('''
     assert(npc.subs[1]=='background_npcs/gangs/wolves/light_male', 'redressed after the body changes')
 ''')
 
-roster = realm(True)
-roster.execute('''
-    bgNPC.Modes={IsPeaceful=function() return false end}
-    setcv('bgn_gang_help_chance',100); setcv('bgn_gang_war_chance',0)
-    all={}
-    function Gang(gang,x)
+sharing = realm(True)
+sharing.execute('''
+    all={}; peaceful=false
+    bgNPC.Modes={IsPeaceful=function() return peaceful end}
+    bgNPC.Combat={IsFighting=function() return false end}
+    bgNPC.Vision={HasLineOfSight=function(watcher,source) return not watcher.hidden and not source.hidden end}
+    bgNPC.Actors={GetAll=function() return all end,GetInRadius=function(pos,radius)
+        local near={}
+        for _,a in ipairs(all) do if a:GetNPC():GetPos():DistToSqr(pos)<=radius^2 then near[#near+1]=a end end
+        return near
+    end}
+    function Member(gang,x)
         local npc={valid=true,pos=Vector(x,0,0),GetPos=function(self) return self.pos end}
-        local a={data={gang=gang},npc=npc,enemies={},alive=true}
-        function a:IsAlive() return self.alive end
-        function a:InVehicle() return false end
+        local a={data={gang=gang},npc=npc,enemies={},enemies_count=0,state='walk',alive=true}
         function a:GetNPC() return npc end
-        function a:HasEnemy(e) return self.enemies[e] == true end
-        function a:AddEnemy(e) if hooks.BGN_AddActorEnemy.BGN_FightRoster(self,e) then return end self.enemies[e]=true end
-        function a:EqualStateGroup() return true end
-        function a:SetState(s) self.state=s end
-        all[#all+1]=a
-        return a
+        function a:IsAlive() return self.alive end
+        function a:InVehicle() return self.seated end
+        function a:HasNoEnemies() return self.enemies_count==0 end
+        function a:IsWanted() return self.wanted end
+        function a:HasState(state) return self.state==state end
+        function a:HasEnemy(e) for _,v in ipairs(self.enemies) do if v==e then return true end end return false end
+        function a:HasTeam(other)
+            if type(other)=='string' then return other=='police' and self.police end
+            return other.enemies~=nil and self.data.gang==other.data.gang
+        end
+        function a:AddEnemy(e)
+            if self.refuse or self:HasEnemy(e) then return end
+            self.enemies[#self.enemies+1]=e; self.enemies_count=#self.enemies
+        end
+        function a:EqualStateGroup() return self.state=='walk' end
+        function a:GetReactionForProtect() self.asked=true; return 'ignore' end
+        function a:RemoveAllTargets() self.targets_cleared=true end
+        function a:SetState(state) self.state=state end
+        all[#all+1]=a; return a
     end
-    bgNPC.Actors={GetInRadius=function() return all end,GetAll=function() return all end}
-    function IsValid(v) return v ~= nil and v.valid ~= false end
-    function math.sqrt(x) return x^0.5 end
+    setcv('bgn_enemy_share_period',2); setcv('bgn_gang_help_chance',0)
+    function IsValid(v) return v~=nil and v.valid==true end
 ''')
-load(roster, 'systems/sv_fight_roster.lua')
-roster.execute('''
-    local enemy={valid=true,Health=function() return 100 end}
+load(sharing, 'systems/sv_fight_roster.lua')
+load(sharing, 'systems/sv_enemy_sharing.lua')
+sharing.execute('''
+    local enemy={valid=true,data={},Health=function() return 100 end}
+    local source=Member('crows',0); source:AddEnemy(enemy)
+    local known=Member('crows',5); known:AddEnemy(enemy)
+    local wanted=Member('crows',6); wanted.wanted=true
     local crowd={}
-    for i=1,12 do crowd[i]=Gang('crows',i*10) end
-    local wolf=Gang('wolves',50)
-    crowd[1]:AddEnemy(enemy)
-    local members=0
-    for _,a in ipairs(crowd) do if a.enemies[enemy] then members=members+1 end end
-    local r=bgNPC.Roster.Get('crows',enemy)
-    assert(members==r.size and r.size>=1 and r.size<=6, 'the roster caps the fight: '..members)
-    assert(bgNPC.Roster.IsMember(crowd[1],enemy))
-    local outsider
-    for _,a in ipairs(crowd) do if not a.enemies[enemy] then outsider=a break end end
-    assert(outsider and not bgNPC.Roster.IsMember(outsider,enemy), 'the rest of the gang stays out')
-    outsider:AddEnemy(enemy); assert(not outsider.enemies[enemy], 'the rest is refused the enemy')
-    assert(not bgNPC.Roster.Get('wolves',enemy), 'another gang has no roster here')
-    wolf:AddEnemy(enemy); assert(wolf.enemies[enemy] and bgNPC.Roster.Get('wolves',enemy).size==1, 'a rival gang forms its own roster')
-    local civilian={data={},IsAlive=function() return true end}
-    assert(bgNPC.Roster.IsMember(civilian,enemy) and hooks.BGN_AddActorEnemy.BGN_FightRoster(civilian,enemy)==nil, 'non-gang actors are untouched')
-    setcv('bgn_gang_help_chance',0)
-    local lone={valid=true,Health=function() return 100 end}
-    crowd[1].enemies[lone]=nil; crowd[1]:AddEnemy(lone)
-    assert(bgNPC.Roster.Get('crows',lone).size==1, 'no chance, no helpers')
+    for i=1,12 do crowd[i]=Member('crows',i*500) end
+    local hidden=Member('crows',10); hidden.npc.hidden=true
+    local rival=Member('wolves',20)
+    local dead=Member('crows',30); dead.alive=false
+    local protected=Member('crows',40); protected.refuse=true
+    local seated=Member('crows',50); seated.seated=true
+    local busy=Member('crows',60); busy.state='defense'
+    timers.BGN_EnemySharing()
+    for _,a in ipairs(crowd) do
+        assert(a:HasEnemy(enemy) and a.state=='defense' and a.targets_cleared and not a.asked,
+            'all visible gang allies join, even beyond 1000, without a chance roll or a protection cooldown')
+    end
+    assert(known.state=='defense', 'an ally that already knows the enemy still joins the fight')
+    assert(wanted:HasEnemy(enemy) and wanted.state=='retreat', 'wanted allies keep their retreat behavior')
+    assert(not hidden:HasEnemy(enemy) and not rival:HasEnemy(enemy) and not dead:HasEnemy(enemy))
+    assert(not protected:HasEnemy(enemy) and protected.state=='walk', 'a refused enemy must not start combat')
+    assert(seated:HasEnemy(enemy) and busy:HasEnemy(enemy), 'seated and busy allies receive the threat too')
+    hidden.npc.hidden=false; now=now+2; timers.BGN_EnemySharing()
+    assert(hidden:HasEnemy(enemy) and hidden.state=='defense', 'a late arrival joins when an ally becomes visible')
+    local late=Member('crows',0)
+    timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy), 'respect the sharing interval')
+    now=now+2; peaceful=true; timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    peaceful=false; setcv('bgn_enemy_share_period',0); timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    setcv('bgn_enemy_share_period',2); enemy.valid=false; timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    enemy.valid=true; source.seated=true; now=now+2; timers.BGN_EnemySharing(); assert(late:HasEnemy(enemy))
+    all={}; bgNPC.enemy_share_next=nil
+    local officer=Member(nil,0); officer.police=true; officer:AddEnemy(enemy)
+    local near=Member(nil,10); local far=Member(nil,1500)
+    timers.BGN_EnemySharing()
+    assert(near:HasEnemy(enemy) and near.asked and near.state=='ignore', 'ordinary allies keep their configured reaction')
+    assert(not far:HasEnemy(enemy), 'ordinary enemy sharing keeps its radius')
 ''')
 
 cooldown = realm(True)
@@ -2114,7 +2145,7 @@ pack.execute('''
         all[#all+1]=a
         return a
     end
-    bgNPC.Actors={GetInRadius=function() return all end}
+    bgNPC.Actors={GetAll=function() return all end}
     function IsValid(v) return v ~= nil and v.valid ~= false end
 ''')
 load(pack, 'systems/npcs/sv_gang_pack.lua')
@@ -2122,11 +2153,21 @@ pack.execute('''
     local P=bgNPC.GangPack
     local lead,f1,f2=Member(5,'crows','walk'),Member(7,'crows','walk'),Member(9,'crows','walk')
     local other=Member(2,'wolves','walk')
-    local idle=Member(1,'crows','idle')
+    local idle=Member(17,'crows','idle')
+    local dead=Member(1,'crows','walk'); dead.IsAlive=function() return false end
     local dest=Vector(1000,0,0)
     local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and not lead.pack_leader, 'the leader picks its own way')
     local schedule
     d,delay,schedule=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-lead:GetPos().x)<=180 and math.abs(d.y)<=180 and schedule=='run', 'a follower stays near its leader and uses its pace')
+    P.Destination(f2,dest); assert(f2.pack_leader==lead, 'three members share one pack')
+    local extra,next1,next2=Member(11,'crows','walk'),Member(13,'crows','walk'),Member(15,'crows','walk')
+    P.Destination(next2,dest); P.Destination(next1,dest); P.Destination(extra,dest)
+    assert(not extra.pack_leader and next1.pack_leader==extra and next2.pack_leader==extra, 'six members form two packs of three regardless of update order')
+    local follower=Member(19,'crows','walk')
+    P.Destination(follower,dest)
+    assert(follower.pack_leader==idle, 'a living member outside walk can lead a pack; dead members cannot')
+    extra:GetNPC().pos=Vector(9000,0,0)
+    P.Destination(next1,dest); assert(not next1.pack_leader, 'a distant leader is replaced')
     local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the offset stays while the leader stays the same')
     d,delay=P.Destination(other,Vector(3,0,0)); assert(delay==nil and d.x==3, 'another gang is its own pack')
     d,delay=P.Destination({data={},GetNPC=lead.GetNPC},Vector(4,0,0)); assert(d.x==4 and delay==nil, 'actors outside gangs are not touched')

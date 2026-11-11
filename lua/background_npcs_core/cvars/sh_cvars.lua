@@ -200,7 +200,7 @@ bgNPC.CVars.Register('bgn_corpse_cleanup_time', bgNPC.cvar.bgn_corpse_cleanup_ti
 
 bgNPC.CVars.Register('bgn_medic_danger_time', bgNPC.cvar.bgn_medic_danger_time, 'Seconds medics avoid an area where a medic was killed, or until the killer dies. 0 disables the restriction.')
 bgNPC.CVars.Register('bgn_medic_danger_radius', bgNPC.cvar.bgn_medic_danger_radius, 'Radius around a killed medic where medics cannot spawn or answer calls.')
-bgNPC.CVars.Register('bgn_gang_help_chance', bgNPC.cvar.bgn_gang_help_chance, 'Percent chance for each nearby member of the same gang to join a fight when it starts (the fight roster is capped at 2-6 members).')
+bgNPC.CVars.Register('bgn_gang_help_chance', bgNPC.cvar.bgn_gang_help_chance, 'Obsolete compatibility setting. Visible gang members always help; this value is ignored.')
 bgNPC.CVars.Register('bgn_gang_war_chance', bgNPC.cvar.bgn_gang_war_chance, 'Percent chance per 10 seconds that a calm gang member starts a fight with a rival gang member nearby. 0 disables gang wars.')
 bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions and point-blank shots are always hopeless.')
 
