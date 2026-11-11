@@ -1,132 +1,108 @@
-local _math_random = math.random
+﻿local _math_random = math.random
 local _spread_vector = Vector(5 / 90, 5 / 90, 0)
-
 timer.Create('BGN_DVCars_ExitAnVhicleIfLowerDistance', 0.5, 0, function()
-	local cars = bgNPC.DVCars
+  local cars = bgNPC.DVCars
+  for i = 1, #cars do
+    local vehicle_provider = cars[i]
+    if not vehicle_provider then continue end
+    local vehicle = vehicle_provider:GetVehicle()
+    if not IsValid(vehicle) then continue end
+    local decentvehicle = vehicle_provider:GetVehicleAI()
+    local driver = vehicle_provider:GetDriver()
+    local vehiclePosition = vehicle:GetPos()
+    local passengers = {}
+    for k, actor in ipairs(vehicle_provider:GetPassengers()) do
+      passengers[k] = actor
+    end
 
-	for i = 1, #cars do
-		local vehicle_provider = cars[i]
-		if not vehicle_provider then continue end
+    for _, actor in ipairs(passengers) do
+      if actor:IsAlive() and actor:HasTeam('police') and actor:ShouldExitVehicle() then actor:ExitVehicle() end
+    end
 
-		local vehicle = vehicle_provider:GetVehicle()
-		if not IsValid(vehicle) then continue end
+    -- A driver exiting removes the AI; the remaining passengers must still get out.
+    if not IsValid(decentvehicle) or not driver then
+      for _, actor in ipairs(passengers) do
+        actor:ExitVehicle(true)
+      end
 
-		local decentvehicle = vehicle_provider:GetVehicleAI()
-		local driver = vehicle_provider:GetDriver()
-		local vehiclePosition = vehicle:GetPos()
-		local passengers = {}
-		for k, actor in ipairs(vehicle_provider:GetPassengers()) do passengers[k] = actor end
-		for _, actor in ipairs(passengers) do
-			if actor:IsAlive() and actor:HasTeam('police') and actor:ShouldExitVehicle() then actor:ExitVehicle() end
-		end
+      continue
+    end
 
-		-- A driver exiting removes the AI; the remaining passengers must still get out.
-		if not IsValid(decentvehicle) or not driver then
-			for _, actor in ipairs(passengers) do actor:ExitVehicle(true) end
-			continue
-		end
+    for k = 1, #passengers do
+      local actor = passengers[k]
+      if actor and actor:IsAlive() and actor:EqualStateGroup('danger') and not actor:HasState('fear') then
+        local enemy = actor:GetNearEnemy()
+        if IsValid(enemy) then
+          local in_vehicle = false
+          local enemy_vehicle
+          if enemy:IsPlayer() then
+            in_vehicle = enemy:InVehicle()
+            if in_vehicle then enemy_vehicle = enemy:GetVehicle() end
+          else
+            local enemy_actor = bgNPC.Actors.Get(enemy)
+            if enemy_actor then
+              enemy_vehicle = enemy_actor:GetVehicle()
+              in_vehicle = IsValid(enemy_vehicle)
+            end
+          end
 
-		for k = 1, #passengers do
-			local actor = passengers[k]
+          local result_enemy
+          if IsValid(enemy_vehicle) and vehicle_provider.type == 'police' and IsValid(decentvehicle) then
+            local parent_vehicle = enemy_vehicle:GetParent()
+            if IsValid(parent_vehicle) and parent_vehicle:IsVehicle() then
+              result_enemy = parent_vehicle
+            elseif IsValid(enemy_vehicle) and enemy_vehicle:GetClass() ~= 'prop_vehicle_prisoner_pod' then
+              result_enemy = enemy_vehicle
+            end
+          end
 
-			if actor and actor:IsAlive() and actor:EqualStateGroup('danger') and not actor:HasState('fear') then
-				local enemy = actor:GetNearEnemy()
+          if not IsValid(result_enemy) then result_enemy = enemy end
+          enemy = result_enemy
+          decentvehicle.DVPolice_Target = enemy
+          if not IsValid(enemy) then break end
+          local dist = enemy:GetPos():DistToSqr(vehiclePosition)
+          if driver and driver.weapon then
+            local isTrueDistance = dist <= 1000000
+            if isTrueDistance then
+              vehicle_provider.bulletFireDelay = vehicle_provider.bulletFireDelay or 0
+              vehicle_provider.bulletIsFire = vehicle_provider.bulletIsFire or false
+              if vehicle_provider.bulletFireDelay < CurTime() then vehicle_provider.bulletIsFire = not vehicle_provider.bulletIsFire end
+              if vehicle_provider.bulletIsFire and IsValid(decentvehicle) then
+                local limit = _math_random(3, 10)
+                local delay = _math_random(0.2, 0.4)
+                local shoot_vector = enemy:GetPos() - decentvehicle:GetPos()
+                shoot_vector:Normalize()
+                bgNPC.Util.EntityTimer(decentvehicle, 'dv_fire_enemy', delay, limit, function()
+                  local dv_veh = decentvehicle.v
+                  local is_static = false
+                  if IsValid(dv_veh) then is_static = dv_veh:GetVelocity():Length() <= 10 end
+                  local bullet = {}
+                  bullet.Num = 1
+                  bullet.Src = decentvehicle:GetPos() + decentvehicle:GetForward() * 100 + decentvehicle:GetUp() * (is_static and _math_random(-5, 5) or _math_random(-10, 40))
+                  bullet.Damage = _math_random(4, 8)
+                  bullet.Force = 50
+                  bullet.Tracer = 1
+                  bullet.Spread = _spread_vector
+                  bullet.Dir = shoot_vector
+                  bullet.IgnoreEntity = vehicle
+                  decentvehicle:FireBullets(bullet)
+                  vehicle:EmitSound('weapons/smg1/smg1_fire1.wav', 75, _math_random(90, 110), 1, CHAN_WEAPON)
+                end)
 
-				if IsValid(enemy) then
-					local in_vehicle = false
-					local enemy_vehicle
-					if enemy:IsPlayer() then
-						in_vehicle = enemy:InVehicle()
-						if in_vehicle then
-							enemy_vehicle = enemy:GetVehicle()
-						end
-					else
-						local enemy_actor = bgNPC.Actors.Get(enemy)
-						if enemy_actor then
-							enemy_vehicle = enemy_actor:GetVehicle()
-							in_vehicle = IsValid(enemy_vehicle)
-						end
-					end
-
-					local result_enemy
-
-					if IsValid(enemy_vehicle) and vehicle_provider.type == 'police' and IsValid(decentvehicle) then
-						local parent_vehicle = enemy_vehicle:GetParent()
-						if IsValid(parent_vehicle) and parent_vehicle:IsVehicle() then
-							result_enemy = parent_vehicle
-						elseif IsValid(enemy_vehicle) and enemy_vehicle:GetClass() ~= 'prop_vehicle_prisoner_pod' then
-							result_enemy = enemy_vehicle
-						end
-					end
-
-					if not IsValid(result_enemy) then
-						result_enemy = enemy
-					end
-
-					enemy = result_enemy
-					decentvehicle.DVPolice_Target = enemy
-
-					if not IsValid(enemy) then break end
-
-					local dist = enemy:GetPos():DistToSqr(vehiclePosition)
-					if driver and driver.weapon then
-						local isTrueDistance = dist <= 1000000
-
-						if isTrueDistance then
-							vehicle_provider.bulletFireDelay = vehicle_provider.bulletFireDelay or 0
-							vehicle_provider.bulletIsFire = vehicle_provider.bulletIsFire or false
-
-							if vehicle_provider.bulletFireDelay < CurTime() then
-								vehicle_provider.bulletIsFire = not vehicle_provider.bulletIsFire
-							end
-
-							if vehicle_provider.bulletIsFire and IsValid(decentvehicle) then
-								local limit = _math_random(3, 10)
-								local delay = _math_random(0.2, 0.4)
-								local shoot_vector = enemy:GetPos() - decentvehicle:GetPos()
-								shoot_vector:Normalize()
-
-								bgNPC.Util.EntityTimer(decentvehicle, 'dv_fire_enemy', delay, limit, function()
-									local dv_veh = decentvehicle.v
-									local is_static = false
-									if IsValid(dv_veh) then
-										is_static = dv_veh:GetVelocity():Length() <= 10
-									end
-
-									local bullet = {}
-									bullet.Num = 1
-									bullet.Src = decentvehicle:GetPos() + decentvehicle:GetForward() * 100 + decentvehicle:GetUp() * (is_static and _math_random(-5, 5) or _math_random(-10, 40))
-									bullet.Damage = _math_random(4, 8)
-									bullet.Force = 50
-									bullet.Tracer = 1
-									bullet.Spread = _spread_vector
-									bullet.Dir = shoot_vector
-									bullet.IgnoreEntity = vehicle
-									decentvehicle:FireBullets(bullet)
-									vehicle:EmitSound(
-										'weapons/smg1/smg1_fire1.wav',
-										75,
-										_math_random(90, 110),
-										1,
-										CHAN_WEAPON
-									)
-								end)
-
-								vehicle_provider.bulletIsFire = false
-								vehicle_provider.bulletFireDelay = CurTime() + limit + delay + 3
-							end
-						end
-					elseif not actor:HasState({ 'fear', 'dyspnea_danger', 'run_from_danger' }) then
-						local isTrueDistance = dist <= 640000
-						local delay = vehicle_provider.actorsExitDelay or 0
-
-						if delay < CurTime() and (isTrueDistance or not driver) then
-							actor:ExitVehicle()
-							vehicle_provider.actorsExitDelay = CurTime() + 0.5
-						end
-					end
-				end
-			end
-		end
-	end
+                vehicle_provider.bulletIsFire = false
+                vehicle_provider.bulletFireDelay = CurTime() + limit + delay + 3
+              end
+            end
+          elseif not actor:HasState({'fear', 'dyspnea_danger', 'run_from_danger'}) then
+            local isTrueDistance = dist <= 640000
+            local delay = vehicle_provider.actorsExitDelay or 0
+            if delay < CurTime() and (isTrueDistance or not driver) then
+              actor:ExitVehicle()
+              vehicle_provider.actorsExitDelay = CurTime() + 0.5
+            end
+          end
+        end
+      end
+    end
+  end
 end)

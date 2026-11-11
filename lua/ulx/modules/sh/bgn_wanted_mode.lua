@@ -1,25 +1,17 @@
-local CATEGORY_NAME = 'Background NPCs'
-
+﻿local CATEGORY_NAME = 'Background NPCs'
 function ulx.bgnsetwantedlevel(calling_ply, target_ply, wanted_level)
   if not wanted_level then return end
-
   if wanted_level == 0 then
     ulx.fancyLogAdmin(calling_ply, '#A remove wanted level for #T', target_ply)
-
     ULib.queueFunctionCall(function(target)
       local ASSET = bgNPC.Modules.Get('wanted')
-
-      if ASSET:HasWanted(target) then
-        ASSET:RemoveWanted(target)
-      end
+      if ASSET:HasWanted(target) then ASSET:RemoveWanted(target) end
     end, target_ply)
   else
     ulx.fancyLogAdmin(calling_ply, '#A set wanted level for #T (#s)', target_ply, wanted_level)
-
     ULib.queueFunctionCall(function(target, wanted_level)
       local delay = 0
       local ASSET = bgNPC.Modules.Get('wanted')
-
       if not ASSET:HasWanted(target) then
         ASSET:AddWanted(target)
         delay = 1
@@ -34,7 +26,6 @@ function ulx.bgnsetwantedlevel(calling_ply, target_ply, wanted_level)
 end
 
 local set_wanted_level = ulx.command(CATEGORY_NAME, 'ulx bgnsetwantedlevel', ulx.bgnsetwantedlevel, '!bgnsetwantedlevel')
-
 set_wanted_level:addParam{
   type = ULib.cmds.PlayerArg
 }
@@ -42,7 +33,9 @@ set_wanted_level:addParam{
 set_wanted_level:addParam{
   type = ULib.cmds.StringArg,
   hint = 'wanted level',
-  ULib.cmds.optional, ULib.cmds.takeRestOfLine, completes = {0, 1, 2, 3, 4, 5}
+  ULib.cmds.optional,
+  ULib.cmds.takeRestOfLine,
+  completes = {0, 1, 2, 3, 4, 5}
 }
 
 set_wanted_level:defaultAccess(ULib.ACCESS_ADMIN)

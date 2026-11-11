@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Public API of Background NPCs.
 
 	Every group of functions lives in its own namespace and is called with a dot:
@@ -16,10 +16,8 @@
 
 	The old "bgNPC:Method()" functions still work, see api/compat/sh_legacy.lua.
 --]]
-
 local Assert = bgNPC.Assert
 --
-
 bgNPC.Actors = bgNPC.Actors or {}
 bgNPC.Points = bgNPC.Points or {}
 bgNPC.Config = bgNPC.Config or {}
@@ -30,96 +28,86 @@ bgNPC.Combat = bgNPC.Combat or {}
 bgNPC.Modes = bgNPC.Modes or {}
 bgNPC.Modules = bgNPC.Modules or {}
 bgNPC.Util = bgNPC.Util or {}
-
 local Util = bgNPC.Util
 local Modules = bgNPC.Modules
-
 -- Actors never react to this player: build mode, or the spawn menu "Ignore players" (ai_ignoreplayers) is on.
 -- Players only: NPCs (wanted NPCs too) are never ignored here.
 function bgNPC.Combat.IsIgnored(ent)
-	if not IsValid(ent) or not ent:IsPlayer() then return false end
-	if ent.BGN_HasBuildMode then return true end
-	local cvar = Util.GetCVar('ai_ignoreplayers')
-	return cvar ~= nil and cvar:GetBool()
+  if not IsValid(ent) or not ent:IsPlayer() then return false end
+  if ent.BGN_HasBuildMode then return true end
+  local cvar = Util.GetCVar('ai_ignoreplayers')
+  return cvar ~= nil and cvar:GetBool()
 end
 
 -- ---------------------------------------------------------------------------
 -- Util
 -- ---------------------------------------------------------------------------
-
 -- The API loads before console variables are created, so they are looked up lazily.
 local cvars_cache = {}
-
 -- Returns a ConVar object, caching it after the first successful lookup.
 function Util.GetCVar(name)
-	local cvar = cvars_cache[name]
-	if cvar then return cvar end
-
-	cvar = GetConVar(name)
-	if cvar then cvars_cache[name] = cvar end
-	return cvar
+  local cvar = cvars_cache[name]
+  if cvar then return cvar end
+  cvar = GetConVar(name)
+  if cvar then cvars_cache[name] = cvar end
+  return cvar
 end
 
 function Util.IsDebug()
-	local cvar = Util.GetCVar('bgn_debug')
-	return cvar ~= nil and cvar:GetBool()
+  local cvar = Util.GetCVar('bgn_debug')
+  return cvar ~= nil and cvar:GetBool()
 end
 
 -- Prints a message to the console when "bgn_debug" is enabled.
 function Util.Log(message, tag)
-	if not Util.IsDebug() then return end
-
-	if tag ~= nil then
-		MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
-	else
-		MsgN('[Background NPCs] ' .. tostring(message))
-	end
+  if not Util.IsDebug() then return end
+  if tag ~= nil then
+    MsgN('[Background NPCs][' .. tostring(tag) .. '] ' .. tostring(message))
+  else
+    MsgN('[Background NPCs] ' .. tostring(message))
+  end
 end
 
 function Util.IsVectorInWater(pos)
-	Assert.Arg(1, pos, 'vector', 'bgNPC.Util.IsVectorInWater')
-	return bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
+  Assert.Arg(1, pos, 'vector', 'bgNPC.Util.IsVectorInWater')
+  return bit.band(util.PointContents(pos), CONTENTS_WATER) == CONTENTS_WATER
 end
 
 -- Returns the player's tool object if the given tool mode is active.
 -- @param tool_name string
 -- @param ply entity|nil the local player on the client by default
 function Util.GetActivePlayerTool(tool_name, ply)
-	if not isstring(tool_name) then return end
+  if not isstring(tool_name) then return end
+  if not IsValid(ply) then
+    if SERVER then return end
+    ply = LocalPlayer()
+  end
 
-	if not IsValid(ply) then
-		if SERVER then return end
-		ply = LocalPlayer()
-	end
-
-	local weapon = ply:GetActiveWeapon()
-	if not IsValid(weapon) or weapon:GetClass() ~= 'gmod_tool' then return end
-
-	local tool = ply:GetTool()
-	if not tool or not tool.GetMode or tool:GetMode() ~= tool_name then return end
-	return tool
+  local weapon = ply:GetActiveWeapon()
+  if not IsValid(weapon) or weapon:GetClass() ~= 'gmod_tool' then return end
+  local tool = ply:GetTool()
+  if not tool or not tool.GetMode or tool:GetMode() ~= tool_name then return end
+  return tool
 end
 
 -- Always printed, not only in debug mode.
 function Util.Warning(message)
-	MsgC(Color(255, 180, 60), '[Background NPCs] ' .. tostring(message) .. '\n')
+  MsgC(Color(255, 180, 60), '[Background NPCs] ' .. tostring(message) .. '\n')
 end
 
 -- ---------------------------------------------------------------------------
 -- Modules
 -- ---------------------------------------------------------------------------
-
 local modules_list = list.GetForEdit('BGN_Modules')
-
 -- Returns a module table registered with Modules.Register (or list.Set('BGN_Modules', ...)).
 function Modules.Get(module_name)
-	Assert.Arg(1, module_name, 'string', 'bgNPC.Modules.Get')
-	return modules_list[module_name]
+  Assert.Arg(1, module_name, 'string', 'bgNPC.Modules.Get')
+  return modules_list[module_name]
 end
 
 function Modules.Register(module_name, module_table)
-	Assert.NonEmptyString(1, module_name, 'bgNPC.Modules.Register')
-	Assert.Arg(2, module_table, 'table', 'bgNPC.Modules.Register')
-	list.Set('BGN_Modules', module_name, module_table)
-	return module_table
+  Assert.NonEmptyString(1, module_name, 'bgNPC.Modules.Register')
+  Assert.Arg(2, module_table, 'table', 'bgNPC.Modules.Register')
+  list.Set('BGN_Modules', module_name, module_table)
+  return module_table
 end
