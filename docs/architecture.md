@@ -14,7 +14,7 @@ A shared filename says where a file loads. It does not guarantee a method can dr
 
 ## Load sequence
 
-`lua/autorun/background_npcs.lua` sends and includes `background_npcs_core/sh_init.lua`. The loader sorts files, loads `sh_`, `sv_`, then `cl_` within each directory, recursively; explicit includes are deduplicated. Replic language files and menu option translations are loaded manually.
+`lua/autorun/background_npcs.lua` sends and includes `background_npcs_core/sh_init.lua`. The loader sorts files, loads `sh_`, `sv_`, then `cl_` within each directory, recursively; explicit includes are deduplicated. Replic language files and menu option translations are loaded manually. `tests/` is only sent to clients; `bgn_selftest` / `bgn_selftest_cl` include it when they run.
 
 1. Core: notices, classes, networking, utilities, scheduler, then remaining helpers.
 2. Built-in config/actors/phrases/states, custom `config`, legacy config adapter.
@@ -33,7 +33,7 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | Path | Responsibility / connections |
 |---|---|
 | `sh_init.lua` | Version, shared storage, deterministic loading. |
-| `core/` | Class factory, task budget, network codec/chunks, cvar/command infrastructure, self-tests, notices, utility helpers. |
+| `core/` | Class factory, task budget, network codec/chunks, cvar/command infrastructure, self-test runner (`bgNPC.Test`), notices, utility helpers. |
 | `config/` | Main settings; `actors/` defaults and inheritance; `states/` dialogue/scenic/arrest data; `replics/language/` text and voice definitions. |
 | `custom_modules/config`, `preload`, `postload` | Extension stages, also discoverable from separate addons through merged GMod Lua paths. |
 | `api/` | Actors/config/points/states/modes/vision/statistics/assertions and combat facade. `compat/sh_legacy.lua` retains old colon APIs. |
@@ -48,6 +48,7 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | `modules/` | Optional integrations: DV, DarkRP, StormFox and NPC mods. `dv/` owns provider access, traffic recovery, pedestrian detours, return and vehicle damage. |
 | `ui/` | Settings window, Classic panels, wizard/welcome, spawnmenu, update display, translations. |
 | `debug/` | Admin UID subscriptions and bounded decision/sight/signal journal (SERVER); cached mesh/HUD, camera and scene/hand markers (CLIENT); diagnostics and automated checks. |
+| `tests/` | Self-tests of pure logic, split by realm prefix (`sh_`, `sv_`, `cl_`). Not loaded with the addon: `bgNPC.Test.Run` includes them on each `bgn_selftest` (SERVER) / `bgn_selftest_cl` (CLIENT) run, so edited tests run without a map change. A test reads only public fields; a helper a test needs is exposed on its module with a `read by tests/` comment. |
 
 Other repository paths:
 
