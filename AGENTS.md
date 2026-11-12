@@ -6,6 +6,8 @@ Keep EN/RU pages aligned, preserve existing documentation URLs, and distinguish 
 
 Keep changes within the user’s task, preserve unrelated work and prefer the smallest complete solution. Do not edit generated `site/` or launch in-game lab fixtures for a docs-only task. State verification limits. A requested local commit does not authorize a push or deployment.
 
+When a task requires a unit test, put it in `lua/background_npcs_core/tests/` (file name prefixed by realm: `sh_`, `sv_`, `cl_`), never in production code.
+
 ## Skills
 
 - **Ponytail**: use by default when writing, changing, refactoring or debugging code. Build the minimal sufficient implementation, reuse existing code, add no extra architecture.
