@@ -2,6 +2,8 @@
 
 Reviewed against Git through tag **2.3.0** (`2258b49`) and current **2.3.1 dev** (`7459c3c7`, 2026-11-10). `version.txt` and `bgNPC.VERSION` both say 2.3.1. There are 48 commits between the tag and this baseline. A version string does not prove publication on Workshop.
 
+Local Animator fixes after the baseline: `dance` starts after state cleanup, active donor animations synchronize to ready players entering PVS, stopping releases Animator-owned NPC freeze, and client copies preserve appearance at startup. See [donor animations](systems/brains.md#donor-animations). Publication is not verified.
+
 ## Through 2.3.0
 
 | Period | User-visible development and current documentation |

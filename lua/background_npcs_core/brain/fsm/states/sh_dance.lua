@@ -1,10 +1,9 @@
 ﻿if SERVER then
   bgNPC.States.Register('dance', 'calm', {
-    pre_start = function(actor, state, data)
+    start = function(actor, state, data)
       local anim_info = bgNPC.Animator.Play('models/player/kleiner.mdl', 'Taunt_Dance', actor:GetNPC())
-      if not anim_info then return 'walk' end
+      if not anim_info then actor:SetState('walk') return end
       data.anim_info = anim_info
-      return state, data
     end,
     update = function(actor, state, data)
       if IsValid(data.anim_info.animator) then return end

@@ -4,6 +4,12 @@ An actor is split into an **actor** (data and rules), a **body** (`actor.body`: 
 engine entity: movement, schedules, relationships, weapons, animation) and a **brain** (`actor.brain`: decisions).
 Bodies and brains exist on the server only.
 
+## Donor animations
+
+`bgNPC.Animator` plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.
+
+The server checks active animation viewers every 0.25 seconds and sends the current animation when a ready player enters its PVS, including late connections. One-shot animations retain their original deadline; loops last until stopped. Stopping releases an NPC schedule frozen by Animator if it is still current and no static actor animation owns the body. The client copies skin, bodygroups, color, material, submaterials and model scale at animation start; subsequent appearance changes are not tracked. The `dance` state starts its animation after the previous state's animation is reset.
+
 ## Bodies
 
 `bgn_actor_body npc|nextbot` (default `npc`; the old value `auto` is the same as `npc`). By default actors are real HL2 NPCs (`NPCBody`), like in the old versions: other addons (model replacers, ragdoll and death mods, Bio-Annihilation 2, Followers) see only real NPCs (`IsNPC`, `OnNPCKilled`). With `nextbot`, on maps with a NavMesh, actors of the HL2 classes

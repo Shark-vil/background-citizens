@@ -40,6 +40,23 @@ function Animator.Get(entity)
 end
 
 if SERVER then
+  local function SyncViewers(info)
+    info.viewers = info.viewers or {}
+    for _, ply in ipairs(player.GetHumans()) do
+      if ply.bgn_ready and ply:TestPVS(info.entity) then
+        if not info.viewers[ply] then
+          Net.Send('bgn.anim_start', ply, info.entity, info.animator, info.name, info.sequence_id, info.settings.loop and 0 or info.stop_time)
+          info.viewers[ply] = true
+        end
+      else
+        info.viewers[ply] = nil
+      end
+    end
+    for ply in pairs(info.viewers) do
+      if not IsValid(ply) then info.viewers[ply] = nil end
+    end
+  end
+
   local function AnyPlayerInPVS(entity)
     local players = player.GetHumans()
     for i = 1, #players do
@@ -52,6 +69,13 @@ if SERVER then
     local info = active[entity]
     if not info then return end
     active[entity] = nil
+    if IsValid(entity) and info.npc_state and entity:IsCurrentSchedule(SCHED_NPC_FREEZE) then
+      local actor = bgNPC.Actors.Get(entity)
+      if not actor or not actor.is_animated then
+        entity:ClearSchedule()
+        if entity:GetNPCState() == NPC_STATE_SCRIPT then entity:SetNPCState(info.npc_state) end
+      end
+    end
     if IsValid(info.animator) then info.animator:Remove() end
     if IsValid(entity) then Net.Send('bgn.anim_stop', nil, entity) end
   end
@@ -70,6 +94,7 @@ if SERVER then
     settings = settings or {}
     Animator.Stop(entity)
     local animator = ents.Create('prop_dynamic')
+    if not IsValid(animator) then return false end
     animator:SetModel(model)
     animator:SetPos(entity:GetPos())
     animator:SetAngles(entity:GetAngles())
@@ -100,7 +125,7 @@ if SERVER then
     }
 
     active[entity] = info
-    Net.Send('bgn.anim_start', nil, entity, animator, name, sequence_id, settings.loop and 0 or info.stop_time)
+    SyncViewers(info)
     hook.Run('BGN_AnimationStarted', info)
     return info
   end
@@ -119,8 +144,13 @@ if SERVER then
           Animator.Stop(entity)
         end
       elseif entity:IsNPC() and not entity:IsCurrentSchedule(SCHED_NPC_FREEZE) then
+        info.npc_state = info.npc_state or entity:GetNPCState()
         entity:SetNPCState(NPC_STATE_SCRIPT)
         entity:SetSchedule(SCHED_NPC_FREEZE)
+      end
+      if active[entity] == info and (info.next_sync or 0) <= now then
+        info.next_sync = now + 0.25
+        SyncViewers(info)
       end
     end
   end)
@@ -159,6 +189,12 @@ else
     ent:AddEffects(EF_BONEMERGE + EF_BONEMERGE_FASTCULL)
     if IsValid(source) then
       ent:SetSkin(source:GetSkin())
+      ent:SetColor(source:GetColor())
+      ent:SetMaterial(source:GetMaterial())
+      ent:SetModelScale(source:GetModelScale())
+      for index in ipairs(source:GetMaterials()) do
+        ent:SetSubMaterial(index - 1, source:GetSubMaterial(index - 1))
+      end
       for _, bodygroup in ipairs(source:GetBodyGroups()) do
         ent:SetBodygroup(bodygroup.id, source:GetBodygroup(bodygroup.id))
       end

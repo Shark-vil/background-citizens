@@ -1845,6 +1845,8 @@ animation_client.execute('''
         return {valid=true,GetPos=function() return Vector() end,GetAngles=function() return {} end,
             GetModel=function() return 'model' end,GetSkin=function() return 0 end,GetBodyGroups=function() return {} end,
             LookupBone=function() return 1 end,SetPos=function() end,SetAngles=function() end,
+            GetColor=function() return {} end,GetMaterial=function() return '' end,GetModelScale=function() return 1 end,
+            GetMaterials=function() return {} end,SetColor=function() end,SetMaterial=function() end,SetModelScale=function() end,
             SetParent=function() end,AddEffects=function() end,SetSkin=function() end,
             SetNoDraw=function(self,v) self.hidden=v end,Remove=function(self) self.valid=false end}
     end
