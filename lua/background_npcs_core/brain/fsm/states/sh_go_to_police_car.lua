@@ -7,7 +7,7 @@
 	Started by the fight when the enemy drives (sv_defense.lua), and by modules/dv/sv_return_to_vehicle.lua.
 --]]
 local MAX_CAR_DIST_SQR = 1000 ^ 2
-local ENTER_DIST_SQR = 500 ^ 2 -- the car is within reach
+local ENTER_DIST_SQR = 180 ^ 2 -- at the car body: boarding is visible from here (the timeout ends a blocked walk)
 local SEIZE_DIST_SQR = 250 ^ 2 -- at the door: close enough to pull the driver out
 -- @param can string 'CanBoard' or 'CanSeize'
 -- @return Entity|nil the nearest car within reach the actor may take that way
@@ -46,6 +46,12 @@ local function Leave(actor, next_state)
   if actor:HasState('go_to_police_car') then actor:SetState('walk', nil, true) end
 end
 
+-- seated: the state ends (its stop gives the enemies back)
+hook.Add('BGN_OnEnterVehicle', 'BGN_GoToCarSeated', function(actor)
+  if not actor:HasState('go_to_police_car') then return end
+  Leave(actor, actor:GetStateData().next_state or 'walk')
+end)
+
 bgNPC.States.Register('go_to_police_car', 'danger', {
   pre_start = function(actor, state, data)
     -- a car of its own first, a seized one only when there is none near
@@ -76,6 +82,7 @@ bgNPC.States.Register('go_to_police_car', 'danger', {
       return
     end
 
+    if data.boarding then return end
     actor:WalkToTarget(car, 'run')
     local dist = npc:GetPos():DistToSqr(car:GetPos())
     if data.seize then
@@ -88,8 +95,16 @@ bgNPC.States.Register('go_to_police_car', 'danger', {
       return
     end
 
-    actor:EnterVehicle(car)
-    Leave(actor, next_state)
+    -- boarding is animated: stay in the state until the actor is seated (BGN_OnEnterVehicle above), or the timeout
+    local delay = actor:EnterVehicle(car, true)
+    if not delay then
+      Leave(actor, next_state)
+      return
+    end
+
+    data.boarding = true
+    data.timeout = math.min(data.timeout, CurTime() + delay + 2)
+    data.next_state = next_state
   end,
   stop = function(actor, state, data)
     actor.mechanics.enemies_controller = true

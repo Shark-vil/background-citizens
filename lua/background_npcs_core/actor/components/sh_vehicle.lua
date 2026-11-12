@@ -62,8 +62,15 @@ local function CaptureBody(actor)
   return saved
 end
 
-function Actor:EnterVehicle(vehicle)
+-- first the model has: citizens sit down, player models take the driving pose, HL2 metrocops duck in
+local BOARD_SEQUENCES = {'Idle_To_Sit_Chair', 'drive_jeep', 'Stand_to_crouchpistol'}
+local BOARD_PAUSE = 1 -- a model without the sequence still stops and turns to the car this long
+local BOARD_MAX_DIST_SQR = 300 ^ 2 -- an actor pushed away during the animation does not board
+-- @param animate boolean|nil visible boarding: the actor turns to the car and plays the sequence before it disappears
+-- @return number|nil seconds until the actor is seated
+function Actor:EnterVehicle(vehicle, animate)
   Assert.Arg(1, vehicle, 'entity', 'ACTOR:EnterVehicle')
+  Assert.Arg(2, animate, 'boolean|nil', 'ACTOR:EnterVehicle')
   if not self.mechanics.use_vehicle or not DecentVehicleDestination then return end
   if not IsValid(vehicle) or not vehicle:IsVehicle() or self:InVehicle() then return end
   local provider = BGN_VEHICLE:GetVehicleProvider(vehicle)
@@ -74,9 +81,31 @@ function Actor:EnterVehicle(vehicle)
   end
 
   if not provider:CanUse(self) then return end
+  local delay = .5
+  if animate then
+    local body = self:GetNPC()
+    body:SetAngles(Angle(0, (vehicle:GetPos() - body:GetPos()):Angle().y, 0))
+    delay = BOARD_PAUSE
+    self:WalkToTarget(nil)
+    for _, name in ipairs(BOARD_SEQUENCES) do
+      if self:IsValidSequence(name) then
+        local duration = body:SequenceDuration(body:LookupSequence(name))
+        -- a one-frame pose is held for the pause
+        if duration > .1 then
+          delay = math.Clamp(duration, .5, 3)
+          self:PlayStaticSequence(name)
+        else
+          self:PlayStaticSequence(name, true, BOARD_PAUSE)
+        end
+        break
+      end
+    end
+  end
+
   -- Each actor owns its pending request; simultaneous passenger requests must not replace each other.
-  bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle_' .. self.uid, .5, 1, function(car)
+  bgNPC.Util.EntityTimer(vehicle, 'bgn_actor_enter_vehicle_' .. self.uid, delay, 1, function(car)
     if not self:IsAlive() or not self.mechanics.use_vehicle or self:InVehicle() or not provider:CanUse(self) then return end
+    if animate and self:GetNPC():GetPos():DistToSqr(car:GetPos()) > BOARD_MAX_DIST_SQR then return end
     if car.bgnHeadingPending then
       timer.Simple(.1, function() if IsValid(car) and self:IsAlive() then self:EnterVehicle(car) end end)
       return
@@ -106,6 +135,7 @@ function Actor:EnterVehicle(vehicle)
     npc:Remove()
     hook.Run('BGN_OnEnterVehicle', self, provider)
   end)
+  return delay
 end
 
 local function IsExitOccupied(pos, saved, model)
