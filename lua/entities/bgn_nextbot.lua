@@ -196,32 +196,7 @@ local function SwepStats(primary, hold_type)
   }
 end
 
-if bgNPC and bgNPC.Test then
-  bgNPC.Test.Add('nextbot.swep_stats', function(check)
-    local s = SwepStats({
-      Damage = 30,
-      RPM = 600,
-      ClipSize = 25,
-      Sound = {'A.Single'}
-    }, 'ar2')
-
-    check(s.damage == 30 and s.delay == 0.1 and s.clip == 25 and s.sound == 'A.Single' and s.hold == 'rifle', 'tfa-style rifle')
-    s = SwepStats({
-      ClipSize = -1
-    }, 'knife')
-
-    check(s.melee and s.clip == nil and s.range == 75 and s.hold == 'melee', 'melee without clip')
-    s = SwepStats({}, 'revolver')
-    check(s.hold == 'pistol' and s.damage == DEFAULT_WEAPON.damage, 'empty primary falls back to pistol')
-  end)
-
-  bgNPC.Test.Add('nextbot.proficiency_ladder', function(check)
-    for p = 1, 4 do
-      local a, b = PROFICIENCY[p - 1], PROFICIENCY[p]
-      check(b.spread < a.spread and b.damage > a.damage and b.reaction < a.reaction, 'skill ' .. p .. ' beats ' .. (p - 1))
-    end
-  end)
-end
+ENT.SwepStats, ENT.PROFICIENCY, ENT.DEFAULT_WEAPON = SwepStats, PROFICIENCY, DEFAULT_WEAPON -- read by tests/sv_systems.lua
 
 -- hold type -> { idle, walk, run, aim idle, attack gesture }; first activity the model has wins
 -- Weaponless: some models (combine soldiers...) have no plain idle/walk/run and T-pose, so fall back to armed ones.

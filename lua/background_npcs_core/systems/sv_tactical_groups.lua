@@ -189,13 +189,4 @@ cvars.AddChangeCallback('bgn_module_tactical_groups', function(_, _, value)
 end, 'tg_bgn_module_tactical_groups')
 
 if cvar_enabled:GetBool() then Start() end
-bgNPC.Test.Add('squads.formations', function(check)
-  local line = Squads.FormationOffsets('line', 3)
-  check(line[1][2] == -SPACING and line[2][2] == 0 and line[3][2] == SPACING, 'line is abreast and centered')
-  local wedge = Squads.FormationOffsets('wedge', 5)
-  check(wedge[1][1] == 0 and wedge[1][2] == 0, 'wedge tip is the leader')
-  check(wedge[2][1] == wedge[3][1] and wedge[2][2] == -wedge[3][2], 'wedge rows are symmetric')
-  check(wedge[4][1] < wedge[2][1], 'wedge widens backwards')
-  local column = Squads.FormationOffsets('column', 3)
-  check(column[3][1] == -2 * SPACING and column[3][2] == 0, 'column is in file')
-end)
+Squads.SPACING = SPACING -- read by tests/sv_systems.lua

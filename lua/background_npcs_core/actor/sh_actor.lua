@@ -43,14 +43,6 @@ function H.GenderByModel(model)
   return 'unknown'
 end
 
-bgNPC.Test.Add('actor.gender_by_model', function(check)
-  check(H.GenderByModel('models/humans/group01/female_01.mdl') == 'female', 'female before male')
-  check(H.GenderByModel('models/humans/group01/male_07.mdl') == 'male', 'male; "humans" folder ignored')
-  check(H.GenderByModel('models/player/woman_police.mdl') == 'female', 'woman before man')
-  check(H.GenderByModel('models/ponies/men_04.mdl') == 'male', 'men')
-  check(H.GenderByModel('models/police.mdl') == 'unknown', 'unknown')
-end)
-
 -- @return entity|NULL the valid entity nearest to origin
 function H.FindNearest(list, count, origin)
   local nearest, nearest_dist = NULL, nil

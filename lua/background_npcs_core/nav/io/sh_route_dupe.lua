@@ -11,45 +11,6 @@ function Editor.GraphFromDupe(dupe)
   return bgNPC.LegacyNodes.ToGraph(data)
 end
 
-bgNPC.Test.Add('nav.route_dupe', function(check)
-  local graph = bgNPC.NodeGraph()
-  local a, b = graph:AddNode(Vector(0, 0, 0)), graph:AddNode(Vector(200, 0, 0))
-  graph:Link(a, b, 'walk')
-  local copy = Editor.GraphFromDupe({
-    id = 'BGN_NODES',
-    map = game.GetMap(),
-    data = graph:ToTable()
-  })
-
-  check(copy and copy:Count() == 2 and copy:IsLinked(1, 2, 'walk'), 'current duplication round trip')
-  local old = Editor.GraphFromDupe({
-    id = 'BGN_NODES',
-    slibrary = true,
-    data = util.TableToJSON({
-      {
-        pos = Vector(0, 0, 0),
-        parents = {2}
-      },
-      {
-        pos = Vector(200, 0, 0),
-        parents = {1}
-      },
-    })
-  })
-
-  check(old and old:IsLinked(1, 2, 'walk'), 'old SLibrary duplication loads without SLibrary')
-  check(Editor.GraphFromDupe({
-    id = 'other',
-    data = graph:ToTable()
-  }) == nil, 'unrelated dupes rejected')
-
-  check(Editor.GraphFromDupe({
-    id = 'BGN_NODES',
-    map = game.GetMap() .. '_other',
-    data = graph:ToTable()
-  }) == nil, 'wrong map rejected')
-end)
-
 if SERVER then
   local function LoadDupe(ply, dupe)
     if not IsValid(ply) or not (ply:IsAdmin() or ply:IsSuperAdmin()) then return end

@@ -22,21 +22,6 @@ local function GetPlayersDisposition(npc, players)
 end
 
 bgNPC.NextBotBody.GetPlayersDisposition = GetPlayersDisposition
-bgNPC.Test.Add('nextbot.players_disposition', function(check)
-  local npc = {
-    Disposition = function(_, relation) return relation end
-  }
-
-  for _, relation in ipairs({D_HT, D_FR, D_LI, D_NU, D_ER}) do
-    check(GetPlayersDisposition(npc, {relation, D_HT, relation}) == relation, 'most frequent disposition ' .. relation)
-  end
-
-  check(GetPlayersDisposition(npc, {}) == D_NU, 'no players')
-  check(GetPlayersDisposition(npc, {D_HT, D_LI}) == D_NU, 'tie is neutral')
-  check(GetPlayersDisposition(npc, {D_LI, D_HT, D_LI, D_FR, D_FR}) == D_NU, 'tie after an early leader')
-  check(GetPlayersDisposition(npc, {D_HT, D_LI, D_FR, D_FR}) == D_FR, 'plurality without absolute majority')
-end)
-
 timer.Create('BGN_Timer_NextBotHostility', PERIOD, 0, function()
   if bgNPC.Modes.IsPeaceful() or cvar_ignore_another_npc:GetBool() then return end
   local bots = {}

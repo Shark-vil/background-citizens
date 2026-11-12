@@ -14,6 +14,7 @@
 		modules/   integrations with other addons
 		ui/        client menus and settings panels
 		debug/     debug rendering
+		tests/     self-tests, included only by bgn_selftest / bgn_selftest_cl
 --]]
 file.CreateDir('background_npcs')
 file.CreateDir('background_npcs/nodes')
@@ -142,6 +143,11 @@ local function ExecutableScripts()
   Include('ui/settings/cl_lang.lua')
   IncludeDir('ui')
   IncludeDir('debug')
+  -- Self-tests are only sent to clients here; bgNPC.Test.Run includes them on demand.
+  for _, name in ipairs(file.Find(ROOT .. '/tests/*.lua', 'LUA')) do
+    Include('tests/' .. name, true)
+  end
+
   IncludeDir('custom_modules/postload')
   hook.Run('BGN_PostLoadScripts')
 end

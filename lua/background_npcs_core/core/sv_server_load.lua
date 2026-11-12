@@ -42,11 +42,3 @@ end
 function ServerLoad.IsOverloaded()
   return ServerLoad.IsLagging() or ServerLoad.IsCriticalMass()
 end
-
-bgNPC.Test.Add('server_load', function(check)
-  local interval = 1 / 66
-  check(not ServerLoad.IsSlowWindow(66, 1, interval), 'a full second of ticks is no lag')
-  check(not ServerLoad.IsSlowWindow(56, 1, interval), 'a few missing ticks are no lag')
-  check(ServerLoad.IsSlowWindow(40, 1, interval), 'a third of the ticks missing is a lag')
-  check(ServerLoad.IsSlowWindow(70, 1.5, interval), 'the window length counts')
-end)

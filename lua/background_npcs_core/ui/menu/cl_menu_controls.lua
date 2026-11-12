@@ -681,19 +681,3 @@ function Builder:Choice(cvar, label, options, opts)
   row.control = ctrl
   return row
 end
-
-bgNPC.Test.Add('menu.hide_server_rows', function(check)
-  local was = Menu.as_player
-  Menu.as_player = true
-  local probe = vgui.Create('DPanel')
-  probe:SetVisible(false)
-  local page = Menu.NewBuilder(probe)
-  page:Section('server')
-  page:Toggle('bgn_enable', 'server row')
-  check(page.rows == 1 and page.visible == 0, 'a server row is hidden from a non-admin')
-  check(page.pending_head ~= nil, 'a section without visible rows has no heading')
-  page:Toggle('bgn_menu_dark', 'client row')
-  check(page.visible == 1 and page.pending_head == nil, 'a client row is shown under its heading')
-  probe:Remove()
-  Menu.as_player = was
-end)

@@ -17,10 +17,7 @@ local function SafeSet(list)
   return safe
 end
 
-bgNPC.Test.Add('arrest.safe_weapons', function(check)
-  local safe = SafeSet('weapon_fists, gmod_tool,weapon_physgun')
-  check(safe.weapon_fists and safe.gmod_tool and safe.weapon_physgun and not safe[''], 'comma list, spaces ignored')
-end)
+ArrestModule.SafeSet = SafeSet -- read by tests/sv_systems.lua
 
 local function IsDisarmed(ply)
   local safe = SafeSet(cvar_safe:GetString())

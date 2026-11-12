@@ -499,34 +499,4 @@ hook.Add('BGN_PlayerLookAtObject', 'BGN_Conversations', function(ply, ent, time)
   if Chance(INTERRUPT_CHANCE) then Conv.Interrupt(conv, ply) end
 end)
 
-bgNPC.Test.Add('conversations.scripts', function(check)
-  for _, script in ipairs(bgNPC.cfg.conversations or {}) do
-    local lines = bgNPC.cfg.replics['conv_' .. script.id]
-    check(lines and #lines == #script.lines, 'conv_' .. script.id .. ': phrases match the script lines')
-    check(#script.roles >= 2 and #script.roles <= 3, script.id .. ': 2-3 roles')
-    check(not script.final or FINALS[script.final], script.id .. ': known final')
-    for _, line in ipairs(script.lines) do
-      check(script.roles[line[1]] ~= nil, script.id .. ': speaker has a role')
-    end
-  end
-end)
-
-bgNPC.Test.Add('conversations.cast', function(check)
-  local function Fake(actor_type)
-    return {
-      GetType = function() return actor_type end
-    }
-  end
-
-  local police, thief, citizen = Fake('police'), Fake('thief'), Fake('citizen')
-  local script = {
-    id = 'police_thief',
-    roles = {'police', 'thief'},
-    lines = bgNPC.cfg.replics['conv_police_thief']
-  }
-
-  local cast = Cast(script, thief, {citizen, police})
-  check(cast and cast[1] == police and cast[2] == thief, 'the initiator takes its own role, a candidate the other')
-  check(Cast(script, citizen, {police, thief}) == nil, 'no role for the initiator: no conversation')
-  check(Cast(script, police, {citizen}) == nil, 'a role nobody can take: no conversation')
-end)
+Conv.Cast, Conv.FINALS = Cast, FINALS -- read by tests/sv_systems.lua

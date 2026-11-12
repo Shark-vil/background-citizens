@@ -237,6 +237,7 @@ end
 
 Protect(function()
 	bgNPC.GOAP.ClearCache() -- planner self-tests construct fresh action instances
+	bgNPC.Test.Load()
 	for _, name in ipairs({ 'goap.planner', 'goap.sets' }) do bgNPC.Test.list[name](Check) end
 	Next()
 end)

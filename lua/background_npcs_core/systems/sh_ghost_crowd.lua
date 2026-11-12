@@ -98,36 +98,3 @@ function GhostCrowd.NextPoint(from, prev, away_from, run_away, each, blocked)
     end
   end
 end
-
-bgNPC.Test.Add('ghost_crowd_rules', function(check)
-  local function List(points)
-    return function(callback)
-      for _, pos in ipairs(points) do
-        callback(pos)
-      end
-    end
-  end
-
-  local function Never()
-    return false
-  end
-
-  local from, ply_pos = Vector(0, 0, 0), Vector(-1000, 0, 0)
-  check(GhostCrowd.NextPoint(from, nil, ply_pos, false, List({Vector(-300, 0, 0), Vector(-300, 100, 0)}), Never) == nil, 'never walks towards the player')
-  check(GhostCrowd.NextPoint(from, nil, ply_pos, false, List({Vector(300, 0, 500), Vector(2000, 0, 0)}), Never) == nil, 'skips too high and too far points')
-  check(GhostCrowd.NextPoint(from, nil, ply_pos, false, List({Vector(300, 0, 0)}), function() return true end) == nil, 'skips blocked points')
-  local pos = GhostCrowd.NextPoint(from, nil, ply_pos, true, List({Vector(300, 0, 0)}), Never)
-  check(pos == nil or pos == Vector(300, 0, 0), 'runs away from the player') -- nil: a wall in the way on this map
-  local seg = {
-    from = Vector(0, 0, 0),
-    to = Vector(100, 0, 0),
-    t0 = 10,
-    speed = 50
-  }
-
-  check(GhostCrowd.SegmentPos(seg, 11) == Vector(50, 0, 0), 'segment: halfway after a second')
-  check(GhostCrowd.SegmentPos(seg, 99) == seg.to, 'segment: stops at the end')
-  check(GhostCrowd.SegmentPos(seg, 0) == seg.from, 'segment: not before the start')
-  seg.speed = 0
-  check(GhostCrowd.SegmentPos(seg, 11) == seg.from, 'segment: standing still')
-end)
