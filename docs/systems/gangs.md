@@ -10,6 +10,12 @@ Gangsters of every gang type (`gangster` and both gangs; `respawn_delay = 30` is
 
 Gang alliance uses gang identity, not the common bandits tag: rivals do not join one another's protection calls. Police/car access still uses team rules.
 
+## Clothing textures
+
+Black Raven wears worn charcoal leather and graphite fabric with raven patches; Red Wolf uses burgundy canvas, dark reinforcements and wolf patches. Trousers, boots and equipment retain separate material colors. The eight painted sheets cover both sexes and light/heavy equipment, using the original HL2 UV layout. Heavy equipment uses gang insignia in place of resistance and medical markings.
+
+The SERVER selects the model and applies `SetSubMaterial`; CLIENT rendering uses the shipped VMT/VTF assets. Editable PNG sheets live in `tools/gang_skins/<gang>/<class>_<sex>.png`. Run `python tools/make_gang_skins.py` (Pillow and srctools) to rebuild the VTF files with their existing dimensions, flags and mipmaps; it no longer recolors the game's textures.
+
 ## Fight roster
 
 The capped roster has been replaced by visible-ally support (`systems/sv_enemy_sharing.lua`). Every living same-gang member that sees an ally outside the `fear` state with a living enemy receives that enemy. Calm members enter `defense` (wanted members use `retreat`) without a chance roll, roster cap or protection cooldown. Walking packs and distance do not limit support: an unobstructed line of sight to the ally is required (a trace, without a facing-direction check). Threats can spread through visible allies. Late arrivals also join; seeing the enemy itself is unnecessary. Seated members also receive enemies. Busy members receive the enemy without changing their current state; arrest protection and state locks remain in effect.

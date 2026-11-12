@@ -1,7 +1,7 @@
 ﻿--[[
 	Gang members (config/actors/sh_gangs.lua): a light one wears HL2 citizen clothes (group01) and carries a pistol,
 	a heavy one wears rebel gear (group03) and carries an SMG or a rifle. The clothes sheet of the model is replaced
-	with the gang's recolor (materials/background_npcs/gangs/<gang>/<class>_<sex>, made by tools/make_gang_skins.py)
+	with the gang's painted UV sheet (materials/background_npcs/gangs/<gang>/<class>_<sex>, compiled by tools/make_gang_skins.py)
 	through SetSubMaterial; the class is read back from the model, so it also survives revival and leaving a car.
 --]]
 local LIGHT = {}
