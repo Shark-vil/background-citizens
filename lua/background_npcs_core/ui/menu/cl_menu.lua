@@ -499,7 +499,9 @@ end
 local function VisiblePages()
   local pages = {}
   for _, def in ipairs(SortedPages()) do
-    if not def.hidden then pages[#pages + 1] = def end -- hidden: opened from another page, not listed
+    if not def.hidden then -- hidden: opened from another page, not listed
+      pages[#pages + 1] = def
+    end
   end
 
   if Menu.IsAdmin() then return pages end

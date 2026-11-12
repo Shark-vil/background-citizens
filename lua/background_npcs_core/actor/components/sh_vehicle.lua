@@ -97,6 +97,7 @@ function Actor:EnterVehicle(vehicle, animate)
         else
           self:PlayStaticSequence(name, true, BOARD_PAUSE)
         end
+
         break
       end
     end

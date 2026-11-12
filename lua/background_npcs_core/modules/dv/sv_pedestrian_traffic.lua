@@ -26,6 +26,7 @@ local function Vehicles(now)
   end
   return vehicles
 end
+
 local function FloorPoint(npc, pos)
   local tr = util.TraceLine({
     start = pos + Vector(0, 0, 32),

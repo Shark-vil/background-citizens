@@ -1,4 +1,4 @@
--- Warm-up: on the first player spawn every configured NPC class/model and vehicle is created once and removed,
+﻿-- Warm-up: on the first player spawn every configured NPC class/model and vehicle is created once and removed,
 -- so the engine loads their resources now instead of as a hitch during gameplay.
 local function Warm(job)
   local pos, ang = vector_origin, angle_zero

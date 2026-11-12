@@ -120,7 +120,6 @@ function Menu.DensityChoice(page, simple)
 end
 
 local cvar_quick_hidden = CreateClientConVar('bgn_menu_quick_hidden', '0', true, false, 'Background NPCs menu: hide the quick settings block on the General page')
-
 -- The quick settings block, tinted with the accent. The General page shows it until it is closed (closable), Tools always.
 local function QuickSettings(page, closable)
   page:Custom(function(panel)
@@ -132,7 +131,9 @@ local function QuickSettings(page, closable)
     local close = closable and Menu.IconButton(panel, math.Round(28 * s), function() return ICONS .. 'close.png' end, Menu.Text('#bgn.menu.close'), function()
       Menu.Sound('click')
       RunConsoleCommand('bgn_menu_quick_hidden', '1')
-      timer.Simple(0, function() Menu.ShowPage('general') end) -- after the cvar changed
+      timer.Simple(0, function()
+        Menu.ShowPage('general') -- after the cvar changed
+      end)
     end)
 
     panel.PerformLayout = function(self, w)
@@ -167,7 +168,6 @@ Menu.AddPage('general', {
   order = 100,
   build = function(page)
     if not cvar_quick_hidden:GetBool() then QuickSettings(page, true) end
-
     page:Section('#bgn.menu.section.main')
     page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
     page:Toggle('bgn_debug', '#bgn.settings.general.debug')
@@ -205,10 +205,12 @@ Menu.AddPage('actors', {
         page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.menu.actor.max', 0, 200)
         if istable(bgNPC.Config.GetActor(actor_type).carry_items) then page:Toggle('bgn_carry_items_' .. actor_type, '#bgn.menu.actor.carry_items') end
         if istable(data.weapons) and #data.weapons ~= 0 then page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.menu.actor.no_weapons') end
-        if DecentVehicleDestination and istable(data.vehicles) and #data.vehicles ~= 0 then page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.menu.actor.max_vehicles', 0, 200, {
-          badge = 'Decent Vehicle',
-          badge_color = 'accent'
-        }) end
+        if DecentVehicleDestination and istable(data.vehicles) and #data.vehicles ~= 0 then
+          page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.menu.actor.max_vehicles', 0, 200, {
+            badge = 'Decent Vehicle',
+            badge_color = 'accent'
+          })
+        end
       end
     end
   end,
@@ -499,7 +501,6 @@ Menu.AddPage('modules', {
       })
 
       row.icon = ICONS .. module.icon
-
       if module.id and HasSettings(module) then
         -- the gear is a sibling of the switch (the switch stays the row's control: the whole row toggles, as on other pages)
         local s = Menu.Scale()

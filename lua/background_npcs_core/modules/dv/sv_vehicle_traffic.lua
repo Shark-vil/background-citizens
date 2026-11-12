@@ -191,7 +191,10 @@ function Traffic.AlternateLanes(ai)
   local rejected = ai.bgnTraffic.rejectedLanes or {}
   local direction = ai.PrevWaypoint and (ai.Waypoint.Target - ai.PrevWaypoint.Target):GetNormalized() or ai:GetVehicleForward()
   for id, from in ipairs(dvd.Waypoints) do
-    if id % 128 == 0 then bgNPC.Tasks.Budget() end -- the whole map's waypoints are scanned
+    if id % 128 == 0 then -- the whole map's waypoints are scanned
+      bgNPC.Tasks.Budget()
+    end
+
     if dvd.WaypointAvailable(id, ai.Group) then
       for _, next_id in ipairs(from.Neighbors) do
         local to = dvd.Waypoints[next_id]

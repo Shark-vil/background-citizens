@@ -1,4 +1,4 @@
-bgNPC.Test.Add('animator.lifecycle', function(check)
+﻿bgNPC.Test.Add('animator.lifecycle', function(check)
   -- Isolate engine stubs so this test never creates or changes live entities.
   local env = setmetatable({
     SERVER = true,

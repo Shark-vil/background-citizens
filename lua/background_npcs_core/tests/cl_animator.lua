@@ -1,4 +1,4 @@
-bgNPC.Test.Add('animator.appearance', function(check)
+﻿bgNPC.Test.Add('animator.appearance', function(check)
   local env = setmetatable({
     SERVER = false,
     CLIENT = true

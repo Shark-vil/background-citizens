@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Level of detail for Decent Vehicle drivers. Cars that no player is near or looking at think and scan less often:
 	every DV think runs the steering logic, 7 hull traces and a sphere search, which dominates a busy street.
 	Cars in a chase, in recovery or fleeing keep the native rate.
@@ -56,6 +56,4 @@ timer.Create('BGN_VehicleLOD', PERIOD, 0, function()
 end)
 
 -- A clear trace keeps the car going for 0.1 s; with a longer scan interval that would brake it between scans.
-hook.Add('Decent Vehicle: Trace', 'BGN_VehicleLOD', function(ai)
-  if ai.bgnFarLOD and math.abs(ai.StopByTrace - CurTime() - .1) < 1e-4 then ai.StopByTrace = CurTime() + FAR.Trace + .05 end
-end)
+hook.Add('Decent Vehicle: Trace', 'BGN_VehicleLOD', function(ai) if ai.bgnFarLOD and math.abs(ai.StopByTrace - CurTime() - .1) < 1e-4 then ai.StopByTrace = CurTime() + FAR.Trace + .05 end end)

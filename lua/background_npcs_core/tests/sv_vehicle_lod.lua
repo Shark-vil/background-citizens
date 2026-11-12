@@ -1,4 +1,4 @@
-bgNPC.Test.Add('vehicle_lod.trace_hold', function(check)
+﻿bgNPC.Test.Add('vehicle_lod.trace_hold', function(check)
   local hold = hook.GetTable()['Decent Vehicle: Trace']['BGN_VehicleLOD']
   local now = CurTime()
   local far = {

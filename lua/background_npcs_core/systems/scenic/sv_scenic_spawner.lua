@@ -483,7 +483,9 @@ local function IsUnwatched(pos)
       start = ply:EyePos(),
       endpos = target,
       mask = MASK_SOLID_BRUSHONLY
-    }).Fraction == 1 then return false end
+    }).Fraction == 1 then
+      return false
+    end
   end
   return true
 end
