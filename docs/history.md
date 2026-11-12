@@ -72,6 +72,8 @@ viewed head clipping into the camera; server eye frames and temporary body rende
 
 Local debug redesign: editor/debug Tools now have separate categories. UID-based inspection defaults to one actor and records actual perception and team handoffs, with bounded history, configurable HUD/3D2D, distances, WH, filters and freeze. Cached line meshes replace the separate immediate world passes. Scene previews and hand markers share these controls; actor movement restores prior control flags/state. Gameplay stealth rules are unchanged. Native debugging also exposed and fixed carried-model culling after actor teleportation. See [debug controls](systems/testing.md#spawnmenu-debug-page).
 
+A 2026-11-12 audit of the current branch against 1.13.7 (what stayed, what changed, what can break old behavior) is in [comparison with 1.13](migration.md).
+
 ## Reproduce the comparison
 
 ```text

@@ -26,6 +26,7 @@
 
 - [Архитектура и структура файлов](architecture.md)
 - [История версий и база 2.3.1](history.md)
+- [Сравнение с 1.13 (Classic)](migration.md)
 - [Серверные методы](reference/server.md)
 - [Клиентские методы](reference/client.md)
 - [Общие методы](reference/shared.md)
