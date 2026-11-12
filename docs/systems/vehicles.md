@@ -6,6 +6,8 @@ DV is optional. Install Decent Vehicle, the car content used by your actor confi
 
 Boarding preserves Actor/UID but replaces its entity; exit restores the saved body at a free seat-specific position. A blocked exit keeps the actor aboard. Use actor health accessors and BGN_ActorEntityChanged for integrations. Actor-on-actor seated hits roll triple damage (20%), double (50%) or unchanged damage (30%); player/foreign NPC hits do not receive this multiplier.
 
+SERVER also preserves the registered Actor/UID during forced ejection when another actor seizes a car, so the restored body continues its normal AI instead of becoming an orphan.
+
 ## Driving and verification
 
 [Emergency routing](navigation.md#emergency-cars-decent-vehicle), [traffic recovery and developer fixtures](testing.md#dv-traffic-developer-checks), [arrest in a car](arrest.md#car-break-in).

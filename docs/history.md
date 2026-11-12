@@ -91,3 +91,5 @@ Local change: distant actor logic uses configurable staggered pause/active windo
 Local weapon change: NextBot pistol single/short bursts, witness-local police harm limits, lifecycle cleanup and armed arrest aim. See [brains](systems/brains.md).
 
 Local network change: actor PVS sync sends identity (entity, type, generation, class, model, name, gender) only on first sight or rebind and otherwise only the changed state part; sends are capped at 8 per tick. See [architecture](architecture.md).
+
+Local vehicle fix: forced ejection during car seizure now uses the original passengers rather than deep copies of their actors. Restored bodies keep their registered identity and AI instead of freezing and later being removed as orphans. See [vehicles](systems/vehicles.md).
