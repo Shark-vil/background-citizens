@@ -1,6 +1,31 @@
 ﻿local Traffic = {}
 bgNPC.PedestrianTraffic = Traffic
 local STEP = Vector(0, 0, 18)
+local DV_CLASSES = {'npc_decentvehicle', 'npc_dvbgn_police', 'npc_dvtaxi'}
+local vehicles, vehicles_time = {}, 0
+-- Cars driven by DV or created by this addon, rebuilt at most every 0.25 s: one scan serves every pedestrian instead of a sphere search each.
+local function Vehicles(now)
+  if now < vehicles_time then return vehicles end
+  vehicles, vehicles_time = {}, now + .25
+  local seen = {}
+  local function Add(car)
+    if IsValid(car) and not seen[car] then
+      seen[car] = true
+      vehicles[#vehicles + 1] = car
+    end
+  end
+
+  for _, provider in ipairs(bgNPC.DVCars) do
+    Add(provider:GetVehicle())
+  end
+
+  for _, class in ipairs(DV_CLASSES) do
+    for _, ai in ipairs(ents.FindByClass(class)) do
+      Add(ai.v)
+    end
+  end
+  return vehicles
+end
 local function FloorPoint(npc, pos)
   local tr = util.TraceLine({
     start = pos + Vector(0, 0, 32),
@@ -131,8 +156,8 @@ function Traffic.Update(actor, goal)
   local pos, car, closest, blocked = npc:GetPos()
   local mins, maxs = npc:GetCollisionBounds()
   local pad = math.max(math.abs(mins.x), math.abs(mins.y), maxs.x, maxs.y) + 16
-  for _, ent in ipairs(ents.FindInSphere(pos, 400)) do
-    if ent.isBgnVehicle or IsValid(ent.DecentVehicle) then
+  for _, ent in ipairs(Vehicles(now)) do
+    if IsValid(ent) and ent:GetPos():DistToSqr(pos) < (400 + ent:BoundingRadius()) ^ 2 then
       local d = ent:NearestPoint(pos):DistToSqr(pos)
       local crosses = goal and CrossesCar(ent, pos, goal, pad)
       if d < 200 ^ 2 and (crosses or d < 120 ^ 2) and (not closest or d < closest) then car, closest, blocked = ent, d, crosses end

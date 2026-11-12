@@ -176,8 +176,10 @@ local function UpdateVehicleMovement(actor, walk_pos)
 end
 
 -- Local traffic navigation preserves the actor's state and original destination.
+local cvar_dv_support
 function Actor:AvoidDVVehicle(goal)
-  if not istable(DecentVehicleDestination) or not GetConVar('bgn_enable_dv_support'):GetBool() or self:InVehicle() or self:GetState() == 'go_to_police_car' then
+  cvar_dv_support = cvar_dv_support or GetConVar('bgn_enable_dv_support')
+  if not istable(DecentVehicleDestination) or not cvar_dv_support:GetBool() or self:InVehicle() or self:GetState() == 'go_to_police_car' then
     self.dvDetour = nil
     return false
   end

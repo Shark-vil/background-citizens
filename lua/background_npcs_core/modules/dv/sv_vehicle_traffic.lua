@@ -191,6 +191,7 @@ function Traffic.AlternateLanes(ai)
   local rejected = ai.bgnTraffic.rejectedLanes or {}
   local direction = ai.PrevWaypoint and (ai.Waypoint.Target - ai.PrevWaypoint.Target):GetNormalized() or ai:GetVehicleForward()
   for id, from in ipairs(dvd.Waypoints) do
+    if id % 128 == 0 then bgNPC.Tasks.Budget() end -- the whole map's waypoints are scanned
     if dvd.WaypointAvailable(id, ai.Group) then
       for _, next_id in ipairs(from.Neighbors) do
         local to = dvd.Waypoints[next_id]
@@ -346,7 +347,8 @@ local function Update(provider, now)
   end
 
   local retry = state.retryLane
-  if now < (state.nextPlan or 0) or (not retry and (stuck < WAIT or not NeedsRecovery(ai))) then return end
+  -- A far unseen car does not plan: it waits for a player to come near or for the unseen-car cleanup (sv_vehicle_lod.lua).
+  if now < (state.nextPlan or 0) or (not retry and (ai.bgnFarLOD or stuck < WAIT or not NeedsRecovery(ai))) then return end
   local obstacle = ai.Trace and ai.Trace.Entity
   local leader = IsValid(obstacle) and obstacle.DecentVehicle
   if IsValid(leader) and leader.bgnTraffic and leader.bgnTraffic.path then
@@ -371,6 +373,7 @@ local function Update(provider, now)
   if not retry and (state.failedPlans or 0) >= 2 and not state.mission and not IsValid(state.enemy) then
     local normal_path, normal_iterations = path, iterations
     local lanes = Traffic.AlternateLanes(ai)
+    if not IsValid(ai) or not IsValid(car) or state.mode ~= 'planning' then return end
     for i = 1, math.min(3, #lanes) do
       local lane = lanes[i]
       path, iterations = Traffic.Plan(ai, lane.to.Target + Vector(0, 0, state.geometry.ride), state.geometry, lane.direction)

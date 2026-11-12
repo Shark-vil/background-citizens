@@ -16,6 +16,12 @@ local PERIODS = {
   [LOD_DORMANT] = 0.2
 }
 
+local MOVEMENT_PERIODS = {
+  [LOD_NEAR] = 0.1,
+  [LOD_FAR] = 0.25,
+  [LOD_DORMANT] = 0.25
+}
+
 local LOD_PERIOD = 1
 local ENEMIES_PERIOD = 1
 local TARGETS_PERIOD = 5
@@ -107,7 +113,9 @@ local function UpdateActor(actor, now, players)
     actor:RecalculationTargets()
   end
 
-  if not actor.logic_paused then
+  -- Node arrival radius is 150 units, so a walker covers at most ~50 units between movement updates.
+  if not actor.logic_paused and (actor.next_movement or 0) <= now then
+    actor.next_movement = now + MOVEMENT_PERIODS[lod]
     RebuildFollowPath(actor, now)
     actor:UpdateMovement()
   end
@@ -146,7 +154,7 @@ end)
 -- Wakes a dormant actor right away (it was attacked, became an enemy, ...).
 function Actors.WakeUp(actor)
   actor.next_lod = CurTime() + 1
-  actor.next_brain = 0
+  actor.next_brain, actor.next_movement = 0, 0
   SetLOD(actor, LOD_NEAR)
 end
 

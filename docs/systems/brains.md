@@ -335,3 +335,5 @@ See [police weapon choice and harm memory](arrest.md#police-weapon-choice-and-wi
 The stock pistol now fires groups of 1–3 individual shots, approximately 0.2 s apart, followed by a 0.45–0.8 s rest. These are separate, visibility/friendly-fire-checked shots, not multiple bullets in one attack. The 18-round magazine keeps the 1.8 s reload pause. Burst state resets on weapon/target changes and reload; other weapon profiles and scripted-weapon fallback remain unchanged. Combat checks quantize the intended intervals to engine ticks.
 
 `python tools/test_police_force.py` checks witnessed distinct counts, thresholds, memory/reset/rebind, vehicle damage and pistol cadence. Live single-player checks compare native HL2 and NextBot shots and inspect arrest weapon retention; multiplayer and third-party weapon bases require separate verification.
+
+Movement updates run every 0.1 s for near actors and every 0.25 s for far or dormant ones (the node arrival radius is 150 units).

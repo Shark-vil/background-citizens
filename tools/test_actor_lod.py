@@ -37,7 +37,7 @@ now=.3; update(a,now,players); update(b,now,players)
 assert(a.on and not b.on,'successive UIDs have different phases')
 local before=b.brains; update(b,now,players); assert(b.brains==before,'no brain during pause')
 for n=1,600 do now=n*.1 update(a,now,players) update(b,now,players) end
-assert(a.moves>100 and b.moves>100 and a.flips>20 and b.flips>20,'both actors repeatedly resume')
+assert(a.moves>50 and b.moves>50 and a.moves<130 and b.moves<130 and a.flips>20 and b.flips>20,'both actors repeatedly resume')
 now=1.5; a.next_lod=0; update(a,now,players); assert(not a.on)
 bgNPC.Actors.WakeUp(a); assert(a.on and a.next_lod==now+1)
 now=1.6; update(a,now,players); assert(a.on,'event wake survives next scheduler pass')
