@@ -7,7 +7,7 @@
 	Started by the fight when the enemy drives (sv_defense.lua), and by modules/dv/sv_return_to_vehicle.lua.
 --]]
 local MAX_CAR_DIST_SQR = 1000 ^ 2
-local ENTER_DIST_SQR = 180 ^ 2 -- at the car body: boarding is visible from here (the timeout ends a blocked walk)
+local ENTER_DIST_SQR = 70 ^ 2 -- to the car's hull, i.e. right at the door (the timeout ends a blocked walk)
 local SEIZE_DIST_SQR = 250 ^ 2 -- at the door: close enough to pull the driver out
 -- @param can string 'CanBoard' or 'CanSeize'
 -- @return Entity|nil the nearest car within reach the actor may take that way
@@ -91,11 +91,11 @@ bgNPC.States.Register('go_to_police_car', 'danger', {
         Leave(actor, next_state) -- someone took it first, or a player got in
         return
       end
-    elseif dist > ENTER_DIST_SQR then
+    elseif npc:GetPos():DistToSqr(car:NearestPoint(npc:GetPos())) > ENTER_DIST_SQR then
       return
     end
 
-    -- boarding is animated: stay in the state until the actor is seated (BGN_OnEnterVehicle above), or the timeout
+    -- boarding is visible (turn to the car): stay in the state until the actor is seated (BGN_OnEnterVehicle above), or the timeout
     local delay = actor:EnterVehicle(car, true)
     if not delay then
       Leave(actor, next_state)

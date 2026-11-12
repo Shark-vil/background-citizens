@@ -243,7 +243,12 @@ end
 -- Throws everyone out; they are scared of the one who did it.
 function VEHICLE:Eject(by_actor)
   local npc = by_actor:GetNPC()
-  for _, actor in ipairs(table.Copy(self:GetPassengers())) do
+  local passengers = {}
+  for i, actor in ipairs(self:GetPassengers()) do
+    passengers[i] = actor
+  end
+
+  for _, actor in ipairs(passengers) do
     if actor ~= by_actor and actor:InVehicle() then
       actor:ExitVehicle(true)
       if not actor:HasTeam(by_actor) then
