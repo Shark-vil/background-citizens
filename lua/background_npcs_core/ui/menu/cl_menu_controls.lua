@@ -227,7 +227,8 @@ local function RowLayout(row, w, h)
   local s = Menu.Scale()
   local pad, vpad = math.Round(16 * s), math.Round(14 * s)
   local control = row.control
-  local reserved = IsValid(control) and control:GetWide() + math.Round(24 * s) or 0
+  local stack = row.stack and IsValid(control) -- the control sits under the text, not beside it
+  local reserved = IsValid(control) and not stack and control:GetWide() + math.Round(24 * s) or 0
   if row.locked then reserved = reserved + math.Round(22 * s) end
   reserved = reserved + (row.reserve or 0) -- room for a button left of the control
   local text_w = w - pad * 2 - reserved - (row.icon and math.Round(30 * s) or 0)
@@ -244,7 +245,14 @@ local function RowLayout(row, w, h)
   if #row.help_lines ~= 0 then text_h = text_h + math.Round(3 * s) + #row.help_lines * Menu.FontHeight('BGN.Menu.Small') end
   local height = math.Round(math.max(text_h, IsValid(control) and control:GetTall() or 0) + vpad * 2)
   row.text_y = math.Round((height - text_h) / 2)
-  if IsValid(control) then control:SetPos(w - pad - control:GetWide(), math.Round((height - control:GetTall()) / 2)) end
+  if stack then
+    row.text_y = vpad
+    height = vpad * 2 + text_h + math.Round(10 * s) + control:GetTall()
+    control:SetPos(pad, vpad + text_h + math.Round(10 * s))
+  elseif IsValid(control) then
+    control:SetPos(w - pad - control:GetWide(), math.Round((height - control:GetTall()) / 2))
+  end
+
   if height ~= h then
     row:SetTall(height)
     row:GetParent():InvalidateLayout()
@@ -297,7 +305,9 @@ local function RowPaint(row, w, h)
 
   if row.locked and IsValid(row.control) then
     local icon = math.Round(14 * s)
-    Menu.Icon('background_npcs/vgui/menu/lock.png', row.control.x - math.Round(10 * s) - icon, (h - icon) / 2, icon, C.muted)
+    local lx, ly = row.control.x - math.Round(10 * s) - icon, (h - icon) / 2
+    if row.stack then lx, ly = w - pad - icon, row.text_y end
+    Menu.Icon('background_npcs/vgui/menu/lock.png', lx, ly, icon, C.muted)
   end
 end
 
@@ -308,7 +318,7 @@ end
 -- @return Panel the row; put your control into row.control (it is placed on the right)
 function Builder:Row(label, help, server, cvar, locked, badge, badge_color)
   local label_text = Menu.Text(label)
-  local help_text = help and Menu.Text(help) or nil
+  local help_text = help and not self.nohelp and Menu.Text(help) or nil -- nohelp: the window explains it elsewhere
   if help_text == '' then help_text = nil end
   local hidden = server and not Menu.IsAdmin() -- non-admins don't see what they can't change
   self.rows = self.rows + 1
@@ -638,6 +648,7 @@ function Builder:Choice(cvar, label, options, opts)
     return cv and cv:GetString() or ''
   end
 
+  row.stack = self.stack -- the wizard puts the segments under the label
   local ctrl = row:Add('DPanel')
   ctrl:SetTall(math.Round(32 * s))
   local inset = math.Round(3 * s)

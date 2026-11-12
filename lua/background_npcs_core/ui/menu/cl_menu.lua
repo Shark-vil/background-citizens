@@ -198,11 +198,12 @@ function Menu.LerpColor(f, a, b)
 end
 
 -- ---------------------------------------------------------------------------
--- Scale and fonts: the layout is designed at 1080p and scaled with the screen height
+-- Scale and fonts: the layout is designed at 960 px of height (so 1080p is 1.125x: bigger, easier to read) and
+-- scaled with the screen height, and also with the width so the 1000-1100 px wide windows still fit narrow screens
 -- ---------------------------------------------------------------------------
 local cvar_ui_scale = CreateClientConVar('bgn_cl_ui_scale', '1', true, false, 'Background NPCs: size of the menu text and controls (1 - by the screen height)', 0.75, 2)
 function Menu.Scale()
-  return math.Clamp(ScrH() / 1080 * cvar_ui_scale:GetFloat(), 0.75, 3)
+  return math.Clamp(math.min(ScrH() / 960, ScrW() / 1150) * cvar_ui_scale:GetFloat(), 0.75, 3)
 end
 
 local font_scale
