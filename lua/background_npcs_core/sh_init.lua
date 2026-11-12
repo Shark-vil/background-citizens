@@ -23,7 +23,7 @@ file.CreateDir('background_npcs/seats')
 file.CreateDir('background_npcs/compile')
 if SERVER then resource.AddWorkshop(2341497926) end
 bgNPC = bgNPC or {}
-bgNPC.VERSION = '2.4.0'
+bgNPC.VERSION = '2.5.1'
 -- Shared storage, filled by the API ----
 bgNPC.LANGUAGES = bgNPC.LANGUAGES or {}
 bgNPC.cfg = bgNPC.cfg or {}
