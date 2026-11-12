@@ -279,6 +279,11 @@ function Actor:ExitVehicle(forced, squeeze)
     npc:SetBodygroup(id, value)
   end
 
+  npc.bgn_exit_guard = {
+    car = provider:GetVehicle(),
+    until_time = CurTime() + 3
+  }
+
   npc:SetCollisionGroup(saved.collision_group)
   npc:SetMaxHealth(saved.max_health)
   npc:SetHealth(saved.health)

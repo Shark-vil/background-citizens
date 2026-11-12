@@ -93,3 +93,5 @@ Local weapon change: NextBot pistol single/short bursts, witness-local police ha
 Local network change: actor PVS sync sends identity (entity, type, generation, class, model, name, gender) only on first sight or rebind and otherwise only the changed state part; sends are capped at 8 per tick. See [architecture](architecture.md).
 
 Local vehicle fix: forced ejection during car seizure now uses the original passengers rather than deep copies of their actors. Restored bodies keep their registered identity and AI instead of freezing and later being removed as orphans. See [vehicles](systems/vehicles.md).
+
+Local vehicle fix 2: an actor leaving a moving car (police arriving at a chase) is immune to damage from that same car for 3 seconds, so a fast car no longer kills the officer on exit, after which the lifeless body stood still and was removed. See [vehicles](systems/vehicles.md).

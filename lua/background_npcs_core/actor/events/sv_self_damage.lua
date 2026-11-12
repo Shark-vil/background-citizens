@@ -2,6 +2,8 @@
 local TeamParentModule
 local cvar_team_damage = GetConVar('bgn_team_damage')
 hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginfo)
+  -- stepping out of a moving car: its own car must not run the actor over (a fast one killed the officer on exit)
+  if target.bgn_exit_guard and target.bgn_exit_guard.until_time > CurTime() and dmginfo:GetAttacker() == target.bgn_exit_guard.car then return true end
   local occupant = bgNPC.Actors.Get(target)
   if occupant and occupant.vehicle_body then
     local damage, attacker = dmginfo:GetDamage(), dmginfo:GetAttacker()
