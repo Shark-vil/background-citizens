@@ -11,6 +11,16 @@ function bgNPC:ActorSpawnOnPosition(npc_type, position)
   -- actor:RandomState()
 end
 
+-- Wanted-only actors appear (and are moved) near the newest wanted target at their level or above.
+-- @return Vector|nil
+function bgNPC:GetWantedSpawnCenter(wanted_level)
+  local wanted_list = bgNPC.Modules.Get('wanted'):GetAllWanted()
+  for i = #wanted_list, 1, -1 do
+    local wanted = wanted_list[i]
+    if wanted and IsValid(wanted.target) and wanted.level >= wanted_level then return wanted.target:GetPos() end
+  end
+end
+
 function bgNPC:RespawnActor(actor, spawn_position, func)
   if not actor or not actor:IsAlive() then
     if func and isfunction(func) then func(false) end
@@ -66,22 +76,8 @@ local function InitActorsSpawner(delay)
         local pos
         local wanted_level = bgNPC.Config.GetWantedLevel(npc_data)
         if wanted_level then
-          local asset = bgNPC.Modules.Get('wanted')
-          local success = false
-          local wanted_list = asset:GetAllWanted()
-          for i = #wanted_list, 1, -1 do
-            local WantedClass = wanted_list[i]
-            if WantedClass then
-              local target = WantedClass.target
-              if IsValid(target) and WantedClass.level >= wanted_level then
-                pos = target:GetPos()
-                success = true
-                break
-              end
-            end
-          end
-
-          if not success then continue end
+          pos = bgNPC:GetWantedSpawnCenter(wanted_level)
+          if not pos then continue end
         end
 
         if npc_data.validator then

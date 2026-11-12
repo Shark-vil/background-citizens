@@ -179,20 +179,7 @@ if SERVER then
     local max_limit = bgNPC.Config.GetTypeLimit(npc_type)
     if max_limit == 0 or bgNPC.Actors.Count(npc_type) >= max_limit then return false end
     local wanted_level = bgNPC.Config.GetWantedLevel(npc_data)
-    if wanted_level then
-      local asset = bgNPC.Modules.Get('wanted')
-      local wanted_list = asset:GetAllWanted()
-      local has_target = false
-      for i = #wanted_list, 1, -1 do
-        local WantedClass = wanted_list[i]
-        if WantedClass and IsValid(WantedClass.target) and WantedClass.level >= wanted_level then
-          has_target = true
-          break
-        end
-      end
-
-      if not has_target then return false end
-    end
+    if wanted_level and not bgNPC:GetWantedSpawnCenter(wanted_level) then return false end
 
     if npc_data.validator then
       local result = npc_data.validator(npc_data, npc_type)

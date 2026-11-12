@@ -27,8 +27,8 @@ local function FindExistCarAndEnterThis(actor)
 end
 
 local function TeleportActor(actor, pos)
+  -- RespawnActor rechecks that the spot is hidden right before moving the actor
   if not actor or not bgNPC:IsValidSpawnArea(actor:GetType(), pos) then return end
-  if not bgNPC:IsHiddenSpawnPosition(pos, actor:GetNPC()) then return end
   bgNPC:RespawnActor(actor, pos, function(success)
     if not success or not actor:IsAlive() then return end
     actor:RandomState()
@@ -74,7 +74,6 @@ local function CanRecycle(actor, players)
 end
 
 local function run_remover_process_async(yield, wait, actors, actors_count)
-  local WantedModule = bgNPC.Modules.Get('wanted')
   fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
   bgn_enable = GetConVar('bgn_enable'):GetBool()
   bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
@@ -106,45 +105,20 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
       if over_limit or actor.toRemove or not bgn_actors_teleporter then
         actor:Remove()
       else
-        local data = actor:GetData()
-        local wanted_level = bgNPC.Config.GetWantedLevel(data)
-        if not wanted_level then
+        local wanted_level = bgNPC.Config.GetWantedLevel(actor:GetData())
+        local desiredPosition = wanted_level and bgNPC:GetWantedSpawnCenter(wanted_level)
+        if wanted_level and not desiredPosition then
+          actor:Remove()
+        else
           if max_teleporter == current_teleport then break end
           current_teleport = current_teleport + 1
-          local is_entered_vehicle = FindExistCarAndEnterThis(actor)
-          if not is_entered_vehicle then
+          if not FindExistCarAndEnterThis(actor) then
             local nodePosition = bgNPC:FindSpawnPositionAsync({
+              position = desiredPosition,
               target = npc
             })
 
             if nodePosition then TeleportActor(actor, nodePosition) end
-          end
-        else
-          local desiredPosition
-          local wanted_list = WantedModule:GetAllWanted()
-          for k = 1, #wanted_list do
-            local WantedComponent = wanted_list[k]
-            local Target = WantedComponent.target
-            if IsValid(Target) and WantedComponent.level >= wanted_level then
-              desiredPosition = Target:GetPos()
-              break
-            end
-          end
-
-          if not desiredPosition then
-            actor:Remove()
-          else
-            if max_teleporter == current_teleport then break end
-            current_teleport = current_teleport + 1
-            local is_entered_vehicle = FindExistCarAndEnterThis(actor)
-            if not is_entered_vehicle then
-              local nodePosition = bgNPC:FindSpawnPositionAsync({
-                position = desiredPosition,
-                target = npc
-              })
-
-              if nodePosition then TeleportActor(actor, nodePosition) end
-            end
           end
         end
       end
