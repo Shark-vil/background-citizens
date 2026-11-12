@@ -19,7 +19,9 @@ function bgNPC.Vision.HasLineOfSight() return seen end
 function bgNPC.Combat.ResolveVehicleAttacker(e) return e end
 function bgNPC.Combat.IsAttacker(e) return IsValid(e) end
 ents={GetAll=function() return {} end}
-function Entity() return {valid=true,health=100,Health=function(self) return self.health end,GetPos=function() return 0 end} end
+function Entity(x) return {valid=true,health=100,x=x or 0,Health=function(self) return self.health end,
+ GetPos=function(self) return {x=self.x,DistToSqr=function(p,o) return (p.x-o.x)^2 end} end,
+ IsPlayer=function() return false end,IsNPC=function() return true end,IsNextBot=function() return false end} end
 suspect=Entity()
 function Actor(uid,police)
  local a={uid=uid,police=police,npc=Entity()}; a.npc.actor=a
@@ -73,6 +75,26 @@ lua.execute('seen=true; reload_victim=Actor(10,false); hooks.PostEntityTakeDamag
 lua.execute((ROOT/'lua/background_npcs_core/api/sv_police_force.lua').read_text(encoding='utf-8-sig'))
 lua.execute('bgNPC.Combat.ResetPoliceThreat(suspect); assert(not observers[1].police_harm[suspect])')
 print('PASS: distinct witnessed victims, five/six and 30% boundaries, sticky injury, rebind and all reset events')
+lua.execute('''
+local C=bgNPC.Combat
+local cop,thug,sniper,near=Actor(20,true),Entity(),Entity(600),Entity(400)
+observers={}
+local hit=function(attacker) return {GetDamage=function() return 1 end,GetAttacker=function() return attacker end} end
+hooks.PostEntityTakeDamage(Actor(21,false).npc,hit(near),true)
+assert(not near.bgn_ranged_attack,'a hit from 400 units is not ranged')
+hooks.PostEntityTakeDamage(Actor(22,false).npc,hit(sniper),false)
+assert(not sniper.bgn_ranged_attack,'a blocked hit marks nobody')
+hooks.PostEntityTakeDamage(Actor(23,false).npc,hit(sniper),true)
+assert(sniper.bgn_ranged_attack,'a hit from 600 units is ranged')
+cop.enemies={thug}
+assert(C.CanPoliceUseStunstick(cop,thug),'a melee enemy alone allows the baton')
+cop.enemies={thug,sniper}
+assert(not C.CanPoliceUseStunstick(cop,thug),'a ranged shooter among the enemies forbids the baton')
+assert(not C.CanPoliceUseStunstick(Actor(24,true),sniper),'the shooter itself is never batoned')
+C.ResetPoliceThreat(sniper)
+assert(C.CanPoliceUseStunstick(cop,thug),'a reset shooter no longer forbids it')
+''')
+print('PASS: an enemy that hit from farther than 500 units forbids the stunstick until reset')
 
 burst=LuaRuntime()
 burst.execute('''

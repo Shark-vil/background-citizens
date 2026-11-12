@@ -10,9 +10,16 @@ for _, officer in ipairs(Actors.GetAll() or {}) do
   end
 end
 
+local RANGED_DIST_SQR = 500 ^ 2
 -- Witness-local memory: one entry per suspect, one count per distinct allied actor.
+-- Never with an enemy that has hit anyone from farther than 500 units: a stunstick does not reach a shooter.
 function Combat.CanPoliceUseStunstick(officer, suspect)
   if not IsValid(suspect) then return false end
+  for _, enemy in ipairs(officer.enemies or {}) do
+    if IsValid(enemy) and enemy.bgn_ranged_attack then return false end
+  end
+
+  if suspect.bgn_ranged_attack then return false end
   if bgNPC.Modules.Get('wanted'):HasWanted(suspect) or suspect.bgn_has_killed or bgNPC.Statistics.GetSum(suspect) > 0 then return false end
   local harm = officer.police_harm and officer.police_harm[suspect]
   return not harm or (not harm.critical and harm.count <= 5)
@@ -22,7 +29,7 @@ function Combat.ResetPoliceThreat(suspect)
   if suspect == nil then return end
   local remembered = suspects[suspect]
   suspects[suspect] = nil
-  suspect.bgn_has_killed, suspect.bgn_last_attack, suspect.bgn_wanted_module_impunity = nil, nil, nil
+  suspect.bgn_has_killed, suspect.bgn_last_attack, suspect.bgn_wanted_module_impunity, suspect.bgn_ranged_attack = nil, nil, nil, nil
   bgNPC.Statistics.Reset(suspect)
   if not remembered then return end
   for _, officer in ipairs(Actors.GetAll()) do
@@ -59,8 +66,25 @@ local function WitnessedHarm(victim, attacker, amount)
   end
 end
 
-hook.Add('PostEntityTakeDamage', 'BGN_PoliceWitnessedHarm', function(victim, dmg, took) if took then WitnessedHarm(victim, dmg:GetAttacker(), dmg:GetDamage()) end end)
-hook.Add('BGN_PostVehicleDamage', 'BGN_PoliceWitnessedHarm', function(actor, attacker, amount) WitnessedHarm(actor:GetNPC(), attacker, amount) end)
+-- any victim counts: a shooter is remembered until its threat is reset (Combat.ResetPoliceThreat)
+local function MarkRangedAttack(victim, attacker)
+  local suspect = Combat.ResolveVehicleAttacker(attacker)
+  if not IsValid(victim) or not IsValid(suspect) or suspect == victim or not Combat.IsAttacker(suspect) then return end
+  if suspect:GetPos():DistToSqr(victim:GetPos()) <= RANGED_DIST_SQR then return end
+  suspect.bgn_ranged_attack, suspects[suspect] = true, true
+end
+
+Combat.MarkRangedAttack = MarkRangedAttack
+hook.Add('PostEntityTakeDamage', 'BGN_PoliceWitnessedHarm', function(victim, dmg, took)
+  if not took then return end
+  WitnessedHarm(victim, dmg:GetAttacker(), dmg:GetDamage())
+  if victim:IsPlayer() or victim:IsNPC() or victim:IsNextBot() then MarkRangedAttack(victim, dmg:GetAttacker()) end
+end)
+
+hook.Add('BGN_PostVehicleDamage', 'BGN_PoliceWitnessedHarm', function(actor, attacker, amount)
+  WitnessedHarm(actor:GetNPC(), attacker, amount)
+  if amount > 0 then MarkRangedAttack(actor:GetNPC(), attacker) end
+end)
 hook.Add('PlayerDeath', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)
 hook.Add('PlayerSilentDeath', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)
 hook.Add('OnNPCKilled', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)
@@ -84,6 +108,6 @@ hook.Add('BGN_ResetAllKillingStatistic', 'BGN_PoliceThreatCleanup', function()
   end
 
   for _, ent in ipairs(ents.GetAll()) do
-    ent.bgn_has_killed, ent.bgn_last_attack = nil, nil
+    ent.bgn_has_killed, ent.bgn_last_attack, ent.bgn_ranged_attack = nil, nil, nil
   end
 end)
