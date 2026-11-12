@@ -47,7 +47,7 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | `systems/` | Wanted/arrest, offenders, medics/corpses, teams/enemy sharing, gang wars/support/packs and combat cooldown, dialogue, seats, scenic, ghost crowd, modes. |
 | `modules/` | Optional integrations: DV, DarkRP, StormFox and NPC mods. `dv/` owns provider access, traffic recovery, pedestrian detours, return and vehicle damage. |
 | `ui/` | Settings window, Classic panels, wizard/welcome, spawnmenu, update display, translations. |
-| `debug/` | Admin actor overlay, diagnostic report/camera, movement visualization and automated in-game checks. |
+| `debug/` | Admin UID subscriptions and bounded decision/sight/signal journal (SERVER); cached mesh/HUD, camera and scene/hand markers (CLIENT); diagnostics and automated checks. |
 
 Other repository paths:
 

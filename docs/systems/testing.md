@@ -101,7 +101,101 @@ a bug report. The sentences follow the interface language; the log is always Eng
 
 ## Actor overlay and regression checks
 
-Admins can enable `bgn_debug 1` to see actor bounds, labels, counts and recent spawn/teleport markers, including actors outside the normal visibility set. Server snapshots are sent only to ready admins; `bgn_debug 0` disables them.
+Debugging is admin-only and requires `bgn_debug 1` (SERVER). CLIENT controls affect only the viewer.
+Inspection records existing decisions; it does not run sensors, roll reactions, advance plans or change stealth rules.
+
+### Spawnmenu debug page
+
+Open **Q → Options → Background NPCs → Debugging**, or **Tools → Background NPCs: Debugging → Actor inspector**.
+Choose an actor from the refreshed list or under the crosshair. Selection uses the actor UID, including across body
+replacement. Pinning prevents the inspector Tool's LMB from replacing it; an explicit menu selection still works.
+The default is one actor and its connections. Nearby overview is optional.
+
+**Tools → Background NPCs: Editor** contains route points, spawn areas and seats. **Background NPCs: Debugging**
+contains actor inspection, navigation test, actor movement, scenes and carried items. Existing Tool IDs are preserved;
+the internal actor spawner remains hidden.
+
+| CLIENT cvar | Default | Meaning |
+|---|---|---|
+| `bgn_cl_debug_mode` | 0 | 0: screen HUD; 1: world cards (3D2D); 2: geometry only. |
+| `bgn_cl_debug_inspector` | 1 | Screen HUD of the selected actor. |
+| `bgn_cl_debug_bounds` / `bgn_cl_debug_labels` | 1 / 1 | Bounds / world-card text. |
+| `bgn_cl_debug_summary` | 1 | Collection/render CPU time and geometry count in the HUD footer. |
+| `bgn_cl_draw_npc_path` | 0 | Selected actor's existing SERVER path. |
+| `bgn_cl_debug_targets` | 1 | Known-enemy connections; these are memory, not current visibility. |
+| `bgn_cl_debug_vision` | 0 | Recorded gameplay sight checks and blockers. |
+| `bgn_cl_debug_signals` / `bgn_cl_debug_history` | 1 / 1 | Team signals / recent events. |
+| `bgn_cl_debug_text_scale` | 1 | Text scale 0.75–2; also scales with screen height, 20 px at 900p. |
+| `bgn_cl_debug_distance` / `bgn_cl_debug_geometry_distance` | 800 / 1500 | Independent text / geometry limits in HU, each 100–5000. |
+| `bgn_cl_debug_wh` / `bgn_cl_debug_overview` | 0 / 0 | Geometry through walls / nearby actor overview. |
+| `bgn_cl_debug_related` / `bgn_cl_debug_cards` | 16 / 8 | Relation limit 1–64 per list / visible-card limit 1–16. |
+| `bgn_cl_debug_rate` | 5 | Selected snapshot rate, 2–10 Hz. |
+| `bgn_cl_debug_seconds` / `bgn_cl_debug_life` | 30 / 2 | History window 1–30 s / line lifetime 0.2–10 s. |
+| `bgn_cl_debug_blockers` / `bgn_cl_debug_markers` | 1 / 1 | Sight blockers / scene and hand markers. |
+| `bgn_cl_debug_marker_size` | 12 | Marker size 2–48 HU. |
+| `bgn_cl_debug_team_filter`, `type_filter`, `state_filter`, `event_filter` | empty | Plain substring filters; all four names have the `bgn_cl_debug_` prefix. Event filter matches the event kind. |
+| `bgn_cl_debug_freeze` / `bgn_cl_debug_technical` | 0 / 0 | Freeze diagnostic data / show technical HUD identifiers. |
+
+Less frequent settings are in **Limits and filters**. World cards use distance scaling and overlap suppression;
+text wraps, and long reports offer copyable details. List refresh preserves selection and camera.
+**Freeze** holds the displayed snapshot, not the game or the live camera.
+
+The compact HUD shows health, state, reaction, known enemies/targets, wanted status, movement, sight and recent events.
+**Open details** adds raw state/group, fight avoidance, model/animation, carry item, reaction weights, known-target
+last-seen times and the current cached GOAP plan/facts. FSM actors have no GOAP plan.
+A weighted reaction pick is a candidate, not proof that a later hook allowed that reaction. Attempted damage is
+recorded before cancellation; the reaction event does not establish actual health loss.
+
+Sight comes from the real `HasLineOfSight` / `CanSeeEntity` calls. Channels identify damage witnesses, shot witnesses,
+enemy memory, ally sharing, help, wanted detection and squads. Green is a successful check, red a failed check with
+its hit point and blocker (including map geometry), purple is remembered enemy knowledge, yellow is a signal.
+Rejected signals are red. Absence of a check means unknown. The view cone is drawn only after an actual direction
+test, using its recorded aim vector and the same dot-product threshold as `Util.IsInView`; its 100 HU length is
+illustrative. Plain LOS has no facing restriction. A remembered enemy can be currently unseen. Wanted proximity
+and radio broadcasts do not imply a successful sight trace. No debugger-generated observer ray is added.
+
+Team events identify sender → recipient and the target being discussed. Help, sharing, radio and squad handoffs
+record resulting enemy membership; witness-reaction vetoes are recorded separately. The wanted broadcast has no
+actor sender. This is a bounded journal of instrumented paths, not a complete log of every rejected AI branch.
+
+SERVER collects selected snapshots at the requested rate and shares collection work for matching subscriptions
+within a tick. The actor list is requested on demand (throttled to 1 Hz); overview updates at 2 Hz within 5000 HU.
+There is no automatic all-actor stream. Per observed UID: at most 256 events and 64 recent sight records; paths
+are capped at 256 points, rosters at 128 actors, and client geometry at 1024 segments. Truncation is reported.
+CLIENT builds text and a colored line mesh on snapshot/settings changes, then draws the cached batch each frame;
+scene/hand markers refresh at 2 Hz. No per-frame actor search or diagnostic visibility traces are used.
+The HUD costs measure collection and client render code, not whole-frame performance or network transmission.
+
+**Toggle actor first-person view** follows the selected actor's eyes. F6, Escape or **Return to your view** exits.
+SERVER adds this camera to the admin's PVS and blocks movement/attacks. The player's body remains vulnerable.
+Death/removal, viewer death, lost rights, map cleanup, debug disable or lost subscription releases the camera.
+Heartbeats are every second, expiry is 3 s, and unfrozen geometry older than 2 s stops drawing. SERVER supplies the
+body-relative eye frame for NPCs/NextBots; CLIENT follows body interpolation. Only the viewed body's model
+renderer is temporarily suppressed and restored on exit; server `NoDraw` is preserved.
+
+Tool-specific checks:
+
+- `bgn_path_finder`: LMB start, RMB destination, R clear. Uses the active SERVER navigation provider; endpoint
+  markers and point count describe this requested path, separately from an actor's current path.
+- `bgn_actor_mover`: LMB actor, RMB destination, R/holster release. Walk/run and arrival tolerance are configurable.
+  One owner controls the actor; previous debugger/eternal/lock flags and state data are restored on release.
+  This Tool deliberately changes movement; it is not passive inspection.
+- `bgn_scenic_debug`: existing placement, inspection, GOAP-door test and owned cleanup/Undo remain. The preview
+  reuses placement checks, shows participant bounds and rejection reasons, and creates nothing. It uses the
+  minimum group layout without RNG; actual spawning may choose another size/orientation/model variant.
+- `bgn_carry_debug`: existing give/remove checks remain. Bone axes, prop bounds, model/animation compatibility
+  and briefcase handle-to-finger distance help inspect attachment; the number is geometric, not a rig-quality score.
+  Both special Tools share distance, WH, marker-size controls and copyable reports.
+
+Console equivalents: `bgn_debug_select [uid]`, `bgn_debug_details`, `bgn_debug_tool_details`, `bgn_debug_watch`,
+`bgn_debug_watch_stop`, `bgn_debug_clear`, `bgn_debug_pin`, `bgn_debug_freeze`.
+
+`python tools/test_actor_debug.py` (lupa) checks permission/payload gates, read-only snapshots, bounded history,
+map blockers, recorded view direction, camera lifecycle, EN/RU keys and mover restoration. Native single-player
+verification on `gm_bigcity_improved` (1280×720, 1600×900, 1920×1080) covers menu categories, real damage/sight/blockers and team handoff,
+HUD/3D2D distance, NPC/NextBot camera, refresh/freeze, scene preview/owned removal, carry issuance/removal and cached
+mesh construction. Timing samples with 30/60/100 actors cover selected inspection and optional overview; they are
+not a general FPS guarantee. Multiplayer and arbitrary camera addons/custom rigs still need separate verification.
 
 `python tools/test_regressions.py` (requires lupa) checks the Lua logic outside GMod. It covers safe actor health accessors in both realms, arrest module registration order, seated damage and police witnesses, passenger aim, exit placement by seat/model attachment, overlap rejection and blocked-side fallback. These checks do not verify live physics or every vehicle model.
 
@@ -132,3 +226,5 @@ Vehicle occupants keep the same actor object and UID in the population registry.
 `dv_lifecycle.lua` checks simultaneous boarding, NPC/NextBot removal and recreation, stable identities/counts/targets, health/equipment, blocked exits, repeat boarding and direct car removal. `dv_lifecycle_guards.lua` checks lost/failed controllers, full seats, wanted/kill history and provider cleanup. Reports: `lifecycle.json` and `lifecycle_guards.json`. Both scenarios clean up their test entities.
 
 The admin **Carried item debugger** (`bgn_carry_debug`) issues a selected briefcase, parcel or newspaper with LMB and removes it with RMB. Aim at a living unarmed actor on foot in a calm state; model/body compatibility remains enforced. Test briefcases on male/female NPCs and NextBots through calm actions, running and combat: no physical briefcase should spawn.
+
+Carried visual models now move with their parent entity instead of keeping a separate world render origin, so a briefcase or newspaper does not remain culled at its old location after an actor teleport.

@@ -558,11 +558,13 @@
 
 | Сигнатура |
 |---|
-| `bgNPC.Vision.HasLineOfSight(watcher, ent)` |
+| `bgNPC.Vision.HasLineOfSight(watcher, ent, channel)` |
 | `bgNPC.Vision.NPCCanSeePos(ent, pos, fov)` |
 | `bgNPC.Vision.PlayerCanSeePos(ply, pos, radius)` |
 | `bgNPC.Vision.AnyActorSees(ent, exclude)` |
 | `bgNPC.Vision.ActorsThatSee(ent)` |
+
+`channel` — необязательная метка отладки (по умолчанию `los`). Она не меняет условие LOS и результаты boolean/попавшая сущность. SERVER записывает существующий результат только для актёра с подпиской и слоем зрения; CLIENT не передаёт телеметрию зрения.
 
 ## statistics
 

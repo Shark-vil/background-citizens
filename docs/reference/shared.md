@@ -558,11 +558,13 @@ Source: `lua/background_npcs_core/api/sh_vision.lua`.
 
 | Signature |
 |---|
-| `bgNPC.Vision.HasLineOfSight(watcher, ent)` |
+| `bgNPC.Vision.HasLineOfSight(watcher, ent, channel)` |
 | `bgNPC.Vision.NPCCanSeePos(ent, pos, fov)` |
 | `bgNPC.Vision.PlayerCanSeePos(ply, pos, radius)` |
 | `bgNPC.Vision.AnyActorSees(ent, exclude)` |
 | `bgNPC.Vision.ActorsThatSee(ent)` |
+
+`channel` is an optional diagnostic label (default `los`). It does not change the LOS predicate or its boolean/hit-entity returns. SERVER records the existing result only for subscribed actors with the vision layer enabled; CLIENT does not send sight telemetry.
 
 ## statistics
 

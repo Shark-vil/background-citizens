@@ -10,6 +10,7 @@ Texts follow the game language (English and Russian), or the one chosen in **My 
 `resource/localization/<lang>/bgn_*.properties` are loaded over the game's. `language.Add` doesn't replace a
 phrase the game already loaded, so they are also kept in `bgNPC.Phrases`, which `Menu.Text` reads first.
 The interface language doesn't change the NPC phrases: they have `bgn_cl_voice_language` (see voices.md).
+Language synchronization sends only the language code to SERVER (`bgn_cl_language`), so server-generated Tool reports use the selected mod language as well.
 
 The search field (Ctrl+F) looks through every page: labels, help texts and cvar names; Esc clears it.
 The full screen button (or a double click on the header) maximizes the window.
@@ -22,9 +23,14 @@ server still checks the rights.
 
 **Tools → Testing** runs the [testing mode](testing.md): spawn, vehicle, state and settings checks with a copyable log.
 
+Spawnmenu **Options → Background NPCs → Debugging** collects debug overlays, NPC paths, actor WH,
+the state/decision inspector, sight visualization and an actor first-person camera. See [debug controls](testing.md#spawnmenu-debug-page).
+
 **Spawn → Scenic scenes** has a checkbox for each automatically eligible scene (`bgn_scenic_<id>`).
 **Actors** shows **Spawn with carried items** (`bgn_carry_items_<type>`) only for types with a `carry_items`
 config table. Both controls also exist in Classic settings and affect future spawning, including ghost items.
+Tools are split into **Background NPCs: Editor** (route points, spawn areas, seats) and **Background NPCs: Debugging** (actor inspector, navigation, movement, scenes, carried items). The debug page shares UID selection, visualization modes, distance/limit filters and freeze controls with the inspector Tool.
+
 
 ## Spawn and recycling settings
 

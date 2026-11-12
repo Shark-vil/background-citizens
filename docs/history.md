@@ -62,6 +62,16 @@ The entity-cache warm-up on first player spawn has been removed: BGN no longer t
 
 Local gang behavior change after the baseline above: walking packs of up to three; the capped random fight roster is replaced by support for all visible same-gang allies, including late arrivals. `bgn_gang_help_chance` is no longer used; `bgn_enemy_share_period` controls the support interval. See [gangs](systems/gangs.md).
 
+Local debug UI addition: Spawnmenu Options now has a Debugging page with separate overlays, an admin-only
+server actor inspector (recent states/reactions, weights and cached GOAP plan/facts), LOS/FOV visualization
+and an actor camera with automatic release. See [debug controls](systems/testing.md#spawnmenu-debug-page).
+The native follow-up enlarges/scales debug text, wraps inspector lines and preserves the camera when the
+actor list is refreshed; overlay, visibility, path, damage, GOAP and camera checks were exercised in single-player.
+Visual verification also fixed the NextBot camera falling to its feet (server-only eye method) and the
+viewed head clipping into the camera; server eye frames and temporary body rendering suppression fix both.
+
+Local debug redesign: editor/debug Tools now have separate categories. UID-based inspection defaults to one actor and records actual perception and team handoffs, with bounded history, configurable HUD/3D2D, distances, WH, filters and freeze. Cached line meshes replace the separate immediate world passes. Scene previews and hand markers share these controls; actor movement restores prior control flags/state. Gameplay stealth rules are unchanged. Native debugging also exposed and fixed carried-model culling after actor teleportation. See [debug controls](systems/testing.md#spawnmenu-debug-page).
+
 ## Reproduce the comparison
 
 ```text
