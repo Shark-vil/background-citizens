@@ -62,11 +62,8 @@ local function CaptureBody(actor)
   return saved
 end
 
--- first the model has: citizens sit down, player models take the driving pose, HL2 metrocops duck in
-local BOARD_SEQUENCES = {'Idle_To_Sit_Chair', 'drive_jeep', 'Stand_to_crouchpistol'}
-local BOARD_PAUSE = 1 -- a model without the sequence still stops and turns to the car this long
-local BOARD_MAX_DIST_SQR = 300 ^ 2 -- an actor pushed away during the animation does not board
--- @param animate boolean|nil visible boarding: the actor turns to the car and plays the sequence before it disappears
+local BOARD_MAX_DIST_SQR = 300 ^ 2 -- an actor pushed away while turning to the car does not board
+-- @param animate boolean|nil visible boarding: the actor stops, turns to the car and only then disappears (no sit animation)
 -- @return number|nil seconds until the actor is seated
 function Actor:EnterVehicle(vehicle, animate)
   Assert.Arg(1, vehicle, 'entity', 'ACTOR:EnterVehicle')
@@ -85,22 +82,7 @@ function Actor:EnterVehicle(vehicle, animate)
   if animate then
     local body = self:GetNPC()
     body:SetAngles(Angle(0, (vehicle:GetPos() - body:GetPos()):Angle().y, 0))
-    delay = BOARD_PAUSE
     self:WalkToTarget(nil)
-    for _, name in ipairs(BOARD_SEQUENCES) do
-      if self:IsValidSequence(name) then
-        local duration = body:SequenceDuration(body:LookupSequence(name))
-        -- a one-frame pose is held for the pause
-        if duration > .1 then
-          delay = math.Clamp(duration, .5, 3)
-          self:PlayStaticSequence(name)
-        else
-          self:PlayStaticSequence(name, true, BOARD_PAUSE)
-        end
-
-        break
-      end
-    end
   end
 
   -- Each actor owns its pending request; simultaneous passenger requests must not replace each other.

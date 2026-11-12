@@ -118,7 +118,7 @@ Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
 `actor:EnterVehicle(vehicle, animate)`
 
-Accepts a valid vehicle entity (chassis); resolves or creates its BGN provider internally. Boarding is checked again after 0.5 seconds; no synchronous success result. With `animate` the actor turns to the car and plays a boarding sequence first; the method returns the delay in seconds. Actor/UID persist, entity changes. Requires DV support and provider access.
+Accepts a valid vehicle entity (chassis); resolves or creates its BGN provider internally. Boarding is checked again after 0.5 seconds; no synchronous success result. With `animate` the actor stops and turns to the car first (no animation); the method returns the delay in seconds. Actor/UID persist, entity changes. Requires DV support and provider access.
 
 Source: `lua/background_npcs_core/actor/components/sh_vehicle.lua`.
 
