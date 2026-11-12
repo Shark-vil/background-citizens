@@ -153,7 +153,10 @@ function ASSET:NotSubjectToArrest(target)
     if actor then
       actor:RemoveAllTargets()
       actor:AddEnemy(target)
+      -- lets the state change through the arrest hold (BGN_ArrestHold)
+      actor.arrest_release = true
       actor:SetState('defense')
+      actor.arrest_release = nil
     end
   end
 end

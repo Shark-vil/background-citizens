@@ -98,21 +98,8 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
       end
     end
 
-    if ArrestComponent.arrested then
-      ArrestComponent.damege_count = ArrestComponent.damege_count + 1
-      if TargetActor then
-        if TargetActor:HasTeam('police') then
-          if target:Health() > 20 and ArrestComponent.damege_count <= 5 then
-            TargetActor:AddTarget(attacker)
-            TargetActor:SetState('arrest')
-          end
-        elseif TargetActor:EqualStateGroup('calm') then
-          TargetActor:AddEnemy(attacker)
-          TargetActor:SetState(reaction, nil, true)
-        end
-      end
-      return false
-    end
+    -- any damage to any actor during the arrest ends it: the officers go back to combat, witnesses react as usual
+    if ArrestComponent.arrested then ArrestModule:NotSubjectToArrest(attacker) end
   end
 end)
 
