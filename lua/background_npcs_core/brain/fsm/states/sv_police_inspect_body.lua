@@ -10,7 +10,7 @@ local BODY_TIME = 60
 local REACH_DIST_SQR = 90 ^ 2
 local RUN_DIST_SQR = 600 ^ 2 -- farther than this the officer runs to the body, closer it walks
 local REVIVED_DIST_SQR = 100 ^ 2
-local SCENE_DIST_SQR = 150 ^ 2 -- bodies this close are one scene: one officer for all of them
+local SCENE_DIST_SQR = 500 ^ 2 -- bodies this close are one scene: one officer for all of them
 local STAGE_TIME = 5
 local GIVE_UP_TIME = 30 -- can't reach the body
 -- first sequence the model has
