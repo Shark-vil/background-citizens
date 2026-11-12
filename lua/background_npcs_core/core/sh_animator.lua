@@ -52,6 +52,7 @@ if SERVER then
         info.viewers[ply] = nil
       end
     end
+
     for ply in pairs(info.viewers) do
       if not IsValid(ply) then info.viewers[ply] = nil end
     end
@@ -76,6 +77,7 @@ if SERVER then
         if entity:GetNPCState() == NPC_STATE_SCRIPT then entity:SetNPCState(info.npc_state) end
       end
     end
+
     if IsValid(info.animator) then info.animator:Remove() end
     if IsValid(entity) then Net.Send('bgn.anim_stop', nil, entity) end
   end
@@ -148,6 +150,7 @@ if SERVER then
         entity:SetNPCState(NPC_STATE_SCRIPT)
         entity:SetSchedule(SCHED_NPC_FREEZE)
       end
+
       if active[entity] == info and (info.next_sync or 0) <= now then
         info.next_sync = now + 0.25
         SyncViewers(info)
@@ -195,6 +198,7 @@ else
       for index in ipairs(source:GetMaterials()) do
         ent:SetSubMaterial(index - 1, source:GetSubMaterial(index - 1))
       end
+
       for _, bodygroup in ipairs(source:GetBodyGroups()) do
         ent:SetBodygroup(bodygroup.id, source:GetBodygroup(bodygroup.id))
       end

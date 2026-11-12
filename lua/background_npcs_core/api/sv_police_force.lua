@@ -85,6 +85,7 @@ hook.Add('BGN_PostVehicleDamage', 'BGN_PoliceWitnessedHarm', function(actor, att
   WitnessedHarm(actor:GetNPC(), attacker, amount)
   if amount > 0 then MarkRangedAttack(actor:GetNPC(), attacker) end
 end)
+
 hook.Add('PlayerDeath', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)
 hook.Add('PlayerSilentDeath', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)
 hook.Add('OnNPCKilled', 'BGN_PoliceThreatReset', Combat.ResetPoliceThreat)

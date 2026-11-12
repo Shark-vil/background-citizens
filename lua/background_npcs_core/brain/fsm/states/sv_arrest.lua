@@ -214,7 +214,8 @@ bgNPC.States.Register('arrest', 'guarded', {
               local weapon = target:GetActiveWeapon()
               if IsValid(weapon) then weapon:Remove() end
               if TargetActor and TargetActor:IsValidSequence('arrestcurious') then
-                TargetActor:PlayStaticSequence('arrestcurious', false, nil, function() -- one-shot: a loop restarted it mid-pose
+                TargetActor:PlayStaticSequence('arrestcurious', false, nil, function()
+                  -- one-shot: a loop restarted it mid-pose
                   TargetActor:PlayStaticSequence('arrestidle', true)
                   bgNPC.Util.FadeRemove(target, .5)
                   return true -- Keep the idle pose while fading; ResetSequence would release the NPC.

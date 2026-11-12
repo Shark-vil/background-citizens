@@ -2,7 +2,11 @@
   bgNPC.States.Register('dance', 'calm', {
     start = function(actor, state, data)
       local anim_info = bgNPC.Animator.Play('models/player/kleiner.mdl', 'Taunt_Dance', actor:GetNPC())
-      if not anim_info then actor:SetState('walk') return end
+      if not anim_info then
+        actor:SetState('walk')
+        return
+      end
+
       data.anim_info = anim_info
     end,
     update = function(actor, state, data)
