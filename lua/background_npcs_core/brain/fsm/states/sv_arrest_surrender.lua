@@ -55,7 +55,8 @@ bgNPC.States.Register('arrest_surrender', 'danger', {
       return
     end
 
-    if not actor:IsAnimationPlayed() then actor:PlayStaticSequence('Fear_Reaction', true) end
+    -- a looping pose: the one-shot Fear_Reaction (0.7 s) replayed in a loop jerked the actor every 0.7 s
+    if not actor:IsAnimationPlayed() then actor:PlayStaticSequence(actor:IsValidSequence('Fear_Reaction_Idle') and 'Fear_Reaction_Idle' or 'cower_Idle', true) end
     local target = actor:GetFirstTarget()
     if not IsValid(target) then
       actor:RemoveTarget(target)
