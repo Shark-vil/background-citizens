@@ -54,3 +54,12 @@ NOTES_UNVERIFIED.md
 
 # Documentation build
 site/
+
+# Local Workshop builds and cached build tools
+/build/
+__pycache__/
+
+# Local notes and editor settings
+/BENCHMARK_LOG.md
+/GANGS_AND_BODIES_PLAN.md
+.vscode/

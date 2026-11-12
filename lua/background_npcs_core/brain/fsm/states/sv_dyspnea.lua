@@ -1,58 +1,43 @@
-local _math_random = math.random
-
-hook.Add('BGN_PreSetNPCState', 'BGN_OverrideDyspneaDangerStateToCallingPolice', function(actor, state)
-	if state == 'dyspnea_danger' and _math_random(0, 100) < 10 then
-		return 'calling_police'
-	end
-end)
-
+﻿local _math_random = math.random
+hook.Add('BGN_PreSetNPCState', 'BGN_OverrideDyspneaDangerStateToCallingPolice', function(actor, state) if state == 'dyspnea_danger' and _math_random(0, 100) < 10 then return 'calling_police' end end)
 bgNPC.States.Register('dyspnea_danger', 'danger', {
-	update = function(actor)
-		if actor:HasNoEnemies() then
-			actor:RandomState()
-			return
-		end
+  update = function(actor)
+    if actor:HasNoEnemies() then
+      actor:RandomState()
+      return
+    end
 
-		local npc = actor:GetNPC()
-		local data = actor:GetStateData()
-		local enemy = actor:GetNearEnemy()
-		data.isAnimationPlayed = data.isAnimationPlayed or false
+    local npc = actor:GetNPC()
+    local data = actor:GetStateData()
+    local enemy = actor:GetNearEnemy()
+    data.isAnimationPlayed = data.isAnimationPlayed or false
+    if not data.isAnimationPlayed then
+      actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02_Entry', false, nil, function()
+        actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02', true, math.random(5, 15), function()
+          actor:SetState('run_from_danger', {
+            dyspnea_delay = CurTime() + math.random(10, 20)
+          })
+        end)
+        -- true: the loop was started here, ResetSequence must not wipe it (it did, and the actor froze for good)
+        return true
+      end)
 
-		if not data.isAnimationPlayed then
-			actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02_Entry', false, nil, function()
-				actor:PlayStaticSequence('d2_coast03_PostBattle_Idle02', true, math.random(5, 15), function()
-					actor:SetState('run_from_danger', {
-						dyspnea_delay = CurTime() + math.random(10, 20)
-					})
-				end)
-				-- true: the loop was started here, ResetSequence must not wipe it (it did, and the actor froze for good)
-				return true
-			end)
+      data.isAnimationPlayed = true
+    end
 
-			data.isAnimationPlayed = true
-		end
+    if not IsValid(enemy) or enemy:Health() <= 0 then
+      actor:RandomState()
+      return
+    end
 
-		-- the rest is over and the enemy is far away: not a threat any more, forget it (the state used to wait forever)
-		if data.isAnimationPlayed and not actor:IsAnimationPlayed() and IsValid(enemy)
-			and npc:GetPos():DistToSqr(enemy:GetPos()) >= 1000000
-		then
-			actor:RemoveEnemy(enemy)
-			return
-		end
-
-		if not IsValid(enemy) or enemy:Health() <= 0 then
-			actor:RandomState()
-			return
-		end
-
-		local dist = npc:GetPos():DistToSqr(enemy:GetPos())
-		if dist >= 1000000 then return end
-		if dist < 40000 then
-			actor:SetState('fear')
-		elseif _math_random(0, 100) < 40 then
-			actor:SetState('run_from_danger', {
-				dyspnea_delay = CurTime() + math.random(10, 20)
-			})
-		end
-	end
+    local dist = npc:GetPos():DistToSqr(enemy:GetPos())
+    if dist >= 1000000 then return end
+    if dist < 40000 then
+      actor:SetState('fear')
+    elseif _math_random(0, 100) < 40 then
+      actor:SetState('run_from_danger', {
+        dyspnea_delay = CurTime() + math.random(10, 20)
+      })
+    end
+  end
 })

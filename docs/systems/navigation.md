@@ -96,6 +96,9 @@ Menu: **General → Doors**. `bgNPC.Util.CanActorOpenDoor(door)` checks both, `b
 tells an open door (`prop_door_rotating`, `func_door*`). Engine NPCs get `CAP_OPEN_DOORS` only while doors are
 allowed, NextBots open only the doors allowed; paths route only through doors that are open or may be opened.
 An open door is not "opened" again: the opening animation used to stop actors in the doorway.
+On the server, `CanActorOpenDoor` also rejects doors reserved by `hold_door`, including when opening locked
+doors is enabled. GOAP can close and hold an open door when desperate; police can breach that temporary hold.
+See [door shelter and breaching](brains.md#door-shelter-and-breaching).
 
 Doorways: an actor within 90 units of a door doesn't collide with other actors
 (`COLLISION_GROUP_NPC_SCRIPTED`, `actor/events/sv_door_pass.lua`), so a crowd going both ways passes instead of

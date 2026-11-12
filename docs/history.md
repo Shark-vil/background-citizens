@@ -2,6 +2,8 @@
 
 Reviewed against Git through tag **2.3.0** (`2258b49`) and current **2.3.1 dev** (`7459c3c7`, 2026-11-10). `version.txt` and `bgNPC.VERSION` both say 2.3.1. There are 48 commits between the tag and this baseline. A version string does not prove publication on Workshop.
 
+Local Animator fixes after the baseline: `dance` starts after state cleanup, active donor animations synchronize to ready players entering PVS, stopping releases Animator-owned NPC freeze, and client copies preserve appearance at startup. See [donor animations](systems/brains.md#donor-animations). Publication is not verified.
+
 ## Through 2.3.0
 
 | Period | User-visible development and current documentation |
@@ -19,7 +21,7 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 
 | Area | Current behavior / owning documentation |
 |---|---|
-| Spawn and debug | Visibility checks and validation are atomic; admin actor overlay; unseen actor recycling, independent car radius; occluded whole-car spawning and pursuit-car catch-up. [Navigation](systems/navigation.md), [testing](systems/testing.md). |
+| Spawn and debug | Visibility checks and validation are atomic; admin actor overlay; unseen actor recycling, independent car radius; occluded whole-car spawning and pursuit-car catch-up; cover must block the sight line at least 40 units short of the spawn point, and the player's own car is not cover. [Navigation](systems/navigation.md), [testing](systems/testing.md). |
 | Vehicles | Measured simfphys headings, pedestrian detours, bounded recovery/alternate lanes, cleanup; native DV trace timing retained; police driver/passenger return and service-car access. [Vehicles](systems/vehicles.md). |
 | Character lifecycle | Stable actor/UID through DV entity replacement, safe health accessors, seat-specific exit hull checks and blocked-exit retention; seated damage goes through reaction/witness handling. [Actor API](classes/actor/index.md). |
 | Policing | Arrest module load order corrected, surrender no longer restarts a fight, officers hold arrest unless attacked; vehicle suspects are shot with ranged weapons; an actor standing still in a car gets the car break-in and arrest like a player (officers at the doors no longer block pulling it out); shots at any car base reach the occupants in full, and the police kill a driver after `bgn_police_car_kill_time` seconds; an unarmed actor out of a fight hit by the police gives up with 30%. [Arrest](systems/arrest.md). |
@@ -31,6 +33,49 @@ Historical fixes describe the reason for current contracts, not separate APIs to
 | Wanted | As in 1.x, the timer stays full while residents see the target, an actor too (not only while it fights); a target in a car is seen through its car body. A wanted NPC gains a level every `bgn_wanted_level_up_period` seconds. A wanted NPC is dropped after 15 s outside every player's field of view or farther than half of `bgn_spawn_radius_visibility` (obstacles ignored); the vehicle spawn exclusion moved to `bgn_vehicle_spawn_visibility_radius`. [Wanted](systems/wanted.md), [menu](systems/menu.md). |
 | Lifecycle cleanup | Actor bodies without a live registered actor are removed after 3 s regardless of health (frozen bodies killed while dormant), also with `bgn_enable 0`. [Brains](systems/brains.md#gangs). |
 
+Working-tree fix after this baseline (version string 2.4.0, publication not verified): door scenes use fully
+closed doors, knocking faces the panel, and opening/removing the linked door returns participants to normal AI.
+The admin spawn command also uses the door finder. See [scenic scenes](systems/scenic.md).
+Five context-dependent scenes (both couches, radio operator, sky watch and door brace) were initially made manual-only;
+all scenic actors keep ordinary spawn/model-hook selection rather than overriding their models.
+GOAP actors in a hopeless fight can close and hold an open rotating door; police can kick it open, throwing
+the holder into a temporary ragdoll without extra damage. Recovery preserves the original actor/entity and
+health, requires free standing space, and restores its previous fight/flee behavior. See [brains](systems/brains.md).
+The admin Scene debugger Tool adds visible manual placement, model/state/animation inspection, owned cleanup/Undo
+and a one-cycle GOAP door check. The console scene spawner shares its placement/Undo path. Chair reservations
+are released when scenic bodies are removed; previous seating states finish before scene placement.
+See [scenic debugging](systems/scenic.md#scene-debugger-tool).
+Scene debugger errors distinguish a missed door from an open/moving door or blocked floor space. Owned test
+actors are excluded from automatic population recycling/removal and scenic lifetime/distance cleanup.
+The scenic overhaul returns couches/radio to automatic indoor-only placement, removes cowering, splits wall
+fatigue from floor poses, adds ledge seating and solitary pose variants, and makes couch pairs atomic.
+Per-scene switches and per-actor `carry_items` settings control future spawning. Citizens have a combined 5%
+carried-item chance. A follow-up confines two-handed ration/newspaper poses to NextBots and visual ghosts;
+HL2 NPCs keep ordinary locomotion with only a clientside briefcase on their right-hand bone. The stock newspaper
+replaces a hidden driving parcel and follows both hands; no extracted or new game assets are shipped. Small items can be stowed. Briefcases on both body types stay attached until a combat state, never drop as physical objects, and need no luggage sequences. The admin carried-item debugger can force an item onto a calm unarmed actor.
+
+Direct attackers without a shared team are now added as enemies on the first hit, including during an existing fight. Police no longer use door holding; door breaching remains available.
+
+Prop-chair seating now finishes the close approach below the route completion distance. Seated scenic NextBots no longer rise or drift under physics; ledge placement additionally checks direct pelvis support.
+
+Ghost carried items were removed in both modes; server-ghost materialization suppresses automatic carry selection. The briefcase hangs upright from the finger grip; the newspaper follows the fingertips at its lower edge, has upright text and leans away from the face by 15 degrees. Render bounds include hand positions so close-up views do not cull the props.
+
+The entity-cache warm-up on first player spawn was restored: BGN temporarily spawns configured NPCs and vehicles to warm their resources. NextBot relationships now use the most frequent disposition of each foreign NPC towards server players, with neutral ties, instead of hidden NPC probes. Ordinary HL2 NPC body relationships retain their existing rules. See [brains](systems/brains.md).
+
+Local gang behavior change after the baseline above: walking packs of up to three; the capped random fight roster is replaced by support for all visible same-gang allies, including late arrivals. `bgn_gang_help_chance` is no longer used; `bgn_enemy_share_period` controls the support interval. See [gangs](systems/gangs.md).
+
+Local debug UI addition: Spawnmenu Options now has a Debugging page with separate overlays, an admin-only
+server actor inspector (recent states/reactions, weights and cached GOAP plan/facts), LOS/FOV visualization
+and an actor camera with automatic release. See [debug controls](systems/testing.md#spawnmenu-debug-page).
+The native follow-up enlarges/scales debug text, wraps inspector lines and preserves the camera when the
+actor list is refreshed; overlay, visibility, path, damage, GOAP and camera checks were exercised in single-player.
+Visual verification also fixed the NextBot camera falling to its feet (server-only eye method) and the
+viewed head clipping into the camera; server eye frames and temporary body rendering suppression fix both.
+
+Local debug redesign: editor/debug Tools now have separate categories. UID-based inspection defaults to one actor and records actual perception and team handoffs, with bounded history, configurable HUD/3D2D, distances, WH, filters and freeze. Cached line meshes replace the separate immediate world passes. Scene previews and hand markers share these controls; actor movement restores prior control flags/state. Gameplay stealth rules are unchanged. Native debugging also exposed and fixed carried-model culling after actor teleportation. See [debug controls](systems/testing.md#spawnmenu-debug-page).
+
+A 2026-11-12 audit of the current branch against 1.13.7 (what stayed, what changed, what can break old behavior) is in [comparison with 1.13](migration.md).
+
 ## Reproduce the comparison
 
 ```text
@@ -40,3 +85,9 @@ git diff --stat 2.3.0 7459c3c7 -- lua docs
 ```
 
 Read implementation and callers before changing a documented contract. Commit subjects alone do not prove behavior. [Maintenance rules](ai.md).
+
+Local change: distant actor logic uses configurable staggered pause/active windows; see [LOD](systems/brains.md).
+
+Local weapon change: NextBot pistol single/short bursts, witness-local police harm limits, lifecycle cleanup and armed arrest aim. See [brains](systems/brains.md).
+
+Local network change: actor PVS sync sends identity (entity, type, generation, class, model, name, gender) only on first sight or rebind and otherwise only the changed state part; sends are capped at 8 per tick. See [architecture](architecture.md).

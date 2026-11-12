@@ -26,6 +26,7 @@ Use the header to switch English / Русский or light / dark theme. These w
 
 - [Architecture and file layout](architecture.md)
 - [Version history and 2.3.1 baseline](history.md)
+- [Comparison with 1.13 (Classic)](migration.md)
 - [Server methods](reference/server.md)
 - [Client methods](reference/client.md)
 - [Shared methods](reference/shared.md)

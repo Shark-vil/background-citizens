@@ -1,158 +1,60 @@
---
-
-TOOL.Category = 'Background NPCs'
+﻿TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_debugger.name'
-TOOL.PanelIsInit = false
-TOOL.Trace = nil
-TOOL.Lock = false
-TOOL.Distance = 10000
-TOOL.Actor = nil
-TOOL.Target = NULL
+TOOL.Information = {
+  {
+    name = 'left'
+  },
+  {
+    name = 'right'
+  },
+  {
+    name = 'reload'
+  }
+}
 
 if SERVER then
-	function TOOL:LeftClick()
-		local ply = self:GetOwner()
-		if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
+  function TOOL:LeftClick(tr)
+    local p = self:GetOwner()
+    if not IsValid(p) or not (p:IsAdmin() or p:IsSuperAdmin()) then return false end
+    local a = bgNPC.Actors.Get(tr.Entity)
+    if not a then
+      for _, provider in ipairs(bgNPC.DVCars or {}) do
+        if provider:GetVehicle() == tr.Entity then
+          a = provider:GetDriver()
+          break
+        end
+      end
+    end
 
-		local tr = util.TraceLine({
-			start = ply:GetShootPos(),
-			endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-			filter = function(ent)
-				if ent ~= ply and ent:IsNPC() then
-					return true
-				end
-			end
-		})
+    if not a or not a:IsAlive() then return false end
+    bgNPC.Net.ToolRPC(self, 'SelectActor', a.uid)
+    return true
+  end
 
-		if not tr.Hit then return end
+  function TOOL:RightClick()
+    bgNPC.Net.ToolRPC(self, 'ClearActor')
+    return true
+  end
 
-		local actor
-
-		local ent = tr.Entity
-		if ent:IsVehicle() and ent.bgn_driver then
-			actor = ent.bgn_driver
-		else
-			actor = bgNPC.Actors.Get(ent)
-		end
-
-		if not actor then
-			bgNPC.Util.Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
-			return
-		end
-
-		do -- the client checks that the actor exists itself (TOOL:SetActor)
-
-			local actor_data = actor
-			if actor_data then MsgN('SERVER:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
-
-			bgNPC.Net.ToolRPC(self, 'SetActor', actor.uid)
-		end
-	end
-
-	function TOOL:RightClick()
-		bgNPC.Net.ToolRPC(self, 'ResetActor')
-	end
+  function TOOL:Reload()
+    bgNPC.Net.ToolRPC(self, 'PinActor')
+    return true
+  end
 else
-	function TOOL:SetActor(uid)
-		local actor = bgNPC.Actors.GetByUid(uid)
-		if actor == nil then
-			bgNPC.Util.Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
-			surface.PlaySound('common/wpn_denyselect.wav')
-			return
-		end
+  function TOOL:SelectActor(uid)
+    if bgNPC.DebugInspector.pinned then return end
+    RunConsoleCommand('bgn_debug_select', tostring(uid))
+  end
 
-		local actor_data = actor
-		if actor_data then MsgN('CLIENT:', '\nACTOR: ' .. actor.type .. '\n') PrintTable(actor_data) end
+  function TOOL:ClearActor()
+    RunConsoleCommand('bgn_debug_clear')
+  end
 
-		self.Actor = actor
-		self.Target = actor:GetNPC()
-		surface.PlaySound('common/wpn_select.wav')
-	end
+  function TOOL:PinActor()
+    RunConsoleCommand('bgn_debug_pin')
+  end
 
-	function TOOL:ResetActor()
-		self.Actor = nil
-		self.Target = NULL
-		surface.PlaySound('buttons/blip1.wav')
-	end
-
-	hook.Add('HUDPaint', 'BGN_TOOL_DrawDebbugerText', function()
-
-		local tool = bgNPC.Util.GetActivePlayerTool('bgn_debugger', LocalPlayer())
-		if not tool or not tool.Actor or not IsValid(tool.Target) then return end
-
-		local ypos = ScrH() / 3
-		local add = 25
-
-		surface.SetDrawColor(0, 0, 0, 150)
-		surface.DrawRect(25, ypos - 10, 240, 260)
-
-		surface.SetFont('Trebuchet18')
-		surface.SetTextColor(255, 255, 255)
-
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Uid - ' .. tostring(tool.Actor.uid))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('State - ' .. tool.Actor:GetState())
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Is animated - ' .. tostring(tool.Actor.is_animated))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Animation time - ' .. tostring(tool.Actor.anim_time_normal))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Animation loop time - ' .. tostring(tool.Actor.loop_time_normal))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Animation is loop - ' .. tostring(tool.Actor.anim_is_loop))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Animation name - ' .. tostring(tool.Actor.anim_name))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('Target count - ' .. tostring(#tool.Actor.targets))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('NPC schedule - ' .. tostring(tool.Actor.npc_schedule))
-
-		ypos = ypos + add
-		surface.SetTextPos(30, ypos)
-		surface.DrawText('NPC state - ' .. tostring(tool.Actor.npc_state))
-	end)
-
-	function TOOL:UpdateControlPanel()
-		local Panel = controlpanel.Get('bgn_debugger')
-		if not Panel then bgNPC.Util.Log('Couldn\'t find bgn_debugger panel!', 'Tool') return end
-		if self.PanelIsInit then return end
-
-		self.PanelIsInit = true
-
-		Panel:ClearControls()
-	end
-
-	local en_lang = {
-		['tool.bgn_debugger.name'] = 'Actor debugger',
-		['tool.bgn_debugger.desc'] = 'A tool for debugging the work of actors.',
-		['tool.bgn_debugger.0'] = 'Left click - select actor. Right click - reset selected actor',
-	}
-
-	local ru_lang = {
-		['tool.bgn_debugger.name'] = 'Дебаггер актёров',
-		['tool.bgn_debugger.desc'] = 'Инструмент для отладки работы актёров.',
-		['tool.bgn_debugger.0'] = 'Левый клик - выделить актёра. Правый клик - отменить выделение актёра.',
-	}
-
-	local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
-	for k, v in pairs(lang) do
-		language.Add(k, v)
-	end
+  function TOOL.BuildCPanel(panel)
+    bgNPC.DebugInspector.BuildPanel(panel)
+  end
 end

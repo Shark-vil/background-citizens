@@ -1,98 +1,64 @@
---
+﻿--
+CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo, {FCVAR_ARCHIVE}, 'Disables the all wanted and calling police halo locally')
+CreateConVar('bgn_cl_disable_hud_local', bgNPC.cvar.bgn_cl_disable_hud_local, {FCVAR_ARCHIVE}, 'Disables the all wanted HUD locally')
+CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_halo_wanted, {FCVAR_ARCHIVE}, 'Disable wanted halo only for your player model')
+CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path, {FCVAR_ARCHIVE}, 'Draw the path of movement of the NPC. 1 - enabled, 0 - disabled.')
+CreateClientConVar('bgn_cl_debug_text_scale', bgNPC.cvar.bgn_cl_debug_text_scale, true, false, 'Background NPCs: debug text scale.', 0.75, 2)
+for _, setting in ipairs(bgNPC.debug_settings) do
+  CreateClientConVar('bgn_cl_debug_' .. setting[1], tostring(setting[3]), true, false, 'Background NPCs debug: ' .. setting[1], setting[4], setting[5])
+end
 
-CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo,
-{ FCVAR_ARCHIVE }, 'Disables the all wanted and calling police halo locally')
+for _, name in ipairs({'bounds', 'labels', 'summary', 'targets', 'inspector', 'vision', 'history'}) do
+  local cvar = 'bgn_cl_debug_' .. name
+  CreateConVar(cvar, bgNPC.cvar[cvar], {FCVAR_ARCHIVE}, 'Background NPCs: local debug ' .. name .. ' (requires bgn_debug and admin rights).')
+end
 
-CreateConVar('bgn_cl_disable_hud_local', bgNPC.cvar.bgn_cl_disable_hud_local,
-{ FCVAR_ARCHIVE }, 'Disables the all wanted HUD locally')
-
-CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_halo_wanted,
-{ FCVAR_ARCHIVE }, 'Disable wanted halo only for your player model')
-
-CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path,
-{ FCVAR_ARCHIVE }, 'Draw the path of movement of the NPC. 1 - enabled, 0 - disabled.')
-
-CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization,
-{ FCVAR_ARCHIVE }, 'Enable field of view optimization.')
-
-CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range,
-{ FCVAR_ARCHIVE }, 'The minimum distance in which the check is not performed.')
-
-CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound,
-{ FCVAR_ARCHIVE }, 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
-
-CreateConVar('bgn_cl_ghost_crowd', bgNPC.cvar.bgn_cl_ghost_crowd,
-{ FCVAR_ARCHIVE }, 'EXPERIMENTAL. Draws a cheap client-side crowd far away that copies the mood of the actors near you.')
-
-CreateConVar('bgn_cl_ghost_crowd_max', bgNPC.cvar.bgn_cl_ghost_crowd_max,
-{ FCVAR_ARCHIVE }, 'The most ghost crowd figures at once.')
-
-CreateConVar('bgn_cl_voices', bgNPC.cvar.bgn_cl_voices,
-{ FCVAR_ARCHIVE }, 'NPC voices: 1 - enabled, 0 - silent. Applies to both Classic and New modes.')
-
-CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance,
-{ FCVAR_ARCHIVE }, 'Distance to draw points in edit mode.')
-
-CreateConVar('bgn_tool_point_editor_autoparent', bgNPC.cvar.bgn_tool_point_editor_autoparent,
-{ FCVAR_ARCHIVE }, 'Enable automatic creation of nodes links.')
-
-CreateConVar('bgn_tool_point_editor_autoalignment', bgNPC.cvar.bgn_tool_point_editor_autoalignment,
-{ FCVAR_ARCHIVE }, 'Enable automatic height alignment.')
-
-CreateConVar('bgn_tool_point_editor_show_parents', bgNPC.cvar.bgn_tool_point_editor_show_parents,
-{ FCVAR_ARCHIVE }, 'Show global connections.')
-
-CreateConVar('bgn_tool_seat_offset_pos_x', bgNPC.cvar.bgn_tool_seat_offset_pos_x,
-{ FCVAR_ARCHIVE }, '')
-
-CreateConVar('bgn_tool_seat_offset_pos_y', bgNPC.cvar.bgn_tool_seat_offset_pos_y,
-{ FCVAR_ARCHIVE }, '')
-
-CreateConVar('bgn_tool_seat_offset_pos_z', bgNPC.cvar.bgn_tool_seat_offset_pos_z,
-{ FCVAR_ARCHIVE }, '')
-
-CreateConVar('bgn_tool_seat_offset_angle_x', bgNPC.cvar.bgn_tool_seat_offset_angle_x,
-{ FCVAR_ARCHIVE }, '')
-
-CreateConVar('bgn_tool_seat_offset_angle_y', bgNPC.cvar.bgn_tool_seat_offset_angle_y,
-{ FCVAR_ARCHIVE }, '')
-
-CreateConVar('bgn_tool_seat_offset_angle_z', bgNPC.cvar.bgn_tool_seat_offset_angle_z,
-{ FCVAR_ARCHIVE }, '')
-
+CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization, {FCVAR_ARCHIVE}, 'Enable field of view optimization.')
+CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range, {FCVAR_ARCHIVE}, 'The minimum distance in which the check is not performed.')
+CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound, {FCVAR_ARCHIVE}, 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')
+CreateConVar('bgn_cl_ghost_crowd', bgNPC.cvar.bgn_cl_ghost_crowd, {FCVAR_ARCHIVE}, 'EXPERIMENTAL. Draws a cheap client-side crowd far away that copies the mood of the actors near you.')
+CreateConVar('bgn_cl_ghost_crowd_max', bgNPC.cvar.bgn_cl_ghost_crowd_max, {FCVAR_ARCHIVE}, 'The most ghost crowd figures at once.')
+CreateConVar('bgn_cl_voices', bgNPC.cvar.bgn_cl_voices, {FCVAR_ARCHIVE}, 'NPC voices: 1 - enabled, 0 - silent. Applies to both Classic and New modes.')
+CreateConVar('bgn_tool_draw_distance', bgNPC.cvar.bgn_tool_draw_distance, {FCVAR_ARCHIVE}, 'Distance to draw points in edit mode.')
+CreateConVar('bgn_tool_point_editor_autoparent', bgNPC.cvar.bgn_tool_point_editor_autoparent, {FCVAR_ARCHIVE}, 'Enable automatic creation of nodes links.')
+CreateConVar('bgn_tool_point_editor_autoalignment', bgNPC.cvar.bgn_tool_point_editor_autoalignment, {FCVAR_ARCHIVE}, 'Enable automatic height alignment.')
+CreateConVar('bgn_tool_point_editor_show_parents', bgNPC.cvar.bgn_tool_point_editor_show_parents, {FCVAR_ARCHIVE}, 'Show global connections.')
+CreateConVar('bgn_tool_seat_offset_pos_x', bgNPC.cvar.bgn_tool_seat_offset_pos_x, {FCVAR_ARCHIVE}, '')
+CreateConVar('bgn_tool_seat_offset_pos_y', bgNPC.cvar.bgn_tool_seat_offset_pos_y, {FCVAR_ARCHIVE}, '')
+CreateConVar('bgn_tool_seat_offset_pos_z', bgNPC.cvar.bgn_tool_seat_offset_pos_z, {FCVAR_ARCHIVE}, '')
+CreateConVar('bgn_tool_seat_offset_angle_x', bgNPC.cvar.bgn_tool_seat_offset_angle_x, {FCVAR_ARCHIVE}, '')
+CreateConVar('bgn_tool_seat_offset_angle_y', bgNPC.cvar.bgn_tool_seat_offset_angle_y, {FCVAR_ARCHIVE}, '')
+CreateConVar('bgn_tool_seat_offset_angle_z', bgNPC.cvar.bgn_tool_seat_offset_angle_z, {FCVAR_ARCHIVE}, '')
 concommand.Add('bgn_reset_cvars_to_factory_settings', function(ply, cmd, args)
-	if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+  if not ply:IsAdmin() and not ply:IsSuperAdmin() then return end
+  for cvar_name, cvar_value in pairs(bgNPC.cvar) do
+    RunConsoleCommand(cvar_name, cvar_value)
+  end
 
-	for cvar_name, cvar_value in pairs(bgNPC.cvar) do
-		RunConsoleCommand(cvar_name, cvar_value)
-	end
+  for npcType, v in pairs(bgNPC.cfg.actors) do
+    local enabled = 0
+    if v.enabled then enabled = 1 end
+    RunConsoleCommand('bgn_npc_type_' .. npcType, enabled)
+  end
 
-	for npcType, v in pairs(bgNPC.cfg.actors) do
-		local enabled = 0
-		if v.enabled then enabled = 1 end
-		RunConsoleCommand('bgn_npc_type_' .. npcType, enabled)
-	end
+  for npcType, v in pairs(bgNPC.cfg.actors) do
+    RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType))
+  end
 
-	for npcType, v in pairs(bgNPC.cfg.actors) do
-		RunConsoleCommand('bgn_npc_type_max_' .. npcType, bgNPC.Config.GetFullness(npcType))
-	end
-
-	for npcType, v in pairs(bgNPC.cfg.actors) do
-		local max_vehicle = v.max_vehicle or 0
-		RunConsoleCommand('bgn_npc_vehicle_max_' .. npcType, max_vehicle)
-	end
+  for npcType, v in pairs(bgNPC.cfg.actors) do
+    local max_vehicle = v.max_vehicle or 0
+    RunConsoleCommand('bgn_npc_vehicle_max_' .. npcType, max_vehicle)
+  end
 end)
 
 local is_first_bgn_enable = false
 cvars.AddChangeCallback('bgn_enable', function(cvar_name, old_value, new_value)
-	if is_first_bgn_enable or tonumber(new_value) ~= 1 then return end
-	is_first_bgn_enable = true
-
-	bgNPC.Util.Notify(LocalPlayer(), 'The first launch of "Background NPCs" can cause lags. '
-	.. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
+  if is_first_bgn_enable or tonumber(new_value) ~= 1 then return end
+  is_first_bgn_enable = true
+  bgNPC.Util.Notify(LocalPlayer(), 'The first launch of "Background NPCs" can cause lags. ' .. 'Please wait until the end of the spawn.', NOTIFY_HINT, 10)
 end)
 
 -- a notice to this player for every change of his own settings (the tool settings change too often)
 for name in pairs(bgNPC.cvar) do
-	if string.StartWith(name, 'bgn_cl_') and GetConVar(name) then bgNPC.Notice.Watch(name) end
+  if string.StartWith(name, 'bgn_cl_') and GetConVar(name) then bgNPC.Notice.Watch(name) end
 end

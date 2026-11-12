@@ -47,6 +47,7 @@ plugins:
           nav_translations:
             Architecture: Архитектура
             Version history: История версий
+            Comparison with 1.13: Сравнение с 1.13
             AI documentation rules: Правила документации для ИИ
             Server API: Серверный API
             Client API: Клиентский API
@@ -104,6 +105,7 @@ nav:
   - Reference:
       - Architecture: architecture.md
       - Version history: history.md
+      - Comparison with 1.13: migration.md
       - Actor API: classes/actor/index.md
       - Server API: reference/server.md
       - Client API: reference/client.md

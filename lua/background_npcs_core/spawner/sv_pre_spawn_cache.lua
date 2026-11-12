@@ -1,56 +1,45 @@
-local function spawn_npc(npc_class, models, spawn_position, spawn_angle)
-	local npc = ents.Create(npc_class)
-	if not IsValid(npc) then return end
+﻿-- Warm-up: on the first player spawn every configured NPC class/model and vehicle is created once and removed,
+-- so the engine loads their resources now instead of as a hitch during gameplay.
+local function Warm(job)
+  local pos, ang = vector_origin, angle_zero
+  if job.vehicle then
+    local vehicle = bgNPC:SpawnVehicle(job.vehicle, pos, ang)
+    if IsValid(vehicle) then vehicle:Remove() end
+    return
+  end
 
-	npc:SetPos(spawn_position)
-	npc:SetAngles(spawn_angle)
-	npc:Spawn()
+  local npc = ents.Create(job.class)
+  if not IsValid(npc) then return end
+  npc:SetPos(pos)
+  npc:SetAngles(ang)
+  npc:Spawn()
+  for _, model in ipairs(job.models) do
+    npc:SetModel(model)
+  end
 
-	if models then
-		if istable(models) then
-			for _, v in ipairs(models) do
-				npc:SetModel(v)
-			end
-		elseif isstring(models) then
-			npc:SetModel(models)
-		end
-	end
-
-	npc:Activate()
-	npc:Remove()
+  npc:Activate()
+  npc:Remove()
 end
 
-local function spawn_vehicle(vehicle_class, spawn_position, spawn_angle)
-	local vehicle = bgNPC:SpawnVehicle(vehicle_class, spawn_position, spawn_angle)
-	if not IsValid(vehicle) then return end
-	vehicle:Remove()
+local function AsList(value)
+  if istable(value) then return value end
+  return value and {value} or {}
 end
 
-hook.Add('PlayerSpawn', 'BGN_PreSpawnEntities_CacheService',  function()
-	hook.Remove('PlayerSpawn', 'BGN_PreSpawnEntities_CacheService')
+hook.Add('PlayerSpawn', 'BGN_PreSpawnEntities_CacheService', function()
+  hook.Remove('PlayerSpawn', 'BGN_PreSpawnEntities_CacheService')
+  for _, cfg in pairs(bgNPC.cfg.actors) do
+    for _, class in ipairs(AsList(cfg.class)) do
+      Warm({
+        class = class,
+        models = AsList(cfg.models)
+      })
+    end
 
-	local spawn_position = Vector(0, 0, 0)
-	local spawn_angle = Angle(0, 0, 0)
-
-	for k, v in pairs(bgNPC.cfg.actors) do
-		if v.class then
-			if istable(v.class) then
-				for _, npc_class in ipairs(v.class) do
-					spawn_npc(npc_class, v.models, spawn_position, spawn_angle)
-				end
-			elseif isstring(v.class) then
-				spawn_npc(v.class, v.models, spawn_position, spawn_angle)
-			end
-		end
-
-		if v.vehicles then
-			if istable(v.vehicles) then
-				for _, vehicle_class in ipairs(v.vehicles) do
-					spawn_vehicle(vehicle_class, spawn_position, spawn_angle)
-				end
-			elseif isstring(v.vehicles) then
-				spawn_vehicle(v.vehicles, spawn_position, spawn_angle)
-			end
-		end
-	end
+    for _, vehicle in ipairs(AsList(cfg.vehicles)) do
+      Warm({
+        vehicle = vehicle
+      })
+    end
+  end
 end)

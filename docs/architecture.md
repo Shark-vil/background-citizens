@@ -14,7 +14,7 @@ A shared filename says where a file loads. It does not guarantee a method can dr
 
 ## Load sequence
 
-`lua/autorun/background_npcs.lua` sends and includes `background_npcs_core/sh_init.lua`. The loader sorts files, loads `sh_`, `sv_`, then `cl_` within each directory, recursively; explicit includes are deduplicated. Replic language files and menu option translations are loaded manually.
+`lua/autorun/background_npcs.lua` sends and includes `background_npcs_core/sh_init.lua`. The loader sorts files, loads `sh_`, `sv_`, then `cl_` within each directory, recursively; explicit includes are deduplicated. Replic language files and menu option translations are loaded manually. `tests/` is only sent to clients; `bgn_selftest` / `bgn_selftest_cl` include it when they run.
 
 1. Core: notices, classes, networking, utilities, scheduler, then remaining helpers.
 2. Built-in config/actors/phrases/states, custom `config`, legacy config adapter.
@@ -33,7 +33,7 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | Path | Responsibility / connections |
 |---|---|
 | `sh_init.lua` | Version, shared storage, deterministic loading. |
-| `core/` | Class factory, task budget, network codec/chunks, cvar/command infrastructure, self-tests, notices, utility helpers. |
+| `core/` | Class factory, task budget, network codec/chunks, cvar/command infrastructure, self-test runner (`bgNPC.Test`), notices, utility helpers. |
 | `config/` | Main settings; `actors/` defaults and inheritance; `states/` dialogue/scenic/arrest data; `replics/language/` text and voice definitions. |
 | `custom_modules/config`, `preload`, `postload` | Extension stages, also discoverable from separate addons through merged GMod Lua paths. |
 | `api/` | Actors/config/points/states/modes/vision/statistics/assertions and combat facade. `compat/sh_legacy.lua` retains old colon APIs. |
@@ -44,10 +44,11 @@ All paths below are relative to the repository root. Under `lua/background_npcs_
 | `nav/` | Provider facade, graph/A*, custom/navmesh/nodegraph providers; `generator/` incremental route building, `io/` editor/save/compile/dupes, `legacy/` conversion. |
 | `brain/fsm/`, `brain/goap/` | State execution and combat planning. States call Actor methods; bodies perform engine actions. |
 | `spawner/` | Visibility-safe population placement/recycling, separate vehicle ranges, pursuit reinforcement and cleanup. |
-| `systems/` | Wanted/arrest, offenders, medics/corpses, teams/enemy sharing, gang roster/cooldown/packs, dialogue, seats, scenic, ghost crowd, modes. |
+| `systems/` | Wanted/arrest, offenders, medics/corpses, teams/enemy sharing, gang wars/support/packs and combat cooldown, dialogue, seats, scenic, ghost crowd, modes. |
 | `modules/` | Optional integrations: DV, DarkRP, StormFox and NPC mods. `dv/` owns provider access, traffic recovery, pedestrian detours, return and vehicle damage. |
 | `ui/` | Settings window, Classic panels, wizard/welcome, spawnmenu, update display, translations. |
-| `debug/` | Admin actor overlay, diagnostic report/camera, movement visualization and automated in-game checks. |
+| `debug/` | Admin UID subscriptions and bounded decision/sight/signal journal (SERVER); cached mesh/HUD, camera and scene/hand markers (CLIENT); diagnostics and automated checks. |
+| `tests/` | Self-tests of pure logic, split by realm prefix (`sh_`, `sv_`, `cl_`). Not loaded with the addon: `bgNPC.Test.Run` includes them on each `bgn_selftest` (SERVER) / `bgn_selftest_cl` (CLIENT) run, so edited tests run without a map change. A test reads only public fields; a helper a test needs is exposed on its module with a `read by tests/` comment. |
 
 Other repository paths:
 
@@ -67,6 +68,8 @@ Other repository paths:
 
 Local planning/lab notes are not release contracts. Do not copy machine-specific paths or temporary bridge setup into runtime installation instructions.
 
+On the first player spawn `spawner/sv_pre_spawn_cache.lua` warms resources: it creates and removes every configured NPC class/model and vehicle once. NextBot relationship sampling uses player dispositions without creating probe entities; see [brains](systems/brains.md).
+
 ## Main relationships
 
 ```text
@@ -78,7 +81,25 @@ Actor <-> vehicle provider -> DV controller + chassis + seated visual
 server Actor -> PVS snapshots + generation -> client registry -> UI / sound / rendering
 ```
 
-The actor and UID survive vehicle boarding; its entity and body adapter do not. Registries, enemy/target references, wanted state and statistics follow the replacement. Addons must follow `BGN_ActorEntityChanged(actor, old, new)` for their own entity-local data.
+The actor and UID survive vehicle boarding; its entity and body adapter do not. Registries, enemy/target references, wanted state and statistics follow the replacement. Addons must follow `BGN_ActorEntityChanged(actor, old, new)` for their own entity-local data. SERVER sends a player the snapshot identity only on first PVS sight or rebind, then only changed state, at most 8 snapshots per tick; a sequence number keeps a delayed identity packet from overwriting newer state on the CLIENT.
+
+Door shelter is server-owned (`systems/sv_door_hold.lua`, `brain/fsm/states/sv_hold_door.lua`); GOAP chooses
+the action. Temporary `knocked_down` keeps the original entity and body adapter, hides/freezes them and uses
+a server ragdoll for physics and forwarded damage. The actor update loop runs only recovery while down;
+standing requires a free hull. Client synchronization/render optimization preserves the server's hidden-body flag.
+
+`systems/sh_carry_items.lua` shares item definitions, model/animation checks and chance selection. SERVER owns
+real actors' item lifetime; body adapters exclude carried props from combat weapon
+queries. Only NextBot activity tables supply carrying locomotion. HL2 NPC movement is unchanged; CLIENT
+attaches briefcases to the hand bone on both body types; they never spawn physical drops. `systems/cl_carry_items.lua` manages real actors' client props from
+`carry_visual` in existing PVS snapshots. The newspaper hides the NextBot's driving parcel and fits the stock
+paper model between both hand bones. CLIENT also owns ghost visuals. Ghosts and actors materialized from them never carry items.
+Scenic placement remains SERVER-owned, including room/ledge traces, furniture bounds and atomic couch pairs.
+
+`debug/sv_scenic.lua` owns admin scene placement, test ownership/Undo and the one-cycle GOAP door test.
+`lua/weapons/gmod_tool/stools/bgn_scenic_debug.lua` supplies the selector and live inspection HUD through the
+existing server-to-client Tool RPC. Manual placement validates the admin owner in both creation and delayed
+setup; only that path bypasses hidden-position checks. Normal spawner model hooks still decide all actor models.
 
 ## Configuration and stored data
 

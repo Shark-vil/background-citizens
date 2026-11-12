@@ -1,31 +1,25 @@
-local cvar_bgn_module_followers_mod_addon = GetConVar('bgn_module_followers_mod_addon')
+﻿local cvar_bgn_module_followers_mod_addon = GetConVar('bgn_module_followers_mod_addon')
 --
-
 local function movement_handler(actor)
-	if not cvar_bgn_module_followers_mod_addon:GetBool() then return end
-	if not actor or not actor:IsAlive() then return end
-
-	local npc = actor:GetNPC()
-	local follower = npc:GetNWEntity('FMOD_MyTarget', nil)
-	if not follower or not IsValid(follower) then return end
-
-	if actor:WalkDestinationExists() then
-		actor:StopWalk()
-	end
-
-	return false
+  if not cvar_bgn_module_followers_mod_addon:GetBool() then return end
+  if not actor or not actor:IsAlive() then return end
+  local npc = actor:GetNPC()
+  local follower = npc:GetNWEntity('FMOD_MyTarget', nil)
+  if not follower or not IsValid(follower) then return end
+  if actor:WalkDestinationExists() then actor:StopWalk() end
+  return false
 end
 
 local function created_actor_handler(actor)
-	local npc = actor:GetNPC()
-	timer.Simple(0, function()
-		if not IsValid(npc) then return end
-		-- shortcut: assumes Followers Mod uses SetNWEntity (NW1), which calls the NW proxy
-		npc:SetNWVarProxy('FMOD_MyTarget', function(_, _, _, value)
-			if not value then return end
-			movement_handler(actor)
-		end)
-	end)
+  local npc = actor:GetNPC()
+  timer.Simple(0, function()
+    if not IsValid(npc) then return end
+    -- shortcut: assumes Followers Mod uses SetNWEntity (NW1), which calls the NW proxy
+    npc:SetNWVarProxy('FMOD_MyTarget', function(_, _, _, value)
+      if not value then return end
+      movement_handler(actor)
+    end)
+  end)
 end
 
 hook.Add('BGN_PreSetWalkPos', 'BGN_Module_FollowersMod', movement_handler)

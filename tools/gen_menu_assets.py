@@ -289,6 +289,86 @@ def icon_check():
     return img
 
 
+def icon_clapper():
+    img, d = canvas()
+    d.rounded_rectangle((28, 108, 228, 228), radius=16, fill=W)
+    d.rounded_rectangle((28, 48, 228, 94), radius=14, fill=W)
+    for x in (72, 126, 180):
+        d.polygon([(x, 48), (x + 26, 48), (x + 6, 94), (x - 20, 94)], fill=0)
+    return img
+
+
+def icon_car():
+    img, d = canvas()
+    d.rounded_rectangle((16, 120, 240, 194), radius=26, fill=W)
+    d.polygon([(66, 124), (98, 64), (166, 64), (204, 124)], fill=W)
+    d.polygon([(84, 116), (106, 78), (124, 78), (124, 116)], fill=0)
+    d.polygon([(136, 116), (136, 78), (158, 78), (184, 116)], fill=0)
+    for x in (68, 188):
+        d.ellipse((x - 36, 158, x + 36, 230), fill=0)
+        d.ellipse((x - 26, 168, x + 26, 220), fill=W)
+    return img
+
+
+def icon_siren():
+    img, d = canvas()
+    d.rounded_rectangle((28, 178, 228, 226), radius=14, fill=W)
+    d.pieslice((56, 60, 200, 204), 180, 360, fill=W)
+    d.rectangle((56, 132, 200, 166), fill=W)
+    for a, b in (((128, 22), (128, 44)), ((46, 56), (62, 72)), ((210, 56), (194, 72))):
+        d.line([a, b], fill=W, width=16)
+    return img
+
+
+def icon_weather():
+    img, d = canvas()
+    d.ellipse((28, 104, 128, 192), fill=W)
+    d.ellipse((72, 50, 190, 168), fill=W)
+    d.ellipse((136, 100, 232, 192), fill=W)
+    d.rounded_rectangle((60, 130, 200, 192), radius=30, fill=W)
+    for x in (82, 128, 174):
+        d.line([(x, 208), (x - 14, 246)], fill=W, width=16)
+    return img
+
+
+def icon_follow():
+    img, d = canvas()
+    person(d, 88, 40, 0.9)
+    for dx in (0, 38):
+        d.line([(166 + dx, 98), (196 + dx, 128), (166 + dx, 158)], fill=W, width=22, joint='curve')
+    return img
+
+
+def icon_coin():
+    img, d = canvas()
+    d.ellipse((24, 24, 232, 232), fill=W)
+    d.ellipse((58, 58, 198, 198), fill=0)
+    d.rounded_rectangle((112, 84, 144, 172), radius=10, fill=W)
+    return img
+
+
+def icon_skull():
+    img, d = canvas()
+    d.ellipse((36, 22, 220, 190), fill=W)
+    d.rounded_rectangle((76, 150, 180, 232), radius=22, fill=W)
+    d.ellipse((62, 86, 118, 142), fill=0)
+    d.ellipse((138, 86, 194, 142), fill=0)
+    d.polygon([(128, 150), (114, 176), (142, 176)], fill=0)
+    for x in (104, 128, 152):
+        d.line([(x, 200), (x, 232)], fill=0, width=8)
+    return img
+
+
+def icon_weapon():
+    img, d = canvas()
+    d.rounded_rectangle((22, 70, 236, 126), radius=14, fill=W)
+    d.polygon([(58, 120), (124, 120), (102, 230), (48, 230)], fill=W)
+    d.rectangle((40, 52, 72, 72), fill=W)
+    d.ellipse((116, 112, 176, 172), outline=W, width=14)
+    d.rectangle((116, 112, 150, 126), fill=W)
+    return img
+
+
 def save_mono(name, img, size=64):
     path = ROOT / 'materials' / 'background_npcs' / 'vgui' / 'menu' / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -318,6 +398,8 @@ ICONS = {
     'sun.png': icon_sun, 'moon.png': icon_moon, 'close.png': icon_close, 'lock.png': icon_lock,
     'classic.png': icon_classic, 'modern.png': icon_modern, 'check.png': icon_check,
     'search.png': icon_search, 'maximize.png': icon_maximize, 'restore.png': icon_restore,
+    'scenic.png': icon_clapper, 'vehicle.png': icon_car, 'siren.png': icon_siren, 'weather.png': icon_weather,
+    'follow.png': icon_follow, 'coin.png': icon_coin, 'skull.png': icon_skull, 'weapon.png': icon_weapon,
 }
 
 if __name__ == '__main__':

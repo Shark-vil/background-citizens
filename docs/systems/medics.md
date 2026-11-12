@@ -11,7 +11,7 @@ Eligible actor deaths create calls. A free medic responds, otherwise the system 
 | `bgn_corpse_cleanup` | `0` | Optional BGN corpse fading; disabled by default. |
 | `bgn_corpse_cleanup_time` | `60` | Seconds after death before cleanup may begin. |
 
-Explosions and bullet/buckshot hits within 150 units are always hopeless. Vehicle impacts use the normal chance and can be saved. A medic gives a verdict; police can run to inspect the body. A medic en route or an officer inspecting it postpones cleanup until the activity finishes. Reviving retires the matching body record. Server ragdolls fade server-side; client ragdolls receive removal events. When BGN cleanup is disabled, it does not block `npc_battle_cleanup`.
+A call is created only when a living ally of the victim (same team) sees the body at the moment of death. Explosions and bullet/buckshot hits within 150 units are always hopeless. Vehicle impacts use the normal chance and can be saved. A medic gives a verdict; police can run to inspect the body. A medic en route or an officer inspecting it postpones cleanup until the activity finishes. Reviving retires the matching body record. Server ragdolls fade server-side; client ragdolls receive removal events. When BGN cleanup is disabled, it does not block `npc_battle_cleanup`.
 
 Medics/ambulances are protected from police enemy/wanted/offender handling and ambulance confiscation. These are targeted service-role rules, not general invulnerability.
 

@@ -34,7 +34,7 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
 - **Mood:** taken from the real actors around you once a second. Panic when 20% or more of them are in the
   `danger` or `assault` state group, or retreating (one scared actor matters more than a dozen walkers), or
   when someone wanted is within the ghosts' ring. It lasts 10 s after the last cause; a new panic makes every
-  ghost drop its goal and run. States are registered on the server only, so the actor sync sends the
+  ghost drop its goal and run (half of the ghosts run upright, the rest crouched, picked once per ghost). States are registered on the server only, so the actor sync sends the
   group too (`actor.state_group` on the client). Calm ghosts walk, some stand for a while (the share follows actors in `idle`).
 - **Movement:** point to point (up to 700 units, a wall trace per step), feet on the ground (a trace down
   every 0.15 s, nav points often hang above it), never towards the player:
@@ -73,6 +73,12 @@ Settings window: **My settings → Experimental** (client), **Spawn → Experime
 provider returns 64 points by default.
 
 Self-test: `bgn_selftest` / `bgn_selftest_cl` → `ghost_crowd_rules`.
+
+Carried ration boxes/suitcases/newspapers use the same actor `carry_items` config and per-type switch as real citizens.
+Local mode chooses a supported item on the client; server mode chooses once and sends `carry` with each
+segment/snapshot. Clients use matching walk/idle sequences and attached non-colliding models. Panic stows a
+parcel/newspaper or drops a suitcase for `carry_items.drop_lifetime` seconds (default 30); local drops are client decoration. Server handoff preserves
+a compatible selected/stowed item without another probability roll. HL2 NPC handoff discards parcels/newspapers and uses a client-only briefcase for a suitcase. See [carry configuration](../tutorials/Modification-of-Existing-NPCs.md#carried-items).
 
 ## Known limits
 

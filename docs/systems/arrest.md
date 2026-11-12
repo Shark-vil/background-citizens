@@ -24,13 +24,15 @@ A surrender never turns back into a fight: when the arrest ends or times out, th
 officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),
 it slips away (`retreat`); otherwise it just calms down.
 
-Regular police (`npc_metropolice`) use the stunstick as an additional melee weapon. An already hostile
-target holding an unsafe ranged weapon makes the officer select a pistol immediately, even up close
-and before the first kill or hit. Against other targets, switching to the pistol requires at least one
-kill, an attack within the last 10 seconds and a distance greater than 75 units. Once selected, the pistol
-stays selected in the current combat state: closing in, the target switching weapons or a pause in attacks
-does not bring back the baton. An already drawn pistol is also kept. Missed bullet shots count as attacks.
-An active arrest stops combat. Other law enforcement keeps its existing shooting and arrest rules.
+## Police weapon choice and witnessed harm
+
+SERVER allows a stunstick only against a non-wanted suspect with no recorded kills, no witnessed allied victim left at or below 30% health, and at most five distinct witnessed allied victims. A sixth victim forbids the baton. Any enemy of the officer that has hit anyone (player or NPC) from farther than 500 units also forbids it, until that enemy's threat is reset. A gun in the suspect's hands alone does not forbid it. A vehicle still requires a ranged weapon. Metropolice otherwise use their assigned main weapon (pistol fallback); other police classes keep their main-weapon rules. Weapon choice is re-evaluated instead of being latched for the whole state.
+
+`api/sv_police_force.lua` stores each officer's private `police_harm[suspect] = {victims, count, critical}`. Only actual damage counts, once per allied actor UID; the officer must witness the attacker or victim with gameplay LOS within 2500 HU, or be the victim. Wanted status does not bypass this observation. Seated actors feed the same logic after virtual health damage. Serious injury remains remembered even if that ally later heals. No global per-frame victim scan is performed.
+
+Death (including silent player death), removal, completed arrest and normal wanted removal clear the suspect's kill evidence and all officers' corresponding harm records. Body replacement transfers records instead of counting another suspect. Bulk wanted clearing and dead-target cleanup use normal removal events. Kill counters also reset on initial wanted escalation in the existing wanted system; the separate kill flag survives that counter reset so the first kill still forbids a baton. `BGN_PlayerArrest` handlers can inspect pre-reset statistics; completed-arrest cleanup follows the hook even when an integration handles the default outcome.
+
+During an arrest, police keep the chosen weapon. Wanted suspects, killers and serious/multiple-victim offenders stay under the main weapon; a protected surrender clears the combat enemy and holds aim without granting permission to fire. This does not change arrest eligibility or the protection against damage from law allies.
 
 When a player refuses arrest and the officer abandons the arrest attempt, the player becomes wanted if
 `bgn_enable_wanted_mode` is enabled. An existing wanted record is neither reset nor extended. Disabling

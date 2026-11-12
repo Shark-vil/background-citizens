@@ -57,7 +57,7 @@ def realm(server):
         function IsValid(v) return type(v)=='table' and v.valid == true end
         FCVAR_NONE=0; FCVAR_ARCHIVE=1; NOTIFY_ERROR=1; NOTIFY_GENERIC=0
         MASK_NPCWORLDSTATIC=1
-        DMG_CRUSH=1; DMG_VEHICLE=16; DMG_BLAST=64; DMG_BULLET=2
+        DMG_CRUSH=1; DMG_VEHICLE=16; DMG_BLAST=64; DMG_BULLET=2; DMG_BUCKSHOT=536870912
         cv={}; changes={}; received={}; sent={}; commands={}; hooks={}; timers={}; tests={}; files={}
         function setcv(name,value)
             local c=GetConVar(name); local old=c.value; c.value=tostring(value)
@@ -122,9 +122,10 @@ def realm(server):
             end},
             Modules={Get=function(n) return modules[n] end},
             Table={HasWhere=function(t,f) for k,v in pairs(t) do if f(k,v) then return true end end return false end},
-            Combat={IsIgnored=function() return false end}, cfg={wanted={levels={5,5,10,10,15}}},
+            Combat={IsIgnored=function() return false end,CanPoliceUseStunstick=function() return true end,EquipActor=function() end,ResetPoliceThreat=function() end}, cfg={wanted={levels={5,5,10,10,15}}},
             Statistics={GetSum=function() return 0 end, Reset=function() end},
             Actors={Get=function() end, GetAll=function() return {} end, GetByTeam=function() return {} end},
+            Doors={held={},Desperate=function() return false end,Find=function() end,Blocker=function() end},
             Vision={AnyActorSees=function() return true end, HasLineOfSight=function() return true end},
             Modes={IsPeaceful=function() return false end}}
         modules.player_arrest={RemoveTarget=function() end, CanArrest=function() return false end,
@@ -139,86 +140,34 @@ def load(lua, *paths):
         lua.execute((ROOT / path).read_text(encoding='utf-8-sig'), name=path)
 
 
-overlay = realm(True)
-overlay.execute('''
-    function SortedPairs(t)
-        local keys={}; for k in pairs(t) do keys[#keys+1]=k end; table.sort(keys)
-        local i=0; return function() i=i+1; local k=keys[i]; if k then return k,t[k] end end
-    end
-    viewers={}; player.GetHumans=function() return viewers end
-    bgNPC.cfg.actors={citizen={},police={}}
-    bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 10 end}
-    bgNPC.Nav={GetName=function() return 'custom' end}
-    bgNPC.Points={Count=function() return 123 end}
-    bgNPC.ServerLoad={IsLagging=function() return false end}
+# Inspector snapshots/history/camera are covered by test_actor_debug.py. The roster is on demand.
+roster = realm(True)
+roster.execute("""
+    bgNPC.DebugInspector={selections={},Selected=function() return true end}
     bgNPC.Brain={Resolve=function() return 'fsm' end}
     local npc={valid=true,GetPos=function() return Vector(100,0,0) end,GetAngles=function() return {} end,
         OBBMins=function() return Vector(-16,-16,0) end,OBBMaxs=function() return Vector(16,16,72) end,
-        Health=function() return 30 end,IsNextBot=function() return false end}
-    actor={uid=1,lod=1,GetNPC=function() return npc end,GetPos=npc.GetPos,
+        IsNextBot=function() return false end}
+    actor={uid=1,lod=1,data={team={'residents'}},GetNPC=function() return npc end,GetPos=npc.GetPos,
         GetType=function() return 'citizen' end,GetState=function() return 'walk' end,IsAlive=function() return true end,
         InVehicle=function() return false end,Health=function() return 30 end}
-    bgNPC.Actors.GetAll=function() return {actor} end
-''')
-load(overlay, 'debug/sv_actor_overlay.lua')
-overlay.execute('''
-    local tick=timers.BGN_Debug_ActorOverlay
-    setcv('bgn_debug',0); tick(); assert(#sent==0, 'debug off sends nothing')
-    setcv('bgn_debug',1)
-    viewers={{bgn_ready=true,IsAdmin=function() return false end,IsSuperAdmin=function() return false end}}
-    tick(); assert(#sent==0, 'ordinary players receive no debug positions')
-    admin.bgn_ready=true; viewers[2]=admin
-    hooks.BGN_InitActor.BGN_Debug_Spawn(actor)
-    now=102; hooks.BGN_RespawnActor.BGN_Debug_Teleport(actor,Vector(200,0,0))
-    tick()
-    local msg=sent[1]; local row=msg[3][1]
-    assert(msg[1]=='bgn.debug_actors' and #msg[2]==1 and msg[2][1]==admin)
-    assert(row.uid==1 and row.spawn_age==2 and row.teleport_age==0 and row.teleport_pos.x==200)
-    assert(row.pos.x==100 and row.maxs.z==72, 'bounds and positions need no client entity/PVS')
-    assert(msg[4].types[1].count==1 and msg[4].types[2].count==0 and msg[4].points==123)
-    now=110; tick()
-    assert(sent[2][3][1].spawn_pos==nil and sent[2][3][1].teleport_pos==nil, 'event markers expire')
-''')
-
-overlay_client = realm(False)
-overlay_client.execute('''
-    function Color(...) return {...} end
-    TEXT_ALIGN_LEFT=0; TEXT_ALIGN_CENTER=1; TEXT_ALIGN_TOP=0
-    hook.Remove=function(name,id) if hooks[name] then hooks[name][id]=nil end end
-    hook.Add('PostDrawTranslucentRenderables','BGN_Debug_ActorOverlay',function() error('old world pass') end)
-    hook.Add('HUDPaint','BGN_Debug_ActorOverlay',function() error('old HUD pass') end)
-    cam={Start3D=function() in3d=true end,IgnoreZ=function(value) ignorez=value end,
-        End3D=function() assert(not ignorez); in3d=false end}
-    render={SetColorMaterial=function() end,DrawWireframeBox=function(...)
-        assert(in3d and ignorez, 'bounds must draw over the map in the final HUD pass')
-        boxes=boxes+1; assert(select(6,...)==true) end,
-        DrawWireframeSphere=function() spheres=spheres+1 end}
-    draw={SimpleTextOutlined=function() labels=labels+1 end}
-    local mt=getmetatable(Vector())
-    function mt:ToScreen() return {visible=true,x=100,y=100} end
-    function EyePos() return Vector() end
-    function RealFrameTime() return 0.01 end
-    boxes=0; spheres=0; labels=0
-    setcv('bgn_debug',1)
-''')
-load(overlay_client, 'debug/cl_actor_overlay.lua')
-overlay_client.execute('''
-    received['bgn.debug_actors'].f(nil,{{uid=1,type='citizen',pos=Vector(100,0,0),ang={},mins=Vector(),
-        maxs=Vector(16,16,72),hp=30,state='walk',body='npc',brain='fsm',lod=1,spawn_age=0,spawn_pos=Vector()}},
-        {types={{name='citizen',count=1,limit=10}},nav='custom',points=123,tasks_ms=1,lagging=false})
-    assert(not hooks.PostDrawTranslucentRenderables.BGN_Debug_ActorOverlay and not hooks.HUDPaint.BGN_Debug_ActorOverlay,
-        'reload must remove old passes')
-    local hud=hooks.PostDrawHUD.BGN_Debug_ActorOverlay
-    hud(); assert(not in3d and not ignorez, 'restore rendering state')
-    assert(boxes==1 and spheres==1 and labels==7, 'bounds, spawn marker, labels and summary render without an entity')
-    now=103; hud(); assert(boxes==1, 'stale snapshots must not leave phantom actors')
-    now=100; admin.IsAdmin=function() return false end
-    hud(); assert(boxes==1, 'ordinary clients must not render debug positions')
-    received['bgn.debug_actors'].f(nil,{},{} )
-    admin.IsAdmin=function() return true end
-    hud(); assert(boxes==1, 'snapshots received without admin rights must be discarded')
-    setcv('bgn_debug',0); hud(); assert(boxes==1)
-''')
+    admin.bgn_ready=true
+    local actors={}; for i=1,130 do actors[i]=actor end
+    bgNPC.Actors.GetAll=function() return actors end
+""")
+load(roster, 'debug/sv_actor_overlay.lua')
+roster.execute("""
+    setcv('bgn_debug',0); timers.BGN_Debug_ActorOverlay(); assert(#sent==0)
+    received['bgn.debug_roster'].f(admin); assert(#sent==0, 'debug disabled')
+    now=102; setcv('bgn_debug',1); timers.BGN_Debug_ActorOverlay(); assert(#sent==0, 'no global stream')
+    received['bgn.debug_roster'].f(admin)
+    assert(#sent==1 and #sent[1][3]==128 and sent[1][4]==2, 'bounded roster reports omitted actors')
+    assert(sent[1][3][1].team=='residents')
+    received['bgn.debug_roster'].f(admin); assert(#sent==1, 'roster requests are throttled')
+    now=104; admin.bgn_ready=false; received['bgn.debug_roster'].f(admin); assert(#sent==1)
+    now=106; admin.bgn_ready=true; admin.IsAdmin=function() return false end
+    received['bgn.debug_roster'].f(admin); assert(#sent==1, 'no non-admin positions')
+""")
 
 spawn = realm(True)
 spawn.execute('''
@@ -373,7 +322,7 @@ recycle.execute('''
 recycle_source = (ROOT / 'spawner/sv_actor_remover.lua').read_text(encoding='utf-8-sig')
 recycle_source = recycle_source.split("bgNPC.Tasks.Add('bgn_actors_remover_process'",1)[0]
 recycle_source = recycle_source.replace('continue', 'goto next_actor').replace(
-    '\n\t\tend\n\tend\nend\n', '\n\t\tend\n\t\t::next_actor::\n\tend\nend\n')
+    '\n    end\n  end\nend\n', '\n    end\n    ::next_actor::\n  end\nend\n')
 recycle.execute(recycle_source + '\ncan_recycle=CanRecycle; run_recycle=run_remover_process_async')
 recycle.execute('''
     hooks.BGN_InitActor.BGN_Recycle_LastSeen(actor)
@@ -387,6 +336,13 @@ recycle.execute('''
     now=159; assert(not can_recycle(actor,viewers))
     now=160; assert(can_recycle(actor,viewers), 'looking through a wall does not count as seeing')
     local function pass() run_recycle(function() end,function() end,{actor},1) end
+    actor.scenic_debug_item={}
+    pass(); assert(removed==0, 'owned scenic tests are never removed or recycled')
+    setcv('bgn_enable',0); pass(); assert(removed==0, 'test exclusion also applies when the population is disabled')
+    local humans=player.GetHumans; player.GetHumans=function() return {} end
+    pass(); assert(removed==0, 'no-player cleanup cannot remove an owned test')
+    player.GetHumans=humans; setcv('bgn_enable',1)
+    actor.scenic_debug_item=nil
     actor.eternal=true; pass(); assert(removed==0)
     actor.eternal=false; in_vehicle=true; pass(); assert(removed==0, 'vehicle occupants have independent lifecycle')
     timers.BGN_Actors_LastSeen(); assert(actor.__last_player_interaction==now)
@@ -889,6 +845,7 @@ arrest.execute('''
             StopSequence=function() error('arrest body released during fade') end}
         bgNPC.Actors.Get=function(ent) if ent==npc then return target end end
         local police={GetNPC=function() return npc end, GetFirstTarget=function() return npc end,
+            GetBody=function() return {SetEnemy=function() end,SetAlertLevel=function() end} end,
             TargetsCount=function() return 1 end, Voice=function() end}
         local fades=0
         bgNPC.Util.FadeRemove=function(ent) assert(ent==npc); fades=fades+1 end
@@ -1063,6 +1020,7 @@ vehicles.execute('''
         function d:GetAttacker() return self.attacker end
         function d:SetInflictor(v) self.inflictor=v end
         function d:GetInflictor() return self.inflictor end
+        function d:IsDamageType() return false end
         return d
     end
     DecentVehicleDestination={}; BGN_VEHICLE={}; bgNPC.Animator={Stop=function() end}
@@ -1360,7 +1318,7 @@ startup.globals().file.Find = startup_find
 startup.globals().include = startup_include
 load(startup, 'sh_init.lua')
 startup.execute('''
-    local npc={valid=true,GetPos=function() return Vector() end}
+    local npc={valid=true,GetPos=function() return Vector() end,Health=function() return 100 end,GetMaxHealth=function() return 100 end}
     local actor={data={team={'residents'}},IsAlive=function() return true end,IsCivilian=function() return true end,HasTeam=function() return false end,
         GetNPC=function() return npc end,SetTeam=function(self,t) self.team=t end}
     local victim={GetNPC=function() end,HasTeam=function() return true end}
@@ -1378,12 +1336,12 @@ vehicle_vision.execute('''
     function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     function vec:Length() return math.sqrt(self.x^2+self.y^2+self.z^2) end
     function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
-    car={valid=true}; target_car={valid=true}; wall={valid=true}
+    car={valid=true,GetParent=function() end}; target_car={valid=true,GetParent=function() end}; wall={valid=true}
     watcher={valid=true,vehicle_provider={GetVehicleAI=function() return driver end},
-        GetForward=function() return Vector(1,0,0) end,
+        GetForward=function() return Vector(1,0,0) end,IsPlayer=function() return false end,
         EyePos=function() return Vector() end, Health=function() return 100 end}
     driver={valid=true,GetVehicleForward=function() return Vector(0,1,0) end}
-    target={valid=true,Health=function() return 100 end,
+    target={valid=true,Health=function() return 100 end,IsPlayer=function() return false end,
         OBBCenter=function() return Vector() end, LocalToWorld=function() return Vector(0,100,0) end,
         WorldSpaceCenter=function() return Vector(0,100,0) end}
     bgNPC.Actors.Get=function(e)
@@ -1416,7 +1374,7 @@ vehicle_vision.execute('''
 witness_source = (ROOT / 'actor/events/sv_damage_reaction.lua').read_text(encoding='utf-8-sig')
 witness_source = witness_source.replace('local actor = actors[i]', 'do local actor = actors[i]')
 witness_source = witness_source.replace('continue', 'goto next_witness').replace(
-    "\n\tend\nend)", "\n\tend ::next_witness::\n\tend\nend)")
+    "\n  end\nend)", "\n  end ::next_witness::\n  end\nend)")
 vehicles.execute(witness_source)
 vehicles.execute('''
     blocked=false
@@ -1577,9 +1535,11 @@ rendering.execute('''
         n.bgn_hidden_weapon={valid=true,hidden=true,SetNoDraw=n.SetNoDraw}
         return n
     end
-    seated=RenderNPC(true,true); culled=RenderNPC(false,true); other=RenderNPC(false,false)
+    seated=RenderNPC(true,true); culled=RenderNPC(false,true); other=RenderNPC(false,false); newspaper=RenderNPC(false,true)
+    newspaper_weapon=newspaper.bgn_hidden_weapon
     seated_weapon=seated.bgn_hidden_weapon; culled_weapon=culled.bgn_hidden_weapon
-    bgNPC.Actors.GetAllNPCs=function() return {seated,culled,other} end
+    bgNPC.Actors.GetAllNPCs=function() return {seated,culled,other,newspaper} end
+    bgNPC.Actors.Get=function(npc) if npc==newspaper then return {carry_visual='newspaper'} end end
 ''')
 # Only the settings callback is needed here; the task below uses GMod's continue.
 render_source = (ROOT / 'systems/cl_render_optimization.lua').read_text(encoding='utf-8-sig')
@@ -1589,6 +1549,7 @@ rendering.execute('''
     assert(seated.hidden and seated_weapon.hidden,'disabling culling must not reveal actors or weapons inside cars')
     assert(not culled.hidden and not culled_weapon.hidden,'disabling culling must restore both NPC and weapon')
     assert(other.hidden,'culling must not clear hiding owned by another system')
+    assert(not newspaper.hidden and newspaper_weapon.hidden,'disabling culling must keep the newspaper driving parcel hidden')
 ''')
 
 speech = realm(False)
@@ -1636,21 +1597,59 @@ load(sync, 'api/sh_actors.lua', 'actor/sync/cl_sync.lua')
 sync.execute('''
     assert(received.bgn_actor_sync_data.opts.wait_entities)
     local first,second=SyncEntity(),SyncEntity()
-    received.bgn_actor_sync_data.f(nil,17,{npc=first,actor_type='police',state='walk',entity_generation=0})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=first,actor_type='police',entity_generation=0},1)
     local a=bgNPC.Actors.GetByUid(17)
     assert(a and a.kind=='police' and a.state=='walk','state sync recovers missed registration')
-    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',state='walk',entity_generation=1})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=second,actor_type='police',entity_generation=1},2)
     assert(bgNPC.Actors.GetByUid(17)==a and a.npc==second and bgNPC.Actors.Count()==1,'rebind retains identity without duplicate population')
     received.bgn_add_actor_from_client.f(nil,first,'police',17,nil,0)
     assert(a.npc==second,'late initial packet cannot revive the deleted body')
     second.valid=false; bgNPC.Actors.ClearRemoved()
     assert(bgNPC.Actors.GetByUid(17)==a,'a missing client body does not retire the server-owned identity')
     local third=SyncEntity()
-    received.bgn_actor_sync_data.f(nil,17,{npc=third,actor_type='police',state='walk',entity_generation=2})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=third,actor_type='police',entity_generation=2},3)
     assert(bgNPC.Actors.GetByUid(17)==a and a.npc==third,'identity survives a gap between entity packets')
     received.bgm_update_death_actors_on_client.f(nil,second,17)
-    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',entity_generation=1})
+    received.bgn_actor_sync_data.f(nil,17,{},{npc=second,actor_type='police',entity_generation=1},4)
     assert(not bgNPC.Actors.GetByUid(17),'late state sync cannot resurrect a removed actor')
+    received.bgn_actor_sync_data.f(nil,18,{state='walk'},{npc=SyncEntity(),actor_type='police',entity_generation=0},10)
+    local b=bgNPC.Actors.GetByUid(18)
+    received.bgn_actor_sync_data.f(nil,18,{state='run'},nil,12)
+    assert(b.state=='run','dynamic-only packet updates a known actor')
+    received.bgn_actor_sync_data.f(nil,18,{state='idle'},{npc=SyncEntity(),actor_type='police',entity_generation=1},11)
+    assert(b.state=='run','a delayed static packet keeps the newer dynamic part')
+    received.bgn_actor_sync_data.f(nil,99,{state='run'},nil,13)
+    assert(not bgNPC.Actors.GetByUid(99),'dynamic-only packet never creates an actor')
+''')
+
+sync_server = realm(True)
+sync_server.execute('''
+    local function ser(t) local keys={} for k,v in pairs(t) do keys[#keys+1]=tostring(k)..'='..tostring(v) end table.sort(keys) return table.concat(keys,',') end
+    bgNPC.Net.Serialize=ser; util.CRC=function(s) return s end
+    bgNPC.States={GetGroup=function() return 'calm' end}
+    bgNPC.Tasks.Add=function(_,f) sync_task=f end
+    ply={valid=true,bgn_ready=true,TestPVS=function() return true end}
+    player.GetHumans=function() return {ply} end
+    actors={}
+    for i=1,20 do
+        local npc={valid=true,GetNoDraw=function() return false end}
+        actors[i]={uid=i,state='walk',sync_players_hash={},IsAlive=function() return true end,GetNPC=function() return npc end,
+            GetType=function() return 'citizen' end,GetName=function() return 'n' end,GetGender=function() return 'male' end,
+            GetState=function(self) return self.state end,InVehicle=function() return false end,HasState=function() return false end}
+    end
+    bgNPC.Actors.GetAll=function() return actors end
+''')
+load(sync_server, 'actor/sync/sv_sync.lua')
+sync_server.execute('''
+    local co=coroutine.create(sync_task)
+    local function step() assert(coroutine.resume(co,function() coroutine.yield('tick') end,function() coroutine.yield('wait') end,function() end)) end
+    step(); assert(#sent==8,'sends are capped per tick')
+    step(); step(); assert(#sent==20,'the burst finishes on later ticks')
+    for i=1,20 do assert(sent[i][5],'first sight carries the static part') end
+    sent={}; step(); assert(#sent==0,'nothing changed, nothing sent')
+    actors[3].state='run'; step()
+    assert(#sent==1 and sent[1][3]==3 and sent[1][4].state=='run' and sent[1][5]==nil,'a change sends only the dynamic part')
+    assert(sent[1][6]>20,'sequence numbers grow')
 ''')
 
 medics = realm(True)
@@ -1764,8 +1763,10 @@ medics.execute('''
 
 medics.execute('''
     local m=bgNPC.Medics
+    local shooter={valid=true,GetPos=function() return Vector(20000,20000,0) end}
     local function hit(npc,kind,dmg)
-        hooks.EntityTakeDamage.BGN_Medics_LastDamage(npc,{GetDamageType=function() return kind end,GetDamage=function() return dmg end})
+        hooks.EntityTakeDamage.BGN_Medics_LastDamage(npc,{GetDamageType=function() return kind end,GetDamage=function() return dmg end,
+            GetAttacker=function() return shooter end})
     end
     local function die(kind,dmg)
         local npc=Person(Vector(9000,9000,0)); npc.IsNPC=function() return true end
@@ -1776,8 +1777,12 @@ medics.execute('''
     end
     setcv('bgn_medic_hopeless_chance',0)
     assert(not die(DMG_BULLET,30).hopeless, 'an ordinary death can be saved')
-    assert(die(DMG_BLAST,30).hopeless and die(DMG_VEHICLE,30).hopeless and die(DMG_CRUSH,30).hopeless, 'explosions and cars cannot be fixed')
-    assert(die(DMG_BULLET,250).hopeless, 'overkill cannot be saved')
+    assert(die(DMG_BLAST,30).hopeless, 'explosions cannot be saved')
+    assert(not die(DMG_VEHICLE,30).hopeless and not die(DMG_CRUSH,30).hopeless, 'vehicle deaths use the ordinary save chance')
+    assert(not die(DMG_BULLET,250).hopeless, 'distant shots use the ordinary save chance even on overkill')
+    shooter.GetPos=function() return Vector(9000,9000,0) end
+    assert(die(DMG_BULLET,30).hopeless and die(DMG_BUCKSHOT,30).hopeless, 'point-blank shots cannot be saved')
+    shooter.GetPos=function() return Vector(20000,20000,0) end
     setcv('bgn_medic_hopeless_chance',100)
     assert(die(DMG_BULLET,30).hopeless, 'the chance makes any death hopeless')
     local call=m.calls[#m.calls]
@@ -1840,6 +1845,8 @@ animation_client.execute('''
         return {valid=true,GetPos=function() return Vector() end,GetAngles=function() return {} end,
             GetModel=function() return 'model' end,GetSkin=function() return 0 end,GetBodyGroups=function() return {} end,
             LookupBone=function() return 1 end,SetPos=function() end,SetAngles=function() end,
+            GetColor=function() return {} end,GetMaterial=function() return '' end,GetModelScale=function() return 1 end,
+            GetMaterials=function() return {} end,SetColor=function() end,SetMaterial=function() end,SetModelScale=function() end,
             SetParent=function() end,AddEffects=function() end,SetSkin=function() end,
             SetNoDraw=function(self,v) self.hidden=v end,Remove=function(self) self.valid=false end}
     end
@@ -1913,7 +1920,8 @@ police_weapons.execute('''
     setcv('bgn_disable_weapon_police',0)
     setcv('bgn_arrest_safe_weapons','weapon_fists, gmod_tool,weapon_physgun')
 ''')
-load(police_weapons, 'api/sv_combat.lua')
+police_weapons.execute("list.Set('', 'wanted', {HasWanted=function() return wanted_target==true end})")
+load(police_weapons, 'api/sv_combat.lua', 'api/sv_police_force.lua')
 police_weapons.execute('''
     npc.active=Weapon('weapon_stunstick')
     expect('weapon_stunstick') -- no attack, no kills
@@ -1925,26 +1933,16 @@ police_weapons.execute('''
     expect('weapon_pistol') -- closing in must not downgrade a fight to melee
     enemy.bgn_last_attack=now-30
     expect('weapon_pistol') -- a pause in attacks must not downgrade the same fight either
-    new_fight(); expect('weapon_stunstick') -- state changes release the escalation
-    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_has_killed=nil
-    expect('weapon_pistol') -- an armed enemy needs no first kill or recorded recent hit, even nearby
-    enemy.weapon=Weapon('gmod_tool')
-    expect('weapon_pistol') -- changing the target's weapon must not reset the same fight
-    npc.active=Weapon('weapon_stunstick')
-    expect('weapon_pistol') -- restore the pistol if another controller selects the baton
-    enemy.pos=Vector(200,0,0)
-    for _,class in ipairs({'gmod_tool','weapon_physgun','weapon_fists','weapon_crowbar'}) do
-        new_fight()
-        enemy.weapon=Weapon(class); expect('weapon_stunstick')
-    end
-    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_last_attack=now-10
-    expect('weapon_pistol') -- a hostile ranged opponent must not be chased with a baton
-    enemy.bgn_last_attack=now-9.99; expect('weapon_pistol')
-    protect(true); expect(nil)
-    assert(not actor.state_data.police_firearm, 'arrest must release firearm escalation')
-    protect(false); expect('weapon_pistol')
-    actor.state_data={}; enemy.weapon=nil; enemy.bgn_last_attack=nil
-    expect('weapon_pistol') -- keep an already drawn pistol after reloading the addon
+    new_fight(); expect('weapon_pistol') -- a new state does not erase the kill
+    enemy.bgn_has_killed=nil
+    enemy.weapon=Weapon('weapon_smg1'); expect('weapon_stunstick') -- a firearm alone does not forbid the baton
+    wanted_target=true; expect('weapon_pistol')
+    protect(true); expect('weapon_pistol') -- surrender keeps the firearm without granting permission to fire
+    protect(false); wanted_target=false; expect('weapon_stunstick')
+    actor.police_harm={[enemy]={count=5,critical=false}}; expect('weapon_stunstick')
+    actor.police_harm[enemy].count=6; expect('weapon_pistol')
+    actor.police_harm[enemy]={count=1,critical=true}; expect('weapon_pistol')
+    actor.police_harm=nil; expect('weapon_stunstick') -- reset releases the choice, even in the same state
     actor.class='npc_combine_s'; enemy.bgn_last_attack=nil
     npc.active=nil; expect('weapon_pistol') -- other law enforcement keeps its existing rules
     npc.active=Weapon('weapon_shotgun'); expect('weapon_shotgun')
@@ -2012,52 +2010,83 @@ gangs.execute('''
     assert(npc.subs[1]=='background_npcs/gangs/wolves/light_male', 'redressed after the body changes')
 ''')
 
-roster = realm(True)
-roster.execute('''
-    bgNPC.Modes={IsPeaceful=function() return false end}
-    setcv('bgn_gang_help_chance',100); setcv('bgn_gang_war_chance',0)
-    all={}
-    function Gang(gang,x)
+sharing = realm(True)
+sharing.execute('''
+    all={}; peaceful=false
+    bgNPC.Modes={IsPeaceful=function() return peaceful end}
+    bgNPC.Combat={IsFighting=function() return false end}
+    bgNPC.Vision={HasLineOfSight=function(watcher,source) return not watcher.hidden and not source.hidden end}
+    bgNPC.Actors={GetAll=function() return all end,GetInRadius=function(pos,radius)
+        local near={}
+        for _,a in ipairs(all) do if a:GetNPC():GetPos():DistToSqr(pos)<=radius^2 then near[#near+1]=a end end
+        return near
+    end}
+    function Member(gang,x)
         local npc={valid=true,pos=Vector(x,0,0),GetPos=function(self) return self.pos end}
-        local a={data={gang=gang},npc=npc,enemies={},alive=true}
-        function a:IsAlive() return self.alive end
-        function a:InVehicle() return false end
+        local a={data={gang=gang},npc=npc,enemies={},enemies_count=0,state='walk',alive=true}
         function a:GetNPC() return npc end
-        function a:HasEnemy(e) return self.enemies[e] == true end
-        function a:AddEnemy(e) if hooks.BGN_AddActorEnemy.BGN_FightRoster(self,e) then return end self.enemies[e]=true end
-        function a:EqualStateGroup() return true end
-        function a:SetState(s) self.state=s end
-        all[#all+1]=a
-        return a
+        function a:IsAlive() return self.alive end
+        function a:InVehicle() return self.seated end
+        function a:HasNoEnemies() return self.enemies_count==0 end
+        function a:IsWanted() return self.wanted end
+        function a:HasState(state) return self.state==state end
+        function a:HasEnemy(e) for _,v in ipairs(self.enemies) do if v==e then return true end end return false end
+        function a:HasTeam(other)
+            if type(other)=='string' then return other=='police' and self.police end
+            return other.enemies~=nil and self.data.gang==other.data.gang
+        end
+        function a:AddEnemy(e)
+            if self.refuse or self:HasEnemy(e) then return end
+            self.enemies[#self.enemies+1]=e; self.enemies_count=#self.enemies
+        end
+        function a:EqualStateGroup() return self.state=='walk' end
+        function a:GetReactionForProtect() self.asked=true; return 'ignore' end
+        function a:RemoveAllTargets() self.targets_cleared=true end
+        function a:SetState(state) self.state=state end
+        all[#all+1]=a; return a
     end
-    bgNPC.Actors={GetInRadius=function() return all end,GetAll=function() return all end}
-    function IsValid(v) return v ~= nil and v.valid ~= false end
-    function math.sqrt(x) return x^0.5 end
+    setcv('bgn_enemy_share_period',2); setcv('bgn_gang_help_chance',0)
+    function IsValid(v) return v~=nil and v.valid==true end
 ''')
-load(roster, 'systems/sv_fight_roster.lua')
-roster.execute('''
-    local enemy={valid=true,Health=function() return 100 end}
+load(sharing, 'systems/sv_fight_roster.lua')
+load(sharing, 'systems/sv_enemy_sharing.lua')
+sharing.execute('''
+    local enemy={valid=true,data={},Health=function() return 100 end}
+    local source=Member('crows',0); source:AddEnemy(enemy)
+    local known=Member('crows',5); known:AddEnemy(enemy)
+    local wanted=Member('crows',6); wanted.wanted=true
     local crowd={}
-    for i=1,12 do crowd[i]=Gang('crows',i*10) end
-    local wolf=Gang('wolves',50)
-    crowd[1]:AddEnemy(enemy)
-    local members=0
-    for _,a in ipairs(crowd) do if a.enemies[enemy] then members=members+1 end end
-    local r=bgNPC.Roster.Get('crows',enemy)
-    assert(members==r.size and r.size>=1 and r.size<=6, 'the roster caps the fight: '..members)
-    assert(bgNPC.Roster.IsMember(crowd[1],enemy))
-    local outsider
-    for _,a in ipairs(crowd) do if not a.enemies[enemy] then outsider=a break end end
-    assert(outsider and not bgNPC.Roster.IsMember(outsider,enemy), 'the rest of the gang stays out')
-    outsider:AddEnemy(enemy); assert(not outsider.enemies[enemy], 'the rest is refused the enemy')
-    assert(not bgNPC.Roster.Get('wolves',enemy), 'another gang has no roster here')
-    wolf:AddEnemy(enemy); assert(wolf.enemies[enemy] and bgNPC.Roster.Get('wolves',enemy).size==1, 'a rival gang forms its own roster')
-    local civilian={data={},IsAlive=function() return true end}
-    assert(bgNPC.Roster.IsMember(civilian,enemy) and hooks.BGN_AddActorEnemy.BGN_FightRoster(civilian,enemy)==nil, 'non-gang actors are untouched')
-    setcv('bgn_gang_help_chance',0)
-    local lone={valid=true,Health=function() return 100 end}
-    crowd[1].enemies[lone]=nil; crowd[1]:AddEnemy(lone)
-    assert(bgNPC.Roster.Get('crows',lone).size==1, 'no chance, no helpers')
+    for i=1,12 do crowd[i]=Member('crows',i*500) end
+    local hidden=Member('crows',10); hidden.npc.hidden=true
+    local rival=Member('wolves',20)
+    local dead=Member('crows',30); dead.alive=false
+    local protected=Member('crows',40); protected.refuse=true
+    local seated=Member('crows',50); seated.seated=true
+    local busy=Member('crows',60); busy.state='defense'
+    timers.BGN_EnemySharing()
+    for _,a in ipairs(crowd) do
+        assert(a:HasEnemy(enemy) and a.state=='defense' and a.targets_cleared and not a.asked,
+            'all visible gang allies join, even beyond 1000, without a chance roll or a protection cooldown')
+    end
+    assert(known.state=='defense', 'an ally that already knows the enemy still joins the fight')
+    assert(wanted:HasEnemy(enemy) and wanted.state=='retreat', 'wanted allies keep their retreat behavior')
+    assert(not hidden:HasEnemy(enemy) and not rival:HasEnemy(enemy) and not dead:HasEnemy(enemy))
+    assert(not protected:HasEnemy(enemy) and protected.state=='walk', 'a refused enemy must not start combat')
+    assert(seated:HasEnemy(enemy) and busy:HasEnemy(enemy), 'seated and busy allies receive the threat too')
+    hidden.npc.hidden=false; now=now+2; timers.BGN_EnemySharing()
+    assert(hidden:HasEnemy(enemy) and hidden.state=='defense', 'a late arrival joins when an ally becomes visible')
+    local late=Member('crows',0)
+    timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy), 'respect the sharing interval')
+    now=now+2; peaceful=true; timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    peaceful=false; setcv('bgn_enemy_share_period',0); timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    setcv('bgn_enemy_share_period',2); enemy.valid=false; timers.BGN_EnemySharing(); assert(not late:HasEnemy(enemy))
+    enemy.valid=true; source.seated=true; now=now+2; timers.BGN_EnemySharing(); assert(late:HasEnemy(enemy))
+    all={}; bgNPC.enemy_share_next=nil
+    local officer=Member(nil,0); officer.police=true; officer:AddEnemy(enemy)
+    local near=Member(nil,10); local far=Member(nil,1500)
+    timers.BGN_EnemySharing()
+    assert(near:HasEnemy(enemy) and near.asked and near.state=='ignore', 'ordinary allies keep their configured reaction')
+    assert(not far:HasEnemy(enemy), 'ordinary enemy sharing keeps its radius')
 ''')
 
 cooldown = realm(True)
@@ -2065,7 +2094,7 @@ cooldown.execute('''
     table.Empty=function(t) for k in pairs(t) do t[k]=nil end end
     function IsValid(v) return v ~= nil and v.valid ~= false end
     setcv('bgn_fight_cooldown',0)
-    function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end} end
+    function Who(x) local n={pos=Vector(x,0,0),GetPos=function(self) return self.pos end}; return {GetNPC=function() return n end,HasTeam=function() return false end} end
     bgNPC.Actors={Get=function(e) if not e.foreign then return e end end}
     function Foe(player) return {valid=true,IsPlayer=function() return player end} end
 ''')
@@ -2091,11 +2120,12 @@ pack.execute('''
     all={}
     function Member(idx,gang,state)
         local npc={valid=true,idx=idx,pos=Vector(idx*10,0,0),EntIndex=function(self) return self.idx end,GetPos=function(self) return self.pos end}
-        local a={data={gang=gang},GetNPC=function() return npc end,IsAlive=function() return true end,GetState=function() return state end}
+        local a={data={gang=gang},GetNPC=function() return npc end,GetPos=function() return npc.pos end,
+            GetStateData=function() return {schedule='run'} end,IsAlive=function() return true end,GetState=function() return state end}
         all[#all+1]=a
         return a
     end
-    bgNPC.Actors={GetInRadius=function() return all end}
+    bgNPC.Actors={GetAll=function() return all end}
     function IsValid(v) return v ~= nil and v.valid ~= false end
 ''')
 load(pack, 'systems/npcs/sv_gang_pack.lua')
@@ -2103,11 +2133,22 @@ pack.execute('''
     local P=bgNPC.GangPack
     local lead,f1,f2=Member(5,'crows','walk'),Member(7,'crows','walk'),Member(9,'crows','walk')
     local other=Member(2,'wolves','walk')
-    local idle=Member(1,'crows','idle')
+    local idle=Member(17,'crows','idle')
+    local dead=Member(1,'crows','walk'); dead.IsAlive=function() return false end
     local dest=Vector(1000,0,0)
-    local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and lead.pack_dest==dest, 'the leader picks its own way')
-    d,delay=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-1000)<=250 and math.abs(d.y)<=250, 'a follower walks near the leader destination')
-    local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the spot stays while the leader destination does')
+    local d,delay=P.Destination(lead,dest); assert(d==dest and delay==nil and not lead.pack_leader, 'the leader picks its own way')
+    local schedule
+    d,delay,schedule=P.Destination(f1,Vector(-500,0,0)); assert(delay and math.abs(d.x-lead:GetPos().x)<=180 and math.abs(d.y)<=180 and schedule=='run', 'a follower stays near its leader and uses its pace')
+    P.Destination(f2,dest); assert(f2.pack_leader==lead, 'three members share one pack')
+    local extra,next1,next2=Member(11,'crows','walk'),Member(13,'crows','walk'),Member(15,'crows','walk')
+    P.Destination(next2,dest); P.Destination(next1,dest); P.Destination(extra,dest)
+    assert(not extra.pack_leader and next1.pack_leader==extra and next2.pack_leader==extra, 'six members form two packs of three regardless of update order')
+    local follower=Member(19,'crows','walk')
+    P.Destination(follower,dest)
+    assert(follower.pack_leader==idle, 'a living member outside walk can lead a pack; dead members cannot')
+    extra:GetNPC().pos=Vector(9000,0,0)
+    P.Destination(next1,dest); assert(not next1.pack_leader, 'a distant leader is replaced')
+    local keep=f1.pack_offset; P.Destination(f1,Vector(0,0,0)); assert(f1.pack_offset==keep, 'the offset stays while the leader stays the same')
     d,delay=P.Destination(other,Vector(3,0,0)); assert(delay==nil and d.x==3, 'another gang is its own pack')
     d,delay=P.Destination({data={},GetNPC=lead.GetNPC},Vector(4,0,0)); assert(d.x==4 and delay==nil, 'actors outside gangs are not touched')
 ''')
@@ -2134,6 +2175,7 @@ for path in paths:
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
 spawns = realm(True)
 spawns.execute('''
+    bgNPC.Assert={True=function(value,message) assert(value,message) end}
     local angles={}
     angles.__index=angles
     function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},angles) end
@@ -2312,4 +2354,111 @@ movement.execute('''
     assert(schedules==2, 'an interrupted schedule must be restarted')
     b:MoveTo(Vector(150,0,0),true); assert(schedules==3, 'new goals must reach the engine')
 ''')
-print('PASS: existing regressions, vehicle body lifecycle/identity/sync, spawn headings, cleanup, police access, detours and LuaJIT syntax')
+vehicles.execute('''
+    local p=NewCar(); local a=NewActor()
+    a:EnterVehicle(p.car)
+    a.mechanics.use_vehicle=false
+    timers['bgn_actor_enter_vehicle_'..a.uid]()
+    assert(not a:InVehicle(), 'a pending boarding request must respect mechanics disabled by knockdown')
+''')
+
+# Door decisions use the real planner and keep flee reactions out of ordinary attack planning.
+doors = realm(True)
+doors.execute('''
+    function table.Count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
+    function SortedPairs(t)
+        local keys={}; for k in pairs(t) do keys[#keys+1]=k end; table.sort(keys)
+        local i=0; return function() i=i+1; local k=keys[i]; if k then return k,t[k] end end
+    end
+    function string.StartWith(s,p) return s:sub(1,#p)==p end
+    bgNPC.States={Call=function() end}; bgNPC.PoliceKnows=function() return false end
+    list.Set('', 'wanted', {HasWanted=function() return false end})
+''')
+load(doors, 'core/sh_class.lua', 'nav/sh_astar.lua', 'brain/goap/sv_goap.lua',
+     'brain/goap/sv_goap_actions.lua', 'systems/sv_door_hold.lua', 'brain/sv_brain.lua',
+     'brain/fsm/sv_fsm_brain.lua', 'brain/goap/sv_goap_brain.lua')
+doors.execute('''
+    for _,name in ipairs({'goap.planner','goap.sets'}) do tests[name](function(ok,message) assert(ok,message) end) end
+    local position=Vector()
+    local npc={valid=true,Health=function() return 100 end,GetMaxHealth=function() return 100 end,GetPos=function() return position end}
+    local weapon={valid=true,GetClass=function() return weapon_class end}
+    weapon_class='weapon_pistol'
+    local enemy={valid=true,GetActiveWeapon=function() return weapon end,GetPos=function() return Vector(200,0,0) end,Health=function() return 100 end}
+    local actor={data={at_damage={fear=1}},mechanics={states_controller=true},enemies={enemy},enemies_count=1,state='fear',
+        GetNPC=function() return npc end,GetPos=function() return position end,GetNearEnemy=function() return enemy end,
+        GetHealth=function() return hp or 100 end,GetMaxHealth=function() return 100 end,
+        InVehicle=function() return false end,HasTeam=function() return false end,HasEnemy=function() return false end,
+        IsWanted=function() return false end,HasNoEnemies=function() return false end,
+        GetState=function(self) return self.state end,HasState=function(self,state) return self.state==state end,
+        GetStateData=function() return {} end,SetState=function(self,state) self.state=state end}
+    local D=bgNPC.Doors
+    assert(D.Desperate(actor,enemy), 'unarmed versus a real weapon is desperate')
+    weapon_class='gmod_tool'
+    assert(not D.Desperate(actor,enemy), 'a tool alone does not make a hopeless fight')
+    actor.weapon='weapon_pistol'; weapon_class='weapon_pistol'
+    assert(not D.Desperate(actor,enemy), 'healthy, equally armed actors do not shelter automatically')
+    hp=34; assert(D.Desperate(actor,enemy), 'below 35 percent is desperate'); hp=100
+    actor.enemies={enemy,enemy}; actor.enemies_count=2
+    assert(D.Desperate(actor,enemy), 'two enemies against one actor is desperate')
+    bgNPC.Actors.GetAll=function() return {{weapon='weapon_pistol',IsAlive=function() return true end,GetPos=function() return position end,GetNPC=function() return npc end}} end
+    actor.HasTeam=function() return true end
+    assert(not D.Desperate(actor,enemy), 'an armed teammate balances two enemies')
+    actor.HasTeam=function() return false end; bgNPC.Actors.GetAll=function() return {} end
+    actor.enemies={enemy}; actor.enemies_count=1; actor.weapon=nil
+    local door={valid=true,Fire=function(self,input) self.last_input=input end}
+    local spot={door=door}
+    assert(D.Reserve(actor,spot) and not D.Reserve({},spot), 'only one holder may reserve a door')
+    D.Release(actor); assert(door.last_input==nil, 'cancel before closing does not unlock an unrelated door')
+    spot.locked=true; assert(D.Reserve(actor,spot)); D.Release(actor)
+    assert(door.last_input=='Unlock' and not D.held[door], 'owned temporary lock is released')
+    actor.HasTeam=function(_,team) return team=='police' end
+    assert(D.Find(actor,enemy)==nil, 'police cannot seek a door to hold')
+    actor.HasTeam=function() return false end
+    D.Find=function() end
+    local brain=bgNPC.GOAPBrain(actor)
+    brain:Update()
+    assert(actor.state=='fear' and not brain.fighting, 'fear without an available shelter must stay fear')
+    D.Find=function() return {} end; brain.next_sense=0
+    brain:Update()
+    assert(actor.state=='hold_door' and brain.door_escape, 'fear can borrow GOAP for door shelter')
+    actor.state='fear'; brain:Update()
+    assert(actor.state=='fear' and not brain.fighting, 'leaving shelter resumes fear rather than selecting attack')
+    actor.state='walk'; brain:Update()
+    assert(actor.state=='walk' and not brain.fighting, 'an enemy alone still cannot start combat or holding')
+''')
+for path in ('systems/sv_door_hold.lua', 'brain/fsm/states/sv_hold_door.lua', 'brain/fsm/states/sh_knocked_down.lua'):
+    doors.execute('assert(loadstring(...))', (ROOT / path).read_text(encoding='utf-8-sig'))
+print('PASS: existing regressions, vehicle lifecycle, door decisions/planner/ownership, cleanup and LuaJIT syntax')
+
+# Direct attackers must be remembered on their first hit during an existing fight.
+damage = realm(True)
+damage.execute("""
+    function isbool(v) return type(v)=='boolean' end
+    local npc={valid=true}; local attacker={valid=true,IsPlayer=function() return false end}
+    local old_enemy={valid=true}
+    local victim={enemies={old_enemy},HasTeam=function() return shared end,
+        HasState=function() return false end,IsCivilian=function() return false end,
+        GetReactionForDamage=function() return 'defense' end,
+        SetReaction=function(self,r) self.reaction=r end,GetLastReaction=function(self) return self.reaction end,
+        EqualStateGroup=function() return false end,
+        AddEnemy=function(self,e) self.enemies[#self.enemies+1]=e end,
+        RemoveEnemy=function() end}
+    local shooter={GetNearEnemy=function() end,HasTeam=function() return false end,EnemiesCount=function() return 1 end,
+        HasEnemy=function() return true end,RemoveEnemy=function() end}
+    bgNPC.Actors.Get=function(e) if e==npc then return victim elseif e==attacker then return shooter end end
+    damage_npc=npc; damage_attacker=attacker; damage_victim=victim
+""")
+load(damage, 'actor/events/sv_self_damage.lua')
+damage.execute("""
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==2 and damage_victim.enemies[2]==damage_attacker,
+        'a new attacker is remembered on the first hit while another enemy exists')
+    damage_victim.enemies={}; shared=true
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==0, 'shared teams still prevent retaliation')
+    shared=false
+    hook.Add('BGN_PreReactionTakeDamage','cancel',function() return true end)
+    hook.Run('BGN_TakeDamageFromNPC',damage_attacker,damage_npc,{})
+    assert(#damage_victim.enemies==0, 'reaction cancellation still prevents adding enemies')
+""")
+print('PASS: first-hit enemy registration, shared-team immunity and reaction cancellation')

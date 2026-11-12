@@ -4,6 +4,12 @@ An actor is split into an **actor** (data and rules), a **body** (`actor.body`: 
 engine entity: movement, schedules, relationships, weapons, animation) and a **brain** (`actor.brain`: decisions).
 Bodies and brains exist on the server only.
 
+## Donor animations
+
+`bgNPC.Animator` plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.
+
+The server checks active animation viewers every 0.25 seconds and sends the current animation when a ready player enters its PVS, including late connections. One-shot animations retain their original deadline; loops last until stopped. Stopping releases an NPC schedule frozen by Animator if it is still current and no static actor animation owns the body. The client copies skin, bodygroups, color, material, submaterials and model scale at animation start; subsequent appearance changes are not tracked. The `dance` state starts its animation after the previous state's animation is reset.
+
 ## Bodies
 
 `bgn_actor_body npc|nextbot` (default `npc`; the old value `auto` is the same as `npc`). By default actors are real HL2 NPCs (`NPCBody`), like in the old versions: other addons (model replacers, ragdoll and death mods, Bio-Annihilation 2, Followers) see only real NPCs (`IsNPC`, `OnNPCKilled`). With `nextbot`, on maps with a NavMesh, actors of the HL2 classes
@@ -14,7 +20,9 @@ NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, 
 perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
 
-In `nextbot` mode regular HL2 NPCs have no relationship with the bodies (the engine only knows NPC classes), so `systems/sv_nextbot_hostility.lua` once per second gives every NPC within 2500 units the relationship it has with the actor's original class, measured on a hidden probe NPC of that class (flagged no-target, so nobody hunts it): an Enemy Rebel attacks nextbot actors as it did real NPCs. An NPC also hates a bot that hates it (the actor fights it). HL2 NPC senses look only at NPCs, players and `FL_OBJECT` entities, so `bgn_nextbot` sets `FL_OBJECT` in `Initialize` (it must be set before the engine registers the entity at spawn): without it an NPC that hates the bot only faces it and never shoots. Skipped in peaceful mode and with `bgn_ignore_another_npc`.
+In `nextbot` mode, SERVER counts each foreign HL2 NPC's dispositions towards all server players and applies the most frequent disposition (`D_HT`, `D_FR`, `D_LI`, `D_NU` or `D_ER`) to nearby BGN NextBot bodies. Ties and an empty player list resolve to `D_NU`. `systems/sv_nextbot_hostility.lua` refreshes this once per second within 2500 units, including changes away from hostility. Initialization uses the same vote; relationships for ordinary HL2 NPC bodies keep their existing rules. No hidden probe NPCs are created. HL2 NPC senses detect `bgn_nextbot` through `FL_OBJECT`, set before engine registration in `Initialize`. The periodic update is skipped in peaceful mode and with `bgn_ignore_another_npc`.
+
+After updating from the probe-based implementation, reload the map to clear legacy probes. `bgn_selftest` includes the player-disposition vote checks; mixed-player votes are pure logic tests.
 
 Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
 back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by
@@ -29,6 +37,7 @@ put at a spot free for its whole body, never inside the car.
   fights with it. It was spawned without a weapon, so it always shoots with `WEAPON_PROFICIENCY_POOR`
   (`actor.novice_shooter`, `bgNPC.Combat.ApplyWeaponSkill`). The same goes for an HL2 NPC that picked a weapon
   up by its engine AI.
+- A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
 - **Offenders** (`systems/sv_offender.lua`): a civilian (`residents`, not `police`) who rams a police car (a hit with damage) or kills a `residents` actor
@@ -43,10 +52,14 @@ put at a spot free for its whole body, never inside the car.
   the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
   except an officer: it gets the enemy and steps out or fires from the car (`modules/dv/sv_move_to_target.lua`). A teammate in a calm state
   switches to its `GetReactionForProtect` reaction; a busy one only gets the enemy. This keeps the others from
-  walking around while an officer already shoots at a player who is not wanted yet.
+  walking around while an officer already shoots at a player who is not wanted yet. Gang exceptions (all visible allies, without a distance cap or reaction roll) are described under [gangs](gangs.md).
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
-  when the enemy is over 300 units away.
+  when the enemy is over 300 units away and the actor has under 50% of its max health.
+
+Prop-chair seating (`sit_to_chair`) uses the configured chair models and offsets. The route handles the distant
+approach; within 300 units the body finishes moving to the chair, and seating begins within 60 units.
+This applies to both HL2 NPC and NextBot bodies. Custom map seats use `sit_to_chair_2`.
 
 ## Choosing a brain
 
@@ -70,13 +83,15 @@ the plan and attacked whenever the actor had an enemy, which made fights much mo
 
 - **Facts** are measured by sensors once per second (and right after damage or a new enemy):
   `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `enemy_police`, `police_called`,
-  `wanted`, `in_cover`, `backup_called`, `outnumbered`, `surrendered`. `outnumbered` is police only: two or more
+  `wanted`, `in_cover`, `backup_called`, `outnumbered`, `surrendered`, `desperate`, `can_hold_door`, `enemy_bracing`.
+  `outnumbered` is police only: two or more
   living enemies of the officer within 2000 units, and more of them than living officers there (itself included).
 - **Actions** run states: `attack` → `defense`, `flee` → `fear`, `call_police` → `calling_police`,
   `hide` → `retreat` (wanted actors only), `take_cover` → `take_cover`, `call_backup` → `call_backup`,
-  `surrender` → `arrest_surrender`.
+  `surrender` → `arrest_surrender`, `hold_door` → `hold_door`, `breach_door` → `breach_door`.
   An actor can only use actions whose state appears in its `at_damage` / `at_protect` config with a weight
-  above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`, `surrender`).
+  above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`, `surrender`,
+  `hold_door`, `breach_door`).
   A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%). `surrender` is
   not a trait: it is rolled at every attempt (8%, see below).
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
@@ -103,14 +118,43 @@ the plan and attacked whenever the actor had an enemy, which made fights much mo
     `arrest_surrender`.
 - Arrests are not planned: the arrest system (`systems/arrest`, `ArrestModule:CanArrest`) owns them, and it
   only works on police without enemies.
-- **Goals** (`eliminate`, `survive`, `report`, `hide`) get a priority from the actor's **set**: `police`,
-  `gangster` or `citizen` (by team, or the config field `goap_set`). `hide` outranks the rest while wanted.
+- **Goals** (`eliminate`, `survive`, `report`, `hide`, `give_up`, `shelter`) get a priority from the actor's **set**:
+  `police`, `gangster` or `citizen` (by team, or the config field `goap_set`). `hide` outranks ordinary combat
+  while wanted; an available door shelter has priority 30 when desperate.
   A citizen reports (calls the police) an enemy farther than 700 units even when it is armed, unless it is hurt
   (then it runs) or armed itself (then it fights).
 - The planner (A* over fact bit masks) returns the cheapest action chain for the top goal. Plans are cached.
 - `ignore` in a reaction table keeps its random chance.
 
 Debug: `bgn_goap_debug` prints the set, goal, plan and facts of the actor you look at.
+
+### Door shelter and breaching
+
+These are server-driven actions for both NPC and NextBot bodies, not random scenic poses. Any non-police GOAP actor
+already fighting or fleeing can seek an open door when below 35% health, unarmed against an armed enemy,
+or facing more living enemies within 1000 units than itself plus nearby armed teammates. An ordinary flee
+reaction only borrows GOAP to seek shelter; it does not become an attack if no door fits or shelter ends.
+
+`hold_door` searches within 400 units for an unlocked, unclaimed rotating door. It uses the leaf's **closed**
+geometry, moves to the side away from the enemy, stays outside the swing while closing, temporarily locks
+the door, then steps up and plays a supported `doorbracer_*` sequence. Approaching takes at most 10 s,
+closing/positioning 4 s, holding 12 s; another attempt waits 20 s. The action ends if the enemy dies, reaches
+the same side, disappears from the actor's enemies, or the door is removed. It releases its lock on exit.
+Models are never replaced to obtain an animation: without a supported brace sequence the action is unavailable.
+Supported doors are upright, unparented `prop_door_rotating` and `func_door_rotating`; sliding and moving-parent
+doors are skipped. Physics/world obstructions may prevent reaching or closing a door, ending the attempt.
+
+Police with an enemy actively holding the other side can choose `breach_door` within 800 units. They approach,
+kick (when the model has a suitable sequence), and open the door at 900 degrees/s, restoring its previous speed
+after 0.4 s. This only releases the holding actor's temporary lock; it does not force arbitrary map-locked doors.
+
+The holder enters `knocked_down`: a temporary server ragdoll receives the impulse, while the **same** original
+NPC/NextBot entity and actor/UID remain registered, hidden, non-solid and unable to move, shoot or board a car.
+The breach and physics contacts add no damage. Shots at the ragdoll are forwarded to the actor; lethal damage
+uses ordinary death/corpse handling. After 3 s it looks for a full standing hull within 96 units of the body;
+if blocked, it stays down and retries. On recovery it restores visibility, collision, equipment and the previous
+combat/flee behavior, keeping current health. Removing the temporary ragdoll also removes its hidden actor.
+Clients only display the server state/body; they do not choose actions or control doors.
 
 ### Extending
 
@@ -140,6 +184,8 @@ The healthiest stand in front, the wounded (< 40% health) form a rear rank. `def
 Actors far from players update less often (`bgn_lod_near_radius`); idle unarmed actors out of range sleep
 (`bgn_disable_logic_radius`). Hook: `BGN_ActorLODChanged(actor, lod)` (1 near, 2 far, 3 dormant).
 
+Distant unseen unarmed actors on foot now alternate pauses and active windows instead of remaining frozen. SERVER settings (Performance and classic Optimization): `bgn_logic_pause` = 2 s (0 disables pauses), `bgn_logic_active` = 1 s (minimum 0.1), `bgn_logic_stagger` = 0.25 s per UID. During active windows both engine movement and the brain resume; brain interval is 0.2 s. Phase is `(time - UID * stagger) modulo (pause + active)`, stable across list reordering. Windows overlap and phases wrap in larger crowds; this spreads transitions, not exclusive execution. Close/in-view actors, armed actors and vehicle occupants retain continuous simulation. Damage/enemy events immediately wake an actor for at least one second. LOD 3 now means intermittent simulation, not permanent sleep. Existing distance thresholds are retained; with near radius 2500 and disable radius 500, off-view actors beyond 2500 enter this cycle. Timings are observed on actor scheduler passes, not exact real-time deadlines.
+
 ## Medics
 
 Actor type `medic` (`config/actors/sh_medic.lua`, limit 4: two pairs) is never spawned by the regular spawner. Every actor
@@ -153,7 +199,7 @@ and drives on with the siren off. The last 300 units to the body the medic walks
 Some deaths cannot be saved: explosions, vehicle hits and overkill damage always, any other death with the chance
 `bgn_medic_hopeless_chance` (25 %; Behavior > Medics). For those the medic still comes and kneels over the body, but
 instead of reviving says `medic_cannot_save` and leaves (`call.verdict`); only then does an officer take the body.
-Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`).
+Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`), nor for one whose death no living ally of the victim saw.
 
 When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
 in that area pause: their responders stop heading to the body and return to their ambulance when possible.
@@ -185,20 +231,7 @@ gang's recolor with `SetSubMaterial` (`materials/background_npcs/gangs/<gang>/<c
 the model, so it survives revival and leaving a car. The recolors are made from the game's own textures by
 `tools/make_gang_skins.py` (needs `vpk`, `srctools`, `pillow`, `numpy`); the game files are not shipped.
 
-**Fight rosters** (`systems/sv_fight_roster.lua`). Gang members help only their own gang, and a fight cannot grow
-without bound. When the first member of a gang takes an enemy (is attacked, sees a crime), the roster of that fight
-is formed at once: the initiator plus the nearest living members of the same gang within 1000 units, each joining
-with `bgn_gang_help_chance` percent (default 1), 2-6 members in total (random per fight). The chosen ones join
-immediately; every other member of the gang is refused that enemy and ignores calls for help. The police and the
-player therefore fight a capped group. Members of different gangs are not teammates (`Actor:HasTeam`), so a gang
-never helps the other one. Calm members of rival gangs within 700 units sight of each other start a fight with
-`bgn_gang_war_chance` percent per 10 seconds (default 0.5, `0` disables); if the police or a player step in, each
-gang fights them (and each other) with its own roster. Actors outside gangs are not affected.
-
-A calm gang member walks in a pack (`systems/npcs/sv_gang_pack.lua`, used by the `walk` state): of the walking
-members of the same gang within 1500 units the one with the lowest entity index is the leader and picks its
-destination as usual, the others follow the leader itself to a spot 80-180 units around it, at its pace (walk or
-run), and recheck every 2 seconds.
+**Gang support and walking.** Members walk in packs of up to three; all visible same-gang allies receive a threat without a chance roll or roster cap, including late arrivals. Combat support is independent of walking packs. See [gangs](gangs.md) for visibility, sharing interval and war rules.
 
 Orphan bodies: `Actor:RemoveActor` leaves the entity to the engine, right for a death only. Every 2 s an NPC or
 NextBot that is an actor body (`BGN_ACTOR_OBJECT`, or `bgn_npc_class` from the spawner) without a live registered
@@ -228,7 +261,7 @@ Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/stat
 The nearest officer within 2000 units who walks or idles without enemies takes it (state `police_inspect_body`):
 runs to the body when it is farther than 600 units (walks when closer), says `police_body_arrive`, crouches over it, reports it on the radio (`police_body_report`) and writes it down
 (`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
-calm down; a body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.
+calm down; an enemy that appears during the inspection ends it at once and the officer reacts as to an attack. Bodies within 150 units are one scene with one officer. A body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.
 
 ## Onlookers
 
@@ -236,6 +269,7 @@ Every actor death outside a vehicle is also an incident for 45 s (`brain/fsm/sta
 From 5 s after it, calm civilians walking or idling within 1500 units come one by one (35% per 2 s check, up to 4):
 they stand 150-280 units from the spot on their side, stare (`LineIdle*`), half of them say a `watch_incident` line,
 and go on after 12-25 s. A gunshot scares them like any calm actor; two of them may start a conversation.
+When the medics revive the actor (`BGN_ActorRevived`), the incident ends: no new onlookers come and those already there go on.
 
 ## Bodies
 
@@ -290,4 +324,16 @@ BGN traffic can plan bounded forward/reverse maneuvers around blockers and, afte
 
 ## Related systems
 
-[Gangs](gangs.md) limit fight rosters and new protection events; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
+[Gangs](gangs.md) walk in packs of three and support visible allies; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
+
+## Police weapon choice and witnessed harm
+
+See [police weapon choice and harm memory](arrest.md#police-weapon-choice-and-witnessed-harm).
+
+## NextBot pistol cadence
+
+The stock pistol now fires groups of 1–3 individual shots, approximately 0.2 s apart, followed by a 0.45–0.8 s rest. These are separate, visibility/friendly-fire-checked shots, not multiple bullets in one attack. The 18-round magazine keeps the 1.8 s reload pause. Burst state resets on weapon/target changes and reload; other weapon profiles and scripted-weapon fallback remain unchanged. Combat checks quantize the intended intervals to engine ticks.
+
+`python tools/test_police_force.py` checks witnessed distinct counts, thresholds, memory/reset/rebind, vehicle damage and pistol cadence. Live single-player checks compare native HL2 and NextBot shots and inspect arrest weapon retention; multiplayer and third-party weapon bases require separate verification.
+
+Movement updates run every 0.1 s for near actors and every 0.25 s for far or dormant ones (the node arrival radius is 150 units).

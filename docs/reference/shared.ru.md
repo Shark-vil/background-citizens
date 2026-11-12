@@ -29,6 +29,7 @@
 `actor:GetActiveWeapon()`
 
 Возвращает сущность оружия либо NULL; у визуальной модели пассажира активного оружия может не быть.
+Паёк, чемодан/кейс и газета возвращают NULL через API актора; сама движковая сущность может по-прежнему возвращать их.
 
 Исходник: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -557,11 +558,13 @@
 
 | Сигнатура |
 |---|
-| `bgNPC.Vision.HasLineOfSight(watcher, ent)` |
+| `bgNPC.Vision.HasLineOfSight(watcher, ent, channel)` |
 | `bgNPC.Vision.NPCCanSeePos(ent, pos, fov)` |
 | `bgNPC.Vision.PlayerCanSeePos(ply, pos, radius)` |
 | `bgNPC.Vision.AnyActorSees(ent, exclude)` |
 | `bgNPC.Vision.ActorsThatSee(ent)` |
+
+`channel` — необязательная метка отладки (по умолчанию `los`). Она не меняет условие LOS и результаты boolean/попавшая сущность. SERVER записывает существующий результат только для актёра с подпиской и слоем зрения; CLIENT не передаёт телеметрию зрения.
 
 ## statistics
 

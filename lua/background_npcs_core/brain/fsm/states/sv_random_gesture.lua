@@ -1,40 +1,21 @@
-local gestures = {
-	'Taunt_Dance',
-	'Taunt_Laught',
-	'Taunt_Muscle',
-	'Taunt_Robot',
-	'Taunt_Zombie',
-	'Taunt_Cheer',
-	'Menu_Gman',
-	'Sit_Zen',
-}
-
+﻿local gestures = {'Taunt_Dance', 'Taunt_Laught', 'Taunt_Muscle', 'Taunt_Robot', 'Taunt_Zombie', 'Taunt_Cheer', 'Menu_Gman', 'Sit_Zen',}
 bgNPC.States.Register('random_gesture', 'calm', {
-	pre_start = function()
-		if not GetConVar('bgn_module_custom_gestures'):GetBool() then
-			return 'walk'
-		end
-	end,
-	start = function(actor, _, data)
-		data.dancing_time = 0
+  pre_start = function() if not GetConVar('bgn_module_custom_gestures'):GetBool() then return 'walk' end end,
+  start = function(actor, _, data)
+    data.dancing_time = 0
+    local npc = actor:GetNPC()
+    local animation_name = bgNPC.Table.Random(gestures)
+    local animation_time = nil
+    if animation_name == 'Sit_Zen' then animation_time = math.random(10, 60) end
+    local anim_info = bgNPC.Animator.Play('models/player/kleiner.mdl', animation_name, npc, {
+      time = animation_time
+    })
 
-		local npc = actor:GetNPC()
-		local animation_name = bgNPC.Table.Random(gestures)
-		local animation_time = nil
-		if animation_name == 'Sit_Zen' then
-			animation_time = math.random(10, 60)
-		end
-
-		local anim_info = bgNPC.Animator.Play('models/player/kleiner.mdl', animation_name, npc, {
-			time = animation_time
-		})
-
-		if not anim_info then return end
-
-		data.dancing_time = CurTime() + anim_info.time + 1
-	end,
-	update = function(actor, state, data)
-		if data.dancing_time > CurTime() then return end
-		actor:SetState('walk')
-	end
+    if not anim_info then return end
+    data.dancing_time = CurTime() + anim_info.time + 1
+  end,
+  update = function(actor, state, data)
+    if data.dancing_time > CurTime() then return end
+    actor:SetState('walk')
+  end
 })

@@ -1,48 +1,37 @@
-local player_GetAll =  player.GetAll
+﻿local player_GetAll = player.GetAll
 --
-
 bgNPC.Tasks.Add('BGN_Timer_PlayerLookAtObject', function(yield, wait)
-	local players = player_GetAll()
+  local players = player_GetAll()
+  for i = 1, #players do
+    local ply = players[i]
+    if IsValid(ply) and ply:Alive() then
+      local tr = util.TraceLine({
+        start = ply:EyePos(),
+        endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000,
+        filter = function(ent) if ent ~= ply then return true end end
+      })
 
-	for i = 1, #players do
-		local ply = players[i]
+      yield()
+      local ent = tr.Entity
+      if tr.Hit and IsValid(ent) then
+        local viewed_entity = ply.bgn_look_at_object
+        local call_hook_delay = ply.bgn_look_at_object_hook_delay
+        yield()
+        if not viewed_entity or viewed_entity ~= ent then
+          viewed_entity = ent
+          call_hook_delay = RealTime()
+          ply.bgn_look_at_object = viewed_entity
+          ply.bgn_look_at_object_hook_delay = call_hook_delay
+        end
 
-		if IsValid(ply) and ply:Alive() then
-			local tr = util.TraceLine({
-				start = ply:EyePos(),
-				endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000,
-				filter = function(ent)
-					if ent ~= ply then return true end
-				end
-			})
+        yield()
+        if viewed_entity and call_hook_delay then
+          local observation_time = RealTime() - call_hook_delay
+          if hook.Run('BGN_PlayerLookAtObject', ply, ent, observation_time) then ply.bgn_look_at_object_hook_delay = RealTime() end
+        end
+      end
+    end
 
-			yield()
-
-			local ent = tr.Entity
-			if tr.Hit and IsValid(ent) then
-				local viewed_entity = ply.bgn_look_at_object
-				local call_hook_delay = ply.bgn_look_at_object_hook_delay
-
-				yield()
-
-				if not viewed_entity or viewed_entity ~= ent then
-					viewed_entity = ent
-					call_hook_delay = RealTime()
-					ply.bgn_look_at_object = viewed_entity
-					ply.bgn_look_at_object_hook_delay = call_hook_delay
-				end
-
-				yield()
-
-				if viewed_entity and call_hook_delay then
-					local observation_time = RealTime() - call_hook_delay
-					if hook.Run('BGN_PlayerLookAtObject', ply, ent, observation_time) then
-						ply.bgn_look_at_object_hook_delay = RealTime()
-					end
-				end
-			end
-		end
-
-		yield()
-	end
+    yield()
+  end
 end)

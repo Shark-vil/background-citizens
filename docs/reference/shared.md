@@ -29,6 +29,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 `actor:GetActiveWeapon()`
 
 Returns a weapon entity or NULL; a seated visual may have no active weapon.
+Carried parcels, suitcases/briefcases and newspapers return NULL through this actor API; the native entity can still expose them.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -557,11 +558,13 @@ Source: `lua/background_npcs_core/api/sh_vision.lua`.
 
 | Signature |
 |---|
-| `bgNPC.Vision.HasLineOfSight(watcher, ent)` |
+| `bgNPC.Vision.HasLineOfSight(watcher, ent, channel)` |
 | `bgNPC.Vision.NPCCanSeePos(ent, pos, fov)` |
 | `bgNPC.Vision.PlayerCanSeePos(ply, pos, radius)` |
 | `bgNPC.Vision.AnyActorSees(ent, exclude)` |
 | `bgNPC.Vision.ActorsThatSee(ent)` |
+
+`channel` is an optional diagnostic label (default `los`). It does not change the LOS predicate or its boolean/hit-entity returns. SERVER records the existing result only for subscribed actors with the vision layer enabled; CLIENT does not send sight telemetry.
 
 ## statistics
 

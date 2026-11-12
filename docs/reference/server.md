@@ -10,7 +10,7 @@ Run gameplay changes on SERVER. Many methods are declared in sh_ files for compa
 
 `actor:AddEnemy(ent, reaction, always_visible)`
 
-Adds an entity enemy with optional reaction and always_visible flag; hooks, team/roster rules may reject it.
+Adds an entity enemy with optional reaction and always_visible flag; hooks, team rules may reject it.
 
 Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
@@ -46,7 +46,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 
 `actor:CallForHelp(enemy)`
 
-Asks nearby actors to react to enemy; visibility, teams, fight rosters and cooldown still apply.
+Asks nearby actors to react to enemy; visibility, teams and cooldown still apply.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -116,9 +116,9 @@ Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
 ### EnterVehicle
 
-`actor:EnterVehicle(vehicle)`
+`actor:EnterVehicle(vehicle, animate)`
 
-Accepts a valid vehicle entity (chassis); resolves or creates its BGN provider internally. Boarding is checked again after 0.5 seconds; no synchronous success result. Actor/UID persist, entity changes. Requires DV support and provider access.
+Accepts a valid vehicle entity (chassis); resolves or creates its BGN provider internally. Boarding is checked again after 0.5 seconds; no synchronous success result. With `animate` the actor turns to the car and plays a boarding sequence first; the method returns the delay in seconds. Actor/UID persist, entity changes. Requires DV support and provider access.
 
 Source: `lua/background_npcs_core/actor/components/sh_vehicle.lua`.
 
@@ -252,7 +252,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
 `actor:GetReactionForProtect(enemy)`
 
-Chooses at_protect reaction with roster, cooldown and civilian participation checks.
+Chooses at_protect reaction with cooldown and civilian participation checks.
 
 Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
@@ -770,3 +770,5 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 | `bgNPC.Nav` | Provider selection, loading and pathfinding: `nav/sv_nav.lua`; see [navigation](../systems/navigation.md). |
 | `bgNPC.GOAP` | Planner actions/sensors: see [brains](../systems/brains.md). |
 | `bgNPC.Tasks` | Cooperative work with yield/wait/budget; `core/sh_tasks.lua`. Each realm has its own scheduler. |
+
+`bgNPC.Combat.CanPoliceUseStunstick(officer, suspect)` returns the SERVER baton eligibility from wanted status, kill evidence, that officer's witnessed harm and whether any of the officer's enemies has hit someone from farther than 500 units. `bgNPC.Combat.ResetPoliceThreat(suspect)` clears kill evidence/counters and officer harm records; use only for a completed reset, not initial wanted escalation. `BGN_PostVehicleDamage(actor, attacker, amount)` fires on SERVER after virtual seated health is updated, before death handling.
