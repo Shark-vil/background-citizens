@@ -1,4 +1,6 @@
-﻿-- Stands still with an idle animation for 10-30 seconds. Metropolice hold a stunstick meanwhile.
+﻿local SEQUENCES = {'LineIdle01', 'LineIdle02', 'LineIdle03', 'LineIdle04', 'plazastand1', 'plazastand2', 'plazastand3', 'plazastand4', 'idle_subtle', 'd2_coast03_postbattle_idle02'}
+
+-- Stands still with an idle animation for 10-30 seconds. Metropolice hold a stunstick meanwhile.
 bgNPC.States.Register('idle', 'calm', {
   start = function(actor, state, data)
     local delay = math.random(10, 30)
@@ -13,7 +15,12 @@ bgNPC.States.Register('idle', 'calm', {
       actor:GetBody():GiveWeapon('weapon_stunstick')
       actor:PlayStaticSequence('plazathreat' .. math.random(1, 2), true, delay)
     else
-      actor:PlayStaticSequence('LineIdle0' .. math.random(1, 4), true, delay)
+      for _, name in ipairs(bgNPC.Table.Shuffle(table.Copy(SEQUENCES))) do
+        if actor:IsValidSequence(name) then
+          actor:PlayStaticSequence(name, true, delay)
+          return
+        end
+      end
     end
   end,
   update = function(actor, state, data)

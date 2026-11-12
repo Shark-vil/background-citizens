@@ -61,16 +61,6 @@ bgNPC.cfg.scenic = {
       }
     },
   },
-  plaza = {
-    place = 'floor',
-    weight = 10,
-    members = {
-      {
-        type = 'citizen',
-        seq = {'plazastand1', 'plazastand2', 'plazastand3', 'plazastand4'}
-      }
-    },
-  },
   luggage = {
     place = 'floor',
     weight = 0,
@@ -140,16 +130,6 @@ bgNPC.cfg.scenic = {
           sitcouchfeet1 = V(16, 0, -16),
           sitcouchknees1 = V(16, 0, -14)
         }
-      }
-    },
-  },
-  tired = {
-    place = 'floor',
-    weight = 8,
-    members = {
-      {
-        type = 'citizen',
-        seq = {'d2_coast03_postbattle_idle02', 'LineIdle01', 'idle_subtle'}
       }
     },
   },
@@ -452,14 +432,12 @@ local names = {
   ledge_sitting = {'Sitting on a ledge', 'Сидящий на уступе'},
   cheering = {'Cheering', 'Радующиеся жители'},
   food_line = {'Food queue', 'Очередь за едой'},
-  plaza = {'Standing citizen', 'Стоящий житель'},
   luggage = {'Citizen with a suitcase / briefcase', 'Житель с чемоданом / кейсом'},
   newspaper = {'Citizen with a newspaper', 'Житель с газетой'},
   ration = {'Citizen with a ration box', 'Житель с пайком'},
   wounded = {'Wounded citizen', 'Раненый житель'},
   healing = {'Medic helping a citizen', 'Помощь медика'},
   ground_sit = {'Sitting on the ground', 'Сидящий на земле'},
-  tired = {'Tired citizen', 'Уставший житель'},
   kneeling = {'Kneeling', 'Житель на коленях'},
   waving = {'Waving', 'Житель машет рукой'},
   sky_watch = {'Watching the sky', 'Наблюдение за небом'},

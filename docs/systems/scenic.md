@@ -96,8 +96,8 @@ ceiling within 384 units and walls in all four horizontal directions within 512 
 Sky ceilings, open courtyards and furniture whose rotated bounds intersect brush geometry are rejected.
 This conservative check can reject a real room with an open doorway/window; it also applies to the Tool.
 
-`plaza`, `ground_sit` and `tired` create one citizen with a supported pose selected from a list. `plaza` has
-standing poses only; `cowering` was removed. The raised-arm tired pose is `tired_wall`, facing its support.
+`ground_sit` creates one citizen with a supported pose selected from a list. Plain standing scenes (`plaza`, `tired`) were
+removed: their poses (`plazastand*`, `idle_subtle`, `d2_coast03_postbattle_idle02`) now belong to the `idle` state. The raised-arm tired pose is `tired_wall`, facing its support.
 `ledge_sitting` needs a flat lip at least 32 units wide, 28 units of support behind it, clear standing room,
 and a 24–56 unit drop in front. Short downward traces also require support directly below the pelvis
 and 10 units to either side; the actor faces the lower surface. Thin rails, ordinary stair steps and deep falls are rejected.
