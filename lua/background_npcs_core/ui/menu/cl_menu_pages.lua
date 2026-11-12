@@ -101,14 +101,15 @@ end)
 
 -- The choice row (shared by the general page, the client page and the wizard); locked with the reason when
 -- the server decides everything.
-function Menu.DensityChoice(page)
+-- simple: the plain words of the wizard
+function Menu.DensityChoice(page, simple)
   local options = {}
   for i, preset in ipairs(DENSITY) do
-    options[i] = {preset.id, '#bgn.menu.crowd_density.' .. preset.id}
+    options[i] = {preset.id, (simple and '#bgn.wizard.density.' or '#bgn.menu.crowd_density.') .. preset.id}
   end
 
   local locked = not DensityScope()
-  page:Choice('bgn_crowd_density', '#bgn.menu.crowd_density', options, {
+  page:Choice('bgn_crowd_density', simple and '#bgn.wizard.density.label' or '#bgn.menu.crowd_density', options, {
     get = CurrentDensity,
     server = false,
     locked = locked,
@@ -126,8 +127,7 @@ local function QuickSettings(page, closable)
     local s = Menu.Scale()
     local pad, gap = math.Round(16 * s), math.Round(8 * s)
     local C = Menu.colors
-    local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.mode'), 'primary', function() RunConsoleCommand('bgn_mode_welcome') end)
-    local second = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'secondary', function() RunConsoleCommand('bgn_wizard', 'all') end)
+    local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'primary', function() RunConsoleCommand('bgn_wizard', 'all') end)
     local help = Menu.Text('#bgn.menu.quick.help')
     local close = closable and Menu.IconButton(panel, math.Round(28 * s), function() return ICONS .. 'close.png' end, Menu.Text('#bgn.menu.close'), function()
       Menu.Sound('click')
@@ -139,7 +139,6 @@ local function QuickSettings(page, closable)
       local lines = Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)
       local h = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s) + #lines * Menu.FontHeight('BGN.Menu.Small') + math.Round(12 * s) + first:GetTall() + pad
       first:SetPos(pad, h - pad - first:GetTall())
-      second:SetPos(pad + first:GetWide() + gap, h - pad - second:GetTall())
       if close then close:SetPos(w - close:GetWide() - gap, gap) end
       if self:GetTall() ~= h then
         self:SetTall(h)
@@ -560,10 +559,6 @@ Menu.AddPage('client', {
     page:Section('#bgn.menu.section.debug')
     page:Toggle('bgn_cl_draw_npc_path', '#bgn.menu.draw_npc_path')
     page:Section('#bgn.menu.section.about')
-    page:Button('#bgn.mode.reopen', 'bgn_mode_welcome', {
-      text = '#bgn.menu.open_page'
-    })
-
     page:Button('#bgn.wizard.title', 'bgn_wizard', {
       text = '#bgn.menu.open_page'
     })

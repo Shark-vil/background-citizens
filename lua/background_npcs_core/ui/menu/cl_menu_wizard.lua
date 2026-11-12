@@ -1,6 +1,6 @@
 ﻿--[[
 	Step by step setup of the most important settings: a title, a short text, a looped clip and the controls.
-	Opens after the mode choice (cl_menu_welcome.lua), console "bgn_wizard", Settings -> Client.
+	Opens by itself on the first start (every step), console "bgn_wizard", Settings -> Client.
 
 	Clips are frame atlases (GMod can't play video): materials/background_npcs/wizard/<clip>.jpg, 2048x2048,
 	CLIP_COLS x CLIP_ROWS frames of FRAME_W x FRAME_H, made by tools/make_wizard_clips.py.
@@ -11,6 +11,8 @@ local C = Menu.colors
 local ICONS = 'background_npcs/vgui/menu/'
 local ATLAS, FRAME_W, FRAME_H, CLIP_COLS = 2048, 384, 216, 5
 local CLIP_FPS = 10
+CreateClientConVar('bgn_mode', 'classic', true, false, 'Background NPCs: set to classic by the bgn_classic command')
+local cvar_chosen = CreateClientConVar('bgn_mode_chosen', '0', true, false, 'Background NPCs: the first-start setup was shown (1) or not (0)')
 -- modern: the step is skipped in the Classic mode (its settings are fixed there)
 -- advanced: only "bgn_wizard all": the mode already decides these, the wizard must not override the choice
 -- build(page): controls, the same builder as the settings pages; server rows are hidden from non-admins
@@ -88,7 +90,7 @@ local STEPS = {
     clip = 'density',
     frames = 45,
     labels = {'#bgn.wizard.density.l1', '#bgn.wizard.density.l2'},
-    build = function(page) Menu.DensityChoice(page) end,
+    build = function(page) Menu.DensityChoice(page, true) end,
   },
   {
     id = 'body',
@@ -97,7 +99,7 @@ local STEPS = {
     clip = 'body',
     frames = 45,
     labels = {'#bgn.wizard.body.l1', '#bgn.wizard.body.l2'},
-    build = function(page) page:Choice('bgn_actor_body', '#bgn.menu.body', {{'npc', 'NPC'}, {'nextbot', 'NextBot'}}) end,
+    build = function(page) page:Choice('bgn_actor_body', '#bgn.wizard.body.label', {{'npc', '#bgn.wizard.body.npc'}, {'nextbot', '#bgn.wizard.body.nextbot'}}) end,
   },
   {
     id = 'brain',
@@ -106,7 +108,7 @@ local STEPS = {
     clip = 'brain',
     frames = 45,
     labels = {'#bgn.wizard.brain.l1', '#bgn.wizard.brain.l2'},
-    build = function(page) page:Choice('bgn_brain', '#bgn.menu.brain', {{'auto', '#bgn.menu.auto'}, {'fsm', 'FSM'}, {'goap', 'GOAP'}}) end,
+    build = function(page) page:Choice('bgn_brain', '#bgn.wizard.brain.label', {{'auto', '#bgn.wizard.brain.auto'}, {'fsm', '#bgn.wizard.brain.fsm'}, {'goap', '#bgn.wizard.brain.goap'}}) end,
   },
   {
     id = 'ghosts',
@@ -116,8 +118,8 @@ local STEPS = {
     frames = 45,
     labels = {'#bgn.wizard.ghosts.l1', '#bgn.wizard.ghosts.l2'},
     build = function(page)
-      page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
-      page:Toggle('bgn_cl_ghost_crowd', '#bgn.menu.ghost_crowd', {
+      page:Toggle('bgn_ghost_crowd', '#bgn.wizard.ghosts.c1')
+      page:Toggle('bgn_cl_ghost_crowd', '#bgn.wizard.ghosts.c2', {
         server = false
       })
     end,
@@ -129,8 +131,8 @@ local STEPS = {
     frames = 45,
     labels = {'#bgn.wizard.scenic.l1', '#bgn.wizard.scenic.l2'},
     build = function(page)
-      page:Toggle('bgn_scenic', '#bgn.menu.scenic')
-      page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
+      page:Toggle('bgn_scenic', '#bgn.wizard.scenic.c1')
+      page:Slider('bgn_scenic_max', '#bgn.wizard.scenic.c2', 0, 20)
     end,
   },
   {
@@ -138,9 +140,9 @@ local STEPS = {
     clip = 'wanted',
     frames = 45,
     build = function(page)
-      page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
-      page:Toggle('bgn_arrest_mode', '#bgn.settings.arrest.arrest_mode')
-      page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)
+      page:Toggle('bgn_enable_wanted_mode', '#bgn.wizard.wanted.c1')
+      page:Toggle('bgn_arrest_mode', '#bgn.wizard.wanted.c2')
+      page:Slider('bgn_wanted_time', '#bgn.wizard.wanted.c3', 0, 300)
     end,
   },
   {
@@ -148,11 +150,11 @@ local STEPS = {
     clip = 'voices',
     frames = 45,
     build = function(page)
-      page:Toggle('bgn_cl_voices', '#bgn.settings.client.cl_voices', {
+      page:Toggle('bgn_cl_voices', '#bgn.wizard.voices.c1', {
         server = false
       })
 
-      page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound', {
+      page:Toggle('bgn_cl_ambient_sound', '#bgn.wizard.voices.c2', {
         server = false
       })
     end,
@@ -163,7 +165,7 @@ local STEPS = {
     frames = 45,
     labels = {'#bgn.wizard.vehicles.l1', '#bgn.wizard.vehicles.l2'},
     build = function(page)
-      page:Toggle('bgn_enable_dv_support', '#bgn.settings.addon.decent_vehicle')
+      page:Toggle('bgn_enable_dv_support', '#bgn.wizard.vehicles.c1')
       SubscribeCard(page, 'dv', {'1587455087'}, true)
       SubscribeCard(page, 'pack', {'771487490', '1737050476', '2512607394'})
     end,
@@ -247,9 +249,9 @@ function Menu.OpenWizard(all)
   if #steps == 0 then return end
   local s = Menu.Scale()
   local R = math.Round
-  local W = math.min(R(1000 * s), ScrW() - 32)
+  local W = math.min(R(1100 * s), ScrW() - 32)
   local pad, gap = R(28 * s), R(24 * s)
-  local left_w = R(420 * s)
+  local left_w = R(460 * s)
   local clip_h = R(left_w * FRAME_H / FRAME_W)
   local lh = Menu.FontHeight('BGN.Menu.Body')
   local radius = R(10 * s)
@@ -328,7 +330,9 @@ function Menu.OpenWizard(all)
     local canvas = content:GetCanvas()
     canvas:SetAlpha(0)
     canvas:AlphaTo(255, 0.15)
-    step.build(Menu.NewBuilder(content))
+    local page = Menu.NewBuilder(content)
+    page.stack, page.nohelp = true, true -- plain labels under each other, the text on the left explains
+    step.build(page)
     back:SetEnabled(i > 1)
     next_btn.text = Menu.Text(i == #steps and '#bgn.wizard.done' or '#bgn.wizard.next')
   end
@@ -361,6 +365,17 @@ function Menu.OpenWizard(all)
 end
 
 concommand.Add('bgn_wizard', function(_, _, args) Menu.OpenWizard(args[1] == 'all') end, nil, 'Opens the step by step setup. bgn_wizard all: with the advanced steps')
+-- First start: a few seconds after the player has loaded in. Only for the owner of the game (singleplayer or the
+-- listen server host): a player who joins somebody's server is never greeted, the wizard stays in the menu and the console.
+hook.Add('InitPostEntity', 'BGN_FirstStart', function()
+  timer.Simple(5, function()
+    if (game.SinglePlayer() or LocalPlayer():IsListenServerHost()) and not cvar_chosen:GetBool() and not Menu.IsOpen() and not IsValid(Menu.wizard) then
+      RunConsoleCommand('bgn_mode_chosen', '1')
+      Menu.OpenWizard(true)
+    end
+  end)
+end)
+
 hook.Add('OnPauseMenuShow', 'BGN_Wizard', function()
   if not IsValid(Menu.wizard) then return end
   Menu.CloseWizard()

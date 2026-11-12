@@ -1,7 +1,7 @@
 ﻿--[[
 	One-time return to the old behavior for the settings the 2.x versions turned on by themselves:
 	ghost crowd (server and client), and the NextBot body / GOAP brain when they were left on "auto".
-	Whoever picked "New" in the mode window (it sets the revision to 1) keeps the choice.
+	Whoever already runs the "new" mode (bgn_mode) keeps the choice.
 	The revision is the cvar bgn_settings_rev (server) and bgn_cl_settings_rev (client): 0 - not migrated yet.
 --]]
 if SERVER then

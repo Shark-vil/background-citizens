@@ -1,6 +1,6 @@
 ﻿--[[
 	Admin command that forces the old-version setup: console "bgn_classic" or chat "!bgn_classic" or "!bgnclassic" (also with "/").
-	It sets the same preset as "Classic" in the mode window (ui/menu/cl_menu_welcome.lua reads bgNPC.ClassicPreset):
+	It sets the classic preset (bgNPC.ClassicPreset):
 	NPC body, FSM brain, no ghost crowd, no scenic NPCs. Server part: the admin's server. Client part: only the caller.
 	NPCs that are already on the map keep their body; new ones spawn the old way (reload the map for a clean start).
 --]]

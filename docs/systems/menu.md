@@ -3,7 +3,7 @@
 Open it with the console command `bgn_menu [page]`, the **Background NPCs** icon in the context menu (C),
 or Spawn menu → Options → Background NPCs → Open settings.
 
-The window scales with the screen height (designed at 1080p), has a light and a dark theme
+The window scales with the screen height and width (designed at 960 px of height, so 1080p is 1.125x; the narrower side wins, so it fits 4:3 and small screens, minimum 0.75x), has a light and a dark theme
 (`bgn_menu_dark`, also the sun / moon button) and soft interface sounds (`bgn_menu_sounds`).
 Texts follow the game language (English and Russian), or the one chosen in **My settings → Menu**
 (`bgn_cl_ui_language`: `auto`, `english`, `russian`): the chosen language's
@@ -99,44 +99,33 @@ Any page can use `highlight = true`.
 
 ## Interface size and migration
 
-`bgn_cl_ui_scale` (0.75 - 2, default 1, Settings, My settings) multiplies the menu scale, which otherwise follows the screen height; the menu reopens on change.
+`bgn_cl_ui_scale` (0.75 - 2, default 1, Settings, My settings) multiplies the menu scale, which otherwise follows the screen size (`Menu.Scale`); the menu reopens on change.
 
-One-time migration (`systems/sh_settings_migration.lua`): while `bgn_settings_rev` (server) / `bgn_cl_settings_rev` (client) is 0, the settings that 2.x turned on by itself go back to the old behavior: ghost crowd off, `bgn_actor_body auto` -> `npc`, `bgn_brain auto` -> `fsm`. Choosing *New* in the mode window marks the choice as deliberate and keeps it.
+One-time migration (`systems/sh_settings_migration.lua`): while `bgn_settings_rev` (server) / `bgn_cl_settings_rev` (client) is 0, the settings that 2.x turned on by itself go back to the old behavior: ghost crowd off, `bgn_actor_body auto` -> `npc`, `bgn_brain auto` -> `fsm`. A client already in `bgn_mode new` keeps its choice.
 
-## First start: mode and setup wizard
+## First start: setup wizard
 
-On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other, only for the owner of the game (singleplayer or the listen server host). A player who joins a server is never greeted; the windows stay available from the menu and the console:
+On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) the setup wizard opens with every step (the same as `bgn_wizard all`), only for the owner of the game (singleplayer or the listen server host). `bgn_mode_chosen` is set to 1 at that moment. A player who joins a server is never greeted; the wizard stays available from the menu and the console.
 
-1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *HL2 NPC* (regular Half-Life 2 NPCs like version 1.x: replacers and mods for standard NPCs keep working, lightest on the PC) or *NextBot* (the mod's own body: ghost crowd, GOAP, staged scenes; replacers do not affect it, heavier). Both are equal and fully supported (internal keys `classic` / `new`), the window only explains the difference; the defaults are the classic ones, and the mode can be changed any time (Settings, About, or `bgn_mode_welcome`). A mode is only a preset of
-   existing settings (it also sets `bgn_settings_rev` / `bgn_cl_settings_rev` to 1); "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.
-2. **Setup wizard** (`ui/menu/cl_menu_wizard.lua`): a title, a short text, a looped clip and the controls of the step.
-   The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step
-   without a visible row is skipped. Changes apply at once; closing the wizard does not roll them back.
+The wizard (`ui/menu/cl_menu_wizard.lua`) shows a title, a short text, a looped clip and the controls of the step.
+The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step
+without a visible row is skipped. Changes apply at once; closing the wizard does not roll them back.
 
-| Mode | `bgn_actor_body` | `bgn_brain` | `bgn_ghost_crowd` | `bgn_cl_ghost_crowd` |
-| --- | --- | --- | --- | --- |
-| Classic | `npc` | `fsm` | 0 | 0 |
-| New | `nextbot` | `auto` | 1 | 1 |
+The wizard text is written in plain words, its controls have their own short labels (`bgn.wizard.<step>.*`) and no technical help text (`builder.nohelp`), and segmented choices sit under their label (`builder.stack`). There is no separate mode window: the *body* step chooses between regular Half-Life 2 NPCs (replacers and mods for standard NPCs keep working, lightest on the PC) and NextBot (ghost crowd, GOAP, staged scenes; replacers do not affect it, heavier). The `bgn_mode` client setting (`classic` by default) is only set by `bgn_classic` and decides which `modern` steps the plain `bgn_wizard` hides.
 
-Both modes use the same voiced conversations. Switching modes preserves the voice setting.
-
-Server settings are applied only for an admin; everybody gets the client ones. The choice is kept in `bgn_mode`
-(`classic` / `new`).
-
-Steps: crowd density, scenic scenes, wanted and arrest, voices and sound, vehicles. The *body*, *brain* and *ghost crowd* steps are
-`advanced`: the mode already decides them, so the wizard shows them only as `bgn_wizard all`. Steps with
+Steps: crowd density, body, brain, ghost crowd, scenic scenes, wanted and arrest, voices and sound, vehicles. The *body*, *brain* and *ghost crowd* steps are
+`advanced`: they show up on the first start and in `bgn_wizard all`, not in the plain `bgn_wizard`. Steps with
 `modern = true` (body, brain, ghosts, scenic scenes) are skipped in Classic, except for `bgn_wizard all`.
 The vehicles step has Workshop cards: Decent Vehicle (required) and a pack of three items (simfphys, GTA SA cars,
 Background NPCs support) that is subscribed at once.
 
 | Command | Opens |
 | --- | --- |
-| `bgn_mode_welcome` | The mode window only |
-| `bgn_wizard` | The wizard for the current mode |
+| `bgn_wizard` | The wizard without the advanced steps |
 | `bgn_wizard all` | The wizard with every step |
-| `bgn_mode_chosen 0` | Nothing now: both windows come back on the next map |
+| `bgn_mode_chosen 0` | Nothing now: the wizard comes back on the next map |
 
-The same two windows can be opened from the **Quick settings** block and from My settings. The block is at the top of the General page until it is closed with its cross (`bgn_menu_quick_hidden`, a client setting), and is always at the top of the Tools page.
+The wizard can be opened from the **Quick settings** block and from My settings. The block is at the top of the General page until it is closed with its cross (`bgn_menu_quick_hidden`, a client setting), and is always at the top of the Tools page.
 
 ## Classic spawn menu pages
 

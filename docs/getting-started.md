@@ -3,7 +3,7 @@
 1. Subscribe to [Background NPCs on Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2341497926), or put this repository in `garrysmod/addons/background-citizens`. Avoid installing two copies.
 2. Start a map, for example `gm_construct`. Version 2.0 does not require SLibrary.
 3. Open the developer console and run `bgn_menu`. You can also use the Background NPCs icon in the C menu.
-4. On first launch choose HL2 NPC or NextBot, then follow the setup wizard. Both are fully supported: HL2 NPC uses engine NPCs and FSM like the old versions (NPC replacers and mods for standard NPCs keep working), NextBot adds NextBots, GOAP and the ghost crowd. You can switch any time in the settings.
+4. On first launch follow the setup wizard. Its *body* step chooses engine NPCs with FSM like the old versions (NPC replacers and mods for standard NPCs keep working) or NextBots with GOAP and the ghost crowd. You can change everything later in the settings.
 5. Walk around and allow time for spawning. Actors generally appear outside your view; the limit is not an immediate spawn command.
 
 Server settings require admin rights. Voice and interface choices are local to each player.
@@ -11,7 +11,6 @@ Server settings require admin rights. Voice and interface choices are local to e
 ## Reopen setup
 
 ```text
-bgn_mode_welcome
 bgn_wizard
 ```
 
