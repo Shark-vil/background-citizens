@@ -82,20 +82,9 @@ end
 
 -- @return boolean true when no part of a car standing at `base` can be seen by the player
 local function HullHiddenFrom(ply, base)
-  local eye, car = ply:EyePos(), ply:GetVehicle()
-  local filter = {ply, car, IsValid(car) and car:GetParent() or nil}
   for _, offset in ipairs(HULL_OFFSETS) do
     local point = base + offset
-    if bgNPC.Util.IsInView(ply, point) then
-      local tr = util.TraceLine({
-        start = eye,
-        endpos = point,
-        mask = MASK_VISIBLE,
-        filter = filter
-      })
-
-      if not tr.Hit or tr.HitPos:DistToSqr(point) < 64 then return false end
-    end
+    if bgNPC.Util.IsInView(ply, point) and not bgNPC.IsPointHiddenFrom(ply, point) then return false end
   end
   return true
 end

@@ -31,6 +31,23 @@ local BODY_POINTS = {
   Vector(0, 0, 64)
 }
 
+-- Covered only when the ray stops at least this far short of the point: a hit right at it
+-- (a curb, a railing, the floor edge) still leaves the body in sight.
+local SPAWN_COVER_SQR = 40 ^ 2
+
+-- Is the point behind cover from the player's eyes. The player's own car is ignored: from the driver's seat
+-- every ray hit the car body and every spot in front of the windshield counted as hidden.
+function bgNPC.IsPointHiddenFrom(ply, point)
+  local car = ply:GetVehicle()
+  local tr = util.TraceLine({
+    start = ply:EyePos(),
+    endpos = point,
+    mask = MASK_VISIBLE,
+    filter = {ply, car, IsValid(car) and car:GetParent() or nil}
+  })
+  return tr.Hit and not tr.StartSolid and tr.HitPos:DistToSqr(point) > SPAWN_COVER_SQR
+end
+
 local function IsNotBlockSpawnPosition(node_position, all_players, target_entity)
   local block_radius_sqr = cvar_bgn_spawn_block_radius:GetFloat() ^ 2
   -- local entities = ents_FindInSphere(node_position, 150)
@@ -53,16 +70,8 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
       if not util.IsInWorld(node_position) then return false end
       -- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
       -- and that counted as "hidden behind something" - actors appeared right in front of the player
-      local ply_eye_pos = ply:EyePos()
       for b = 1, #BODY_POINTS do
-        local tr = util.TraceLine({
-          start = ply_eye_pos,
-          endpos = node_position + BODY_POINTS[b],
-          mask = MASK_VISIBLE,
-          filter = ply
-        })
-
-        if not tr.Hit or tr.StartSolid then return false end
+        if not bgNPC.IsPointHiddenFrom(ply, node_position + BODY_POINTS[b]) then return false end
       end
     end
   end
