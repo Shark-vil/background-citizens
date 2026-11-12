@@ -118,8 +118,8 @@ local function RedirectEnemyToVehicle(body, enemy)
   return true
 end
 
-local ENEMY_FORGET_TIME = 20
-local CALM_ENEMY_FORGET_TIME = 15
+local ENEMY_FORGET_TIME = 60
+local CALM_ENEMY_FORGET_TIME = 20
 local FEAR_STATES = {'fear', 'run_from_danger', 'dyspnea_danger'}
 -- Removes dead enemies, forgets enemies that were not seen for a long time
 -- and points the body at the nearest one.

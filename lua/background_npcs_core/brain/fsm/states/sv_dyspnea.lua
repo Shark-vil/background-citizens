@@ -25,12 +25,6 @@ bgNPC.States.Register('dyspnea_danger', 'danger', {
       data.isAnimationPlayed = true
     end
 
-    -- the rest is over and the enemy is far away: not a threat any more, forget it (the state used to wait forever)
-    if data.isAnimationPlayed and not actor:IsAnimationPlayed() and IsValid(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) >= 1000000 then
-      actor:RemoveEnemy(enemy)
-      return
-    end
-
     if not IsValid(enemy) or enemy:Health() <= 0 then
       actor:RandomState()
       return

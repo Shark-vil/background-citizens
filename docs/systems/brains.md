@@ -55,7 +55,7 @@ put at a spot free for its whole body, never inside the car.
   walking around while an officer already shoots at a player who is not wanted yet. Gang exceptions (all visible allies, without a distance cap or reaction roll) are described under [gangs](gangs.md).
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
-  when the enemy is over 300 units away.
+  when the enemy is over 300 units away and the actor has under 50% of its max health.
 
 Prop-chair seating (`sit_to_chair`) uses the configured chair models and offsets. The route handles the distant
 approach; within 300 units the body finishes moving to the chair, and seating begins within 60 units.

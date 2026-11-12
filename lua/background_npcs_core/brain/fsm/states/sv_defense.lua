@@ -5,6 +5,7 @@ local SLOT_MOVED_SQR = 64 ^ 2
 local MELEE_STOP_SQR = 50 ^ 2
 local MELEE_ENGINE_DIST_SQR = 700 ^ 2
 local WANTED_FIGHT_DIST_SQR = 300 ^ 2 -- a wanted actor fights only this close (retreat turns to defense at 190)
+local WANTED_RETREAT_HEALTH = 0.5 -- ...and only below this share of max health
 local CAR_CHECK_PERIOD = 2
 local CAR_CHANCE = 30
 --
@@ -94,8 +95,8 @@ bgNPC.States.Register('defense', 'danger', {
         return
       end
 
-      -- a wanted actor no longer cornered goes back to hiding
-      if actor:IsWanted() and actor:GetPos():DistToSqr(enemy:GetPos()) > WANTED_FIGHT_DIST_SQR then
+      -- a wounded wanted actor no longer cornered goes back to hiding
+      if actor:IsWanted() and actor:GetHealth() < actor:GetMaxHealth() * WANTED_RETREAT_HEALTH and actor:GetPos():DistToSqr(enemy:GetPos()) > WANTED_FIGHT_DIST_SQR then
         actor:SetState('retreat')
         return
       end
