@@ -95,8 +95,9 @@ function Carry.CreateVisual(ent, kind, native)
         pos = grip:GetTranslation() - ang:Up() * 7.5
       end
 
-      self:SetRenderOrigin(pos)
-      self:SetRenderAngles(ang)
+      -- Move the parented model itself so culling follows actor teleports.
+      self:SetPos(pos)
+      self:SetAngles(ang)
       local scale = Matrix()
       scale:Scale(Vector(1, 0.65, 1))
       self:EnableMatrix('RenderMultiply', scale)
@@ -116,8 +117,8 @@ function Carry.CreateVisual(ent, kind, native)
       -- Grip the lower edge with the fingers; the top leans away from the face.
       local pos = (right + left) * 0.5 - ang:Forward() * ((maxs.x - mins.x) * 0.65 * 0.5 - 2)
       pos = pos - ang:Forward() * center.x * 0.65 + ang:Right() * center.y * (width / 24) - ang:Up() * center.z * 0.2
-      self:SetRenderOrigin(pos)
-      self:SetRenderAngles(ang)
+      self:SetPos(pos)
+      self:SetAngles(ang)
       local scale = Matrix()
       scale:Scale(Vector(0.65, width / 24, 0.2))
       self:EnableMatrix('RenderMultiply', scale)
