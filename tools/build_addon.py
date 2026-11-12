@@ -1,6 +1,5 @@
 """Build a minified Workshop folder without changing the addon sources."""
 import hashlib
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -9,6 +8,7 @@ import tempfile
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
+WORKSHOP_ID = '2341497926'
 RESOURCES = {
     'materials': {'.vmt', '.vtf', '.png', '.jpg', '.jpeg'},
     'models': {'.mdl', '.vvd', '.vtx', '.phy', '.ani'},
@@ -110,35 +110,13 @@ class Minifier:
         return self.convert(source.removeprefix(b'\xef\xbb\xbf'))
 
 
-def link_resources(source, destination):
-    files = [file for file in source.rglob('*') if file.is_file()]
-    included = [file for file in files if file.suffix.lower() in RESOURCES[source.name]
-                and not file.name.lower().endswith('.sw.vtx')]
-    if len(included) != len(files):
-        # A whole-directory link would also expose development/unsupported files.
-        destination.mkdir()
-        for file in included:
-            link = destination / file.relative_to(source)
-            link.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                link.symlink_to(file)
-            except OSError as exc:
-                if os.name != 'nt' or exc.winerror != 1314:
-                    raise
-                os.link(file, link)
-        return
-    try:
-        destination.symlink_to(source, target_is_directory=True)
-    except OSError as exc:
-        if os.name != 'nt' or exc.winerror != 1314:
-            raise
-        # Directory junctions work without Developer Mode or administrator rights.
-        subprocess.run(
-            ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
-             'New-Item -ItemType Junction -Path $env:BGN_BUILD_LINK -Target $env:BGN_BUILD_SOURCE -ErrorAction Stop | Out-Null'],
-            env={**os.environ, 'BGN_BUILD_LINK': str(destination), 'BGN_BUILD_SOURCE': str(source)},
-            check=True, capture_output=True,
-        )
+def copy_resources(source, destination):
+    for file in source.rglob('*'):
+        if (file.is_file() and file.suffix.lower() in RESOURCES[source.name]
+                and not file.name.lower().endswith('.sw.vtx')):
+            target = destination / file.relative_to(source)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(file, target)
 
 
 def reject_link(path):
@@ -196,7 +174,7 @@ def build(root=ROOT):
         shutil.copy2(root / 'LICENSE', stage / 'LICENSE')
         for name in RESOURCES:
             if (root / name).is_dir():
-                link_resources((root / name).resolve(), stage / name)
+                copy_resources(root / name, stage / name)
         # Only remove this generated folder, after the replacement is ready.
         reject_link(output)
         if output.parent.resolve() != build_dir.resolve():
@@ -206,13 +184,33 @@ def build(root=ROOT):
         stage.replace(output)
     print(f'Built: {output}\nLua: {count} files, {before:,} -> {after:,} bytes '
           f'({100 * (1 - after / before):.1f}% smaller); {aliases} cached standard functions.')
-    print('Resources are links to the working tree. No upload was performed.')
     return output
+
+
+def publish(output):
+    """Pack the build into a .gma with gmad and update the Workshop item with gmpublish."""
+    bin_dir = ROOT.parents[2] / 'bin'  # <GarrysMod>/garrysmod/addons/<addon> -> <GarrysMod>/bin
+    gmad, gmpublish = bin_dir / 'gmad.exe', bin_dir / 'gmpublish.exe'
+    for tool in (gmad, gmpublish):
+        if not tool.is_file():
+            raise RuntimeError(f'Not found: {tool}')
+    gma = output.parent / 'background-citizens.gma'
+    gma.unlink(missing_ok=True)
+    subprocess.run([str(gmad), 'create', '-folder', str(output), '-out', str(gma)], check=True)
+    changes = input('Update description (empty = cancel): ').strip()
+    if not changes:
+        print('Cancelled. The .gma was built but not uploaded:', gma)
+        return
+    subprocess.run([str(gmpublish), 'update', '-addon', str(gma), '-id', WORKSHOP_ID,
+                    '-changes', changes], check=True)
+    print(f'Updated https://steamcommunity.com/sharedfiles/filedetails/?id={WORKSHOP_ID}')
 
 
 if __name__ == '__main__':
     try:
-        build()
+        result = build()
+        if '--publish' in sys.argv:
+            publish(result)
     except Exception as exc:
         print(f'ERROR: {exc}', file=sys.stderr)
         sys.exit(1)

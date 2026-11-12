@@ -1,6 +1,5 @@
 """Build checks: python.exe -m unittest discover -s tools -p test_build.py -v"""
 import hashlib
-import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -84,8 +83,8 @@ class BuildTests(unittest.TestCase):
                 self.assertFalse((output / 'tools').exists())
                 self.assertFalse((output / 'models/test.sw.vtx').exists())
                 self.assertFalse((output / 'models/source.blend').exists())
-                self.assertTrue((output / 'materials').is_symlink() or (output / 'materials').is_junction())
-                self.assertTrue((output / 'models/test.mdl').samefile(model))
+                self.assertFalse((output / 'materials').is_symlink())
+                self.assertEqual((output / 'models/test.mdl').read_bytes(), b'model')
                 self.assertNotIn(b'comment', (output / 'lua/nested/test.lua').read_bytes())
                 (output / 'stale.txt').write_text('old build')
                 build_addon.build(root)
@@ -110,26 +109,12 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'checksum mismatch'):
                 build_addon.download_minifier(cache)
 
-    @unittest.skipUnless(os.name == 'nt', 'Windows junction fallback')
-    def test_junction_fallback(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            source = root / 'materials'
-            source.mkdir()
-            (source / 'test.vmt').write_bytes(b'asset')
-            error = OSError('Symbolic link privilege unavailable')
-            error.winerror = 1314
-            with patch.object(Path, 'symlink_to', side_effect=error):
-                build_addon.link_resources(source, root / 'linked')
-            self.assertTrue((root / 'linked').is_junction())
-            self.assertTrue((root / 'linked/test.vmt').samefile(source / 'test.vmt'))
-
     def test_reject_linked_build(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             target = root / 'outside'
             target.mkdir()
-            build_addon.link_resources(target, root / 'build')
+            (root / 'build').symlink_to(target, target_is_directory=True)
             with self.assertRaisesRegex(RuntimeError, 'linked build directory'):
                 build_addon.build(root)
             self.assertTrue(target.exists())

@@ -29,7 +29,7 @@ python.exe -m pip install -r requirements-build.txt
 
 Run `build.bat` from any working directory, or double-click it. The result is
 `build/background-citizens/`: a Workshop addon folder containing `addon.json`,
-the license, minified `lua/` and linked game resources. `build/` is ignored by Git.
+the license, minified `lua/` and copied game resources. `build/` is ignored by Git.
 The build does not upload anything or change the source Lua files.
 
 The first build downloads [glua-minify](https://github.com/TRIGONIM/glua-minify)
@@ -52,23 +52,18 @@ functions after this file loads.** GMod APIs and hooks remain dynamic. This is
 source minification with limited lookup optimization, not a promise of higher FPS
 or C++-style whole-program optimization. Debug stack traces lose source line detail.
 
-Resources are linked from `materials/` (`vmt/vtf/png/jpg/jpeg`), `models/`
+Resources are copied from `materials/` (`vmt/vtf/png/jpg/jpeg`), `models/`
 (`mdl/vvd/vtx/phy/ani`), `sound/` (`wav/mp3/ogg`) and `resource/`
 (`properties/ttf`). Other extensions and Workshop-incompatible `*.sw.vtx` are
-excluded. A whole-directory symbolic link is used when every file is included;
-otherwise the build links individual included files. Windows falls back to
-directory junctions and file hard links when symbolic links need extra privileges.
-**Treat linked resources as read-only: editing them edits the working tree.**
-These links also mean resource changes appear in an existing build immediately;
-rebuild before packaging to refresh Lua and the resource selection. The build folder
-is not a standalone copy to move to another machine.
+excluded. The build folder is a standalone copy; rebuild to pick up changes.
 
 Both source and generated Lua must pass `glualint dump-ast`. A failed transform
 or syntax check leaves the previous successful output intact. A successful rebuild
 replaces only `build/background-citizens/`, removing stale generated files. Other
 files under `build/` are retained. Development tools, docs and quarantined files
-are not included. To create a `.gma`, pass this output folder to GMad using the
-[Workshop packaging instructions](https://wiki.facepunch.com/gmod/Workshop_Addon_Creation).
+are not included. To update the Workshop item (id `2341497926`), run `publish.bat`: it builds, packs
+`build/background-citizens.gma` with `bin/gmad.exe`, asks for the update description
+(empty cancels) and uploads with `bin/gmpublish.exe` (Steam must be running).
 
 Build regression checks:
 
