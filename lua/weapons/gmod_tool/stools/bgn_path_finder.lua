@@ -86,9 +86,9 @@ else
   function TOOL:Think()
     if self.LastPath ~= self.Path or self.LastStart ~= self.StartPos then
       self.LastPath, self.LastStart = self.Path, self.StartPos
-      bgNPC.DebugInspector.SetToolPath('bgn_path_finder', #self.Path>0 and self.Path or (self.StartPos and {self.StartPos} or {}))
-      local T=bgNPC.DebugInspector.Text
-      self.ReportText=T('path_points')..': '..#self.Path..' | '..T(self.EndPos and (#self.Path>1 and 'compatible' or 'no_path') or 'path.help')
+      bgNPC.DebugInspector.SetToolPath('bgn_path_finder', #self.Path > 0 and self.Path or (self.StartPos and {self.StartPos} or {}))
+      local T = bgNPC.DebugInspector.Text
+      self.ReportText = T('path_points') .. ': ' .. #self.Path .. ' | ' .. T(self.EndPos and (#self.Path > 1 and 'compatible' or 'no_path') or 'path.help')
     end
   end
 

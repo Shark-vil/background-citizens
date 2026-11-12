@@ -12,7 +12,10 @@ local Scenic = bgNPC.Scenic or {}
 bgNPC.Scenic = Scenic
 local Spots = {}
 Scenic.Spots = Spots
-local function Shuffle(t) return Spots.preview and table.Copy(t) or bgNPC.Table.Shuffle(t) end
+local function Shuffle(t)
+  return Spots.preview and table.Copy(t) or bgNPC.Table.Shuffle(t)
+end
+
 --
 local INDEX_LIFETIME = 30
 local DOOR_CLASSES = {'prop_door_rotating', 'func_door_rotating'}

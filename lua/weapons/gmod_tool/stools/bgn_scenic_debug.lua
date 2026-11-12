@@ -250,8 +250,8 @@ function TOOL:SetReport(text)
 end
 
 function TOOL:DrawHUD()
-  local text=(self.PreviewText or '')..'\n'..(self.ReportText or '')
-  if text~='\n' then bgNPC.DebugInspector.DrawToolReport(text) end
+  local text = (self.PreviewText or '') .. '\n' .. (self.ReportText or '')
+  if text ~= '\n' then bgNPC.DebugInspector.DrawToolReport(text) end
 end
 
 function TOOL.BuildCPanel(panel)

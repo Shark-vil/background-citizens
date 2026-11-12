@@ -127,12 +127,26 @@ end
 
 local function FindPreview(ply, id, tr)
   if not Debug.Allowed(ply) then return nil, 'admin' end
-  if id=='goap_door' and Scenic.Spots.preview then
-    local spot, cop_pos=DoorPreview(ply,tr)
+  if id == 'goap_door' and Scenic.Spots.preview then
+    local spot, cop_pos = DoorPreview(ply, tr)
     if not spot then return nil, cop_pos end
-    if not bgNPC:IsValidSpawnArea('citizen',spot.pos) or not bgNPC:IsValidSpawnArea('police',cop_pos) then return nil,'spawn' end
-    return {place='door'},spot,{members={{pos=spot.pos,ang=spot.ang},{pos=cop_pos,ang=spot.ang}}}
+    if not bgNPC:IsValidSpawnArea('citizen', spot.pos) or not bgNPC:IsValidSpawnArea('police', cop_pos) then return nil, 'spawn' end
+    return {
+      place = 'door'
+    }, spot, {
+      members = {
+        {
+          pos = spot.pos,
+          ang = spot.ang
+        },
+        {
+          pos = cop_pos,
+          ang = spot.ang
+        }
+      }
+    }
   end
+
   local scene = bgNPC.cfg.scenic[id]
   if not scene then return nil, 'scene' end
   for _, member in ipairs(scene.members) do
@@ -165,7 +179,10 @@ function Debug.Preview(ply, id, tr, preview)
   Scenic.Spots.preview = preview == true
   local ok, scene, spot, plan = xpcall(function() return FindPreview(ply, id, tr) end, debug.traceback)
   Scenic.Spots.preview = old
-  if not ok then ErrorNoHalt(tostring(scene)) return nil, 'spawn' end
+  if not ok then
+    ErrorNoHalt(tostring(scene))
+    return nil, 'spawn'
+  end
   return scene, spot, plan
 end
 
@@ -289,17 +306,36 @@ hook.Add('PlayerDisconnected', 'BGN_ScenicDebug', function(ply)
   end
 end)
 
-bgNPC.Net.Receive('bgn.debug_preview',function(ply,id)
+bgNPC.Net.Receive('bgn.debug_preview', function(ply, id)
   if not Debug.Allowed(ply) or not GetConVar('bgn_debug'):GetBool() or not isstring(id) then return end
-  if (ply.bgn_preview_next or 0)>CurTime() then return end
-  ply.bgn_preview_next=CurTime()+.5
-  local tool=ply:GetTool()
-  local wep=ply:GetActiveWeapon()
-  if not tool or tool.Mode~='bgn_scenic_debug' or not IsValid(wep) or wep:GetClass()~='gmod_tool' then return end
-  local tr=ply:GetEyeTrace()
-  local scene,spot,plan=Debug.Preview(ply,id,tr,true)
-  local positions={}
-  if plan then for j,m in ipairs(plan.members) do if j<=8 then positions[#positions+1]={pos=m.pos,ang=m.ang} end end end
-  bgNPC.Net.Send('bgn.debug_preview',ply,{id=id,positions=positions,pos=tr.HitPos,valid=scene~=nil,message=scene and '' or Debug.Message(ply,spot),
-    point=spot and istable(spot) and spot.pos or nil,normal=tr.HitNormal})
-end,{admin=true})
+  if (ply.bgn_preview_next or 0) > CurTime() then return end
+  ply.bgn_preview_next = CurTime() + .5
+  local tool = ply:GetTool()
+  local wep = ply:GetActiveWeapon()
+  if not tool or tool.Mode ~= 'bgn_scenic_debug' or not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+  local tr = ply:GetEyeTrace()
+  local scene, spot, plan = Debug.Preview(ply, id, tr, true)
+  local positions = {}
+  if plan then
+    for j, m in ipairs(plan.members) do
+      if j <= 8 then
+        positions[#positions + 1] = {
+          pos = m.pos,
+          ang = m.ang
+        }
+      end
+    end
+  end
+
+  bgNPC.Net.Send('bgn.debug_preview', ply, {
+    id = id,
+    positions = positions,
+    pos = tr.HitPos,
+    valid = scene ~= nil,
+    message = scene and '' or Debug.Message(ply, spot),
+    point = spot and istable(spot) and spot.pos or nil,
+    normal = tr.HitNormal
+  })
+end, {
+  admin = true
+})

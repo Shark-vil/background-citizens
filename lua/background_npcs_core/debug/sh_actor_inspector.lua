@@ -1,6 +1,5 @@
-bgNPC.DebugInspector = bgNPC.DebugInspector or {}
+﻿bgNPC.DebugInspector = bgNPC.DebugInspector or {}
 local Inspector = bgNPC.DebugInspector
-
 function Inspector.View(npc, snapshot)
   -- NextBot BGN_EyePos exists only on SERVER; interpolate its server eye frame with the client body.
   if snapshot then return npc:LocalToWorld(snapshot.eye_local), npc:LocalToWorldAngles(snapshot.aim_local) end

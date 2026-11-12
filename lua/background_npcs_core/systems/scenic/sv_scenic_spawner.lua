@@ -56,7 +56,7 @@ local function Roster(scene, preview)
   for i = 2, count do
     local offset, yaw = vector_origin, template.yaw or 0
     if group.step then
-      offset = group.step * (i - 1) + Vector(0, (preview and 0 or math.random(-6, 6)), 0)
+      offset = group.step * (i - 1) + Vector(0, preview and 0 or math.random(-6, 6), 0)
     else
       -- a loose cluster: the first stands in the middle, the others around it
       local around = 360 / (count - 1) * (i - 2) + (preview and 0 or math.random(-20, 20))

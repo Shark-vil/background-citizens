@@ -360,9 +360,17 @@ Menu.AddPage('performance', {
   build = function(page)
     page:Slider('bgn_disable_logic_radius', '#bgn.settings.optimization.disable_logic', 0, 1000)
     page:Slider('bgn_lod_near_radius', '#bgn.menu.lod_near_radius', 0, 10000)
-    page:Slider('bgn_logic_pause', '#bgn.menu.logic_pause', 0, 30, {decimals=2})
-    page:Slider('bgn_logic_active', '#bgn.menu.logic_active', 0.1, 30, {decimals=2})
-    page:Slider('bgn_logic_stagger', '#bgn.menu.logic_stagger', 0, 10, {decimals=2})
+    page:Slider('bgn_logic_pause', '#bgn.menu.logic_pause', 0, 30, {
+      decimals = 2
+    })
+
+    page:Slider('bgn_logic_active', '#bgn.menu.logic_active', 0.1, 30, {
+      decimals = 2
+    })
+
+    page:Slider('bgn_logic_stagger', '#bgn.menu.logic_stagger', 0, 10, {
+      decimals = 2
+    })
   end,
 })
 
