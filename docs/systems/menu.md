@@ -107,7 +107,7 @@ One-time migration (`systems/sh_settings_migration.lua`): while `bgn_settings_re
 
 On the first map (5 seconds after loading, while `bgn_mode_chosen` is 0) two windows open one after the other, only for the owner of the game (singleplayer or the listen server host). A player who joins a server is never greeted; the windows stay available from the menu and the console:
 
-1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *Classic* (like version 1.x) or *New* (extra features). Both are equal and fully supported, the window only explains the difference; the defaults are the classic ones, and the mode can be changed any time (Settings, About, or `bgn_mode_welcome`). A mode is only a preset of
+1. **Mode** (`ui/menu/cl_menu_welcome.lua`): *HL2 NPC* (regular Half-Life 2 NPCs like version 1.x: replacers and mods for standard NPCs keep working, lightest on the PC) or *NextBot* (the mod's own body: ghost crowd, GOAP, staged scenes; replacers do not affect it, heavier). Both are equal and fully supported (internal keys `classic` / `new`), the window only explains the difference; the defaults are the classic ones, and the mode can be changed any time (Settings, About, or `bgn_mode_welcome`). A mode is only a preset of
    existing settings (it also sets `bgn_settings_rev` / `bgn_cl_settings_rev` to 1); "Keep my current settings" changes nothing. Whatever is pressed (or Esc), the wizard follows.
 2. **Setup wizard** (`ui/menu/cl_menu_wizard.lua`): a title, a short text, a looped clip and the controls of the step.
    The controls are the settings rows (`Menu.NewBuilder`), so server rows are hidden from non-admins and a step

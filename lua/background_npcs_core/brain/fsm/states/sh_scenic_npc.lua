@@ -1,5 +1,14 @@
 ﻿-- "calm" group: the reactions to a shot or a hit look for calm actors. Both realms know the group.
 bgNPC.States.Register('scenic_npc', 'calm')
+-- The knock of the sequence is an animation event with a map-wide sound level: keep it local to the door.
+-- Shared because the event of a NextBot plays on the client, where the actor is unknown, so the flag is a NW2 bool.
+hook.Add('EntityEmitSound', 'BGN_ScenicDoorSound', function(t)
+  if not IsValid(t.Entity) or not t.Entity:GetNW2Bool('bgn_scenic_door') then return end
+  t.SoundLevel = math.min(t.SoundLevel or 60, 55)
+  t.Volume = math.min(t.Volume or 1, 0.6)
+  return true
+end)
+
 if SERVER then
   local DOOR_CAPABILITIES = CAP_AUTO_DOORS + CAP_OPEN_DOORS
   -- An actor of a scene (systems/scenic/): plays one looped sequence. A calm state (walk, talk, a random
@@ -13,6 +22,7 @@ if SERVER then
         npc.loco:SetGravity(0)
       end
 
+      if data.door then npc:SetNW2Bool('bgn_scenic_door', true) end
       if data.door and npc.CapabilitiesRemove then npc:CapabilitiesRemove(DOOR_CAPABILITIES) end
       actor:PlayStaticSequence(data.seq, true)
     end,
@@ -21,6 +31,7 @@ if SERVER then
     stop = function(actor, state, data)
       local npc = actor:GetNPC()
       local back = data.back
+      if IsValid(npc) then npc:SetNW2Bool('bgn_scenic_door', false) end
       if data.old_solid_mask and IsValid(npc) then
         npc:SetSolidMask(data.old_solid_mask)
         npc.loco:SetGravity(data.old_gravity)
