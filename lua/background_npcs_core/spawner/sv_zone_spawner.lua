@@ -180,7 +180,6 @@ if SERVER then
     if max_limit == 0 or bgNPC.Actors.Count(npc_type) >= max_limit then return false end
     local wanted_level = bgNPC.Config.GetWantedLevel(npc_data)
     if wanted_level and not bgNPC:GetWantedSpawnCenter(wanted_level) then return false end
-
     if npc_data.validator then
       local result = npc_data.validator(npc_data, npc_type)
       if isbool(result) and not result then return false end

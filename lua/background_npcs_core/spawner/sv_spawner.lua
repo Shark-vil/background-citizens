@@ -34,7 +34,6 @@ local BODY_POINTS = {
 -- Covered only when the ray stops at least this far short of the point: a hit right at it
 -- (a curb, a railing, the floor edge) still leaves the body in sight.
 local SPAWN_COVER_SQR = 40 ^ 2
-
 -- Is the point behind cover from the player's eyes. The player's own car is ignored: from the driver's seat
 -- every ray hit the car body and every spot in front of the windshield counted as hidden.
 function bgNPC.IsPointHiddenFrom(ply, point)
