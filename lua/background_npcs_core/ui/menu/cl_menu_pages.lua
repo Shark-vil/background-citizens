@@ -118,43 +118,56 @@ function Menu.DensityChoice(page)
   if locked then page:Note('#bgn.menu.crowd_density.by_server', 'warn') end
 end
 
+local cvar_quick_hidden = CreateClientConVar('bgn_menu_quick_hidden', '0', true, false, 'Background NPCs menu: hide the quick settings block on the General page')
+
+-- The quick settings block, tinted with the accent. The General page shows it until it is closed (closable), Tools always.
+local function QuickSettings(page, closable)
+  page:Custom(function(panel)
+    local s = Menu.Scale()
+    local pad, gap = math.Round(16 * s), math.Round(8 * s)
+    local C = Menu.colors
+    local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.mode'), 'primary', function() RunConsoleCommand('bgn_mode_welcome') end)
+    local second = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'secondary', function() RunConsoleCommand('bgn_wizard', 'all') end)
+    local help = Menu.Text('#bgn.menu.quick.help')
+    local close = closable and Menu.IconButton(panel, math.Round(28 * s), function() return ICONS .. 'close.png' end, Menu.Text('#bgn.menu.close'), function()
+      Menu.Sound('click')
+      RunConsoleCommand('bgn_menu_quick_hidden', '1')
+      timer.Simple(0, function() Menu.ShowPage('general') end) -- after the cvar changed
+    end)
+
+    panel.PerformLayout = function(self, w)
+      local lines = Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)
+      local h = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s) + #lines * Menu.FontHeight('BGN.Menu.Small') + math.Round(12 * s) + first:GetTall() + pad
+      first:SetPos(pad, h - pad - first:GetTall())
+      second:SetPos(pad + first:GetWide() + gap, h - pad - second:GetTall())
+      if close then close:SetPos(w - close:GetWide() - gap, gap) end
+      if self:GetTall() ~= h then
+        self:SetTall(h)
+        Menu.ContentChanged()
+      end
+    end
+
+    panel.Paint = function(_, w)
+      local r = math.Round(8 * s)
+      draw.RoundedBox(r, 0, 0, w, panel:GetTall(), Menu.Fade(C.accent, 0.55))
+      draw.RoundedBox(r, 1, 1, w - 2, panel:GetTall() - 2, Menu.LerpColor(0.1, C.surface, C.accent))
+      draw.SimpleText(Menu.Text('#bgn.menu.quick'), 'BGN.Menu.Section', pad, pad, C.text)
+      local y = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s)
+      for _, line in ipairs(Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)) do
+        draw.SimpleText(line, 'BGN.Menu.Small', pad, y, C.muted)
+        y = y + Menu.FontHeight('BGN.Menu.Small')
+      end
+    end
+  end)
+end
+
 Menu.AddPage('general', {
   group = SERVER_GROUP,
   title = '#bgn.menu.page.general',
   icon = ICONS .. 'general.png',
   order = 100,
   build = function(page)
-    -- quick settings: a block tinted with the accent, over the rows
-    page:Custom(function(panel)
-      local s = Menu.Scale()
-      local pad, gap = math.Round(16 * s), math.Round(8 * s)
-      local C = Menu.colors
-      local first = Menu.Button(panel, Menu.Text('#bgn.menu.quick.mode'), 'primary', function() RunConsoleCommand('bgn_mode_welcome') end)
-      local second = Menu.Button(panel, Menu.Text('#bgn.menu.quick.wizard'), 'secondary', function() RunConsoleCommand('bgn_wizard', 'all') end)
-      local help = Menu.Text('#bgn.menu.quick.help')
-      panel.PerformLayout = function(self, w)
-        local lines = Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)
-        local h = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s) + #lines * Menu.FontHeight('BGN.Menu.Small') + math.Round(12 * s) + first:GetTall() + pad
-        first:SetPos(pad, h - pad - first:GetTall())
-        second:SetPos(pad + first:GetWide() + gap, h - pad - second:GetTall())
-        if self:GetTall() ~= h then
-          self:SetTall(h)
-          Menu.ContentChanged()
-        end
-      end
-
-      panel.Paint = function(_, w)
-        local r = math.Round(8 * s)
-        draw.RoundedBox(r, 0, 0, w, panel:GetTall(), Menu.Fade(C.accent, 0.55))
-        draw.RoundedBox(r, 1, 1, w - 2, panel:GetTall() - 2, Menu.LerpColor(0.1, C.surface, C.accent))
-        draw.SimpleText(Menu.Text('#bgn.menu.quick'), 'BGN.Menu.Section', pad, pad, C.text)
-        local y = pad + Menu.FontHeight('BGN.Menu.Section') + math.Round(4 * s)
-        for _, line in ipairs(Menu.Wrap(help, 'BGN.Menu.Small', w - pad * 2)) do
-          draw.SimpleText(line, 'BGN.Menu.Small', pad, y, C.muted)
-          y = y + Menu.FontHeight('BGN.Menu.Small')
-        end
-      end
-    end)
+    if not cvar_quick_hidden:GetBool() then QuickSettings(page, true) end
 
     page:Section('#bgn.menu.section.main')
     page:Toggle('bgn_enable', '#bgn.settings.general.mod_enable')
@@ -193,7 +206,10 @@ Menu.AddPage('actors', {
         page:Slider('bgn_npc_type_max_' .. actor_type, '#bgn.menu.actor.max', 0, 200)
         if istable(bgNPC.Config.GetActor(actor_type).carry_items) then page:Toggle('bgn_carry_items_' .. actor_type, '#bgn.menu.actor.carry_items') end
         if istable(data.weapons) and #data.weapons ~= 0 then page:Toggle('bgn_disable_weapon_' .. actor_type, '#bgn.menu.actor.no_weapons') end
-        if DecentVehicleDestination and istable(data.vehicles) and #data.vehicles ~= 0 then page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.menu.actor.max_vehicles', 0, 200) end
+        if DecentVehicleDestination and istable(data.vehicles) and #data.vehicles ~= 0 then page:Slider('bgn_npc_vehicle_max_' .. actor_type, '#bgn.menu.actor.max_vehicles', 0, 200, {
+          badge = 'Decent Vehicle',
+          badge_color = 'accent'
+        }) end
       end
     end
   end,
@@ -208,7 +224,6 @@ Menu.AddPage('spawn', {
     page:Section('#bgn.menu.section.main')
     page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
     page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
-    if istable(DecentVehicleDestination) then page:Slider('bgn_vehicle_spawn_visibility_radius', '#bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000) end
     page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
     page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, {
       decimals = 1
@@ -219,83 +234,9 @@ Menu.AddPage('spawn', {
     page:Slider('bgn_actor_unseen_time', '#bgn.settings.spawn.actor_unseen_time', 0, 600)
     page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
     page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
-    page:Section('#bgn.menu.section.scenic')
-    page:Toggle('bgn_scenic', '#bgn.menu.scenic')
-    page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
-    page:Slider('bgn_scenic_period', '#bgn.menu.scenic_period', 5, 300)
-    for id, scene in SortedPairs(bgNPC.cfg.scenic) do
-      if (scene.weight or 10) > 0 then
-        page:Toggle('bgn_scenic_' .. id, bgNPC.Util.Lang(scene.name or {
-          default = id
-        }))
-      end
-    end
-
     page:Section('#bgn.menu.section.experimental')
     page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
     page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)
-  end,
-})
-
-Menu.AddPage('wanted', {
-  group = SERVER_GROUP,
-  title = '#bgn.menu.page.wanted',
-  icon = ICONS .. 'wanted.png',
-  order = 600,
-  build = function(page)
-    page:Section('#bgn.menu.section.main')
-    page:Toggle('bgn_enable_wanted_mode', '#bgn.settings.wanted.enable_wanted_mode')
-    page:Slider('bgn_wanted_detection_radius', '#bgn.settings.wanted.detection_radius', 0, 5000)
-    page:Toggle('bgn_wanted_level', '#bgn.settings.wanted.level')
-    page:Slider('bgn_wanted_level_up_period', '#bgn.settings.wanted.level_up_period', 0, 600)
-    page:Toggle('bgn_wanted_police_instantly', '#bgn.settings.wanted.police_instantly')
-    page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)
-    page:Slider('bgn_wanted_impunity_limit', '#bgn.settings.wanted.impunity_limit', 0, 50)
-    page:Slider('bgn_wanted_impunity_reduction_period', '#bgn.settings.wanted.impunity_reduction_period', 0, 300)
-    page:Section('#bgn.menu.section.hud')
-    page:Toggle('bgn_wanted_hud_text', '#bgn.settings.wanted.hud_text')
-    page:Toggle('bgn_wanted_hud_stars', '#bgn.settings.wanted.hud_stars')
-    page:Section('#bgn.menu.section.halo')
-    page:Toggle('bgn_disable_halo_calling', '#bgn.settings.wanted.disable_halo_calling')
-    page:Toggle('bgn_disable_halo_wanted', '#bgn.settings.wanted.disable_halo_wanted')
-    page:Section('#bgn.menu.section.colors')
-    for _, name in ipairs({'calling_police_text', 'calling_police_halo', 'wanted_halo'}) do
-      local prefix = 'bgn_wanted_color_' .. name
-      page:Color('#bgn.settings.wanted.' .. name .. '_color', {prefix .. '_r', prefix .. '_g', prefix .. '_b'})
-    end
-  end,
-})
-
-Menu.AddPage('arrest', {
-  group = SERVER_GROUP,
-  title = '#bgn.menu.page.arrest',
-  icon = ICONS .. 'arrest.png',
-  order = 700,
-  build = function(page)
-    page:Toggle('bgn_arrest_mode', '#bgn.settings.arrest.arrest_mode')
-    page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, {
-      decimals = 1
-    })
-
-    page:Slider('bgn_arrest_time_limit', '#bgn.settings.arrest.arrest_time_limit', 0, 100, {
-      decimals = 1
-    })
-
-    page:Slider('bgn_arrest_surrender_delay', '#bgn.settings.arrest.surrender_delay', 0, 120, {
-      decimals = 1
-    })
-
-    page:Slider('bgn_arrest_car_wait', '#bgn.settings.arrest.car_wait', 0, 60, {
-      decimals = 1
-    })
-
-    page:Slider('bgn_arrest_car_time', '#bgn.settings.arrest.car_time', 1, 60, {
-      decimals = 1
-    })
-
-    page:Slider('bgn_police_car_kill_time', '#bgn.settings.arrest.car_kill_time', 0, 300, {
-      decimals = 0
-    })
   end,
 })
 
@@ -374,21 +315,210 @@ Menu.AddPage('performance', {
   end,
 })
 
-Menu.AddPage('addons', {
+-- Modules: a switch per module; the gear opens the module's own settings page (hidden from the sidebar, but searchable).
+-- server / client: function(page) with the settings of that side; has_server: function() false when there is nothing to show.
+local MODULES = {
+  {
+    id = 'wanted',
+    title = '#bgn.menu.page.wanted',
+    cvar = 'bgn_enable_wanted_mode',
+    label = '#bgn.menu.page.wanted',
+    help = '#bgn.settings.wanted.enable_wanted_mode.help',
+    icon = 'wanted.png',
+    server = function(page)
+      page:Slider('bgn_wanted_detection_radius', '#bgn.settings.wanted.detection_radius', 0, 5000)
+      page:Toggle('bgn_wanted_level', '#bgn.settings.wanted.level')
+      page:Slider('bgn_wanted_level_up_period', '#bgn.settings.wanted.level_up_period', 0, 600)
+      page:Toggle('bgn_wanted_police_instantly', '#bgn.settings.wanted.police_instantly')
+      page:Slider('bgn_wanted_time', '#bgn.settings.wanted.time', 0, 300)
+      page:Slider('bgn_wanted_impunity_limit', '#bgn.settings.wanted.impunity_limit', 0, 50)
+      page:Slider('bgn_wanted_impunity_reduction_period', '#bgn.settings.wanted.impunity_reduction_period', 0, 300)
+      page:Toggle('bgn_wanted_hud_text', '#bgn.settings.wanted.hud_text')
+      page:Toggle('bgn_wanted_hud_stars', '#bgn.settings.wanted.hud_stars')
+      page:Toggle('bgn_disable_halo_calling', '#bgn.settings.wanted.disable_halo_calling')
+      page:Toggle('bgn_disable_halo_wanted', '#bgn.settings.wanted.disable_halo_wanted')
+      for _, name in ipairs({'calling_police_text', 'calling_police_halo', 'wanted_halo'}) do
+        local prefix = 'bgn_wanted_color_' .. name
+        page:Color('#bgn.settings.wanted.' .. name .. '_color', {prefix .. '_r', prefix .. '_g', prefix .. '_b'})
+      end
+    end,
+    client = function(page)
+      page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
+      page:Toggle('bgn_cl_disable_halo', '#bgn.settings.wanted.cl_disable_halo')
+      page:Toggle('bgn_cl_disable_self_halo_wanted', '#bgn.settings.wanted.cl_disable_self_halo_wanted')
+    end,
+  },
+  {
+    id = 'arrest',
+    title = '#bgn.menu.page.arrest',
+    cvar = 'bgn_arrest_mode',
+    label = '#bgn.menu.page.arrest',
+    help = '#bgn.settings.arrest.arrest_mode.help',
+    icon = 'arrest.png',
+    server = function(page)
+      page:Slider('bgn_arrest_time', '#bgn.settings.arrest.arrest_time', 0, 100, {
+        decimals = 1
+      })
+
+      page:Slider('bgn_arrest_time_limit', '#bgn.settings.arrest.arrest_time_limit', 0, 100, {
+        decimals = 1
+      })
+
+      page:Slider('bgn_arrest_surrender_delay', '#bgn.settings.arrest.surrender_delay', 0, 120, {
+        decimals = 1
+      })
+
+      page:Slider('bgn_arrest_car_wait', '#bgn.settings.arrest.car_wait', 0, 60, {
+        decimals = 1
+      })
+
+      page:Slider('bgn_arrest_car_time', '#bgn.settings.arrest.car_time', 1, 60, {
+        decimals = 1
+      })
+
+      page:Slider('bgn_police_car_kill_time', '#bgn.settings.arrest.car_kill_time', 0, 300)
+    end,
+  },
+  {
+    id = 'scenic',
+    title = '#bgn.menu.section.scenic',
+    cvar = 'bgn_scenic',
+    label = '#bgn.menu.scenic',
+    icon = 'scenic.png',
+    server = function(page)
+      page:Slider('bgn_scenic_max', '#bgn.menu.scenic_max', 0, 20)
+      page:Slider('bgn_scenic_period', '#bgn.menu.scenic_period', 5, 300)
+      for id, scene in SortedPairs(bgNPC.cfg.scenic) do
+        if (scene.weight or 10) > 0 then
+          page:Toggle('bgn_scenic_' .. id, bgNPC.Util.Lang(scene.name or {
+            default = id
+          }))
+        end
+      end
+    end,
+  },
+  {
+    id = 'dv',
+    title = '#bgn.settings.addon.decent_vehicle',
+    cvar = 'bgn_enable_dv_support',
+    label = '#bgn.settings.addon.decent_vehicle',
+    icon = 'vehicle.png',
+    has_server = function() return istable(DecentVehicleDestination) end,
+    server = function(page) page:Slider('bgn_vehicle_spawn_visibility_radius', '#bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000) end,
+  },
+  {
+    cvar = 'bgn_enable_police_system_support',
+    label = '#bgn.settings.addon.police_system',
+    icon = 'siren.png'
+  },
+  {
+    cvar = 'bgn_module_stormfox2',
+    label = '#bgn.settings.addon.stormfox2',
+    icon = 'weather.png'
+  },
+  {
+    cvar = 'bgn_module_followers_mod_addon',
+    label = '#bgn.settings.addon.followers_mod_addon',
+    icon = 'follow.png'
+  },
+  {
+    cvar = 'bgn_module_n2money',
+    label = '#bgn.settings.addon.n2money',
+    icon = 'coin.png'
+  },
+  {
+    cvar = 'bgn_module_bio_annihilation_two_replacement',
+    label = '#bgn.settings.addon.bio_annihilation_two_replacement',
+    icon = 'skull.png'
+  },
+  {
+    cvar = 'bgn_module_arccw_weapon_replacement',
+    label = '#bgn.settings.addon.arccw_weapon_replacement',
+    icon = 'weapon.png'
+  },
+  {
+    cvar = 'bgn_module_arc9_weapon_replacement',
+    label = '#bgn.settings.addon.arc9_weapon_replacement',
+    icon = 'weapon.png'
+  },
+  {
+    cvar = 'bgn_module_tfa_weapon_replacement',
+    label = '#bgn.settings.addon.tfa_weapon_replacement',
+    icon = 'weapon.png'
+  },
+}
+
+local function HasServerSettings(module)
+  return module.server and (not module.has_server or module.has_server())
+end
+
+-- the gear is shown when the player has something on the module page: server rows for an admin, client rows for everybody
+local function HasSettings(module)
+  return module.client or (HasServerSettings(module) and Menu.IsAdmin())
+end
+
+for _, module in ipairs(MODULES) do
+  if module.id then
+    Menu.AddPage('module_' .. module.id, {
+      hidden = true,
+      parent = 'modules',
+      title = module.title,
+      order = 901,
+      build = function(page)
+        if not page.filter then -- not a search result
+          page:Button('#bgn.menu.page.modules', function() Menu.ShowPage('modules') end, {
+            text = '#bgn.menu.back'
+          })
+        end
+
+        if HasServerSettings(module) then
+          page:Section(SERVER_GROUP)
+          module.server(page)
+        end
+
+        if module.client then
+          page:Section('#bgn.menu.group.client')
+          module.client(page)
+        end
+      end,
+    })
+  end
+end
+
+Menu.AddPage('modules', {
   group = SERVER_GROUP,
-  title = '#bgn.menu.page.addons',
+  title = '#bgn.menu.page.modules',
   icon = ICONS .. 'addons.png',
   order = 900,
   build = function(page)
-    page:Toggle('bgn_enable_dv_support', '#bgn.settings.addon.decent_vehicle')
-    page:Toggle('bgn_enable_police_system_support', '#bgn.settings.addon.police_system')
-    page:Toggle('bgn_module_stormfox2', '#bgn.settings.addon.stormfox2')
-    page:Toggle('bgn_module_followers_mod_addon', '#bgn.settings.addon.followers_mod_addon')
-    page:Toggle('bgn_module_n2money', '#bgn.settings.addon.n2money')
-    page:Toggle('bgn_module_bio_annihilation_two_replacement', '#bgn.settings.addon.bio_annihilation_two_replacement')
-    page:Toggle('bgn_module_arccw_weapon_replacement', '#bgn.settings.addon.arccw_weapon_replacement')
-    page:Toggle('bgn_module_arc9_weapon_replacement', '#bgn.settings.addon.arc9_weapon_replacement')
-    page:Toggle('bgn_module_tfa_weapon_replacement', '#bgn.settings.addon.tfa_weapon_replacement')
+    for _, module in ipairs(MODULES) do
+      -- the switch is visible to everybody: a player who is not an admin sees it locked
+      local row = page:Toggle(module.cvar, module.label, {
+        server = false,
+        locked = not Menu.IsAdmin(),
+        help = module.help
+      })
+
+      row.icon = ICONS .. module.icon
+
+      if module.id and HasSettings(module) then
+        -- the gear is a sibling of the switch (the switch stays the row's control: the whole row toggles, as on other pages)
+        local s = Menu.Scale()
+        local size, gap = math.Round(32 * s), math.Round(12 * s)
+        local gear = Menu.IconButton(row, size, function() return ICONS .. 'general.png' end, Menu.Text('#bgn.menu.module_settings'), function()
+          Menu.Sound('click')
+          Menu.ShowPage('module_' .. module.id)
+        end)
+
+        row.reserve = size + gap
+        local layout = row.PerformLayout
+        row.PerformLayout = function(panel, w, h)
+          layout(panel, w, h)
+          local lock = panel.locked and math.Round(24 * s) or 0 -- the lock icon sits left of the switch
+          gear:SetPos(panel.control.x - lock - gap - size, math.Round((panel:GetTall() - size) / 2))
+        end
+      end
+    end
   end,
 })
 
@@ -409,10 +539,6 @@ Menu.AddPage('client', {
     page:Toggle('bgn_cl_ambient_sound', '#bgn.settings.client.cl_ambient_sound')
     page:Toggle('bgn_cl_voices', '#bgn.settings.client.cl_voices')
     page:Choice('bgn_cl_voice_language', '#bgn.menu.voice_language', {{'auto', '#bgn.menu.auto'}, {'english', 'English'}, {'russian', 'Русский'},})
-    page:Section('#bgn.menu.section.wanted')
-    page:Toggle('bgn_cl_disable_hud_local', '#bgn.settings.wanted.cl_disable_hud_local')
-    page:Toggle('bgn_cl_disable_halo', '#bgn.settings.wanted.cl_disable_halo')
-    page:Toggle('bgn_cl_disable_self_halo_wanted', '#bgn.settings.wanted.cl_disable_self_halo_wanted')
     page:Section('#bgn.menu.section.experimental')
     -- the server runs the ghosts for everyone: this player's own ghost settings do nothing then
     local by_server = GetConVar('bgn_ghost_crowd'):GetBool() and {
@@ -454,6 +580,7 @@ Menu.AddPage('tools', {
   icon = ICONS .. 'tools.png',
   order = 1100,
   build = function(page)
+    QuickSettings(page)
     page:Section('#bgn.menu.section.mesh')
     page:Button('#bgn.settings.general.cl_citizens_load_route', 'cl_citizens_load_route', {
       admin = true,

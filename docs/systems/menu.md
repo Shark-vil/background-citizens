@@ -26,15 +26,16 @@ server still checks the rights.
 Spawnmenu **Options → Background NPCs → Debugging** collects debug overlays, NPC paths, actor WH,
 the state/decision inspector, sight visualization and an actor first-person camera. See [debug controls](testing.md#spawnmenu-debug-page).
 
-**Spawn → Scenic scenes** has a checkbox for each automatically eligible scene (`bgn_scenic_<id>`).
-**Actors** shows **Spawn with carried items** (`bgn_carry_items_<type>`) only for types with a `carry_items`
+**Modules** lists the switchable modules: Wanted, Arrest, Scenic NPCs, Decent Vehicle and the supported addons. The switch of a module is shown to everybody and is locked for a player who is not an admin. A gear opens the module's own page (opened from the page, not listed in the sidebar; search finds its rows) with a **Server** section (admins) and an **Only for you** section (this computer's options, e.g. the wanted HUD and halo). The gear is shown only when the player has something on that page: any server row for an admin, a client row for everybody; Decent Vehicle has server rows only while Decent Vehicle is loaded (`DecentVehicleDestination`).
+**Modules → Scenic NPCs (gear)** has a checkbox for each automatically eligible scene (`bgn_scenic_<id>`).
+**Actors** shows the vehicle count of a type with a blue **Decent Vehicle** badge (only while Decent Vehicle is loaded) and **Spawn with carried items** (`bgn_carry_items_<type>`) only for types with a `carry_items`
 config table. Both controls also exist in Classic settings and affect future spawning, including ghost items.
 Tools are split into **Background NPCs: Editor** (route points, spawn areas, seats) and **Background NPCs: Debugging** (actor inspector, navigation, movement, scenes, carried items). The debug page shares UID selection, visualization modes, distance/limit filters and freeze controls with the inspector Tool.
 
 
 ## Spawn and recycling settings
 
-The **Spawn** page separates pedestrian settings from vehicle visibility. Server defaults:
+The **Spawn** page holds the pedestrian settings; the vehicle visibility radius is in **Modules → Decent Vehicle (gear)**. Server defaults:
 
 | Cvar | Default | Meaning |
 | --- | --- | --- |
@@ -56,6 +57,8 @@ bgNPC.Menu.AddPage('my_addon', {
 	icon = 'background_npcs/vgui/menu/general.png',  -- optional: a white glyph on transparent, 64x64
 	order = 1300,                                    -- built-in pages use 100..1200
 	group = '#bgn.menu.group.client',                -- optional sidebar heading: '#bgn.menu.group.server' or your own
+	hidden = true,                                   -- optional: not listed in the sidebar (open it with ShowPage; search still finds it)
+	parent = 'modules',                              -- optional: the sidebar item shown as active while this page is open
 	build = function(page)
 		page:Section('Movement')
 		page:Toggle('my_addon_enabled', 'Enable')
@@ -133,7 +136,7 @@ Background NPCs support) that is subscribed at once.
 | `bgn_wizard all` | The wizard with every step |
 | `bgn_mode_chosen 0` | Nothing now: both windows come back on the next map |
 
-The same two windows can be opened from the **Quick settings** block (General page) and from My settings.
+The same two windows can be opened from the **Quick settings** block and from My settings. The block is at the top of the General page until it is closed with its cross (`bgn_menu_quick_hidden`, a client setting), and is always at the top of the Tools page.
 
 ## Classic spawn menu pages
 

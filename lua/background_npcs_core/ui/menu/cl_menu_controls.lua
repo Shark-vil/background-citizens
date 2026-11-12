@@ -229,7 +229,8 @@ local function RowLayout(row, w, h)
   local control = row.control
   local reserved = IsValid(control) and control:GetWide() + math.Round(24 * s) or 0
   if row.locked then reserved = reserved + math.Round(22 * s) end
-  local text_w = w - pad * 2 - reserved
+  reserved = reserved + (row.reserve or 0) -- room for a button left of the control
+  local text_w = w - pad * 2 - reserved - (row.icon and math.Round(30 * s) or 0)
   -- the badge sits after the label: the label wraps short of it
   row.badge_w = 0
   if row.badge then
@@ -253,6 +254,7 @@ end
 local function RowPaint(row, w, h)
   local s = Menu.Scale()
   local pad = math.Round(16 * s)
+  local tx = pad + (row.icon and math.Round(30 * s) or 0) -- the text starts after the icon
   row.hover = Lerp(FrameTime() * 16, row.hover, (row.clickable and (row:IsHovered() or row:IsChildHovered())) and 1 or 0)
   if row.hover > 0.01 then draw.RoundedBoxEx(math.Round(7 * s), 0, 0, w, h, Menu.Fade(C.hover, row.hover), row.is_first, row.is_first, row.is_last, row.is_last) end
   if not row.is_first then
@@ -264,27 +266,33 @@ local function RowPaint(row, w, h)
   local y = row.text_y
   local body_h = Menu.FontHeight('BGN.Menu.Body')
   for _, line in ipairs(row.lines) do
-    draw.SimpleText(line, 'BGN.Menu.Body', pad, y, row.locked and C.muted or C.text)
+    draw.SimpleText(line, 'BGN.Menu.Body', tx, y, row.locked and C.muted or C.text)
     y = y + body_h
   end
 
   if row.badge and #row.lines ~= 0 then
     surface.SetFont('BGN.Menu.Body')
-    local bx = pad + surface.GetTextSize(row.lines[#row.lines]) + math.Round(8 * s)
+    local bx = tx + surface.GetTextSize(row.lines[#row.lines]) + math.Round(8 * s)
     local bh = Menu.FontHeight('BGN.Menu.Small') + math.Round(4 * s)
     local by = y - body_h + math.Round((body_h - bh) / 2)
     local r = math.floor(bh / 2)
-    draw.RoundedBox(r, bx, by, row.badge_w, bh, C.warn)
+    local color = C[row.badge_color]
+    draw.RoundedBox(r, bx, by, row.badge_w, bh, color)
     draw.RoundedBox(r, bx + 1, by + 1, row.badge_w - 2, bh - 2, C.surface)
-    draw.RoundedBox(r, bx + 1, by + 1, row.badge_w - 2, bh - 2, Menu.Fade(C.warn, 0.12))
-    draw.SimpleText(row.badge, 'BGN.Menu.Small', bx + row.badge_w / 2, by + bh / 2, C.warn, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.RoundedBox(r, bx + 1, by + 1, row.badge_w - 2, bh - 2, Menu.Fade(color, 0.12))
+    draw.SimpleText(row.badge, 'BGN.Menu.Small', bx + row.badge_w / 2, by + bh / 2, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
   end
 
   y = y + math.Round(3 * s)
   local small_h = Menu.FontHeight('BGN.Menu.Small')
   for _, line in ipairs(row.help_lines) do
-    draw.SimpleText(line, 'BGN.Menu.Small', pad, y, C.muted)
+    draw.SimpleText(line, 'BGN.Menu.Small', tx, y, C.muted)
     y = y + small_h
+  end
+
+  if row.icon then
+    local size = math.Round(18 * s)
+    Menu.Icon(row.icon, pad, (h - size) / 2, size, row.locked and C.muted or C.accent)
   end
 
   if row.locked and IsValid(row.control) then
@@ -298,7 +306,7 @@ end
 -- @param locked boolean|nil shown but can't be changed (opts.locked of the controls)
 -- @param badge string|nil a pill after the label, e.g. why it is locked (opts.badge of the controls)
 -- @return Panel the row; put your control into row.control (it is placed on the right)
-function Builder:Row(label, help, server, cvar, locked, badge)
+function Builder:Row(label, help, server, cvar, locked, badge, badge_color)
   local label_text = Menu.Text(label)
   local help_text = help and Menu.Text(help) or nil
   if help_text == '' then help_text = nil end
@@ -323,6 +331,7 @@ function Builder:Row(label, help, server, cvar, locked, badge)
   row.help = help_text
   row.locked = hidden or locked or false -- hidden rows stay disabled too
   row.badge = badge and Menu.Text(badge) or nil
+  row.badge_color = badge_color or 'warn'
   row.hover = 0
   row.PerformLayout = RowLayout
   row.Paint = RowPaint
@@ -363,7 +372,7 @@ end
 function Builder:Toggle(cvar, label, opts)
   opts = opts or {}
   local s = Menu.Scale()
-  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
+  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge, opts.badge_color)
   local function Get()
     local cv = GetConVar(cvar)
     return cv ~= nil and cv:GetBool()
@@ -405,7 +414,7 @@ function Builder:Slider(cvar, label, min, max, opts)
   opts = opts or {}
   local s = Menu.Scale()
   local decimals = opts.decimals or 0
-  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
+  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge, opts.badge_color)
   local function Get()
     local cv = GetConVar(cvar)
     return cv and cv:GetFloat() or min
@@ -622,7 +631,7 @@ end
 function Builder:Choice(cvar, label, options, opts)
   opts = opts or {}
   local s = Menu.Scale()
-  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge)
+  local row = self:Row(label, Help(label, opts), IsServer(cvar, opts), cvar, opts.locked, opts.badge, opts.badge_color)
   local function Get()
     if opts.get then return tostring(opts.get()) end
     local cv = GetConVar(cvar)

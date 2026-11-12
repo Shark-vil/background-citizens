@@ -8,6 +8,8 @@
 			title = '#my.phrase',                              -- '#phrase', plain text or { en = '', ru = '' }
 			icon = 'background_npcs/vgui/menu/general.png',    -- optional white glyph
 			order = 500,                                       -- sidebar position, built-in pages use 100..1100
+			hidden = true,                                     -- optional: not listed in the sidebar (opened with ShowPage, still searched)
+			parent = 'modules',                                -- optional: the sidebar item shown as active while this page is open
 			build = function(page)
 				page:Section('#my.section')
 				page:Toggle('my_cvar', '#my.phrase')           -- help text: '#my.phrase.help' when it exists
@@ -494,7 +496,11 @@ end
 -- Pages this player sees: for non-admins, pages whose rows are all server settings are left out.
 -- A search build (no network requests) with an empty query counts the rows.
 local function VisiblePages()
-  local pages = SortedPages()
+  local pages = {}
+  for _, def in ipairs(SortedPages()) do
+    if not def.hidden then pages[#pages + 1] = def end -- hidden: opened from another page, not listed
+  end
+
   if Menu.IsAdmin() then return pages end
   local probe = vgui.Create('DPanel')
   probe:SetVisible(false)
@@ -527,6 +533,10 @@ function Menu.Open(page_id)
   local shown = {}
   for _, def in ipairs(pages) do
     shown[def.id] = true
+  end
+
+  for id, def in pairs(Menu.pages) do
+    if def.hidden then shown[id] = true end
   end
 
   if not shown[page_id or ''] then page_id = shown[Menu.page_id or ''] and Menu.page_id or pages[1].id end
@@ -668,7 +678,7 @@ function Menu.Open(page_id)
     item:SetText('')
     item.hover = 0
     item.Paint = function(self, w, h)
-      local active = Menu.page_id == def.id and not frame.query
+      local active = (Menu.page_id == def.id or (Menu.pages[Menu.page_id] or {}).parent == def.id) and not frame.query
       self.hover = Lerp(FrameTime() * 16, self.hover, (self:IsHovered() or active) and 1 or 0)
       local r = math.Round(6 * s)
       if active then
