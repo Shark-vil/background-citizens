@@ -191,6 +191,7 @@ local function DrawGhost(ent)
 end
 
 local function SetActivity(ghost, act)
+  if act == ACT_PANIC then act = ghost.panic_act or act end
   if ghost.act == act then return end
   local ent = ghost.ent
   if not IsValid(ent) then return end
@@ -241,7 +242,9 @@ local function CreateGhost(pos, server_look)
     next_ground = 0,
     alpha = 0,
     cycle = math.random(),
-    yaw = ent:GetAngles().y
+    yaw = ent:GetAngles().y,
+    -- half of them run upright, the rest crouched; picked once so a ghost keeps its gait
+    panic_act = math.random(2) == 1 and ACT_RUN or ACT_PANIC
   }
 
   SetActivity(ghost, ACT_IDLE)
