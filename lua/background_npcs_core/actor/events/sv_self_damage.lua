@@ -6,18 +6,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
   if target.bgn_exit_guard and target.bgn_exit_guard.until_time > CurTime() and dmginfo:GetAttacker() == target.bgn_exit_guard.car then return true end
   local occupant = bgNPC.Actors.Get(target)
   if occupant and occupant.vehicle_body then
-    local damage, attacker = dmginfo:GetDamage(), dmginfo:GetAttacker()
-    -- an actor can grind another one in a car for ages: its hits there double (50%) or triple (20%)
-    if bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(attacker)) then
-      local roll = math.random(100)
-      if roll <= 20 then
-        damage = damage * 3
-      elseif roll <= 70 then
-        damage = damage * 2
-      end
-    end
-
-    occupant:TakeVehicleDamage(damage, attacker, dmginfo:GetInflictor())
+    occupant:TakeVehicleDamage(dmginfo:GetDamage(), dmginfo:GetAttacker(), dmginfo:GetInflictor())
     return true
   end
 

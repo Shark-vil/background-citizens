@@ -4,8 +4,7 @@ DV is optional. Install Decent Vehicle, the car content used by your actor confi
 
 ## Character identity and damage
 
-Boarding preserves Actor/UID but replaces its entity; exit restores the saved body at a free seat-specific position. A blocked exit keeps the actor aboard. Use actor health accessors and BGN_ActorEntityChanged for integrations. Actor-on-actor seated hits roll triple damage (20%), double (50%) or unchanged damage (30%); player/foreign NPC hits do not receive this multiplier.
-
+Boarding preserves Actor/UID but replaces its entity; exit restores the saved body at a free seat-specific position. A blocked exit keeps the actor aboard. Use actor health accessors and BGN_ActorEntityChanged for integrations.
 SERVER also preserves the registered Actor/UID during forced ejection when another actor seizes a car, so the restored body continues its normal AI instead of becoming an orphan.
 SERVER also gives an actor that steps out of a moving car 3 seconds of immunity to damage from that same car.
 
