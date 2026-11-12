@@ -10,8 +10,9 @@ bgNPC.States.Register('run_from_danger', 'danger', {
     local enemy = actor:GetNearEnemy()
     data.call_for_help = data.call_for_help or CurTime() + math.random(20, 30)
     if not IsValid(enemy) or enemy:Health() <= 0 then return end
-    if not data.skip_update_delay and not actor:CheckMoveUpdate('state_run_from_danger', 5) then return end
-    data.skip_update_delay = false
+    -- per entry: the first path is built at once (a shared CheckMoveUpdate timer left the actor standing up to 5 s)
+    if (data.next_path_update or 0) > CurTime() then return end
+    data.next_path_update = CurTime() + 5
     local npc = actor:GetNPC()
     local npc_pos = npc:GetPos()
     local enemy_pos = enemy:GetPos()
