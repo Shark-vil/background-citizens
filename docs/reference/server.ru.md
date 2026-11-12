@@ -771,3 +771,5 @@
 | `bgNPC.GOAP` | Действия/сенсоры планировщика: [мозги](../systems/brains.md). |
 | `bgNPC.Tasks` | Кооперативные задачи yield/wait/budget; `core/sh_tasks.lua`. У каждого окружения собственный планировщик. |
 | `bgNPC.Modules.Get('wanted')` | Розыск: [контракт и события](../systems/wanted.md). |
+
+`bgNPC.Combat.CanPoliceUseStunstick(officer, suspect)` возвращает SERVER-допустимость станстика по розыску, убийствам и личной памяти полицейского. `bgNPC.Combat.ResetPoliceThreat(suspect)` очищает признаки/счётчики убийств и записи пострадавших; применять для завершённого сброса, не при первоначальном объявлении розыска. `BGN_PostVehicleDamage(actor, attacker, amount)` вызывается на SERVER после изменения виртуального здоровья в машине, до обработки смерти.

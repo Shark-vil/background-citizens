@@ -1,6 +1,6 @@
 ﻿-- Enemy bookkeeping on deaths and when an actor has no enemies left.
 hook.Add('BGN_ResetEnemiesForActor', 'BGN_SetDefaultStateIfEnemiesDeath', function(actor)
-  if not actor:IsAlive() then return end
+  if not actor:IsAlive() or actor:HasState('arrest') then return end
   actor:FoldWeapon()
   actor:RandomState()
 end)

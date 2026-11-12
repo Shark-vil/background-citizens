@@ -5,7 +5,6 @@ local Modules = bgNPC.Modules
 local Combat = bgNPC.Combat
 --
 local FirstAttackerModule, WantedModule
-local POLICE_MELEE_DISTANCE_SQR = 75 ^ 2
 local POLICE_ATTACK_WINDOW = 10
 local function HasRangedWeapon(enemy)
   local weapon = enemy.GetActiveWeapon and enemy:GetActiveWeapon()
@@ -128,18 +127,14 @@ function Combat.EquipActor(actor, weapon_class, switching)
   local active_weapon = npc:GetActiveWeapon()
   if not weapon_class and actor.class == 'npc_metropolice' and actor:HasTeam('police') then
     local enemy = actor:GetNearEnemy()
+    if not IsValid(enemy) and actor.GetFirstTarget then enemy = actor:GetFirstTarget() end
     if IsValid(enemy) then
       local data = actor:GetStateData()
-      if Modules.Get('player_arrest'):IsProtected(enemy) then
-        data.police_firearm = nil
-        actor:GetBody():RemoveActiveWeapon()
-        return
+      data.police_firearm = not Combat.CanPoliceUseStunstick(actor, enemy) or IsInVehicle(enemy)
+      weapon_class = data.police_firearm and actor:GetActorWeapon() or 'weapon_stunstick'
+      if not weapon_class or weapon_class == 'weapon_stunstick' then
+        weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'
       end
-
-      local close = npc:GetPos():DistToSqr(enemy:GetPos()) <= POLICE_MELEE_DISTANCE_SQR
-      -- Once a fight escalates, distance and an expired attack timer must not bring the baton back.
-      data.police_firearm = data.police_firearm or HasRangedWeapon(enemy) or IsInVehicle(enemy) or (IsValid(active_weapon) and active_weapon:GetClass() == 'weapon_pistol') or (not close and Combat.CanPoliceShoot(enemy))
-      weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'
       switching = true
     end
   end

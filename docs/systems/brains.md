@@ -178,6 +178,8 @@ The healthiest stand in front, the wounded (< 40% health) form a rear rank. `def
 Actors far from players update less often (`bgn_lod_near_radius`); idle unarmed actors out of range sleep
 (`bgn_disable_logic_radius`). Hook: `BGN_ActorLODChanged(actor, lod)` (1 near, 2 far, 3 dormant).
 
+Distant unseen unarmed actors on foot now alternate pauses and active windows instead of remaining frozen. SERVER settings (Performance and classic Optimization): `bgn_logic_pause` = 2 s (0 disables pauses), `bgn_logic_active` = 1 s (minimum 0.1), `bgn_logic_stagger` = 0.25 s per UID. During active windows both engine movement and the brain resume; brain interval is 0.2 s. Phase is `(time - UID * stagger) modulo (pause + active)`, stable across list reordering. Windows overlap and phases wrap in larger crowds; this spreads transitions, not exclusive execution. Close/in-view actors, armed actors and vehicle occupants retain continuous simulation. Damage/enemy events immediately wake an actor for at least one second. LOD 3 now means intermittent simulation, not permanent sleep. Existing distance thresholds are retained; with near radius 2500 and disable radius 500, off-view actors beyond 2500 enter this cycle. Timings are observed on actor scheduler passes, not exact real-time deadlines.
+
 ## Medics
 
 Actor type `medic` (`config/actors/sh_medic.lua`, limit 4: two pairs) is never spawned by the regular spawner. Every actor
@@ -316,3 +318,13 @@ BGN traffic can plan bounded forward/reverse maneuvers around blockers and, afte
 ## Related systems
 
 [Gangs](gangs.md) walk in packs of three and support visible allies; direct self-defense remains. [Medics and bodies](medics.md) own calls/verdicts/cleanup. [Wanted](wanted.md) and [arrest](arrest.md) own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.
+
+## Police weapon choice and witnessed harm
+
+See [police weapon choice and harm memory](arrest.md#police-weapon-choice-and-witnessed-harm).
+
+## NextBot pistol cadence
+
+The stock pistol now fires groups of 1–3 individual shots, approximately 0.2 s apart, followed by a 0.45–0.8 s rest. These are separate, visibility/friendly-fire-checked shots, not multiple bullets in one attack. The 18-round magazine keeps the 1.8 s reload pause. Burst state resets on weapon/target changes and reload; other weapon profiles and scripted-weapon fallback remain unchanged. Combat checks quantize the intended intervals to engine ticks.
+
+`python tools/test_police_force.py` checks witnessed distinct counts, thresholds, memory/reset/rebind, vehicle damage and pistol cadence. Live single-player checks compare native HL2 and NextBot shots and inspect arrest weapon retention; multiplayer and third-party weapon bases require separate verification.

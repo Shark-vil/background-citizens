@@ -770,3 +770,5 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 | `bgNPC.Nav` | Provider selection, loading and pathfinding: `nav/sv_nav.lua`; see [navigation](../systems/navigation.md). |
 | `bgNPC.GOAP` | Planner actions/sensors: see [brains](../systems/brains.md). |
 | `bgNPC.Tasks` | Cooperative work with yield/wait/budget; `core/sh_tasks.lua`. Each realm has its own scheduler. |
+
+`bgNPC.Combat.CanPoliceUseStunstick(officer, suspect)` returns the SERVER baton eligibility from wanted status, kill evidence and that officer's witnessed harm. `bgNPC.Combat.ResetPoliceThreat(suspect)` clears kill evidence/counters and officer harm records; use only for a completed reset, not initial wanted escalation. `BGN_PostVehicleDamage(actor, attacker, amount)` fires on SERVER after virtual seated health is updated, before death handling.

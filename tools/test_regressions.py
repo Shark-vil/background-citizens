@@ -122,7 +122,7 @@ def realm(server):
             end},
             Modules={Get=function(n) return modules[n] end},
             Table={HasWhere=function(t,f) for k,v in pairs(t) do if f(k,v) then return true end end return false end},
-            Combat={IsIgnored=function() return false end}, cfg={wanted={levels={5,5,10,10,15}}},
+            Combat={IsIgnored=function() return false end,CanPoliceUseStunstick=function() return true end,EquipActor=function() end,ResetPoliceThreat=function() end}, cfg={wanted={levels={5,5,10,10,15}}},
             Statistics={GetSum=function() return 0 end, Reset=function() end},
             Actors={Get=function() end, GetAll=function() return {} end, GetByTeam=function() return {} end},
             Doors={held={},Desperate=function() return false end,Find=function() end,Blocker=function() end},
@@ -845,6 +845,7 @@ arrest.execute('''
             StopSequence=function() error('arrest body released during fade') end}
         bgNPC.Actors.Get=function(ent) if ent==npc then return target end end
         local police={GetNPC=function() return npc end, GetFirstTarget=function() return npc end,
+            GetBody=function() return {SetEnemy=function() end,SetAlertLevel=function() end} end,
             TargetsCount=function() return 1 end, Voice=function() end}
         local fades=0
         bgNPC.Util.FadeRemove=function(ent) assert(ent==npc); fades=fades+1 end
@@ -1596,21 +1597,59 @@ load(sync, 'api/sh_actors.lua', 'actor/sync/cl_sync.lua')
 sync.execute('''
     assert(received.bgn_actor_sync_data.opts.wait_entities)
     local first,second=SyncEntity(),SyncEntity()
-    received.bgn_actor_sync_data.f(nil,17,{npc=first,actor_type='police',state='walk',entity_generation=0})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=first,actor_type='police',entity_generation=0},1)
     local a=bgNPC.Actors.GetByUid(17)
     assert(a and a.kind=='police' and a.state=='walk','state sync recovers missed registration')
-    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',state='walk',entity_generation=1})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=second,actor_type='police',entity_generation=1},2)
     assert(bgNPC.Actors.GetByUid(17)==a and a.npc==second and bgNPC.Actors.Count()==1,'rebind retains identity without duplicate population')
     received.bgn_add_actor_from_client.f(nil,first,'police',17,nil,0)
     assert(a.npc==second,'late initial packet cannot revive the deleted body')
     second.valid=false; bgNPC.Actors.ClearRemoved()
     assert(bgNPC.Actors.GetByUid(17)==a,'a missing client body does not retire the server-owned identity')
     local third=SyncEntity()
-    received.bgn_actor_sync_data.f(nil,17,{npc=third,actor_type='police',state='walk',entity_generation=2})
+    received.bgn_actor_sync_data.f(nil,17,{state='walk'},{npc=third,actor_type='police',entity_generation=2},3)
     assert(bgNPC.Actors.GetByUid(17)==a and a.npc==third,'identity survives a gap between entity packets')
     received.bgm_update_death_actors_on_client.f(nil,second,17)
-    received.bgn_actor_sync_data.f(nil,17,{npc=second,actor_type='police',entity_generation=1})
+    received.bgn_actor_sync_data.f(nil,17,{},{npc=second,actor_type='police',entity_generation=1},4)
     assert(not bgNPC.Actors.GetByUid(17),'late state sync cannot resurrect a removed actor')
+    received.bgn_actor_sync_data.f(nil,18,{state='walk'},{npc=SyncEntity(),actor_type='police',entity_generation=0},10)
+    local b=bgNPC.Actors.GetByUid(18)
+    received.bgn_actor_sync_data.f(nil,18,{state='run'},nil,12)
+    assert(b.state=='run','dynamic-only packet updates a known actor')
+    received.bgn_actor_sync_data.f(nil,18,{state='idle'},{npc=SyncEntity(),actor_type='police',entity_generation=1},11)
+    assert(b.state=='run','a delayed static packet keeps the newer dynamic part')
+    received.bgn_actor_sync_data.f(nil,99,{state='run'},nil,13)
+    assert(not bgNPC.Actors.GetByUid(99),'dynamic-only packet never creates an actor')
+''')
+
+sync_server = realm(True)
+sync_server.execute('''
+    local function ser(t) local keys={} for k,v in pairs(t) do keys[#keys+1]=tostring(k)..'='..tostring(v) end table.sort(keys) return table.concat(keys,',') end
+    bgNPC.Net.Serialize=ser; util.CRC=function(s) return s end
+    bgNPC.States={GetGroup=function() return 'calm' end}
+    bgNPC.Tasks.Add=function(_,f) sync_task=f end
+    ply={valid=true,bgn_ready=true,TestPVS=function() return true end}
+    player.GetHumans=function() return {ply} end
+    actors={}
+    for i=1,20 do
+        local npc={valid=true,GetNoDraw=function() return false end}
+        actors[i]={uid=i,state='walk',sync_players_hash={},IsAlive=function() return true end,GetNPC=function() return npc end,
+            GetType=function() return 'citizen' end,GetName=function() return 'n' end,GetGender=function() return 'male' end,
+            GetState=function(self) return self.state end,InVehicle=function() return false end,HasState=function() return false end}
+    end
+    bgNPC.Actors.GetAll=function() return actors end
+''')
+load(sync_server, 'actor/sync/sv_sync.lua')
+sync_server.execute('''
+    local co=coroutine.create(sync_task)
+    local function step() assert(coroutine.resume(co,function() coroutine.yield('tick') end,function() coroutine.yield('wait') end,function() end)) end
+    step(); assert(#sent==8,'sends are capped per tick')
+    step(); step(); assert(#sent==20,'the burst finishes on later ticks')
+    for i=1,20 do assert(sent[i][5],'first sight carries the static part') end
+    sent={}; step(); assert(#sent==0,'nothing changed, nothing sent')
+    actors[3].state='run'; step()
+    assert(#sent==1 and sent[1][3]==3 and sent[1][4].state=='run' and sent[1][5]==nil,'a change sends only the dynamic part')
+    assert(sent[1][6]>20,'sequence numbers grow')
 ''')
 
 medics = realm(True)
@@ -1879,7 +1918,8 @@ police_weapons.execute('''
     setcv('bgn_disable_weapon_police',0)
     setcv('bgn_arrest_safe_weapons','weapon_fists, gmod_tool,weapon_physgun')
 ''')
-load(police_weapons, 'api/sv_combat.lua')
+police_weapons.execute("list.Set('', 'wanted', {HasWanted=function() return wanted_target==true end})")
+load(police_weapons, 'api/sv_combat.lua', 'api/sv_police_force.lua')
 police_weapons.execute('''
     npc.active=Weapon('weapon_stunstick')
     expect('weapon_stunstick') -- no attack, no kills
@@ -1891,26 +1931,16 @@ police_weapons.execute('''
     expect('weapon_pistol') -- closing in must not downgrade a fight to melee
     enemy.bgn_last_attack=now-30
     expect('weapon_pistol') -- a pause in attacks must not downgrade the same fight either
-    new_fight(); expect('weapon_stunstick') -- state changes release the escalation
-    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_has_killed=nil
-    expect('weapon_pistol') -- an armed enemy needs no first kill or recorded recent hit, even nearby
-    enemy.weapon=Weapon('gmod_tool')
-    expect('weapon_pistol') -- changing the target's weapon must not reset the same fight
-    npc.active=Weapon('weapon_stunstick')
-    expect('weapon_pistol') -- restore the pistol if another controller selects the baton
-    enemy.pos=Vector(200,0,0)
-    for _,class in ipairs({'gmod_tool','weapon_physgun','weapon_fists','weapon_crowbar'}) do
-        new_fight()
-        enemy.weapon=Weapon(class); expect('weapon_stunstick')
-    end
-    enemy.weapon=Weapon('weapon_smg1'); enemy.bgn_last_attack=now-10
-    expect('weapon_pistol') -- a hostile ranged opponent must not be chased with a baton
-    enemy.bgn_last_attack=now-9.99; expect('weapon_pistol')
-    protect(true); expect(nil)
-    assert(not actor.state_data.police_firearm, 'arrest must release firearm escalation')
-    protect(false); expect('weapon_pistol')
-    actor.state_data={}; enemy.weapon=nil; enemy.bgn_last_attack=nil
-    expect('weapon_pistol') -- keep an already drawn pistol after reloading the addon
+    new_fight(); expect('weapon_pistol') -- a new state does not erase the kill
+    enemy.bgn_has_killed=nil
+    enemy.weapon=Weapon('weapon_smg1'); expect('weapon_stunstick') -- a firearm alone does not forbid the baton
+    wanted_target=true; expect('weapon_pistol')
+    protect(true); expect('weapon_pistol') -- surrender keeps the firearm without granting permission to fire
+    protect(false); wanted_target=false; expect('weapon_stunstick')
+    actor.police_harm={[enemy]={count=5,critical=false}}; expect('weapon_stunstick')
+    actor.police_harm[enemy].count=6; expect('weapon_pistol')
+    actor.police_harm[enemy]={count=1,critical=true}; expect('weapon_pistol')
+    actor.police_harm=nil; expect('weapon_stunstick') -- reset releases the choice, even in the same state
     actor.class='npc_combine_s'; enemy.bgn_last_attack=nil
     npc.active=nil; expect('weapon_pistol') -- other law enforcement keeps its existing rules
     npc.active=Weapon('weapon_shotgun'); expect('weapon_shotgun')

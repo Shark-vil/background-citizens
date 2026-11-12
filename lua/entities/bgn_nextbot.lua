@@ -60,6 +60,8 @@ local WEAPONS = {
   weapon_pistol = {
     damage = 6,
     delay = 0.45,
+    burst_min = 1, burst_max = 3, burst_delay = 0.2,
+    rest_min = 0.45, rest_max = 0.8,
     spread = 0.04,
     clip = 18,
     range = 2000,
@@ -121,7 +123,8 @@ local WEAPONS = {
   },
 }
 
-local DEFAULT_WEAPON = WEAPONS.weapon_pistol
+local DEFAULT_WEAPON = table.Copy(WEAPONS.weapon_pistol)
+DEFAULT_WEAPON.burst_max = nil
 -- Per WEAPON_PROFICIENCY_* (0 poor .. 4 perfect), so the wanted levels get harder step by step:
 -- citizen poor, police / gangster average, civil defense good, special forces very good, special forces 2 perfect.
 -- spread: multiplier of the WEAPONS spread; damage: multiplier against players only (HL2 NPCs hit a player for about
@@ -360,6 +363,7 @@ function ENT:Give(weapon_class)
   weapon.bgn_nextbot_weapon = true
   self.weapon = weapon
   self:SetNW2Entity('bgn_weapon', weapon)
+  self.burst_left = nil
   self.weapon_stats = WEAPONS[weapon_class] or (istable(weapon.Primary) and SwepStats(weapon.Primary, weapon:GetHoldType())) or DEFAULT_WEAPON
   self.clip = self.weapon_stats.clip or 0
   return weapon
@@ -388,6 +392,7 @@ function ENT:BGN_DropWeapon()
   local hand = self:BGN_Hand()
   self.weapon = nil
   self:SetNW2Entity('bgn_weapon', NULL)
+  self.burst_left = nil
   self.weapon_stats = nil
   weapon.bgn_nextbot_weapon = nil
   weapon:SetParent(NULL)
@@ -407,6 +412,7 @@ function ENT:BGN_RemoveWeapon()
   if IsValid(self.weapon) then self.weapon:Remove() end
   self.weapon = nil
   self:SetNW2Entity('bgn_weapon', NULL)
+  self.burst_left = nil
   self.weapon_stats = nil
 end
 
@@ -457,7 +463,9 @@ end
 function ENT:UpdateActivity()
   if self.sequence_lock then return end
   local set = ACTIVITIES[self:HoldType()] or ACTIVITIES.none
-  local fighting = self.alert == 'combat' and IsValid(self.enemy) and not (self.weapon_stats and self.weapon_stats.carry)
+  local holding = IsValid(self.bgn_arrest_aim_target)
+  local fighting = (holding or (self.alert == 'combat' and IsValid(self.enemy))) and not (self.weapon_stats and self.weapon_stats.carry)
+  if holding then self.loco:FaceTowards(self.bgn_arrest_aim_target:GetPos()) end
   -- Crowd pushing and sidesteps move a bot a few units per second; a walk or run cycle slowed down to that looks like
   -- slow-motion running (people waiting in a dialogue), so only a real pace plays one, and a run needs a run pace.
   local speed_sqr = self.loco:GetVelocity():Length2DSqr()
@@ -545,6 +553,11 @@ function ENT:Attack(enemy, stats)
   local now = CurTime()
   local set = ACTIVITIES[stats.hold] or ACTIVITIES.none
   self.next_fire = now + stats.delay
+  if stats.burst_max then
+    self.burst_left = (self.burst_left or math.random(stats.burst_min, stats.burst_max)) - 1
+    self.next_fire = now + (self.burst_left > 0 and stats.burst_delay or math.Rand(stats.rest_min, stats.rest_max))
+    if self.burst_left == 0 then self.burst_left = nil end
+  end
   self.busy_until = now + math.min(stats.delay, 0.5)
   -- HL2 citizens have no melee gesture, only the full-body swing: play it as a gesture layer
   if set.gesture and (self:SelectWeightedSequence(set.gesture) or -1) > 0 then
@@ -570,7 +583,9 @@ function ENT:Attack(enemy, stats)
     self.clip = self.clip - 1
     if self.clip <= 0 then
       self.clip = stats.clip
+      self.burst_left = nil
       self.next_fire = now + 1.8
+      self.busy_until = self.next_fire
       self:RestartGesture(ACT_GESTURE_RELOAD)
     end
   end
@@ -625,6 +640,7 @@ function ENT:UpdateCombat()
     if self.aim_target ~= enemy or now - (self.enemy_seen_at or 0) > REACQUIRE_TIME then
       local skill = PROFICIENCY[self.proficiency] or PROFICIENCY[WEAPON_PROFICIENCY_AVERAGE]
       self.next_fire = math.max(self.next_fire, now + skill.reaction)
+      self.burst_left = nil
       self.aim_target = enemy
     end
 

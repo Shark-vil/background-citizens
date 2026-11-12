@@ -80,7 +80,7 @@ Actor <-> vehicle provider -> DV controller + chassis + seated visual
 server Actor -> PVS snapshots + generation -> client registry -> UI / sound / rendering
 ```
 
-The actor and UID survive vehicle boarding; its entity and body adapter do not. Registries, enemy/target references, wanted state and statistics follow the replacement. Addons must follow `BGN_ActorEntityChanged(actor, old, new)` for their own entity-local data.
+The actor and UID survive vehicle boarding; its entity and body adapter do not. Registries, enemy/target references, wanted state and statistics follow the replacement. Addons must follow `BGN_ActorEntityChanged(actor, old, new)` for their own entity-local data. SERVER sends a player the snapshot identity only on first PVS sight or rebind, then only changed state, at most 8 snapshots per tick; a sequence number keeps a delayed identity packet from overwriting newer state on the CLIENT.
 
 Door shelter is server-owned (`systems/sv_door_hold.lua`, `brain/fsm/states/sv_hold_door.lua`); GOAP chooses
 the action. Temporary `knocked_down` keeps the original entity and body adapter, hides/freezes them and uses

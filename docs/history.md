@@ -81,3 +81,9 @@ git diff --stat 2.3.0 7459c3c7 -- lua docs
 ```
 
 Read implementation and callers before changing a documented contract. Commit subjects alone do not prove behavior. [Maintenance rules](ai.md).
+
+Local change: distant actor logic uses configurable staggered pause/active windows; see [LOD](systems/brains.md).
+
+Local weapon change: NextBot pistol single/short bursts, witness-local police harm limits, lifecycle cleanup and armed arrest aim. See [brains](systems/brains.md).
+
+Local network change: actor PVS sync sends identity (entity, type, generation, class, model, name, gender) only on first sight or rebind and otherwise only the changed state part; sends are capped at 8 per tick. See [architecture](architecture.md).
