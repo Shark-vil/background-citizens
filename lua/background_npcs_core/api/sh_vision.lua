@@ -22,7 +22,7 @@ end
 -- Checks a direct line of sight from the watcher's eyes to the entity's center.
 -- A car the entity sits in counts as the entity.
 -- @return boolean visible, entity hit entity
-function Vision.HasLineOfSight(watcher, ent)
+function Vision.HasLineOfSight(watcher, ent, channel)
   if not IsValid(watcher) or watcher:Health() <= 0 then return false end
   if not IsValid(ent) or ent:Health() <= 0 then return false end
   -- a NextBot has no view offset, its EyePos is at the feet and low cover would block the view
@@ -32,10 +32,17 @@ function Vision.HasLineOfSight(watcher, ent)
   trace_data.filter = watcher_car and {watcher, watcher_car, watcher_parent or watcher_car, watcher.Seat} or watcher
   local tr = util.TraceLine(trace_data)
   local hit = tr.Entity
-  if not tr.Hit then return false, hit end
-  if hit == ent then return true, hit end
-  local target_car, target_parent = CarOf(ent)
-  return target_car ~= nil and (hit == target_car or hit == target_parent), hit
+  local visible = false
+  if tr.Hit then
+    if hit == ent then visible = true
+    else
+      local target_car, target_parent = CarOf(ent)
+      visible = target_car ~= nil and (hit == target_car or hit == target_parent)
+    end
+  end
+  local debug = bgNPC.DebugInspector
+  if SERVER and debug and debug.Sight then debug.Sight(watcher, ent, visible, channel or 'los', tr) end
+  return visible, hit
 end
 
 -- Checks whether the position is inside the NPC's field of view.

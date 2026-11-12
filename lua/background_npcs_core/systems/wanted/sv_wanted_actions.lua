@@ -123,6 +123,7 @@ hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(tar
   for _, actor in ipairs(bgNPC.Actors.GetAll()) do
     if IsValid(actor:GetNPC()) and actor:HasTeam('police') then
       actor:AddEnemy(target)
+      if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(actor, 'wanted', target, nil, nil, actor:HasEnemy(target)) end
       if actor:HasState('idle') or actor:HasState('walk') then actor:SetState(actor:GetReactionForProtect(target)) end
     end
   end
@@ -222,7 +223,7 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
           if dist <= min_distance_detect then
             UpdateWantedAndSetReaction(actor, enemy)
             is_update = true
-          elseif dist <= ray_distance_detect and bgNPC.Vision.HasLineOfSight(npc, enemy) then
+          elseif dist <= ray_distance_detect and bgNPC.Vision.HasLineOfSight(npc, enemy, 'wanted') then
             UpdateWantedAndSetReaction(actor, enemy)
             is_update = true
           end

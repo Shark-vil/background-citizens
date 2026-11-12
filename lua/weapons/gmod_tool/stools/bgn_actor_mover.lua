@@ -1,178 +1,66 @@
-﻿--
-TOOL.Category = 'Background NPCs'
+﻿TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_actor_mover.name'
-TOOL.Trace = nil
-TOOL.Distance = 10000
-TOOL.Actor = nil
-TOOL.Target = NULL
-TOOL.Path = {}
-TOOL.UpdatePathDelay = 0
+TOOL.Information = {{name='left'},{name='right'},{name='reload'}}
+TOOL.ClientConVar = {speed='walk', tolerance='48'}
 if SERVER then
-  hook.Add('BGN_PreSetNPCState', 'BGN_Debugger_ActorMover', function(actor) if actor.debugger then return true end end)
+  local function Allowed(p) return IsValid(p) and (p:IsAdmin() or p:IsSuperAdmin()) end
+  function TOOL:Release()
+    local a=self.Actor
+    if a and self.Saved then
+      a.debugger, a.eternal = self.Saved.debugger, self.Saved.eternal
+      a:StateLock(self.Saved.locked)
+      if a:IsAlive() then
+        a:StopWalk()
+        a:SetState(self.Saved.state,self.Saved.data,true)
+      end
+    end
+    if a then bgNPC.Net.ToolRPC(self,'ClearMove') end
+    if a and self.Saved and a.debug_move_owner==self.Saved.owner then a.debug_move_owner=nil end
+    self.Actor,self.Saved,self.Destination=nil,nil,nil
+  end
+  function TOOL:LeftClick(tr)
+    if not Allowed(self:GetOwner()) then return false end
+    local a=bgNPC.Actors.Get(tr.Entity)
+    if not a or not a:IsAlive() or a:InVehicle() or (a.debug_move_owner and a.debug_move_owner~=self:GetOwner()) then return false end
+    self:Release()
+    self.Actor=a
+    self.Saved={owner=self:GetOwner(),debugger=a.debugger,eternal=a.eternal,locked=a:IsStateLock(),state=a:GetState(),data=a:GetStateData()}
+    a.debug_move_owner=self:GetOwner()
+    a:SetState('none',nil,true) a:StateLock(true) a.debugger=true
+    bgNPC.Net.ToolRPC(self,'SelectActor',a.uid)
+    return true
+  end
+  function TOOL:RightClick(tr)
+    if not Allowed(self:GetOwner()) or not self.Actor or not tr.Hit then return false end
+    self.Destination=tr.HitPos self.NextUpdate=0
+    return true
+  end
   function TOOL:Think()
-    if self.Actor == nil or not IsValid(self.Target) then return end
-    if self.UpdatePathDelay < CurTime() then
-      bgNPC.Net.ToolRPC(self, 'UpdatePath', self.Actor.walkPath)
-      self.UpdatePathDelay = CurTime() + 1
-    end
+    local a=self.Actor
+    if not a then return end
+    if not Allowed(self:GetOwner()) or not a:IsAlive() then self:Release() return end
+    if not self.Destination or (self.NextUpdate or 0)>CurTime() then return end
+    self.NextUpdate=CurTime()+.5
+    local tolerance=math.Clamp(tonumber(self:GetClientInfo('tolerance')) or 48,16,200)
+    if a:GetPos():DistToSqr(self.Destination)<=tolerance*tolerance then self.Destination=nil a:StopWalk() bgNPC.Net.ToolRPC(self,'ClearMove') return end
+    a:WalkToPos(self.Destination,self:GetClientInfo('speed')=='run' and 'run' or 'walk')
+    bgNPC.Net.ToolRPC(self,'MovementReport',a.walkPath,#a.walkPath>0)
   end
-
-  function TOOL:LeftClick()
-    local ply = self:GetOwner()
-    if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
-    local tr = util.TraceLine({
-      start = ply:GetShootPos(),
-      endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-      filter = function(ent) if ent ~= ply and (ent:IsNPC() or ent:IsVehicle()) then return true end end
-    })
-
-    if not tr.Hit then return end
-    local ent = tr.Entity
-    local actor = bgNPC.Actors.Get(ent)
-    if ent:IsVehicle() then
-      local provider = BGN_VEHICLE:GetVehicleProvider(ent)
-      if provider then actor = provider:GetDriver() end
-    end
-
-    if not actor then
-      bgNPC.Util.Log('Failed to convert ' .. tostring(ent) .. ' to actor', 'Debugger')
-      return
-    end
-
-    do
-      -- the client checks that the actor exists itself (TOOL:SetActor)
-      if self.Actor then
-        self.Actor.debugger = false
-        self.Actor.eternal = false
-        self.Actor:RandomState()
-      end
-
-      actor:SetState('none')
-      actor.debugger = true
-      actor.eternal = true
-      self.Actor = actor
-      self.Target = actor:GetNPC()
-      bgNPC.Net.ToolRPC(self, 'SetActor', actor.uid)
-    end
-  end
-
-  function TOOL:RightClick()
-    if SERVER then
-      local ply = self:GetOwner()
-      if not ply:IsAdmin() or not ply:IsSuperAdmin() then return end
-      if not IsValid(self.Target) or self.Actor == nil then return end
-      local tr = util.TraceLine({
-        start = ply:GetShootPos(),
-        endpos = ply:GetShootPos() + ply:GetAimVector() * self.Distance,
-        filter = function(ent) if ent ~= ply then return true end end
-      })
-
-      if not tr.Hit then return end
-      self.Actor:ClearSchedule()
-      local pos = tr.HitPos
-      local function walk_to_pos()
-        if not IsValid(self.Target) or not self.Actor or not self.Actor:IsAlive() then
-          timer.Remove('bgn_tool_actor_mover_update')
-          return
-        end
-
-        if self.Target:GetPos():Distance(pos) <= 500 then
-          self.Actor:WalkToPos(pos)
-        else
-          self.Actor:WalkToPos(pos, 'run')
-        end
-
-        bgNPC.Net.ToolRPC(self, 'UpdatePath', (self.Actor.walkPath and #self.Actor.walkPath ~= 0) and self.Actor.walkPath or {pos})
-      end
-
-      walk_to_pos()
-      timer.Create('bgn_tool_actor_mover_update', 5, 0, walk_to_pos)
-    end
-  end
-
-  function TOOL:Reload()
-    if CLIENT then return end
-    if self.Actor ~= nil then
-      self.Actor.debugger = false
-      self.Actor.eternal = false
-      self.Actor:RandomState()
-    end
-
-    self.Actor = nil
-    self.Target = NULL
-    bgNPC.Net.ToolRPC(self, 'ResetActor')
-  end
-
-  function TOOL:Holster()
-    timer.Remove('bgn_tool_actor_mover_update')
-  end
+  function TOOL:Reload() if Allowed(self:GetOwner()) then self:Release() end return true end
+  function TOOL:Holster() self:Release() return true end
 else
-  function TOOL:ResetActor()
-    self.Actor = nil
-    self.Target = NULL
-    self.Path = {}
+  function TOOL:SelectActor(uid) RunConsoleCommand('bgn_debug_select',tostring(uid)) end
+  function TOOL:MovementReport(path,ok)
+    bgNPC.DebugInspector.SetToolPath('bgn_actor_mover',path)
+    self.ReportText=bgNPC.DebugInspector.Text(ok and 'moving' or 'no_path')
   end
-
-  function TOOL:SetActor(uid)
-    local actor = bgNPC.Actors.GetByUid(uid)
-    if actor == nil then
-      bgNPC.Util.Log('Failed to convert ' .. uid .. ' to actor', 'Debugger')
-      surface.PlaySound('common/wpn_denyselect.wav')
-      return
-    end
-
-    self.Actor = actor
-    self.Target = actor:GetNPC()
-    surface.PlaySound('common/wpn_select.wav')
-  end
-
-  function TOOL:UpdatePath(path)
-    self.Path = path
-  end
-
-  local halo_color = Color(196, 0, 255)
-  hook.Add('PreDrawHalos', 'BGN_TOOL_ActorMover', function()
-    local tool = bgNPC.Util.GetActivePlayerTool('bgn_actor_mover', LocalPlayer())
-    if not tool or not tool.Actor or not IsValid(tool.Target) then return end
-    halo.Add({tool.Target}, halo_color, 3, 3, 2)
-  end)
-
-  local clr_green = Color(72, 232, 9, 200)
-  local clr_58 = Color(58, 23, 255, 200)
-  local color_white = Color(255, 255, 255)
-  local color_black = Color(0, 0, 0)
-  local vec_20 = Vector(0, 0, 20)
-  hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_ActorMovement', function()
-    local tool = bgNPC.Util.GetActivePlayerTool('bgn_actor_mover', LocalPlayer())
-    if not tool or #tool.Path == 0 then return end
-    render.SetColorMaterial()
-    for i = #tool.Path, 1, -1 do
-      local pos = tool.Path[i]
-      if i ~= 1 then render.DrawLine(pos, tool.Path[i - 1], clr_58) end
-      render.DrawSphere(pos, 10, 30, 30, clr_green)
-      local cam_angle = LocalPlayer():EyeAngles()
-      cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
-      cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
-      cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-      draw.SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-      cam.End3D2D()
-    end
-  end)
-
-  local en_lang = {
-    ['tool.bgn_actor_mover.name'] = 'Actor mover',
-    ['tool.bgn_actor_mover.desc'] = 'Forces the selected actor to go to the specified point.',
-    ['tool.bgn_actor_mover.0'] = 'Left click - select actor. Right click - set movement point. Reload - reset selected actor.',
-  }
-
-  local ru_lang = {
-    ['tool.bgn_actor_mover.name'] = 'Двигатель актёров',
-    ['tool.bgn_actor_mover.desc'] = 'Заставляет выделенного актёра идти к указанной точке.',
-    ['tool.bgn_actor_mover.0'] = 'Левый клик - выделить актёра. Правый клик - задать точку движения. Перезарядка - отменить выделение актёра.',
-  }
-
-  local lang = GetConVar('cl_language'):GetString() == 'russian' and ru_lang or en_lang
-  for k, v in pairs(lang) do
-    language.Add(k, v)
+  function TOOL:ClearMove() bgNPC.DebugInspector.SetToolPath('bgn_actor_mover',{}) self.ReportText=bgNPC.DebugInspector.Text('stopped') end
+  function TOOL:DrawHUD() if self.ReportText then bgNPC.DebugInspector.DrawToolReport(self.ReportText) end end
+  function TOOL.BuildCPanel(panel)
+    panel:Help('#tool.bgn_actor_mover.desc')
+    local speed=panel:ComboBox(bgNPC.DebugInspector.Text('speed'),'bgn_actor_mover_speed')
+    speed:AddChoice(bgNPC.DebugInspector.Text('walk'),'walk') speed:AddChoice(bgNPC.DebugInspector.Text('run'),'run')
+    panel:NumSlider(bgNPC.DebugInspector.Text('tolerance'),'bgn_actor_mover_tolerance',16,200,0)
+    bgNPC.DebugInspector.ToolControls(panel)
   end
 end

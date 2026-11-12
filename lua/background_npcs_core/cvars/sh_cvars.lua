@@ -69,6 +69,24 @@ bgNPC.cvar.bgn_tool_seat_offset_angle_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_angle_z = 0
 bgNPC.cvar.bgn_cl_draw_npc_path = 0
+bgNPC.cvar.bgn_cl_debug_bounds = 1
+bgNPC.cvar.bgn_cl_debug_labels = 1
+bgNPC.cvar.bgn_cl_debug_summary = 1
+bgNPC.cvar.bgn_cl_debug_targets = 1
+bgNPC.cvar.bgn_cl_debug_inspector = 1
+bgNPC.cvar.bgn_cl_debug_vision = 0
+bgNPC.cvar.bgn_cl_debug_history = 1
+bgNPC.cvar.bgn_cl_debug_text_scale = 1
+bgNPC.debug_settings = {
+  {'mode', 'choice', 0, 0, 2}, {'distance', 'number', 800, 100, 5000},
+  {'geometry_distance', 'number', 1500, 100, 5000}, {'wh', 'check', 0}, {'overview', 'check', 0},
+  {'related', 'number', 16, 1, 64}, {'cards', 'number', 8, 1, 16}, {'rate', 'number', 5, 2, 10},
+  {'seconds', 'number', 30, 1, 30}, {'life', 'number', 2, 0.2, 10}, {'signals', 'check', 1},
+  {'blockers', 'check', 1}, {'markers', 'check', 1}, {'marker_size', 'number', 12, 2, 48},
+  {'team_filter', 'text', ''}, {'type_filter', 'text', ''}, {'state_filter', 'text', ''},
+  {'event_filter', 'text', ''}, {'freeze', 'check', 0}, {'technical', 'check', 0},
+}
+for _, setting in ipairs(bgNPC.debug_settings) do bgNPC.cvar['bgn_cl_debug_' .. setting[1]] = setting[3] end
 bgNPC.cvar.bgn_cl_field_view_optimization = 1
 bgNPC.cvar.bgn_cl_field_view_optimization_range = 500
 bgNPC.cvar.bgn_cl_ambient_sound = 1

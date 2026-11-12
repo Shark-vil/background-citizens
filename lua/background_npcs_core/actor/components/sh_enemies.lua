@@ -38,6 +38,7 @@ function Actor:AddEnemy(ent, reaction, always_visible)
     -- the body would otherwise get its enemy on the next EnemiesRecalculate, up to a second later
     if not IsValid(body:GetEnemy()) then body:SetEnemy(ent) end
   end
+  if SERVER and bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(self, 'enemy_added', ent) end
 end
 
 -- @param ent entity|nil enemy to remove
@@ -135,7 +136,7 @@ function Actor:EnemiesRecalculate()
 
   local enemy = self:GetNearEnemy()
   if not IsValid(enemy) then return end
-  if enemy.bgn_always_visible or bgNPC.Vision.HasLineOfSight(self.npc, enemy) then
+  if enemy.bgn_always_visible or bgNPC.Vision.HasLineOfSight(self.npc, enemy, 'memory') then
     body:SetEnemy(enemy)
     self.enemy_last_seen = self.enemy_last_seen or {}
     self.enemy_last_seen[enemy] = CurTime()

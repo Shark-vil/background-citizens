@@ -109,8 +109,30 @@ function Debug.Remove(ply, item)
   return true
 end
 
-function Debug.Spawn(ply, id, tr)
+local function DoorPreview(ply, tr)
+  local door, spots = tr.Entity, Scenic.Spots
+  if not bgNPC.Util.IsDoor(door) then return nil, 'door_target' end
+  if bgNPC.Doors.held[door] or bgNPC.Util.IsDoorLocked(door) then return nil, 'door_test' end
+  if door:GetClass() ~= 'prop_door_rotating' and door:GetClass() ~= 'func_door_rotating' then return nil, 'door_test' end
+  local spot = spots.Find('door', door, {
+    gap = 100
+  })
+
+  if not spot then return nil, 'door_test' end
+  local center = door:LocalToWorld(door:OBBCenter())
+  local cop_pos = spots.Floor(Vector(center.x, center.y, spot.pos.z) + spot.ang:Forward() * 140)
+  if not cop_pos or not spots.HasRoom(cop_pos) then return nil, 'spawn' end
+  return spot, cop_pos
+end
+
+local function FindPreview(ply, id, tr)
   if not Debug.Allowed(ply) then return nil, 'admin' end
+  if id=='goap_door' and Scenic.Spots.preview then
+    local spot, cop_pos=DoorPreview(ply,tr)
+    if not spot then return nil, cop_pos end
+    if not bgNPC:IsValidSpawnArea('citizen',spot.pos) or not bgNPC:IsValidSpawnArea('police',cop_pos) then return nil,'spawn' end
+    return {place='door'},spot,{members={{pos=spot.pos,ang=spot.ang},{pos=cop_pos,ang=spot.ang}}}
+  end
   local scene = bgNPC.cfg.scenic[id]
   if not scene then return nil, 'scene' end
   for _, member in ipairs(scene.members) do
@@ -133,8 +155,23 @@ function Debug.Spawn(ply, id, tr)
   end
 
   if not spot then return nil, scene.indoors and 'room' or scene.place end
-  local plan = Scenic.Plan(scene, spot)
+  local plan = Scenic.Plan(scene, spot, spots.preview)
   if not plan then return nil, scene.indoors and 'room_space' or 'spawn' end
+  return scene, spot, plan
+end
+
+function Debug.Preview(ply, id, tr, preview)
+  local old = Scenic.Spots.preview
+  Scenic.Spots.preview = preview == true
+  local ok, scene, spot, plan = xpcall(function() return FindPreview(ply, id, tr) end, debug.traceback)
+  Scenic.Spots.preview = old
+  if not ok then ErrorNoHalt(tostring(scene)) return nil, 'spawn' end
+  return scene, spot, plan
+end
+
+function Debug.Spawn(ply, id, tr)
+  local scene, spot, plan = Debug.Preview(ply, id, tr)
+  if not scene then return nil, spot end
   local item = Scenic.Create(id, scene, spot, plan, ply)
   if not item then return nil, 'spawn' end
   item.debug_chair, item.debug_seat = spot.chair, spot.seat
@@ -172,18 +209,9 @@ end
 
 function Debug.DoorTest(ply, tr)
   if not Debug.Allowed(ply) then return nil, 'admin' end
-  local door, spots = tr.Entity, Scenic.Spots
-  if not bgNPC.Util.IsDoor(door) then return nil, 'door_target' end
-  if bgNPC.Doors.held[door] or bgNPC.Util.IsDoorLocked(door) then return nil, 'door_test' end
-  if door:GetClass() ~= 'prop_door_rotating' and door:GetClass() ~= 'func_door_rotating' then return nil, 'door_test' end
-  local spot = spots.Find('door', door, {
-    gap = 100
-  })
-
-  if not spot then return nil, 'door_test' end
-  local center = door:LocalToWorld(door:OBBCenter())
-  local cop_pos = spots.Floor(Vector(center.x, center.y, spot.pos.z) + spot.ang:Forward() * 140)
-  if not cop_pos or not spots.HasRoom(cop_pos) then return nil, 'spawn' end
+  local spot, cop_pos = DoorPreview(ply, tr)
+  if not spot then return nil, cop_pos end
+  local door = tr.Entity
   local item = {
     id = 'goap_door',
     actors = {},
@@ -260,3 +288,18 @@ hook.Add('PlayerDisconnected', 'BGN_ScenicDebug', function(ply)
     if item.debug_owner == ply then Debug.Remove(ply, item) end
   end
 end)
+
+bgNPC.Net.Receive('bgn.debug_preview',function(ply,id)
+  if not Debug.Allowed(ply) or not GetConVar('bgn_debug'):GetBool() or not isstring(id) then return end
+  if (ply.bgn_preview_next or 0)>CurTime() then return end
+  ply.bgn_preview_next=CurTime()+.5
+  local tool=ply:GetTool()
+  local wep=ply:GetActiveWeapon()
+  if not tool or tool.Mode~='bgn_scenic_debug' or not IsValid(wep) or wep:GetClass()~='gmod_tool' then return end
+  local tr=ply:GetEyeTrace()
+  local scene,spot,plan=Debug.Preview(ply,id,tr,true)
+  local positions={}
+  if plan then for j,m in ipairs(plan.members) do if j<=8 then positions[#positions+1]={pos=m.pos,ang=m.ang} end end end
+  bgNPC.Net.Send('bgn.debug_preview',ply,{id=id,positions=positions,pos=tr.HitPos,valid=scene~=nil,message=scene and '' or Debug.Message(ply,spot),
+    point=spot and istable(spot) and spot.pos or nil,normal=tr.HitNormal})
+end,{admin=true})

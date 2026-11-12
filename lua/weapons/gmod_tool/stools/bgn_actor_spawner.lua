@@ -1,5 +1,5 @@
 ﻿TOOL.AddToMenu = false
-TOOL.Category = 'Background NPCs'
+TOOL.Category = 'Background NPCs Editor'
 TOOL.Name = 'Actor spawner'
 function TOOL:LeftClick(tr)
   local actorType = self.actorType

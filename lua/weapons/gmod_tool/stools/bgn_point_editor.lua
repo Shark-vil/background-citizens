@@ -3,7 +3,7 @@
 	"Load points" pulls the server's graph, "Save points" stores it on the server (custom provider).
 	Nodes are referenced by graph ids.
 --]]
-TOOL.Category = 'Background NPCs'
+TOOL.Category = 'Background NPCs Editor'
 TOOL.Name = '#tool.bgn_point_editor.name'
 TOOL.Distance = 10000
 TOOL.Types = {'creator', 'remover', 'linker', 'parents_cleaner'}

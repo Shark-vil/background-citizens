@@ -12,7 +12,7 @@ local Scenic = bgNPC.Scenic or {}
 bgNPC.Scenic = Scenic
 local Spots = {}
 Scenic.Spots = Spots
-local Shuffle = bgNPC.Table.Shuffle
+local function Shuffle(t) return Spots.preview and table.Copy(t) or bgNPC.Table.Shuffle(t) end
 --
 local INDEX_LIFETIME = 30
 local DOOR_CLASSES = {'prop_door_rotating', 'func_door_rotating'}
@@ -193,7 +193,7 @@ function Finders.floor(pos, scene)
   if scene and scene.indoors and not Spots.InRoom(floor) then return end
   return {
     pos = floor,
-    ang = Angle(0, math.random(0, 359), 0)
+    ang = Angle(0, Spots.preview and 0 or math.random(0, 359), 0)
   }
 end
 

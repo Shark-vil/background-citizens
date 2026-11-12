@@ -63,6 +63,7 @@ bgNPC.States.Register('call_backup', 'danger', {
     for i = 1, math.min(#list, MAX_OFFICERS) do
       local officer = list[i].officer
       officer:AddEnemy(data.enemy)
+      if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(officer, 'radio', data.enemy, nil, actor:GetNPC(), officer:HasEnemy(data.enemy)) end
       officer:SetState('defense')
     end
 

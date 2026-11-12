@@ -1,4 +1,4 @@
-﻿TOOL.Category = 'Background NPCs'
+﻿TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_scenic_debug.name'
 TOOL.ClientConVar = {
   scene = 'door_knock'
@@ -250,22 +250,12 @@ function TOOL:SetReport(text)
 end
 
 function TOOL:DrawHUD()
-  if not self.ReportText or self.ReportText == '' then return end
-  local lines = string.Explode('\n', self.ReportText)
-  surface.SetFont('DermaDefault')
-  local width = 0
-  for _, line in ipairs(lines) do
-    width = math.max(width, surface.GetTextSize(line))
-  end
-
-  local y = math.min(ScrH() * 0.55, ScrH() - #lines * 17 - 24)
-  draw.RoundedBox(4, 16, y - 8, math.min(width + 24, ScrW() - 32), #lines * 17 + 16, Color(0, 0, 0, 200))
-  for i, line in ipairs(lines) do
-    draw.SimpleText(line, 'DermaDefault', 24, y + (i - 1) * 17, color_white)
-  end
+  local text=(self.PreviewText or '')..'\n'..(self.ReportText or '')
+  if text~='\n' then bgNPC.DebugInspector.DrawToolReport(text) end
 end
 
 function TOOL.BuildCPanel(panel)
+  bgNPC.DebugInspector.ToolControls(panel)
   panel:Help(L(nil, 'help'))
   local choices = panel:ComboBox(L(nil, 'choose'), 'bgn_scenic_debug_scene')
   for id, scene in SortedPairs(bgNPC.cfg.scenic) do

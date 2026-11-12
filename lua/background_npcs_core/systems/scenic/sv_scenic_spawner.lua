@@ -39,7 +39,7 @@ local function ToWorld(spot, offset, yaw)
 end
 
 -- The members of a scene with the copies of the group: { def, offset, yaw }
-local function Roster(scene)
+local function Roster(scene, preview)
   local roster = {}
   for i, def in ipairs(scene.members) do
     roster[i] = {
@@ -52,17 +52,17 @@ local function Roster(scene)
   local group = scene.group
   if not group then return roster end
   local template = scene.members[1]
-  local count = math.random(group.min, group.max)
+  local count = preview and group.min or math.random(group.min, group.max)
   for i = 2, count do
     local offset, yaw = vector_origin, template.yaw or 0
     if group.step then
-      offset = group.step * (i - 1) + Vector(0, math.random(-6, 6), 0)
+      offset = group.step * (i - 1) + Vector(0, (preview and 0 or math.random(-6, 6)), 0)
     else
       -- a loose cluster: the first stands in the middle, the others around it
-      local around = 360 / (count - 1) * (i - 2) + math.random(-20, 20)
-      local dist = group.ring * math.Rand(0.7, 1)
+      local around = 360 / (count - 1) * (i - 2) + (preview and 0 or math.random(-20, 20))
+      local dist = group.ring * (preview and 1 or math.Rand(0.7, 1))
       offset = Vector(math.cos(math.rad(around)) * dist, math.sin(math.rad(around)) * dist, 0)
-      yaw = yaw + math.random(-70, 70)
+      yaw = yaw + (preview and 0 or math.random(-70, 70))
     end
 
     roster[#roster + 1] = {
@@ -75,9 +75,9 @@ local function Roster(scene)
 end
 
 -- @return table|nil plan { members = { { def, pos, ang } }, props = { { model, pos, ang, solid } } }
-local function Plan(scene, spot)
+local function Plan(scene, spot, preview)
   local members = {}
-  for _, item in ipairs(Roster(scene)) do
+  for _, item in ipairs(Roster(scene, preview)) do
     local def = item.def
     local pos, ang = ToWorld(spot, item.offset, item.yaw)
     local stand = pos
@@ -114,7 +114,7 @@ local function Plan(scene, spot)
   local props = {}
   for _, prop in ipairs(scene.props or {}) do
     local pos, ang = ToWorld(spot, prop.pos, prop.yaw)
-    local model = istable(prop.model) and table.Random(prop.model) or prop.model
+    local model = istable(prop.model) and (preview and prop.model[1] or table.Random(prop.model)) or prop.model
     if scene.indoors and not Spots.PropFits(model, pos, ang) then return end
     props[#props + 1] = {
       model = model,

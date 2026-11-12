@@ -34,10 +34,11 @@ local function Share(source)
       end
 
       -- the trace only for those who have something to learn
-      if missing and bgNPC.Vision.HasLineOfSight(other:GetNPC(), npc) then
+      if missing and bgNPC.Vision.HasLineOfSight(other:GetNPC(), npc, 'share') then
         for _, enemy in ipairs(missing) do
           if gang then
             other:AddEnemy(enemy)
+            if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(other, 'share', enemy, nil, npc, other:HasEnemy(enemy)) end
             -- AddEnemy may refuse an enemy protected by an arrest or another gameplay hook.
             if other:HasEnemy(enemy) and other:EqualStateGroup('calm') then
               other:RemoveAllTargets()
@@ -51,7 +52,12 @@ local function Share(source)
               other:SetState(other:GetReactionForProtect(enemy))
             end
 
-            if not (asked and other.protect_blocked_enemy == enemy) then other:AddEnemy(enemy) end
+            if not (asked and other.protect_blocked_enemy == enemy) then
+              other:AddEnemy(enemy)
+              if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(other, 'share', enemy, nil, npc, other:HasEnemy(enemy)) end
+            elseif bgNPC.DebugInspector then
+              bgNPC.DebugInspector.Emit(other, 'share', enemy, 'reaction_blocked', npc, false)
+            end
           end
         end
       end

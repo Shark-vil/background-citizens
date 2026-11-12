@@ -140,86 +140,34 @@ def load(lua, *paths):
         lua.execute((ROOT / path).read_text(encoding='utf-8-sig'), name=path)
 
 
-overlay = realm(True)
-overlay.execute('''
-    function SortedPairs(t)
-        local keys={}; for k in pairs(t) do keys[#keys+1]=k end; table.sort(keys)
-        local i=0; return function() i=i+1; local k=keys[i]; if k then return k,t[k] end end
-    end
-    viewers={}; player.GetHumans=function() return viewers end
-    bgNPC.cfg.actors={citizen={},police={}}
-    bgNPC.Config={IsTypeActive=function() return true end,GetTypeLimit=function() return 10 end}
-    bgNPC.Nav={GetName=function() return 'custom' end}
-    bgNPC.Points={Count=function() return 123 end}
-    bgNPC.ServerLoad={IsLagging=function() return false end}
+# Inspector snapshots/history/camera are covered by test_actor_debug.py. The roster is on demand.
+roster = realm(True)
+roster.execute("""
+    bgNPC.DebugInspector={selections={},Selected=function() return true end}
     bgNPC.Brain={Resolve=function() return 'fsm' end}
     local npc={valid=true,GetPos=function() return Vector(100,0,0) end,GetAngles=function() return {} end,
         OBBMins=function() return Vector(-16,-16,0) end,OBBMaxs=function() return Vector(16,16,72) end,
-        Health=function() return 30 end,IsNextBot=function() return false end}
-    actor={uid=1,lod=1,GetNPC=function() return npc end,GetPos=npc.GetPos,
+        IsNextBot=function() return false end}
+    actor={uid=1,lod=1,data={team={'residents'}},GetNPC=function() return npc end,GetPos=npc.GetPos,
         GetType=function() return 'citizen' end,GetState=function() return 'walk' end,IsAlive=function() return true end,
         InVehicle=function() return false end,Health=function() return 30 end}
-    bgNPC.Actors.GetAll=function() return {actor} end
-''')
-load(overlay, 'debug/sv_actor_overlay.lua')
-overlay.execute('''
-    local tick=timers.BGN_Debug_ActorOverlay
-    setcv('bgn_debug',0); tick(); assert(#sent==0, 'debug off sends nothing')
-    setcv('bgn_debug',1)
-    viewers={{bgn_ready=true,IsAdmin=function() return false end,IsSuperAdmin=function() return false end}}
-    tick(); assert(#sent==0, 'ordinary players receive no debug positions')
-    admin.bgn_ready=true; viewers[2]=admin
-    hooks.BGN_InitActor.BGN_Debug_Spawn(actor)
-    now=102; hooks.BGN_RespawnActor.BGN_Debug_Teleport(actor,Vector(200,0,0))
-    tick()
-    local msg=sent[1]; local row=msg[3][1]
-    assert(msg[1]=='bgn.debug_actors' and #msg[2]==1 and msg[2][1]==admin)
-    assert(row.uid==1 and row.spawn_age==2 and row.teleport_age==0 and row.teleport_pos.x==200)
-    assert(row.pos.x==100 and row.maxs.z==72, 'bounds and positions need no client entity/PVS')
-    assert(msg[4].types[1].count==1 and msg[4].types[2].count==0 and msg[4].points==123)
-    now=110; tick()
-    assert(sent[2][3][1].spawn_pos==nil and sent[2][3][1].teleport_pos==nil, 'event markers expire')
-''')
-
-overlay_client = realm(False)
-overlay_client.execute('''
-    function Color(...) return {...} end
-    TEXT_ALIGN_LEFT=0; TEXT_ALIGN_CENTER=1; TEXT_ALIGN_TOP=0
-    hook.Remove=function(name,id) if hooks[name] then hooks[name][id]=nil end end
-    hook.Add('PostDrawTranslucentRenderables','BGN_Debug_ActorOverlay',function() error('old world pass') end)
-    hook.Add('HUDPaint','BGN_Debug_ActorOverlay',function() error('old HUD pass') end)
-    cam={Start3D=function() in3d=true end,IgnoreZ=function(value) ignorez=value end,
-        End3D=function() assert(not ignorez); in3d=false end}
-    render={SetColorMaterial=function() end,DrawWireframeBox=function(...)
-        assert(in3d and ignorez, 'bounds must draw over the map in the final HUD pass')
-        boxes=boxes+1; assert(select(6,...)==true) end,
-        DrawWireframeSphere=function() spheres=spheres+1 end}
-    draw={SimpleTextOutlined=function() labels=labels+1 end}
-    local mt=getmetatable(Vector())
-    function mt:ToScreen() return {visible=true,x=100,y=100} end
-    function EyePos() return Vector() end
-    function RealFrameTime() return 0.01 end
-    boxes=0; spheres=0; labels=0
-    setcv('bgn_debug',1)
-''')
-load(overlay_client, 'debug/cl_actor_overlay.lua')
-overlay_client.execute('''
-    received['bgn.debug_actors'].f(nil,{{uid=1,type='citizen',pos=Vector(100,0,0),ang={},mins=Vector(),
-        maxs=Vector(16,16,72),hp=30,state='walk',body='npc',brain='fsm',lod=1,spawn_age=0,spawn_pos=Vector()}},
-        {types={{name='citizen',count=1,limit=10}},nav='custom',points=123,tasks_ms=1,lagging=false})
-    assert(not hooks.PostDrawTranslucentRenderables.BGN_Debug_ActorOverlay and not hooks.HUDPaint.BGN_Debug_ActorOverlay,
-        'reload must remove old passes')
-    local hud=hooks.PostDrawHUD.BGN_Debug_ActorOverlay
-    hud(); assert(not in3d and not ignorez, 'restore rendering state')
-    assert(boxes==1 and spheres==1 and labels==7, 'bounds, spawn marker, labels and summary render without an entity')
-    now=103; hud(); assert(boxes==1, 'stale snapshots must not leave phantom actors')
-    now=100; admin.IsAdmin=function() return false end
-    hud(); assert(boxes==1, 'ordinary clients must not render debug positions')
-    received['bgn.debug_actors'].f(nil,{},{} )
-    admin.IsAdmin=function() return true end
-    hud(); assert(boxes==1, 'snapshots received without admin rights must be discarded')
-    setcv('bgn_debug',0); hud(); assert(boxes==1)
-''')
+    admin.bgn_ready=true
+    local actors={}; for i=1,130 do actors[i]=actor end
+    bgNPC.Actors.GetAll=function() return actors end
+""")
+load(roster, 'debug/sv_actor_overlay.lua')
+roster.execute("""
+    setcv('bgn_debug',0); timers.BGN_Debug_ActorOverlay(); assert(#sent==0)
+    received['bgn.debug_roster'].f(admin); assert(#sent==0, 'debug disabled')
+    now=102; setcv('bgn_debug',1); timers.BGN_Debug_ActorOverlay(); assert(#sent==0, 'no global stream')
+    received['bgn.debug_roster'].f(admin)
+    assert(#sent==1 and #sent[1][3]==128 and sent[1][4]==2, 'bounded roster reports omitted actors')
+    assert(sent[1][3][1].team=='residents')
+    received['bgn.debug_roster'].f(admin); assert(#sent==1, 'roster requests are throttled')
+    now=104; admin.bgn_ready=false; received['bgn.debug_roster'].f(admin); assert(#sent==1)
+    now=106; admin.bgn_ready=true; admin.IsAdmin=function() return false end
+    received['bgn.debug_roster'].f(admin); assert(#sent==1, 'no non-admin positions')
+""")
 
 spawn = realm(True)
 spawn.execute('''
@@ -374,7 +322,7 @@ recycle.execute('''
 recycle_source = (ROOT / 'spawner/sv_actor_remover.lua').read_text(encoding='utf-8-sig')
 recycle_source = recycle_source.split("bgNPC.Tasks.Add('bgn_actors_remover_process'",1)[0]
 recycle_source = recycle_source.replace('continue', 'goto next_actor').replace(
-    '\n\t\tend\n\tend\nend\n', '\n\t\tend\n\t\t::next_actor::\n\tend\nend\n')
+    '\n    end\n  end\nend\n', '\n    end\n    ::next_actor::\n  end\nend\n')
 recycle.execute(recycle_source + '\ncan_recycle=CanRecycle; run_recycle=run_remover_process_async')
 recycle.execute('''
     hooks.BGN_InitActor.BGN_Recycle_LastSeen(actor)
@@ -1425,7 +1373,7 @@ vehicle_vision.execute('''
 witness_source = (ROOT / 'actor/events/sv_damage_reaction.lua').read_text(encoding='utf-8-sig')
 witness_source = witness_source.replace('local actor = actors[i]', 'do local actor = actors[i]')
 witness_source = witness_source.replace('continue', 'goto next_witness').replace(
-    "\n\tend\nend)", "\n\tend ::next_witness::\n\tend\nend)")
+    "\n  end\nend)", "\n  end ::next_witness::\n  end\nend)")
 vehicles.execute(witness_source)
 vehicles.execute('''
     blocked=false
@@ -2195,6 +2143,7 @@ for path in paths:
 assert (ROOT / 'ui/settings/cl_classic_settings.lua').read_text(encoding='utf-8-sig').count('OpenNewMenuButton(panel)') == 2
 spawns = realm(True)
 spawns.execute('''
+    bgNPC.Assert={True=function(value,message) assert(value,message) end}
     local angles={}
     angles.__index=angles
     function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},angles) end

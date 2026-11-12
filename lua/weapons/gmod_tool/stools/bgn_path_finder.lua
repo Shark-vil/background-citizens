@@ -1,5 +1,5 @@
 ﻿--
-TOOL.Category = 'Background NPCs'
+TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_path_finder.name'
 TOOL.PanelIsInit = false
 TOOL.Trace = nil
@@ -43,6 +43,7 @@ else
   end
 
   function TOOL.BuildCPanel(Panel)
+    bgNPC.DebugInspector.ToolControls(Panel)
     Panel:AddControl('Label', {
       ['Text'] = '#tool.bgn_path_finder.pnl.help'
     })
@@ -78,30 +79,21 @@ else
     surface.PlaySound('common/wpn_denyselect.wav')
   end
 
-  local clr_green = Color(72, 232, 9, 200)
-  local clr_232_59 = Color(232, 59, 255, 255)
-  local color_white = Color(255, 255, 255)
-  local color_black = Color(0, 0, 0)
-  local vec_20 = Vector(0, 0, 20)
-  hook.Add('PostDrawOpaqueRenderables', 'BGN_TOOL_PathFinder', function()
-    local tool = bgNPC.Util.GetActivePlayerTool('bgn_path_finder', LocalPlayer())
-    if not tool then return end
-    render.SetColorMaterial()
-    for i = #tool.Path, 1, -1 do
-      local pos = tool.Path[i]
-      if i ~= 1 then render.DrawLine(pos, tool.Path[i - 1], clr_232_59) end
-      render.DrawSphere(pos, 10, 5, 5, clr_green)
-      local cam_angle = LocalPlayer():EyeAngles()
-      cam_angle:RotateAroundAxis(cam_angle:Forward(), 90)
-      cam_angle:RotateAroundAxis(cam_angle:Right(), 90)
-      cam.Start3D2D(pos + vec_20, cam_angle, 0.9)
-      draw.SimpleTextOutlined(tostring(i), 'TargetID', 0, 0, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0.5, color_black)
-      cam.End3D2D()
+  function TOOL:DrawHUD()
+    if self.ReportText then bgNPC.DebugInspector.DrawToolReport(self.ReportText) end
+  end
+
+  function TOOL:Think()
+    if self.LastPath ~= self.Path or self.LastStart ~= self.StartPos then
+      self.LastPath, self.LastStart = self.Path, self.StartPos
+      bgNPC.DebugInspector.SetToolPath('bgn_path_finder', #self.Path>0 and self.Path or (self.StartPos and {self.StartPos} or {}))
+      local T=bgNPC.DebugInspector.Text
+      self.ReportText=T('path_points')..': '..#self.Path..' | '..T(self.EndPos and (#self.Path>1 and 'compatible' or 'no_path') or 'path.help')
     end
-  end)
+  end
 
   local en_lang = {
-    ['tool.bgn_path_finder.name'] = 'Path finder',
+    ['tool.bgn_path_finder.name'] = 'Navigation test',
     ['tool.bgn_path_finder.desc'] = '',
     ['tool.bgn_path_finder.0'] = '',
     ['tool.bgn_path_finder.pnl.help'] = 'Left click - start, right click - end. The server builds the path with the active navigation (bgn_nav_info).',

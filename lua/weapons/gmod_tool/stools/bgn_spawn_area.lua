@@ -1,4 +1,4 @@
-﻿TOOL.Category = 'Background NPCs'
+﻿TOOL.Category = 'Background NPCs Editor'
 TOOL.Name = '#tool.bgn_spawn_area.name'
 TOOL.StartPoint = nil
 TOOL.EndPoint = nil

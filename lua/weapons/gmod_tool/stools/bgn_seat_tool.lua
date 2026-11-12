@@ -1,5 +1,5 @@
 ﻿--
-TOOL.Category = 'Background NPCs'
+TOOL.Category = 'Background NPCs Editor'
 TOOL.Name = '#tool.bgn_seat_tool.name'
 TOOL.Trace = nil
 TOOL.Distance = 10000

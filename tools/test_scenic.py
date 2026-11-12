@@ -35,7 +35,7 @@ lua.execute('''
     hook={Run=function() end,Add=function(n,id,f) hooks[n]=hooks[n] or {}; hooks[n][id]=f end}
     undo={Create=function() end,SetPlayer=function() end,AddFunction=function(f) undos[#undos+1]=f end,Finish=function() end}
     bgNPC.Doors={held={},Release=function() end,IsClosed=function(d) return d.state==0 end}
-    bgNPC.Net={Send=function() end,ToolRPC=function(_,_,text) last_report=text end}
+    bgNPC.Net={Receive=function() end,Send=function() end,ToolRPC=function(_,_,text) last_report=text end}
     bgNPC.Actors={Get=function(n) return n and n.actor end}
     disabled_cvars={}
     function GetConVar(name) return {GetFloat=function() return 3000 end,GetBool=function() return not disabled_cvars[name] end} end

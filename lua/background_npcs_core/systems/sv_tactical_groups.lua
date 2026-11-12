@@ -99,7 +99,7 @@ local function Assign(squad)
   local sees = false
   for _, member in ipairs(members) do
     center:Add(member:GetPos())
-    sees = sees or bgNPC.Vision.HasLineOfSight(member:GetNPC(), enemy)
+    sees = sees or bgNPC.Vision.HasLineOfSight(member:GetNPC(), enemy, 'squad')
   end
 
   center:Div(#members)
@@ -142,6 +142,7 @@ local function Assign(squad)
       }
 
       member:AddEnemy(enemy)
+      if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(member, 'squad', enemy, nil, squad.leader:GetNPC(), member:HasEnemy(enemy)) end
       if role == 'rear' and member.vo_role ~= 'rear' and member:HasTeam('police') then member:Voice('police_squad_rear') end
       member.vo_role = role
     end

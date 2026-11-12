@@ -49,6 +49,7 @@ local function PickReaction(actor, reactions, enemy)
     reaction = H.PickWeighted(reactions)
   end
 
+  if SERVER and bgNPC.DebugInspector and bgNPC.DebugInspector.Observed(actor) then bgNPC.DebugInspector.Emit(actor, 'pick', enemy, reaction) end
   if reaction == 'defense' and actor:IsWanted() then return 'retreat' end
   return reaction
 end

@@ -108,7 +108,7 @@ if CLIENT then
   CreateClientConVar('bgn_cl_ui_language', 'auto', true, false, 'Language of the mod: auto (the game language), english, russian.')
   CreateClientConVar('bgn_cl_language', 'en', false, true, 'Synchronized with gmod_language, do not change.')
   local function SyncLanguage()
-    RunConsoleCommand('bgn_cl_language', Util.GetLanguage())
+    RunConsoleCommand('bgn_cl_language', (Util.GetLanguage()))
   end
 
   cvars.AddChangeCallback('gmod_language', SyncLanguage, 'bgn_cl_language')
@@ -190,7 +190,11 @@ end
 function Util.CanSeeEntity(ent, target, check_view)
   if not IsValid(ent) or not IsValid(target) then return false end
   local target_pos = target:LocalToWorld(target:OBBCenter())
-  if check_view and not Util.IsInView(ent, target_pos) then return false end
+  if check_view and not Util.IsInView(ent, target_pos) then
+    local debug = bgNPC.DebugInspector
+    if SERVER and debug and debug.Sight then debug.Sight(ent, target, false, 'view', nil, false) end
+    return false
+  end
   local eye_pos
   if ent.EyePos then
     eye_pos = ent:EyePos()
@@ -208,11 +212,16 @@ function Util.CanSeeEntity(ent, target, check_view)
     filter = IsValid(car) and {ent, car, ent.Seat} or ent
   })
 
-  if not tr.Hit then return false end
   local hit = tr.Entity
-  local target_actor = bgNPC.Actors.Get(target)
-  local target_car = target_actor and target_actor:GetVehicle()
-  return hit == target or (IsValid(target_car) and hit == target_car) or (IsValid(hit) and hit:IsVehicle() and hit:GetDriver() == target)
+  local visible = false
+  if tr.Hit then
+    local target_actor = bgNPC.Actors.Get(target)
+    local target_car = target_actor and target_actor:GetVehicle()
+    visible = hit == target or (IsValid(target_car) and hit == target_car) or (IsValid(hit) and hit:IsVehicle() and hit:GetDriver() == target)
+  end
+  local debug = bgNPC.DebugInspector
+  if SERVER and debug and debug.Sight then debug.Sight(ent, target, visible, check_view and 'view' or 'direct', tr, check_view and true or nil) end
+  return visible
 end
 
 function Util.IsAnyPlayerLooking(pos)

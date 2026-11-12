@@ -3,6 +3,14 @@ CreateConVar('bgn_cl_disable_halo', bgNPC.cvar.bgn_cl_disable_halo, {FCVAR_ARCHI
 CreateConVar('bgn_cl_disable_hud_local', bgNPC.cvar.bgn_cl_disable_hud_local, {FCVAR_ARCHIVE}, 'Disables the all wanted HUD locally')
 CreateConVar('bgn_cl_disable_self_halo_wanted', bgNPC.cvar.bgn_cl_disable_self_halo_wanted, {FCVAR_ARCHIVE}, 'Disable wanted halo only for your player model')
 CreateConVar('bgn_cl_draw_npc_path', bgNPC.cvar.bgn_cl_draw_npc_path, {FCVAR_ARCHIVE}, 'Draw the path of movement of the NPC. 1 - enabled, 0 - disabled.')
+CreateClientConVar('bgn_cl_debug_text_scale', bgNPC.cvar.bgn_cl_debug_text_scale, true, false, 'Background NPCs: debug text scale.', 0.75, 2)
+for _, setting in ipairs(bgNPC.debug_settings) do
+  CreateClientConVar('bgn_cl_debug_' .. setting[1], tostring(setting[3]), true, false, 'Background NPCs debug: ' .. setting[1], setting[4], setting[5])
+end
+for _, name in ipairs({'bounds', 'labels', 'summary', 'targets', 'inspector', 'vision', 'history'}) do
+  local cvar = 'bgn_cl_debug_' .. name
+  CreateConVar(cvar, bgNPC.cvar[cvar], {FCVAR_ARCHIVE}, 'Background NPCs: local debug ' .. name .. ' (requires bgn_debug and admin rights).')
+end
 CreateConVar('bgn_cl_field_view_optimization', bgNPC.cvar.bgn_cl_field_view_optimization, {FCVAR_ARCHIVE}, 'Enable field of view optimization.')
 CreateConVar('bgn_cl_field_view_optimization_range', bgNPC.cvar.bgn_cl_field_view_optimization_range, {FCVAR_ARCHIVE}, 'The minimum distance in which the check is not performed.')
 CreateConVar('bgn_cl_ambient_sound', bgNPC.cvar.bgn_cl_ambient_sound, {FCVAR_ARCHIVE}, 'Plays a crowd sound based on the number of actors around you. (WARNING! Not recommended for use on weak PC!)')

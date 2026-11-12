@@ -38,6 +38,8 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
     end
 
     local ply = LocalPlayer()
+    local inspector = bgNPC.DebugInspector
+    local watching = inspector and inspector.IsWatching and inspector.IsWatching()
     local actors = bgNPC.Actors.GetAll()
     for i = 1, #actors do
       local actor = actors[i]
@@ -48,7 +50,7 @@ bgNPC.Tasks.Add('bgn_client_render_optimization', function(yield, wait, budget)
           local weapon = npc:GetActiveWeapon()
           local in_vehicle = actor:InVehicle() or npc:GetNW2Bool('bgn_knocked_down', false)
           local past_set_no_draw = npc.bgn_render_optimization or false
-          if in_vehicle or (ply:GetPos():DistToSqr(pos) > min_range and not bgNPC.Util.IsInView(ply, pos)) then
+          if in_vehicle or (not watching and ply:GetPos():DistToSqr(pos) > min_range and not bgNPC.Util.IsInView(ply, pos)) then
             if not past_set_no_draw and not npc:GetNoDraw() then
               npc:SetNoDraw(true)
               npc.bgn_render_optimization = true

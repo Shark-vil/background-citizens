@@ -1,4 +1,4 @@
-﻿TOOL.Category = 'Background NPCs'
+﻿TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_carry_debug.name'
 TOOL.ClientConVar = {
   item = 'suitcase'
@@ -94,10 +94,17 @@ if CLIENT then
   end
 
   function TOOL.BuildCPanel(panel)
+    bgNPC.DebugInspector.ToolControls(panel)
     panel:Help(L('desc'))
     local combo = panel:ComboBox(L('item'), 'bgn_carry_debug_item')
     for _, kind in ipairs({'suitcase', 'ration', 'newspaper'}) do
       combo:AddChoice(L(kind), kind)
     end
+  end
+end
+
+if CLIENT then
+  function TOOL:DrawHUD()
+    if self.ReportText then bgNPC.DebugInspector.DrawToolReport(self.ReportText) end
   end
 end
