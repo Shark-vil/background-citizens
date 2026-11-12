@@ -120,6 +120,9 @@ bgNPC.cvar.bgn_settings_rev = 0
 bgNPC.cvar.bgn_nav_provider = 'auto'
 bgNPC.cvar.bgn_nav_generator_max_nodes = 15000
 bgNPC.cvar.bgn_lod_near_radius = 2500
+bgNPC.cvar.bgn_logic_pause = 2
+bgNPC.cvar.bgn_logic_active = 1
+bgNPC.cvar.bgn_logic_stagger = 0.25
 bgNPC.cvar.bgn_scenic = 1
 bgNPC.cvar.bgn_scenic_max = 4
 bgNPC.cvar.bgn_scenic_period = 30
@@ -210,6 +213,9 @@ bgNPC.CVars.Register('bgn_pick_up_weapons', bgNPC.cvar.bgn_pick_up_weapons, 'Una
 bgNPC.CVars.Register('bgn_settings_rev', bgNPC.cvar.bgn_settings_rev, 'Internal: settings revision. Do not change.')
 bgNPC.CVars.Register('bgn_nav_provider', bgNPC.cvar.bgn_nav_provider, 'Background NPCs: navigation source (auto, navmesh, nodegraph, custom)')
 bgNPC.CVars.Register('bgn_nav_generator_max_nodes', bgNPC.cvar.bgn_nav_generator_max_nodes, 'Background NPCs: node limit of the generator')
+bgNPC.CVars.Register('bgn_logic_pause', 2, 'Distant actor pause duration in seconds')
+bgNPC.CVars.Register('bgn_logic_active', 1, 'Distant actor active window in seconds')
+bgNPC.CVars.Register('bgn_logic_stagger', 0.25, 'Actor cycle phase offset in seconds')
 bgNPC.CVars.Register('bgn_lod_near_radius', bgNPC.cvar.bgn_lod_near_radius, 'Background NPCs: actors closer than this to a player get full updates')
 bgNPC.CVars.Register('bgn_scenic', bgNPC.cvar.bgn_scenic, 'Staged scenes (people in a queue, an arrest, a couple on a couch...) appear on the map. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_scenic_max', bgNPC.cvar.bgn_scenic_max, 'The most scenic scenes on the map at once.')

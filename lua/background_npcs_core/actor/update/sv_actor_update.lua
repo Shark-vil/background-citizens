@@ -5,15 +5,15 @@
 		near     - close to a player or in view: brain every NEAR_PERIOD
 		far      - not seen, farther than "bgn_lod_near_radius": brain every FAR_PERIOD
 		dormant  - farther than "bgn_disable_logic_radius" and not seen, unarmed, not in a vehicle:
-		           brain every DORMANT_PERIOD and the engine AI is frozen (no think)
-	Movement is updated on every pass of a non-dormant actor (it throttles itself).
+		           alternating engine/brain/movement pauses and active windows
+	Movement continues during active windows (it throttles itself).
 --]]
 local Actors = bgNPC.Actors
 local LOD_NEAR, LOD_FAR, LOD_DORMANT = 1, 2, 3
 local PERIODS = {
   [LOD_NEAR] = 0.2,
   [LOD_FAR] = 1,
-  [LOD_DORMANT] = 3
+  [LOD_DORMANT] = 0.2
 }
 
 local LOD_PERIOD = 1
@@ -23,6 +23,15 @@ local PATH_REBUILD_PERIOD = 10
 local VEHICLE_PATH_REBUILD_PERIOD = 5
 local cvar_near_radius = CreateConVar('bgn_lod_near_radius', '2500', {FCVAR_ARCHIVE}, 'Background NPCs: actors closer than this to a player get full updates', 0)
 local cvar_dormant_radius = GetConVar('bgn_disable_logic_radius')
+local pause_time = CreateConVar('bgn_logic_pause', '2', {FCVAR_ARCHIVE}, 'Seconds paused for distant unseen actors; 0 disables pauses', 0, 30)
+local active_time = CreateConVar('bgn_logic_active', '1', {FCVAR_ARCHIVE}, 'Seconds active between distant actor pauses', 0.1, 30)
+local stagger = CreateConVar('bgn_logic_stagger', '0.25', {FCVAR_ARCHIVE}, 'Cycle phase offset per actor in seconds', 0, 10)
+local function SetPaused(actor, paused)
+  if actor.logic_paused == paused and actor.logic_pause_body == actor.body then return end
+  actor.logic_paused, actor.logic_pause_body = paused, actor.body
+  if actor.body and not actor:InVehicle() then actor.body:SetThinkEnabled(not paused) end
+  if not paused then actor.next_brain = 0 end
+end
 bgNPC.LOD = {
   NEAR = LOD_NEAR,
   FAR = LOD_FAR,
@@ -51,8 +60,7 @@ end
 local function SetLOD(actor, lod)
   if actor.lod == lod then return end
   actor.lod = lod
-  local body = actor.body
-  if body and not actor:InVehicle() then body:SetThinkEnabled(lod ~= LOD_DORMANT) end
+  if lod ~= LOD_DORMANT then SetPaused(actor, false) end
   hook.Run('BGN_ActorLODChanged', actor, lod)
 end
 
@@ -83,6 +91,11 @@ local function UpdateActor(actor, now, players)
   end
 
   local lod = actor.lod or LOD_NEAR
+  local pause = math.max(0, pause_time:GetFloat())
+  local duration = math.max(0.1, active_time:GetFloat())
+  -- Stable phases survive list reordering/removal; wraps intentionally share slots in large crowds.
+  local phase = (now - actor.uid * stagger:GetFloat()) % (pause + duration)
+  SetPaused(actor, lod == LOD_DORMANT and pause > 0 and phase >= duration)
   if (actor.next_enemies or 0) <= now then
     actor.next_enemies = now + ENEMIES_PERIOD
     actor:EnemiesRecalculate()
@@ -93,12 +106,12 @@ local function UpdateActor(actor, now, players)
     actor:RecalculationTargets()
   end
 
-  if lod ~= LOD_DORMANT then
+  if not actor.logic_paused then
     RebuildFollowPath(actor, now)
     actor:UpdateMovement()
   end
 
-  if (actor.next_brain or 0) <= now and actor.start_think and actor.brain then
+  if not actor.logic_paused and (actor.next_brain or 0) <= now and actor.start_think and actor.brain then
     actor.next_brain = now + PERIODS[lod]
     actor.brain:Update()
   end
@@ -131,7 +144,7 @@ end)
 
 -- Wakes a dormant actor right away (it was attacked, became an enemy, ...).
 function Actors.WakeUp(actor)
-  actor.next_lod = 0
+  actor.next_lod = CurTime() + 1
   actor.next_brain = 0
   SetLOD(actor, LOD_NEAR)
 end

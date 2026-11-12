@@ -50,7 +50,7 @@ local PAGES = {
   {
     id = 'Optimization',
     title = 'bgn.settings.optimization',
-    items = {{'check', 'bgn_cl_field_view_optimization', 'bgn.settings.optimization.cl_field_view_optimization'}, {'slider', 'bgn_cl_field_view_optimization_range', 'bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000}, {'slider', 'bgn_disable_logic_radius', 'bgn.settings.optimization.disable_logic', 0, 1000}, {'check', 'bgn_actors_teleporter', 'bgn.settings.spawn.actors_teleporter'}, {'slider', 'bgn_actors_max_teleports', 'bgn.settings.spawn.actors_max_teleports', 1, 10},}
+    items = {{'check', 'bgn_cl_field_view_optimization', 'bgn.settings.optimization.cl_field_view_optimization'}, {'slider', 'bgn_cl_field_view_optimization_range', 'bgn.settings.optimization.cl_field_view_optimization_range', 0, 2000}, {'slider', 'bgn_disable_logic_radius', 'bgn.settings.optimization.disable_logic', 0, 1000}, {'slider', 'bgn_logic_pause', 'bgn.menu.logic_pause', 0, 30, 2}, {'slider', 'bgn_logic_active', 'bgn.menu.logic_active', 0.1, 30, 2}, {'slider', 'bgn_logic_stagger', 'bgn.menu.logic_stagger', 0, 10, 2}, {'check', 'bgn_actors_teleporter', 'bgn.settings.spawn.actors_teleporter'}, {'slider', 'bgn_actors_max_teleports', 'bgn.settings.spawn.actors_max_teleports', 1, 10},}
   },
   {
     id = 'Addons',
