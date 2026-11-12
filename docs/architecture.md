@@ -68,7 +68,7 @@ Other repository paths:
 
 Local planning/lab notes are not release contracts. Do not copy machine-specific paths or temporary bridge setup into runtime installation instructions.
 
-Spawning loads resources through normal gameplay creation. There is no first-player-spawn NPC/vehicle warm-up pass. NextBot relationship sampling uses player dispositions without creating probe entities; see [brains](systems/brains.md).
+On the first player spawn `spawner/sv_pre_spawn_cache.lua` warms resources: it creates and removes every configured NPC class/model and vehicle once. NextBot relationship sampling uses player dispositions without creating probe entities; see [brains](systems/brains.md).
 
 ## Main relationships
 

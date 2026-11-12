@@ -22,7 +22,7 @@ perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
 In `nextbot` mode, SERVER counts each foreign HL2 NPC's dispositions towards all server players and applies the most frequent disposition (`D_HT`, `D_FR`, `D_LI`, `D_NU` or `D_ER`) to nearby BGN NextBot bodies. Ties and an empty player list resolve to `D_NU`. `systems/sv_nextbot_hostility.lua` refreshes this once per second within 2500 units, including changes away from hostility. Initialization uses the same vote; relationships for ordinary HL2 NPC bodies keep their existing rules. No hidden probe NPCs are created. HL2 NPC senses detect `bgn_nextbot` through `FL_OBJECT`, set before engine registration in `Initialize`. The periodic update is skipped in peaceful mode and with `bgn_ignore_another_npc`.
 
-After updating from the probe-based implementation, reload the map to clear legacy probes and the old resource warm-up hook. `bgn_selftest` includes the player-disposition vote checks; mixed-player votes are pure logic tests.
+After updating from the probe-based implementation, reload the map to clear legacy probes. `bgn_selftest` includes the player-disposition vote checks; mixed-player votes are pure logic tests.
 
 Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
 back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by
