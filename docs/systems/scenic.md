@@ -74,7 +74,8 @@ Door scenes (`door_knock`, `door_brace`, `entrance_block`) also end for each par
 starts opening or is removed. The server stops the animation and returns the actor to normal AI; the actor
 is kept alive and is no longer removed with the scene. `door_knock` aligns its sideways-authored animation
 with the door so the raised hand reaches the panel.
-An automatic scene that nobody sees is removed after `ttl` seconds (default 600).
+An automatic scene is removed after `ttl` seconds (default 60) once nobody watches it, even inside the spawn radius: no player
+is within `bgn_spawn_block_radius`, and none looks toward it with a clear line to the scene (a world trace). The check runs every 5 s.
 
 Offline door placement/lifecycle checks: `python tools/test_scenic.py` (requires lupa).
 

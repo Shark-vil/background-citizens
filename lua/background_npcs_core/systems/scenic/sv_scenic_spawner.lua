@@ -21,7 +21,7 @@ local TRIES = 6 -- seeds checked in one pass
 local MIN_DISTANCE_SQR = 400 * 400 -- between two scenes
 local START_DELAY = 0.2 -- the actor finishes its own initialization first
 local CHECK_PERIOD = 5
-local DEFAULT_TTL = 600
+local DEFAULT_TTL = 60
 local MAX_COOLDOWN = 600
 local SPAWN_LIFT = Vector(0, 0, 4)
 local STAGE_OFFSETS = {Vector(), Vector(48, 0, 0), Vector(-48, 0, 0), Vector(0, 48, 0), Vector(0, -48, 0), Vector(48, 48, 0), Vector(-48, 48, 0), Vector(48, -48, 0), Vector(-48, -48, 0)}
@@ -472,10 +472,18 @@ end
 -- Life cycle
 -- ---------------------------------------------------------------------------
 -- Nobody sees the place and nobody is close.
+local EYE_LIFT = Vector(0, 0, 40)
 local function IsUnwatched(pos)
   local block_sqr = cvar_block:GetFloat() ^ 2
+  local target = pos + EYE_LIFT
   for _, ply in ipairs(player.GetHumans()) do
-    if pos:DistToSqr(ply:GetPos()) <= block_sqr or bgNPC.Vision.PlayerCanSeePos(ply, pos) then return false end
+    if pos:DistToSqr(ply:GetPos()) <= block_sqr then return false end
+    -- looking that way and the line is clear of the world: a wall hides the scene
+    if bgNPC.Vision.PlayerCanSeePos(ply, target) and util.TraceLine({
+      start = ply:EyePos(),
+      endpos = target,
+      mask = MASK_SOLID_BRUSHONLY
+    }).Fraction == 1 then return false end
   end
   return true
 end

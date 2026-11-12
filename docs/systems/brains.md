@@ -269,6 +269,7 @@ Every actor death outside a vehicle is also an incident for 45 s (`brain/fsm/sta
 From 5 s after it, calm civilians walking or idling within 1500 units come one by one (35% per 2 s check, up to 4):
 they stand 150-280 units from the spot on their side, stare (`LineIdle*`), half of them say a `watch_incident` line,
 and go on after 12-25 s. A gunshot scares them like any calm actor; two of them may start a conversation.
+When the medics revive the actor (`BGN_ActorRevived`), the incident ends: no new onlookers come and those already there go on.
 
 ## Bodies
 

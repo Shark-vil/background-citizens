@@ -28,6 +28,19 @@ hook.Add('BGN_OnKilledActor', 'BGN_WatchIncident', function(actor)
   }
 end)
 
+-- revived by the medics: nothing to see any more, the watchers go on
+hook.Add('BGN_ActorRevived', 'BGN_WatchIncident', function(_, call)
+  for i = #incidents, 1, -1 do
+    local incident = incidents[i]
+    if incident.pos:DistToSqr(call.pos) < 1 then
+      table.remove(incidents, i)
+      for watcher in pairs(incident.watchers) do
+        if watcher:IsAlive() and watcher:HasState('watch_incident') and watcher:GetStateData().incident == incident then watcher:RandomState() end
+      end
+    end
+  end
+end)
+
 local function CountWatchers(incident)
   local count = 0
   for watcher in pairs(incident.watchers) do
