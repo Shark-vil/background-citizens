@@ -38,6 +38,7 @@ function Actor:AddEnemy(ent, reaction, always_visible)
     -- the body would otherwise get its enemy on the next EnemiesRecalculate, up to a second later
     if not IsValid(body:GetEnemy()) then body:SetEnemy(ent) end
   end
+
   if SERVER and bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(self, 'enemy_added', ent) end
 end
 

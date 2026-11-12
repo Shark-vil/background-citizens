@@ -132,9 +132,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
       local data = actor:GetStateData()
       data.police_firearm = not Combat.CanPoliceUseStunstick(actor, enemy) or IsInVehicle(enemy)
       weapon_class = data.police_firearm and actor:GetActorWeapon() or 'weapon_stunstick'
-      if not weapon_class or weapon_class == 'weapon_stunstick' then
-        weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick'
-      end
+      if not weapon_class or weapon_class == 'weapon_stunstick' then weapon_class = data.police_firearm and 'weapon_pistol' or 'weapon_stunstick' end
       switching = true
     end
   end

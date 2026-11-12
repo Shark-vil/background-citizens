@@ -160,14 +160,13 @@ bgNPC.States.Register('arrest', 'guarded', {
       return
     end
 
-    local primary = not bgNPC.Combat.CanPoliceUseStunstick(actor,target)
+    local primary = not bgNPC.Combat.CanPoliceUseStunstick(actor, target)
     local weapon = primary and actor:GetActorWeapon() or 'weapon_stunstick'
-    if not weapon or (primary and weapon=='weapon_stunstick') then weapon='weapon_pistol' end
-    bgNPC.Combat.EquipActor(actor,weapon,true)
+    if not weapon or (primary and weapon == 'weapon_stunstick') then weapon = 'weapon_pistol' end
+    bgNPC.Combat.EquipActor(actor, weapon, true)
     npc.bgn_arrest_aim_target = primary and target or nil
     actor:GetBody():SetEnemy(NULL)
     actor:GetBody():SetAlertLevel('alert')
-
     if npc:GetPos():DistToSqr(target:GetPos()) > 40000 then
       if actor:IsAnimationPlayed() then actor:ResetSequence() end
       actor:WalkToTarget(target, 'run')
@@ -194,13 +193,11 @@ bgNPC.States.Register('arrest', 'guarded', {
         actor:Voice('police_arrest_order', bgNPC.cfg.arrest['order_sound'])
       elseif ArrestComponent.detention then
         local time = ArrestComponent.arrest_time - CurTime()
-
-
         if time <= 0 then
           ArrestModule:RemoveTarget(target)
           data.arrested = true
           actor:Voice('police_arrested')
-          local handled=hook.Run('BGN_PlayerArrest', target, actor)
+          local handled = hook.Run('BGN_PlayerArrest', target, actor)
           bgNPC.Combat.ResetPoliceThreat(target)
           if not handled then
             target:EmitSound('background_npcs/handcuffs_sound1.mp3')
@@ -248,23 +245,24 @@ bgNPC.States.Register('arrest', 'guarded', {
           end
         end
       end
+
       if primary and not data.arrested and npc:IsNPC() then
-        local ang=(target:GetPos()-npc:GetPos()):Angle()
-        npc:SetAngles(Angle(0,ang.y,0))
-        local selected=npc:GetActiveWeapon()
-        local pistol=IsValid(selected) and (selected:GetClass()=='weapon_pistol' or selected:GetClass()=='weapon_357')
-        local sequence=npc:SelectWeightedSequence(pistol and ACT_IDLE_ANGRY_PISTOL or ACT_IDLE_ANGRY_SMG1)
-        if sequence and sequence>=0 then actor:PlayStaticSequence(npc:GetSequenceName(sequence),true) end
+        local ang = (target:GetPos() - npc:GetPos()):Angle()
+        npc:SetAngles(Angle(0, ang.y, 0))
+        local selected = npc:GetActiveWeapon()
+        local pistol = IsValid(selected) and (selected:GetClass() == 'weapon_pistol' or selected:GetClass() == 'weapon_357')
+        local sequence = npc:SelectWeightedSequence(pistol and ACT_IDLE_ANGRY_PISTOL or ACT_IDLE_ANGRY_SMG1)
+        if sequence and sequence >= 0 then actor:PlayStaticSequence(npc:GetSequenceName(sequence), true) end
       elseif not primary and ArrestComponent.detention and npc:IsNPC() then
-        local ang=(target:GetPos()-npc:GetPos()):Angle()
-        npc:SetAngles(Angle(0,ang.y,0))
-        actor:PlayStaticSequence('canal5bidle1',true)
+        local ang = (target:GetPos() - npc:GetPos()):Angle()
+        npc:SetAngles(Angle(0, ang.y, 0))
+        actor:PlayStaticSequence('canal5bidle1', true)
       end
     end
   end,
   stop = function(actor, state, data)
-    local npc=actor:GetNPC()
-    if IsValid(npc) then npc.bgn_arrest_aim_target=nil end
+    local npc = actor:GetNPC()
+    if IsValid(npc) then npc.bgn_arrest_aim_target = nil end
     local ArrestComponent = ArrestModule:GetTarget(actor:GetFirstTarget())
     if ArrestComponent then SetHold(ArrestComponent, actor, false) end
     if data.arrested then hook.Run('BGN_PlayerArrestStop', actor, state, data) end

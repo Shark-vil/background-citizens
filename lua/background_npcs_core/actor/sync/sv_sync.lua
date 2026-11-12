@@ -64,7 +64,11 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
 
               seq = seq + 1
               bgNPC.Net.Send('bgn_actor_sync_data', ply, actor.uid, dynamic, send_static and static or nil, seq)
-              hashes[ply] = {static = static_hash, dynamic = dynamic_hash}
+              hashes[ply] = {
+                static = static_hash,
+                dynamic = dynamic_hash
+              }
+
               sends = sends + 1
             end
           else

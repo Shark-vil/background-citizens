@@ -32,6 +32,7 @@ local function SetPaused(actor, paused)
   if actor.body and not actor:InVehicle() then actor.body:SetThinkEnabled(not paused) end
   if not paused then actor.next_brain = 0 end
 end
+
 bgNPC.LOD = {
   NEAR = LOD_NEAR,
   FAR = LOD_FAR,

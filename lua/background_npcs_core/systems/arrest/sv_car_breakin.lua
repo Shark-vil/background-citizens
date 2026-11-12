@@ -53,7 +53,7 @@ local function ArrestPlayer(ply, actor)
   ply:ExitVehicle()
   ArrestModule:RemoveTarget(ply)
   actor:Voice('police_arrested')
-  local handled=hook.Run('BGN_PlayerArrest', ply, actor)
+  local handled = hook.Run('BGN_PlayerArrest', ply, actor)
   bgNPC.Combat.ResetPoliceThreat(ply)
   if not handled then
     ply:EmitSound('background_npcs/handcuffs_sound1.mp3')

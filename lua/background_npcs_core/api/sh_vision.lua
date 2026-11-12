@@ -34,12 +34,14 @@ function Vision.HasLineOfSight(watcher, ent, channel)
   local hit = tr.Entity
   local visible = false
   if tr.Hit then
-    if hit == ent then visible = true
+    if hit == ent then
+      visible = true
     else
       local target_car, target_parent = CarOf(ent)
       visible = target_car ~= nil and (hit == target_car or hit == target_parent)
     end
   end
+
   local debug = bgNPC.DebugInspector
   if SERVER and debug and debug.Sight then debug.Sight(watcher, ent, visible, channel or 'los', tr) end
   return visible, hit

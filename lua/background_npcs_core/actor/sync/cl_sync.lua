@@ -4,11 +4,13 @@ local latest = {}
 bgNPC.Net.Receive('bgn_actor_sync_data', function(ply, uid, data, static, seq)
   seq = seq or 0
   local last = latest[uid]
-  if last and last.seq > seq then
-    data, seq = last.data, last.seq
-  end
+  if last and last.seq > seq then data, seq = last.data, last.seq end
+  latest[uid] = {
+    seq = seq,
+    data = data,
+    expire = RealTime() + LATEST_LIFETIME
+  }
 
-  latest[uid] = {seq = seq, data = data, expire = RealTime() + LATEST_LIFETIME}
   local actor
   if static then
     actor = bgNPC.Actors.ReceiveBinding(static.npc, static.actor_type, uid, nil, static.entity_generation, static.class, static.model)

@@ -118,10 +118,17 @@ end
 function ASSET:ClearAll()
   bgNPC.Util.Log('ClearAll', 'Module | Wanted')
   if SERVER then
-    local targets={}
-    for _,wanted in ipairs(wanted_list) do targets[#targets+1]=wanted.target end
-    for _,target in ipairs(targets) do self:RemoveWanted(target) end
-  else wanted_list={} end
+    local targets = {}
+    for _, wanted in ipairs(wanted_list) do
+      targets[#targets + 1] = wanted.target
+    end
+
+    for _, target in ipairs(targets) do
+      self:RemoveWanted(target)
+    end
+  else
+    wanted_list = {}
+  end
 end
 
 function ASSET:ClearDeath()
@@ -129,7 +136,11 @@ function ASSET:ClearDeath()
     local WantedClass = wanted_list[i]
     local target = WantedClass.target
     if not IsValid(target) or target:Health() <= 0 then
-      if SERVER then self:RemoveWanted(target) else table.remove(wanted_list,i) end
+      if SERVER then
+        self:RemoveWanted(target)
+      else
+        table.remove(wanted_list, i)
+      end
     end
   end
 end

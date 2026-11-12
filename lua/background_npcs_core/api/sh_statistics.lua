@@ -39,7 +39,7 @@ local function ResetAll()
 end
 
 if CLIENT then
-  hook.Add('EntityRemoved','BGN_KillingStatisticCleanup',ResetAttacker)
+  hook.Add('EntityRemoved', 'BGN_KillingStatisticCleanup', ResetAttacker)
   bgNPC.Net.Receive('bgn_killing_stats_set', function(_, attacker, actor_type, value)
     if not IsValid(attacker) or not actor_type or not value then return end
     SetKills(attacker, actor_type, value)

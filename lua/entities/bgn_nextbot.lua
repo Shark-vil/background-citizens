@@ -60,8 +60,11 @@ local WEAPONS = {
   weapon_pistol = {
     damage = 6,
     delay = 0.45,
-    burst_min = 1, burst_max = 3, burst_delay = 0.2,
-    rest_min = 0.45, rest_max = 0.8,
+    burst_min = 1,
+    burst_max = 3,
+    burst_delay = 0.2,
+    rest_min = 0.45,
+    rest_max = 0.8,
     spread = 0.04,
     clip = 18,
     range = 2000,
@@ -558,6 +561,7 @@ function ENT:Attack(enemy, stats)
     self.next_fire = now + (self.burst_left > 0 and stats.burst_delay or math.Rand(stats.rest_min, stats.rest_max))
     if self.burst_left == 0 then self.burst_left = nil end
   end
+
   self.busy_until = now + math.min(stats.delay, 0.5)
   -- HL2 citizens have no melee gesture, only the full-body swing: play it as a gesture layer
   if set.gesture and (self:SelectWeightedSequence(set.gesture) or -1) > 0 then

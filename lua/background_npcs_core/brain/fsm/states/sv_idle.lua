@@ -8,8 +8,8 @@ bgNPC.States.Register('idle', 'calm', {
     end
 
     if actor.class == 'npc_metropolice' then
-      local suspect=actor:GetNearEnemy()
-      if IsValid(suspect) and not bgNPC.Combat.CanPoliceUseStunstick(actor,suspect) then return end
+      local suspect = actor:GetNearEnemy()
+      if IsValid(suspect) and not bgNPC.Combat.CanPoliceUseStunstick(actor, suspect) then return end
       actor:GetBody():GiveWeapon('weapon_stunstick')
       actor:PlayStaticSequence('plazathreat' .. math.random(1, 2), true, delay)
     else

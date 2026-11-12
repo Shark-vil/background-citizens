@@ -336,7 +336,7 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
 
   saved.health = math.max(0, self:Health() - amount)
   if IsValid(self.npc) then self.npc:SetHealth(saved.health) end
-  hook.Run('BGN_PostVehicleDamage',self,attacker,amount)
+  hook.Run('BGN_PostVehicleDamage', self, attacker, amount)
   if saved.health <= 0 then
     -- The seated DV entity cannot produce the character's death ragdoll.
     local ragdoll = ents.Create('prop_ragdoll')
