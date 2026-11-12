@@ -1,6 +1,5 @@
 ﻿local Menu = bgNPC.Menu
 local Parse = Menu.ParseWorkshop
-
 bgNPC.Test.Add('menu.workshop_parse', function(check)
   local html = '<div id="sharedfile_42" class="x"><img class="workshopItemPreviewImage " src="https://a/b.jpg?x=1&amp;y=2">' .. 'SharedFileBindMouseHover( "sharedfile_42", true, {"id":"42","title":"Mod","description":"Text {x}"} );' .. '<a href="?appid=4000&amp;p=2">2</a><a href="?appid=4000&amp;p=11">11</a><a href="?numperpage=30">'
   local items, pages = Parse(html)

@@ -197,7 +197,6 @@ local function SwepStats(primary, hold_type)
 end
 
 ENT.SwepStats, ENT.PROFICIENCY, ENT.DEFAULT_WEAPON = SwepStats, PROFICIENCY, DEFAULT_WEAPON -- read by tests/sv_systems.lua
-
 -- hold type -> { idle, walk, run, aim idle, attack gesture }; first activity the model has wins
 -- Weaponless: some models (combine soldiers...) have no plain idle/walk/run and T-pose, so fall back to armed ones.
 local UNARMED = {

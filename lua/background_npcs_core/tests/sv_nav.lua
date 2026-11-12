@@ -4,7 +4,6 @@ local AIN_VERSION = 37
 local NUM_HULLS = 10
 local NODE_GROUND = 2
 local MOVE_GROUND = 1
-
 -- In-memory little endian writer/reader for the parser test.
 local function Buffer()
   local b = {

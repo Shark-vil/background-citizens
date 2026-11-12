@@ -6,7 +6,6 @@ local Cast, FINALS = bgNPC.Conversation.Cast, bgNPC.Conversation.FINALS
 local SafeSet = bgNPC.Modules.Get('player_arrest').SafeSet
 local NextBot = scripted_ents.GetStored('bgn_nextbot').t
 local SwepStats, PROFICIENCY, DEFAULT_WEAPON = NextBot.SwepStats, NextBot.PROFICIENCY, NextBot.DEFAULT_WEAPON
-
 bgNPC.Test.Add('server_load', function(check)
   local interval = 1 / 66
   check(not ServerLoad.IsSlowWindow(66, 1, interval), 'a full second of ticks is no lag')

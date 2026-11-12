@@ -3,7 +3,6 @@ local Heap = AStar.Heap
 local NodeGraph = bgNPC.NodeGraph
 local LegacyNodes = bgNPC.LegacyNodes
 local Editor = bgNPC.NavEditor
-
 bgNPC.Test.Add('nav.heap', function(check)
   local heap = Heap()
   for _, v in ipairs({5, 1, 9, 3, 7, 2, 8}) do

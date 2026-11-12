@@ -18,7 +18,6 @@ local function SafeSet(list)
 end
 
 ArrestModule.SafeSet = SafeSet -- read by tests/sv_systems.lua
-
 local function IsDisarmed(ply)
   local safe = SafeSet(cvar_safe:GetString())
   for _, weapon in ipairs(ply:GetWeapons()) do

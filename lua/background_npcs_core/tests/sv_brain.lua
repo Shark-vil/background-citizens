@@ -1,6 +1,5 @@
 ﻿local GOAP = bgNPC.GOAP
 local Action, Goal, F = GOAP.Action, GOAP.Goal, GOAP.Fact
-
 bgNPC.Test.Add('goap.planner', function(check)
   local get_weapon = Action('test_get_weapon', {
     effects = {

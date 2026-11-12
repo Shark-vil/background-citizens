@@ -1,7 +1,6 @@
 ﻿local Test = bgNPC.Test
 local H = bgNPC.Actor.Helpers
 local GhostCrowd = bgNPC.GhostCrowd
-
 Test.Add('core.class', function(check)
   local A = bgNPC.Class('TestA')
   function A:Init(v)

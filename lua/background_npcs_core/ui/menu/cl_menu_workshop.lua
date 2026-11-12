@@ -38,7 +38,6 @@ local function Parse(html)
 end
 
 Menu.ParseWorkshop = Parse -- read by tests/cl_menu.lua
-
 -- @param done function(items|nil, pages|nil)
 local function Fetch(page, done)
   http.Fetch(URL .. page, function(body, _, _, code)
