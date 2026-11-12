@@ -10,6 +10,7 @@ local BODY_TIME = 60
 local REACH_DIST_SQR = 90 ^ 2
 local RUN_DIST_SQR = 600 ^ 2 -- farther than this the officer runs to the body, closer it walks
 local REVIVED_DIST_SQR = 100 ^ 2
+local SCENE_DIST_SQR = 150 ^ 2 -- bodies this close are one scene: one officer for all of them
 local STAGE_TIME = 5
 local GIVE_UP_TIME = 30 -- can't reach the body
 -- first sequence the model has
@@ -54,13 +55,21 @@ local function FindOfficer(pos)
   return best
 end
 
+-- @return boolean another officer already handles a body at this scene
+local function SceneTaken(body)
+  for _, other in ipairs(bodies) do
+    if other ~= body and not other.done and other.officer and IsInspecting(other.officer, other) and other.pos:DistToSqr(body.pos) < SCENE_DIST_SQR then return true end
+  end
+  return false
+end
+
 timer.Create('BGN_PoliceInspectBodies', 2, 0, function()
   local now = CurTime()
   for i = #bodies, 1, -1 do
     local body = bodies[i]
     if body.done or body.time + BODY_TIME < now then
       table.remove(bodies, i)
-    elseif not bgNPC.Medics.IsHandling(body.pos) and (not body.officer or not IsInspecting(body.officer, body)) then
+    elseif not bgNPC.Medics.IsHandling(body.pos) and (not body.officer or not IsInspecting(body.officer, body)) and not SceneTaken(body) then
       body.officer = FindOfficer(body.pos)
       if body.officer then
         body.officer:SetState('police_inspect_body', {
@@ -78,6 +87,13 @@ bgNPC.States.Register('police_inspect_body', 'calm', {
     local data = actor:GetStateData()
     local body = data.body
     local now = CurTime()
+    -- a threat ends the paperwork at once: the officer answers it like an attack
+    if not actor:HasNoEnemies() then
+      local reaction = actor:GetReactionForDamage(actor:GetNearEnemy())
+      actor:SetState((reaction == 'ignore' or reaction == 'none') and 'defense' or reaction)
+      return
+    end
+
     if not body or body.done or data.give_up < now then
       actor:RandomState()
       return
@@ -107,6 +123,11 @@ bgNPC.States.Register('police_inspect_body', 'calm', {
         actor:Voice('police_body_notes')
       else
         body.done = true
+        -- the rest of the scene was seen too
+        for _, other in ipairs(bodies) do
+          if other.pos:DistToSqr(body.pos) < SCENE_DIST_SQR then other.done = true end
+        end
+
         actor:RandomState()
         return
       end

@@ -255,7 +255,7 @@ Every actor death outside a vehicle also leaves a body for 60 s (`brain/fsm/stat
 The nearest officer within 2000 units who walks or idles without enemies takes it (state `police_inspect_body`):
 runs to the body when it is farther than 600 units (walks when closer), says `police_body_arrive`, crouches over it, reports it on the radio (`police_body_report`) and writes it down
 (`police_body_notes`), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
-calm down; a body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.
+calm down; an enemy that appears during the inspection ends it at once and the officer reacts as to an attack. Bodies within 150 units are one scene with one officer. A body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.
 
 ## Onlookers
 
