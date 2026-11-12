@@ -489,9 +489,42 @@ local function Drive(ai, state, now)
   ai:SetThrottle(not state.safetyBlocked and math.abs(speed) < desired and target.dir * .6 or 0)
 end
 
+-- A calm car avoids waypoints it passed recently, so it does not circle the same loop. Fear, combat and assigned routes are exempt.
+local VISIT_COOLDOWN = 120
+local function IsCalm(ai)
+  local driver = ai.bgnProvider and ai.bgnProvider:GetDriver()
+  if ai.bgnFlee or #(ai.WaypointList or {}) > 0 or not driver or driver.drive_target_pos then return false end
+  return not driver:HasState(FLEE_STATES) and not IsValid(driver:GetNearEnemy())
+end
+
+local function AvoidVisited(ai)
+  local now, visited = CurTime(), ai.bgnVisited or {}
+  ai.bgnVisited = visited
+  for waypoint, expires in pairs(visited) do
+    if expires <= now then visited[waypoint] = nil end
+  end
+
+  if ai.Waypoint then visited[ai.Waypoint] = now + VISIT_COOLDOWN end
+  if not ai.Waypoint or not ai.NextWaypoint or not visited[ai.NextWaypoint] or not IsCalm(ai) then return end
+  local dvd, options = DecentVehicleDestination, {}
+  for _, id in ipairs(ai.Waypoint.Neighbors) do
+    local waypoint = dvd.Waypoints[id]
+    if waypoint and not visited[waypoint] and dvd.WaypointAvailable(id, ai.Group) then options[#options + 1] = waypoint end
+  end
+
+  if #options > 0 then ai.NextWaypoint = options[math.random(#options)] end
+end
+
 function Traffic.Attach(ai)
   if ai.bgnTrafficAttached then return end
   ai.bgnTrafficAttached = true
+  local setup = ai.SetupNextWaypoint
+  function ai:SetupNextWaypoint(...)
+    local result = setup(self, ...)
+    AvoidVisited(self)
+    return result
+  end
+
   local think = ai.Think
   function ai:Think()
     local state = self.bgnTraffic
