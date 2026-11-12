@@ -644,6 +644,13 @@ function ENT:Think()
     self:UpdateCombat()
   end
 
+  -- A roof is not ground: the bot would ride the car, never slide off and stay on it as it drives on.
+  if now >= (self.next_roof_check or 0) then
+    self.next_roof_check = now + 0.5
+    local ground = self:GetGroundEntity()
+    if IsValid(ground) and (ground:IsVehicle() or ground.IsSimfphyscar or ground.DecentVehicle) then self:PullOut() end
+  end
+
   self:UpdateActivity()
   self:NextThink(now)
   return true
