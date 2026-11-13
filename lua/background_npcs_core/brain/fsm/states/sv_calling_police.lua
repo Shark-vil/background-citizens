@@ -90,7 +90,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 
         data.btn_click_delay = data.btn_click_delay or 0
         if data.btn_click_delay < CurTime() then
-          EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 120, 0, 100)
+          EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 0.6, 120, 0, 100)
           data.btn_click_delay = CurTime() + math.random(.3, 1.2)
         end
       end
