@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 team protection change (publication not verified): the vehicle offender exception (`bgNPC.OffenderFromRamming`, `systems/sv_offender.lua`) is removed. Running over a civilian or ramming police no longer moves a civilian driver from `residents` to `offenders`; police in a car ignore a civilian driver's ram. See [wanted](systems/wanted.md).
+
 Local 2.5.1 SERVER optimization (publication not verified): the object scan behind `BGN_ActorVisibleAtObject`/`BGN_ActorLookAtObject` searches 100 units around an actor instead of 1000 (the built-in listeners react within 80 units), and its forward trace runs once per scan. The once-per-second foreign-hostility check rejects non-NPC entities first, and the static animation controller checks `IsAlive` only for animated actors. Behavior is unchanged.
 
 Local 2.5.1 police-call fix (publication not verified): damage/protection reactions reject calls about already wanted or police-known enemies before enemy registration; entering a call also requires a valid selected enemy. Active-call completion rules are unchanged. See [police calls](systems/wanted.md#completing-a-police-call).

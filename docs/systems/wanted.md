@@ -1,6 +1,6 @@
 # Wanted levels and offenders
 
-Sources: `systems/wanted/`, `systems/sv_offender.lua`, `config/states/sh_wanted.lua`. The server owns wanted state and reactions; clients receive records and render the HUD/halos.
+Sources: `systems/wanted/`, `config/states/sh_wanted.lua`. The server owns wanted state and reactions; clients receive records and render the HUD/halos.
 
 | Server cvar | Default | Purpose |
 |---|---|---|
@@ -16,7 +16,7 @@ Kills, witnesses, police calls and arrest refusal feed wanted handling. Ignored/
 
 Residents and police sharing a team cannot become enemies through an ordinary hit or kill. Friendly hits do not start fear, help, arrest or crime reporting; `bgn_team_damage` controls health damage only. `AddWanted` rejects resident actors, and regular cleanup removes stale resident entries. `SetTeam`/`AddTeam` reconcile mutual enemy lists immediately; becoming a resident clears wanted, and joining the primary officer's team clears that actor's arrest.
 
-Only actual vehicle collisions can turn a civilian driver (`residents`, not `police` or `medics`) into an offender: running over a civilian on foot, or repeatedly ramming the same officer/car for at least 3 seconds, with no gap over 3 seconds. Police ramming retains the 10% reaction chance per eligible hit after that minimum; ignored police-car impacts do not damage occupants. Both damage type (`DMG_CRUSH`/`DMG_VEHICLE`) and the driver's car as attacker/inflictor are required. Bullets, ordinary kills and a single police bump do not qualify. The driver loses `residents`, gains `offenders`, then becomes wanted when enabled; peaceful mode blocks conversion. Wanted expiry does not restore the team. See [brains](brains.md) and [arrest](arrest.md).
+Nothing in the addon removes a civilian's `residents` team. Vehicle collisions are no exception: running over a civilian or ramming an officer or a police car never turns the driver into an offender. Police in a car ignore a civilian driver's ram and take no damage from it; a ram by a non-civilian actor keeps the 10% reaction chance. See [brains](brains.md) and [arrest](arrest.md).
 
 ## Integration
 
@@ -40,7 +40,7 @@ With wanted enabled and peaceful mode off, players and actors not currently in r
 
 A foreign entity (neither player nor actor) becomes wanted without a witness if it kills any residents/police actor, or has `Disposition(actor) == D_HT` towards any living residents/police actor. Hostility is polled once per second; `bgn_ignore_another_npc` disables this polling. For local enemy detection, a hostile foreign entity must be within 2500 units and LOS; FOV is not required. Foreign NPC dispositions towards ordinary actor bodies are preserved instead of being replaced from player relations; the existing NextBot player-disposition adapter remains in use. There is no guessed hostility for entities without `Disposition`.
 
-Completed witness calls, police radio backup and the vehicle-only civilian-offender paths remain wanted sources. Resident/medic and existing ignored/arrested exclusions remain protected. Arrest escalation is described on the [arrest page](arrest.md#escalation-during-an-arrest). Wanted assignment still informs all police immediately.
+Completed witness calls and police radio backup remain wanted sources. Resident/medic and existing ignored/arrested exclusions remain protected. Arrest escalation is described on the [arrest page](arrest.md#escalation-during-an-arrest). Wanted assignment still informs all police immediately.
 
 <a id="behavior-decision-tree"></a>
 
@@ -71,7 +71,6 @@ This is the implemented **SERVER** tree in the local 2.5.1 implementation on `de
 Damage attempt
 ├─ Resolve siege payload owner (attacker, then inflictor) before reaction/team checks
 │  └─ Vehicle resolution then follows the existing driver rules; hook order does not choose the team
-├─ Actual vehicle collision → check only the two driver exceptions above before team protection
 ├─ Shared team → no combat reaction; health damage follows bgn_team_damage
 ├─ Existing personal/team/mode/protection hooks may block damage
 │  └─ The victim's own reaction can happen here, before health changes
@@ -145,7 +144,7 @@ Initial wanted request from built-in gameplay
 ├─ Arrest refusal/escape/harm/kill → follow the arrest tree
 ├─ Completed witness phone call → report eligible known enemies
 │  └─ Police already know the enemy or it is already wanted / hook veto / failed call → no new report
-├─ Police radio backup / civilian-offender path → their existing conditions
+├─ Police radio backup → its existing conditions
 └─ An ACTOR was killed
    ├─ Peaceful mode, wanted disabled, or invalid killer → stop this kill handler
    ├─ Killer is still a residents ACTOR → stop; ordinary kills do not remove this team

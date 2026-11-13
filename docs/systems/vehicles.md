@@ -18,4 +18,4 @@ Steep ramps and unusual axle layouts require separate live calibration. Stub reg
 
 Cars farther than 1500 units from every player (3500 when in view) and not in a chase, recovery or flight think every 0.05 s, scan every 0.25 s and do not start recovery planning (`bgn_vehicle_lod`, default 1; `modules/dv/sv_vehicle_lod.lua`). They return to native timing as soon as a player comes near. In a 12-car test this cut DV think time from 151 to 96 ms/s.
 
-Friendly police hits do not activate the seated-driver execution timer. Friendly hits do not force occupants to exit or turn a citizen into an offender. Only the [validated vehicle collision exceptions](wanted.md) can remove civilian team protection.
+Friendly police hits do not activate the seated-driver execution timer. Friendly hits do not force occupants to exit or turn a citizen into an offender. Vehicle collisions do not remove civilian team protection either: running over a civilian or ramming police keeps the driver allied ([wanted](wanted.md)).

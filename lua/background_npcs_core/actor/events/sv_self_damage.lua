@@ -15,15 +15,6 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
   if not bgNPC.Combat.IsAttacker(attacker) then return end
   if bgNPC.Combat.IsIgnored(attacker) or attacker.bgNPCIgnore or attacker == target then return end
   local hit_actor = bgNPC.Actors.Get(target)
-  local attacker_actor = bgNPC.Actors.Get(attacker)
-  if hit_actor and attacker_actor and attacker_actor:InVehicle() and not hit_actor:InVehicle() then
-    if hit_actor:HasTeam('police') then
-      bgNPC.OffenderFromRamming(attacker, dmginfo, target)
-    elseif hit_actor:IsCivilian() then
-      bgNPC.OffenderFromRamming(attacker, dmginfo)
-    end
-  end
-
   -- the arrest state lets go only of an attacked officer
   if hit_actor and not hit_actor:HasTeam(attacker) then hit_actor.last_attacked_at, hit_actor.last_attacker = CurTime(), attacker end
   local result

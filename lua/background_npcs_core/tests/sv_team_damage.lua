@@ -224,7 +224,6 @@ local function World()
   w.Load('systems/arrest/sv_arrest.lua')
   w.Load('systems/wanted/sh_wanted_class.lua')
   w.Load('systems/sv_first_attacker_found.lua')
-  w.Load('systems/sv_offender.lua')
   w.Load('actor/events/sv_self_damage.lua')
   w.Load('brain/fsm/states/sv_calling_police.lua')
   w.Load('systems/wanted/sv_wanted_actions.lua')
@@ -409,19 +408,6 @@ bgNPC.Test.Add('teams.team_change_clears_mutual_targets_and_wanted', function(ch
   check(not w.modules.player_arrest:HasTarget(suspect.npc), 'newly allied suspects leave an existing arrest')
 end)
 
-bgNPC.Test.Add('teams.ramming_requires_vehicle_source_and_resets_after_a_gap', function(check)
-  local w = World()
-  local driver, police_car = w.Actor({'residents'}), w.Entity('vehicle')
-  local car = w.Car(driver)
-  check(not w.bgNPC.OffenderFromRamming(driver.npc, w.Damage(driver.npc, DMG_CRUSH), police_car), 'a seated attacker alone does not prove a vehicle collision')
-  w.bgNPC.OffenderFromRamming(driver.npc, w.Damage(car, DMG_CRUSH, car), police_car)
-  w.now = 110
-  check(not w.bgNPC.OffenderFromRamming(driver.npc, w.Damage(car, DMG_CRUSH, car), police_car) and driver:HasTeam('residents'), 'a long gap resets the police ramming timer')
-  local other_car = w.Entity('vehicle')
-  w.now = 112
-  check(not w.bgNPC.OffenderFromRamming(driver.npc, w.Damage(car, DMG_CRUSH, car), other_car), 'changing the rammed car resets the timer')
-end)
-
 bgNPC.Test.Add('teams.help_cannot_spread_an_allied_enemy', function(check)
   local w = World()
   local caller, bystander, police = w.Actor({'residents'}), w.Actor({'residents'}), w.Actor({'residents', 'police'})
@@ -475,29 +461,16 @@ bgNPC.Test.Add('teams.stale_resident_wanted_is_removed', function(check)
   check(not w.modules.wanted:HasWanted(citizen.npc), 'the regular cleanup removes a stale resident wanted entry')
 end)
 
-bgNPC.Test.Add('teams.police_on_foot_requires_repeated_vehicle_ramming', function(check)
+bgNPC.Test.Add('teams.ramming_police_on_foot_keeps_the_driver_allied', function(check)
   local w = World()
   local driver, police = w.Actor({'residents'}), w.Actor({'residents', 'police'})
   local car = w.Car(driver)
-  w.hook.Run('EntityTakeDamage', police.npc, w.Damage(car, DMG_VEHICLE, car))
-  check(driver:HasTeam('residents') and police:HasNoEnemies(), 'one collision with an officer on foot does not start a conflict')
-  for now = 101, 103 do
+  for now = 100, 103 do
     w.now = now
     w.hook.Run('EntityTakeDamage', police.npc, w.Damage(car, DMG_VEHICLE, car))
   end
 
-  check(driver:HasTeam('offenders') and police:HasEnemy(driver.npc), 'repeated vehicle ramming of an officer keeps the explicit exception')
-end)
-
-bgNPC.Test.Add('teams.ramming_preserves_medic_and_peaceful_protection', function(check)
-  local w = World()
-  local medic = w.Actor({'residents', 'medics'})
-  local car = w.Car(medic)
-  check(not w.bgNPC.OffenderFromRamming(medic.npc, w.Damage(car, DMG_VEHICLE, car)) and medic:HasTeam('residents'), 'medics keep their existing protection')
-  local driver = w.Actor({'residents'})
-  car = w.Car(driver)
-  w.bgNPC.Modes.IsPeaceful = function() return true end
-  check(not w.bgNPC.OffenderFromRamming(driver.npc, w.Damage(car, DMG_VEHICLE, car)) and driver:HasTeam('residents'), 'peaceful mode never strips the residents team')
+  check(driver:HasTeam('residents') and not driver:HasTeam('offenders') and police:HasNoEnemies(), 'repeated vehicle ramming of an officer never makes the driver hostile')
 end)
 
 bgNPC.Test.Add('teams.friendly_police_hits_do_not_execute_a_seated_citizen', function(check)
@@ -527,7 +500,7 @@ bgNPC.Test.Add('teams.ordinary_kill_does_not_remove_civilian_team', function(che
   local w = World()
   local citizen, victim = w.Actor({'residents'}), w.Actor({'residents'})
   w.hook.Run('BGN_OnKilledActor', victim, citizen.npc)
-  check(citizen:HasTeam('residents') and not citizen:HasTeam('offenders') and not w.modules.wanted:HasWanted(citizen.npc), 'ordinary friendly kills cannot use the vehicle-only offender exception')
+  check(citizen:HasTeam('residents') and not citizen:HasTeam('offenders') and not w.modules.wanted:HasWanted(citizen.npc), 'ordinary friendly kills keep the killer allied')
 end)
 
 bgNPC.Test.Add('teams.police_cannot_arrest_a_teammate', function(check)
@@ -536,7 +509,7 @@ bgNPC.Test.Add('teams.police_cannot_arrest_a_teammate', function(check)
   check(w.modules.player_arrest:AddTarget(citizen.npc, police) == false, 'arrest registration rejects a teammate')
 end)
 
-bgNPC.Test.Add('teams.vehicle_exception_requires_a_real_collision', function(check)
+bgNPC.Test.Add('teams.vehicle_collisions_keep_the_driver_allied', function(check)
   local w = World()
   local driver, police = w.Actor({'residents'}), w.Actor({'residents', 'police'})
   local car, police_car = w.Car(driver), w.Entity('vehicle')
@@ -555,18 +528,16 @@ bgNPC.Test.Add('teams.vehicle_exception_requires_a_real_collision', function(che
 
   w.Load('modules/dv/sv_car_damage_reaction.lua')
   w.hook.Run('EntityTakeDamage', police_car, w.Damage(driver.npc, DMG_BULLET))
-  check(driver:HasTeam('residents') and not w.modules.wanted:HasWanted(driver.npc), 'shooting the car is not a ramming exception, even while seated')
-  w.hook.Run('EntityTakeDamage', police_car, w.Damage(car, DMG_CRUSH, car))
-  check(driver:HasTeam('residents'), 'one accidental bump does not remove team protection')
-  for now = 101, 103 do
+  check(driver:HasTeam('residents') and not w.modules.wanted:HasWanted(driver.npc), 'shooting the car keeps the driver allied')
+  for now = 100, 103 do
     w.now = now
     w.hook.Run('EntityTakeDamage', police_car, w.Damage(car, DMG_CRUSH, car))
   end
 
-  check(driver:HasTeam('offenders') and not driver:HasTeam('residents'), 'actual reacted-to vehicle ramming keeps its explicit exception')
+  check(driver:HasTeam('residents') and not driver:HasTeam('offenders'), 'repeated ramming of a police car keeps the driver allied')
   local pedestrian = w.Actor({'residents'})
   local other_driver = w.Actor({'residents'})
   local other_car = w.Car(other_driver)
   w.hook.Run('EntityTakeDamage', pedestrian.npc, w.Damage(other_car, DMG_VEHICLE, other_car))
-  check(other_driver:HasTeam('offenders') and not other_driver:HasTeam('residents'), 'running over a civilian uses the vehicle exception before team protection')
+  check(other_driver:HasTeam('residents') and not other_driver:HasTeam('offenders'), 'running over a civilian keeps the driver allied')
 end)

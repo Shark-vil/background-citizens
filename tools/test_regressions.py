@@ -1310,9 +1310,7 @@ def startup_find(pattern, _realm):
 
 def startup_include(path):
     path = path.removeprefix('background_npcs_core/')
-    if path in ('systems/arrest/sv_arrest.lua', 'systems/sv_offender.lua'):
-        if path == 'systems/sv_offender.lua':
-            startup.execute("assert(bgNPC.Modules.Get('player_arrest'), 'arrest must register before offender captures the module')")
+    if path == 'systems/arrest/sv_arrest.lua':
         load(startup, path)
 
 startup.globals().file.Find = startup_find

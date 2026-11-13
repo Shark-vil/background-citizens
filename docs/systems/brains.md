@@ -86,7 +86,7 @@ put at a spot free for its whole body, never inside the car.
 - A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
-- **Offenders** (`systems/sv_offender.lua`): only the two [vehicle collision exceptions](wanted.md) remove a civilian driver's `residents` team. Ordinary friendly hits/kills do not start fear, retaliation or wanted. `bgn_team_damage` affects health only; medics and peaceful mode remain protected.
+- **Team protection**: nothing removes a civilian's `residents` team, vehicle collisions included ([wanted](wanted.md)). Ordinary friendly hits/kills do not start fear, retaliation or wanted. `bgn_team_damage` affects health only.
 - **Shared enemies** (`systems/sv_enemy_sharing.lua`, `bgn_enemy_share_period`, default 2 s, `0` = off): an actor
   with enemies (not in `fear`, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
   the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
