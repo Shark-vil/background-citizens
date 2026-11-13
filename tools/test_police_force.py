@@ -34,7 +34,7 @@ function Actor(uid,police)
  return a
 end
 officer=Actor(1,true); observers={officer}
-dmg={GetDamage=function() return 1 end,GetAttacker=function() return suspect end}
+dmg={GetDamage=function() return 1 end,GetAttacker=function() return suspect end,GetInflictor=function() return suspect end}
 ''')
 lua.execute((ROOT/'lua/background_npcs_core/api/sv_police_force.lua').read_text(encoding='utf-8-sig'))
 lua.execute('''
@@ -81,7 +81,7 @@ lua.execute('''
 local C=bgNPC.Combat
 local cop,thug,sniper,near=Actor(20,true),Entity(),Entity(600),Entity(400)
 observers={}
-local hit=function(attacker) return {GetDamage=function() return 1 end,GetAttacker=function() return attacker end} end
+local hit=function(attacker) return {GetDamage=function() return 1 end,GetAttacker=function() return attacker end,GetInflictor=function() return attacker end} end
 hooks.PostEntityTakeDamage(Actor(21,false).npc,hit(near),true)
 assert(not near.bgn_ranged_attack,'a hit from 400 units is not ranged')
 hooks.PostEntityTakeDamage(Actor(22,false).npc,hit(sniper),false)

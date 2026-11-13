@@ -27,6 +27,7 @@ hook.Add('EntityTakeDamage', 'BGN_LethalWeaponDamage', function(target, dmg)
   local actor = Actors.Get(target)
   if not actor then return end
   local attacker, inflictor = dmg:GetAttacker(), dmg:GetInflictor()
+  attacker = Combat.ResolveVehicleAttacker(attacker, inflictor)
   actor.lethal_weapon_damage = {
     attacker = attacker,
     excluded = dmg:IsExplosionDamage() or dmg:IsDamageType(DMG_VEHICLE)

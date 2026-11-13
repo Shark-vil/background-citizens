@@ -107,6 +107,9 @@ bgNPC.Test.Add('siege.reservation_and_wait', function(check)
     check(forced, 'cleanup bypasses a state delay instead of leaving participants frozen')
     self.active, self.siege = false, nil
   end
+  actor.hold_fire = true
+  check(w.bgNPC.Siege.CanStart(actor, enemy) == nil, 'an officer holding negotiation fire cannot initiate a siege')
+  actor.hold_fire = nil
   check(w.bgNPC.Siege.CanStart(actor, enemy) == portal, 'a remembered enemy behind the doorway enables the tactic')
   local entry, member = w.bgNPC.Siege.Start(actor)
   check(entry and member and entry.near_count == 1, 'the operator reserves its entrance and position')
@@ -135,8 +138,11 @@ bgNPC.Test.Add('siege.reservation_and_wait', function(check)
     return ally
   end
   for _ = 1, 6 do Ally() end
+  local negotiating = Ally()
+  negotiating.hold_fire = true
   w.bgNPC.Actors.GetAll = function() return teammates end
   update()
+  check(not negotiating.siege and not entry.members[negotiating], 'a negotiating officer cannot join or lose its separate capability ownership')
   check(entry.phase == 'wait' and entry.wait_until == 112, 'the wait starts after positioning and lasts twelve seconds')
   local near, rear = 0, 0
   for _, slot in pairs(entry.members) do

@@ -2,7 +2,7 @@
 -- Not only IsVehicle(): simfphys/LVS/Glide chassis are scripted entities, and a hit on them must reach the occupants too.
 hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginfo)
   if dmginfo:GetDamage() <= 0 then return end
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   if not bgNPC.Combat.IsAttacker(attacker) then return end
   local cars = bgNPC.DVCars
   for i = 1, #cars do

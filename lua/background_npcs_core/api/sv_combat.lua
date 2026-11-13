@@ -30,18 +30,18 @@ function Combat.CanPoliceShoot(enemy)
   return (HasRangedWeapon(enemy) or enemy.bgn_has_killed or bgNPC.Statistics.GetSum(enemy) >= 1) and enemy.bgn_last_attack ~= nil and CurTime() - enemy.bgn_last_attack < POLICE_ATTACK_WINDOW and not Modules.Get('player_arrest'):IsProtected(enemy)
 end
 
-local function RecordKill(victim, attacker)
-  attacker = Combat.ResolveVehicleAttacker(attacker)
+local function RecordKill(victim, attacker, inflictor)
+  attacker = Combat.ResolveVehicleAttacker(attacker, inflictor)
   -- Wanted statistics reset on escalation; that must not erase the first kill for weapon selection.
   if IsValid(attacker) and attacker ~= victim then attacker.bgn_has_killed = true end
 end
 
 hook.Add('OnNPCKilled', 'BGN_PoliceLethalThreat', RecordKill)
 hook.Add('BGN_OnKilledActor', 'BGN_PoliceLethalThreat', function(actor, attacker) RecordKill(actor:GetNPC(), attacker) end)
-hook.Add('PlayerDeath', 'BGN_PoliceLethalThreat', function(victim, _, attacker)
+hook.Add('PlayerDeath', 'BGN_PoliceLethalThreat', function(victim, inflictor, attacker)
   victim.bgn_has_killed = nil
   victim.bgn_last_attack = nil
-  RecordKill(victim, attacker)
+  RecordKill(victim, attacker, inflictor)
 end)
 
 -- Is the entity in a real fight: it shot or hurt someone lately, or an actor shoots back at an enemy.
@@ -65,7 +65,7 @@ function Combat.IsInCombatRadius(actor)
 end
 
 hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
-  local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   if dmginfo:GetDamage() > 0 and Combat.IsAttacker(attacker) then attacker.bgn_last_attack = CurTime() end
 end)
 
@@ -136,7 +136,7 @@ function Combat.EquipActor(actor, weapon_class, switching)
   local npc = actor:GetNPC()
   local active_weapon = npc:GetActiveWeapon()
   if not weapon_class and actor.class == 'npc_metropolice' and actor:HasTeam('police') then
-    local enemy = actor:GetNearEnemy()
+    local enemy = actor:GetEnemy()
     if not IsValid(enemy) and actor.GetFirstTarget then enemy = actor:GetFirstTarget() end
     if IsValid(enemy) then
       local data = actor:GetStateData()
@@ -178,8 +178,11 @@ end
 -- ---------------------------------------------------------------------------
 -- Enemy resolving
 -- ---------------------------------------------------------------------------
--- Returns the driver when the attacker is a vehicle, nil if nobody drives it.
-function Combat.ResolveVehicleAttacker(attacker)
+-- Resolve payload ownership before team checks, then the vehicle driver (nil when empty).
+function Combat.ResolveVehicleAttacker(attacker, inflictor)
+  local owner = IsValid(attacker) and attacker.bgn_siege_owner
+  if not IsValid(owner) then owner = IsValid(inflictor) and inflictor.bgn_siege_owner end
+  if IsValid(owner) then attacker = owner end
   -- an actor's Decent Vehicle car (or its AI): the driving actor, so the team rules apply to its hits
   local provider = BGN_VEHICLE and IsValid(attacker) and BGN_VEHICLE:GetVehicleProvider(attacker)
   local driver = provider and provider:GetDriver()

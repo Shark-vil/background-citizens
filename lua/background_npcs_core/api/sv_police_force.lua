@@ -77,8 +77,9 @@ end
 Combat.MarkRangedAttack = MarkRangedAttack
 hook.Add('PostEntityTakeDamage', 'BGN_PoliceWitnessedHarm', function(victim, dmg, took)
   if not took then return end
-  WitnessedHarm(victim, dmg:GetAttacker(), dmg:GetDamage())
-  if victim:IsPlayer() or victim:IsNPC() or victim:IsNextBot() then MarkRangedAttack(victim, dmg:GetAttacker()) end
+  local attacker = Combat.ResolveVehicleAttacker(dmg:GetAttacker(), dmg:GetInflictor())
+  WitnessedHarm(victim, attacker, dmg:GetDamage())
+  if victim:IsPlayer() or victim:IsNPC() or victim:IsNextBot() then MarkRangedAttack(victim, attacker) end
 end)
 
 hook.Add('BGN_PostVehicleDamage', 'BGN_PoliceWitnessedHarm', function(actor, attacker, amount)

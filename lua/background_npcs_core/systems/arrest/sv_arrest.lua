@@ -141,7 +141,7 @@ end)
 hook.Add('BGN_AddActorEnemy', 'BGN_ArrestCeaseFire', function(actor, enemy) if IsLawAlly(actor) and ASSET:IsProtected(enemy) then return true end end)
 hook.Add('EntityTakeDamage', 'BGN_ArrestCeaseFire', function(target, dmginfo)
   if not ASSET:IsProtected(target) then return end
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   local actor = bgNPC.Actors.Get(attacker)
   if actor and IsLawAlly(actor) then return true end
 end)
@@ -201,13 +201,13 @@ function ASSET:CheckCompliance(target, officer)
   if not component.detention and component.warningTime < CurTime() and GetConVar('bgn_arrest_mode'):GetBool() then self:Escalate(target) end
 end
 
-local function ArrestKill(attacker)
-  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker)
+local function ArrestKill(attacker, inflictor)
+  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)
   if IsValid(attacker) then ASSET:Escalate(attacker) end
 end
 hook.Add('BGN_OnKilledActor', 'BGN_ArrestKill', function(_, attacker) ArrestKill(attacker) end)
-hook.Add('OnNPCKilled', 'BGN_ArrestKill', function(_, attacker) ArrestKill(attacker) end)
-hook.Add('PlayerDeath', 'BGN_ArrestKill', function(_, _, attacker) ArrestKill(attacker) end)
+hook.Add('OnNPCKilled', 'BGN_ArrestKill', function(_, attacker, inflictor) ArrestKill(attacker, inflictor) end)
+hook.Add('PlayerDeath', 'BGN_ArrestKill', function(_, inflictor, attacker) ArrestKill(attacker, inflictor) end)
 
 timer.Create('BGN_ArrestCompliance', .25, 0, function()
   local targets = {}

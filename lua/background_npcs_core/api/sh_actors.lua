@@ -113,6 +113,8 @@ function Actors.Rebind(actor, npc)
     end
 
     if other.walkTarget == old then other.walkTarget = npc end
+    if other.combat_enemy == old then other.combat_enemy = npc end
+    if other.last_attacker == old then other.last_attacker = npc end
     for _, state in ipairs({other.state_data or {}, other.old_state or {}}) do
       for key, value in pairs(state.data or {}) do
         if value == old then state.data[key] = npc end
@@ -120,7 +122,8 @@ function Actors.Rebind(actor, npc)
     end
 
     if other.enemy_last_seen and other.enemy_last_seen[old] then other.enemy_last_seen[npc], other.enemy_last_seen[old] = other.enemy_last_seen[old], nil end
-    if other.body and other.body:GetEnemy() == old then other.body:SetEnemy(npc) end
+    if other.enemy_last_position and other.enemy_last_position[old] then other.enemy_last_position[npc], other.enemy_last_position[old] = other.enemy_last_position[old], nil end
+    if other.body and other.body:GetEnemy() == old then other.body:SetEnemy(npc, other.enemy_last_position and other.enemy_last_position[npc]) end
   end
 
   hook.Run('BGN_ActorEntityChanged', actor, old, npc)

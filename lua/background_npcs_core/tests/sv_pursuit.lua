@@ -179,3 +179,119 @@ bgNPC.Test.Add('pursuit.wanted_target_is_known', function(check)
   actor:AddEnemy(other)
   check(not actor.enemy_last_position[other], 'an unseen non-wanted enemy has no known position')
 end)
+
+bgNPC.Test.Add('pursuit.npc_memory_does_not_extend_search', function(check)
+  local w = World()
+  local actor, enemy = w.Actor(), w.Entity(300)
+  local npc = actor:GetNPC()
+  function npc:SetEnemy(ent) actor.body.enemy = ent end
+  function npc:SetTarget() end
+  function npc:UpdateEnemyMemory() self.engine_seen = w.now end
+  function npc:GetEnemyLastTimeSeen() return self.engine_seen or 0 end
+  -- Use the real adapter while modelling UpdateEnemyMemory's native last-seen side effect.
+  w.bgNPC.Class = function() return {} end
+  w.Load('actor/body/sv_npc_body.lua')
+  actor.body.SetEnemy = w.bgNPC.NPCBody.SetEnemy
+  actor.body.GetEnemyLastTimeSeen = w.bgNPC.NPCBody.GetEnemyLastTimeSeen
+  actor.body.ent = npc
+  actor:AddEnemy(enemy)
+  enemy.visible = false
+  for t = 101, 160 do w.now = t actor:EnemiesRecalculate() end
+  check(actor:HasEnemy(enemy) and npc.engine_seen == 160, 'engine pursuit writes do not represent new observations')
+  w.now = 161 actor:EnemiesRecalculate()
+  check(not actor:HasEnemy(enemy), 'a hidden ordinary enemy expires after sixty seconds despite engine memory writes')
+  enemy.visible = true
+  actor:AddEnemy(enemy)
+  w.now = 200 actor:EnemiesRecalculate()
+  enemy.visible = false
+  w.now = 250 actor:EnemiesRecalculate()
+  check(actor:HasEnemy(enemy) and actor.enemy_last_seen[enemy] == 200, 'a real new sighting renews the search')
+end)
+
+bgNPC.Test.Add('pursuit.rebind_preserves_hidden_target', function(check)
+  for _, server in ipairs({false, true}) do
+    local w = World()
+    w.SERVER = server
+    local observer, suspect = w.Actor(), w.Actor()
+    local old, replacement, nearer = suspect:GetNPC(), w.Entity(700), w.Entity(50)
+    old.pos, suspect.uid = Vector(500, 0, 0), 2
+    observer:AddEnemy(old) observer:AddEnemy(nearer)
+    local known, seen = observer.enemy_last_position[old], observer.enemy_last_seen[old]
+    observer.combat_enemy, observer.last_attacker, observer.last_attacked_at = old, old, w.now
+    observer.targets, suspect.targets = {}, {}
+    function suspect:GetType() return 'citizen' end
+    function old:SetNW2Bool() end
+    function replacement:SetNW2Bool() end
+    function replacement:EntIndex() return 42 end
+    w.bgNPC.Net = {Send = function() end}
+    w.bgNPC.Body = {For = function() return {GetEnemy = function() return NULL end} end}
+    w.Load('api/sh_actors.lua')
+    w.bgNPC.actors, w.bgNPC.npcs = {observer, suspect}, {observer:GetNPC(), old}
+    w.bgNPC.actors_by_uid[suspect.uid] = suspect
+    w.bgNPC.Actors.Rebind(suspect, replacement)
+    replacement.visible = false
+    check(w.bgNPC.actors_by_uid[2] == suspect and suspect:GetNPC() == replacement, 'body replacement preserves the registered actor and UID')
+    check(observer.enemy_last_position[replacement] == known and observer.enemy_last_position[old] == nil,
+      'body replacement transfers position and releases the old key in both realms')
+    check(observer.enemy_last_seen[replacement] == seen and observer.enemy_last_seen[old] == nil,
+      'replacement preserves the original observation age')
+    check(observer.last_attacker == replacement and observer.combat_enemy == replacement and observer:GetEnemy() == replacement,
+      'recent-attacker and stable-target priorities survive replacement')
+    check(observer.body.enemy == replacement and observer.body.memory == known, 'the body receives the transferred known position')
+    w.Load('brain/fsm/states/sv_defense.lua')
+    observer.enemy_last_position[nearer] = nil
+    w.states.defense.update(observer)
+    check(observer.destination == known, 'a replaced hidden target remains pursuable')
+  end
+end)
+
+bgNPC.Test.Add('pursuit.equipment_uses_selected_enemy', function(check)
+  local w = World()
+  w.Load('api/sv_combat.lua')
+  local actor, near, selected = w.Actor(), w.Entity(50), w.Entity(500)
+  actor.class = 'npc_metropolice'
+  function actor:IsNPC() return true end
+  function actor:GetType() return 'police' end
+  function actor:HasTeam(team) return team == 'police' end
+  function actor:GetActorWeapon() return 'weapon_pistol' end
+  function actor:GetEnemy() return selected end
+  function actor:GetNearEnemy() return near end
+  function actor:GetFirstTarget() return selected end
+  w.bgNPC.Util.GetCVar = function() end
+  local held = {valid = true, GetClass = function() return 'weapon_pistol' end}
+  function actor.npc:GetActiveWeapon() return held end
+  function actor.npc:GetWeapon() return held end
+  w.bgNPC.Combat.CanPoliceUseStunstick = function(_, enemy) return enemy == near end
+  w.bgNPC.Combat.EquipActor(actor)
+  check(actor.state_data.police_firearm == true, 'a nearer minor threat cannot select a baton for the active firearm target')
+  selected = NULL
+  function actor:GetFirstTarget() return near end
+  function held:GetClass() return 'weapon_stunstick' end
+  w.bgNPC.Combat.EquipActor(actor)
+  check(actor.state_data.police_firearm == false, 'arrest-target fallback still works without a combat enemy')
+end)
+
+bgNPC.Test.Add('pursuit.nextbot_unstuck_combat_guard', function(check)
+  local w = World()
+  w.Load('api/sv_combat.lua')
+  w.ENT, w.CLIENT, w.AddCSLuaFile = {}, false, function() end
+  w.util = {TraceHull = function() return {Hit = false, StartSolid = false} end}
+  w.navmesh.Find = function() return {{GetRandomPoint = function() return Vector(100, 0, 0) end}} end
+  w.bgNPC.IsHiddenSpawnPosition = function() return true end
+  setfenv(assert(CompileFile('entities/bgn_nextbot.lua')), w)()
+  local actor, enemy = w.Actor(), w.Entity(1000)
+  actor:AddEnemy(enemy)
+  local bot = setmetatable({BGN_ACTOR_OBJECT = actor, loco = {ClearStuck = function() end}}, {__index = w.ENT})
+  function bot:GetPos() return Vector() end
+  function bot:SetPos() self.teleports = (self.teleports or 0) + 1 end
+  local path = {GetCurrentGoal = function() return {pos = Vector(200, 0, 0)} end}
+  for _, distance in ipairs({1000, 1000.1}) do
+    enemy.pos, bot.teleports, bot.stuck_since = Vector(distance, 0, 0), 0, 90
+    bot:HandleStuck(path)
+    bot:PullOut()
+    check(bot.teleports == (distance == 1000 and 0 or 2), 'both teleport paths respect the inclusive combat boundary')
+  end
+  actor.siege, enemy.pos, bot.teleports, bot.stuck_since = {}, Vector(2000, 0, 0), 0, 90
+  bot:HandleStuck(path) bot:PullOut()
+  check(bot.teleports == 0, 'siege protection remains independent of distance')
+end)

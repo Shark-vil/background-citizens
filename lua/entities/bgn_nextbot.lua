@@ -694,7 +694,7 @@ end
 -- @return boolean true if the bot was moved
 function ENT:PullOut()
   local actor = self.BGN_ACTOR_OBJECT
-  if actor and actor.siege then return false end
+  if actor and (actor.siege or bgNPC.Combat.IsInCombatRadius(actor)) then return false end
   local pos = self:GetPos()
   local goal = self.move_goal
   local best, best_dist
@@ -734,6 +734,12 @@ function ENT:HandleStuck(path)
   end
 
   if CurTime() - self.stuck_since < STUCK_TELEPORT_TIME then return end
+  if actor and bgNPC.Combat.IsInCombatRadius(actor) then
+    self.loco:ClearStuck()
+    self.stuck_since = nil
+    self.path_dirty = true
+    return
+  end
   local goal = path:GetCurrentGoal()
   -- a player who sees the bot or the goal gets no far teleport: pull out nearby instead
   if goal and IsSpotFree(self, goal.pos) and bgNPC:IsHiddenSpawnPosition(goal.pos, self) then

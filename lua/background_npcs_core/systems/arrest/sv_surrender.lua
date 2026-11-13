@@ -27,7 +27,7 @@ local function IsDisarmed(ply)
 end
 
 hook.Add('EntityTakeDamage', 'BGN_Surrender_LastAttack', function(target, dmginfo)
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   if IsValid(attacker) and attacker ~= target and dmginfo:GetDamage() > 0 and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot()) and (target:IsPlayer() or target:IsNPC() or target:IsNextBot()) then attacker.bgn_last_attack = CurTime() end
 end)
 
@@ -45,7 +45,7 @@ local COMBAT_STATES = {
 hook.Add('EntityTakeDamage', 'BGN_Surrender_Unarmed', function(target, dmginfo)
   if not cvar_mode:GetBool() or dmginfo:GetDamage() <= 0 or dmginfo:GetDamage() >= target:Health() then return end
   local suspect = bgNPC.Actors.Get(target)
-  local police = bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker()))
+  local police = bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor()))
   if not suspect or not police or not police:HasTeam('police') or not police:HasEnemy(target) or suspect:HasTeam('police') or not suspect:IsAlive() or suspect:InVehicle() or IsValid(suspect:GetActiveWeapon()) or COMBAT_STATES[suspect:GetState()] or not bgNPC.Util.Chance(UNARMED_SURRENDER_CHANCE) then return end
   ArrestModule:Surrender(suspect, police)
 end)

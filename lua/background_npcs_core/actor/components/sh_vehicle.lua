@@ -331,7 +331,7 @@ local POLICE_HIT_GAP = 60 -- a pause in police hits this long ends the attempt t
 function Actor:TakeVehicleDamage(amount, attacker, inflictor)
   local saved = self.vehicle_body
   if not saved or self.is_removed or amount <= 0 then return end
-  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker) or attacker
+  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor) or attacker
   if bgNPC.Combat.IsAttacker(attacker) and attacker ~= self.npc and not bgNPC.Combat.IsIgnored(attacker) and not attacker.bgNPCIgnore then
     local damage = DamageInfo()
     damage:SetDamage(amount)

@@ -86,7 +86,7 @@ end
 timer.Create('BGN_Negotiation', 0.5, 0, Tick)
 -- Any kill by the negotiated player breaks the talks.
 hook.Add('PostEntityTakeDamage', 'BGN_Negotiation', function(ent, damage)
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(damage:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(damage:GetAttacker(), damage:GetInflictor())
   local talk = IsValid(attacker) and talks[attacker]
   if talk and ent ~= attacker and ent:Health() <= 0 and (ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer()) then talk.failed = true end
 end)

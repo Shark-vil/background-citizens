@@ -17,6 +17,7 @@ local function World()
       if a ~= nil then return a, b end
     end
   end
+  env.hooks = hooks
   env.timer = {Create = function(id, _, _, fn) timers[id] = fn end, Simple = function(_, fn) fn() end}
   env.list = {Set = function(_, name, value) modules[name] = value end}
   env.cvars = {AddChangeCallback = function() end}
@@ -94,13 +95,46 @@ local function World()
     return actor
   end
   function env.Damage(attacker, amount)
-    return {GetAttacker = function() return attacker end, GetDamage = function() return amount or 1 end}
+    return {GetAttacker = function() return attacker end, GetInflictor = function() return attacker end, GetDamage = function() return amount or 1 end}
   end
   env.Load('api/sv_combat.lua')
   env.Load('systems/arrest/sv_arrest.lua')
   env.Load('systems/sv_first_attacker_found.lua')
   return env, modules, timers, wanted, values
 end
+
+bgNPC.Test.Add('conflicts.payload_owner_before_reaction', function(check)
+  for _, owner_first in ipairs({false, true}) do
+    for _, inflictor_only in ipairs({false, true}) do
+      local w = World()
+      w.bgNPC.Siege = {}
+      w.Load('actor/events/sv_self_damage.lua')
+      w.Load('systems/siege/sv_siege.lua')
+      local victim, officer = w.Actor({residents = true}), w.Actor({residents = true, police = true})
+      function victim:GetReactionForDamage() return 'fear' end
+      function victim:RemoveEnemy(ent) self.enemies[ent] = nil end
+      function victim:IsCivilian() return true end
+      function officer:RemoveEnemy(ent) self.enemies[ent] = nil end
+      function officer:GetNearEnemy() return NULL end
+      local payload = w.Entity()
+      payload.bgn_siege_owner = officer.npc
+      local damage = {attacker = inflictor_only and NULL or payload}
+      function damage:GetAttacker() return self.attacker end
+      function damage:SetAttacker(ent) self.attacker = ent end
+      function damage:GetInflictor() return payload end
+      function damage:GetDamage() return 10 end
+      local owner = w.hooks.EntityTakeDamage.BGN_SiegeOwner
+      local reaction = w.hooks.EntityTakeDamage.BGN_ActorTakeDamageEvent
+      if owner_first then owner(victim.npc, damage) end
+      local blocked = reaction(victim.npc, damage)
+      if not owner_first then owner(victim.npc, damage) end
+      check(blocked == true and not victim:HasEnemy(payload), 'friendly payload damage is blocked in either hook order, also with owner on the inflictor only')
+      check(damage:GetAttacker() == officer.npc, 'native damage credit resolves to the same officer')
+      payload.bgn_siege_owner = NULL
+      check(w.bgNPC.Combat.ResolveVehicleAttacker(payload) == payload, 'a removed owner is not substituted')
+    end
+  end
+end)
 
 bgNPC.Test.Add('conflicts.initiator_and_resets', function(check)
   local w, modules = World()

@@ -160,7 +160,8 @@ function Actor:EnemiesRecalculate()
         self.enemy_calm_since[enemy] = nil
       end
     else
-      local last_seen = math.max(body:GetEnemyLastTimeSeen(enemy), self.enemy_last_seen and self.enemy_last_seen[enemy] or 0)
+      -- NPC pursuit writes refresh engine memory too; only sightings/reports may extend our search.
+      local last_seen = self.enemy_last_seen and self.enemy_last_seen[enemy] or 0
       if not bgNPC.Modules.Get('wanted'):HasWanted(enemy) and not bgNPC.Table.HasValue(self.enemies_always_visible, enemy)
         and last_seen + ENEMY_FORGET_TIME < CurTime() then
         if self:HasTeam('police') then self:Voice('police_target_lost') end

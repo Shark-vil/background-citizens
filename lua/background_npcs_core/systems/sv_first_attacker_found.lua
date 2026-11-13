@@ -51,9 +51,9 @@ function ASSET:GetData()
   return first_attackers
 end
 
-local function ConfirmDamage(target, attacker, amount)
+local function ConfirmDamage(target, attacker, amount, inflictor)
   if amount <= 0 or not bgNPC.Combat.IsAttacker(target) then return end
-  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker)
+  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)
   if not bgNPC.Combat.IsAttacker(attacker) or attacker == target or bgNPC.Combat.IsIgnored(attacker) then return end
   local actor = bgNPC.Actors.Get(target)
   if actor and actor:HasState('brawl') and actor:GetStateData().enemy == attacker then return end
@@ -64,7 +64,7 @@ local function ConfirmDamage(target, attacker, amount)
 end
 
 hook.Add('PostEntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, damage, took)
-  if took then ConfirmDamage(target, damage:GetAttacker(), damage:GetDamage()) end
+  if took then ConfirmDamage(target, damage:GetAttacker(), damage:GetDamage(), damage:GetInflictor()) end
 end)
 hook.Add('BGN_PostVehicleDamage', 'BGN_FoundFirstAttacker', function(actor, attacker, amount) ConfirmDamage(actor:GetNPC(), attacker, amount) end)
 hook.Add('BGN_ActorEntityChanged', 'BGN_FirstAttackerRebind', function(_, old, ent)

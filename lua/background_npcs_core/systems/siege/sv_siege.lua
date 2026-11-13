@@ -45,7 +45,7 @@ local function CanUseDoors(actor, portal)
 end
 
 function Siege.CanStart(actor, enemy)
-  if actor.siege or actor:InVehicle() or not actor.weapon or not IsValid(enemy) or enemy:Health() <= 0
+  if actor.siege or actor.hold_fire or actor:InVehicle() or not actor.weapon or not IsValid(enemy) or enemy:Health() <= 0
     or (cooldown[enemy] or 0) > CurTime() or not Siege.Equipment(actor) or not Sequence(actor, WAIT) then return end
   local known = actor.enemy_last_position and actor.enemy_last_position[enemy]
   if not known or CurTime() - (actor.enemy_last_seen and actor.enemy_last_seen[enemy] or 0) > 30 then return end
@@ -79,7 +79,7 @@ function Siege.Inside(actor, entry)
 end
 
 local function Join(actor, entry, near)
-  if actor.siege or Siege.Inside(actor, entry) or not actor:IsAlive() or actor:InVehicle() or not actor.weapon or actor:IsMeleeWeapon()
+  if actor.siege or actor.hold_fire or Siege.Inside(actor, entry) or not actor:IsAlive() or actor:InVehicle() or not actor.weapon or actor:IsMeleeWeapon()
     or not actor:HasEnemy(entry.enemy) or not actor:HasTeam(entry.operator) or not Sequence(actor, WAIT)
     or not actor:HasState({'defense', 'take_cover'}) then return end
   local portal = entry.portal
