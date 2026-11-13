@@ -1,4 +1,4 @@
-local slib = slib
+﻿local slib = slib
 local snet = slib.Components.Network
 local RealTime = RealTime
 local table_remove = table.remove
@@ -7,10 +7,8 @@ local IsValid = IsValid
 local pairs = pairs
 local Log = slib.Log
 local Error = slib.Error
-
 function snet.RunGarbageCollection(requests)
   local counting_requests = {}
-
   for i = #requests, 1, -1 do
     local data = requests[i]
     if not data or (data.request and not data.request.eternal and data.timeout < RealTime()) then
@@ -25,6 +23,7 @@ function snet.RunGarbageCollection(requests)
             Error('NETWORK ERROR:\n' .. error_message)
           end)
         end
+
         local request_name = data.request.name
         counting_requests[request_name] = counting_requests[request_name] or 0
         counting_requests[request_name] = counting_requests[request_name] + 1

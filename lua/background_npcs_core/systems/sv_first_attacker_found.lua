@@ -1,4 +1,4 @@
---
+﻿--
 local ASSET = {}
 local first_attackers = {}
 local FORGET_TIME = 60
@@ -17,7 +17,13 @@ function ASSET:RecordDamage(attacker, target)
       return
     end
   end
-  first_attackers[#first_attackers + 1] = {attacker = attacker, victim = target, last_damage = now, last_contact = now}
+
+  first_attackers[#first_attackers + 1] = {
+    attacker = attacker,
+    victim = target,
+    last_damage = now,
+    last_contact = now
+  }
 end
 
 function ASSET:IsFirstAttacker(attacker, victim)
@@ -64,9 +70,7 @@ local function ConfirmDamage(target, attacker, amount, inflictor)
   hook.Run('BGN_ConfirmedDamage', attacker, target, amount)
 end
 
-hook.Add('PostEntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, damage, took)
-  if took then ConfirmDamage(target, damage:GetAttacker(), damage:GetDamage(), damage:GetInflictor()) end
-end)
+hook.Add('PostEntityTakeDamage', 'BGN_FoundFirstAttacker', function(target, damage, took) if took then ConfirmDamage(target, damage:GetAttacker(), damage:GetDamage(), damage:GetInflictor()) end end)
 hook.Add('BGN_PostVehicleDamage', 'BGN_FoundFirstAttacker', function(actor, attacker, amount) ConfirmDamage(actor:GetNPC(), attacker, amount) end)
 hook.Add('BGN_ActorEntityChanged', 'BGN_FirstAttackerRebind', function(_, old, ent)
   ent.bgn_wanted_module_impunity, old.bgn_wanted_module_impunity = old.bgn_wanted_module_impunity, nil
@@ -75,9 +79,11 @@ hook.Add('BGN_ActorEntityChanged', 'BGN_FirstAttackerRebind', function(_, old, e
     if data.victim == old then data.victim = ent end
   end
 end)
+
 hook.Add('PostCleanupMap', 'BGN_FirstAttackerModule_ClearAttackersList', function() first_attackers = {} end)
 for _, event in ipairs({'PlayerDeath', 'PlayerSilentDeath', 'OnNPCKilled', 'EntityRemoved', 'BGN_PlayerArrest', 'BGN_RemoveWantedTarget'}) do
   hook.Add(event, 'BGN_FirstAttackerReset', function(ent) ASSET:RemoveAttacker(ent) end)
 end
+
 timer.Create('BGN_ModuleTimer_FirstAttacker', 1, 0, function() ASSET:ClearDeath() end)
 list.Set('BGN_Modules', 'first_attacker', ASSET)

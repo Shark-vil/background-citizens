@@ -237,6 +237,7 @@ function Combat.IsAttackingEnemy(actor, target, attacker)
     local attacker_body = attacker_actor:GetBody()
     if attacker_body and attacker_body:GetDisposition(npc) == D_HT then return false end
   end
+
   if isfunction(attacker.Disposition) and attacker:Disposition(npc) == D_HT then return false end
   return true
 end
@@ -287,6 +288,7 @@ function Combat.ResolveEnemy(actor, target, attacker)
     if Combat.IsEnemyOfTeam(actor, attacker) then return attacker end
     return target
   end
+
   local wanted = GetWantedModule()
   local target_actor = Actors.Get(target)
   -- A player attacks an NPC that is not an actor
@@ -299,9 +301,7 @@ function Combat.ResolveEnemy(actor, target, attacker)
   if not attacker_actor and attacker_type ~= 'player' and target_type == 'player' then return attacker end
   if wanted:HasWanted(attacker) then return attacker end
   if wanted:HasWanted(target) then return target end
-  if law then
-    if first_attacker:IsFirstAttacker(attacker, target) then return attacker end
-  end
+  if law then if first_attacker:IsFirstAttacker(attacker, target) then return attacker end end
   -- Someone from the actor's team is already fighting the target
   if Combat.IsEnemyOfTeam(actor, target) then return target end
   -- Someone from the actor's team is already fighting the attacker

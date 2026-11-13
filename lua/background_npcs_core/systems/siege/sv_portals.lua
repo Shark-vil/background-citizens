@@ -1,4 +1,4 @@
--- A bounded NavMesh pocket behind one physical doorway; closed doors are not walls in this search.
+﻿-- A bounded NavMesh pocket behind one physical doorway; closed doors are not walls in this search.
 local Siege = {}
 bgNPC.Siege = Siege
 local UP = Vector(0, 0, 48)
@@ -9,7 +9,11 @@ end
 
 Siege.Area = Area
 local function Ceiling(pos)
-  local tr = util.TraceLine({start = pos + UP, endpos = pos + UP + Vector(0, 0, 384), mask = MASK_SOLID_BRUSHONLY})
+  local tr = util.TraceLine({
+    start = pos + UP,
+    endpos = pos + UP + Vector(0, 0, 384),
+    mask = MASK_SOLID_BRUSHONLY
+  })
   return tr.HitWorld and not tr.HitSky and not tr.StartSolid
 end
 
@@ -17,8 +21,7 @@ local function Crosses(portal, a, b)
   local da, db = (a - portal.center):Dot(portal.normal), (b - portal.center):Dot(portal.normal)
   if (da > 0) == (db > 0) or math.abs(da - db) < 0.01 then return false end
   local hit = a + (b - a) * (da / (da - db))
-  return math.abs((hit - portal.center):Dot(portal.right)) <= portal.width / 2 + 24
-    and math.abs(hit.z - portal.floor) < 80
+  return math.abs((hit - portal.center):Dot(portal.right)) <= portal.width / 2 + 24 and math.abs(hit.z - portal.floor) < 80
 end
 
 -- read by tests/: the physical cut may span several NavMesh connections (and two door leaves).
@@ -26,14 +29,16 @@ Siege.Crosses = Crosses
 function Siege.Pocket(portal, inside)
   local seed = Area(inside)
   if not seed or not Ceiling(inside) then return end
-  local seen, queue, cuts = {[seed:GetID()] = true}, {seed}, {}
+  local seen, queue, cuts = {
+    [seed:GetID()] = true
+  }, {seed}, {}
+
   local head = 1
   while head <= #queue do
     local area = queue[head]
     local pos = area:GetCenter()
     -- shortcut: incomplete NavMeshes cannot prove every escape, decline large/vertical/ladder pockets.
-    if #queue > 128 or pos:DistToSqr(portal.center) > 900 ^ 2 or math.abs(pos.z - portal.floor) > 80
-      or #area:GetLadders() > 0 or not Ceiling(pos) then return end
+    if #queue > 128 or pos:DistToSqr(portal.center) > 900 ^ 2 or math.abs(pos.z - portal.floor) > 80 or #area:GetLadders() > 0 or not Ceiling(pos) then return end
     local adjacent = area:GetAdjacentAreas()
     table.Add(adjacent, area:GetIncomingConnections())
     for _, next_area in ipairs(adjacent) do
@@ -45,10 +50,14 @@ function Siege.Pocket(portal, inside)
         queue[#queue + 1] = next_area
       end
     end
+
     head = head + 1
   end
+
   if next(cuts) == nil then return end
-  for id in pairs(cuts) do if seen[id] then return end end -- another way around the same doorway
+  for id in pairs(cuts) do -- another way around the same doorway
+    if seen[id] then return end
+  end
   return seen
 end
 
@@ -72,9 +81,17 @@ local function DoorPortal(door, doors)
       end
     end
   end
+
   center = center + right * ((low + high) / 2)
-  return {key = 'door:' .. key, center = center, normal = normal, right = right, width = high - low,
-    floor = center.z - size.z / 2, doors = leaves}
+  return {
+    key = 'door:' .. key,
+    center = center,
+    normal = normal,
+    right = right,
+    width = high - low,
+    floor = center.z - size.z / 2,
+    doors = leaves
+  }
 end
 
 -- A narrow, walled NavMesh portal also supports passages without a door entity.
@@ -88,6 +105,7 @@ local function OpenPortal(a, b)
     axis, low, high = 'y', math.max(amin.x, bmin.x), math.min(amax.x, bmax.x)
     plane = math.abs(amax.y - bmin.y) < 2 and amax.y or amin.y
   end
+
   if not axis or high <= low then return end
   local floor = (a:GetCenter().z + b:GetCenter().z) / 2
   if math.abs(a:GetCenter().z - b:GetCenter().z) > 24 then return end
@@ -96,19 +114,38 @@ local function OpenPortal(a, b)
   local right = normal:Cross(Vector(0, 0, 1))
   local walls = {}
   for _, sign in ipairs({-1, 1}) do
-    local tr = util.TraceLine({start = center, endpos = center + right * sign * 160, mask = MASK_SOLID_BRUSHONLY})
+    local tr = util.TraceLine({
+      start = center,
+      endpos = center + right * sign * 160,
+      mask = MASK_SOLID_BRUSHONLY
+    })
+
     if not tr.HitWorld or tr.StartSolid or math.abs(tr.HitNormal:Dot(right)) < 0.7 then return end
     walls[sign] = tr.HitPos:Distance(center)
   end
+
   local width = walls[-1] + walls[1]
   if width < 32 or width > 128 then return end
   center = center + right * ((walls[1] - walls[-1]) / 2)
   local floor_center = Vector(center.x, center.y, floor + 2)
-  local hull = util.TraceHull({start = floor_center - normal * 32, endpos = floor_center + normal * 32,
-    mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 36), mask = MASK_NPCSOLID_BRUSHONLY})
+  local hull = util.TraceHull({
+    start = floor_center - normal * 32,
+    endpos = floor_center + normal * 32,
+    mins = Vector(-16, -16, 0),
+    maxs = Vector(16, 16, 36),
+    mask = MASK_NPCSOLID_BRUSHONLY
+  })
+
   if hull.Hit or hull.StartSolid then return end
-  return {key = 'nav:' .. math.min(a:GetID(), b:GetID()) .. ':' .. math.max(a:GetID(), b:GetID()),
-    center = center, normal = normal, right = right, width = width, floor = floor, doors = {}}
+  return {
+    key = 'nav:' .. math.min(a:GetID(), b:GetID()) .. ':' .. math.max(a:GetID(), b:GetID()),
+    center = center,
+    normal = normal,
+    right = right,
+    width = width,
+    floor = floor,
+    doors = {}
+  }
 end
 
 local function FindPocket(candidates, known)
@@ -132,7 +169,10 @@ local function FindPocket(candidates, known)
   end
 end
 
-local cache = setmetatable({}, {__mode = 'k'})
+local cache = setmetatable({}, {
+  __mode = 'k'
+})
+
 local next_search = 0
 function Siege.Find(enemy, known)
   if not navmesh.IsLoaded() or not known then return end
@@ -144,6 +184,7 @@ function Siege.Find(enemy, known)
   for _, ent in ipairs(ents.FindInSphere(known, 700)) do
     if bgNPC.Util.IsDoor(ent) then doors[#doors + 1] = ent end
   end
+
   for _, door in ipairs(doors) do
     local portal = DoorPortal(door, doors)
     if portal and not keys[portal.key] then
@@ -151,6 +192,7 @@ function Siege.Find(enemy, known)
       candidates[#candidates + 1] = portal
     end
   end
+
   local found = FindPocket(candidates, known)
   if not found then
     candidates = {}
@@ -158,15 +200,34 @@ function Siege.Find(enemy, known)
       if i > 64 then break end
       for _, adjacent in ipairs(area:GetAdjacentAreas()) do
         local portal = OpenPortal(area, adjacent)
-        if portal and not keys[portal.key] then keys[portal.key] = true candidates[#candidates + 1] = portal end
+        if portal and not keys[portal.key] then
+          keys[portal.key] = true
+          candidates[#candidates + 1] = portal
+        end
       end
+
       if #candidates >= 24 then break end
     end
+
     found = FindPocket(candidates, known)
   end
-  cache[enemy] = {pos = known, portal = found, until_time = CurTime() + 3}
+
+  cache[enemy] = {
+    pos = known,
+    portal = found,
+    until_time = CurTime() + 3
+  }
   return found
 end
 
-hook.Add('BGN_NavProviderChanged', 'BGN_SiegePortals', function() cache = setmetatable({}, {__mode = 'k'}) end)
-hook.Add('PreCleanupMap', 'BGN_SiegePortals', function() cache = setmetatable({}, {__mode = 'k'}) end)
+hook.Add('BGN_NavProviderChanged', 'BGN_SiegePortals', function()
+  cache = setmetatable({}, {
+    __mode = 'k'
+  })
+end)
+
+hook.Add('PreCleanupMap', 'BGN_SiegePortals', function()
+  cache = setmetatable({}, {
+    __mode = 'k'
+  })
+end)

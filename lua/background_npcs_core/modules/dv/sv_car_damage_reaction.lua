@@ -25,6 +25,7 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
           return
         end
       end
+
       for k = 1, #passengers do
         local actor = passengers[k]
         if actor and actor:IsAlive() then

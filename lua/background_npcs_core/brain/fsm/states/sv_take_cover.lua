@@ -45,9 +45,7 @@ end
 bgNPC.States.Register('take_cover', 'danger', {
   pre_start = function(actor, _, data)
     local enemy = actor:GetEnemy()
-    if IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then
-      return 'defense'
-    end
+    if IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then return 'defense' end
     data.cover = IsValid(enemy) and bgNPC.FindCover(actor, enemy)
     if not data.cover then return 'defense' end
   end,
@@ -61,6 +59,7 @@ bgNPC.States.Register('take_cover', 'danger', {
       actor:SetState('defense')
       return
     end
+
     if not IsValid(enemy) or (not data.hide_until and data.give_up < now) then
       if actor:HasNoEnemies() then
         actor:RandomState()

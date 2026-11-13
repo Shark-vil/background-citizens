@@ -1,4 +1,4 @@
---
+﻿--
 local asset = bgNPC.Modules.Get('wanted')
 local enable_wanted_mode = GetConVar('bgn_enable_wanted_mode'):GetBool()
 local enable_wanted_police_instantly = GetConVar('bgn_wanted_police_instantly'):GetBool()
@@ -104,6 +104,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
       if actor:HasTeam('residents') or actor:HasTeam('police') then asset:AddWanted(attacker) end
       return
     end
+
     local seen, police_seen = false, false
     local actors = bgNPC.Actors.GetAll()
     for i = #actors, 1, -1 do
@@ -113,6 +114,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
         if witness:HasTeam('police') then police_seen = true end
       end
     end
+
     if not seen then return end
     local current_impunity = (attacker.bgn_wanted_module_impunity or 0) + 1
     if (enable_wanted_police_instantly and actor:HasTeam('police') and police_seen) or (impunity_limit > 0 and current_impunity >= impunity_limit) then
@@ -191,7 +193,10 @@ timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
   if impunity_last_reduction_period > CurTime() then return end
   impunity_last_reduction_period = CurTime() + impunity_limit_reduction_period
   local targets = player.GetHumans()
-  for _, actor in ipairs(bgNPC.Actors.GetAll()) do targets[#targets + 1] = actor:GetNPC() end
+  for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+    targets[#targets + 1] = actor:GetNPC()
+  end
+
   for _, ply in ipairs(targets) do
     if IsValid(ply) then
       local current_impunity = ply.bgn_wanted_module_impunity or 0

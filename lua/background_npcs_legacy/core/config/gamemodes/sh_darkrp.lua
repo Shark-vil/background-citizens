@@ -1,13 +1,12 @@
-bgNPC.cfg.darkrp = {}
-
+﻿bgNPC.cfg.darkrp = {}
 -- TEXT --
 local text = slib.language({
-	['default'] = {
-		['notify'] = 'You cannot change your job while you are wanted!',
-	},
-	['russian'] = {
-		['notify'] = 'Вы не можете сменить работу, пока вас разыскивают!'
-	}
+  ['default'] = {
+    ['notify'] = 'You cannot change your job while you are wanted!',
+  },
+  ['russian'] = {
+    ['notify'] = 'Вы не можете сменить работу, пока вас разыскивают!'
+  }
 })
 
 -- Prevents the player from changing job while he is wanted

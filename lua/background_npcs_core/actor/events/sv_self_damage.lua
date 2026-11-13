@@ -23,6 +23,7 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
       bgNPC.OffenderFromRamming(attacker, dmginfo)
     end
   end
+
   -- the arrest state lets go only of an attacked officer
   if hit_actor and not hit_actor:HasTeam(attacker) then hit_actor.last_attacked_at, hit_actor.last_attacker = CurTime(), attacker end
   local result

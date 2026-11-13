@@ -175,13 +175,18 @@ function ASSET:RecordDamage(attacker, target)
   if not component or not component.arrested then return end
   local victim = bgNPC.Actors.Get(target) or target.BGN_ACTOR_OBJECT
   if not victim then return end
-  if victim:HasTeam('police') then self:Escalate(attacker) return end
+  if victim:HasTeam('police') then
+    self:Escalate(attacker)
+    return
+  end
+
   if component.policeActor and bgNPC.Combat.IsAttackingEnemy(component.policeActor, target, attacker) then return end
   if bgNPC.Modules.Get('first_attacker'):IsFirstAttacker(target, attacker) then return end
   if not component.victims[victim.uid] then
     component.victims[victim.uid] = true
     component.damage_count = component.damage_count + 1
   end
+
   if component.damage_count > 3 or target:Health() < victim:GetMaxHealth() * .3 then self:Escalate(attacker) end
 end
 
@@ -197,6 +202,7 @@ function ASSET:CheckCompliance(target, officer)
     self:Escalate(target)
     return
   end
+
   component.last_target_pos = pos
   if not component.detention and component.warningTime < CurTime() and GetConVar('bgn_arrest_mode'):GetBool() then self:Escalate(target) end
 end
@@ -205,13 +211,16 @@ local function ArrestKill(attacker, inflictor)
   attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)
   if IsValid(attacker) then ASSET:Escalate(attacker) end
 end
+
 hook.Add('BGN_OnKilledActor', 'BGN_ArrestKill', function(_, attacker) ArrestKill(attacker) end)
 hook.Add('OnNPCKilled', 'BGN_ArrestKill', function(_, attacker, inflictor) ArrestKill(attacker, inflictor) end)
 hook.Add('PlayerDeath', 'BGN_ArrestKill', function(_, inflictor, attacker) ArrestKill(attacker, inflictor) end)
-
 timer.Create('BGN_ArrestCompliance', .25, 0, function()
   local targets = {}
-  for target in pairs(arrest_targets) do targets[#targets + 1] = target end
+  for target in pairs(arrest_targets) do
+    targets[#targets + 1] = target
+  end
+
   for _, target in ipairs(targets) do
     if not IsValid(target) or target:Health() <= 0 then
       ASSET:RemoveTarget(target)
@@ -244,8 +253,6 @@ end
 
 hook.Add('PlayerDeath', 'BGN_ArrestModule_ClearDataOnPlayerDeath', function(victim, inflictor, attacker) ASSET:RemoveTarget(victim) end)
 hook.Add('BGN_RemoveWantedTarget', 'BGN_ArrestModule_ClearByWanted', function(target) ASSET:RemoveTarget(target) end)
-hook.Add('BGN_ActorEntityChanged', 'BGN_ArrestRebind', function(_, old, ent)
-  if arrest_targets[old] then arrest_targets[ent], arrest_targets[old] = arrest_targets[old], nil end
-end)
+hook.Add('BGN_ActorEntityChanged', 'BGN_ArrestRebind', function(_, old, ent) if arrest_targets[old] then arrest_targets[ent], arrest_targets[old] = arrest_targets[old], nil end end)
 hook.Add('PostCleanupMap', 'BGN_ArrestModule_ClearPlayerOnCleanupMap', function() ASSET:ClearAll() end)
 list.Set('BGN_Modules', 'player_arrest', ASSET)

@@ -51,6 +51,7 @@ hook.Add('BGN_ConfirmedDamage', 'BGN_PlayerArrest', function(attacker, target)
       PoliceActor:AddEnemy(enemy)
       return
     end
+
     if enemy ~= attacker then
       target = attacker
       attacker = enemy
@@ -90,7 +91,6 @@ hook.Add('BGN_ConfirmedDamage', 'BGN_PlayerArrest', function(attacker, target)
         return
       end
     end
-
     -- Harm limits were evaluated by ArrestModule:RecordDamage before this hook.
   end
 end)
@@ -101,9 +101,7 @@ local function OnSetDefense(actor)
   local TargetActor = bgNPC.Actors.Get(target)
   if not IsValid(target) or not ArrestModule:CanArrest(target) or (TargetActor and not TargetActor:HasState('arrest_surrender')) then
     actor:RemoveAllTargets()
-    if IsValid(target) then
-      actor:AddEnemy(target)
-    end
+    if IsValid(target) then actor:AddEnemy(target) end
     return 'defense'
   end
 end

@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Negotiation: a player who shields himself with a hostage is not shot at, he is talked to.
 	A hostage is any frightened non-police actor within HOSTAGE_RADIUS of the target that stands closer to the officer
 	than the target does (so a flank or rear approach, where the hostage is behind the target, does not count).
@@ -11,14 +11,16 @@ local WAIT_TIME, WARNING_TIME, BLOCK_TIME, LOST_TIME = 20, 5, 120, 3
 local FEAR_STATES = {'fear', 'run_from_danger', 'dyspnea_danger'}
 local Negotiation = {}
 bgNPC.Negotiation = Negotiation
-local talks, blocked, holding = {}, setmetatable({}, {__mode = 'k'}), {}
+local talks, blocked, holding = {}, setmetatable({}, {
+  __mode = 'k'
+}), {}
+
 -- @return actor|nil the hostage the target hides behind, seen from the officer
 function Negotiation.Hostage(officer, target)
   local origin, target_pos = officer:GetPos(), target:GetPos()
   local limit = target_pos:DistToSqr(origin)
   for _, actor in ipairs(bgNPC.Actors.GetInRadius(target_pos, HOSTAGE_RADIUS)) do
-    if actor ~= officer and actor:IsAlive() and not actor:HasTeam('police') and actor:HasState(FEAR_STATES)
-      and actor:GetPos():DistToSqr(origin) < limit then return actor end
+    if actor ~= officer and actor:IsAlive() and not actor:HasTeam('police') and actor:HasState(FEAR_STATES) and actor:GetPos():DistToSqr(origin) < limit then return actor end
   end
 end
 
@@ -50,7 +52,10 @@ local function Tick()
     if IsValid(enemy) and enemy:IsPlayer() and enemy:Alive() and (blocked[enemy] or 0) <= now and Negotiation.Hostage(actor, enemy) then
       local talk = talks[enemy]
       if not talk then
-        talk = {deadline = now + WAIT_TIME}
+        talk = {
+          deadline = now + WAIT_TIME
+        }
+
         talks[enemy] = talk
         actor:Voice('police_negotiate_offer')
       end
@@ -91,7 +96,10 @@ hook.Add('PostEntityTakeDamage', 'BGN_Negotiation', function(ent, damage)
   if talk and ent ~= attacker and ent:Health() <= 0 and (ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer()) then talk.failed = true end
 end)
 
-local function Reset(target) if IsValid(target) then blocked[target], talks[target] = nil, nil end end
+local function Reset(target)
+  if IsValid(target) then blocked[target], talks[target] = nil, nil end
+end
+
 hook.Add('PlayerDeath', 'BGN_Negotiation', Reset)
 hook.Add('BGN_WantedLevelDown', 'BGN_Negotiation', Reset)
 hook.Add('BGN_PlayerArrest', 'BGN_Negotiation', Reset)

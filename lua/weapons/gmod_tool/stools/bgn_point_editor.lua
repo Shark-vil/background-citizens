@@ -1,4 +1,4 @@
-TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
 if not TOOL.AddToMenu then return end
 --[[
 	Point editor: edits the custom route graph (bgNPC.NavEditor.graph) on the client.

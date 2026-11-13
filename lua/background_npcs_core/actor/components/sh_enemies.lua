@@ -33,6 +33,7 @@ function Actor:AddEnemy(ent, reaction, always_visible)
     self.enemy_last_position = self.enemy_last_position or {}
     self.enemy_last_position[ent] = ent:GetPos()
   end
+
   if always_visible then
     self.enemies_always_visible_count = self.enemies_always_visible_count + 1
     self.enemies_always_visible[self.enemies_always_visible_count] = ent
@@ -163,21 +164,22 @@ function Actor:EnemiesRecalculate()
     else
       -- NPC pursuit writes refresh engine memory too; only sightings/reports may extend our search.
       local last_seen = self.enemy_last_seen and self.enemy_last_seen[enemy] or 0
-      if not bgNPC.Modules.Get('wanted'):HasWanted(enemy) and not bgNPC.Table.HasValue(self.enemies_always_visible, enemy)
-        and last_seen + ENEMY_FORGET_TIME < CurTime() then
+      if not bgNPC.Modules.Get('wanted'):HasWanted(enemy) and not bgNPC.Table.HasValue(self.enemies_always_visible, enemy) and last_seen + ENEMY_FORGET_TIME < CurTime() then
         if self:HasTeam('police') then self:Voice('police_target_lost') end
         self:RemoveEnemy(enemy)
       end
     end
   end
+
   local enemy = self:GetEnemy()
-  if not RedirectEnemyToVehicle(body, enemy) then
-    body:SetEnemy(enemy, self.enemy_last_position and self.enemy_last_position[enemy])
-  end
+  if not RedirectEnemyToVehicle(body, enemy) then body:SetEnemy(enemy, self.enemy_last_position and self.enemy_last_position[enemy]) end
 end
 
 function Actor:GetEnemy()
-  local function Valid(enemy) return IsValid(enemy) and enemy:Health() > 0 and self:HasEnemy(enemy) end
+  local function Valid(enemy)
+    return IsValid(enemy) and enemy:Health() > 0 and self:HasEnemy(enemy)
+  end
+
   local enemy = self.last_attacker
   if not Valid(enemy) or CurTime() - (self.last_attacked_at or 0) > 5 then
     enemy = self.siege and self.siege.enemy
@@ -194,6 +196,7 @@ function Actor:GetEnemy()
       end
     end
   end
+
   self.combat_enemy = IsValid(enemy) and enemy or nil
   return enemy
 end
@@ -203,8 +206,7 @@ function Actor:ShareEnemyMemory(source, enemy)
   local pos = source.enemy_last_position and source.enemy_last_position[enemy]
   local seen = source.enemy_last_seen and source.enemy_last_seen[enemy]
   if not pos or not seen or CurTime() - seen > ENEMY_FORGET_TIME then return false end
-  if self.enemy_last_position and self.enemy_last_position[enemy] and self.enemy_last_seen
-    and (self.enemy_last_seen[enemy] or 0) >= seen then return false end
+  if self.enemy_last_position and self.enemy_last_position[enemy] and self.enemy_last_seen and (self.enemy_last_seen[enemy] or 0) >= seen then return false end
   self.enemy_last_position = self.enemy_last_position or {}
   self.enemy_last_seen = self.enemy_last_seen or {}
   self.enemy_last_position[enemy], self.enemy_last_seen[enemy] = Vector(pos), seen

@@ -725,6 +725,7 @@ function ENT:HandleStuck(path)
     self.path_dirty = true
     return
   end
+
   if not self.stuck_since then
     self.stuck_since = CurTime()
     if GetConVar('bgn_nextbot_jump'):GetBool() then
@@ -740,6 +741,7 @@ function ENT:HandleStuck(path)
     self.path_dirty = true
     return
   end
+
   local goal = path:GetCurrentGoal()
   -- a player who sees the bot or the goal gets no far teleport: pull out nearby instead
   if goal and IsSpotFree(self, goal.pos) and bgNPC:IsHiddenSpawnPosition(goal.pos, self) then

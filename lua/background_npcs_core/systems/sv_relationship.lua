@@ -1,4 +1,4 @@
---
+﻿--
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
 -- Initialize configured actor relationships without erasing a foreign NPC's own hostility.
 local function SetNPCRelationship(actor, another_npc)
@@ -94,7 +94,10 @@ hook.Add('BGN_ActorEntityChanged', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRe
 timer.Create('BGN_SpotHostileNPC', 1, 0, function()
   if bgNPC.Modes.IsPeaceful() or cvar_bgn_ignore_another_npc:GetBool() then return end
   local actors = {}
-  for i, actor in ipairs(bgNPC.Actors.GetAll()) do actors[i] = actor end
+  for i, actor in ipairs(bgNPC.Actors.GetAll()) do
+    actors[i] = actor
+  end
+
   local wanted = bgNPC.Modules.Get('wanted')
   for _, ent in ipairs(ents.GetAll()) do
     if IsValid(ent) and not ent:IsPlayer() and not bgNPC.Actors.Get(ent) and not ent.bgn_siege_owner and bgNPC.Combat.IsAttacker(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then

@@ -1,4 +1,4 @@
-TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
 if not TOOL.AddToMenu then return end
 --
 TOOL.Category = 'Background NPCs Debug'

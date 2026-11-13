@@ -1,4 +1,4 @@
-local PATH = 'background_npcs/lethal_weapons.json'
+﻿local PATH = 'background_npcs/lethal_weapons.json'
 local Actors, Combat = bgNPC.Actors, bgNPC.Combat
 local enabled = GetConVar('bgn_react_to_lethal_weapon')
 -- Keep the cache through script reloads; gameplay checks never read DATA.
@@ -9,14 +9,22 @@ if not bgNPC.lethal_weapons then
   local valid = istable(classes)
   if valid then
     for class, value in pairs(classes) do
-      if not isstring(class) or class == '' or value ~= true then valid = false break end
+      if not isstring(class) or class == '' or value ~= true then
+        valid = false
+        break
+      end
     end
   end
-  bgNPC.lethal_weapons = {classes = valid and classes or {}, writable = valid}
+
+  bgNPC.lethal_weapons = {
+    classes = valid and classes or {},
+    writable = valid
+  }
+
   if not valid then ErrorNoHalt('[Background NPCs] Invalid ' .. PATH .. '; preserved without overwriting.\n') end
 end
-local cache = bgNPC.lethal_weapons
 
+local cache = bgNPC.lethal_weapons
 local function WeaponClass(ent)
   if not IsValid(ent) or not isfunction(ent.GetActiveWeapon) then return end
   local weapon = ent:GetActiveWeapon()
@@ -30,9 +38,7 @@ hook.Add('EntityTakeDamage', 'BGN_LethalWeaponDamage', function(target, dmg)
   attacker = Combat.ResolveVehicleAttacker(attacker, inflictor)
   actor.lethal_weapon_damage = {
     attacker = attacker,
-    excluded = dmg:IsExplosionDamage() or dmg:IsDamageType(DMG_VEHICLE)
-      or (IsValid(inflictor) and inflictor:IsVehicle())
-      or (IsValid(attacker) and attacker:IsPlayer() and attacker:InVehicle()),
+    excluded = dmg:IsExplosionDamage() or dmg:IsDamageType(DMG_VEHICLE) or (IsValid(inflictor) and inflictor:IsVehicle()) or (IsValid(attacker) and attacker:IsPlayer() and attacker:InVehicle()),
   }
 end)
 
@@ -43,9 +49,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_LearnLethalWeapon', function(actor, attacker)
   local class = WeaponClass(attacker)
   if not isstring(class) or class == '' or cache.classes[class] then return end
   cache.classes[class] = true
-  if cache.writable and not file.Write(PATH, util.TableToJSON(cache.classes, true)) then
-    ErrorNoHalt('[Background NPCs] Failed to write ' .. PATH .. '.\n')
-  end
+  if cache.writable and not file.Write(PATH, util.TableToJSON(cache.classes, true)) then ErrorNoHalt('[Background NPCs] Failed to write ' .. PATH .. '.\n') end
 end)
 
 local function React(actor, target)
@@ -68,13 +72,17 @@ end
 timer.Create('BGN_ReactToLethalWeapon', 1, 0, function()
   if not enabled:GetBool() or bgNPC.Modes.IsPeaceful() then return end
   local observers = {}
-  for i, actor in ipairs(Actors.GetAll()) do observers[i] = actor end
+  for i, actor in ipairs(Actors.GetAll()) do
+    observers[i] = actor
+  end
+
   for _, target in ipairs(ents.GetAll()) do
-    if Combat.IsAttacker(target) and target:Health() > 0 and not Combat.IsIgnored(target)
-      and not (target:IsPlayer() and bgNPC.Modes.IsFriend()) then
+    if Combat.IsAttacker(target) and target:Health() > 0 and not Combat.IsIgnored(target) and not (target:IsPlayer() and bgNPC.Modes.IsFriend()) then
       local class = WeaponClass(target)
       if class and cache.classes[class] then
-        for _, actor in ipairs(observers) do React(actor, target) end
+        for _, actor in ipairs(observers) do
+          React(actor, target)
+        end
       end
     end
   end

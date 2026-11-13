@@ -78,6 +78,7 @@ function Actor:SetTeam(team_data)
         self:RemoveEnemy(other:GetNPC())
       end
     end
+
     local wanted = bgNPC.Modules.Get('wanted')
     if wanted and self:HasTeam('residents') then wanted:RemoveWanted(self.npc) end
     local arrest = bgNPC.Modules.Get('player_arrest')

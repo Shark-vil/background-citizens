@@ -25,7 +25,6 @@ local function Geometry(door)
 end
 
 Doors.Geometry = Geometry
-
 local function Floor(actor, pos, door)
   local npc = actor:GetNPC()
   local tr = util.TraceLine({

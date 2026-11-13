@@ -1,4 +1,4 @@
-util.AddNetworkString('sv_network_rpc_callback')
+﻿util.AddNetworkString('sv_network_rpc_callback')
 util.AddNetworkString('cl_network_rpc_callback')
 util.AddNetworkString('sv_network_rpc_success')
 util.AddNetworkString('cl_network_rpc_success')

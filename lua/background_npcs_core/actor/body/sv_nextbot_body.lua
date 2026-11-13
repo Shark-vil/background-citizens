@@ -100,7 +100,12 @@ end
 
 function NextBotBody:GetEnemyLastTimeSeen(ent)
   local bot = self.ent
-  if not istable(self.enemy_seen) then self.enemy_seen = setmetatable({}, {__mode = 'k'}) end
+  if not istable(self.enemy_seen) then
+    self.enemy_seen = setmetatable({}, {
+      __mode = 'k'
+    })
+  end
+
   if IsValid(bot) and IsValid(ent) and bot:CanSeeEnemy(ent) then self.enemy_seen[ent] = CurTime() end
   return self.enemy_seen[ent] or 0
 end

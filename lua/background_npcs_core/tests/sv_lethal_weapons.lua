@@ -1,69 +1,223 @@
--- Isolated DATA and entities: never change the live weapon list or population.
+﻿-- Isolated DATA and entities: never change the live weapon list or population.
 local function World(raw)
-  local w = setmetatable({enabled = false, reads = 0, writes = 0, errors = 0, disk = raw}, {__index = _G})
+  local w = setmetatable({
+    enabled = false,
+    reads = 0,
+    writes = 0,
+    errors = 0,
+    disk = raw
+  }, {
+    __index = _G
+  })
+
   local actors, entities, hooks, timers = {}, {}, {}, {}
   w.IsValid = function(ent) return istable(ent) and ent.valid == true end
   w.ErrorNoHalt = function() w.errors = w.errors + 1 end
-  w.GetConVar = function() return {GetBool = function() return w.enabled end} end
+  w.GetConVar = function()
+    return {
+      GetBool = function() return w.enabled end
+    }
+  end
+
   w.file = {
-    Read = function() w.reads = w.reads + 1 return w.disk end,
-    Write = function(_, value) w.writes = w.writes + 1 if w.fail_write then return false end w.disk = value return true end,
+    Read = function()
+      w.reads = w.reads + 1
+      return w.disk
+    end,
+    Write = function(_, value)
+      w.writes = w.writes + 1
+      if w.fail_write then return false end
+      w.disk = value
+      return true
+    end,
   }
-  w.hook = {Add = function(event, id, fn) hooks[event] = hooks[event] or {} hooks[event][id] = fn end}
-  w.timer = {Create = function(id, period, _, fn) assert(period == 1) timers[id] = fn end}
-  w.ents = {GetAll = function() return entities end}
-  w.bgNPC = {Assert = {Arg = function() end}, Util = {}, Modules = {}, Combat = {}, Actors = {
-    Get = function(ent) return ent and ent.actor end, GetAll = function() return actors end,
-  }, Modes = {IsPeaceful = function() return w.peaceful end, IsFriend = function() return w.friendly end},
-    Vision = {HasLineOfSight = function(_, ent) return ent.visible ~= false end}}
+
+  w.hook = {
+    Add = function(event, id, fn)
+      hooks[event] = hooks[event] or {}
+      hooks[event][id] = fn
+    end
+  }
+
+  w.timer = {
+    Create = function(id, period, _, fn)
+      assert(period == 1)
+      timers[id] = fn
+    end
+  }
+
+  w.ents = {
+    GetAll = function() return entities end
+  }
+
+  w.bgNPC = {
+    Assert = {
+      Arg = function() end
+    },
+    Util = {},
+    Modules = {},
+    Combat = {},
+    Actors = {
+      Get = function(ent) return ent and ent.actor end,
+      GetAll = function() return actors end,
+    },
+    Modes = {
+      IsPeaceful = function() return w.peaceful end,
+      IsFriend = function() return w.friendly end
+    },
+    Vision = {
+      HasLineOfSight = function(_, ent) return ent.visible ~= false end
+    }
+  }
+
   local function Load(path)
     setfenv(assert(CompileFile('background_npcs_core/' .. path)), w)()
   end
+
   Load('api/sv_combat.lua')
   w.bgNPC.Combat.IsIgnored = function(ent) return ent.ignored end
-  function w.Reload() Load('systems/sv_lethal_weapons.lua') end
-  function w.Tick() timers.BGN_ReactToLethalWeapon() end
+  function w.Reload()
+    Load('systems/sv_lethal_weapons.lua')
+  end
+
+  function w.Tick()
+    timers.BGN_ReactToLethalWeapon()
+  end
+
   function w.Entity(kind, x)
-    local ent = {valid = true, kind = kind or 'npc', pos = Vector(x or 0, 0, 0), forward = Vector(1, 0, 0), health = 100}
-    function ent:IsPlayer() return self.kind == 'player' end
-    function ent:IsNPC() return self.kind == 'npc' end
-    function ent:IsNextBot() return self.kind == 'nextbot' end
-    function ent:IsVehicle() return self.kind == 'vehicle' end
-    function ent:InVehicle() return self.in_vehicle end
-    function ent:Health() return self.health end
-    function ent:GetPos() return self.pos end
-    function ent:EyePos() return self.pos end
-    function ent:WorldSpaceCenter() return self.pos end
-    function ent:GetAimVector() return self.forward end
-    function ent:GetActiveWeapon() return self.weapon end
+    local ent = {
+      valid = true,
+      kind = kind or 'npc',
+      pos = Vector(x or 0, 0, 0),
+      forward = Vector(1, 0, 0),
+      health = 100
+    }
+
+    function ent:IsPlayer()
+      return self.kind == 'player'
+    end
+
+    function ent:IsNPC()
+      return self.kind == 'npc'
+    end
+
+    function ent:IsNextBot()
+      return self.kind == 'nextbot'
+    end
+
+    function ent:IsVehicle()
+      return self.kind == 'vehicle'
+    end
+
+    function ent:InVehicle()
+      return self.in_vehicle
+    end
+
+    function ent:Health()
+      return self.health
+    end
+
+    function ent:GetPos()
+      return self.pos
+    end
+
+    function ent:EyePos()
+      return self.pos
+    end
+
+    function ent:WorldSpaceCenter()
+      return self.pos
+    end
+
+    function ent:GetAimVector()
+      return self.forward
+    end
+
+    function ent:GetActiveWeapon()
+      return self.weapon
+    end
+
     entities[#entities + 1] = ent
     return ent
   end
+
   function w.Weapon(ent, class)
-    ent.weapon = {valid = true, GetClass = function() return class end}
+    ent.weapon = {
+      valid = true,
+      GetClass = function() return class end
+    }
   end
+
   function w.Actor(team, kind)
-    local actor = {npc = w.Entity(kind), team = team or 'residents', enemies = {}, state = 'walk', picks = 0}
+    local actor = {
+      npc = w.Entity(kind),
+      team = team or 'residents',
+      enemies = {},
+      state = 'walk',
+      picks = 0
+    }
+
     actor.npc.actor = actor
-    function actor:GetNPC() return self.npc end
-    function actor:IsAlive() return self.npc.valid and self.npc.health > 0 end
-    function actor:HasTeam(other) return other == self.team or (other.actor and other.actor.team == self.team) end
-    function actor:HasEnemy(ent) return self.enemies[ent] end
-    function actor:AddEnemy(ent) if not self.blocked then self.enemies[ent] = true end end
-    function actor:GetReactionForDamage() self.picks = self.picks + 1 return self.pick or 'fear' end
-    function actor:SetReaction(reaction) self.reaction = reaction end
-    function actor:EqualStateGroup() return self.state == 'walk' end
-    function actor:RemoveAllTargets() self.cleared = true end
-    function actor:SetState(state) self.state = state end
+    function actor:GetNPC()
+      return self.npc
+    end
+
+    function actor:IsAlive()
+      return self.npc.valid and self.npc.health > 0
+    end
+
+    function actor:HasTeam(other)
+      return other == self.team or (other.actor and other.actor.team == self.team)
+    end
+
+    function actor:HasEnemy(ent)
+      return self.enemies[ent]
+    end
+
+    function actor:AddEnemy(ent)
+      if not self.blocked then self.enemies[ent] = true end
+    end
+
+    function actor:GetReactionForDamage()
+      self.picks = self.picks + 1
+      return self.pick or 'fear'
+    end
+
+    function actor:SetReaction(reaction)
+      self.reaction = reaction
+    end
+
+    function actor:EqualStateGroup()
+      return self.state == 'walk'
+    end
+
+    function actor:RemoveAllTargets()
+      self.cleared = true
+    end
+
+    function actor:SetState(state)
+      self.state = state
+    end
+
     actors[#actors + 1] = actor
     return actor
   end
+
   function w.Hit(actor, attacker, blast, vehicle)
-    local dmg = {GetAttacker = function() return attacker end, GetInflictor = function() return vehicle end,
-      IsExplosionDamage = function() return blast end, IsDamageType = function() return vehicle ~= nil end}
+    local dmg = {
+      GetAttacker = function() return attacker end,
+      GetInflictor = function() return vehicle end,
+      IsExplosionDamage = function() return blast end,
+      IsDamageType = function() return vehicle ~= nil end
+    }
+
     hooks.EntityTakeDamage.BGN_LethalWeaponDamage(actor.npc, dmg)
   end
-  function w.Kill(actor, attacker) hooks.BGN_OnKilledActor.BGN_LearnLethalWeapon(actor, attacker) end
+
+  function w.Kill(actor, attacker)
+    hooks.BGN_OnKilledActor.BGN_LearnLethalWeapon(actor, attacker)
+  end
+
   w.Reload()
   return w
 end
@@ -161,10 +315,15 @@ bgNPC.Test.Add('lethal_weapons.teams_and_guards', function(check)
   local player = w.Entity('player', 100)
   w.Weapon(player, 'weapon_test')
   for _, flag in ipairs({'peaceful', 'friendly'}) do
-    w[flag] = true w.Tick() w[flag] = false
+    w[flag] = true
+    w.Tick()
+    w[flag] = false
     check(not police:HasEnemy(player), flag .. ' mode prevents player reactions')
   end
-  player.ignored = true w.Tick() player.ignored = false
+
+  player.ignored = true
+  w.Tick()
+  player.ignored = false
   police.blocked = true
   w.Tick()
   check(not police:HasEnemy(player) and police.state == 'walk', 'ignored players and rejected enemies do not start combat')

@@ -185,8 +185,14 @@ GOAP.RegisterAction('breach_door', {
 GOAP.RegisterAction('siege', {
   state = 'siege',
   always = true,
-  pre = {has_enemy = true, armed = true, can_siege = true},
-  effects = {threat_handled = true},
+  pre = {
+    has_enemy = true,
+    armed = true,
+    can_siege = true
+  },
+  effects = {
+    threat_handled = true
+  },
   cost = 0.5,
 })
 

@@ -148,7 +148,10 @@
   players = {}
   check(not a.Play('models/police.mdl', 'deploy', npc), 'ordinary animations still require a viewer')
   local count = #messages
-  local unseen = a.Play('models/police.mdl', 'deploy', npc, {require_pvs = false})
+  local unseen = a.Play('models/police.mdl', 'deploy', npc, {
+    require_pvs = false
+  })
+
   callbacks.Think()
   check(unseen and a.IsPlaying(npc) and #messages == count, 'server gameplay animation runs without a PVS viewer')
   players[1], now = viewer, 113

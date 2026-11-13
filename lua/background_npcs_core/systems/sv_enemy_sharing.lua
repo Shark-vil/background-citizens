@@ -44,8 +44,7 @@ local function Share(source)
       local missing
       for _, enemy in ipairs(enemies) do
         local memory = source.enemy_last_position and source.enemy_last_position[enemy]
-        local newer = memory and (not other.enemy_last_position or not other.enemy_last_position[enemy]
-          or (source.enemy_last_seen and source.enemy_last_seen[enemy] or 0) > (other.enemy_last_seen and other.enemy_last_seen[enemy] or 0))
+        local newer = memory and (not other.enemy_last_position or not other.enemy_last_position[enemy] or (source.enemy_last_seen and source.enemy_last_seen[enemy] or 0) > (other.enemy_last_seen and other.enemy_last_seen[enemy] or 0))
         if (not other:HasEnemy(enemy) or newer or (gang and other:EqualStateGroup('calm'))) and not other:HasTeam(enemy) then
           missing = missing or {}
           missing[#missing + 1] = enemy
@@ -66,6 +65,7 @@ local function Share(source)
           else
             Warn(other, enemy, npc)
           end
+
           other:ShareEnemyMemory(source, enemy)
         end
       end
@@ -90,12 +90,10 @@ local function Witness(scared)
   if not scared:IsAlive() or scared:HasNoEnemies() or not scared:HasState(FEAR_STATES) or not NearPlayer(scared_npc:GetPos()) then return end
   for _, observer in ipairs(bgNPC.Actors.GetInRadius(scared_npc:GetPos(), RADIUS)) do
     local npc = observer:GetNPC()
-    if observer ~= scared and observer:IsAlive() and not observer:InVehicle() and observer:EqualStateGroup('calm') and observer:HasTeam(scared)
-      and bgNPC.Vision.HasLineOfSight(npc, scared_npc, 'share') then
+    if observer ~= scared and observer:IsAlive() and not observer:InVehicle() and observer:EqualStateGroup('calm') and observer:HasTeam(scared) and bgNPC.Vision.HasLineOfSight(npc, scared_npc, 'share') then
       for i = 1, scared.enemies_count do
         local enemy = scared.enemies[i]
-        if IsValid(enemy) and enemy:Health() > 0 and not observer:HasEnemy(enemy) and not observer:HasTeam(enemy)
-          and npc:GetPos():DistToSqr(enemy:GetPos()) <= RADIUS ^ 2 and bgNPC.Vision.HasLineOfSight(npc, enemy, 'share') then
+        if IsValid(enemy) and enemy:Health() > 0 and not observer:HasEnemy(enemy) and not observer:HasTeam(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) <= RADIUS ^ 2 and bgNPC.Vision.HasLineOfSight(npc, enemy, 'share') then
           Warn(observer, enemy, scared_npc)
           if not observer:EqualStateGroup('calm') then break end
         end
