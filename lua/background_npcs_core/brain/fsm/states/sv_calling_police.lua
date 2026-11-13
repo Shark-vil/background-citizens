@@ -50,13 +50,7 @@ bgNPC.States.Register('calling_police', 'danger', {
     local currentEnemy = actor:GetEnemy()
     local reaction = actor:GetReactionForDamage()
     reaction = reaction == 'calling_police' and 'fear' or reaction
-    if not IsValidWantedMode() or not IsValid(currentEnemy) or asset:HasWanted(currentEnemy) then
-      actor:SetState(reaction)
-      return
-    end
-
-    local enemyActor = bgNPC.Actors.Get(currentEnemy)
-    if enemyActor and enemyActor:HasTeam('police') then
+    if not IsValidWantedMode() or not IsValid(currentEnemy) then
       actor:SetState(reaction)
       return
     end
@@ -64,7 +58,7 @@ bgNPC.States.Register('calling_police', 'danger', {
     local npc = actor:GetNPC()
     local npc_index = npc:EntIndex()
     -- 90000 = 300 ^ 2
-    if not bgNPC.Vision.HasLineOfSight(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
+    if npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
       local rnd = math.random(0, 100)
       if rnd > 80 then actor:CallForHelp(currentEnemy) end
       actor:SetState('fear')

@@ -31,7 +31,8 @@ local function World()
     Util = {IsInView = function() return env.in_view end, CanSeeEntity = function() return env.seen end, Log = function() end},
     Statistics = {GetSum = function(ent) return ent.kills or 0 end, Reset = function(ent) ent.kills = nil end},
     Net = {Send = function() end}, NextBotBody = {GetPlayersDisposition = function() return D_NU end}}
-  env.bgNPC.States = {Register = function() end}
+  env.states = {}
+  env.bgNPC.States = {Register = function(name, _, state) env.states[name] = state end}
   env.bgNPC.Util.Chance = function() return false end
   local wanted = {}
   modules.wanted = {
@@ -128,6 +129,62 @@ bgNPC.Test.Add('conflicts.initiator_and_resets', function(check)
   end
 end)
 
+bgNPC.Test.Add('police_call.proximity_only', function(check)
+  local w, _, _, wanted, values = World()
+  w.Sound = function(path) return path end
+  w.EmitSound = function() end
+  w.SoundDuration = function() return 2 end
+  w.bgNPC.Table = {Random = function(items) return items[1] end}
+  w.Load('brain/fsm/states/sv_calling_police.lua')
+  local caller, enemy = w.Actor({residents = true}), w.Entity('player')
+  caller.state = 'calling_police'
+  caller.state_data = {calling_time = 110}
+  caller.enemies = {enemy}
+  enemy.pos = Vector(300, 0, 0)
+  function caller:HasNoEnemies() return false end
+  function caller:GetEnemy() return enemy end
+  function caller:GetReactionForDamage() return 'fear' end
+  function caller:HasSequence() return true end
+  function caller.npc:EntIndex() return 1 end
+  function caller:Voice() end
+  function caller:CallForHelp() end
+  w.seen = false
+  wanted[enemy] = true
+  local state = w.states.calling_police
+  state.update(caller)
+  check(caller.state == 'calling_police' and caller.state_data.calling_time == 110, 'LOS loss and wanted status do not cancel or restart the call at exactly 300')
+  w.now = 111
+  state.update(caller)
+  check(caller.state == 'fear', 'the call finishes normally without LOS')
+  caller.state = 'calling_police'
+  caller.state_data = {calling_time = 130}
+  enemy.pos = Vector(299, 0, 0)
+  state.update(caller)
+  check(caller.state == 'fear', 'a threat closer than 300 still interrupts')
+  caller.state = 'calling_police'
+  enemy.pos = Vector(400, 0, 0)
+  values.bgn_enable_wanted_mode = 0
+  state.update(caller)
+  check(caller.state == 'fear', 'disabling wanted still exits safely')
+end)
+
+bgNPC.Test.Add('police_call.goap_does_not_interrupt', function(check)
+  local w = World()
+  local updated = false
+  w.bgNPC.Class = function() return {} end
+  w.bgNPC.GOAP = {}
+  w.bgNPC.FSMBrain = {Update = function() updated = true end}
+  w.bgNPC.Commands = {Register = function() end}
+  w.bgNPC.Brain = {Register = function() end}
+  w.Load('brain/goap/sv_goap_brain.lua')
+  local caller = w.Actor({residents = true})
+  function caller:HasNoEnemies() return false end
+  function caller:GetState() return 'calling_police' end
+  local brain = setmetatable({actor = caller, fighting = true}, {__index = w.bgNPC.GOAPBrain})
+  brain:Update()
+  check(updated, 'an active call runs its FSM without replanning it away')
+end)
+
 bgNPC.Test.Add('arrest.starts_after_damage', function(check)
   local w, modules, _, wanted = World()
   w.Load('brain/fsm/states/sv_arrest.lua')
@@ -173,6 +230,10 @@ bgNPC.Test.Add('conflicts.help_sees_caller', function(check)
   ally.enemies = {} source.npc.visible = false enemy.visible = true
   w.bgNPC.Actor.CallForHelp(source, enemy)
   check(not ally:HasEnemy(enemy), 'seeing only the enemy does not substitute for seeing the caller')
+  source.npc.visible = true
+  ally.state = 'calling_police'
+  w.bgNPC.Actor.CallForHelp(source, enemy)
+  check(ally.state == 'calling_police' and ally:HasEnemy(enemy), 'help adds threat knowledge without interrupting an active call')
 end)
 
 bgNPC.Test.Add('conflicts.damage_witnesses', function(check)

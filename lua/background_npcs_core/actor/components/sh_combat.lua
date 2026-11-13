@@ -41,7 +41,8 @@ function Actor:CallForHelp(enemy)
   for i = 1, #near_actors do
     local near_actor = near_actors[i]
     if near_actor ~= self and near_actor:IsAlive() and near_actor:HasTeam(self) and bgNPC.Vision.HasLineOfSight(near_actor.npc, self.npc, 'help') then
-      near_actor:SetState(near_actor:GetReactionForProtect(enemy))
+      local reaction = near_actor:GetReactionForProtect(enemy)
+      if not near_actor:HasState('calling_police') then near_actor:SetState(reaction) end
       if near_actor.protect_blocked_enemy ~= enemy then
         near_actor:AddEnemy(enemy)
         if SERVER and bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(near_actor, 'help', enemy, nil, self.npc, near_actor:HasEnemy(enemy)) end
