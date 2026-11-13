@@ -6,7 +6,7 @@
 	The talks also fail the moment the player kills anybody. A failed negotiation is not offered again to that
 	player until he is arrested, drops a wanted level, dies, or BLOCK_TIME passes.
 --]]
-local HOSTAGE_RADIUS = 300
+local HOSTAGE_RADIUS = 100
 local WAIT_TIME, WARNING_TIME, BLOCK_TIME, LOST_TIME = 20, 5, 120, 3
 local FEAR_STATES = {'fear', 'run_from_danger', 'dyspnea_danger'}
 local Negotiation = {}

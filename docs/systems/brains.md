@@ -253,10 +253,11 @@ state/animations; they do not choose the tactic or spawn weapons.
 
 ### Hostage negotiation
 
-`systems/sv_negotiation.lua` (SERVER). A frightened non-police actor within 300 units of a player target that stands
+`systems/sv_negotiation.lua` (SERVER). A frightened non-police actor within 100 units of a player target that stands
 closer to the officer than the target is a hostage: the target hides behind it, so approaching from behind does not
 count. Every officer whose selected target meets this rule holds fire (engine NPCs lose `CAP_USE_WEAPONS`, NextBots skip
-`UpdateCombat`), the first one offers to surrender and warns 5 s before the 20 s deadline. The talks end quietly when
+`UpdateCombat`), the first one offers to surrender and warns 5 s before the 20 s deadline. A negotiating officer in
+`defense` keeps its distance: closer than 600 units it stops approaching (squad slots included), closer than 400 it backs off. The talks end quietly when
 the shield stays gone for 3 s; they fail on the deadline or when the player kills anyone. After a failure the officers shoot
 again and the player is not offered talks until he is arrested, drops a wanted level, dies or 120 s pass.
 Negotiation with NPC targets is a separate story scenario and is not implemented.

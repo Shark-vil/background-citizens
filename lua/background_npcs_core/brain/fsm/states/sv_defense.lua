@@ -8,6 +8,8 @@ local WANTED_FIGHT_DIST_SQR = 300 ^ 2 -- a wanted actor fights only this close (
 local WANTED_RETREAT_HEALTH = 0.5 -- ...and only below this share of max health
 local CAR_CHECK_PERIOD = 2
 local CAR_CHANCE = 30
+local NEGOTIATE_NEAR_SQR = 400 ^ 2 -- a negotiating officer backs off when closer than this
+local NEGOTIATE_FAR_SQR = 600 ^ 2 -- ...and stops approaching when closer than this
 --
 -- A player in a vehicle, or an actor in a car (its hidden entity is the enemy)
 local function IsEnemyInVehicle(enemy)
@@ -113,6 +115,25 @@ bgNPC.States.Register('defense', 'danger', {
         })
 
         if actor:HasState('go_to_police_car') then return end
+      end
+    end
+
+    -- negotiating (systems/sv_negotiation.lua): talk from a distance instead of walking up to the target
+    if actor.hold_fire then
+      local dist_sqr = actor:GetPos():DistToSqr(enemy:GetPos())
+      if dist_sqr < NEGOTIATE_FAR_SQR then
+        data.slot = nil
+        if actor:WalkDestinationExists() then actor:StopWalk() end
+        local body = actor:GetBody()
+        if dist_sqr < NEGOTIATE_NEAR_SQR then
+          if (data.next_move or 0) <= now then
+            data.next_move = now + 1
+            body:MoveAwayFromEnemy()
+          end
+        elseif body:IsMoving() then
+          body:StopMoving()
+        end
+        return
       end
     end
 
