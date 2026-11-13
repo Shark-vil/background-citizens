@@ -12,13 +12,15 @@ Sources: `systems/wanted/`, `systems/sv_offender.lua`, `config/states/sh_wanted.
 | `bgn_wanted_impunity_limit` | `5` | Impunity threshold used by wanted actions. |
 | `bgn_wanted_impunity_reduction_period` | `10` | Seconds between impunity reductions. |
 
-Kills, witnesses, police calls and arrest refusal feed wanted handling. Ignored/arrested players and medic actors are excluded from new wanted entries. Actor wanted identity survives DV body replacement. While any resident is within 600 units of the target or sees it within `bgn_wanted_detection_radius`, the timer is reset every second and does not run, for players and actors alike; a car the target sits in counts as the target for the sight check. A non-player wanted target that stays 15 seconds outside every player's field of view, or farther than half of `bgn_spawn_radius_visibility` (obstacles are not checked), is dropped; this is separate from player wanted expiry and population removal.
+Kills, witnesses, police calls and arrest refusal feed wanted handling. Ignored/arrested players and resident/medic actors are excluded from new wanted entries. Actor wanted identity survives DV body replacement. While any resident is within 600 units of the target or sees it within `bgn_wanted_detection_radius`, the timer is reset every second and does not run, for players and actors alike; a car the target sits in counts as the target for the sight check. A non-player wanted target that stays 15 seconds outside every player's field of view, or farther than half of `bgn_spawn_radius_visibility` (obstacles are not checked), is dropped; this is separate from player wanted expiry and population removal.
 
-A resident who kills a resident or damages a police car by ramming becomes an offender (the officers react to a ram by an actor-driven car only with 10% per hit; otherwise it is ignored and does no damage to them, `modules/dv/sv_car_damage_reaction.lua`): it loses residents and gains offenders in its own configuration copy. The team is not automatically restored when wanted expires. Witnessed crimes can also create wanted state when enabled. See [brains](brains.md) for reactions and [arrest](arrest.md) for surrender/refusal.
+Residents and police sharing a team cannot become enemies through an ordinary hit or kill. Friendly hits do not start fear, help, arrest or crime reporting; `bgn_team_damage` controls health damage only. `AddWanted` rejects resident actors, and regular cleanup removes stale resident entries. `SetTeam`/`AddTeam` reconcile mutual enemy lists immediately; becoming a resident clears wanted, and joining the primary officer's team clears that actor's arrest.
+
+Only actual vehicle collisions can turn a civilian driver (`residents`, not `police` or `medics`) into an offender: running over a civilian on foot, or repeatedly ramming the same officer/car for at least 3 seconds, with no gap over 3 seconds. Police ramming retains the 10% reaction chance per eligible hit after that minimum; ignored police-car impacts do not damage occupants. Both damage type (`DMG_CRUSH`/`DMG_VEHICLE`) and the driver's car as attacker/inflictor are required. Bullets, ordinary kills and a single police bump do not qualify. The driver loses `residents`, gains `offenders`, then becomes wanted when enabled; peaceful mode blocks conversion. Wanted expiry does not restore the team. See [brains](brains.md) and [arrest](arrest.md).
 
 ## Integration
 
-Obtain `local wanted = bgNPC.Modules.Get('wanted')` after systems load; it may be nil before then or in a different realm. Query `wanted:HasWanted(entity)`, `GetWanted(entity)` and `GetAllWanted()`. Change state on SERVER with `AddWanted(entity, time)` and `RemoveWanted(entity)`; adding an existing target does not reset or extend its timer. The returned wanted record supports `UpdateWanted(time)`, `SetLevel(level)`, `LevelUp()` and `LevelDown()`; nonpositive SetLevel removes wanted, levels above 5 are capped.
+Obtain `local wanted = bgNPC.Modules.Get('wanted')` after systems load; it may be nil before then or in a different realm. Query `wanted:HasWanted(entity)`, `GetWanted(entity)` and `GetAllWanted()`. Change state on SERVER with `AddWanted(entity, time)` and `RemoveWanted(entity)`; adding an existing target does not reset or extend its timer. `AddWanted` returns nil for a protected resident/medic actor. The returned wanted record supports `UpdateWanted(time)`, `SetLevel(level)`, `LevelUp()` and `LevelDown()`; nonpositive SetLevel removes wanted, levels above 5 are capped.
 
 Hooks include `BGN_AddWantedTarget`, `BGN_RemoveWantedTarget`, `BGN_WantedLevelUp`, `BGN_WantedLevelDown`. The server sends existing records to a player on `BGN_PlayerReady`. Client UI options do not disable the authoritative server system.
 
@@ -38,7 +40,7 @@ With wanted enabled and peaceful mode off, players and actors not currently in r
 
 A foreign entity (neither player nor actor) becomes wanted without a witness if it kills any residents/police actor, or has `Disposition(actor) == D_HT` towards any living residents/police actor. Hostility is polled once per second; `bgn_ignore_another_npc` disables this polling. For local enemy detection, a hostile foreign entity must be within 2500 units and LOS; FOV is not required. Foreign NPC dispositions towards ordinary actor bodies are preserved instead of being replaced from player relations; the existing NextBot player-disposition adapter remains in use. There is no guessed hostility for entities without `Disposition`.
 
-Completed witness calls, police radio backup and existing civilian-offender paths remain wanted sources. Medics and existing ignored/arrested exclusions remain protected. Arrest escalation is described on the [arrest page](arrest.md#escalation-during-an-arrest). Wanted assignment still informs all police immediately.
+Completed witness calls, police radio backup and the vehicle-only civilian-offender paths remain wanted sources. Resident/medic and existing ignored/arrested exclusions remain protected. Arrest escalation is described on the [arrest page](arrest.md#escalation-during-an-arrest). Wanted assignment still informs all police immediately.
 
 <a id="behavior-decision-tree"></a>
 
@@ -69,10 +71,12 @@ This is the implemented **SERVER** tree in the local 2.5.1 implementation on `de
 Damage attempt
 ├─ Resolve siege payload owner (attacker, then inflictor) before reaction/team checks
 │  └─ Vehicle resolution then follows the existing driver rules; hook order does not choose the team
+├─ Actual vehicle collision → check only the two driver exceptions above before team protection
+├─ Shared team → no combat reaction; health damage follows bgn_team_damage
 ├─ Existing personal/team/mode/protection hooks may block damage
 │  └─ The victim's own reaction can happen here, before health changes
 └─ Positive actual damage (engine or virtual seated health)
-   ├─ Invalid participant/ignored attacker, self-hit or consensual brawl → stop this notification
+   ├─ Invalid participant/ignored attacker, self-hit, shared team or consensual brawl → stop this notification
    ├─ Living pair (except same-team ACTOR pairs) → record first A → V, or refresh time
    │  └─ Response V → A never reverses the saved roles
    ├─ Friend mode with a player involved → keep its separate reaction override
@@ -107,7 +111,7 @@ For a direct resolver call, `A`/`V` are the supplied sides; the witness normaliz
 
 | Priority | Condition | Resolver result |
 |---|---|---|
-| 1 | Unsupported participant type | None. |
+| 1 | Unsupported participant type, or ACTOR A and V share a team | None. |
 | 2 | Both sides are teammates of O | None. |
 | 3 | Only V is O's teammate | A. |
 | 4 | Only A is O's teammate | V. |
@@ -144,7 +148,7 @@ Initial wanted request from built-in gameplay
 ├─ Police radio backup / civilian-offender path → their existing conditions
 └─ An ACTOR was killed
    ├─ Peaceful mode, wanted disabled, or invalid killer → stop this kill handler
-   ├─ Killer is still a residents ACTOR → stop this handler (offender path is separate)
+   ├─ Killer is still a residents ACTOR → stop; ordinary kills do not remove this team
    ├─ Killer already wanted → refresh timer / evaluate level-up
    ├─ Killer is neither player nor ACTOR
    │  └─ Victim is residents/police → wanted, no witness required
@@ -155,7 +159,7 @@ Initial wanted request from built-in gameplay
       └─ Otherwise → retain the witnessed-kill count if threshold counting is enabled
 ```
 
-New entries still pass through `AddWanted` exclusions for ignored/arrested entities and medic actors. Assignment informs all police; it does not imply each officer witnessed the crime. Manual API calls and third-party hooks are outside this built-in trigger tree.
+New entries still pass through `AddWanted` exclusions for ignored/arrested entities and resident/medic actors. Assignment informs all police; it does not imply each officer witnessed the crime. Manual API calls and third-party hooks are outside this built-in trigger tree.
 
 ### Consequences of the priority order
 
@@ -196,4 +200,4 @@ These are cooperating state/timer paths, not a single atomic tick. They do not b
 
 ## Completing a police call
 
-Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the selected `GetEnemy()` target; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.
+Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the selected `GetEnemy()` target; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion excludes teammates before filtering enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.

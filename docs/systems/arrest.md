@@ -1,5 +1,7 @@
 # Arrest
 
+SERVER rejects arrest registration for a teammate of the primary officer. Changing a suspect's team to match that officer removes its existing arrest; friendly damage does not reach confirmed-harm escalation.
+
 Code: `lua/background_npcs_core/systems/arrest/`, the police state `brain/fsm/states/sv_arrest.lua`.
 Settings window: **Arrest**.
 

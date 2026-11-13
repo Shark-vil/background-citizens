@@ -86,13 +86,7 @@ put at a spot free for its whole body, never inside the car.
 - A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
-- **Offenders** (`systems/sv_offender.lua`): a civilian (`residents`, not `police`) who rams a police car (a hit with damage) or kills a `residents` actor
-  (a citizen, an officer, a medic) loses `residents` and gets the team `offenders`. Only this actor's `data.team`
-  changes (every actor holds its own copy of the config), so the team immunity no longer covers it. If wanted mode
-  is on and someone saw the kill, it is added to the wanted list: the residents take it as an enemy and react
-  as to a wanted player (arrest, defense, fear, calling the police). It then runs from the nearest resident
-  (`fear`) or, with an officer in sight and `bgn_arrest_mode` on, gives up (40%, `arrest_surrender`). The team is
-  not restored when the wanted time runs out. Not in peaceful mode.
+- **Offenders** (`systems/sv_offender.lua`): only the two [vehicle collision exceptions](wanted.md) remove a civilian driver's `residents` team. Ordinary friendly hits/kills do not start fear, retaliation or wanted. `bgn_team_damage` affects health only; medics and peaceful mode remain protected.
 - **Shared enemies** (`systems/sv_enemy_sharing.lua`, `bgn_enemy_share_period`, default 2 s, `0` = off): an actor
   with enemies (not in `fear`, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
   the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,

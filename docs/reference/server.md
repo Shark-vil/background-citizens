@@ -38,7 +38,7 @@ Source: `lua/background_npcs_core/actor/components/sh_targets.lua`.
 
 `actor:AddTeam(team_name)`
 
-Adds a non-empty team name without duplicates.
+Adds a non-empty team name without duplicates, applying the same enemy/wanted/arrest reconciliation as `SetTeam`.
 
 Source: `lua/background_npcs_core/actor/components/sh_team.lua`.
 
@@ -614,7 +614,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
 `actor:SetTeam(team_data)`
 
-Replaces this actor’s team list; nil clears it.
+Replaces this actor’s team list; nil clears it. SERVER removes mutual enemy entries with new teammates and clears body targets. Joining `residents` removes wanted; sharing the primary officer’s team removes this actor’s arrest. Use this setter instead of editing `data.team` directly.
 
 Source: `lua/background_npcs_core/actor/components/sh_team.lua`.
 
