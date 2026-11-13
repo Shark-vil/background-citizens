@@ -340,6 +340,7 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
     if hook.Run('BGN_TakeDamageFromNPC', attacker, self.npc, damage) == true then return end
     amount = damage:GetDamage()
   end
+  if amount <= 0 then return end
 
   -- The police fail to kill a driver for bgn_police_car_kill_time seconds: their next hit kills.
   -- The time runs from their first hit in this seat; POLICE_HIT_GAP seconds without one start it over.

@@ -43,9 +43,9 @@ local function WitnessedHarm(victim, attacker, amount)
   local suspect = Combat.ResolveVehicleAttacker(attacker)
   if not allied or not IsValid(suspect) or suspect == victim or not Combat.IsAttacker(suspect) then return end
   for _, officer in ipairs(Actors.GetInRadius(victim:GetPos(), 2500)) do
-    if officer:IsAlive() and officer:HasTeam('police') and officer:HasTeam(allied) and not officer:HasTeam(suspect) then
+    if officer:IsAlive() and officer:HasTeam('police') and officer:HasTeam(allied) and not officer:HasTeam(suspect) and not Combat.IsAttackingEnemy(officer, victim, suspect) then
       local npc = officer:GetNPC()
-      if npc == victim or bgNPC.Vision.HasLineOfSight(npc, suspect, 'witness') or bgNPC.Vision.HasLineOfSight(npc, victim, 'witness') then
+      if npc == victim or Combat.CanWitness(officer, suspect) then
         suspects[suspect] = true
         officer.police_harm = officer.police_harm or {}
         local harm = officer.police_harm[suspect] or {

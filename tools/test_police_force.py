@@ -16,6 +16,8 @@ function bgNPC.Actors.Get(e) return e and e.actor end
 function bgNPC.Actors.GetAll() return observers end
 function bgNPC.Actors.GetInRadius() return observers end
 function bgNPC.Vision.HasLineOfSight() return seen end
+function bgNPC.Combat.CanWitness() return seen end
+function bgNPC.Combat.IsAttackingEnemy() return false end
 function bgNPC.Combat.ResolveVehicleAttacker(e) return e end
 function bgNPC.Combat.IsAttacker(e) return IsValid(e) end
 ents={GetAll=function() return {} end}

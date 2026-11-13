@@ -190,10 +190,11 @@ end
 function Combat.IsEnemyOfTeam(target_actor, attacker)
   Assert.Arg(1, target_actor, 'actor', 'bgNPC.Combat.IsEnemyOfTeam')
   if not IsValid(attacker) or attacker:Health() <= 0 then return false end
+  if target_actor:HasEnemy(attacker) then return true end
   local first_attacker = GetFirstAttackerModule()
   local attacker_actor = Actors.Get(attacker)
   if attacker_actor and attacker_actor:HasEnemy(target_actor) then return true end
-  if first_attacker:IsFirstAttacker(attacker, target_actor) then return true end
+  if first_attacker:IsFirstAttacker(attacker, target_actor:GetNPC()) then return true end
   local actors = Actors.GetAll()
   for i = #actors, 1, -1 do
     local actor = actors[i]
@@ -203,6 +204,25 @@ function Combat.IsEnemyOfTeam(target_actor, attacker)
     end
   end
   return false
+end
+
+-- A shared target excuses this hit only; it never clears hostility between its observers.
+function Combat.IsAttackingEnemy(actor, target, attacker)
+  if not IsValid(target) or not IsValid(attacker) or target == actor:GetNPC() or not actor:HasEnemy(target) or actor:HasEnemy(attacker) then return false end
+  local npc = actor:GetNPC()
+  local attacker_actor = Actors.Get(attacker)
+  if attacker_actor and attacker_actor:HasEnemy(npc) then return false end
+  if actor:GetRelationship(attacker) == D_HT then return false end
+  local body = actor:GetBody()
+  if body and body:GetDisposition(attacker) == D_HT then return false end
+  if isfunction(npc.Disposition) and npc:Disposition(attacker) == D_HT then return false end
+  if attacker_actor then
+    if attacker_actor:GetRelationship(npc) == D_HT then return false end
+    local attacker_body = attacker_actor:GetBody()
+    if attacker_body and attacker_body:GetDisposition(npc) == D_HT then return false end
+  end
+  if isfunction(attacker.Disposition) and attacker:Disposition(npc) == D_HT then return false end
+  return true
 end
 
 local function GetEntityType(ent)
@@ -215,6 +235,19 @@ local function GetEntityType(ent)
   return nil
 end
 
+-- A witness must identify the attacker; actor attacks additionally require the view cone.
+function Combat.CanWitness(actor, attacker, check_view)
+  if not actor:IsAlive() or not IsValid(attacker) then return false end
+  local npc = actor:GetNPC()
+  if npc:GetPos():DistToSqr(attacker:GetPos()) > 2500 ^ 2 then return false end
+  if check_view or Actors.Get(attacker) then
+    local eye = npc.BGN_EyePos and npc:BGN_EyePos() or npc:EyePos()
+    local forward = npc.GetAimVector and npc:GetAimVector() or npc:GetForward()
+    if forward:Dot(attacker:WorldSpaceCenter() - eye) <= 0 then return false end
+  end
+  return bgNPC.Vision.HasLineOfSight(npc, attacker, 'witness')
+end
+
 -- Decides which side of a fight (target or attacker) the actor should treat as an enemy.
 -- @return entity|nil enemy, nil if the actor should stay out of it
 function Combat.ResolveEnemy(actor, target, attacker)
@@ -222,18 +255,29 @@ function Combat.ResolveEnemy(actor, target, attacker)
   local target_type = GetEntityType(target)
   local attacker_type = GetEntityType(attacker)
   if not target_type or not attacker_type then return end
+  if Combat.IsAttackingEnemy(actor, target, attacker) then return end
   local is_attacker_team = actor:HasTeam(attacker)
   local is_target_team = actor:HasTeam(target)
   if is_attacker_team and is_target_team then return end
+  local first_attacker = GetFirstAttackerModule()
+  local law = actor:HasTeam('residents') or actor:HasTeam('police')
+  -- Retaliation is justified unless the defender is already a threat to the team.
+  if law and first_attacker:IsFirstAttacker(target, attacker) then
+    if Combat.IsEnemyOfTeam(actor, attacker) then
+      if not is_attacker_team then return attacker end
+      return
+    end
+    if not is_target_team then return target end
+    return
+  end
   if is_attacker_team then return target end
   if is_target_team then return attacker end
-  local first_attacker = GetFirstAttackerModule()
   local wanted = GetWantedModule()
   local attacker_actor = Actors.Get(attacker)
   local target_actor = Actors.Get(target)
   -- A player attacks an NPC that is not an actor
-  if not target_actor and target_type == 'npc' and attacker_type == 'player' then
-    if target:Disposition(attacker) == D_HT then return target end
+  if not target_actor and target_type ~= 'player' and attacker_type == 'player' then
+    if isfunction(target.Disposition) and target:Disposition(attacker) == D_HT then return target end
     return attacker
   end
 
@@ -241,6 +285,9 @@ function Combat.ResolveEnemy(actor, target, attacker)
   if not attacker_actor and attacker_type ~= 'player' and target_type == 'player' then return attacker end
   if wanted:HasWanted(attacker) then return attacker end
   if wanted:HasWanted(target) then return target end
+  if law then
+    if first_attacker:IsFirstAttacker(attacker, target) then return attacker end
+  end
   -- Someone from the actor's team is already fighting the target
   if Combat.IsEnemyOfTeam(actor, target) then return target end
   -- Someone from the actor's team is already fighting the attacker

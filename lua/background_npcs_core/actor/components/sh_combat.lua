@@ -30,19 +30,17 @@ function Actor:Fear()
   self.body:Cower()
 end
 
--- Screams and asks nearby teammates who can see the enemy to protect the actor.
+-- Screams and tells nearby teammates who see the caller about the enemy.
 function Actor:CallForHelp(enemy)
   Assert.Arg(1, enemy, 'entity|nil', 'ACTOR:CallForHelp')
   if not self.mechanics.call_for_help then return end
   if not IsValid(enemy) or not self:IsAlive() then return end
   if hook.Run('BGN_PreCallForHelp', self, enemy) then return end
-  -- panic spreads only from a real fight; an officer's call needs no fight
-  if not self:HasTeam('police') and not bgNPC.Combat.IsFighting(enemy) then return end
   self:FearScream()
   local near_actors = bgNPC.Actors.GetInRadius(self.npc:GetPos(), 1000)
   for i = 1, #near_actors do
     local near_actor = near_actors[i]
-    if near_actor ~= self and near_actor:IsAlive() and near_actor:HasTeam(self) and bgNPC.Vision.HasLineOfSight(near_actor.npc, enemy, 'help') then
+    if near_actor ~= self and near_actor:IsAlive() and near_actor:HasTeam(self) and bgNPC.Vision.HasLineOfSight(near_actor.npc, self.npc, 'help') then
       near_actor:SetState(near_actor:GetReactionForProtect(enemy))
       if near_actor.protect_blocked_enemy ~= enemy then
         near_actor:AddEnemy(enemy)
