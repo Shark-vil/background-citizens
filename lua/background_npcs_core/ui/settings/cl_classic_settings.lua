@@ -27,7 +27,7 @@ local PAGES = {
     id = 'Spawn',
     title = 'bgn.settings.spawn',
     admin = true,
-    items = {{'slider', 'bgn_spawn_radius', 'bgn.settings.spawn.spawn_radius', 0, 5000}, {'slider', 'bgn_spawn_radius_visibility', 'bgn.settings.spawn.spawn_radius_visibility', 0, 5000}, {'slider', 'bgn_vehicle_spawn_visibility_radius', 'bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000}, {'slider', 'bgn_spawn_block_radius', 'bgn.settings.spawn.spawn_block_radius', 0, 5000}, {'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1}, {'check', 'bgn_fasted_teleport', 'bgn.settings.spawn.fasted_teleport'}, {'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600}, {'scenes'},}
+    items = {{'slider', 'bgn_spawn_radius', 'bgn.settings.spawn.spawn_radius', 0, 5000}, {'slider', 'bgn_spawn_radius_visibility', 'bgn.settings.spawn.spawn_radius_visibility', 0, 5000}, {'slider', 'bgn_vehicle_spawn_visibility_radius', 'bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000}, {'slider', 'bgn_spawn_block_radius', 'bgn.settings.spawn.spawn_block_radius', 0, 5000}, {'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1}, {'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600}, {'scenes'},}
   },
   {
     id = 'Wanted',

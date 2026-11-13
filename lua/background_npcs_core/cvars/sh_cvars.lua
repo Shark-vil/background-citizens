@@ -1,7 +1,6 @@
 ﻿bgNPC.cvar = bgNPC.cvar or {}
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
-bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
@@ -13,7 +12,7 @@ bgNPC.cvar.bgn_vehicle_spawn_visibility_radius = 2000
 bgNPC.cvar.bgn_actor_unseen_time = 30
 bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
-bgNPC.cvar.bgn_spawn_period = 1
+bgNPC.cvar.bgn_spawn_period = 0
 bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment = 1
@@ -62,7 +61,7 @@ bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 bgNPC.cvar.bgn_actors_teleporter = 1
-bgNPC.cvar.bgn_actors_max_teleports = 3
+bgNPC.cvar.bgn_actors_max_teleports = 10
 bgNPC.cvar.bgn_tool_seat_offset_pos_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_z = 0
@@ -131,7 +130,6 @@ bgNPC.CVars.Register('bgn_drop_money', bgNPC.cvar.bgn_drop_money, 'Enables the a
 bgNPC.CVars.Register('bgn_module_n2money', bgNPC.cvar.bgn_module_n2money, 'Enables a money drop from the addon "nMoney2 - Sandbox Currency". 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_debug', bgNPC.cvar.bgn_debug, 'Turns on debug mode and prints additional information to the console. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_dynamic_nodes_save_progress', bgNPC.cvar.bgn_dynamic_nodes_save_progress, 'If enabled, the automatically-generated movement mesh will not be deleted with each new generation, 1 - enabled, 0 - disabled.')
-bgNPC.CVars.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport, 'Enables fast teleportation of NPCs. Disable this if you experience performance issues. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2, 'Includes support for the "StormFox2" addon. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode, 'Enables or disables wanted mode.')

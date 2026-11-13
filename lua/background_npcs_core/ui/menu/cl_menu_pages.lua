@@ -234,7 +234,6 @@ Menu.AddPage('spawn', {
     page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
     page:Slider('bgn_actor_unseen_time', '#bgn.settings.spawn.actor_unseen_time', 0, 600)
     page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
-    page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
     page:Section('#bgn.menu.section.experimental')
     page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
     page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)

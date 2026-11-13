@@ -1,5 +1,4 @@
 ﻿--
-local fasted_teleport
 local bgn_enable
 local bgn_actors_teleporter
 local max_teleporter
@@ -75,7 +74,6 @@ local function CanRecycle(actor, players)
 end
 
 local function run_remover_process_async(yield, wait, actors, actors_count)
-  fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
   bgn_enable = GetConVar('bgn_enable'):GetBool()
   bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
   max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
@@ -84,7 +82,6 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
   player_count = #player_list
   for i = 1, actors_count do
     yield()
-    if not fasted_teleport then yield() end
     player_list = player.GetHumans()
     player_count = #player_list
     local actor = actors[i]
