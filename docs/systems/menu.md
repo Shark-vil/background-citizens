@@ -161,7 +161,8 @@ No preset is selected when the limits were changed by hand. Presets: `DENSITY` i
 Every change of a setting shows a notice in the bottom right corner, drawn above the menus: a **blue** *SERVER*
 plate (`#03a9f4`) for a server setting (also one changed by the testing mode's *Fix* button), announced to all players
 after the server has applied it, and an **amber** *CLIENT* plate (`#dea909`) for a `bgn_cl_*` setting, shown only to its
-player. A plate has the name and `old > new`; a slider updates one plate instead of stacking new ones, and the limits that
+player. A plate has the name and `old > new`; every change gets a plate (no cap, the stack grows upwards), a plate lives 6 seconds and they leave one by one in the
+order they came; every switch makes a new plate, while a slider changed again updates its own plate in place instead of stacking new ones, and the limits that
 the mod rewrites by itself after `bgn_max_npc` are not announced. If an admin's copy is stale, the server sends the real
 value back quietly.
 
