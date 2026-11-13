@@ -103,6 +103,10 @@ setup; only that path bypasses hidden-position checks. Normal spawner model hook
 
 ## Configuration and stored data
 
+`systems/sv_lethal_weapons.lua` owns the SERVER-only learned weapon cache and optional one-second
+perception timer. `background_npcs/lethal_weapons.json` is read once per server/map start; script reloads
+reuse the cache, and only a newly learned class rewrites the full file. See [held weapons](systems/brains.md#lethal-weapons).
+
 Cvar defaults are defined in `cvars/sh_cvars.lua`, `sv_cvars.lua`, `cl_cvars.lua`; registration and permissions are in `core/sh_cvars.lua`. Server settings are admin-controlled; client voice/UI options stay local. Actor definitions resolve `inherit` and `@type` references, cache the result and copy it on creation. After editing definitions, clear the config cache; existing actors retain their copy.
 
 GMod DATA paths are relative to `garrysmod/data/`, not this addon: `background_npcs/nodes`, `graph`, `seats`, `compile` (created by bootstrap), diagnostic `background_npcs/test_report.txt`. DV waypoints are separate from pedestrian routes. Preserve users' route files; legacy import/duplication conversion must not overwrite unrelated points. Compiled routes are Lua distribution artifacts generated from stored data.

@@ -44,7 +44,26 @@ Completed witness calls, police radio backup and existing civilian-offender path
 
 ## Behavior decision tree
 
-This is the implemented **SERVER** tree in the local 2.5.1 implementation on `dev` at `009c6cb6`; it does not establish a Workshop release. CLIENT receives wanted records but does not determine guilt. `O` is the observer, `A` the attacker and `V` the damaged target. LOS checks obstacles; the damage-witness FOV check requires the attacker to be strictly in front of the observer's eye/forward direction (including NextBot bodies).
+The optional [held-weapon reaction](brains.md#lethal-weapons) is a separate SERVER input, without damage:
+
+```text
+Actor killed → inspect last damage and the killer's current active weapon
+├─ Explosion / vehicle damage / player killing from a vehicle → do not learn
+└─ Same attacker + valid active weapon + new class → cache it, rewrite DATA (even with checkbox off)
+
+Once per second: bgn_react_to_lethal_weapon = 1, non-peaceful mode
+├─ Living player/NPC/NextBot holds a class from the cache
+└─ Living residents/police observer; not self, teammate or existing enemy
+   ├─ Ignored player / player in friend mode / beyond 800 / outside FOV / blocked LOS → skip
+   └─ Pick at_damage reaction
+      ├─ ignore/none or AddEnemy rejected → no new state
+      └─ Enemy accepted → store reaction; if calm, clear targets and change state
+         └─ Holstering/disabling does not clear enemies; normal memory applies
+```
+
+This input assigns no wanted level directly. Existing police calls and sharing can propagate the threat.
+
+This is the implemented **SERVER** tree in the local 2.5.1 implementation on `dev`; it does not establish a Workshop release. CLIENT receives wanted records but does not determine guilt. `O` is the observer, `A` the attacker and `V` the damaged target. LOS checks obstacles; the damage-witness FOV check requires the attacker to be strictly in front of the observer's eye/forward direction (including NextBot bodies).
 
 ```text
 Damage attempt

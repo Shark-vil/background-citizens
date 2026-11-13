@@ -4,6 +4,38 @@ An actor is split into an **actor** (data and rules), a **body** (`actor.body`: 
 engine entity: movement, schedules, relationships, weapons, animation) and a **brain** (`actor.brain`: decisions).
 Bodies and brains exist on the server only.
 
+<a id="lethal-weapons"></a>
+
+## Reaction to weapons in hands
+
+`bgn_react_to_lethal_weapon` is a SERVER setting, **0 by default**. When enabled, once per second living
+`residents`/`police` actors inspect players, NPCs and NextBots, including BGN actors. A target holding a
+learned lethal weapon must be within **800 units inclusive**, in front of the observer's eyes (FOV,
+including NextBot observers), and visible through LOS. Shared-team targets, existing enemies, ignored
+players and players in friend mode are skipped; peaceful mode disables reactions.
+
+The actor picks `GetReactionForDamage(target)` (`at_damage`), as when hurt. `ignore`/`none` adds no enemy.
+Otherwise it requests `AddEnemy(target, reaction)`; if accepted, it stores the reaction and, while calm,
+clears its targets and enters that state. Busy actors retain their state. Enemy-controller, team, arrest,
+medic and addon-hook restrictions still apply. This starts the ordinary FSM/GOAP behavior without
+fabricating damage, conflict records or a wanted assignment. Later police calls and enemy sharing use
+their ordinary rules; the 800-unit/FOV gate applies to initial detection, not those separate systems.
+Holstering the weapon or disabling the setting does not clear enemies; ordinary forgetting still applies.
+
+Learning is always active, including with the checkbox off. On `BGN_OnKilledActor`, SERVER checks the
+attacker's callable `GetActiveWeapon`, validates its returned entity and stores its `GetClass()`. The
+last damage must identify that same attacker. Explosion/vehicle damage and kills by a player inside a
+vehicle are excluded. No prefilled weapon list is supplied; the first qualifying kill teaches a class.
+Classification uses the weapon held at death, not the projectile/inflictor's class.
+
+`systems/sv_lethal_weapons.lua` reads `data/background_npcs/lethal_weapons.json` once into a persistent
+SERVER cache, retained through script reloads. The JSON object maps class names to `true`; all maps share
+the file. Each new class updates the cache and rewrites the full object; duplicate kills and detection
+perform no file reads/writes. CLIENT receives only the setting through the existing cvar synchronization.
+An invalid file is reported and preserved without overwriting for that cache's lifetime; a write failure
+is reported while the learned class remains in memory. Offline edits take effect on the next server/map
+start. Isolated tests: `tests/sv_lethal_weapons.lua` via `bgn_selftest`.
+
 ## Donor animations
 
 `bgNPC.Animator` plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.

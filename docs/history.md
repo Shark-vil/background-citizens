@@ -1,5 +1,10 @@
 # Version history and documentation baseline
 
+Local 2.5.1 change (publication not verified): optional held-lethal-weapon reaction for residents/police,
+default off, one-second LOS/FOV checks within 800 units. Weapon learning continues while off, excludes
+explosion/vehicle kills and persists new classes in a server cache/DATA file. See [brains](systems/brains.md#lethal-weapons)
+and the [behavior tree](systems/wanted.md#behavior-decision-tree).
+
 Reviewed against Git through tag **2.3.0** (`2258b49`) and current **2.3.1 dev** (`7459c3c7`, 2026-11-10). `version.txt` and `bgNPC.VERSION` both say 2.3.1. There are 48 commits between the tag and this baseline. A version string does not prove publication on Workshop.
 
 Local Animator fixes after the baseline: `dance` starts after state cleanup, active donor animations synchronize to ready players entering PVS, stopping releases Animator-owned NPC freeze, and client copies preserve appearance at startup. See [donor animations](systems/brains.md#donor-animations). Publication is not verified.

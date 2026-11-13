@@ -33,6 +33,10 @@ config table. Both controls also exist in Classic settings and affect future spa
 Tools are split into **Background NPCs: Editor** (route points, spawn areas, seats) and **Background NPCs: Debugging** (actor inspector, navigation, movement, scenes, carried items). The debug page shares UID selection, visualization modes, distance/limit filters and freeze controls with the inspector Tool.
 
 
+**Behavior → AI** and **Classic → Extensions** contain **React to weapons in hands**
+(`bgn_react_to_lethal_weapon`, SERVER/admin, default `0`). Learning continues while off;
+see [detection, reactions and stored weapon classes](brains.md#lethal-weapons).
+
 ## Spawn and recycling settings
 
 The **Spawn** page holds the pedestrian settings; the vehicle visibility radius is in **Modules → Decent Vehicle (gear)**. Server defaults:
