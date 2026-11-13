@@ -99,11 +99,14 @@ timer.Create('BGN_SpotHostileNPC', 1, 0, function()
   end
 
   local wanted = bgNPC.Modules.Get('wanted')
+  local wanted_mode = GetConVar('bgn_enable_wanted_mode'):GetBool()
   for _, ent in ipairs(ents.GetAll()) do
-    if IsValid(ent) and not ent:IsPlayer() and not bgNPC.Actors.Get(ent) and not ent.bgn_siege_owner and bgNPC.Combat.IsAttacker(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
+    -- walks every entity on the map: the cheap NPC/NextBot class check rejects props first
+    -- (not a player and not an actor, so Combat.IsAttacker is exactly this check)
+    if (ent:IsNPC() or ent:IsNextBot()) and IsValid(ent) and not ent.bgn_siege_owner and not bgNPC.Actors.Get(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
       for _, actor in ipairs(actors) do
         if actor:IsAlive() and ent:Disposition(actor:GetNPC()) == D_HT then
-          if GetConVar('bgn_enable_wanted_mode'):GetBool() and (actor:HasTeam('residents') or actor:HasTeam('police')) then wanted:AddWanted(ent) end
+          if wanted_mode and (actor:HasTeam('residents') or actor:HasTeam('police')) then wanted:AddWanted(ent) end
           if not actor:HasEnemy(ent) and actor:GetNPC():GetPos():DistToSqr(ent:GetPos()) <= 2500 ^ 2 and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent, 'hostile') then
             local reaction = actor:GetReactionForProtect(ent)
             if actor.protect_blocked_enemy ~= ent then

@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 SERVER optimization (publication not verified): the object scan behind `BGN_ActorVisibleAtObject`/`BGN_ActorLookAtObject` searches 100 units around an actor instead of 1000 (the built-in listeners react within 80 units), and its forward trace runs once per scan. The once-per-second foreign-hostility check rejects non-NPC entities first, and the static animation controller checks `IsAlive` only for animated actors. Behavior is unchanged.
+
 Local 2.5.1 police-call fix (publication not verified): damage/protection reactions reject calls about already wanted or police-known enemies before enemy registration; entering a call also requires a valid selected enemy. Active-call completion rules are unchanged. See [police calls](systems/wanted.md#completing-a-police-call).
 
 Local 2.5.1 recycling change (publication not verified): spawn delay is `0` and the teleport limit is `10` per second. Move instead of removing remains enabled (`1`). The fast-check setting is removed: SERVER always uses one scheduler yield before each actor's recycling check. Saved values of the remaining cvars are preserved. See [settings](systems/menu.md).
