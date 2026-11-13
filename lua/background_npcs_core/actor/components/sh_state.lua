@@ -51,6 +51,7 @@ local function PickReaction(actor, reactions, enemy)
 
   if SERVER and bgNPC.DebugInspector and bgNPC.DebugInspector.Observed(actor) then bgNPC.DebugInspector.Emit(actor, 'pick', enemy, reaction) end
   if reaction == 'defense' and actor:IsWanted() then return 'retreat' end
+  if SERVER and reaction == 'calling_police' and IsValid(enemy) and bgNPC.PoliceKnows(enemy) then return 'fear' end
   return reaction
 end
 

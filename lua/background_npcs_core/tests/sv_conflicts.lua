@@ -455,6 +455,26 @@ bgNPC.Test.Add('police_call.proximity_only', function(check)
   w.seen = false
   wanted[enemy] = true
   local state = w.states.calling_police
+  function caller:GetPos()
+    return self.npc:GetPos()
+  end
+
+  check(state.pre_start(caller) == 'fear', 'an already wanted target cannot start a call')
+  wanted[enemy] = nil
+  check(state.pre_start(caller) == nil, 'an unknown target can start a call')
+  caller.GetEnemy = function() return nil end
+  check(state.pre_start(caller) == 'fear', 'a call cannot start before its target is available')
+  caller.GetEnemy = function() return enemy end
+  w.bgNPC.Actor = {Helpers = {PickWeighted = function() return 'calling_police' end}}
+  w.bgNPC.Assert = {}
+  w.Load('actor/components/sh_state.lua')
+  caller.data.at_damage, caller.data.at_protect = {}, {}
+  wanted[enemy] = true
+  check(w.bgNPC.Actor.GetReactionForDamage(caller, enemy) == 'fear', 'a wanted attacker is rejected before AddEnemy')
+  check(w.bgNPC.Actor.GetReactionForProtect(caller, enemy) == 'fear', 'a wanted witnessed threat cannot start a call')
+  wanted[enemy] = nil
+  check(w.bgNPC.Actor.GetReactionForDamage(caller, enemy) == 'calling_police', 'an unknown attacker can still trigger a call reaction')
+  wanted[enemy] = true
   state.update(caller)
   check(caller.state == 'calling_police' and caller.state_data.calling_time == 110, 'LOS loss and wanted status do not cancel or restart the call at exactly 300')
   w.now = 111

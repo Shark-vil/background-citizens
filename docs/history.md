@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 police-call fix (publication not verified): damage/protection reactions reject calls about already wanted or police-known enemies before enemy registration; entering a call also requires a valid selected enemy. Active-call completion rules are unchanged. See [police calls](systems/wanted.md#completing-a-police-call).
+
 Local 2.5.1 recycling change (publication not verified): spawn delay is `0` and the teleport limit is `10` per second. Move instead of removing remains enabled (`1`). The fast-check setting is removed: SERVER always uses one scheduler yield before each actor's recycling check. Saved values of the remaining cvars are preserved. See [settings](systems/menu.md).
 
 Local 2.5.1 citizen/police fix (publication not verified): friendly hits no longer start fear or confirmed conflict reactions; residents cannot be reported as wanted. Team changes reconcile targets/wanted/arrest. Only proven vehicle collisions can turn a civilian driver into an offender: running over a civilian or repeated police ramming, with a 3-second minimum and the existing 10% reaction chance. See [wanted rules and behavior tree](systems/wanted.md).

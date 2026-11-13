@@ -200,4 +200,6 @@ These are cooperating state/timer paths, not a single atomic tick. They do not b
 
 ## Completing a police call
 
+SERVER rejects a new call without a valid selected enemy or when police already know it (including an active wanted entry). Damage/protection reaction selection also checks the event's enemy before `AddEnemy`, so a newly reported wanted attacker cannot bypass the entry check. The reaction becomes `fear`.
+
 Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the selected `GetEnemy()` target; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion excludes teammates before filtering enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.

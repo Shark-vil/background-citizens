@@ -39,7 +39,7 @@ bgNPC.States.Register('calling_police', 'danger', {
   pre_start = function(actor)
     if not IsValidWantedMode() or TooManyCallers(actor) then return 'fear' end
     local enemy = actor:GetEnemy()
-    if IsValid(enemy) and bgNPC.PoliceKnows(enemy) then return 'fear' end
+    if not IsValid(enemy) or bgNPC.PoliceKnows(enemy) then return 'fear' end
   end,
   stop = function(actor) actor:StopStaticSequence() end,
   update = function(actor)
