@@ -1,0 +1,1 @@
+MsgN('This is a demo module. I boot after initializing all addon scripts.')
