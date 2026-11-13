@@ -95,3 +95,7 @@ Local network change: actor PVS sync sends identity (entity, type, generation, c
 Local vehicle fix: forced ejection during car seizure now uses the original passengers rather than deep copies of their actors. Restored bodies keep their registered identity and AI instead of freezing and later being removed as orphans. See [vehicles](systems/vehicles.md).
 
 Local vehicle fix 2: an actor leaving a moving car (police arriving at a chase) is immune to damage from that same car for 3 seconds, so a fast car no longer kills the officer on exit, after which the lifeless body stood still and was removed. See [vehicles](systems/vehicles.md).
+
+Local 2.5.1 working-tree change (publication not verified): confirmed-damage conflict memory, attacker-only witnesses, caller-visible help, shared player/actor wanted thresholds, foreign hostility wanted and primary-officer arrest escalation. See [wanted](systems/wanted.md) and [arrest](systems/arrest.md).
+
+Local follow-up: attacking an observer's known enemy does not incriminate a non-hostile attacker; existing enemy lists and bidirectional `D_HT` forbid the exception. It applies before initiator selection, also to arrest initiation/non-police harm counts. The observer's own enemies now count in `IsEnemyOfTeam`. See [conflicts](systems/wanted.md#conflict-memory-and-witnesses).

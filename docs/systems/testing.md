@@ -228,3 +228,5 @@ Vehicle occupants keep the same actor object and UID in the population registry.
 The admin **Carried item debugger** (`bgn_carry_debug`) issues a selected briefcase, parcel or newspaper with LMB and removes it with RMB. Aim at a living unarmed actor on foot in a calm state; model/body compatibility remains enforced. Test briefcases on male/female NPCs and NextBots through calm actions, running and combat: no physical briefcase should spawn.
 
 Carried visual models now move with their parent entity instead of keeping a separate world render origin, so a briefcase or newspaper does not remain culled at its old location after an actor teleport.
+
+`bgn_selftest` also runs `tests/sv_conflicts.lua`: isolated modules/hooks cover initiator direction/reset/rebind/forgetting, confirmed arrest initiation, attacker visibility, caller-visible help, foreign hostility, distinct arrest victims, strict health/distance boundaries, refusal and shared player/actor wanted thresholds. They create no live entities and do not establish engine hook timing, traces or vehicle physics.

@@ -114,3 +114,5 @@ GMod DATA paths are relative to `garrysmod/data/`, not this addon: `background_n
 - [AI documentation rules](ai.md): scope, sources, realm contracts and maintenance checklist.
 
 Unit/stub checks do not establish real GMod physics, multiplayer permission behavior or every optional-addon combination. Record exact conditions for live evidence.
+
+Combat damage authority: `systems/sv_first_attacker_found.lua` receives confirmed engine/seated damage, records the pair initiator, evaluates existing-arrest harm and emits `BGN_ConfirmedDamage` for arrest initiation and witnesses. `systems/arrest/sv_arrest.lua` checks primary-officer compliance every 0.25 seconds. These records are SERVER-only; see [wanted](systems/wanted.md).
