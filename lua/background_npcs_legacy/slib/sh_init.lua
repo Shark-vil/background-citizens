@@ -1,3 +1,6 @@
+-- If active workshop version
+if SLibraryIsLoaded then return  end
+
 -- Trimmed copy of SLibrary 1.8.5 (only what the legacy core uses; no sql, file I/O, netfile, GUI, DFrame).
 slib = slib or {}
 slib.Version = '1.8.5-bgn'
