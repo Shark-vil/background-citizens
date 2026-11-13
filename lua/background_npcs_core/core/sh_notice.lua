@@ -96,8 +96,12 @@ local function IsRussian()
   return language == 'ru' or language == 'russian'
 end
 
+local fonts = {}
 local function Font(size)
   local name = 'BGN.Notice.' .. size
+  -- Draw() asks for fonts every frame: create each size once, CreateFont per frame drops the FPS
+  if fonts[name] then return name end
+  fonts[name] = true
   surface.CreateFont(name, {
     font = 'Tahoma',
     size = size,
