@@ -1,7 +1,7 @@
 # Voices
 
 NPC phrases are voiced (XTTS-v2, generated): citizens (calm, fear, the 911 call after the operator answers; a
-male and a female take), the police (combat shouts, arrest orders, detention, squad formation calls, wounded
+male and a female take), the police (combat shouts, arrest orders, detention, squad formation calls, siege and hostage-negotiation radio calls, a downed or lost target, wounded
 falling back, officer down, luggage warnings, reporting and writing down a body, confiscating a car), gangsters (carjacking) and every conversation line. English and Russian; the police speak through a radio filter.
 
 ## Who plays what

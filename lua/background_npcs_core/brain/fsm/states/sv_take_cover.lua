@@ -44,7 +44,10 @@ end
 
 bgNPC.States.Register('take_cover', 'danger', {
   pre_start = function(actor, _, data)
-    local enemy = actor:GetNearEnemy()
+    local enemy = actor:GetEnemy()
+    if IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then
+      return 'defense'
+    end
     data.cover = IsValid(enemy) and bgNPC.FindCover(actor, enemy)
     if not data.cover then return 'defense' end
   end,
@@ -52,7 +55,12 @@ bgNPC.States.Register('take_cover', 'danger', {
   stop = function(actor) actor:StopStaticSequence() end,
   update = function(actor, _, data)
     local now = CurTime()
-    local enemy = actor:GetNearEnemy()
+    local enemy = actor:GetEnemy()
+    -- hidden behind the cover is the point: only the way there ends when the enemy loses sight of the actor
+    if not data.hide_until and IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then
+      actor:SetState('defense')
+      return
+    end
     if not IsValid(enemy) or (not data.hide_until and data.give_up < now) then
       if actor:HasNoEnemies() then
         actor:RandomState()

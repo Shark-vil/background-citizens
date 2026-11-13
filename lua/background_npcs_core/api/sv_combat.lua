@@ -46,12 +46,22 @@ end)
 
 -- Is the entity in a real fight: it shot or hurt someone lately, or an actor shoots back at an enemy.
 local FIGHT_WINDOW = 10
-local FIGHT_STATES = {'defense', 'killer', 'take_cover', 'retreat'}
+local FIGHT_STATES = {'defense', 'killer', 'take_cover', 'retreat', 'siege', 'hold_door', 'breach_door', 'call_backup'}
 function Combat.IsFighting(ent)
   if not IsValid(ent) then return false end
   if CurTime() - (ent.bgn_last_attack or -FIGHT_WINDOW) < FIGHT_WINDOW then return true end
   local actor = Actors.Get(ent)
   return actor ~= nil and actor:EnemiesCount() > 0 and actor:HasState(FIGHT_STATES)
+end
+
+local COMBAT_RADIUS = 1000
+function Combat.IsInCombatRadius(actor)
+  if not actor or not actor:IsAlive() or not Combat.IsFighting(actor:GetNPC()) then return false end
+  local origin = actor:GetPos()
+  for _, enemy in ipairs(actor.enemies) do
+    if IsValid(enemy) and enemy:Health() > 0 and origin:DistToSqr(enemy:GetPos()) <= COMBAT_RADIUS ^ 2 then return true end
+  end
+  return false
 end
 
 hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
@@ -255,23 +265,20 @@ function Combat.ResolveEnemy(actor, target, attacker)
   local target_type = GetEntityType(target)
   local attacker_type = GetEntityType(attacker)
   if not target_type or not attacker_type then return end
-  if Combat.IsAttackingEnemy(actor, target, attacker) then return end
   local is_attacker_team = actor:HasTeam(attacker)
   local is_target_team = actor:HasTeam(target)
   if is_attacker_team and is_target_team then return end
+  -- Whoever hit a teammate is always the enemy, regardless of who started the conflict.
+  if is_attacker_team then return target end
+  if is_target_team then return attacker end
+  if Combat.IsAttackingEnemy(actor, target, attacker) then return end
   local first_attacker = GetFirstAttackerModule()
   local law = actor:HasTeam('residents') or actor:HasTeam('police')
   -- Retaliation is justified unless the defender is already a threat to the team.
   if law and first_attacker:IsFirstAttacker(target, attacker) then
-    if Combat.IsEnemyOfTeam(actor, attacker) then
-      if not is_attacker_team then return attacker end
-      return
-    end
-    if not is_target_team then return target end
-    return
+    if Combat.IsEnemyOfTeam(actor, attacker) then return attacker end
+    return target
   end
-  if is_attacker_team then return target end
-  if is_target_team then return attacker end
   local wanted = GetWantedModule()
   local attacker_actor = Actors.Get(attacker)
   local target_actor = Actors.Get(target)

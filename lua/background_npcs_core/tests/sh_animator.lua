@@ -145,6 +145,16 @@
   npc.schedule, npc.state = 99, 3
   a.Stop(npc)
   check(npc.schedule == 99 and npc.state == 3, 'stop preserves a replacement schedule')
+  players = {}
+  check(not a.Play('models/police.mdl', 'deploy', npc), 'ordinary animations still require a viewer')
+  local count = #messages
+  local unseen = a.Play('models/police.mdl', 'deploy', npc, {require_pvs = false})
+  callbacks.Think()
+  check(unseen and a.IsPlaying(npc) and #messages == count, 'server gameplay animation runs without a PVS viewer')
+  players[1], now = viewer, 113
+  callbacks.Think()
+  check(#messages == count + 1 and messages[#messages][7] == unseen.stop_time, 'a viewer entering later receives the original gameplay deadline')
+  a.Stop(npc)
   local states = {}
   env.bgNPC.States = {
     Register = function(name, _, state) states[name] = state end

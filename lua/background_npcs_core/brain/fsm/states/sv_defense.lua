@@ -70,15 +70,14 @@ bgNPC.States.Register('defense', 'danger', {
 
     body:SetAlertLevel('combat')
     if actor:HasTeam('police') then
-      local enemy = actor:GetNearEnemy()
+      local enemy = actor:GetEnemy()
       local npc = actor:GetNPC()
       if IsValid(enemy) and enemy:GetPos():DistToSqr(npc:GetPos()) < 250000 then actor:Voice('police_contact', 'npc/metropolice/vo/defender.wav') end
     end
   end,
   update = function(actor)
     local squad = actor.squad
-    local enemy = squad and squad.enemy
-    if not IsValid(enemy) then enemy = actor:GetNearEnemy() end
+    local enemy = actor:GetEnemy()
     if not IsValid(enemy) then
       if actor:HasNoEnemies() then actor:RandomState() end
       return
@@ -117,7 +116,24 @@ bgNPC.States.Register('defense', 'danger', {
       end
     end
 
-    if squad then
+    local visible = bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'combat')
+    if not visible then
+      local known = actor.enemy_last_position and actor.enemy_last_position[enemy]
+      if known and squad and squad.enemy == enemy and squad.squad.formation == 'column' then
+        MoveToSlot(actor, data, squad.slot)
+      elseif (data.next_move or 0) <= now then
+        data.next_move = now + REPOSITION_PERIOD
+        if known and actor:GetPos():DistToSqr(known) > SLOT_REACHED_SQR then
+          actor:WalkToPos(known, 'run')
+        else
+          actor:StopWalk()
+          actor:GetBody():StopMoving()
+        end
+      end
+      return
+    end
+
+    if squad and squad.enemy == enemy then
       MoveToSlot(actor, data, squad.slot)
       return
     end

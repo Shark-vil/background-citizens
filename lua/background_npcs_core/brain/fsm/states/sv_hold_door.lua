@@ -22,7 +22,7 @@ end
 
 bgNPC.States.Register('hold_door', 'danger', {
   pre_start = function(actor, _, data)
-    data.spot = Doors.Find(actor, actor:GetNearEnemy())
+    data.spot = Doors.Find(actor, actor:GetEnemy())
     if not Doors.Reserve(actor, data.spot) then return true end
     data.spot.resume = actor:GetState()
   end,
@@ -87,14 +87,14 @@ bgNPC.States.Register('hold_door', 'danger', {
 
 bgNPC.States.Register('breach_door', 'danger', {
   pre_start = function(actor, _, data)
-    data.spot = Doors.Blocker(actor, actor:GetNearEnemy())
+    data.spot = Doors.Blocker(actor, actor:GetEnemy())
     if not data.spot then return true end
     data.approach = Doors.Floor(actor, data.spot.center - data.spot.normal * 54, data.spot.door)
     if not data.approach then return true end
   end,
   start = function(_, _, data) data.until_time = CurTime() + 8 end,
   update = function(actor, _, data)
-    if CurTime() > data.until_time or Doors.Blocker(actor, actor:GetNearEnemy()) ~= data.spot then
+    if CurTime() > data.until_time or Doors.Blocker(actor, actor:GetEnemy()) ~= data.spot then
       actor:SetState('defense')
       return
     end

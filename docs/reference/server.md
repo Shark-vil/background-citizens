@@ -6,6 +6,12 @@ Run gameplay changes on SERVER. Many methods are declared in sh_ files for compa
 
 ## Actor
 
+### ShareEnemyMemory
+
+`actor:ShareEnemyMemory(source, enemy)` copies another actor's observed position and original timestamp only when this actor already knows the enemy, the source memory is at most 60 seconds old and this actor has no newer known position. Returns whether it copied memory. Does not add enemies or change reactions. Source: `actor/components/sh_enemies.lua`.
+
+`bgNPC.Combat.IsInCombatRadius(actor)` returns whether a living combat actor has any living known enemy within a fixed 1000 units (inclusive); this is independent of observer cameras. Source: `api/sv_combat.lua`.
+
 ### AddEnemy
 
 `actor:AddEnemy(ent, reaction, always_visible)`

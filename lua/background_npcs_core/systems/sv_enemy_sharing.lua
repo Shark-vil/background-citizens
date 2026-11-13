@@ -10,6 +10,22 @@ local function CanShare(actor)
   return actor:IsAlive() and not actor:HasNoEnemies() and not actor:HasState('fear') and (actor.data.gang or not actor:InVehicle())
 end
 
+-- The enemy reaches a teammate: a calm one reacts first, the blocked flag is only fresh for an actor asked just now.
+local function Warn(other, enemy, source_npc)
+  local asked = other:EqualStateGroup('calm')
+  if asked then
+    other:RemoveAllTargets()
+    other:SetState(other:GetReactionForProtect(enemy))
+  end
+
+  if not (asked and other.protect_blocked_enemy == enemy) then
+    other:AddEnemy(enemy)
+    if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(other, 'share', enemy, nil, source_npc, other:HasEnemy(enemy)) end
+  elseif bgNPC.DebugInspector then
+    bgNPC.DebugInspector.Emit(other, 'share', enemy, 'reaction_blocked', source_npc, false)
+  end
+end
+
 local function Share(source)
   local npc = source:GetNPC()
   local gang = source.data.gang
@@ -27,7 +43,10 @@ local function Share(source)
     if other ~= source and other:IsAlive() and (gang or not other:InVehicle() or other:HasTeam('police')) and other:HasTeam(source) then
       local missing
       for _, enemy in ipairs(enemies) do
-        if (not other:HasEnemy(enemy) or (gang and other:EqualStateGroup('calm'))) and not other:HasTeam(enemy) then
+        local memory = source.enemy_last_position and source.enemy_last_position[enemy]
+        local newer = memory and (not other.enemy_last_position or not other.enemy_last_position[enemy]
+          or (source.enemy_last_seen and source.enemy_last_seen[enemy] or 0) > (other.enemy_last_seen and other.enemy_last_seen[enemy] or 0))
+        if (not other:HasEnemy(enemy) or newer or (gang and other:EqualStateGroup('calm'))) and not other:HasTeam(enemy) then
           missing = missing or {}
           missing[#missing + 1] = enemy
         end
@@ -45,20 +64,40 @@ local function Share(source)
               other:SetState(other:IsWanted() and 'retreat' or 'defense')
             end
           else
-            -- the blocked flag is only fresh for an actor asked just now (a calm one)
-            local asked = other:EqualStateGroup('calm')
-            if asked then
-              other:RemoveAllTargets()
-              other:SetState(other:GetReactionForProtect(enemy))
-            end
-
-            if not (asked and other.protect_blocked_enemy == enemy) then
-              other:AddEnemy(enemy)
-              if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(other, 'share', enemy, nil, npc, other:HasEnemy(enemy)) end
-            elseif bgNPC.DebugInspector then
-              bgNPC.DebugInspector.Emit(other, 'share', enemy, 'reaction_blocked', npc, false)
-            end
+            Warn(other, enemy, npc)
           end
+          other:ShareEnemyMemory(source, enemy)
+        end
+      end
+    end
+  end
+end
+
+-- A calm actor that sees a scared teammate and, itself, that teammate's enemy takes the enemy too.
+-- It must see both: a panic never runs further than the eyes of the witness.
+-- Only fear/flight from a threat counts; the scan starts from scared actors near a player, not from every actor.
+local FEAR_STATES = {'fear', 'run_from_danger', 'dyspnea_danger'}
+local PLAYER_RADIUS = 2500
+local function NearPlayer(pos)
+  for _, ply in ipairs(player.GetHumans()) do
+    if ply:Alive() and ply:GetPos():DistToSqr(pos) <= PLAYER_RADIUS ^ 2 then return true end
+  end
+  return false
+end
+
+local function Witness(scared)
+  local scared_npc = scared:GetNPC()
+  if not scared:IsAlive() or scared:HasNoEnemies() or not scared:HasState(FEAR_STATES) or not NearPlayer(scared_npc:GetPos()) then return end
+  for _, observer in ipairs(bgNPC.Actors.GetInRadius(scared_npc:GetPos(), RADIUS)) do
+    local npc = observer:GetNPC()
+    if observer ~= scared and observer:IsAlive() and not observer:InVehicle() and observer:EqualStateGroup('calm') and observer:HasTeam(scared)
+      and bgNPC.Vision.HasLineOfSight(npc, scared_npc, 'share') then
+      for i = 1, scared.enemies_count do
+        local enemy = scared.enemies[i]
+        if IsValid(enemy) and enemy:Health() > 0 and not observer:HasEnemy(enemy) and not observer:HasTeam(enemy)
+          and npc:GetPos():DistToSqr(enemy:GetPos()) <= RADIUS ^ 2 and bgNPC.Vision.HasLineOfSight(npc, enemy, 'share') then
+          Warn(observer, enemy, scared_npc)
+          if not observer:EqualStateGroup('calm') then break end
         end
       end
     end
@@ -72,5 +111,6 @@ timer.Create('BGN_EnemySharing', 1, 0, function()
   bgNPC.enemy_share_next = CurTime() + period
   for _, actor in ipairs(bgNPC.Actors.GetAll()) do
     if CanShare(actor) then Share(actor) end
+    Witness(actor)
   end
 end)

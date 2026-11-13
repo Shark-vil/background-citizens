@@ -106,11 +106,11 @@ For a direct resolver call, `A`/`V` are the supplied sides; the witness normaliz
 | Priority | Condition | Resolver result |
 |---|---|---|
 | 1 | Unsupported participant type | None. |
-| 2 | V is already O's enemy; A and O have no enemy-list hostility or `D_HT` in either direction; V is not O itself | None: the common-enemy exception. |
-| 3 | Both sides are teammates of O | None. |
-| 4 | O is residents/police and V was first to attack A | If A is a threat to O's team, choose A unless A is a teammate; otherwise choose V unless V is a teammate. A teammate result means none. |
-| 5 | Only A is O's teammate | V. |
-| 6 | Only V is O's teammate | A. |
+| 2 | Both sides are teammates of O | None. |
+| 3 | Only V is O's teammate | A. |
+| 4 | Only A is O's teammate | V. |
+| 5 | V is already O's enemy; A and O have no enemy-list hostility or `D_HT` in either direction; V is not O itself | None: the common-enemy exception. |
+| 6 | O is residents/police and V was first to attack A | If A is a threat to O's team, choose A; otherwise choose V. |
 | 7 | Player A attacks foreign NPC/NextBot V | V if its available `Disposition(A)` is `D_HT`; otherwise A. |
 | 8 | Foreign non-player A attacks player V | A. |
 | 9 | A is wanted, otherwise V is wanted | A first, otherwise V. |
@@ -138,7 +138,7 @@ Other ways to learn an enemy
 Initial wanted request from built-in gameplay
 ├─ Arrest refusal/escape/harm/kill → follow the arrest tree
 ├─ Completed witness phone call → report eligible known enemies
-│  └─ Police already know the enemy / hook veto / failed call → no new report
+│  └─ Police already know the enemy or it is already wanted / hook veto / failed call → no new report
 ├─ Police radio backup / civilian-offender path → their existing conditions
 └─ An ACTOR was killed
    ├─ Peaceful mode, wanted disabled, or invalid killer → stop this kill handler
@@ -169,4 +169,4 @@ Sources: `api/sv_combat.lua`, `actor/events/sv_self_damage.lua`, `actor/events/s
 
 ## Completing a police call
 
-Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the current nearest enemy; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when police already know the selected enemy, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.
+Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the current nearest enemy; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.

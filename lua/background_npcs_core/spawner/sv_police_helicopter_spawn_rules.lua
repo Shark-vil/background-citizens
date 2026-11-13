@@ -12,7 +12,7 @@ end)
 timer.Create('BGN_PoliceHelicopterSetTarget', 1, 0, function()
   for _, actor in ipairs(bgNPC.Actors.GetByType('police_helicopter')) do
     if actor:IsAlive() and actor.class == 'npc_apache_scp_sb' then
-      local enemy = actor:GetNearEnemy()
+      local enemy = actor:GetEnemy()
       if IsValid(enemy) then actor:GetNPC().ConstTarget = enemy end
     end
   end

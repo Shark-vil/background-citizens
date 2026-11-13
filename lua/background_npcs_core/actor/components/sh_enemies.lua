@@ -26,6 +26,13 @@ function Actor:AddEnemy(ent, reaction, always_visible)
   local relationship = reaction == 'fear' and D_FR or D_HT
   self.enemies_count = self.enemies_count + 1
   self.enemies[self.enemies_count] = ent
+  self.enemy_last_seen = self.enemy_last_seen or {}
+  self.enemy_last_seen[ent] = CurTime() -- newly reported enemies get the normal search grace period
+  -- a wanted target is known to the city even out of sight, otherwise a fresh reinforcement would stand still
+  if bgNPC.Vision.HasLineOfSight(npc, ent, 'memory') or bgNPC.Modules.Get('wanted'):HasWanted(ent) then
+    self.enemy_last_position = self.enemy_last_position or {}
+    self.enemy_last_position[ent] = ent:GetPos()
+  end
   if always_visible then
     self.enemies_always_visible_count = self.enemies_always_visible_count + 1
     self.enemies_always_visible[self.enemies_always_visible_count] = ent
@@ -36,7 +43,7 @@ function Actor:AddEnemy(ent, reaction, always_visible)
     body:SetDisposition(ent, relationship)
     body:SetAlertLevel(relationship == D_HT and 'combat' or 'alert')
     -- the body would otherwise get its enemy on the next EnemiesRecalculate, up to a second later
-    if not IsValid(body:GetEnemy()) then body:SetEnemy(ent) end
+    if not IsValid(body:GetEnemy()) then body:SetEnemy(ent, self.enemy_last_position and self.enemy_last_position[ent]) end
   end
 
   if SERVER and bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(self, 'enemy_added', ent) end
@@ -54,6 +61,7 @@ function Actor:RemoveEnemy(ent, index)
   local old_count = self.enemies_count
   local body = self.body
   if ent == self.walkTarget then self.walkTarget = NULL end
+  if ent == self.combat_enemy then self.combat_enemy = nil end
   if body and IsValid(ent) then
     if body:GetEnemy() == ent then body:SetEnemy(NULL) end
     body:SetDisposition(ent, D_NU)
@@ -67,6 +75,7 @@ function Actor:RemoveEnemy(ent, index)
 
   table.RemoveByValue(self.enemies_always_visible, ent)
   if self.enemy_last_seen then self.enemy_last_seen[ent] = nil end
+  if self.enemy_last_position then self.enemy_last_position[ent] = nil end
   self.enemies_count = #self.enemies
   self.enemies_always_visible_count = #self.enemies_always_visible
   if old_count > 0 and self.enemies_count == 0 then hook.Run('BGN_ResetEnemiesForActor', self) end
@@ -122,47 +131,82 @@ local ENEMY_FORGET_TIME = 60
 local CALM_ENEMY_FORGET_TIME = 20
 local FEAR_STATES = {'fear', 'run_from_danger', 'dyspnea_danger'}
 -- Removes dead enemies, forgets enemies that were not seen for a long time
--- and points the body at the nearest one.
+-- and points the body at the selected combat target.
 function Actor:EnemiesRecalculate()
   if not self.mechanics.enemies_controller then return end
   local body = self.body
   if not body or not body:IsValid() then return end
   self.enemies_count = #self.enemies
   self.enemies_always_visible_count = #self.enemies_always_visible
-  if RedirectEnemyToVehicle(body, self:GetNearEnemy()) then return end
   for i = self.enemies_count, 1, -1 do
     local enemy = self.enemies[i]
-    if not IsValid(enemy) or enemy:Health() <= 0 then self:RemoveEnemy(nil, i) end
-  end
-
-  local enemy = self:GetNearEnemy()
-  if not IsValid(enemy) then return end
-  if enemy.bgn_always_visible or bgNPC.Vision.HasLineOfSight(self.npc, enemy, 'memory') then
-    body:SetEnemy(enemy)
-    self.enemy_last_seen = self.enemy_last_seen or {}
-    self.enemy_last_seen[enemy] = CurTime()
-    -- A frightened actor stops fearing an actor that has not fought for a while, even in plain sight.
-    if not enemy:IsPlayer() and self:HasState(FEAR_STATES) and not bgNPC.Combat.IsFighting(enemy) and not bgNPC.Modules.Get('wanted'):HasWanted(enemy) then
-      self.enemy_calm_since = self.enemy_calm_since or {}
-      self.enemy_calm_since[enemy] = self.enemy_calm_since[enemy] or CurTime()
-      if self.enemy_calm_since[enemy] + CALM_ENEMY_FORGET_TIME < CurTime() then
+    if not IsValid(enemy) or enemy:Health() <= 0 then
+      if IsValid(enemy) and self:HasTeam('police') then self:Voice('police_target_down') end
+      self:RemoveEnemy(nil, i)
+    elseif enemy.bgn_always_visible or bgNPC.Vision.HasLineOfSight(self.npc, enemy, 'memory') then
+      self.enemy_last_seen = self.enemy_last_seen or {}
+      self.enemy_last_seen[enemy] = CurTime()
+      self.enemy_last_position = self.enemy_last_position or {}
+      self.enemy_last_position[enemy] = enemy:GetPos()
+      -- A frightened actor stops fearing an actor that has not fought for a while, even in plain sight.
+      if not enemy:IsPlayer() and self:HasState(FEAR_STATES) and not bgNPC.Combat.IsFighting(enemy) and not bgNPC.Modules.Get('wanted'):HasWanted(enemy) then
+        self.enemy_calm_since = self.enemy_calm_since or {}
+        self.enemy_calm_since[enemy] = self.enemy_calm_since[enemy] or CurTime()
+        if self.enemy_calm_since[enemy] + CALM_ENEMY_FORGET_TIME < CurTime() then
+          self.enemy_calm_since[enemy] = nil
+          self:RemoveEnemy(enemy)
+        end
+      elseif self.enemy_calm_since then
         self.enemy_calm_since[enemy] = nil
+      end
+    else
+      local last_seen = math.max(body:GetEnemyLastTimeSeen(enemy), self.enemy_last_seen and self.enemy_last_seen[enemy] or 0)
+      if not bgNPC.Modules.Get('wanted'):HasWanted(enemy) and not bgNPC.Table.HasValue(self.enemies_always_visible, enemy)
+        and last_seen + ENEMY_FORGET_TIME < CurTime() then
+        if self:HasTeam('police') then self:Voice('police_target_lost') end
         self:RemoveEnemy(enemy)
       end
-    elseif self.enemy_calm_since then
-      self.enemy_calm_since[enemy] = nil
     end
-    return
   end
-
-  if bgNPC.Modules.Get('wanted'):HasWanted(enemy) then return end
-  if bgNPC.Table.HasValue(self.enemies_always_visible, enemy) then return end
-  local last_seen = math.max(body:GetEnemyLastTimeSeen(enemy), self.enemy_last_seen and self.enemy_last_seen[enemy] or 0)
-  if last_seen + ENEMY_FORGET_TIME < CurTime() then self:RemoveEnemy(enemy) end
+  local enemy = self:GetEnemy()
+  if not RedirectEnemyToVehicle(body, enemy) then
+    body:SetEnemy(enemy, self.enemy_last_position and self.enemy_last_position[enemy])
+  end
 end
 
 function Actor:GetEnemy()
-  return self:GetNearEnemy()
+  local function Valid(enemy) return IsValid(enemy) and enemy:Health() > 0 and self:HasEnemy(enemy) end
+  local enemy = self.last_attacker
+  if not Valid(enemy) or CurTime() - (self.last_attacked_at or 0) > 5 then
+    enemy = self.siege and self.siege.enemy
+    if not Valid(enemy) then enemy = self.squad and self.squad.enemy end
+    if not Valid(enemy) then enemy = self.combat_enemy end
+    if not Valid(enemy) then
+      enemy = NULL
+      local distance
+      for _, candidate in ipairs(self.enemies) do
+        if Valid(candidate) then
+          local d = self:GetPos():DistToSqr(candidate:GetPos())
+          if not distance or d < distance then enemy, distance = candidate, d end
+        end
+      end
+    end
+  end
+  self.combat_enemy = IsValid(enemy) and enemy or nil
+  return enemy
+end
+
+function Actor:ShareEnemyMemory(source, enemy)
+  if not self:HasEnemy(enemy) then return false end
+  local pos = source.enemy_last_position and source.enemy_last_position[enemy]
+  local seen = source.enemy_last_seen and source.enemy_last_seen[enemy]
+  if not pos or not seen or CurTime() - seen > ENEMY_FORGET_TIME then return false end
+  if self.enemy_last_position and self.enemy_last_position[enemy] and self.enemy_last_seen
+    and (self.enemy_last_seen[enemy] or 0) >= seen then return false end
+  self.enemy_last_position = self.enemy_last_position or {}
+  self.enemy_last_seen = self.enemy_last_seen or {}
+  self.enemy_last_position[enemy], self.enemy_last_seen[enemy] = Vector(pos), seen
+  return true
 end
 
 function Actor:GetFirstEnemy()

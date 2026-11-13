@@ -45,6 +45,7 @@ GOAP.sensors = {
   can_surrender = function(actor, npc) return npc:Health() < npc:GetMaxHealth() * SURRENDER_HEALTH_FRACTION end,
   enemy_close = function(actor, npc, enemy) return IsValid(enemy) and npc:GetPos():DistToSqr(enemy:GetPos()) < ENEMY_CLOSE_DIST_SQR end,
   enemy_armed = function(actor, npc, enemy) return IsValid(enemy) and IsArmedEntity(enemy) end,
+  enemy_visible = function(_, npc, enemy) return IsValid(enemy) and bgNPC.Vision.HasLineOfSight(npc, enemy, 'goap') end,
   wanted = function(actor) return actor:IsWanted() end,
   in_cover = function(actor)
     return (actor.cover_until or 0) > CurTime() -- set by take_cover
@@ -78,14 +79,15 @@ GOAP.sensors = {
   desperate = function(actor, _, enemy) return bgNPC.Doors.Desperate(actor, enemy) end,
   can_hold_door = function(actor, _, enemy) return bgNPC.Doors.Find(actor, enemy) ~= nil end,
   enemy_bracing = function(actor, _, enemy) return bgNPC.Doors.Blocker(actor, enemy) ~= nil end,
+  can_siege = function(actor, _, enemy) return bgNPC.Siege.CanStart(actor, enemy) ~= nil end,
 }
 
--- @param enemy entity|nil enemy to sense against, the nearest enemy by default
+-- @param enemy entity|nil enemy to sense against, the selected combat target by default
 -- @return number world state of the actor
 function GOAP.Sense(actor, enemy)
   local npc = actor:GetNPC()
   if not IsValid(npc) then return 0 end
-  enemy = IsValid(enemy) and enemy or actor:GetNearEnemy()
+  enemy = IsValid(enemy) and enemy or actor:GetEnemy()
   local ws = 0
   for name, sensor in pairs(GOAP.sensors) do
     if sensor(actor, npc, enemy) then ws = bit.bor(ws, F(name)) end
@@ -180,6 +182,14 @@ GOAP.RegisterAction('breach_door', {
   cost = 1,
 })
 
+GOAP.RegisterAction('siege', {
+  state = 'siege',
+  always = true,
+  pre = {has_enemy = true, armed = true, can_siege = true},
+  effects = {threat_handled = true},
+  cost = 0.5,
+})
+
 -- attack chains: take_cover [-> call_backup] -> attack against an armed enemy or, for an outnumbered officer,
 -- a crowd. Cover is picked only when the attack cost makes it cheaper, so it needs no enemy_armed itself.
 GOAP.RegisterAction('take_cover', {
@@ -188,7 +198,8 @@ GOAP.RegisterAction('take_cover', {
   pre = {
     has_enemy = true,
     armed = true,
-    in_cover = false
+    in_cover = false,
+    enemy_visible = true
   },
   effects = {
     in_cover = true

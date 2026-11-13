@@ -24,6 +24,8 @@ local function Geometry(door)
   return center, size.x < size.y and ang:Forward() or ang:Right(), size
 end
 
+Doors.Geometry = Geometry
+
 local function Floor(actor, pos, door)
   local npc = actor:GetNPC()
   local tr = util.TraceLine({

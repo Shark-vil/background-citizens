@@ -199,6 +199,21 @@ not a general FPS guarantee. Multiplayer and arbitrary camera addons/custom rigs
 
 `python tools/test_regressions.py` (requires lupa) checks the Lua logic outside GMod. It covers safe actor health accessors in both realms, arrest module registration order, seated damage and police witnesses, passenger aim, exit placement by seat/model attachment, overlap rejection and blocked-side fallback. These checks do not verify live physics or every vehicle model.
 
+## Room siege developer checks
+
+`bgn_selftest` includes `tests/sv_siege.lua`: isolated checks for one-exit pockets, alternative/incoming
+connections, outdoor rejection, animation/class requirements, door chance/fallback, shared deployment
+reservations, grenade clearance and the wait/cooldown. These do not establish real physics or map completeness.
+
+`tools/siege.lua` is an opt-in SERVER fixture for an isolated single-player `gm_bigcity_improved` session,
+using the room near `setpos -748.617798 -4298.178223 -11071.968750`. It creates eight actors and exercises
+metropolice/combine operators with NPC and NextBot bodies, including a player target. It checks the double-leaf
+exit, missing-animation rejection, five front/three rear participants, silent waiting, one real projectile,
+entry into the room, actual damage/attribution against NPC targets, exit/damage cancellation and NPC capability
+restoration. It temporarily moves/arms the observer, pauses population
+tasks and cleans up/restores its own state. Run it through a temporary local SERVER bridge, never as an autorun
+or on a public server. Results: `garrysmod/data/bgn_siege_lab/verification.json`.
+
 ## DV traffic developer checks
 
 Only BGN-created vehicles (`isBgnVehicle`) use the new recovery controller; the original DV remains a dependency. Police designation (`bgnPoliceVehicle`) persists across driver/group changes. Only actors on team `police` can drive or ride in these cars. Players may still take an empty police car.
@@ -230,3 +245,5 @@ The admin **Carried item debugger** (`bgn_carry_debug`) issues a selected briefc
 Carried visual models now move with their parent entity instead of keeping a separate world render origin, so a briefcase or newspaper does not remain culled at its old location after an actor teleport.
 
 `bgn_selftest` also runs `tests/sv_conflicts.lua`: isolated modules/hooks cover initiator direction/reset/rebind/forgetting, confirmed arrest initiation, attacker visibility, caller-visible help, foreign hostility, distinct arrest victims, strict health/distance boundaries, refusal and shared player/actor wanted thresholds. They create no live entities and do not establish engine hook timing, traces or vehicle physics.
+
+`tests/sv_pursuit.lua` checks stable/direct-attacker/group target priorities, observation of every enemy, original shared timestamps, hidden-target approach without standoff, visible-only cover, hidden squad columns, and the inclusive combat-radius boundary/disabled option. Native integration also needs ordinary non-eternal actors with the remover enabled: observe a target through an open door, close it, then add reinforcements without manually seeding their memory. Verify pursuit/siege and no recycling inside the radius, then removal after leaving it; exercise NextBot unstuck protection separately.

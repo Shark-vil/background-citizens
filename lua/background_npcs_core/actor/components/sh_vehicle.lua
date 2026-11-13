@@ -307,10 +307,10 @@ function Actor:ExitVehicle(forced, squeeze)
     if IsValid(enemy) then self.body:SetDisposition(enemy, fear and D_FR or D_HT) end
   end
 
-  local enemy = self:GetNearEnemy()
+  local enemy = self:GetEnemy()
   if IsValid(enemy) then
     self.body:SetAlertLevel(fear and 'alert' or 'combat')
-    self.body:SetEnemy(enemy)
+    self.body:SetEnemy(enemy, self.enemy_last_position and self.enemy_last_position[enemy])
   end
 
   if provider.driver == self then

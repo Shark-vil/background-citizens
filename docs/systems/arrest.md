@@ -18,7 +18,7 @@ A player gives up by looking at the ground (pitch over 40°) near the officer. N
 `arrest_surrender` state: an actor (an NPC or a NextBot body, e.g. a gangster) that attacks near the police may
 give up, 5% on its first attack and 10% on each later one, only while below half its maximum health. An actor on
 foot hit by an officer while it holds no active weapon and is not fighting (`defense`, `killer`, `zombie`,
-`take_cover`, `pick_up_weapon`, `brawl`) gives up with 30% per hit (`systems/arrest/sv_surrender.lua`). Players and actors share the refusal time limit and the escalation rules below. An attacked officer may defend itself.
+`take_cover`, `pick_up_weapon`, `brawl`) gives up with 30% per hit, only when that officer has it as an enemy: a stray police bullet never arrests a bystander (`systems/arrest/sv_surrender.lua`). Players and actors share the refusal time limit and the escalation rules below. An attacked officer may defend itself.
 
 A surrender never turns back into a fight: when the arrest ends or times out, the actor stops regarding the
 officers as enemies. If every officer within 2500 units is busy with another target (none arrests or hunts it),

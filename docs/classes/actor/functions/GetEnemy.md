@@ -6,7 +6,7 @@ Realm: **SHARED** (supported usage).
 actor:GetEnemy()
 ```
 
-Returns the nearest valid enemy or NULL (delegates to GetNearEnemy).
+Returns the selected living enemy or NULL: a direct attacker from the last 5 seconds, then the siege/squad target, then the previous valid combat target, then the nearest living enemy. GetNearEnemy remains the distance-only query. CLIENT uses only its received local data; SERVER owns combat selection.
 
 Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 

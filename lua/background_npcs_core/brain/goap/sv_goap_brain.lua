@@ -22,6 +22,7 @@ local SENSE_PERIOD = 1
 local BLOCK_TIME = 5
 -- states the plan never interrupts: a surrendering actor keeps its enemies until the arrest ends
 local HOLD_STATES = {
+  siege = true,
   calling_police = true,
   arrest_surrender = true,
   hold_door = true,

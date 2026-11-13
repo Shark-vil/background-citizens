@@ -1,5 +1,15 @@
 # Version history and documentation baseline
 
+Local 2.5.1 change (publication not verified): stable combat target priority, pursuit of last observed hidden positions, shared sighting memory, visible-only cover and combat recycling/unstuck protection (fixed 1000-unit radius). See [brains](systems/brains.md).
+
+Local 2.5.1 change (publication not verified): police radio lines for sieges (position, breach, grenade, manhack,
+outcome), a downed or lost target and hostage negotiation; sieges no longer mute actor voices; a wanted target is a
+known position even out of sight. See [brains](systems/brains.md#hostage-negotiation).
+
+Local 2.5.1 change (publication not verified): GOAP single-exit room sieges with shared front/rear group
+positions, animation-gated metropolice manhacks/combine grenades and probabilistic door breaching/opening.
+The NavMesh-backed tactic and its limits are described in [brains](systems/brains.md#sieging-a-single-exit-room).
+
 Local 2.5.1 change (publication not verified): optional held-lethal-weapon reaction for residents/police,
 default off, one-second LOS/FOV checks within 800 units. Weapon learning continues while off, excludes
 explosion/vehicle kills and persists new classes in a server cache/DATA file. See [brains](systems/brains.md#lethal-weapons)

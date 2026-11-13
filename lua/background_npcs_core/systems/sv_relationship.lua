@@ -2,7 +2,8 @@
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
 -- Initialize configured actor relationships without erasing a foreign NPC's own hostility.
 local function SetNPCRelationship(actor, another_npc)
-  if not actor:IsAlive() then return end
+  -- an officer's manhack keeps the relations the siege gave it (the priority 100 line below would override them)
+  if not actor:IsAlive() or another_npc.bgn_siege_owner then return end
   local actor_npc = actor:GetNPC()
   local another_actor = bgNPC.Actors.Get(another_npc)
   local disposition = D_NU
@@ -96,7 +97,7 @@ timer.Create('BGN_SpotHostileNPC', 1, 0, function()
   for i, actor in ipairs(bgNPC.Actors.GetAll()) do actors[i] = actor end
   local wanted = bgNPC.Modules.Get('wanted')
   for _, ent in ipairs(ents.GetAll()) do
-    if IsValid(ent) and not ent:IsPlayer() and not bgNPC.Actors.Get(ent) and bgNPC.Combat.IsAttacker(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
+    if IsValid(ent) and not ent:IsPlayer() and not bgNPC.Actors.Get(ent) and not ent.bgn_siege_owner and bgNPC.Combat.IsAttacker(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
       for _, actor in ipairs(actors) do
         if actor:IsAlive() and ent:Disposition(actor:GetNPC()) == D_HT then
           if GetConVar('bgn_enable_wanted_mode'):GetBool() and (actor:HasTeam('residents') or actor:HasTeam('police')) then wanted:AddWanted(ent) end

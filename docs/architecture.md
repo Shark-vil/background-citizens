@@ -88,6 +88,11 @@ the action. Temporary `knocked_down` keeps the original entity and body adapter,
 a server ragdoll for physics and forwarded damage. The actor update loop runs only recovery while down;
 standing requires a free hull. Client synchronization/render optimization preserves the server's hidden-body flag.
 
+`systems/siege/` owns bounded NavMesh pocket detection, shared entrance reservations, siege positioning and
+special weapons on SERVER. GOAP selects `siege`; `brain/fsm/states/sv_siege.lua` executes its phases on both body
+types. Existing donor animations prevent native NPC throw/deploy events from producing duplicate weapons.
+Clients receive the ordinary state/animation updates. See [room sieges](systems/brains.md#sieging-a-single-exit-room).
+
 `systems/sh_carry_items.lua` shares item definitions, model/animation checks and chance selection. SERVER owns
 real actors' item lifetime; body adapters exclude carried props from combat weapon
 queries. Only NextBot activity tables supply carrying locomotion. HL2 NPC movement is unchanged; CLIENT

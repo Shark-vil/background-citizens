@@ -100,7 +100,7 @@ function NPCBody:GetDisposition(ent)
   return self.ent:Disposition(ent)
 end
 
-function NPCBody:SetEnemy(ent)
+function NPCBody:SetEnemy(ent, known_pos)
   local npc = self.ent
   if not IsValid(npc) then return end
   if not IsValid(ent) then
@@ -110,7 +110,7 @@ function NPCBody:SetEnemy(ent)
 
   npc:SetEnemy(ent)
   npc:SetTarget(ent)
-  npc:UpdateEnemyMemory(ent, ent:GetPos())
+  if known_pos then npc:UpdateEnemyMemory(ent, known_pos) end
 end
 
 function NPCBody:GetEnemy()

@@ -606,6 +606,8 @@ function ENT:UpdateCombat()
   local enemy = self.enemy
   local stats = self.weapon_stats
   self.enemy_visible = false
+  local actor = self.BGN_ACTOR_OBJECT
+  if actor and (actor.siege or actor.hold_fire) then return end
   if self.alert ~= 'combat' or not stats or stats.carry or not IsValid(enemy) or not IsValid(self.weapon) then return end
   -- a player in a car: the enemy is the car (RedirectEnemyToVehicle), which mostly has no health of its own
   if (enemy:Health() <= 0 and not enemy:IsVehicle() and not enemy.IsSimfphyscar) or self.sequence_lock then return end
@@ -660,6 +662,7 @@ end
 -- Movement
 -- ---------------------------------------------------------------------------
 function ENT:OpenDoorsAhead()
+  if self.BGN_ACTOR_OBJECT and self.BGN_ACTOR_OBJECT.siege then return end
   local start = self:BGN_EyePos()
   local tr = util.TraceLine({
     start = start,
@@ -690,6 +693,8 @@ end
 -- or another body and the path follower cannot get it out. Short, so it does not need the "hidden from players" rule.
 -- @return boolean true if the bot was moved
 function ENT:PullOut()
+  local actor = self.BGN_ACTOR_OBJECT
+  if actor and actor.siege then return false end
   local pos = self:GetPos()
   local goal = self.move_goal
   local best, best_dist
@@ -713,6 +718,13 @@ function ENT:PullOut()
 end
 
 function ENT:HandleStuck(path)
+  local actor = self.BGN_ACTOR_OBJECT
+  if actor and actor.siege then
+    self.loco:ClearStuck()
+    self.stuck_since = nil
+    self.path_dirty = true
+    return
+  end
   if not self.stuck_since then
     self.stuck_since = CurTime()
     if GetConVar('bgn_nextbot_jump'):GetBool() then
