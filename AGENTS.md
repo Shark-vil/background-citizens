@@ -4,7 +4,7 @@ Read [documentation maintenance rules](docs/ai.md) ([по-русски](docs/ai.
 
 Keep EN/RU pages aligned, preserve existing documentation URLs, and distinguish SERVER, CLIENT and SHARED usage by implementation and synchronization behavior. Update the affected docs with public API/default/behavior changes. Validate documentation with `python -m mkdocs build --strict` and `git diff --check`.
 
-Work only with the current version of the project. The Legacy core (`lua/background_npcs_legacy/`) is obsolete: do not change or analyze it during normal work unless the user explicitly asks.
+Work only with the current version of the project. The Legacy core (`lua/background_npcs_legacy/`), the legacy STools (`lua/weapons/gmod_tool/stools/bgn_legacy_*.lua`) and the legacy entities (`lua/entities/bgn_legacy_*`) are obsolete: do not change or analyze them during normal work unless the user explicitly asks.
 
 Keep changes within the user’s task, preserve unrelated work and prefer the smallest complete solution. Do not edit generated `site/` or launch in-game lab fixtures for a docs-only task. State verification limits. A requested local commit does not authorize a push or deployment.
 
