@@ -252,6 +252,7 @@ Menu.AddPage('behavior', {
     page:Choice('bgn_actor_body', '#bgn.menu.body', {{'npc', 'NPC'}, {'nextbot', 'NextBot'},})
     page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
     page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
+    page:Toggle('bgn_react_to_lethal_weapon', '#bgn.settings.extension.react_to_lethal_weapon')
     page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
     page:Slider('bgn_enemy_share_period', '#bgn.menu.enemy_share_period', 0, 10)
     page:Slider('bgn_fight_cooldown', '#bgn.menu.fight_cooldown', 0, 120)

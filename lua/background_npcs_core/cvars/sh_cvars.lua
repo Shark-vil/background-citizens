@@ -37,6 +37,7 @@ bgNPC.cvar.bgn_arrest_car_time = 8
 bgNPC.cvar.bgn_police_car_kill_time = 30
 bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
+bgNPC.cvar.bgn_react_to_lethal_weapon = 0
 bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
@@ -173,6 +174,7 @@ bgNPC.CVars.Register('bgn_gang_war_chance', bgNPC.cvar.bgn_gang_war_chance, 'Per
 bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions and point-blank shots are always hopeless.')
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
+bgNPC.CVars.Register('bgn_react_to_lethal_weapon', bgNPC.cvar.bgn_react_to_lethal_weapon, 'Residents and police react to visible learned lethal weapons within 800 units, once per second. Learning stays enabled when this setting is off.')
 bgNPC.CVars.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 bgNPC.CVars.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_calling, 'Disable halo for actors calling the police.')
 bgNPC.CVars.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted, 'Disable halo for wanted entities.')
