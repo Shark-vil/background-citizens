@@ -99,3 +99,5 @@ Local vehicle fix 2: an actor leaving a moving car (police arriving at a chase) 
 Local 2.5.1 working-tree change (publication not verified): confirmed-damage conflict memory, attacker-only witnesses, caller-visible help, shared player/actor wanted thresholds, foreign hostility wanted and primary-officer arrest escalation. See [wanted](systems/wanted.md) and [arrest](systems/arrest.md).
 
 Local follow-up: attacking an observer's known enemy does not incriminate a non-hostile attacker; existing enemy lists and bidirectional `D_HT` forbid the exception. It applies before initiator selection, also to arrest initiation/non-police harm counts. The observer's own enemies now count in `IsEnemyOfTeam`. See [conflicts](systems/wanted.md#conflict-memory-and-witnesses).
+
+Local follow-up: an active police phone call no longer requires continuous LOS or stops because the target became wanted/police. Threat interruption is strictly below 300 units. Allied help and GOAP replanning preserve the active call; entry limits and completion filters remain. See [wanted](systems/wanted.md).

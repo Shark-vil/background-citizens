@@ -147,3 +147,7 @@ New entries still pass through `AddWanted` exclusions for ignored/arrested entit
 | First-attacker memory expires | It removes pair evidence, not all enemy lists or an active wanted record. Those have separate lifetimes. |
 
 Sources: `api/sv_combat.lua`, `actor/events/sv_self_damage.lua`, `actor/events/sv_damage_reaction.lua`, `systems/sv_first_attacker_found.lua`, `systems/sv_relationship.lua`, `systems/wanted/sv_wanted_actions.lua`, `systems/wanted/sh_wanted_class.lua`. See [conflict memory](#conflict-memory-and-witnesses) for resets and [arrest](arrest.md) for weapon choice.
+
+## Completing a police call
+
+Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the current nearest enemy; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when police already know the selected enemy, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.
