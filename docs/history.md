@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 audit fixes (publication not verified): NPC pursuit writes no longer extend the 60-second actor search; body replacement preserves position memory and target priority; police equipment follows the selected enemy. Negotiating officers cannot start/join sieges, payload ownership is resolved before damage reactions, and both NextBot unstuck teleport paths respect combat-radius protection. See the [updated decision tree](systems/wanted.md#combat-continuation) and [developer checks](systems/testing.md#combat-audit-regressions).
+
 Local 2.5.1 change (publication not verified): stable combat target priority, pursuit of last observed hidden positions, shared sighting memory, visible-only cover and combat recycling/unstuck protection (fixed 1000-unit radius). See [brains](systems/brains.md).
 
 Local 2.5.1 change (publication not verified): police radio lines for sieges (position, breach, grenade, manhack,

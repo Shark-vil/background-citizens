@@ -246,4 +246,19 @@ Carried visual models now move with their parent entity instead of keeping a sep
 
 `bgn_selftest` also runs `tests/sv_conflicts.lua`: isolated modules/hooks cover initiator direction/reset/rebind/forgetting, confirmed arrest initiation, attacker visibility, caller-visible help, foreign hostility, distinct arrest victims, strict health/distance boundaries, refusal and shared player/actor wanted thresholds. They create no live entities and do not establish engine hook timing, traces or vehicle physics.
 
-`tests/sv_pursuit.lua` checks stable/direct-attacker/group target priorities, observation of every enemy, original shared timestamps, hidden-target approach without standoff, visible-only cover, hidden squad columns, and the inclusive combat-radius boundary/disabled option. Native integration also needs ordinary non-eternal actors with the remover enabled: observe a target through an open door, close it, then add reinforcements without manually seeding their memory. Verify pursuit/siege and no recycling inside the radius, then removal after leaving it; exercise NextBot unstuck protection separately.
+`tests/sv_pursuit.lua` checks stable/direct-attacker/group target priorities, observation of every enemy, original shared timestamps, hidden-target approach without standoff, visible-only cover, hidden squad columns, and the inclusive combat-radius boundary. Native integration also needs ordinary non-eternal actors with the remover enabled: observe a target through an open door, close it, then add reinforcements without manually seeding their memory. Verify pursuit/siege and no recycling inside the radius, then removal after leaving it; exercise NextBot unstuck protection separately.
+
+<a id="combat-audit-regressions"></a>
+
+## Combat audit regressions
+
+`bgn_selftest` loads these SERVER tests on demand, without creating live entities:
+
+| File | Interaction checked |
+|---|---|
+| `tests/sv_pursuit.lua` | Real NPC adapter with modelled engine-memory refresh: search expires after more than 60 s and actual sightings renew it; real Rebind transfers hidden position/time and priorities in both realm branches; equipment follows the selected enemy with arrest fallback; both real NextBot teleport methods reject combat at 1000 and allow it at 1000.1, retaining siege protection. |
+| `tests/sv_siege.lua` | Negotiation's `hold_fire` rejects both siege initiation and follower recruitment. |
+| `tests/sv_negotiation.lua` | Weapon capabilities are removed and restored while door capabilities survive. |
+| `tests/sv_conflicts.lua` | Friendly manhack damage is blocked in both owner/reaction hook orders, including ownership available only through inflictor; invalid owners are not substituted. |
+
+An external LuaJIT/lupa run passed 36 tests across conflicts, lethal weapons, negotiation, pursuit, siege and GOAP planning after the fixes. The six affected checks failed against the earlier implementation. The external harness models engine APIs and is not a native `bgn_selftest` run. Native multiplayer, vehicle/door physics, real engine memory timing and script reload during these actions still require separate verification.

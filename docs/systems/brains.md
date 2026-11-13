@@ -12,6 +12,8 @@ When the target is hidden, `defense` advances to that remembered position withou
 
 A fixed 1000-unit combat radius (SERVER, no setting) protects a living combat actor from ordinary population removal/recycling and NextBot unstuck teleports while any living known enemy is within that radius, inclusive. It also gates the final respawn operation after asynchronous spawn search. Sieges remain busy until finished. Outside the radius the ordinary unseen timeout and eligibility rules apply. Death, admin cleanup and disabling the addon/type retain their separate paths.
 
+The 60-second search timeout uses the actor's observation/report timestamp, including its original age when shared. Rewriting an NPC's engine memory to steer pursuit does not renew that timeout. Wanted and always-visible exceptions remain. Body replacement transfers the remembered position, timestamp, stable target and recent attacker. Metrocop equipment uses the same selected target as combat, with the existing arrest-target fallback. Both NextBot unstuck teleport paths check the combat radius; normal movement and optional jumps remain available. See the [combat decision tree](wanted.md#combat-continuation).
+
 <a id="lethal-weapons"></a>
 
 ## Reaction to weapons in hands
@@ -224,8 +226,10 @@ least 650 units away (34-unit arrival tolerance). Existing squad membership is c
 rebuild excludes siege participants. Without a current squad, the nearest eligible allies fill the five places.
 Only actors with a supported waiting animation join. Positioning has a 15 s limit; the 12 s silent wait starts
 after the front group is positioned and rear participants have withdrawn. Both NPC and NextBot bodies suppress
-ordinary shooting and BGN voice lines during the tactic. Followers can execute the state with an FSM brain;
+ordinary shooting during the tactic; siege radio lines remain enabled. Followers can execute the state with an FSM brain;
 the initiating fighter requires GOAP.
+
+An officer holding fire for negotiation cannot initiate or join a siege. Negotiation also excludes actors already in a siege, so the two systems cannot restore each other's weapon capabilities.
 
 Narrow corridors fall back to separated positions along the passage instead of side positions. Members that
 cannot fit near the entrance try the rear positions; if a close eligible reinforcement cannot withdraw, the
@@ -235,7 +239,7 @@ After waiting, closed rotating doors are kicked with 35% probability or opened n
 falls back to a supported opening gesture, and vice versa; without either animation the doorway is unavailable.
 Combine models can use their gun strike to breach. Existing door-opening/locked-door settings and held-door
 reservations still apply. The operator steps outside the swing and retries opening once if necessary. Doors
-must be fully open before deployment. Their automatic return delay is temporarily suspended and restored on
+must have started opening before deployment, and the payload path must be clear. Their automatic return delay is temporarily suspended and restored on
 exit; a previously locked door is relocked after the attempt. Door entities are preserved.
 
 The single operator deploys **one** `npc_manhack` (`npc_metropolice`, requires `deploy`) or **one**
@@ -251,15 +255,19 @@ cooldown. Damage to a participant, loss of an enemy/operator, leaving the pocket
 another state, map cleanup or a navigation reload ends it and restores body control. Clients display the
 state/animations; they do not choose the tactic or spawn weapons.
 
+<a id="hostage-negotiation"></a>
+
 ### Hostage negotiation
 
 `systems/sv_negotiation.lua` (SERVER). A frightened non-police actor within 300 units of a player target that stands
 closer to the officer than the target is a hostage: the target hides behind it, so approaching from behind does not
-count. Every officer that sees such a shield holds fire (engine NPCs lose `CAP_USE_WEAPONS`, NextBots skip
+count. Every officer whose selected target meets this rule holds fire (engine NPCs lose `CAP_USE_WEAPONS`, NextBots skip
 `UpdateCombat`), the first one offers to surrender and warns 5 s before the 20 s deadline. The talks end quietly when
 the shield stays gone for 3 s; they fail on the deadline or when the player kills anyone. After a failure the officers shoot
 again and the player is not offered talks until he is arrested, drops a wanted level, dies or 120 s pass.
 Negotiation with NPC targets is a separate story scenario and is not implemented.
+
+The hostage test currently uses radius, fear state and relative distance only; it does not check LOS to the hostage or alignment with the firing line. This rule has not been changed by the combat audit fixes.
 
 ### Extending
 

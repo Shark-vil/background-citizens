@@ -125,3 +125,5 @@ GMod DATA paths are relative to `garrysmod/data/`, not this addon: `background_n
 Unit/stub checks do not establish real GMod physics, multiplayer permission behavior or every optional-addon combination. Record exact conditions for live evidence.
 
 Combat damage authority: `systems/sv_first_attacker_found.lua` receives confirmed engine/seated damage, records the pair initiator, evaluates existing-arrest harm and emits `BGN_ConfirmedDamage` for arrest initiation and witnesses. `systems/arrest/sv_arrest.lua` checks primary-officer compliance every 0.25 seconds. These records are SERVER-only; see [wanted](systems/wanted.md).
+
+Damage entry points resolve siege payload ownership through `Combat.ResolveVehicleAttacker(attacker, inflictor)` before team/protection/reaction checks, independently of native damage-hook order. Actor search age comes from observed/shared timestamps, not NPC engine pursuit writes. `Actors.Rebind` transfers position/time and combat/recent-attacker references before updating the body's enemy. Siege entry excludes negotiation's `hold_fire` actors. See the [combat continuation tree](systems/wanted.md#combat-continuation).

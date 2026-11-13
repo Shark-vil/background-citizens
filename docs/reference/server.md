@@ -6,6 +6,8 @@ Run gameplay changes on SERVER. Many methods are declared in sh_ files for compa
 
 ## Actor
 
+`bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)` resolves a valid siege payload owner from the attacker, falling back to the optional inflictor, then resolves a driven vehicle to its driver. Without a valid owner or vehicle conversion it returns the supplied attacker; an engine `IsVehicle()` entity without a valid driver returns nil. Existing one-argument calls remain valid. Damage handlers pass both entities before team/protection checks. Source: `api/sv_combat.lua`.
+
 ### ShareEnemyMemory
 
 `actor:ShareEnemyMemory(source, enemy)` copies another actor's observed position and original timestamp only when this actor already knows the enemy, the source memory is at most 60 seconds old and this actor has no newer known position. Returns whether it copied memory. Does not add enemies or change reactions. Source: `actor/components/sh_enemies.lua`.

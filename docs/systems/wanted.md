@@ -67,6 +67,8 @@ This is the implemented **SERVER** tree in the local 2.5.1 implementation on `de
 
 ```text
 Damage attempt
+├─ Resolve siege payload owner (attacker, then inflictor) before reaction/team checks
+│  └─ Vehicle resolution then follows the existing driver rules; hook order does not choose the team
 ├─ Existing personal/team/mode/protection hooks may block damage
 │  └─ The victim's own reaction can happen here, before health changes
 └─ Positive actual damage (engine or virtual seated health)
@@ -167,6 +169,31 @@ New entries still pass through `AddWanted` exclusions for ignored/arrested entit
 
 Sources: `api/sv_combat.lua`, `actor/events/sv_self_damage.lua`, `actor/events/sv_damage_reaction.lua`, `systems/sv_first_attacker_found.lua`, `systems/sv_relationship.lua`, `systems/wanted/sv_wanted_actions.lua`, `systems/wanted/sh_wanted_class.lua`. See [conflict memory](#conflict-memory-and-witnesses) for resets and [arrest](arrest.md) for weapon choice.
 
+<a id="combat-continuation"></a>
+
+### Combat decisions after an enemy is accepted
+
+This SERVER flow applies after the entry paths above. FSM runs the state; GOAP may plan an existing fight. Full tactic limits belong to [brains](brains.md).
+
+```text
+Accepted enemy
+├─ Observe all visible known enemies; share positions with original observation times
+│  ├─ Hidden ordinary enemy: more than 60 s without a sighting/report → forget
+│  │  └─ Engine pursuit writes do not refresh this timer; wanted/always-visible exceptions remain
+│  └─ Body replaced → move position/time, combat target and recent-attacker references
+├─ Select target: attacker within 5 s → siege → squad → previous target → nearest living enemy
+│  ├─ Metrocop equipment uses this target; no combat enemy → arrest-target fallback
+│  ├─ Hidden → last observed position / squad column; no position → stop
+│  └─ Visible → combat movement; GOAP may choose cover, backup, breach or siege
+├─ Police holding negotiation fire → cannot start or join siege
+│  └─ Already in siege → negotiation cannot acquire its weapon capabilities
+└─ Fighting with a living known enemy within 1000 inclusive
+   ├─ Ordinary population recycling/respawn → blocked
+   └─ NextBot HandleStuck / PullOut teleport → blocked; movement/jump attempts remain
+```
+
+These are cooperating state/timer paths, not a single atomic tick. They do not bypass existing state hooks or admin/death cleanup. Negotiation still uses the current radius/fear/relative-distance hostage rule, without LOS or firing-line alignment.
+
 ## Completing a police call
 
-Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the current nearest enemy; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.
+Once `calling_police` has started, losing LOS, the target becoming wanted or belonging to police do not abort its 7–15 second countdown. The threat-related cancellation is distance strictly below 300 units to the selected `GetEnemy()` target; exactly 300 does not cancel. Allied `CallForHelp` can add enemy knowledge without changing the caller's state, and GOAP leaves the active call to the FSM. Missing enemies/invalid targets and disabling wanted still end the state safely. Entry limits remain: at most two callers near a player, no new call when the selected enemy is already wanted or police already know it, and wanted mode must be enabled. Completion still filters enemies through police knowledge and `BGN_PreCallingPolice`, then normally enters `fear`; finishing the animation does not guarantee a new wanted entry.
