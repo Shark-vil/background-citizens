@@ -101,7 +101,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
     if WantedClass.next_kill_update <= kills then WantedClass:LevelUp() end
   else
     if not attacker:IsPlayer() and not AttackerActor then
-      if actor:HasTeam('residents') or actor:HasTeam('police') then asset:AddWanted(attacker) end
+      asset:AddWanted(attacker)
       return
     end
 

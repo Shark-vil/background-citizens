@@ -31,7 +31,6 @@ local function Call_BGN_OnKilledActor(actor, npc, attacker)
   actor.OnNPCKilled = true
   bgNPC.Util.Log(tostring(attacker) .. ' killed ' .. actor:GetName(), 'OnNPCKilled')
   bgNPC.Statistics.AddKill(attacker, actor)
-  -- bgNPC:AddWantedKillingStatistic(attacker, actor)
   hook.Run('BGN_OnKilledActor', actor, attacker)
 end
 
