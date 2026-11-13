@@ -64,7 +64,7 @@ function Actor:RemoveEnemy(ent, index)
   if ent == self.combat_enemy then self.combat_enemy = nil end
   if body and IsValid(ent) then
     if body:GetEnemy() == ent then body:SetEnemy(NULL) end
-    body:SetDisposition(ent, D_NU)
+    body:SetDisposition(ent, self:HasTeam(ent) and D_LI or D_NU)
   end
 
   if index and self.enemies[index] == ent then
@@ -102,6 +102,7 @@ end
 function Actor:HasEnemy(ent)
   if istable(ent) and ent.isBgnClass then ent = ent.npc end
   if not IsValid(ent) then return false end
+  if SERVER and self:HasTeam(ent) then return false end
   return bgNPC.Table.HasValue(self.enemies, ent)
 end
 
@@ -140,8 +141,8 @@ function Actor:EnemiesRecalculate()
   self.enemies_always_visible_count = #self.enemies_always_visible
   for i = self.enemies_count, 1, -1 do
     local enemy = self.enemies[i]
-    if not IsValid(enemy) or enemy:Health() <= 0 then
-      if IsValid(enemy) and self:HasTeam('police') then self:Voice('police_target_down') end
+    if not IsValid(enemy) or enemy:Health() <= 0 or self:HasTeam(enemy) then
+      if IsValid(enemy) and enemy:Health() <= 0 and self:HasTeam('police') then self:Voice('police_target_down') end
       self:RemoveEnemy(nil, i)
     elseif enemy.bgn_always_visible or bgNPC.Vision.HasLineOfSight(self.npc, enemy, 'memory') then
       self.enemy_last_seen = self.enemy_last_seen or {}

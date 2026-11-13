@@ -30,7 +30,7 @@ function Actor(uid,police)
  function a:GetNPC() return self.npc end
  function a:GetMaxHealth() return 100 end
  function a:IsAlive() return true end
- function a:HasTeam(other) if type(other)=='string' then return other=='police' and self.police end return other~=suspect end
+ function a:HasTeam(other) if type(other)=='string' then return other=='police' and self.police end return other and (other.actor~=nil or other.uid~=nil) end
  return a
 end
 officer=Actor(1,true); observers={officer}
@@ -88,6 +88,9 @@ hooks.PostEntityTakeDamage(Actor(22,false).npc,hit(sniper),false)
 assert(not sniper.bgn_ranged_attack,'a blocked hit marks nobody')
 hooks.PostEntityTakeDamage(Actor(23,false).npc,hit(sniper),true)
 assert(sniper.bgn_ranged_attack,'a hit from 600 units is ranged')
+local ally=Actor(25,false); ally.npc.x=600
+hooks.PostEntityTakeDamage(Actor(26,false).npc,hit(ally.npc),true)
+assert(not ally.npc.bgn_ranged_attack,'a distant friendly hit does not create a ranged threat')
 cop.enemies={thug}
 assert(C.CanPoliceUseStunstick(cop,thug),'a melee enemy alone allows the baton')
 cop.enemies={thug,sniper}

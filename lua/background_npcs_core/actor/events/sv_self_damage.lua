@@ -15,8 +15,16 @@ hook.Add('EntityTakeDamage', 'BGN_ActorTakeDamageEvent', function(target, dmginf
   if not bgNPC.Combat.IsAttacker(attacker) then return end
   if bgNPC.Combat.IsIgnored(attacker) or attacker.bgNPCIgnore or attacker == target then return end
   local hit_actor = bgNPC.Actors.Get(target)
+  local attacker_actor = bgNPC.Actors.Get(attacker)
+  if hit_actor and attacker_actor and attacker_actor:InVehicle() and not hit_actor:InVehicle() then
+    if hit_actor:HasTeam('police') then
+      bgNPC.OffenderFromRamming(attacker, dmginfo, target)
+    elseif hit_actor:IsCivilian() then
+      bgNPC.OffenderFromRamming(attacker, dmginfo)
+    end
+  end
   -- the arrest state lets go only of an attacked officer
-  if hit_actor then hit_actor.last_attacked_at, hit_actor.last_attacker = CurTime(), attacker end
+  if hit_actor and not hit_actor:HasTeam(attacker) then hit_actor.last_attacked_at, hit_actor.last_attacker = CurTime(), attacker end
   local result
   if target:IsNPC() or target:IsNextBot() then
     result = hook.Run('BGN_TakeDamageFromNPC', attacker, target, dmginfo)
@@ -43,14 +51,6 @@ hook.Add('BGN_TakeDamageFromNPC', 'BGN_NPCDamageReaction', function(attacker, ta
       if ActorTarget:HasTeam(ActorAttacker) then
         ActorTarget:RemoveEnemy(attacker)
         ActorAttacker:RemoveEnemy(target)
-        -- a teammate's stray bullet: a calm civilian runs from whoever the shooter fights
-        local danger = ActorAttacker:GetNearEnemy()
-        if ActorTarget:IsCivilian() and ActorTarget:EqualStateGroup('calm') and IsValid(danger) and danger ~= target then
-          ActorTarget:AddEnemy(danger, 'fear')
-          ActorTarget:SetState('fear')
-          ActorTarget:StayOutOfFight()
-        end
-
         -- nil lets the damage through without a reaction
         if not cvar_team_damage:GetBool() then return true end
         return

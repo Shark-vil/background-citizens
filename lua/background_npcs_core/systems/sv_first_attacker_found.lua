@@ -56,6 +56,7 @@ local function ConfirmDamage(target, attacker, amount, inflictor)
   attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)
   if not bgNPC.Combat.IsAttacker(attacker) or attacker == target or bgNPC.Combat.IsIgnored(attacker) then return end
   local actor = bgNPC.Actors.Get(target)
+  if actor and actor:HasTeam(attacker) then return end
   if actor and actor:HasState('brawl') and actor:GetStateData().enemy == attacker then return end
   ASSET:RecordDamage(attacker, target)
   if bgNPC.Modes.IsFriend() and (attacker:IsPlayer() or target:IsPlayer()) then return end

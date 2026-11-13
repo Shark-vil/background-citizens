@@ -70,6 +70,8 @@ end
 local function MarkRangedAttack(victim, attacker)
   local suspect = Combat.ResolveVehicleAttacker(attacker)
   if not IsValid(victim) or not IsValid(suspect) or suspect == victim or not Combat.IsAttacker(suspect) then return end
+  local allied = Actors.Get(victim) or victim.BGN_ACTOR_OBJECT
+  if allied and allied:HasTeam(suspect) then return end
   if suspect:GetPos():DistToSqr(victim:GetPos()) <= RANGED_DIST_SQR then return end
   suspect.bgn_ranged_attack, suspects[suspect] = true, true
 end

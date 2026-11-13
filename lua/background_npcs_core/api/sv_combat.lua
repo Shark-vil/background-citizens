@@ -64,8 +64,10 @@ function Combat.IsInCombatRadius(actor)
   return false
 end
 
-hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(_, dmginfo)
+hook.Add('EntityTakeDamage', 'BGN_LastAttackOnDamage', function(target, dmginfo)
   local attacker = Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
+  local actor = Actors.Get(target)
+  if actor and actor:HasTeam(attacker) then return end
   if dmginfo:GetDamage() > 0 and Combat.IsAttacker(attacker) then attacker.bgn_last_attack = CurTime() end
 end)
 
@@ -203,6 +205,7 @@ end
 function Combat.IsEnemyOfTeam(target_actor, attacker)
   Assert.Arg(1, target_actor, 'actor', 'bgNPC.Combat.IsEnemyOfTeam')
   if not IsValid(attacker) or attacker:Health() <= 0 then return false end
+  if target_actor:HasTeam(attacker) then return false end
   if target_actor:HasEnemy(attacker) then return true end
   local first_attacker = GetFirstAttackerModule()
   local attacker_actor = Actors.Get(attacker)
@@ -268,6 +271,8 @@ function Combat.ResolveEnemy(actor, target, attacker)
   local target_type = GetEntityType(target)
   local attacker_type = GetEntityType(attacker)
   if not target_type or not attacker_type then return end
+  local attacker_actor = Actors.Get(attacker)
+  if attacker_actor and attacker_actor:HasTeam(target) then return end
   local is_attacker_team = actor:HasTeam(attacker)
   local is_target_team = actor:HasTeam(target)
   if is_attacker_team and is_target_team then return end
@@ -283,7 +288,6 @@ function Combat.ResolveEnemy(actor, target, attacker)
     return target
   end
   local wanted = GetWantedModule()
-  local attacker_actor = Actors.Get(attacker)
   local target_actor = Actors.Get(target)
   -- A player attacks an NPC that is not an actor
   if not target_actor and target_type ~= 'player' and attacker_type == 'player' then

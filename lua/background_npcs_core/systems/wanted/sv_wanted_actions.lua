@@ -130,7 +130,7 @@ hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(tar
     if IsValid(actor:GetNPC()) and actor:HasTeam('police') then
       actor:AddEnemy(target)
       if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(actor, 'wanted', target, nil, nil, actor:HasEnemy(target)) end
-      if actor:HasState('idle') or actor:HasState('walk') then actor:SetState(actor:GetReactionForProtect(target)) end
+      if actor:HasEnemy(target) and (actor:HasState('idle') or actor:HasState('walk')) then actor:SetState(actor:GetReactionForProtect(target)) end
     end
   end
 end)
@@ -152,11 +152,7 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
     for i = 1, wanted_count do
       local enemy = wanted_list[i].target
       actor:AddEnemy(enemy)
-      if actor:HasTeam('police') then
-        actor:SetState('defense')
-      elseif actor:HasTeam('residents') then
-        actor:SetState(actor:GetReactionForProtect(enemy))
-      end
+      if actor:HasEnemy(enemy) then actor:SetState('defense') end
     end
   end
 end)
@@ -169,6 +165,7 @@ hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim,
 end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
+  if actor:HasTeam(enemy) then return end
   -- a wanted player given a second chance to give up (sv_surrender.lua): don't turn the arrest into a fight
   local arrest = bgNPC.Modules.Get('player_arrest')
   if arrest:IsProtected(enemy) or (actor:HasState('arrest') and arrest:CanArrest(enemy)) then return end

@@ -72,7 +72,7 @@ bgNPC.States.Register('calling_police', 'danger', {
     else
       if data.calling_time < CurTime() then
         for _, enemy in pairs(actor.enemies) do
-          if IsValid(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+          if IsValid(enemy) and not actor:HasTeam(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
             asset:AddWanted(enemy)
             local operator = table_RandomBySeq(phone_911_sounnds)
             EmitSound(operator, npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)

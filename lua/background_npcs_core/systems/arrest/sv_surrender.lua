@@ -28,6 +28,8 @@ end
 
 hook.Add('EntityTakeDamage', 'BGN_Surrender_LastAttack', function(target, dmginfo)
   local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
+  local actor = bgNPC.Actors.Get(target)
+  if actor and actor:HasTeam(attacker) then return end
   if IsValid(attacker) and attacker ~= target and dmginfo:GetDamage() > 0 and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot()) and (target:IsPlayer() or target:IsNPC() or target:IsNextBot()) then attacker.bgn_last_attack = CurTime() end
 end)
 

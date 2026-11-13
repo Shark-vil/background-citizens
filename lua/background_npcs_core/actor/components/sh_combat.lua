@@ -34,13 +34,13 @@ end
 function Actor:CallForHelp(enemy)
   Assert.Arg(1, enemy, 'entity|nil', 'ACTOR:CallForHelp')
   if not self.mechanics.call_for_help then return end
-  if not IsValid(enemy) or not self:IsAlive() then return end
+  if not IsValid(enemy) or not self:IsAlive() or self:HasTeam(enemy) then return end
   if hook.Run('BGN_PreCallForHelp', self, enemy) then return end
   self:FearScream()
   local near_actors = bgNPC.Actors.GetInRadius(self.npc:GetPos(), 1000)
   for i = 1, #near_actors do
     local near_actor = near_actors[i]
-    if near_actor ~= self and near_actor:IsAlive() and near_actor:HasTeam(self) and bgNPC.Vision.HasLineOfSight(near_actor.npc, self.npc, 'help') then
+    if near_actor ~= self and near_actor:IsAlive() and near_actor:HasTeam(self) and not near_actor:HasTeam(enemy) and bgNPC.Vision.HasLineOfSight(near_actor.npc, self.npc, 'help') then
       local reaction = near_actor:GetReactionForProtect(enemy)
       if not near_actor:HasState('calling_police') then near_actor:SetState(reaction) end
       if near_actor.protect_blocked_enemy ~= enemy then

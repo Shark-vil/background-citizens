@@ -2,7 +2,7 @@
 local arrest_targets = {}
 function ASSET:AddTarget(target, policeActor)
   if not IsValid(target) or (not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot()) then return false end
-  if not policeActor or arrest_targets[target] then return false end
+  if not policeActor or policeActor:HasTeam(target) or arrest_targets[target] then return false end
   local ArrestComponent = {
     warningTime = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
     notify_order_time = 0,

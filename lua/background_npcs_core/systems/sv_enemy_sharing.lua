@@ -33,7 +33,7 @@ local function Share(source)
   for i = 1, source.enemies_count do
     local enemy = source.enemies[i]
     -- Police and gangs share known threats even before the enemy attacks again.
-    if IsValid(enemy) and enemy:Health() > 0 and (gang or source:HasTeam('police') or bgNPC.Combat.IsFighting(enemy)) then enemies[#enemies + 1] = enemy end
+    if IsValid(enemy) and enemy:Health() > 0 and not source:HasTeam(enemy) and (gang or source:HasTeam('police') or bgNPC.Combat.IsFighting(enemy)) then enemies[#enemies + 1] = enemy end
   end
 
   if #enemies == 0 then return end

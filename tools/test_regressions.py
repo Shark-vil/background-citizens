@@ -77,6 +77,7 @@ def realm(server):
         cvars={AddChangeCallback=function(name,f,id) changes[name]=changes[name] or {}; changes[name][id]=f end}
         concommand={Add=function(name,f) commands[name]=f end, GetTable=function() return commands end}
         hook={Add=function(name,id,f) hooks[name]=hooks[name] or {}; hooks[name][id]=f end,
+            Remove=function(name,id) if hooks[name] then hooks[name][id]=nil end end,
             Run=function(name,...) for _,f in pairs(hooks[name] or {}) do local v=f(...); if v~=nil then return v end end end}
         timer={Create=function(name,_,__,f) timers[name]=f end, Simple=function(_,f) timers[#timers+1]=f end}
         game={GetMap=function() return 'gm_test' end}
@@ -1324,8 +1325,8 @@ startup.execute('''
     local victim={GetNPC=function() end,HasTeam=function() return true end}
     bgNPC.Actors.Get=function() return actor end
     bgNPC.Actors.GetInRadius=function() return {} end
-    hooks.BGN_OnKilledActor.BGN_Offender(victim,npc)
-    assert(actor.team[1]=='offenders' and wanted_added, 'witnessed civilian murder registers an offender without a missing module')
+    assert(not (hooks.BGN_OnKilledActor and hooks.BGN_OnKilledActor.BGN_Offender), 'ordinary kills have no offender-conversion hook')
+    assert(actor.data.team[1]=='residents' and not wanted_added, 'ordinary kills keep resident protection')
 ''')
 
 # Vehicle hits use the same reactions and witness hook as hits on foot.

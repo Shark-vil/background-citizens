@@ -37,7 +37,7 @@ local function MarkWanted(actor)
   if not wanted or not cvar_wanted_mode:GetBool() then return end
   for _, enemy in ipairs(actor.enemies) do
     local enemy_actor = IsValid(enemy) and bgNPC.Actors.Get(enemy)
-    if IsValid(enemy) and not (enemy_actor and enemy_actor:HasTeam('police')) then
+    if IsValid(enemy) and not actor:HasTeam(enemy) and not (enemy_actor and enemy_actor:HasTeam('police')) then
       if wanted:HasWanted(enemy) then
         wanted:GetWanted(enemy):UpdateWanted()
       else

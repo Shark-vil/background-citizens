@@ -346,7 +346,7 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
   -- The time runs from their first hit in this seat; POLICE_HIT_GAP seconds without one start it over.
   local police = bgNPC.Actors.Get(attacker)
   local kill_time = GetConVar('bgn_police_car_kill_time'):GetFloat()
-  if kill_time > 0 and police and police:HasTeam('police') then
+  if kill_time > 0 and police and police:HasTeam('police') and not self:HasTeam(police) then
     local now = CurTime()
     if now - (saved.police_hit_last or -math.huge) > POLICE_HIT_GAP then saved.police_hit_since = now end
     saved.police_hit_last = now
