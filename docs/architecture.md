@@ -1,6 +1,6 @@
 # Project architecture
 
-Source baseline: **local 2.5.1**, `dev` at `cde2f701` (2026-11-14), plus the [core engineering audit](core-audit.md). Tag `2.5.1` is `a7f2d9da`; later branch behavior is recorded in [version history](history.md). This describes the repository, not a promise that Workshop already contains these commits.
+Source baseline: **local 2.6.0**, `dev` at `463d21ca` (2026-11-14), plus the [core engineering audit](core-audit.md). Tag `2.5.1` is `a7f2d9da`; later branch behavior is recorded in [version history](history.md). This describes the repository, not a promise that Workshop already contains these commits.
 
 ## Runtime boundaries
 

@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Version 2.6.0 (`version.txt` and `bgNPC.VERSION`; publication not verified) includes every change after tag `2.5.1` (`a7f2d9da`) through `463d21ca`. The entries below labelled "Local 2.5.1" belong to 2.6.0. It also adds the optional cover-trace skip for spawn points (`bgn_spawn_no_visibility_trace`, default `0`), medics revive only actors innocent toward residents, and bandits are no longer gang allies. See [settings](systems/menu.md).
+
 Local 2.5.1 dialogue fix (publication not verified): random state phrases and ambient coughs no longer interrupt conversation participants, including gathering and player-interruption phases. See [conversations](systems/conversations.md).
 
 Local 2.5.1 follow-up fix (publication not verified): vehicle exits and lethal damage tolerate an already removed DV occupant entity; wanted detection skips living actors without a valid current entity. Stored character identity/health and normal exit obstruction checks are preserved. See [vehicles](systems/vehicles.md) and [regressions](systems/testing.md#core-engineering-audit-regressions).
