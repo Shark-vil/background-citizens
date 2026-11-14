@@ -1,112 +1,29 @@
 ﻿--
 local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
--- local cvar_bgn_debug = GetConVar('bgn_debug')
--- local log_disposition = {
--- 	[D_ER] = 'Error',
--- 	[D_HT] = 'Hate',
--- 	[D_FR] = 'Frightened / Fear',
--- 	[D_LI] = 'Like',
--- 	[D_NU] = 'Neutral'
--- }
---
---[[
--- Gets the maximum value that the NPC has on players.
-local function GetPlayersDisposition(npc)
-	local disposition_result = D_NU
-
-	if not npc.Disposition or not isfunction(npc.Disposition) then
-		return disposition_result
-	end
-
-	local dispositions = {}
-
-	for _, ply in ipairs(player.GetAll()) do
-		local index = npc:Disposition(ply)
-		dispositions[index] = dispositions[index] or 0
-		dispositions[index] = dispositions[index] + 1
-	end
-
-	local last_max_disposition_count = 0
-
-	for disposition_index, disposition_count in pairs(dispositions) do
-		if disposition_count > last_max_disposition_count then
-			last_max_disposition_count = disposition_count
-			disposition_result = disposition_index
-		end
-	end
-
-	return disposition_result
-end
---]]
--- Gets a neutral value if the NPC is not aggressive towards any player
-local function GetPlayersDisposition(npc)
-  if isfunction(npc.Disposition) then
-    for _, ply in ipairs(player.GetAll()) do
-      if npc:Disposition(ply) == D_HT then return D_HT end
-    end
-  end
-  return D_NU
-end
-
--- @param disposition number|nil precomputed GetPlayersDisposition(another_npc), it does not depend on the actor
-local function SetNPCRelationship(actor, another_npc, disposition)
-  if not actor:IsAlive() then return end
+-- Initialize configured actor relationships without erasing a foreign NPC's own hostility.
+local function SetNPCRelationship(actor, another_npc)
+  -- an officer's manhack keeps the relations the siege gave it (the priority 100 line below would override them)
+  if not actor:IsAlive() or not IsValid(another_npc) or another_npc.bgn_siege_owner then return end
   local actor_npc = actor:GetNPC()
+  if not IsValid(actor_npc) then return end
   local another_actor = bgNPC.Actors.Get(another_npc)
-  local is_ignore_another_npc = cvar_bgn_ignore_another_npc:GetBool()
-  local nextbot_disposition = actor_npc:IsNextBot() and another_npc:IsNPC() and not another_actor
-  if nextbot_disposition then
-    disposition = bgNPC.NextBotBody.GetPlayersDisposition(another_npc, player.GetAll())
-  else
-    disposition = disposition or GetPlayersDisposition(another_npc)
-  end
-
+  local disposition = D_NU
+  if another_actor and (bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor)) then disposition = D_LI end
+  if isfunction(actor_npc.AddEntityRelationship) then actor_npc:AddEntityRelationship(another_npc, actor:GetRelationship(another_npc) or disposition, 99) end
   if another_actor then
-    if bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor) then
-      if isfunction(actor_npc.AddEntityRelationship) then actor_npc:AddEntityRelationship(another_npc, actor:GetRelationship(another_npc) or D_LI, 99) end
-      if isfunction(another_npc.AddEntityRelationship) then another_npc:AddEntityRelationship(actor_npc, another_actor:GetRelationship(actor_npc) or D_LI, 99) end
-    else
-      if isfunction(actor_npc.AddEntityRelationship) then actor_npc:AddEntityRelationship(another_npc, actor:GetRelationship(another_npc) or D_NU, 99) end
-      if isfunction(another_npc.AddEntityRelationship) then another_npc:AddEntityRelationship(actor_npc, another_actor:GetRelationship(actor_npc) or D_NU, 99) end
-    end
-  else
-    if bgNPC.Modes.IsPeaceful() or is_ignore_another_npc or disposition ~= D_HT then
-      if isfunction(actor_npc.AddEntityRelationship) then actor_npc:AddEntityRelationship(another_npc, actor:GetRelationship(another_npc) or D_NU, 99) end
-      if isfunction(another_npc.AddEntityRelationship) then
-        local relation = nextbot_disposition and not bgNPC.Modes.IsPeaceful() and not is_ignore_another_npc and disposition or D_NU
-        another_npc:AddEntityRelationship(actor_npc, relation, 99)
-      end
-
-      actor:RemoveEnemy(another_npc)
-    elseif not is_ignore_another_npc then
-      local reaction = actor:GetReactionForProtect()
-      if actor:HasStateGroup(reaction, 'danger') then
-        -- a forced restart of a running danger state for every new hostile NPC froze the server with many actors
-        if not actor:EqualStateGroup('danger') then actor:SetState(reaction, nil, true) end
-        actor:AddEnemy(another_npc)
-      end
-    end
+    if isfunction(another_npc.AddEntityRelationship) then another_npc:AddEntityRelationship(actor_npc, another_actor:GetRelationship(actor_npc) or disposition, 99) end
+  elseif actor_npc:IsNextBot() and another_npc:IsNPC() and isfunction(another_npc.Disposition) and isfunction(another_npc.AddEntityRelationship) then
+    local relation = D_NU
+    if not bgNPC.Modes.IsPeaceful() and not cvar_bgn_ignore_another_npc:GetBool() then relation = bgNPC.NextBotBody.GetPlayersDisposition(another_npc, player.GetAll()) end
+    another_npc:AddEntityRelationship(actor_npc, relation, 100)
   end
-  -- if cvar_bgn_debug:GetBool() and actor_npc:IsNPC() then
-  -- 	bgNPC.Util.Log(
-  -- 		string.format('Actor NPC: [%s] %q > [%s] %q : %s',
-  -- 			tostring(actor:GetType()),
-  -- 			tostring(actor_npc),
-  -- 			tostring(another_actor and another_actor:GetType() or 'NPC'),
-  -- 			tostring(another_npc),
-  -- 			tostring(log_disposition[another_npc:Disposition(actor_npc)])
-  -- 		),
-  -- 		'Relationship'
-  -- 	)
-  -- end
 end
 
 local function RebuildActorsRelationship(actor)
   if not actor or not actor:IsAlive() then return end
   bgNPC.Util.Log('RebuildActorsRelationship', 'Relationship')
   for _, another_actor in ipairs(bgNPC.Actors.GetAll()) do
-    if not another_actor or not another_actor:IsAlive() or another_actor == actor then continue end
-    SetNPCRelationship(actor, another_actor:GetNPC())
+    if another_actor and another_actor:IsAlive() and another_actor ~= actor then SetNPCRelationship(actor, another_actor:GetNPC()) end
   end
 end
 
@@ -174,23 +91,33 @@ end
 
 hook.Add('BGN_InitActor', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
 hook.Add('BGN_ActorEntityChanged', 'BGN_AddAnotherNPCToIgnore', SetExistingNPCRelationships)
--- A seated officer's body is a Decent Vehicle entity without NPC senses, and the hooks above skip seated actors:
--- hostile NPCs and NextBots near the car become its enemies here, so it steps out (modules/dv/sv_move_to_target.lua).
-local SEATED_SPOT_RADIUS = 1000
--- An NPC hostile to players, or a NextBot (no Disposition) hunting a player or an actor.
-local function IsHostile(ent)
-  if ent:IsNPC() then return GetPlayersDisposition(ent) == D_HT end
-  local target = isfunction(ent.GetEnemy) and ent:GetEnemy()
-  return IsValid(target) and (target:IsPlayer() or bgNPC.Actors.Get(target) ~= nil)
-end
-
-timer.Create('BGN_SeatedPoliceSpotHostileNPC', 1, 0, function()
+-- Poll actual dispositions, including changes made by other addons after initialization.
+timer.Create('BGN_SpotHostileNPC', 1, 0, function()
   if bgNPC.Modes.IsPeaceful() or cvar_bgn_ignore_another_npc:GetBool() then return end
-  for _, actor in ipairs(bgNPC.Actors.GetByTeam('police')) do
-    local car = actor:IsAlive() and actor:GetVehicle()
-    if IsValid(car) then
-      for _, ent in ipairs(ents.FindInSphere(car:GetPos(), SEATED_SPOT_RADIUS)) do
-        if (ent:IsNPC() or ent:IsNextBot()) and not ent.isBgnActor and ent:Health() > 0 and not actor:HasEnemy(ent) and IsHostile(ent) and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent) then SetNPCRelationship(actor, ent, D_HT) end
+  local actors = {}
+  for i, actor in ipairs(bgNPC.Actors.GetAll()) do
+    actors[i] = actor
+  end
+
+  local wanted = bgNPC.Modules.Get('wanted')
+  local wanted_mode = GetConVar('bgn_enable_wanted_mode'):GetBool()
+  for _, ent in ipairs(ents.GetAll()) do
+    -- walks every entity on the map: the cheap NPC/NextBot class check rejects props first
+    -- (not a player and not an actor, so Combat.IsAttacker is exactly this check)
+    if (ent:IsNPC() or ent:IsNextBot()) and IsValid(ent) and not ent.bgn_siege_owner and not bgNPC.Actors.Get(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
+      for _, actor in ipairs(actors) do
+        local npc = actor:IsAlive() and actor:GetNPC()
+        if IsValid(npc) and ent:Disposition(npc) == D_HT then
+          if wanted_mode and (actor:HasTeam('residents') or actor:HasTeam('police')) then wanted:AddWanted(ent) end
+          npc = actor:GetNPC() -- wanted hooks can replace or remove the observer's body
+          if IsValid(npc) and not actor:HasEnemy(ent) and npc:GetPos():DistToSqr(ent:GetPos()) <= 2500 ^ 2 and bgNPC.Vision.HasLineOfSight(npc, ent, 'hostile') then
+            local reaction = actor:GetReactionForProtect(ent)
+            if actor.protect_blocked_enemy ~= ent then
+              actor:AddEnemy(ent, reaction)
+              if actor:EqualStateGroup('calm') then actor:SetState(reaction) end
+            end
+          end
+        end
       end
     end
   end
@@ -202,10 +129,9 @@ hook.Add('OnEntityCreated', 'BGN_AddAnotherNPCToIgnore', function(npc)
   timer.Simple(.5, function()
     if not IsValid(npc) or npc.isBgnActor then return end
     local actors = bgNPC.Actors.GetAll()
-    local disposition = GetPlayersDisposition(npc)
     for i = #actors, 1, -1 do -- backwards: IsAlive() unregisters dead actors from this live list
       local actor = actors[i]
-      if actor and actor:IsAlive() then SetNPCRelationship(actor, npc, disposition) end
+      if actor and actor:IsAlive() then SetNPCRelationship(actor, npc) end
     end
   end)
 end)

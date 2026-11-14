@@ -1,4 +1,6 @@
-﻿--
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+if not TOOL.AddToMenu then return end
+--
 TOOL.Category = 'Background NPCs Editor'
 TOOL.Name = '#tool.bgn_seat_tool.name'
 TOOL.Trace = nil

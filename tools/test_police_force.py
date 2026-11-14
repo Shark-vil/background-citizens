@@ -16,6 +16,8 @@ function bgNPC.Actors.Get(e) return e and e.actor end
 function bgNPC.Actors.GetAll() return observers end
 function bgNPC.Actors.GetInRadius() return observers end
 function bgNPC.Vision.HasLineOfSight() return seen end
+function bgNPC.Combat.CanWitness() return seen end
+function bgNPC.Combat.IsAttackingEnemy() return false end
 function bgNPC.Combat.ResolveVehicleAttacker(e) return e end
 function bgNPC.Combat.IsAttacker(e) return IsValid(e) end
 ents={GetAll=function() return {} end}
@@ -28,11 +30,11 @@ function Actor(uid,police)
  function a:GetNPC() return self.npc end
  function a:GetMaxHealth() return 100 end
  function a:IsAlive() return true end
- function a:HasTeam(other) if type(other)=='string' then return other=='police' and self.police end return other~=suspect end
+ function a:HasTeam(other) if type(other)=='string' then return other=='police' and self.police end return other and (other.actor~=nil or other.uid~=nil) end
  return a
 end
 officer=Actor(1,true); observers={officer}
-dmg={GetDamage=function() return 1 end,GetAttacker=function() return suspect end}
+dmg={GetDamage=function() return 1 end,GetAttacker=function() return suspect end,GetInflictor=function() return suspect end}
 ''')
 lua.execute((ROOT/'lua/background_npcs_core/api/sv_police_force.lua').read_text(encoding='utf-8-sig'))
 lua.execute('''
@@ -79,13 +81,16 @@ lua.execute('''
 local C=bgNPC.Combat
 local cop,thug,sniper,near=Actor(20,true),Entity(),Entity(600),Entity(400)
 observers={}
-local hit=function(attacker) return {GetDamage=function() return 1 end,GetAttacker=function() return attacker end} end
+local hit=function(attacker) return {GetDamage=function() return 1 end,GetAttacker=function() return attacker end,GetInflictor=function() return attacker end} end
 hooks.PostEntityTakeDamage(Actor(21,false).npc,hit(near),true)
 assert(not near.bgn_ranged_attack,'a hit from 400 units is not ranged')
 hooks.PostEntityTakeDamage(Actor(22,false).npc,hit(sniper),false)
 assert(not sniper.bgn_ranged_attack,'a blocked hit marks nobody')
 hooks.PostEntityTakeDamage(Actor(23,false).npc,hit(sniper),true)
 assert(sniper.bgn_ranged_attack,'a hit from 600 units is ranged')
+local ally=Actor(25,false); ally.npc.x=600
+hooks.PostEntityTakeDamage(Actor(26,false).npc,hit(ally.npc),true)
+assert(not ally.npc.bgn_ranged_attack,'a distant friendly hit does not create a ranged threat')
 cop.enemies={thug}
 assert(C.CanPoliceUseStunstick(cop,thug),'a melee enemy alone allows the baton')
 cop.enemies={thug,sniper}

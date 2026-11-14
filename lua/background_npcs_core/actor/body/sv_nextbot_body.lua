@@ -92,7 +92,6 @@ end
 
 function NextBotBody:SetEnemy(ent)
   if IsValid(self.ent) then self.ent:BGN_SetEnemy(ent) end
-  if IsValid(ent) then self.enemy_seen = CurTime() end
 end
 
 function NextBotBody:GetEnemy()
@@ -101,8 +100,14 @@ end
 
 function NextBotBody:GetEnemyLastTimeSeen(ent)
   local bot = self.ent
-  if IsValid(bot) and IsValid(ent) and bot:CanSeeEnemy(ent) then self.enemy_seen = CurTime() end
-  return self.enemy_seen or 0
+  if not istable(self.enemy_seen) then
+    self.enemy_seen = setmetatable({}, {
+      __mode = 'k'
+    })
+  end
+
+  if IsValid(bot) and IsValid(ent) and bot:CanSeeEnemy(ent) then self.enemy_seen[ent] = CurTime() end
+  return self.enemy_seen[ent] or 0
 end
 
 function NextBotBody:SetAlertLevel(level)

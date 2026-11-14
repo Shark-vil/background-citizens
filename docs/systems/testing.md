@@ -1,5 +1,18 @@
 # Testing mode
 
+## Core engineering audit regressions
+
+`python tools/test_core_audit.py` runs 21 isolated LuaJIT/lupa tests from
+`tests/sv_engineering_audit.lua`; SERVER `bgn_selftest` loads the same file on demand without live entities.
+The cases cover scheduler mutations, recurring services, mechanics, UID/snapshot reloads, client retirement,
+malformed/chunked network input, navigation, GOAP, appearance and gamemode spawn permission/accounting,
+regeneration, spawnmenu IO, string UID LOD and client seat downloads. Follow-up cases cover forced exit,
+blocked exits and lethal damage without the DV visual, plus wanted observers awaiting a replacement entity.
+Recheck cases cover missing bodies in regeneration, voices, relationships and scan budget yields.
+All 21 fail against the starting `dev`
+with `--baseline` and pass after these changes. This models engine calls; it is not a native game result.
+See [audit decisions and remaining limits](../core-audit.md).
+
 For interactive scenic and GOAP door checks, use the admin [Scene debugger Tool](scenic.md#scene-debugger-tool).
 `tools/scenic_tool.lua` exercises the real server Tool, native Undo, chair cleanup, model diagnostics and the
 one-cycle door test on both NPC and NextBot bodies through a temporary single-player bridge. Use an isolated
@@ -199,6 +212,21 @@ not a general FPS guarantee. Multiplayer and arbitrary camera addons/custom rigs
 
 `python tools/test_regressions.py` (requires lupa) checks the Lua logic outside GMod. It covers safe actor health accessors in both realms, arrest module registration order, seated damage and police witnesses, passenger aim, exit placement by seat/model attachment, overlap rejection and blocked-side fallback. These checks do not verify live physics or every vehicle model.
 
+## Room siege developer checks
+
+`bgn_selftest` includes `tests/sv_siege.lua`: isolated checks for one-exit pockets, alternative/incoming
+connections, outdoor rejection, animation/class requirements, door chance/fallback, shared deployment
+reservations, grenade clearance and the wait/cooldown. These do not establish real physics or map completeness.
+
+`tools/siege.lua` is an opt-in SERVER fixture for an isolated single-player `gm_bigcity_improved` session,
+using the room near `setpos -748.617798 -4298.178223 -11071.968750`. It creates eight actors and exercises
+metropolice/combine operators with NPC and NextBot bodies, including a player target. It checks the double-leaf
+exit, missing-animation rejection, five front/three rear participants, silent waiting, one real projectile,
+entry into the room, actual damage/attribution against NPC targets, exit/damage cancellation and NPC capability
+restoration. It temporarily moves/arms the observer, pauses population
+tasks and cleans up/restores its own state. Run it through a temporary local SERVER bridge, never as an autorun
+or on a public server. Results: `garrysmod/data/bgn_siege_lab/verification.json`.
+
 ## DV traffic developer checks
 
 Only BGN-created vehicles (`isBgnVehicle`) use the new recovery controller; the original DV remains a dependency. Police designation (`bgnPoliceVehicle`) persists across driver/group changes. Only actors on team `police` can drive or ride in these cars. Players may still take an empty police car.
@@ -228,3 +256,24 @@ Vehicle occupants keep the same actor object and UID in the population registry.
 The admin **Carried item debugger** (`bgn_carry_debug`) issues a selected briefcase, parcel or newspaper with LMB and removes it with RMB. Aim at a living unarmed actor on foot in a calm state; model/body compatibility remains enforced. Test briefcases on male/female NPCs and NextBots through calm actions, running and combat: no physical briefcase should spawn.
 
 Carried visual models now move with their parent entity instead of keeping a separate world render origin, so a briefcase or newspaper does not remain culled at its old location after an actor teleport.
+
+`bgn_selftest` also runs `tests/sv_conflicts.lua`: isolated modules/hooks cover initiator direction/reset/rebind/forgetting, confirmed arrest initiation, attacker visibility, caller-visible help, foreign hostility, distinct arrest victims, strict health/distance boundaries, refusal and shared player/actor wanted thresholds. They create no live entities and do not establish engine hook timing, traces or vehicle physics.
+
+`tests/sv_pursuit.lua` checks stable/direct-attacker/group target priorities, observation of every enemy, original shared timestamps, hidden-target approach without standoff, visible-only cover, hidden squad columns, and the inclusive combat-radius boundary. Native integration also needs ordinary non-eternal actors with the remover enabled: observe a target through an open door, close it, then add reinforcements without manually seeding their memory. Verify pursuit/siege and no recycling inside the radius, then removal after leaving it; exercise NextBot unstuck protection separately.
+
+<a id="combat-audit-regressions"></a>
+
+## Combat audit regressions
+
+`bgn_selftest` loads these SERVER tests on demand, without creating live entities:
+
+| File | Interaction checked |
+|---|---|
+| `tests/sv_pursuit.lua` | Real NPC adapter with modelled engine-memory refresh: search expires after more than 60 s and actual sightings renew it; real Rebind transfers hidden position/time and priorities in both realm branches; equipment follows the selected enemy with arrest fallback; both real NextBot teleport methods reject combat at 1000 and allow it at 1000.1, retaining siege protection. |
+| `tests/sv_siege.lua` | Negotiation's `hold_fire` rejects both siege initiation and follower recruitment. |
+| `tests/sv_negotiation.lua` | Weapon capabilities are removed and restored while door capabilities survive. |
+| `tests/sv_conflicts.lua` | Friendly manhack damage is blocked in both owner/reaction hook orders, including ownership available only through inflictor; invalid owners are not substituted. |
+
+An external LuaJIT/lupa run passed 36 tests across conflicts, lethal weapons, negotiation, pursuit, siege and GOAP planning after the fixes. The six affected checks failed against the earlier implementation. The external harness models engine APIs and is not a native `bgn_selftest` run. Native multiplayer, vehicle/door physics, real engine memory timing and script reload during these actions still require separate verification.
+
+`tests/sv_team_damage.lua` runs 10 isolated regressions with real team, enemy, damage, wanted, arrest and vehicle-reaction modules: friendly NPC/NextBot hits with team damage off/on; help/report rejection; wanted broadcast and stale-entry cleanup; ordinary kills; SetTeam/AddTeam cleanup; repeated ramming of police on foot or in a car and a pedestrian run-over keep the driver in `residents`. `tools/test_police_force.py` also verifies a distant friendly hit is not a ranged threat. These are modelled engine calls, not native physics evidence.

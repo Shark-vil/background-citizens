@@ -13,18 +13,21 @@ local FIGHT_TIME = 10
 local GIVE_UP_TIME = 8
 local HEAD = Vector(0, 0, 36) -- a crouching head
 local CROUCH = {'Crouch_Idle_Pistol', 'crouchidle', 'Crouch_IdleD'}
+local EYES = Vector(0, 0, 64) -- a standing head over a threat position
 local function IsHidden(pos, enemy)
+  local at_pos = isvector(enemy)
   return util.TraceLine({
-    start = enemy:EyePos(),
+    start = at_pos and enemy + EYES or enemy:EyePos(),
     endpos = pos + HEAD,
     mask = MASK_BLOCKLOS,
-    filter = enemy
+    filter = not at_pos and enemy or nil
   }).Hit
 end
 
+-- @param enemy entity|Vector the threat, or where it was (sv_threat_search.lua)
 -- @return Vector|nil the nearest point near the actor hidden from the enemy
 function bgNPC.FindCover(actor, enemy)
-  local origin, enemy_pos = actor:GetPos(), enemy:GetPos()
+  local origin, enemy_pos = actor:GetPos(), isvector(enemy) and enemy or enemy:GetPos()
   local candidates = {}
   for _, point in ipairs(bgNPC.Points.GetInRadius(origin, SEARCH_RADIUS)) do
     local pos = point:GetPos()
@@ -44,7 +47,8 @@ end
 
 bgNPC.States.Register('take_cover', 'danger', {
   pre_start = function(actor, _, data)
-    local enemy = actor:GetNearEnemy()
+    local enemy = actor:GetEnemy()
+    if IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then return 'defense' end
     data.cover = IsValid(enemy) and bgNPC.FindCover(actor, enemy)
     if not data.cover then return 'defense' end
   end,
@@ -52,7 +56,13 @@ bgNPC.States.Register('take_cover', 'danger', {
   stop = function(actor) actor:StopStaticSequence() end,
   update = function(actor, _, data)
     local now = CurTime()
-    local enemy = actor:GetNearEnemy()
+    local enemy = actor:GetEnemy()
+    -- hidden behind the cover is the point: only the way there ends when the enemy loses sight of the actor
+    if not data.hide_until and IsValid(enemy) and not bgNPC.Vision.HasLineOfSight(actor:GetNPC(), enemy, 'cover') then
+      actor:SetState('defense')
+      return
+    end
+
     if not IsValid(enemy) or (not data.hide_until and data.give_up < now) then
       if actor:HasNoEnemies() then
         actor:RandomState()

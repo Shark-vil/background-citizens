@@ -226,6 +226,7 @@ Menu.AddPage('spawn', {
     page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
     page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
     page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
+    page:Toggle('bgn_spawn_no_visibility_trace', '#bgn.settings.spawn.spawn_no_visibility_trace')
     page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, {
       decimals = 1
     })
@@ -234,7 +235,6 @@ Menu.AddPage('spawn', {
     page:Toggle('bgn_actors_teleporter', '#bgn.settings.spawn.actors_teleporter')
     page:Slider('bgn_actor_unseen_time', '#bgn.settings.spawn.actor_unseen_time', 0, 600)
     page:Slider('bgn_actors_max_teleports', '#bgn.settings.spawn.actors_max_teleports', 1, 10)
-    page:Toggle('bgn_fasted_teleport', '#bgn.settings.spawn.fasted_teleport')
     page:Section('#bgn.menu.section.experimental')
     page:Toggle('bgn_ghost_crowd', '#bgn.menu.ghost_crowd_server')
     page:Slider('bgn_ghost_crowd_max', '#bgn.menu.ghost_crowd_server_max', 0, 150)
@@ -252,6 +252,8 @@ Menu.AddPage('behavior', {
     page:Choice('bgn_actor_body', '#bgn.menu.body', {{'npc', 'NPC'}, {'nextbot', 'NextBot'},})
     page:Toggle('bgn_module_tactical_groups', '#bgn.settings.extension.tactical_groups')
     page:Toggle('bgn_pick_up_weapons', '#bgn.menu.pick_up_weapons')
+    page:Toggle('bgn_react_to_lethal_weapon', '#bgn.settings.extension.react_to_lethal_weapon')
+    page:Toggle('bgn_threat_search', '#bgn.settings.extension.threat_search')
     page:Toggle('bgn_nextbot_jump', '#bgn.menu.nextbot_jump')
     page:Slider('bgn_enemy_share_period', '#bgn.menu.enemy_share_period', 0, 10)
     page:Slider('bgn_fight_cooldown', '#bgn.menu.fight_cooldown', 0, 120)

@@ -4,8 +4,9 @@ local asset = bgNPC.Modules.Get('wanted')
 local cvar_bgn_enable_wanted_mode = GetConVar('bgn_enable_wanted_mode')
 local phone_911_sounnds = {Sound('background_npcs/calling_police/911/1.wav'), Sound('background_npcs/calling_police/911/2.wav'), Sound('background_npcs/calling_police/911/3.wav'), Sound('background_npcs/calling_police/911/4.wav'),}
 local phone_beep_sounnds = {Sound('background_npcs/calling_police/bepp/1.wav'), Sound('background_npcs/calling_police/bepp/2.wav'), Sound('background_npcs/calling_police/bepp/3.wav'), Sound('background_npcs/calling_police/bepp/4.wav'), Sound('background_npcs/calling_police/bepp/5.wav'), Sound('background_npcs/calling_police/bepp/6.wav'), Sound('background_npcs/calling_police/bepp/7.wav'), Sound('background_npcs/calling_police/bepp/8.wav'),}
--- @return boolean at least one living officer already has this entity as an enemy or a target: no need to report it
+-- @return boolean the entity is already wanted, or at least one living officer has it as an enemy or a target: no need to report it
 function bgNPC.PoliceKnows(enemy)
+  if asset:HasWanted(enemy) then return true end
   for _, police in ipairs(bgNPC.Actors.GetByTeam('police')) do
     if police:IsAlive() and (police:HasEnemy(enemy) or police:HasTarget(enemy)) then return true end
   end
@@ -38,7 +39,7 @@ bgNPC.States.Register('calling_police', 'danger', {
   pre_start = function(actor)
     if not IsValidWantedMode() or TooManyCallers(actor) then return 'fear' end
     local enemy = actor:GetEnemy()
-    if IsValid(enemy) and bgNPC.PoliceKnows(enemy) then return 'fear' end
+    if not IsValid(enemy) or bgNPC.PoliceKnows(enemy) then return 'fear' end
   end,
   stop = function(actor) actor:StopStaticSequence() end,
   update = function(actor)
@@ -50,13 +51,7 @@ bgNPC.States.Register('calling_police', 'danger', {
     local currentEnemy = actor:GetEnemy()
     local reaction = actor:GetReactionForDamage()
     reaction = reaction == 'calling_police' and 'fear' or reaction
-    if not IsValidWantedMode() or not IsValid(currentEnemy) or asset:HasWanted(currentEnemy) then
-      actor:SetState(reaction)
-      return
-    end
-
-    local enemyActor = bgNPC.Actors.Get(currentEnemy)
-    if enemyActor and enemyActor:HasTeam('police') then
+    if not IsValidWantedMode() or not IsValid(currentEnemy) then
       actor:SetState(reaction)
       return
     end
@@ -64,7 +59,7 @@ bgNPC.States.Register('calling_police', 'danger', {
     local npc = actor:GetNPC()
     local npc_index = npc:EntIndex()
     -- 90000 = 300 ^ 2
-    if not bgNPC.Vision.HasLineOfSight(npc, currentEnemy) or npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
+    if npc:GetPos():DistToSqr(currentEnemy:GetPos()) < 90000 then
       local rnd = math.random(0, 100)
       if rnd > 80 then actor:CallForHelp(currentEnemy) end
       actor:SetState('fear')
@@ -77,17 +72,12 @@ bgNPC.States.Register('calling_police', 'danger', {
     else
       if data.calling_time < CurTime() then
         for _, enemy in pairs(actor.enemies) do
-          if IsValid(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
-            if asset:HasWanted(enemy) then
-              local WantedClass = asset:GetWanted(enemy)
-              WantedClass:UpdateWanted(enemy)
-            else
-              asset:AddWanted(enemy)
-              local operator = table_RandomBySeq(phone_911_sounnds)
-              EmitSound(operator, npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)
-              -- the caller answers the operator once the clip ends
-              timer.Simple(math.max(SoundDuration(operator), 2), function() actor:Voice('call_911') end)
-            end
+          if IsValid(enemy) and not actor:HasTeam(enemy) and not bgNPC.PoliceKnows(enemy) and not hook.Run('BGN_PreCallingPolice', actor, enemy) then
+            asset:AddWanted(enemy)
+            local operator = table_RandomBySeq(phone_911_sounnds)
+            EmitSound(operator, npc:GetPos(), npc_index, CHAN_AUTO, 1, 140, 0, 100)
+            -- the caller answers the operator once the clip ends
+            timer.Simple(math.max(SoundDuration(operator), 2), function() actor:Voice('call_911') end)
           end
         end
 
@@ -100,7 +90,7 @@ bgNPC.States.Register('calling_police', 'danger', {
 
         data.btn_click_delay = data.btn_click_delay or 0
         if data.btn_click_delay < CurTime() then
-          EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 1, 120, 0, 100)
+          EmitSound(table_RandomBySeq(phone_beep_sounnds), npc:GetPos(), npc_index, CHAN_AUTO, 0.6, 120, 0, 100)
           data.btn_click_delay = CurTime() + math.random(.3, 1.2)
         end
       end

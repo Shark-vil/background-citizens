@@ -46,7 +46,7 @@ def is_police(line_id):
 def load(lang):
     lua = LuaRuntime()
     lua.execute('bgNPC = { cfg = { replics = {} } }')
-    lua.execute((SRC / f'sh_{lang}.lua').read_text(encoding='utf8'))
+    lua.execute((SRC / f'sh_{lang}.lua').read_text(encoding='utf-8-sig'))
     tables = lua.eval('bgNPC.cfg.replics')
     return {k: [t[i] for i in range(1, len(t) + 1)] for k, t in tables.items()}
 
@@ -55,7 +55,7 @@ def conversations():
     """{'conv_<id>': [role of each phrase], [is that role police]} from config/states/sh_conversations.lua"""
     lua = LuaRuntime()
     lua.execute('bgNPC = { cfg = {} }')
-    lua.execute(CONVERSATIONS.read_text(encoding='utf8'))
+    lua.execute(CONVERSATIONS.read_text(encoding='utf-8-sig'))
     out = {}
     for script in lua.eval('bgNPC.cfg.conversations').values():
         roles = [list(r.values()) if not isinstance(r, str) else [r] for r in script.roles.values()]
@@ -121,7 +121,7 @@ def main():
     ap.add_argument('--only', help='voice only this line id')
     args = ap.parse_args()
 
-    state = json.loads(STATE.read_text(encoding='utf8')) if STATE.exists() else {}
+    state = json.loads(STATE.read_text(encoding='utf-8-sig')) if STATE.exists() else {}
     wanted = jobs()
     sig = {path: f'{text}|{speaker}|{RADIO if police else "revive"}' for path, (text, _, speaker, police) in wanted.items()}
 

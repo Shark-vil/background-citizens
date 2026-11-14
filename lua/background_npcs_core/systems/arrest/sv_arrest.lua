@@ -2,17 +2,17 @@
 local arrest_targets = {}
 function ASSET:AddTarget(target, policeActor)
   if not IsValid(target) or (not target:IsPlayer() and not target:IsNPC() and not target:IsNextBot()) then return false end
-  if not policeActor or arrest_targets[target] then return false end
+  if not policeActor or policeActor:HasTeam(target) or arrest_targets[target] then return false end
   local ArrestComponent = {
     warningTime = CurTime() + GetConVar('bgn_arrest_time_limit'):GetFloat(),
     notify_order_time = 0,
     notify_arrest_time = 0,
     arrest_time = 0,
     detention = false,
-    holders = {}, -- police actors that hold the target in detention now (several officers share one component)
+    holders = {}, -- the primary officer owns detention; nearby officers only stand ready
     arrested = true,
-    damege_count = 1,
-    is_look_police = false,
+    victims = {},
+    damage_count = 0,
     policeActor = policeActor,
   }
 
@@ -30,7 +30,10 @@ function ASSET:UpdateArrest(target)
   ArrestComponent.detention = false
   ArrestComponent.holders = {}
   ArrestComponent.arrested = true
-  ArrestComponent.damege_count = 1
+  ArrestComponent.victims = {}
+  ArrestComponent.damage_count = 0
+  ArrestComponent.close_police_pos = nil
+  ArrestComponent.last_target_pos = nil
 end
 
 function ASSET:FoundPoliceInRadius(target, radius)
@@ -84,17 +87,15 @@ function ASSET:GetAllTargets()
   return arrest_targets
 end
 
--- The police still try to arrest: arrest mode is on, the target didn't kill (arrested), didn't keep attacking
--- (damege_count), obeys within the time limit and is not wanted.
+-- Escalation is based on confirmed harm, refusal or escape, not every attempted hit.
 -- @return boolean
 function ASSET:CanArrest(target)
   local ArrestComponent = self:GetTarget(target)
-  if not ArrestComponent or not ArrestComponent.arrested or ArrestComponent.damege_count > 5 then return false end
+  if not ArrestComponent or not ArrestComponent.arrested then return false end
   if not GetConVar('bgn_arrest_mode'):GetBool() then return false end
-  if not target:IsPlayer() then return true end
   if not ArrestComponent.detention and ArrestComponent.warningTime < CurTime() then return false end
-  -- a second chance (sv_surrender.lua) holds even while wanted, until the player attacks again
-  if ArrestComponent.surrender then return (target.bgn_last_attack or 0) < ArrestComponent.surrender end
+  -- A second chance holds even while wanted, until a confirmed escalation condition.
+  if ArrestComponent.surrender then return true end
   return not bgNPC.Modules.Get('wanted'):HasWanted(target)
 end
 
@@ -140,7 +141,7 @@ end)
 hook.Add('BGN_AddActorEnemy', 'BGN_ArrestCeaseFire', function(actor, enemy) if IsLawAlly(actor) and ASSET:IsProtected(enemy) then return true end end)
 hook.Add('EntityTakeDamage', 'BGN_ArrestCeaseFire', function(target, dmginfo)
   if not ASSET:IsProtected(target) then return end
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   local actor = bgNPC.Actors.Get(attacker)
   if actor and IsLawAlly(actor) then return true end
 end)
@@ -161,6 +162,79 @@ function ASSET:NotSubjectToArrest(target)
   end
 end
 
+function ASSET:Escalate(target)
+  if not GetConVar('bgn_arrest_mode'):GetBool() then return end
+  local component = self:GetTarget(target)
+  if not component or not component.arrested then return end
+  self:NotSubjectToArrest(target)
+  if GetConVar('bgn_enable_wanted_mode'):GetBool() and not bgNPC.Modes.IsPeaceful() then bgNPC.Modules.Get('wanted'):AddWanted(target) end
+end
+
+function ASSET:RecordDamage(attacker, target)
+  local component = self:GetTarget(attacker)
+  if not component or not component.arrested then return end
+  local victim = bgNPC.Actors.Get(target) or target.BGN_ACTOR_OBJECT
+  if not victim then return end
+  if victim:HasTeam('police') then
+    self:Escalate(attacker)
+    return
+  end
+
+  if component.policeActor and bgNPC.Combat.IsAttackingEnemy(component.policeActor, target, attacker) then return end
+  if bgNPC.Modules.Get('first_attacker'):IsFirstAttacker(target, attacker) then return end
+  if not component.victims[victim.uid] then
+    component.victims[victim.uid] = true
+    component.damage_count = component.damage_count + 1
+  end
+
+  if component.damage_count > 3 or target:Health() < victim:GetMaxHealth() * .3 then self:Escalate(attacker) end
+end
+
+function ASSET:CheckCompliance(target, officer)
+  if not GetConVar('bgn_arrest_mode'):GetBool() then return end
+  local component = self:GetTarget(target)
+  if not component or not component.arrested or component.policeActor ~= officer then return end
+  local pos, police_pos = target:GetPos(), officer:GetNPC():GetPos()
+  if pos:DistToSqr(police_pos) <= 250 ^ 2 then
+    component.close_police_pos = police_pos
+  elseif component.close_police_pos and component.last_target_pos and pos:DistToSqr(component.last_target_pos) > 0 and pos:DistToSqr(component.close_police_pos) > 250 ^ 2 then
+    -- Use the last close officer position too: an officer stepping away cannot cause an escape.
+    self:Escalate(target)
+    return
+  end
+
+  component.last_target_pos = pos
+  if not component.detention and component.warningTime < CurTime() and GetConVar('bgn_arrest_mode'):GetBool() then self:Escalate(target) end
+end
+
+local function ArrestKill(attacker, inflictor)
+  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)
+  if IsValid(attacker) then ASSET:Escalate(attacker) end
+end
+
+hook.Add('BGN_OnKilledActor', 'BGN_ArrestKill', function(_, attacker) ArrestKill(attacker) end)
+hook.Add('OnNPCKilled', 'BGN_ArrestKill', function(_, attacker, inflictor) ArrestKill(attacker, inflictor) end)
+hook.Add('PlayerDeath', 'BGN_ArrestKill', function(_, inflictor, attacker) ArrestKill(attacker, inflictor) end)
+timer.Create('BGN_ArrestCompliance', .25, 0, function()
+  local targets = {}
+  for target in pairs(arrest_targets) do
+    targets[#targets + 1] = target
+  end
+
+  for _, target in ipairs(targets) do
+    if not IsValid(target) or target:Health() <= 0 then
+      ASSET:RemoveTarget(target)
+      arrest_targets[target] = nil
+    else
+      local component = ASSET:GetTarget(target)
+      local previous = component.policeActor
+      ASSET:UpdatePolice(target)
+      if component.policeActor ~= previous then component.close_police_pos, component.last_target_pos = nil, nil end
+      if component.policeActor then ASSET:CheckCompliance(target, component.policeActor) end
+    end
+  end
+end)
+
 -- An actor gives up to the officer: the same chain as the arrest state (the suspect surrenders, the officer arrests).
 -- Both must be on foot, the officer steps out of its car here.
 -- @return boolean false when the suspect is already an arrest target
@@ -179,5 +253,6 @@ end
 
 hook.Add('PlayerDeath', 'BGN_ArrestModule_ClearDataOnPlayerDeath', function(victim, inflictor, attacker) ASSET:RemoveTarget(victim) end)
 hook.Add('BGN_RemoveWantedTarget', 'BGN_ArrestModule_ClearByWanted', function(target) ASSET:RemoveTarget(target) end)
+hook.Add('BGN_ActorEntityChanged', 'BGN_ArrestRebind', function(_, old, ent) if arrest_targets[old] then arrest_targets[ent], arrest_targets[old] = arrest_targets[old], nil end end)
 hook.Add('PostCleanupMap', 'BGN_ArrestModule_ClearPlayerOnCleanupMap', function() ASSET:ClearAll() end)
 list.Set('BGN_Modules', 'player_arrest', ASSET)

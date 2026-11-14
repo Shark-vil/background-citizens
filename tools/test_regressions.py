@@ -77,6 +77,7 @@ def realm(server):
         cvars={AddChangeCallback=function(name,f,id) changes[name]=changes[name] or {}; changes[name][id]=f end}
         concommand={Add=function(name,f) commands[name]=f end, GetTable=function() return commands end}
         hook={Add=function(name,id,f) hooks[name]=hooks[name] or {}; hooks[name][id]=f end,
+            Remove=function(name,id) if hooks[name] then hooks[name][id]=nil end end,
             Run=function(name,...) for _,f in pairs(hooks[name] or {}) do local v=f(...); if v~=nil then return v end end end}
         timer={Create=function(name,_,__,f) timers[name]=f end, Simple=function(_,f) timers[#timers+1]=f end}
         game={GetMap=function() return 'gm_test' end}
@@ -122,7 +123,7 @@ def realm(server):
             end},
             Modules={Get=function(n) return modules[n] end},
             Table={HasWhere=function(t,f) for k,v in pairs(t) do if f(k,v) then return true end end return false end},
-            Combat={IsIgnored=function() return false end,CanPoliceUseStunstick=function() return true end,EquipActor=function() end,ResetPoliceThreat=function() end}, cfg={wanted={levels={5,5,10,10,15}}},
+            Combat={IsIgnored=function() return false end,IsInCombatRadius=function() return false end,CanPoliceUseStunstick=function() return true end,EquipActor=function() end,ResetPoliceThreat=function() end}, cfg={wanted={levels={5,5,10,10,15}}},
             Statistics={GetSum=function() return 0 end, Reset=function() end},
             Actors={Get=function() end, GetAll=function() return {} end, GetByTeam=function() return {} end},
             Doors={held={},Desperate=function() return false end,Find=function() end,Blocker=function() end},
@@ -178,7 +179,7 @@ spawn.execute('''
     bgNPC.Util.CanSeeEntity=function(ply) return ply.sees_target end
     function watcher(in_view)
         return {in_view=in_view, GetPos=function() return Vector() end,
-            EyePos=function() return Vector(0,0,64) end}
+            EyePos=function() return Vector(0,0,64) end,GetVehicle=function() end}
     end
     covered=true; exposed_height=nil; traces=0
     MASK_VISIBLE=1
@@ -186,7 +187,8 @@ spawn.execute('''
     util.TraceLine=function(data)
         assert(data.filter~=nil, 'spawn traces must ignore the player whose eyes they start at')
         traces=traces+1
-        return {Hit=covered and data.endpos.z~=exposed_height,StartSolid=trace_start_solid}
+        return {Hit=covered and data.endpos.z~=exposed_height,StartSolid=trace_start_solid,
+            HitPos=Vector(data.endpos.x-100,data.endpos.y,data.endpos.z)}
     end
 ''')
 # Exercise the actual shared spawn/teleport predicate without the unrelated GLua continue loops.
@@ -237,14 +239,14 @@ priority.execute('''
     bgNPC.Util.IsVectorInWater=function(pos) water_checks=water_checks+1; return wet or pos.y==1 end
     bgNPC.Util.CanSeeEntity=function() return visible_target end
     util.IsInWorld=function() return true end
-    util.TraceLine=function() return {Hit=true} end
+    util.TraceLine=function(t) return {Hit=true,HitPos=Vector(t.endpos.x-100,t.endpos.y,t.endpos.z)} end
     setcv('bgn_spawn_radius_visibility',2500); setcv('bgn_spawn_block_radius',600)
 ''')
 priority.execute(spawn_source.split('local function FindSpawnLocationProcess', 1)[0]
                  + '\nfind_front = FindFrontSpawnPosition')
 priority.execute('''
     local function watcher(front)
-        return {front=front,GetPos=function() return Vector() end,EyePos=function() return Vector(0,0,64) end}
+        return {front=front,GetPos=function() return Vector() end,EyePos=function() return Vector(0,0,64) end,GetVehicle=function() end}
     end
     local points={}
     for i=1,1000 do
@@ -433,6 +435,8 @@ server.execute('''
     assert(#wanted:GetAllWanted()==0,'disabling wanted clears every target, not every other target')
     setcv('bgn_enable_wanted_mode',1)
     local actor={HasTeam=function(_,team) return team=='police' end}
+    bgNPC.Actors.GetAll=function() return {{GetNPC=function() return {} end,HasTeam=actor.HasTeam}} end
+    bgNPC.Combat.CanWitness=function() return true end
     setcv('bgn_wanted_impunity_limit',0); setcv('bgn_wanted_police_instantly',0)
     hook.Run('BGN_OnKilledActor',actor,a); assert(not wanted:HasWanted(a))
     setcv('bgn_wanted_police_instantly',1)
@@ -442,9 +446,10 @@ server.execute('''
     hook.Run('BGN_OnKilledActor',actor,a); assert(not wanted:HasWanted(a))
     hook.Run('BGN_OnKilledActor',actor,a); assert(wanted:HasWanted(a),'threshold fires on the specified kill')
     local detections=0
-    local npc={GetPos=function() return Vector(1000,0,0) end}
+    local npc={valid=true,GetPos=function() return Vector(1000,0,0) end}
     a.GetPos=function() return Vector(0,0,0) end
     local resident={IsAlive=function() return true end, GetNPC=function() return npc end,
+        HasTeam=function() return false end,GetReactionForProtect=function() return 'fear' end,SetState=function() end,
         HasState=function() return false end, EqualStateGroup=function() return true end,
         AddEnemy=function() detections=detections+1 end}
     bgNPC.Actors.GetByTeam=function() return {resident} end
@@ -821,6 +826,8 @@ arrest.execute('''
     for _,sequence in ipairs({'arrestcurious','checkmale'}) do
         local component={detention=true,arrest_time=0,holders={}}
         local module=bgNPC.Modules.Get('player_arrest')
+        module.CheckCompliance=function() end
+        module.HasTarget=function() return true end
         module.GetTarget=function() return component end
         module.CanArrest=function() return true end
         local npc={valid=true}
@@ -847,6 +854,7 @@ arrest.execute('''
         local police={GetNPC=function() return npc end, GetFirstTarget=function() return npc end,
             GetBody=function() return {SetEnemy=function() end,SetAlertLevel=function() end} end,
             TargetsCount=function() return 1 end, Voice=function() end}
+        component.policeActor=police
         local fades=0
         bgNPC.Util.FadeRemove=function(ent) assert(ent==npc); fades=fades+1 end
         bgNPC.States.arrest.update(police,'arrest',{})
@@ -865,10 +873,11 @@ load(refusal, 'core/sh_cvars.lua', 'systems/wanted/sh_wanted_class.lua', 'system
 refusal.execute('''
     bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end}
     setcv('bgn_arrest_mode',1); setcv('bgn_enable_wanted_mode',1)
-    suspect={valid=true,alive=true,IsPlayer=function() return true end,Alive=function(self) return self.alive end}
-    officer={GetFirstTarget=function(self) return self.target end,
+    suspect={valid=true,alive=true,IsPlayer=function() return true end,Alive=function(self) return self.alive end,
+        GetPos=function() return Vector() end}
+    officer={GetFirstTarget=function(self) return self.target end,HasTeam=function() return false end,
         RemoveAllTargets=function(self) self.target=nil end,AddEnemy=function(self,v) self.enemy=v end,
-        GetNPC=function() return {} end,TargetsCount=function() return 1 end,
+        GetNPC=function() return {GetPos=function() return Vector() end} end,TargetsCount=function() return 1 end,
         SetState=function(self,v) self.state=v end}
 ''')
 load(refusal, 'brain/fsm/states/sv_arrest.lua')
@@ -971,7 +980,7 @@ ceasefire.execute('''
     assert(hook.Run('BGN_AddActorEnemy',citizen,target)==true,'citizens must not reacquire the suspect')
     assert(hook.Run('BGN_AddActorEnemy',partner,target)==true,'police must not reacquire the suspect')
     assert(hook.Run('BGN_AddActorEnemy',bandit,target)==nil)
-    local info={GetAttacker=function() return citizen.npc end}
+    local info={GetAttacker=function() return citizen.npc end,GetInflictor=function() end}
     assert(hooks.EntityTakeDamage.BGN_ArrestCeaseFire(target,info)==true,'allied bullets already fired must be stopped')
     info.GetAttacker=function() return bandit.npc end
     assert(hooks.EntityTakeDamage.BGN_ArrestCeaseFire(target,info)==nil)
@@ -987,8 +996,9 @@ ceasefire.execute('''
     module:UpdateArrest(target)
     assert(module:IsProtected(target))
     module:GetTarget(target).surrender=now
-    target.bgn_last_attack=now
-    assert(not module:IsProtected(target),'attacking after a second surrender chance must end protection')
+    component=module:GetTarget(target)
+    component.arrested=false
+    assert(not module:IsProtected(target),'confirmed escalation after a second surrender chance must end protection')
     module:RemoveTarget(target)
     assert(not module:IsProtected(target),'a completed or cancelled arrest must release protection')
 
@@ -1061,7 +1071,7 @@ vehicles.execute('''
         function e:GetMaxHealth() return self.maxhp end
         function e:SetHealth(v) self.hp=v end
         function e:SetMaxHealth(v) self.maxhp=v end
-        function e:GetPos() return self.pos end
+        function e:GetPos() assert(self.valid,'NULL GetPos'); return self.pos end
         function e:SetPos(v) self.pos=v end
         function e:GetAngles() return {y=0} end
         function e:Clip1() return self.clip1 end
@@ -1071,7 +1081,7 @@ vehicles.execute('''
         function e:GetActiveWeapon() return self.weapon end
         function e:Remove() self.valid=false; if self.weapon then self.weapon.valid=false end end
         function e:SetNW2Bool() end
-        function e:GetNWEntity() return self.seat end
+        function e:GetNWEntity() assert(self.valid,'NULL GetNWEntity'); return self.seat end
         function e:SetAngles() end
         function e:SetSkin() end
         function e:SetModelScale() end
@@ -1092,11 +1102,12 @@ vehicles.execute('''
         function a:GetNPC() return self.npc end
         function a:HasState() return false end
         function a:GetNearEnemy() return self.enemies[1] end
+        function a:GetEnemy() return self.enemies[1] end
         function a:GetPos() return self.npc:GetPos() end
         function a:GetAngles() return self.npc:GetAngles() end
         function a:GetType() return 'police' end
         function a:GetActiveWeapon() return self.npc.weapon end
-        function a:Health() return self.npc:Health() end
+        function a:Health() return IsValid(self.npc) and self.npc:Health() or self.vehicle_body and self.vehicle_body.health or 0 end
         function a:HasTeam(team) return team=='police' end
         function a:HasState(s) return self.state==s end
         function a:EqualStateGroup(g) return g=='calm' and (not self.state or self.state=='walk') end
@@ -1309,9 +1320,7 @@ def startup_find(pattern, _realm):
 
 def startup_include(path):
     path = path.removeprefix('background_npcs_core/')
-    if path in ('systems/arrest/sv_arrest.lua', 'systems/sv_offender.lua'):
-        if path == 'systems/sv_offender.lua':
-            startup.execute("assert(bgNPC.Modules.Get('player_arrest'), 'arrest must register before offender captures the module')")
+    if path == 'systems/arrest/sv_arrest.lua':
         load(startup, path)
 
 startup.globals().file.Find = startup_find
@@ -1324,8 +1333,8 @@ startup.execute('''
     local victim={GetNPC=function() end,HasTeam=function() return true end}
     bgNPC.Actors.Get=function() return actor end
     bgNPC.Actors.GetInRadius=function() return {} end
-    hooks.BGN_OnKilledActor.BGN_Offender(victim,npc)
-    assert(actor.team[1]=='offenders' and wanted_added, 'witnessed civilian murder registers an offender without a missing module')
+    assert(not (hooks.BGN_OnKilledActor and hooks.BGN_OnKilledActor.BGN_Offender), 'ordinary kills have no offender-conversion hook')
+    assert(actor.data.team[1]=='residents' and not wanted_added, 'ordinary kills keep resident protection')
 ''')
 
 # Vehicle hits use the same reactions and witness hook as hits on foot.
@@ -1376,6 +1385,12 @@ witness_source = witness_source.replace('local actor = actors[i]', 'do local act
 witness_source = witness_source.replace('continue', 'goto next_witness').replace(
     "\n  end\nend)", "\n  end ::next_witness::\n  end\nend)")
 vehicles.execute(witness_source)
+vehicles.execute('''
+    bgNPC.Combat.CanWitness=function() return true end
+    bgNPC.Modes.IsFriend=function() return false end
+    bgNPC.Modules.Get('player_arrest').RecordDamage=function() end
+''')
+load(vehicles, 'systems/sv_first_attacker_found.lua')
 vehicles.execute('''
     blocked=false
     list.Set('', 'wanted', {HasWanted=function() return false end})
@@ -1589,7 +1604,8 @@ sync.execute('''
     bgNPC.Actor={Create=function(npc,kind,uid)
         local a={uid=uid,npc=npc,kind=kind,mechanics={},enemies={},targets={},enemies_always_visible={},
             GetNPC=function(self) return self.npc end,GetType=function(self) return self.kind end,
-            SetName=function() end,SetGender=function() end,SyncState=function(self,v) self.state=v end}
+            SetName=function() end,SetGender=function() end,SyncState=function(self,v) self.state=v end,
+            RemoveActor=function(self) self.is_removed=true; bgNPC.Actors.UnregisterActor(self) end}
         return a
     end}
 ''')
@@ -1623,6 +1639,7 @@ sync.execute('''
 ''')
 
 sync_server = realm(True)
+load(sync_server, 'core/sh_util.lua')
 sync_server.execute('''
     local function ser(t) local keys={} for k,v in pairs(t) do keys[#keys+1]=tostring(k)..'='..tostring(v) end table.sort(keys) return table.concat(keys,',') end
     bgNPC.Net.Serialize=ser; util.CRC=function(s) return s end
@@ -1680,6 +1697,7 @@ medics.execute('''
     bgNPC.States={Register=function(n,_,v) bgNPC.States[n]=v end}
 ''')
 load(medics, 'systems/sv_medics.lua', 'brain/fsm/states/sv_medic_revive.lua')
+medics.execute("bgNPC.Vision.ActorsThatSee=function() return true,{{HasTeam=function() return true end}} end")
 medics.execute('''
     local m=bgNPC.Medics
     local death=hooks.BGN_OnKilledActor.BGN_Medics_Call
@@ -1905,7 +1923,7 @@ police_weapons.execute('''
         GetClass=function() return 'npc_metropolice' end}
     actor={class='npc_metropolice',state_data={},IsAlive=function() return true end,IsNPC=function() return true end,
         GetType=function() return 'police' end,GetNPC=function() return npc end,
-        HasTeam=function(_,team) return team=='police' end,GetNearEnemy=function() return enemy end,
+        HasTeam=function(_,team) return team=='police' end,GetNearEnemy=function() return enemy end,GetEnemy=function() return enemy end,
         GetActorWeapon=function() return 'weapon_pistol' end,
         GetStateData=function(self) return self.state_data end,
         GetBody=function() return {RemoveActiveWeapon=function() npc.active=nil end} end}
@@ -1962,7 +1980,7 @@ police_weapons.execute((ROOT / 'systems/arrest/sv_surrender.lua').read_text(enco
                        .split("timer.Create('BGN_Surrender'", 1)[0])
 police_weapons.execute('''
     local victim={IsPlayer=function() return false end,IsNPC=function() return true end}
-    local damage={GetAttacker=function() return enemy end,GetDamage=function() return 5 end}
+    local damage={GetAttacker=function() return enemy end,GetDamage=function() return 5 end,GetInflictor=function() end}
     local record=hooks.EntityTakeDamage.BGN_Surrender_LastAttack
     record(victim,damage); assert(enemy.bgn_last_attack==now)
     enemy.bgn_last_attack=nil; damage.GetDamage=function() return 0 end
@@ -2041,6 +2059,7 @@ sharing.execute('''
         end
         function a:EqualStateGroup() return self.state=='walk' end
         function a:GetReactionForProtect() self.asked=true; return 'ignore' end
+        function a:ShareEnemyMemory() return false end
         function a:RemoveAllTargets() self.targets_cleared=true end
         function a:SetState(state) self.state=state end
         all[#all+1]=a; return a
@@ -2372,11 +2391,12 @@ doors.execute('''
     end
     function string.StartWith(s,p) return s:sub(1,#p)==p end
     bgNPC.States={Call=function() end}; bgNPC.PoliceKnows=function() return false end
+    bgNPC.Siege={CanStart=function() end}
     list.Set('', 'wanted', {HasWanted=function() return false end})
 ''')
 load(doors, 'core/sh_class.lua', 'nav/sh_astar.lua', 'brain/goap/sv_goap.lua',
      'brain/goap/sv_goap_actions.lua', 'systems/sv_door_hold.lua', 'brain/sv_brain.lua',
-     'brain/fsm/sv_fsm_brain.lua', 'brain/goap/sv_goap_brain.lua')
+     'brain/fsm/sv_fsm_brain.lua', 'brain/goap/sv_goap_brain.lua', 'tests/sv_brain.lua')
 doors.execute('''
     for _,name in ipairs({'goap.planner','goap.sets'}) do tests[name](function(ok,message) assert(ok,message) end) end
     local position=Vector()
@@ -2385,7 +2405,7 @@ doors.execute('''
     weapon_class='weapon_pistol'
     local enemy={valid=true,GetActiveWeapon=function() return weapon end,GetPos=function() return Vector(200,0,0) end,Health=function() return 100 end}
     local actor={data={at_damage={fear=1}},mechanics={states_controller=true},enemies={enemy},enemies_count=1,state='fear',
-        GetNPC=function() return npc end,GetPos=function() return position end,GetNearEnemy=function() return enemy end,
+        GetNPC=function() return npc end,GetPos=function() return position end,GetNearEnemy=function() return enemy end,GetEnemy=function() return enemy end,
         GetHealth=function() return hp or 100 end,GetMaxHealth=function() return 100 end,
         InVehicle=function() return false end,HasTeam=function() return false end,HasEnemy=function() return false end,
         IsWanted=function() return false end,HasNoEnemies=function() return false end,

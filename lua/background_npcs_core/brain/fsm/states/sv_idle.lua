@@ -14,7 +14,7 @@ bgNPC.States.Register('idle', 'calm', {
       actor:GetBody():GiveWeapon('weapon_stunstick')
       actor:PlayStaticSequence('plazathreat' .. math.random(1, 2), true, delay)
     else
-      for _, name in ipairs(bgNPC.Table.Shuffle(table.Copy(SEQUENCES))) do
+      for _, name in ipairs(bgNPC.Table.Shuffle(SEQUENCES)) do
         if actor:IsValidSequence(name) then
           actor:PlayStaticSequence(name, true, delay)
           return

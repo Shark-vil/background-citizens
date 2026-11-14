@@ -20,7 +20,7 @@ end
 
 local last_uid = 0
 -- Unique number within the current session.
-function Util.NextId()
+Util.NextId = Util.NextId or function()
   last_uid = last_uid + 1
   return last_uid
 end
@@ -108,7 +108,8 @@ if CLIENT then
   CreateClientConVar('bgn_cl_ui_language', 'auto', true, false, 'Language of the mod: auto (the game language), english, russian.')
   CreateClientConVar('bgn_cl_language', 'en', false, true, 'Synchronized with gmod_language, do not change.')
   local function SyncLanguage()
-    RunConsoleCommand('bgn_cl_language', Util.GetLanguage())
+    local code = Util.GetLanguage()
+    RunConsoleCommand('bgn_cl_language', code)
   end
 
   cvars.AddChangeCallback('gmod_language', SyncLanguage, 'bgn_cl_language')

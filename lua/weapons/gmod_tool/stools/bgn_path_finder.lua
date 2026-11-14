@@ -1,4 +1,6 @@
-﻿--
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+if not TOOL.AddToMenu then return end
+--
 TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_path_finder.name'
 TOOL.PanelIsInit = false

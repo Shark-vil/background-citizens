@@ -58,3 +58,7 @@ end
 ```
 
 События: `BGN_NavProviderChanged(provider)`, `BGN_NavGeneratorFinished(graph, added_count)` на сервере; `BGN_NavEditorGraphLoaded(graph)` на клиенте.
+
+`Points.GetRandom` возвращает Vector либо nil, если подходящих точек нет; пустой запрос радиуса графа
+не переходит к выбору в другой части карты. NavMesh выбирает из загруженного списка областей,
+а не из предполагаемого непрерывного диапазона ID. После внешнего изменения сетки выполните `bgn_nav_reload`.

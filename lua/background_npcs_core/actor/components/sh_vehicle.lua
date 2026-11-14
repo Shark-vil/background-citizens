@@ -137,12 +137,14 @@ end
 
 -- squeeze: other actors (the officers at the door) do not block the exit, only the world and props do
 local function FindVehicleExitPos(vehicle, saved, model, squeeze)
+  -- EntityRemoved evacuates a living character after its DV model has already gone.
+  model = IsValid(model) and model or nil
   local mins, maxs = vehicle:GetModelBounds()
   local pos = vehicle:GetPos()
-  local forward = model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
+  local forward = model and model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
   local right = forward:Cross(vehicle:GetUp()):GetNormalized()
-  local seat = model:GetNWEntity('Seat')
-  local seat_pos = IsValid(seat) and seat:GetPos() or model:GetPos()
+  local seat = model and model:GetNWEntity('Seat')
+  local seat_pos = IsValid(seat) and seat:GetPos() or model and model:GetPos() or pos
   if seat == vehicle then
     local eyes = vehicle:GetAttachment(vehicle:LookupAttachment('vehicle_driver_eyes'))
     if eyes then seat_pos = eyes.Pos end
@@ -178,7 +180,7 @@ local function FindVehicleExitPos(vehicle, saved, model, squeeze)
     local ground = util.TraceLine({
       start = candidate,
       endpos = candidate - Vector(0, 0, 500),
-      filter = {model, vehicle}
+      filter = {vehicle, model}
     })
 
     -- A free floor below a bridge is not an exit beside the car.
@@ -307,10 +309,10 @@ function Actor:ExitVehicle(forced, squeeze)
     if IsValid(enemy) then self.body:SetDisposition(enemy, fear and D_FR or D_HT) end
   end
 
-  local enemy = self:GetNearEnemy()
+  local enemy = self:GetEnemy()
   if IsValid(enemy) then
     self.body:SetAlertLevel(fear and 'alert' or 'combat')
-    self.body:SetEnemy(enemy)
+    self.body:SetEnemy(enemy, self.enemy_last_position and self.enemy_last_position[enemy])
   end
 
   if provider.driver == self then
@@ -331,7 +333,7 @@ local POLICE_HIT_GAP = 60 -- a pause in police hits this long ends the attempt t
 function Actor:TakeVehicleDamage(amount, attacker, inflictor)
   local saved = self.vehicle_body
   if not saved or self.is_removed or amount <= 0 then return end
-  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker) or attacker
+  attacker = bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor) or attacker
   if bgNPC.Combat.IsAttacker(attacker) and attacker ~= self.npc and not bgNPC.Combat.IsIgnored(attacker) and not attacker.bgNPCIgnore then
     local damage = DamageInfo()
     damage:SetDamage(amount)
@@ -341,11 +343,12 @@ function Actor:TakeVehicleDamage(amount, attacker, inflictor)
     amount = damage:GetDamage()
   end
 
+  if amount <= 0 then return end
   -- The police fail to kill a driver for bgn_police_car_kill_time seconds: their next hit kills.
   -- The time runs from their first hit in this seat; POLICE_HIT_GAP seconds without one start it over.
   local police = bgNPC.Actors.Get(attacker)
   local kill_time = GetConVar('bgn_police_car_kill_time'):GetFloat()
-  if kill_time > 0 and police and police:HasTeam('police') then
+  if kill_time > 0 and police and police:HasTeam('police') and not self:HasTeam(police) then
     local now = CurTime()
     if now - (saved.police_hit_last or -math.huge) > POLICE_HIT_GAP then saved.police_hit_since = now end
     saved.police_hit_last = now

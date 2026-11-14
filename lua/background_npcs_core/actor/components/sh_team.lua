@@ -71,10 +71,27 @@ end
 function Actor:SetTeam(team_data)
   Assert.Arg(1, team_data, 'table|nil', 'ACTOR:SetTeam')
   self.data.team = team_data
+  if SERVER then
+    for _, other in ipairs(bgNPC.Actors.GetAll()) do
+      if other ~= self and other:HasTeam(self) then
+        other:RemoveEnemy(self.npc)
+        self:RemoveEnemy(other:GetNPC())
+      end
+    end
+
+    local wanted = bgNPC.Modules.Get('wanted')
+    if wanted and self:HasTeam('residents') then wanted:RemoveWanted(self.npc) end
+    local arrest = bgNPC.Modules.Get('player_arrest')
+    local component = arrest and arrest:GetTarget(self.npc)
+    if component and component.policeActor and component.policeActor:HasTeam(self) then arrest:RemoveTarget(self.npc) end
+  end
 end
 
 function Actor:AddTeam(team_name)
   Assert.NonEmptyString(1, team_name, 'ACTOR:AddTeam')
   self.data.team = self.data.team or {}
-  if not bgNPC.Table.HasValue(self.data.team, team_name) then table.insert(self.data.team, team_name) end
+  if not bgNPC.Table.HasValue(self.data.team, team_name) then
+    table.insert(self.data.team, team_name)
+    self:SetTeam(self.data.team)
+  end
 end

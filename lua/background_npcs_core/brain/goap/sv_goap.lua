@@ -20,7 +20,7 @@
 local GOAP = bgNPC.GOAP or {}
 bgNPC.GOAP = GOAP
 -- hot path: the planner calls these in its inner loop
-local band, bor, bxor, bnot = bit.band, bit.bor, bit.bxor, bit.bnot
+local band, bor, bnot = bit.band, bit.bor, bit.bnot
 local MAX_FACTS = 31
 local MAX_ITERATIONS = 200
 local CACHE_LIMIT = 1024
@@ -66,15 +66,6 @@ function GOAP.Describe(state, mask)
   return table.concat(parts, ' ')
 end
 
-local function CountBits(n)
-  local count = 0
-  while n ~= 0 do
-    n = band(n, n - 1)
-    count = count + 1
-  end
-  return count
-end
-
 -- ---------------------------------------------------------------------------
 -- Action / Goal
 -- ---------------------------------------------------------------------------
@@ -113,7 +104,7 @@ function Action:IsDone(ws)
   return band(ws, self.effect_mask) == self.effect_value
 end
 
--- Costs below 1 would break the A* heuristic (one unsatisfied fact = at least cost 1).
+-- Every nonempty plan costs at least 1, even when one action changes several facts.
 function Action:GetCost(ws)
   local cost = isfunction(self.cost) and self.cost(ws) or self.cost
   return math.max(1, cost)
@@ -146,7 +137,7 @@ end
 function GOAP.Plan(ws, goal, actions, actions_key)
   if goal:IsSatisfied(ws) then return {} end
   actions_key = actions_key or ActionsKey(actions)
-  local key = ws .. ':' .. goal.name .. ':' .. actions_key
+  local key = ws .. ':' .. goal.mask .. ':' .. goal.value .. ':' .. actions_key
   local cached = cache[key]
   if cached ~= nil then return cached or nil end
   local via = {}
@@ -154,7 +145,7 @@ function GOAP.Plan(ws, goal, actions, actions_key)
     start = ws,
     max_iterations = MAX_ITERATIONS,
     is_goal = function(state) return band(state, goal.mask) == goal.value end,
-    heuristic = function(state) return CountBits(band(bxor(state, goal.value), goal.mask)) end,
+    heuristic = function(state) return goal:IsSatisfied(state) and 0 or 1 end,
     neighbours = function(state, push)
       for i = 1, #actions do
         local action = actions[i]

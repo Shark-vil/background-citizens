@@ -1,5 +1,46 @@
 # Version history and documentation baseline
 
+Version 2.6.0 (`version.txt` and `bgNPC.VERSION`; publication not verified) includes every change after tag `2.5.1` (`a7f2d9da`) through `463d21ca`. The entries below labelled "Local 2.5.1" belong to 2.6.0. It also adds the optional cover-trace skip for spawn points (`bgn_spawn_no_visibility_trace`, default `0`), medics revive only actors innocent toward residents, and bandits are no longer gang allies. See [settings](systems/menu.md).
+
+Local 2.5.1 dialogue fix (publication not verified): random state phrases and ambient coughs no longer interrupt conversation participants, including gathering and player-interruption phases. See [conversations](systems/conversations.md).
+
+Local 2.5.1 follow-up fix (publication not verified): vehicle exits and lethal damage tolerate an already removed DV occupant entity; wanted detection skips living actors without a valid current entity. Stored character identity/health and normal exit obstruction checks are preserved. See [vehicles](systems/vehicles.md) and [regressions](systems/testing.md#core-engineering-audit-regressions).
+
+Local 2.5.1 engineering audit (publication not verified): corrected disabled mechanics, recurring services,
+scheduler mutation, reload identity/snapshot counters, empty/sparse navigation queries, GOAP planning,
+appearance selection, regeneration and client receivers. Removed per-entity spawnmenu config IO;
+player-owned spawns now use gamemode permission/counting hooks. Network uploads have explicit bounds.
+Architecture and defaults remain; see the [audit and verification limits](core-audit.md).
+
+Local 2.5.1 change (publication not verified): optional panic and threat search (`bgn_threat_search`, default off). An ally who sees a kill but not the killer (a trace from the victim, no view cone) panics (residents) or searches where the killer stood (police, gangs), walking within 1000 units of the killer; the spawner does not recycle them meanwhile. Anyone holding the killer's weapon class seen 3 checks in a row within 500 units in view becomes an enemy. See [brains](systems/brains.md#threat-search).
+
+Local 2.5.1 team protection change (publication not verified): the vehicle offender exception (`bgNPC.OffenderFromRamming`, `systems/sv_offender.lua`) is removed. Running over a civilian or ramming police no longer moves a civilian driver from `residents` to `offenders`; police in a car ignore a civilian driver's ram. See [wanted](systems/wanted.md).
+
+Local 2.5.1 SERVER optimization (publication not verified): the object scan behind `BGN_ActorVisibleAtObject`/`BGN_ActorLookAtObject` searches 100 units around an actor instead of 1000 (the built-in listeners react within 80 units), and its forward trace runs once per scan. The once-per-second foreign-hostility check rejects non-NPC entities first, and the static animation controller checks `IsAlive` only for animated actors. Behavior is unchanged.
+
+Local 2.5.1 police-call fix (publication not verified): damage/protection reactions reject calls about already wanted or police-known enemies before enemy registration; entering a call also requires a valid selected enemy. Active-call completion rules are unchanged. See [police calls](systems/wanted.md#completing-a-police-call).
+
+Local 2.5.1 recycling change (publication not verified): spawn delay is `0` and the teleport limit is `10` per second. Move instead of removing remains enabled (`1`). The fast-check setting is removed: SERVER always uses one scheduler yield before each actor's recycling check. Saved values of the remaining cvars are preserved. See [settings](systems/menu.md).
+
+Local 2.5.1 citizen/police fix (publication not verified): friendly hits no longer start fear or confirmed conflict reactions; residents cannot be reported as wanted. Team changes reconcile targets/wanted/arrest. Only proven vehicle collisions can turn a civilian driver into an offender: running over a civilian or repeated police ramming, with a 3-second minimum and the existing 10% reaction chance. See [wanted rules and behavior tree](systems/wanted.md).
+
+Local 2.5.1 audit fixes (publication not verified): NPC pursuit writes no longer extend the 60-second actor search; body replacement preserves position memory and target priority; police equipment follows the selected enemy. Negotiating officers cannot start/join sieges, payload ownership is resolved before damage reactions, and both NextBot unstuck teleport paths respect combat-radius protection. See the [updated decision tree](systems/wanted.md#combat-continuation) and [developer checks](systems/testing.md#combat-audit-regressions).
+
+Local 2.5.1 change (publication not verified): stable combat target priority, pursuit of last observed hidden positions, shared sighting memory, visible-only cover and combat recycling/unstuck protection (fixed 1000-unit radius). See [brains](systems/brains.md).
+
+Local 2.5.1 change (publication not verified): police radio lines for sieges (position, breach, grenade, manhack,
+outcome), a downed or lost target and hostage negotiation; sieges no longer mute actor voices; a wanted target is a
+known position even out of sight. See [brains](systems/brains.md#hostage-negotiation).
+
+Local 2.5.1 change (publication not verified): GOAP single-exit room sieges with shared front/rear group
+positions, animation-gated metropolice manhacks/combine grenades and probabilistic door breaching/opening.
+The NavMesh-backed tactic and its limits are described in [brains](systems/brains.md#sieging-a-single-exit-room).
+
+Local 2.5.1 change (publication not verified): optional held-lethal-weapon reaction for residents/police,
+default off, one-second LOS/FOV checks within 800 units. Weapon learning continues while off, excludes
+explosion/vehicle kills and persists new classes in a server cache/DATA file. See [brains](systems/brains.md#lethal-weapons)
+and the [behavior tree](systems/wanted.md#behavior-decision-tree).
+
 Reviewed against Git through tag **2.3.0** (`2258b49`) and current **2.3.1 dev** (`7459c3c7`, 2026-11-10). `version.txt` and `bgNPC.VERSION` both say 2.3.1. There are 48 commits between the tag and this baseline. A version string does not prove publication on Workshop.
 
 Local Animator fixes after the baseline: `dance` starts after state cleanup, active donor animations synchronize to ready players entering PVS, stopping releases Animator-owned NPC freeze, and client copies preserve appearance at startup. See [donor animations](systems/brains.md#donor-animations). Publication is not verified.
@@ -95,3 +136,9 @@ Local network change: actor PVS sync sends identity (entity, type, generation, c
 Local vehicle fix: forced ejection during car seizure now uses the original passengers rather than deep copies of their actors. Restored bodies keep their registered identity and AI instead of freezing and later being removed as orphans. See [vehicles](systems/vehicles.md).
 
 Local vehicle fix 2: an actor leaving a moving car (police arriving at a chase) is immune to damage from that same car for 3 seconds, so a fast car no longer kills the officer on exit, after which the lifeless body stood still and was removed. See [vehicles](systems/vehicles.md).
+
+Local 2.5.1 working-tree change (publication not verified): confirmed-damage conflict memory, attacker-only witnesses, caller-visible help, shared player/actor wanted thresholds, foreign hostility wanted and primary-officer arrest escalation. See [wanted](systems/wanted.md) and [arrest](systems/arrest.md).
+
+Local follow-up: attacking an observer's known enemy does not incriminate a non-hostile attacker; existing enemy lists and bidirectional `D_HT` forbid the exception. It applies before initiator selection, also to arrest initiation/non-police harm counts. The observer's own enemies now count in `IsEnemyOfTeam`. See [conflicts](systems/wanted.md#conflict-memory-and-witnesses).
+
+Local follow-up: an active police phone call no longer requires continuous LOS or stops because the target became wanted/police. Threat interruption is strictly below 300 units. Allied help and GOAP replanning preserve the active call; entry limits and completion filters remain. See [wanted](systems/wanted.md).

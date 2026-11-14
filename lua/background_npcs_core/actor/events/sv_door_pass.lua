@@ -18,25 +18,27 @@ local function NearDoor(pos)
 end
 
 bgNPC.Tasks.Add('BGN_DoorPass', function(yield, wait)
-  for _, actor in ipairs(bgNPC.Actors.GetAll()) do
-    local npc = actor:GetNPC()
-    if IsValid(npc) and actor:IsAlive() then
-      local group = npc:GetCollisionGroup()
-      if not actor.door_pass_group then
-        if SWITCHABLE[group] and NearDoor(npc:GetPos()) then
-          actor.door_pass_group = group
-          npc:SetCollisionGroup(COLLISION_GROUP_NPC_SCRIPTED)
+  while true do
+    for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+      local npc = actor:GetNPC()
+      if IsValid(npc) and actor:IsAlive() then
+        local group = npc:GetCollisionGroup()
+        if not actor.door_pass_group then
+          if SWITCHABLE[group] and NearDoor(npc:GetPos()) then
+            actor.door_pass_group = group
+            npc:SetCollisionGroup(COLLISION_GROUP_NPC_SCRIPTED)
+          end
+        elseif group ~= COLLISION_GROUP_NPC_SCRIPTED then
+          actor.door_pass_group = nil -- something else (a chair, a car) took over the group
+        elseif not NearDoor(npc:GetPos()) then
+          npc:SetCollisionGroup(actor.door_pass_group)
+          actor.door_pass_group = nil
         end
-      elseif group ~= COLLISION_GROUP_NPC_SCRIPTED then
-        actor.door_pass_group = nil -- something else (a chair, a car) took over the group
-      elseif not NearDoor(npc:GetPos()) then
-        npc:SetCollisionGroup(actor.door_pass_group)
-        actor.door_pass_group = nil
       end
+
+      yield()
     end
 
-    yield()
+    wait(PERIOD)
   end
-
-  wait(PERIOD)
 end)

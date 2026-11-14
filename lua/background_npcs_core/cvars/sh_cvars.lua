@@ -1,7 +1,6 @@
 ﻿bgNPC.cvar = bgNPC.cvar or {}
 bgNPC.cvar.bgn_enable = 1
 bgNPC.cvar.bgn_debug = 0
-bgNPC.cvar.bgn_fasted_teleport = 0
 bgNPC.cvar.bgn_max_npc = 35
 bgNPC.cvar.bgn_dynamic_nodes = 1
 bgNPC.cvar.bgn_dynamic_nodes_save_progress = 1
@@ -13,7 +12,8 @@ bgNPC.cvar.bgn_vehicle_spawn_visibility_radius = 2000
 bgNPC.cvar.bgn_actor_unseen_time = 30
 bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
-bgNPC.cvar.bgn_spawn_period = 1
+bgNPC.cvar.bgn_spawn_period = 0
+bgNPC.cvar.bgn_spawn_no_visibility_trace = 0
 bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment = 1
@@ -37,6 +37,8 @@ bgNPC.cvar.bgn_arrest_car_time = 8
 bgNPC.cvar.bgn_police_car_kill_time = 30
 bgNPC.cvar.bgn_arrest_safe_weapons = 'mlp_hoof,empty,weapon_card,weapon_simrepair,weapon_simremote,weapon_medkit,gmod_tool,gmod_camera,weapon_fists,weapon_physgun,weapon_bugbait,weapon_physcannon'
 bgNPC.cvar.bgn_ignore_another_npc = 0
+bgNPC.cvar.bgn_react_to_lethal_weapon = 0
+bgNPC.cvar.bgn_threat_search = 0
 bgNPC.cvar.bgn_team_damage = 0
 bgNPC.cvar.bgn_npc_open_doors = 1
 bgNPC.cvar.bgn_npc_open_locked_doors = 0
@@ -61,7 +63,7 @@ bgNPC.cvar.bgn_disable_dialogues = 0
 bgNPC.cvar.bgn_tool_draw_distance = 1000
 bgNPC.cvar.bgn_tool_point_editor_show_parents = 1
 bgNPC.cvar.bgn_actors_teleporter = 1
-bgNPC.cvar.bgn_actors_max_teleports = 3
+bgNPC.cvar.bgn_actors_max_teleports = 10
 bgNPC.cvar.bgn_tool_seat_offset_pos_x = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_y = 0
 bgNPC.cvar.bgn_tool_seat_offset_pos_z = 0
@@ -130,7 +132,6 @@ bgNPC.CVars.Register('bgn_drop_money', bgNPC.cvar.bgn_drop_money, 'Enables the a
 bgNPC.CVars.Register('bgn_module_n2money', bgNPC.cvar.bgn_module_n2money, 'Enables a money drop from the addon "nMoney2 - Sandbox Currency". 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_debug', bgNPC.cvar.bgn_debug, 'Turns on debug mode and prints additional information to the console. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_dynamic_nodes_save_progress', bgNPC.cvar.bgn_dynamic_nodes_save_progress, 'If enabled, the automatically-generated movement mesh will not be deleted with each new generation, 1 - enabled, 0 - disabled.')
-bgNPC.CVars.Register('bgn_fasted_teleport', bgNPC.cvar.bgn_fasted_teleport, 'Enables fast teleportation of NPCs. Disable this if you experience performance issues. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_peaceful_mode', bgNPC.cvar.bgn_peaceful_mode, 'Disables any skirmishes between NPCs. They will just walk around so you don\'t feel lonely.. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_module_stormfox2', bgNPC.cvar.bgn_module_stormfox2, 'Includes support for the "StormFox2" addon. 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_enable_wanted_mode', bgNPC.cvar.bgn_enable_wanted_mode, 'Enables or disables wanted mode.')
@@ -150,6 +151,7 @@ bgNPC.CVars.Register('bgn_vehicle_spawn_visibility_radius', bgNPC.cvar.bgn_vehic
 bgNPC.CVars.Register('bgn_actor_unseen_time', bgNPC.cvar.bgn_actor_unseen_time, 'Seconds without any player seeing an actor before it can be removed or teleported. 0 allows immediate recycling out of sight.')
 bgNPC.CVars.Register('bgn_wanted_detection_radius', bgNPC.cvar.bgn_wanted_detection_radius, 'Distance at which residents can see a wanted target and keep the wanted timer active.')
 bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
+bgNPC.CVars.Register('bgn_spawn_no_visibility_trace', bgNPC.cvar.bgn_spawn_no_visibility_trace, 'Skip the cover trace for pedestrian spawn points: a point in any player\'s field of view is rejected even when it is hidden behind an obstacle. 1 - enabled, 0 - disabled (default).')
 bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'Pause between actor spawner passes. Changes apply immediately.')
 bgNPC.CVars.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 'Height limit between points. Used to correctly define child points.')
 bgNPC.CVars.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, 'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.')
@@ -173,6 +175,8 @@ bgNPC.CVars.Register('bgn_gang_war_chance', bgNPC.cvar.bgn_gang_war_chance, 'Per
 bgNPC.CVars.Register('bgn_medic_hopeless_chance', bgNPC.cvar.bgn_medic_hopeless_chance, 'Percent of ordinary deaths the medics cannot save. Explosions and point-blank shots are always hopeless.')
 bgNPC.CVars.Register('bgn_npc_open_locked_doors', bgNPC.cvar.bgn_npc_open_locked_doors, 'Actors unlock and open locked doors too (needs bgn_npc_open_doors). 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_ignore_another_npc', bgNPC.cvar.bgn_ignore_another_npc, 'If this parameter is active, then NPCs will ignore any other spawned NPCs.')
+bgNPC.CVars.Register('bgn_react_to_lethal_weapon', bgNPC.cvar.bgn_react_to_lethal_weapon, 'Residents and police react to visible learned lethal weapons within 800 units, once per second. Learning stays enabled when this setting is off.')
+bgNPC.CVars.Register('bgn_threat_search', bgNPC.cvar.bgn_threat_search, 'An ally who sees a kill but not the killer panics (residents) or searches for the threat (police, gangs). 1 - enabled, 0 - disabled.')
 bgNPC.CVars.Register('bgn_shot_sound_mode', bgNPC.cvar.bgn_shot_sound_mode, 'If enabled, then NPCs will react to the sound of a shot as if someone was shooting at an ally. (Warning: this function is experimental and not recommended for use)')
 bgNPC.CVars.Register('bgn_disable_halo_calling', bgNPC.cvar.bgn_disable_halo_calling, 'Disable halo for actors calling the police.')
 bgNPC.CVars.Register('bgn_disable_halo_wanted', bgNPC.cvar.bgn_disable_halo_wanted, 'Disable halo for wanted entities.')

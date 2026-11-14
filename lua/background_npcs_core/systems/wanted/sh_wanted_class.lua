@@ -89,8 +89,6 @@ function ASSET:AddWanted(ent, time)
   if self:HasWanted(ent) then return end
   -- every source (kills, police calls, damage) ends here: ignored players are never wanted
   if SERVER and (ent.bgn_arrested or bgNPC.Combat.IsIgnored(ent)) then return end
-  local actor = SERVER and bgNPC.Actors.Get(ent)
-  if actor and actor:HasTeam('medics') then return end
   if SERVER and not ent:IsPlayer() then bgNPC.Modules.Get('player_arrest'):RemoveTarget(ent) end
   local WantedClass = self:Instance(ent)
   if isnumber(time) then
@@ -135,7 +133,8 @@ function ASSET:ClearDeath()
   for i = #wanted_list, 1, -1 do
     local WantedClass = wanted_list[i]
     local target = WantedClass.target
-    if not IsValid(target) or target:Health() <= 0 then
+    local actor = SERVER and bgNPC.Actors.Get(target)
+    if not IsValid(target) or target:Health() <= 0 or (actor and actor:HasTeam('residents')) then
       if SERVER then
         self:RemoveWanted(target)
       else

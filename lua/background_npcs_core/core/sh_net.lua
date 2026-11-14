@@ -24,6 +24,10 @@ local COMPRESS_FROM = 512
 local CHUNK_LIFETIME = 30
 local WAIT_ENTITIES_TIME = 3
 local CLIENT_RATE_LIMIT = 100 -- messages per second from one client
+local CLIENT_BUFFER_LIMIT = 8 * 1024 * 1024
+local CLIENT_PAYLOAD_LIMIT = 32 * 1024 * 1024
+local CLIENT_TRANSFERS_LIMIT = 8
+local CLIENT_VALUE_LIMIT = 100000
 --
 -- ---------------------------------------------------------------------------
 -- Serializer
@@ -84,7 +88,9 @@ local function WriteValue(buf, n, v, seen)
       buf[n] = '_'
     elseif v.NetSerialize then
       -- Objects can choose their network form (e.g. nodes send indexes instead of links).
+      seen[v] = true
       n = WriteValue(buf, n, v:NetSerialize(), seen)
+      seen[v] = nil
     else
       seen[v] = true
       n = n + 1
@@ -128,6 +134,11 @@ local function ReadNumberUntil(s, i, stop)
 end
 
 local function ReadValue(s, i, state)
+  if state.remaining then
+    assert(state.remaining > 0, 'bgNPC.Net: too many values')
+    state.remaining = state.remaining - 1
+  end
+
   local c = string.byte(s, i)
   if c == 95 then -- _
     return nil, i + 1
@@ -143,6 +154,7 @@ local function ReadValue(s, i, state)
     -- s
     local j = string.find(s, ':', i + 1, true)
     local len = tonumber(string.sub(s, i + 1, j - 1))
+    assert(len and len >= 0 and len % 1 == 0 and len <= #s - j, 'bgNPC.Net: invalid string length')
     return string.sub(s, j + 1, j + len), j + len + 1
   elseif c == 101 then
     -- e
@@ -167,6 +179,8 @@ local function ReadValue(s, i, state)
   elseif c == 123 then
     -- {
     local t = {}
+    state.depth = (state.depth or 0) + 1
+    assert(state.depth <= 64, 'bgNPC.Net: table nesting exceeds 64')
     i = i + 1
     while string.byte(s, i) ~= 125 do
       local key, value
@@ -174,6 +188,8 @@ local function ReadValue(s, i, state)
       value, i = Read(s, i, state)
       if key ~= nil then t[key] = value end
     end
+
+    state.depth = state.depth - 1
     return t, i + 1
   end
 
@@ -182,14 +198,21 @@ end
 
 Read = ReadValue
 -- @return table values, number count, boolean has_missing_entities
-function Net.Deserialize(s)
-  local state = {}
+function Net.Deserialize(s, value_limit)
+  local state = {
+    remaining = value_limit
+  }
+
+  assert(string.sub(s, 1, 1) == 'n', 'bgNPC.Net: missing argument count')
   local text, i = ReadNumberUntil(s, 2, ';')
   local count = tonumber(text)
+  assert(count and count >= 0 and count % 1 == 0 and count <= #s - i + 1, 'bgNPC.Net: invalid argument count')
   local values = {}
   for k = 1, count do
     values[k], i = ReadValue(s, i, state)
   end
+
+  assert(i == #s + 1, 'bgNPC.Net: trailing data')
   return values, count, state.missing == true
 end
 
@@ -198,7 +221,6 @@ end
 -- ---------------------------------------------------------------------------
 local receivers = {}
 local progress_texts = {}
-local message_id = 0
 function Net.Receive(name, func, options)
   receivers[name] = {
     func = func,
@@ -231,21 +253,25 @@ end
 local function Dispatch(name, ply, payload)
   local receiver = receivers[name]
   if not CanReceive(receiver, ply) then return end
-  local ok, values, count, missing = pcall(Net.Deserialize, payload)
+  local ok, values, count, missing = pcall(Net.Deserialize, payload, SERVER and CLIENT_VALUE_LIMIT or nil)
   if not ok then
     ErrorNoHaltWithStack('[Background NPCs] Bad network data in "' .. name .. '": ' .. tostring(values) .. '\n')
     return
   end
 
+  if count > 256 then -- unpacking a hostile argument list can overflow the Lua stack
+    return
+  end
+
   if CLIENT and missing and receiver.options.wait_entities then
     local give_up = RealTime() + WAIT_ENTITIES_TIME
-    message_id = message_id + 1
-    local timer_name = 'bgn_net_wait_' .. message_id
+    Net.message_id = (Net.message_id or 0) + 1
+    local timer_name = 'bgn_net_wait_' .. Net.message_id
     timer.Create(timer_name, .1, 0, function()
-      local _, new_values, new_count, still_missing = pcall(Net.Deserialize, payload)
+      local decoded, new_values, new_count, still_missing = pcall(Net.Deserialize, payload)
       if still_missing and RealTime() < give_up then return end
       timer.Remove(timer_name)
-      Execute(receiver, name, ply, new_values, new_count)
+      if decoded and receivers[name] == receiver then Execute(receiver, name, ply, new_values, new_count) end
     end)
     return
   end
@@ -289,8 +315,8 @@ local function Transmit(name, send, ...)
     return
   end
 
-  message_id = message_id + 1
-  local id = message_id
+  Net.message_id = (Net.message_id or 0) + 1
+  local id = Net.message_id
   local text = progress_texts[name]
   local part = 0
   -- One chunk per tick, so big transfers never overflow the reliable channel.
@@ -366,34 +392,63 @@ net.Receive(CHANNEL, function(_, ply)
   -- Drop data nobody listens to before buffering anything.
   if not CanReceive(receivers[name], ply) then return end
   local total = net.ReadUInt(16)
+  if total < 1 or (SERVER and total > math.ceil(CLIENT_BUFFER_LIMIT / CHUNK_SIZE)) then return end
   local id, part, text = 0, 1, nil
   if total > 1 then
     id = net.ReadUInt(32)
     part = net.ReadUInt(16)
     text = net.ReadString()
+    if part < 1 or part > total then return end
   end
 
   local compressed = net.ReadBool()
-  local data = net.ReadData(net.ReadUInt(32))
+  local length = net.ReadUInt(32)
+  local _, bits_left = net.BytesLeft()
+  if length > CHUNK_SIZE or length * 8 > bits_left then return end
+  local data = net.ReadData(length)
+  if not data or #data ~= length then return end
   if total > 1 then
     local sender = SERVER and ply or 'server'
     buffers[sender] = buffers[sender] or {}
     local buffer = buffers[sender][id]
     if not buffer then
+      if SERVER and table.Count(buffers[sender]) >= CLIENT_TRANSFERS_LIMIT then return end
       buffer = {
         parts = {},
-        count = 0
+        count = 0,
+        bytes = 0,
+        name = name,
+        total = total,
+        compressed = compressed,
+        expire = RealTime() + CHUNK_LIFETIME
       }
 
       buffers[sender][id] = buffer
     end
 
-    if not buffer.parts[part] then
-      buffer.parts[part] = data
-      buffer.count = buffer.count + 1
+    if buffer.name ~= name or buffer.total ~= total or buffer.compressed ~= compressed then
+      buffers[sender][id] = nil
+      return
     end
 
-    buffer.expire = RealTime() + CHUNK_LIFETIME
+    if not buffer.parts[part] then
+      if SERVER then
+        local bytes = #data
+        for _, pending in pairs(buffers[sender]) do
+          bytes = bytes + pending.bytes
+        end
+
+        if bytes > CLIENT_BUFFER_LIMIT then
+          buffers[sender][id] = nil
+          return
+        end
+      end
+
+      buffer.parts[part] = data
+      buffer.count = buffer.count + 1
+      buffer.bytes = buffer.bytes + #data
+    end
+
     Progress('bgn_net_' .. id, text, buffer.count, total)
     if buffer.count < total then return end
     buffers[sender][id] = nil
@@ -401,7 +456,7 @@ net.Receive(CHANNEL, function(_, ply)
   end
 
   if compressed then
-    data = util.Decompress(data)
+    data = util.Decompress(data, SERVER and CLIENT_PAYLOAD_LIMIT or nil)
     if not data then return end
   end
 

@@ -1,5 +1,4 @@
 ﻿--
-local fasted_teleport
 local bgn_enable
 local bgn_actors_teleporter
 local max_teleporter
@@ -18,7 +17,11 @@ hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
     return
   end
 
-  bgNPC.Actors.Unregister(ent)
+  if actor then
+    actor:RemoveActor()
+  else
+    bgNPC.Actors.Unregister(ent)
+  end
 end)
 
 local function FindExistCarAndEnterThis(actor)
@@ -37,7 +40,7 @@ local function TeleportActor(actor, pos)
 end
 
 -- states tied to other actors or to a spot: moved away, the others went on talking to empty air
-local BUSY_STATES = {'dialogue', 'arrest', 'arrest_surrender', 'medic_revive', 'police_inspect_body', 'sit_to_chair', 'sit_to_chair_2', 'scenic_npc', 'hold_door', 'breach_door', 'knocked_down',}
+local BUSY_STATES = {'dialogue', 'arrest', 'arrest_surrender', 'medic_revive', 'police_inspect_body', 'sit_to_chair', 'sit_to_chair_2', 'scenic_npc', 'hold_door', 'breach_door', 'knocked_down', 'siege', 'panic', 'search_threat',}
 local cvar_unseen_time = GetConVar('bgn_actor_unseen_time')
 local function UpdateLastSeen(actor, players)
   local now = CurTime()
@@ -69,12 +72,12 @@ timer.Create('BGN_Actors_LastSeen', 0.5, 0, function()
 end)
 
 local function CanRecycle(actor, players)
+  if bgNPC.Combat.IsInCombatRadius(actor) then return false end
   if UpdateLastSeen(actor, players) then return false end
   return CurTime() - actor.__last_player_interaction >= math.max(0, cvar_unseen_time:GetFloat())
 end
 
 local function run_remover_process_async(yield, wait, actors, actors_count)
-  fasted_teleport = GetConVar('bgn_fasted_teleport'):GetBool()
   bgn_enable = GetConVar('bgn_enable'):GetBool()
   bgn_actors_teleporter = GetConVar('bgn_actors_teleporter'):GetBool()
   max_teleporter = GetConVar('bgn_actors_max_teleports'):GetInt()
@@ -83,7 +86,6 @@ local function run_remover_process_async(yield, wait, actors, actors_count)
   player_count = #player_list
   for i = 1, actors_count do
     yield()
-    if not fasted_teleport then yield() end
     player_list = player.GetHumans()
     player_count = #player_list
     local actor = actors[i]

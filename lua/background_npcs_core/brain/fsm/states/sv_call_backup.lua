@@ -37,7 +37,7 @@ local function MarkWanted(actor)
   if not wanted or not cvar_wanted_mode:GetBool() then return end
   for _, enemy in ipairs(actor.enemies) do
     local enemy_actor = IsValid(enemy) and bgNPC.Actors.Get(enemy)
-    if IsValid(enemy) and not (enemy_actor and enemy_actor:HasTeam('police')) then
+    if IsValid(enemy) and not actor:HasTeam(enemy) and not (enemy_actor and enemy_actor:HasTeam('police')) then
       if wanted:HasWanted(enemy) then
         wanted:GetWanted(enemy):UpdateWanted()
       else
@@ -49,7 +49,7 @@ end
 
 bgNPC.States.Register('call_backup', 'danger', {
   pre_start = function(actor, _, data)
-    data.enemy = actor:GetNearEnemy()
+    data.enemy = actor:GetEnemy()
     if not IsValid(data.enemy) then
       actor.backup_until = CurTime() + BACKUP_TIME -- don't ask again right away
       return 'defense'
@@ -63,6 +63,7 @@ bgNPC.States.Register('call_backup', 'danger', {
     for i = 1, math.min(#list, MAX_OFFICERS) do
       local officer = list[i].officer
       officer:AddEnemy(data.enemy)
+      officer:ShareEnemyMemory(actor, data.enemy)
       if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(officer, 'radio', data.enemy, nil, actor:GetNPC(), officer:HasEnemy(data.enemy)) end
       officer:SetState('defense')
     end

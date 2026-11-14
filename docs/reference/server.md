@@ -6,6 +6,14 @@ Run gameplay changes on SERVER. Many methods are declared in sh_ files for compa
 
 ## Actor
 
+`bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)` resolves a valid siege payload owner from the attacker, falling back to the optional inflictor, then resolves a driven vehicle to its driver. Without a valid owner or vehicle conversion it returns the supplied attacker; an engine `IsVehicle()` entity without a valid driver returns nil. Existing one-argument calls remain valid. Damage handlers pass both entities before team/protection checks. Source: `api/sv_combat.lua`.
+
+### ShareEnemyMemory
+
+`actor:ShareEnemyMemory(source, enemy)` copies another actor's observed position and original timestamp only when this actor already knows the enemy, the source memory is at most 60 seconds old and this actor has no newer known position. Returns whether it copied memory. Does not add enemies or change reactions. Source: `actor/components/sh_enemies.lua`.
+
+`bgNPC.Combat.IsInCombatRadius(actor)` returns whether a living combat actor has any living known enemy within a fixed 1000 units (inclusive); this is independent of observer cameras. Source: `api/sv_combat.lua`.
+
 ### AddEnemy
 
 `actor:AddEnemy(ent, reaction, always_visible)`
@@ -30,7 +38,7 @@ Source: `lua/background_npcs_core/actor/components/sh_targets.lua`.
 
 `actor:AddTeam(team_name)`
 
-Adds a non-empty team name without duplicates.
+Adds a non-empty team name without duplicates, applying the same enemy/wanted/arrest reconciliation as `SetTeam`.
 
 Source: `lua/background_npcs_core/actor/components/sh_team.lua`.
 
@@ -46,7 +54,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 
 `actor:CallForHelp(enemy)`
 
-Asks nearby actors to react to enemy; visibility, teams and cooldown still apply.
+Asks living teammates within 1000 units who have LOS to the caller to react to the enemy. Seeing the enemy is not required; FOV is not checked. The caller needs `call_for_help`, a valid enemy and positive health. `BGN_PreCallForHelp` can cancel; arrest protection, enemy restrictions and protection cooldown still apply.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
@@ -606,7 +614,7 @@ Source: `lua/background_npcs_core/actor/components/sh_state.lua`.
 
 `actor:SetTeam(team_data)`
 
-Replaces this actor’s team list; nil clears it.
+Replaces this actor’s team list; nil clears it. SERVER removes mutual enemy entries with new teammates and clears body targets. Joining `residents` removes wanted; sharing the primary officer’s team removes this actor’s arrest. Use this setter instead of editing `data.team` directly.
 
 Source: `lua/background_npcs_core/actor/components/sh_team.lua`.
 
@@ -762,7 +770,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 
 | API | Contract / source |
 |---|---|
-| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden)` | Creates an actor; implementation in `spawner/sv_spawner.lua`; check result before use. |
+| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden, owner)` | Creates an actor; `owner` is optional. When supplied, requires a valid living player (or admin), lets `PlayerSpawnNPC` veto the resolved NPC class before creation, sets creator and emits `PlayerSpawnedNPC` for gamemode counting. Menu/Tool pass their player; automatic population omits it. Check the result before use. Source: `spawner/sv_spawner.lua`. |
 | `bgNPC.Statistics.AddKill(attacker, actor)` | Adds and synchronizes a kill count. |
 | `bgNPC.Statistics.Reset(attacker)`, `ResetAll()` | Clears and synchronizes statistics. |
 | `bgNPC.Actors.Rebind(actor, npc)` | Internal body replacement; updates registries/references and emits `BGN_ActorEntityChanged`. Use the normal vehicle lifecycle instead of calling directly. |
@@ -772,3 +780,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 | `bgNPC.Tasks` | Cooperative work with yield/wait/budget; `core/sh_tasks.lua`. Each realm has its own scheduler. |
 
 `bgNPC.Combat.CanPoliceUseStunstick(officer, suspect)` returns the SERVER baton eligibility from wanted status, kill evidence, that officer's witnessed harm and whether any of the officer's enemies has hit someone from farther than 500 units. `bgNPC.Combat.ResetPoliceThreat(suspect)` clears kill evidence/counters and officer harm records; use only for a completed reset, not initial wanted escalation. `BGN_PostVehicleDamage(actor, attacker, amount)` fires on SERVER after virtual seated health is updated, before death handling.
+
+`bgNPC.Combat.CanWitness(actor, attacker, check_view)` checks a living observer, a valid attacker, distance up to 2500 and LOS to the attacker; actor attackers also require FOV. `check_view = true` requires FOV for any attacker. It returns a visibility boolean and may return the LOS hit entity as its second value. `BGN_ConfirmedDamage(attacker, target, amount)` fires on SERVER after positive actual damage, including seated health, after recording the initiator and evaluating existing-arrest harm limits; initial arrest and witnesses run from this notification. Consensual brawls and ignored attackers are excluded; friend mode keeps its existing player-side reaction override instead of dispatching this notification for player conflicts. `BGN_PostReactionTakeDamage` remains a pre-application reaction hook and does not prove actual damage. See [conflicts](../systems/wanted.md#conflict-memory-and-witnesses).
+
+`bgNPC.Combat.IsAttackingEnemy(actor, target, attacker)` returns a SERVER boolean: the target is already that observer's enemy, while observer and attacker have no enemy-list hostility or `D_HT` in either direction. It reads configured actor relationships, body dispositions (including NextBots) and available entity `Disposition` methods. Invalid entities and direct hits on the observer return false; missing optional methods do not imply hatred. `ResolveEnemy` returns nil for this exception before selection by initiator, team or wanted status; the observer stays out of that hit. The predicate does not change teams, enemy lists or conflict memory.

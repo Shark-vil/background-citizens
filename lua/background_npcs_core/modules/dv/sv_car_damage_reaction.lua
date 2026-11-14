@@ -2,7 +2,7 @@
 -- Not only IsVehicle(): simfphys/LVS/Glide chassis are scripted entities, and a hit on them must reach the occupants too.
 hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginfo)
   if dmginfo:GetDamage() <= 0 then return end
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
   if not bgNPC.Combat.IsAttacker(attacker) then return end
   local cars = bgNPC.DVCars
   for i = 1, #cars do
@@ -16,13 +16,13 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
         police_inside = police_inside or actor:HasTeam('police')
       end
 
-      -- another actor's car rams a police car: the officers react only now and then, otherwise the hit is ignored
+      -- another actor's car rams a police car: a civilian's ram is always ignored, others only get a reaction now and then
       local rammer = bgNPC.Actors.Get(attacker)
-      if police_inside and rammer and rammer:InVehicle() and not bgNPC.Util.Chance(RAM_REACTION_CHANCE) and (dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE)) then return end
+      if police_inside and rammer and rammer:InVehicle() and (dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE)) then if rammer:IsCivilian() or not bgNPC.Util.Chance(RAM_REACTION_CHANCE) then return end end
       for k = 1, #passengers do
         local actor = passengers[k]
-        if actor and actor:IsAlive() and actor:HasTeam('police') then bgNPC.OffenderFromRamming(attacker) end
         if actor and actor:IsAlive() then
+          local allied = actor:HasTeam(attacker)
           -- a shot through the car hits the occupant in full; a crash only shakes them
           local damage = dmginfo:GetDamage()
           if dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE) then damage = damage / math.random(2, 10) end
@@ -32,9 +32,9 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
             actor:GetNPC():TakeDamage(damage, attacker, dmginfo:GetInflictor())
           end
 
-          if actor:IsAlive() and actor:HasTeam('police') then
+          if not allied and actor:IsAlive() and actor:HasTeam('police') then
             actor:ExitVehicle()
-          elseif actor:IsAlive() and math.random(0, 100) <= 5 then
+          elseif not allied and actor:IsAlive() and math.random(0, 100) <= 5 then
             actor:ExitVehicle()
           end
         end

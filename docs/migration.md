@@ -69,6 +69,17 @@ About 50 cvars were added. Removed cvars (`bgn_chunk_*`, dynamic node options ab
 
 Internal `hook.Add` / net identifiers (about 60, e.g. `BGN_ThinkProcess`) disappeared; they are not a public contract.
 
+## Running the 1.13 Classic core
+
+The Classic core (1.13.7) ships inside this addon in `lua/background_npcs_legacy/`, with a trimmed copy of SLibrary (no separate SLibrary addon needed). Choose which core loads with the `bgn_loader core|legacy` command (autocomplete, superadmin or server console). The choice is stored in `data/background_npcs/loader.txt`; the server publishes it to clients through the internal replicated ConVar `bgn_loader_active`:
+
+| Value | Loads |
+|---|---|
+| `core` (default) | `background_npcs_core` (current) |
+| `legacy` | `background_npcs_legacy` (Classic 1.13.7) |
+
+Run `bgn_loader legacy` and **restart the map**; changing it at runtime does nothing until then. Both cores share the `bgn_*` settings, route files and compiled map data. Classic uses its own entities (`bgn_legacy_dv_police`, `bgn_legacy_dv_passenger`) and tools (`bgn_legacy_*`); the tools of the inactive core are hidden from the tool menu. Not carried over: the Classic poll and update-check pages. Tested: both loaders start on `gm_construct` without Lua errors and spawn actors; Classic gameplay was not played through.
+
 ## Limits of this audit
 
 Not checked: behavior in game; semantic equivalence of each compatibility alias beyond its name; DV and DarkRP modules beyond file level. Highest risks: item 1 (recycling) and item 2 (navigation source).

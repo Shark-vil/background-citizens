@@ -1,4 +1,6 @@
-﻿TOOL.Category = 'Background NPCs Debug'
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+if not TOOL.AddToMenu then return end
+TOOL.Category = 'Background NPCs Debug'
 TOOL.Name = '#tool.bgn_scenic_debug.name'
 TOOL.ClientConVar = {
   scene = 'door_knock'

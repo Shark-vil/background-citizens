@@ -22,7 +22,7 @@ function bgNPC:GetWantedSpawnCenter(wanted_level)
 end
 
 function bgNPC:RespawnActor(actor, spawn_position, func)
-  if not actor or not actor:IsAlive() then
+  if not actor or not actor:IsAlive() or actor.siege or bgNPC.Combat.IsInCombatRadius(actor) then
     if func and isfunction(func) then func(false) end
     return
   end

@@ -2,7 +2,7 @@
 	Squads (cvar "bgn_module_tactical_groups"): armed actors of one team that fight near each other act as a group.
 
 	Every UPDATE_PERIOD the actors in the "defense" state are grouped: same team, within SQUAD_RADIUS of the leader,
-	at most MAX_SIZE. The healthiest actor leads; its nearest enemy becomes the target of the whole squad
+	at most MAX_SIZE. The healthiest actor leads; its selected enemy becomes the target of the whole squad
 	(every member gets it as an enemy, so they engage together).
 
 	Formation, facing the target:
@@ -36,7 +36,7 @@ local function HealthFraction(actor)
 end
 
 local function CanJoin(actor)
-  return actor:IsAlive() and actor:GetState() == 'defense' and actor.weapon ~= nil and not actor:HasNoEnemies() and not actor:InVehicle() and not actor:IsMeleeWeapon()
+  return not actor.siege and actor:IsAlive() and actor:GetState() == 'defense' and actor.weapon ~= nil and not actor:HasNoEnemies() and not actor:InVehicle() and not actor:IsMeleeWeapon()
 end
 
 local function SnapToNav(pos)
@@ -92,7 +92,7 @@ local function Build(candidates)
 end
 
 local function Assign(squad)
-  local enemy = squad.leader:GetNearEnemy()
+  local enemy = squad.leader:GetEnemy()
   if not IsValid(enemy) then return end
   local members = squad.members
   local center = Vector()
@@ -100,10 +100,12 @@ local function Assign(squad)
   for _, member in ipairs(members) do
     center:Add(member:GetPos())
     sees = sees or bgNPC.Vision.HasLineOfSight(member:GetNPC(), enemy, 'squad')
+    squad.leader:ShareEnemyMemory(member, enemy)
   end
 
   center:Div(#members)
-  local enemy_pos = enemy:GetPos()
+  local enemy_pos = sees and enemy:GetPos() or squad.leader.enemy_last_position and squad.leader.enemy_last_position[enemy]
+  if not enemy_pos then return end
   local forward = enemy_pos - center
   forward.z = 0
   if forward:LengthSqr() < 1 then forward = squad.leader:GetNPC():GetForward() end
@@ -128,7 +130,7 @@ local function Assign(squad)
     leader:Voice('police_squad_' .. formation)
   end
 
-  local anchor = enemy_pos - forward * ENGAGE_DIST
+  local anchor = sees and enemy_pos - forward * ENGAGE_DIST or enemy_pos
   local depth = 0
   local function Place(list, offsets, base, role)
     for i, member in ipairs(list) do
@@ -142,6 +144,7 @@ local function Assign(squad)
       }
 
       member:AddEnemy(enemy)
+      member:ShareEnemyMemory(leader, enemy)
       if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(member, 'squad', enemy, nil, squad.leader:GetNPC(), member:HasEnemy(enemy)) end
       if role == 'rear' and member.vo_role ~= 'rear' and member:HasTeam('police') then member:Voice('police_squad_rear') end
       member.vo_role = role

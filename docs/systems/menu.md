@@ -33,14 +33,24 @@ config table. Both controls also exist in Classic settings and affect future spa
 Tools are split into **Background NPCs: Editor** (route points, spawn areas, seats) and **Background NPCs: Debugging** (actor inspector, navigation, movement, scenes, carried items). The debug page shares UID selection, visualization modes, distance/limit filters and freeze controls with the inspector Tool.
 
 
+**Behavior → AI** and **Classic → Extensions** contain **React to weapons in hands**
+(`bgn_react_to_lethal_weapon`, SERVER/admin, default `0`). Learning continues while off;
+see [detection, reactions and stored weapon classes](brains.md#lethal-weapons).
+They also contain **Panic and threat search** (`bgn_threat_search`, SERVER/admin, default `0`);
+see [panic and threat search](brains.md#threat-search).
+
 ## Spawn and recycling settings
 
 The **Spawn** page holds the pedestrian settings; the vehicle visibility radius is in **Modules → Decent Vehicle (gear)**. Server defaults:
 
 | Cvar | Default | Meaning |
 | --- | --- | --- |
+| `bgn_spawn_period` | 0 | Pause in seconds between spawner passes. |
+| `bgn_actors_max_teleports` | 10 | Maximum actor teleports per second. |
+| `bgn_actors_teleporter` | 1 | Move eligible unseen actors instead of removing them. |
 | `bgn_spawn_radius` | 3000 | Radius used to find spawn points around players. |
 | `bgn_spawn_block_radius` | 600 | No pedestrian spawns this close to any player. |
+| `bgn_spawn_no_visibility_trace` | 0 | Skip the pedestrian cover trace: a spawn or teleport point in any player's field of view is rejected even behind an obstacle. |
 | `bgn_spawn_radius_visibility` | 2000 | Visibility radius of players. Used only by [wanted](wanted.md): a wanted NPC/actor (not a player) is dropped after 15 s outside every player's field of view or farther than half of this radius; obstacles are not checked. |
 | `bgn_vehicle_spawn_visibility_radius` | 2000 | Within this distance in a player's view direction vehicles spawn only when the whole car body (a grid of points over its size) is hidden behind cover; affects vehicles only. |
 | `bgn_actor_unseen_time` | 30 | Seconds unseen by every player before an eligible actor can be removed or teleported; `0` permits immediate recycling out of sight. |
@@ -161,7 +171,8 @@ No preset is selected when the limits were changed by hand. Presets: `DENSITY` i
 Every change of a setting shows a notice in the bottom right corner, drawn above the menus: a **blue** *SERVER*
 plate (`#03a9f4`) for a server setting (also one changed by the testing mode's *Fix* button), announced to all players
 after the server has applied it, and an **amber** *CLIENT* plate (`#dea909`) for a `bgn_cl_*` setting, shown only to its
-player. A plate has the name and `old > new`; a slider updates one plate instead of stacking new ones, and the limits that
+player. A plate has the name and `old > new`; every change gets a plate (no cap, the stack grows upwards), a plate lives 6 seconds and they leave one by one in the
+order they came; every switch makes a new plate, while a slider changed again updates its own plate in place instead of stacking new ones, and the limits that
 the mod rewrites by itself after `bgn_max_npc` are not announced. If an admin's copy is stale, the server sends the real
 value back quietly.
 

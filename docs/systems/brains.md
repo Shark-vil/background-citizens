@@ -4,11 +4,89 @@ An actor is split into an **actor** (data and rules), a **body** (`actor.body`: 
 engine entity: movement, schedules, relationships, weapons, animation) and a **brain** (`actor.brain`: decisions).
 Bodies and brains exist on the server only.
 
+## Pursuing an occluded target
+
+SERVER keeps a stable combat target through `GetEnemy`: a recent direct attacker takes priority, followed by the siege/squad target and the previous valid enemy. Perception checks every enemy, so a nearer hidden enemy cannot prevent observation of another. Ordinary hidden positions are never refreshed from the current entity position. Teammates, radio backup and siege participants receive the last observed position with its original timestamp; sharing does not renew a sighting.
+
+When the target is hidden, `defense` advances to that remembered position without a minimum firing distance. A hidden-target squad uses a column anchored at the remembered position, without the visible-target 550-unit gap. Cover requires line of sight and ends when sight is lost. With no known position, the actor stops rather than navigating to the hidden entity's current position.
+
+A fixed 1000-unit combat radius (SERVER, no setting) protects a living combat actor from ordinary population removal/recycling and NextBot unstuck teleports while any living known enemy is within that radius, inclusive. It also gates the final respawn operation after asynchronous spawn search. Sieges remain busy until finished. Outside the radius the ordinary unseen timeout and eligibility rules apply. Death, admin cleanup and disabling the addon/type retain their separate paths.
+
+The 60-second search timeout uses the actor's observation/report timestamp, including its original age when shared. Rewriting an NPC's engine memory to steer pursuit does not renew that timeout. Wanted and always-visible exceptions remain. Body replacement transfers the remembered position, timestamp, stable target and recent attacker. Metrocop equipment uses the same selected target as combat, with the existing arrest-target fallback. Both NextBot unstuck teleport paths check the combat radius; normal movement and optional jumps remain available. See the [combat decision tree](wanted.md#combat-continuation).
+
+<a id="lethal-weapons"></a>
+
+## Reaction to weapons in hands
+
+`bgn_react_to_lethal_weapon` is a SERVER setting, **0 by default**. When enabled, once per second living
+`residents`/`police` actors inspect players, NPCs and NextBots, including BGN actors. A target holding a
+learned lethal weapon must be within **800 units inclusive**, in front of the observer's eyes (FOV,
+including NextBot observers), and visible through LOS. Shared-team targets, existing enemies, ignored
+players and players in friend mode are skipped; peaceful mode disables reactions.
+
+The actor picks `GetReactionForDamage(target)` (`at_damage`), as when hurt. `ignore`/`none` adds no enemy.
+Otherwise it requests `AddEnemy(target, reaction)`; if accepted, it stores the reaction and, while calm,
+clears its targets and enters that state. Busy actors retain their state. Enemy-controller, team, arrest,
+medic and addon-hook restrictions still apply. This starts the ordinary FSM/GOAP behavior without
+fabricating damage, conflict records or a wanted assignment. Later police calls and enemy sharing use
+their ordinary rules; the 800-unit/FOV gate applies to initial detection, not those separate systems.
+Holstering the weapon or disabling the setting does not clear enemies; ordinary forgetting still applies.
+
+Learning is always active, including with the checkbox off. On `BGN_OnKilledActor`, SERVER checks the
+attacker's callable `GetActiveWeapon`, validates its returned entity and stores its `GetClass()`. The
+last damage must identify that same attacker. Explosion/vehicle damage and kills by a player inside a
+vehicle are excluded. No prefilled weapon list is supplied; the first qualifying kill teaches a class.
+Classification uses the weapon held at death, not the projectile/inflictor's class.
+
+`systems/sv_lethal_weapons.lua` reads `data/background_npcs/lethal_weapons.json` once into a persistent
+SERVER cache, retained through script reloads. The JSON object maps class names to `true`; all maps share
+the file. Each new class updates the cache and rewrites the full object; duplicate kills and detection
+perform no file reads/writes. CLIENT receives only the setting through the existing cvar synchronization.
+An invalid file is reported and preserved without overwriting for that cache's lifetime; a write failure
+is reported while the learned class remains in memory. Offline edits take effect on the next server/map
+start. Isolated tests: `tests/sv_lethal_weapons.lua` via `bgn_selftest`.
+
+<a id="threat-search"></a>
+
+## Panic and threat search
+
+`bgn_threat_search` is a SERVER setting, **0 by default** (Behavior → AI, Classic → Extensions).
+When enabled, one tick after `BGN_OnKilledActor` (after the ordinary witness reactions to the killing damage),
+SERVER looks for calm living allies of the victim (shared team, not in a vehicle, no enemy in the killer)
+that see the death and **not** the killer: within 1500 units of the victim, a clear `MASK_BLOCKLOS` trace
+**from the victim's position to the actor's eyes** (no view cone; the body itself is filtered out), and
+`Combat.CanWitness(actor, killer, true)` false. One who sees the killer is left to the ordinary witness reactions.
+The spawner never recycles or teleports an actor in `panic` or `search_threat`. Peaceful mode, ignored killers, non-combatant killers and
+deaths in a vehicle start nothing.
+
+- Residents that are neither police nor medics enter `panic`: a scream, a run to a route point hidden from the
+  killer's position (`bgNPC.FindCover` now also takes a position), crouching there; after 15-25 s, `RandomState`.
+- Police and `bandits` (gangs included) enter `search_threat`: they go to a random route point within 200 units of
+  where the killer stood, then patrol random points within 600 units of it (a new point on arrival or after 10 s); they walk instead of running within
+  1000 units of the killer. The search ends after 45 s or when the killer dies.
+
+The incident keeps the class of the killer's weapon at the moment of the kill (`GetActiveWeapon`; a weapon in
+`bgn_arrest_safe_weapons`, no weapon, or a player in a vehicle count as none). With a class, **anyone** holding it
+is a suspect, not only the killer: an innocent with the same weapon can be attacked. Without one, only the killer
+is recognized in person. Allies, ignored entities and players in friend mode are never suspects.
+Every 0.33 s (no faster than the brain update: 0.2 s near players, 1 s far away) the actor checks entities within
+500 units: distance, view cone, then `Vision.HasLineOfSight` last. The same suspect in **3 checks in a row**
+is recognized; a miss or another suspect starts over. `search_threat` then adds it with `GetReactionForDamage`
+(`ignore`/`none` → `defense`), `panic` with `run_from_danger`. A recognized player alone hears
+`sound/background_npcs/threat_alert.wav` from the actor at 60% volume (`EmitSound` with a one-player
+`RecipientFilter`); NPCs and other players hear nothing. A refused `AddEnemy` keeps the state.
+An enemy from another system (a shot, enemy sharing) ends either state as an attack does. Isolated tests:
+`tests/sv_threat_search.lua` via `bgn_selftest`.
+
 ## Donor animations
 
 `bgNPC.Animator` plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.
 
 The server checks active animation viewers every 0.25 seconds and sends the current animation when a ready player enters its PVS, including late connections. One-shot animations retain their original deadline; loops last until stopped. Stopping releases an NPC schedule frozen by Animator if it is still current and no static actor animation owns the body. The client copies skin, bodygroups, color, material, submaterials and model scale at animation start; subsequent appearance changes are not tracked. The `dance` state starts its animation after the previous state's animation is reset.
+
+SERVER `Animator.Play` normally requires a PVS viewer at startup. `settings.require_pvs = false` permits a
+gameplay animation without one; room sieges use it so a closed visibility portal does not prevent deployment.
+Late viewers still receive the remaining animation with its original deadline.
 
 ## Bodies
 
@@ -20,13 +98,13 @@ NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, 
 perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.
 
 
-In `nextbot` mode, SERVER counts each foreign HL2 NPC's dispositions towards all server players and applies the most frequent disposition (`D_HT`, `D_FR`, `D_LI`, `D_NU` or `D_ER`) to nearby BGN NextBot bodies. Ties and an empty player list resolve to `D_NU`. `systems/sv_nextbot_hostility.lua` refreshes this once per second within 2500 units, including changes away from hostility. Initialization uses the same vote; relationships for ordinary HL2 NPC bodies keep their existing rules. No hidden probe NPCs are created. HL2 NPC senses detect `bgn_nextbot` through `FL_OBJECT`, set before engine registration in `Initialize`. The periodic update is skipped in peaceful mode and with `bgn_ignore_another_npc`.
+In `nextbot` mode, SERVER counts each foreign HL2 NPC's dispositions towards all server players and applies the most frequent disposition (`D_HT`, `D_FR`, `D_LI`, `D_NU` or `D_ER`) to nearby BGN NextBot bodies. Ties and an empty player list resolve to `D_NU`. `systems/sv_nextbot_hostility.lua` refreshes this once per second within 2500 units, including changes away from hostility. Initialization uses the same vote for NextBot targets. Foreign NPC dispositions towards ordinary HL2 NPC actor bodies are preserved; detection reads their direct disposition towards the actor (see [wanted and conflicts](wanted.md#conflict-memory-and-witnesses)). No hidden probe NPCs are created. HL2 NPC senses detect `bgn_nextbot` through `FL_OBJECT`, set before engine registration in `Initialize`. The periodic update is skipped in peaceful mode and with `bgn_ignore_another_npc`.
 
 After updating from the probe-based implementation, reload the map to clear legacy probes. `bgn_selftest` includes the player-disposition vote checks; mixed-player votes are pure logic tests.
 
 Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
 back to the armed ones (`ACT_IDLE_SMG1`, `ACT_WALK_RIFLE`, `ACT_RUN_RIFLE`, then the pistol ones). Jumps are off by
-default (`bgn_nextbot_jump`, behavior settings): a stuck bot waits and then teleports to the next path point, and a
+default (`bgn_nextbot_jump`, behavior settings): outside the protected combat radius a stuck bot waits and then teleports to the next path point, and a
 car hit only throws it. With the cvar on, a stuck bot jumps first and a hit adds a jump. An actor leaving a car is
 put at a spot free for its whole body, never inside the car.
 
@@ -40,13 +118,7 @@ put at a spot free for its whole body, never inside the car.
 - A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.
 - Actors of one team never damage or answer each other. `bgn_team_damage 1` lets the damage through,
   they still don't react to it.
-- **Offenders** (`systems/sv_offender.lua`): a civilian (`residents`, not `police`) who rams a police car (a hit with damage) or kills a `residents` actor
-  (a citizen, an officer, a medic) loses `residents` and gets the team `offenders`. Only this actor's `data.team`
-  changes (every actor holds its own copy of the config), so the team immunity no longer covers it. If wanted mode
-  is on and someone saw the kill, it is added to the wanted list: the residents take it as an enemy and react
-  as to a wanted player (arrest, defense, fear, calling the police). It then runs from the nearest resident
-  (`fear`) or, with an officer in sight and `bgn_arrest_mode` on, gives up (40%, `arrest_surrender`). The team is
-  not restored when the wanted time runs out. Not in peaceful mode.
+- **Team protection**: nothing removes a civilian's `residents` team, vehicle collisions included ([wanted](wanted.md)). Ordinary friendly hits/kills do not start fear, retaliation or wanted. `bgn_team_damage` affects health only.
 - **Shared enemies** (`systems/sv_enemy_sharing.lua`, `bgn_enemy_share_period`, default 2 s, `0` = off): an actor
   with enemies (not in `fear`, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
   the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
@@ -56,6 +128,11 @@ put at a spot free for its whole body, never inside the car.
 - A wanted actor (`Actor:IsWanted`, wanted is lost by NPCs exactly like by players) hides: a `defense` reaction
   turns into `retreat`, which fights back only when the enemy is within 190 units; `defense` returns to `retreat`
   when the enemy is over 300 units away and the actor has under 50% of its max health.
+  **Witness check** (same timer): a calm actor not in a vehicle that sees a teammate in `fear`, `run_from_danger` or `dyspnea_danger` with enemies,
+  and itself sees one of that teammate's enemies within 1000 units, takes the enemy too and reacts like a calm one that
+  was asked for help. Fights and other danger states do not count. The scan starts from scared actors within 2500
+  units of a living player, so no traces are spent far from players. It needs both lines of sight, so a scared actor's panic spreads only as far as eyes reach.
+  `AddEnemy` guards (arrest protection, ignored entities, peaceful mode) still apply.
 
 Prop-chair seating (`sit_to_chair`) uses the configured chair models and offsets. The route handles the distant
 approach; within 300 units the body finishes moving to the chair, and seating begins within 60 units.
@@ -83,15 +160,15 @@ the plan and attacked whenever the actor had an enemy, which made fights much mo
 
 - **Facts** are measured by sensors once per second (and right after damage or a new enemy):
   `has_enemy`, `armed`, `is_police`, `low_health`, `enemy_close`, `enemy_armed`, `enemy_police`, `police_called`,
-  `wanted`, `in_cover`, `backup_called`, `outnumbered`, `surrendered`, `desperate`, `can_hold_door`, `enemy_bracing`.
+  `wanted`, `in_cover`, `backup_called`, `outnumbered`, `surrendered`, `desperate`, `can_hold_door`, `enemy_bracing`, `can_siege`.
   `outnumbered` is police only: two or more
   living enemies of the officer within 2000 units, and more of them than living officers there (itself included).
 - **Actions** run states: `attack` → `defense`, `flee` → `fear`, `call_police` → `calling_police`,
   `hide` → `retreat` (wanted actors only), `take_cover` → `take_cover`, `call_backup` → `call_backup`,
-  `surrender` → `arrest_surrender`, `hold_door` → `hold_door`, `breach_door` → `breach_door`.
+  `surrender` → `arrest_surrender`, `hold_door` → `hold_door`, `breach_door` → `breach_door`, `siege` → `siege`.
   An actor can only use actions whose state appears in its `at_damage` / `at_protect` config with a weight
   above zero, except actions registered with `always = true` (`hide`, `take_cover`, `call_backup`, `surrender`,
-  `hold_door`, `breach_door`).
+  `hold_door`, `breach_door`, `siege`).
   A trait action is rolled once per actor: `call_police` with its config share (20 of 100 → 20%). `surrender` is
   not a trait: it is rolled at every attempt (8%, see below).
   An action stays running while its state moves on to a follow-up (`also`, e.g. `fear` → `run_from_danger`).
@@ -156,6 +233,69 @@ if blocked, it stays down and retries. On recovery it restores visibility, colli
 combat/flee behavior, keeping current health. Removing the temporary ragdoll also removes its hidden actor.
 Clients only display the server state/body; they do not choose actions or control doors.
 
+### Sieging a single-exit room
+
+SERVER GOAP fighters of class `npc_metropolice` or `npc_combine_s` can choose `siege` for an enemy last seen
+within 30 s, at a doorway within 1000 units. Enemy memory stores the last visible position; the tactic does not
+aim at a continuously updated position through walls. It requires a loaded NavMesh, including when pedestrian
+routes use the custom provider. Removing the doorway connections must leave a roofed pocket containing the
+remembered position, with no alternate connection around the cut. Adjacent door leaves count as one exit;
+narrow walled NavMesh passages without door entities are also considered if door candidates do not prove a pocket.
+If the target vanished within 300 units of a doorway and the remembered side proves no pocket, the far side of that doorway is tried as the pocket. An actor already inside the pocket never joins; a member that enters it leaves the siege for `defense` without cancelling the others.
+Searches are bounded to 128 areas, 900 units and one floor (80-unit height tolerance); ladders, unknown geometry,
+missing navigation or an unproven pocket decline the tactic. The scenic indoor check alone does not prove one exit.
+Incomplete NavMeshes can omit real escapes such as windows or jumps.
+
+One reservation controls the enemy/entrance. Up to five members of the initiating squad occupy separated
+positions outside it; other armed fighting teammates within 2000 units receive spaced waiting positions at
+least 650 units away (34-unit arrival tolerance). Existing squad membership is captured before the normal squad
+rebuild excludes siege participants. Without a current squad, the nearest eligible allies fill the five places.
+Only actors with a supported waiting animation join. Positioning has a 15 s limit; the 12 s silent wait starts
+after the front group is positioned and rear participants have withdrawn. Both NPC and NextBot bodies suppress
+ordinary shooting during the tactic; siege radio lines remain enabled. Followers can execute the state with an FSM brain;
+the initiating fighter requires GOAP.
+
+An officer holding fire for negotiation cannot initiate or join a siege. Negotiation also excludes actors already in a siege, so the two systems cannot restore each other's weapon capabilities.
+
+Narrow corridors fall back to separated positions along the passage instead of side positions. Members that
+cannot fit near the entrance try the rear positions; if a close eligible reinforcement cannot withdraw, the
+attempt ends rather than leaving an uncoordinated group crowding the active siege.
+
+After waiting, closed rotating doors are kicked with 35% probability or opened normally. An unsupported kick
+falls back to a supported opening gesture, and vice versa; without either animation the doorway is unavailable.
+Combine models can use their gun strike to breach. Existing door-opening/locked-door settings and held-door
+reservations still apply. The operator steps outside the swing and retries opening once if necessary. Doors
+must have started opening before deployment, and the payload path must be clear. Their automatic return delay is temporarily suspended and restored on
+exit; a previously locked door is relocked after the attempt. Door entities are preserved.
+
+The single operator deploys **one** `npc_manhack` (`npc_metropolice`, requires `deploy`) or **one**
+`npc_grenade_frag` (`npc_combine_s`, requires `grenThrow`). The selected model is never replaced.
+Existing donor animation playback prevents native NPC animation events from creating duplicate weapons.
+The grenade uses a traced ballistic path, a 3.5 s fuse and a blast-clearance check for non-enemy actors/players.
+The manhack gets a checked entry direction and two seconds of native directed flight, then ordinary AI;
+it is hostile (`D_HT`) to every current enemy of the operator, friendly (`D_LI`) to the operator's team, neutral (`D_NU`) to everyone else, never becomes wanted, is skipped by the relationship and NextBot-hostility updaters that would override its relations, and removes itself after 30 s. Weapon damage is attributed to its operator.
+The operator opens the door and releases the weapon from the same spot: the throw starts while the leaf is still
+swinging (a retry window of 1.5 s covers a blocked path), and the operator then returns to its slot during the
+fuse. The operator is not part of the blast-clearance check. The group holds another 6 s after deployment. The whole attempt is limited to 50 s and shares a 60 s target
+cooldown. Damage to a participant, loss of an enemy/operator, leaving the pocket, interruption by arrest or
+another state, map cleanup or a navigation reload ends it and restores body control. Clients display the
+state/animations; they do not choose the tactic or spawn weapons.
+
+<a id="hostage-negotiation"></a>
+
+### Hostage negotiation
+
+`systems/sv_negotiation.lua` (SERVER). A frightened non-police actor within 100 units of a player target that stands
+closer to the officer than the target is a hostage: the target hides behind it, so approaching from behind does not
+count. Every officer whose selected target meets this rule holds fire (engine NPCs lose `CAP_USE_WEAPONS`, NextBots skip
+`UpdateCombat`), the first one offers to surrender and warns 5 s before the 20 s deadline. A negotiating officer in
+`defense` keeps its distance: closer than 600 units it stops approaching (squad slots included), closer than 400 it backs off. The talks end quietly when
+the shield stays gone for 3 s; they fail on the deadline or when the player kills anyone. After a failure the officers shoot
+again and the player is not offered talks until he is arrested, drops a wanted level, dies or 120 s pass.
+Negotiation with NPC targets is a separate story scenario and is not implemented.
+
+The hostage test currently uses radius, fear state and relative distance only; it does not check LOS to the hostage or alignment with the firing line. This rule has not been changed by the combat audit fixes.
+
 ### Extending
 
 ```lua
@@ -174,7 +314,7 @@ bgNPC.GOAP.RegisterSet('my_set', { survive = function(ws) return 10 end })
 ## Squads
 
 `bgn_module_tactical_groups` (on by default). Every second actors in `defense` of one team within 1200 units
-form squads of up to 5. The healthiest leads, its nearest enemy becomes the target of every member.
+form squads of up to 5. The healthiest leads, its selected combat enemy becomes the target of every member.
 Formations face the target: `column` when nobody sees it, `wedge` with 4+ healthy members, `line` otherwise.
 The healthiest stand in front, the wounded (< 40% health) form a rear rank. `defense` moves a member to
 `actor.squad.slot`; `bgNPC.Squads.list` holds the current squads.
@@ -199,7 +339,7 @@ and drives on with the siren off. The last 300 units to the body the medic walks
 Some deaths cannot be saved: explosions, vehicle hits and overkill damage always, any other death with the chance
 `bgn_medic_hopeless_chance` (25 %; Behavior > Medics). For those the medic still comes and kneels over the body, but
 instead of reviving says `medic_cannot_save` and leaves (`call.verdict`); only then does an officer take the body.
-Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`), nor for one whose death no living ally of the victim saw.
+Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`), nor for one whose death no living ally of the victim saw, nor for an enemy of the residents or one whose team is fighting them.
 
 When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
 in that area pause: their responders stop heading to the body and return to their ambulance when possible.
@@ -242,7 +382,7 @@ the old check (alive bodies only) left those on the map for good. An actor remov
 registered afterwards (it kept a slot of the type limit). A medic marked `eternal` for a call is released together
 with the call, so it no longer escapes the limit and the remover.
 
-Calling the police is skipped when at least one living officer already has the target as an enemy or a target
+Calling the police is skipped when the target is already wanted, or at least one living officer has it as an enemy or a target
 (`bgNPC.PoliceKnows`, `calling_police` state and the GOAP `police_called` sensor).
 
 ## Delay between skirmishes

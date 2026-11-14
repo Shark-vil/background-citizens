@@ -6,7 +6,7 @@ Realm: **SERVER** (supported usage).
 actor:CallForHelp(enemy)
 ```
 
-Asks nearby actors to react to enemy; visibility, teams and cooldown still apply.
+Asks living teammates within 1000 units who have LOS to the caller to react to the enemy. Seeing the enemy is not required; FOV is not checked. The enemy must not share a team with either the caller or the recipient; this check runs before changing the recipient’s state. The caller needs `call_for_help`, a valid enemy and positive health. `BGN_PreCallForHelp` can cancel; arrest protection, enemy restrictions and protection cooldown still apply.
 
 Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 

@@ -33,7 +33,7 @@ timer.Create('BGN_Timer_NextBotHostility', PERIOD, 0, function()
   if #bots == 0 then return end
   local players = player.GetAll()
   for _, npc in ipairs(ents.GetAll()) do
-    if IsValid(npc) and npc:IsNPC() and not npc.isBgnActor and npc:Health() > 0 then
+    if IsValid(npc) and npc:IsNPC() and not npc.isBgnActor and not npc.bgn_siege_owner and npc:Health() > 0 then
       local pos = npc:GetPos()
       local disposition = GetPlayersDisposition(npc, players)
       for _, actor in ipairs(bots) do

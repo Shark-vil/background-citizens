@@ -1,4 +1,6 @@
-﻿--[[
+﻿TOOL.AddToMenu = BGN_LOADER ~= 'legacy'
+if not TOOL.AddToMenu then return end
+--[[
 	Point editor: edits the custom route graph (bgNPC.NavEditor.graph) on the client.
 	"Load points" pulls the server's graph, "Save points" stores it on the server (custom provider).
 	Nodes are referenced by graph ids.

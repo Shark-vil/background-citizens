@@ -1,6 +1,5 @@
 ﻿--
 local asset = bgNPC.Modules.Get('wanted')
-local TeamParentModule = bgNPC.Modules.Get('team_parent')
 local enable_wanted_mode = GetConVar('bgn_enable_wanted_mode'):GetBool()
 local enable_wanted_police_instantly = GetConVar('bgn_wanted_police_instantly'):GetBool()
 local enable_arrest_mode = GetConVar('bgn_arrest_mode'):GetBool()
@@ -83,7 +82,7 @@ cvars.AddChangeCallback('bgn_wanted_impunity_reduction_period', function(_, _, n
   bgNPC.Util.Log('New value for "impunity_last_reduction_period" - ' .. tostring(impunity_last_reduction_period), 'Wanted Module')
 end, 'bgn_wanted_module_cvar_bgn_wanted_impunity_reduction_period')
 
-hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker', function(attacker, target)
+hook.Add('BGN_ConfirmedDamage', 'BGN_WantedModule_UpdateWantedTimeForAttacker', function(attacker, target)
   if asset:HasWanted(attacker) then
     asset:GetWanted(attacker):UpdateWanted()
   elseif asset:HasWanted(target) then
@@ -92,7 +91,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_WantedModule_UpdateWantedTimeForAttac
 end)
 
 hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', function(actor, attacker)
-  if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode then return end
+  if bgNPC.Modes.IsPeaceful() or not enable_wanted_mode or not IsValid(attacker) then return end
   local AttackerActor = bgNPC.Actors.Get(attacker)
   if AttackerActor and AttackerActor:HasTeam('residents') then return end
   if asset:HasWanted(attacker) then
@@ -101,20 +100,29 @@ hook.Add('BGN_OnKilledActor', 'BGN_WantedModule_UpdateWantedOnKilledActor', func
     local kills = bgNPC.Statistics.GetSum(attacker)
     if WantedClass.next_kill_update <= kills then WantedClass:LevelUp() end
   else
-    local can_see, _ = bgNPC.Vision.AnyActorSees(attacker, actor)
-    if not can_see then return end
-    local is_player = attacker:IsPlayer()
-    if is_player then
-      local current_impunity = (attacker.bgn_wanted_module_impunity or 0) + 1
-      if (enable_wanted_police_instantly and actor:HasTeam('police')) or (impunity_limit > 0 and current_impunity >= impunity_limit) then
-        attacker.bgn_wanted_module_impunity = 0
-        bgNPC.Statistics.Reset(attacker)
-        asset:AddWanted(attacker)
-      elseif impunity_limit > 0 then
-        attacker.bgn_wanted_module_impunity = current_impunity
+    if not attacker:IsPlayer() and not AttackerActor then
+      asset:AddWanted(attacker)
+      return
+    end
+
+    local seen, police_seen = false, false
+    local actors = bgNPC.Actors.GetAll()
+    for i = #actors, 1, -1 do
+      local witness = actors[i]
+      if witness ~= actor and witness:GetNPC() ~= attacker and bgNPC.Combat.CanWitness(witness, attacker, true) then
+        seen = true
+        if witness:HasTeam('police') then police_seen = true end
       end
-    else
-      if enable_wanted_police_instantly and not TeamParentModule:HasParent(attacker, actor) and actor:HasTeam('police') then asset:AddWanted(attacker) end
+    end
+
+    if not seen then return end
+    local current_impunity = (attacker.bgn_wanted_module_impunity or 0) + 1
+    if (enable_wanted_police_instantly and actor:HasTeam('police') and police_seen) or (impunity_limit > 0 and current_impunity >= impunity_limit) then
+      attacker.bgn_wanted_module_impunity = 0
+      bgNPC.Statistics.Reset(attacker)
+      asset:AddWanted(attacker)
+    elseif impunity_limit > 0 then
+      attacker.bgn_wanted_module_impunity = current_impunity
     end
   end
 end)
@@ -124,7 +132,7 @@ hook.Add('BGN_AddWantedTarget', 'BGN_AddWantedTargetFromResidents', function(tar
     if IsValid(actor:GetNPC()) and actor:HasTeam('police') then
       actor:AddEnemy(target)
       if bgNPC.DebugInspector then bgNPC.DebugInspector.Emit(actor, 'wanted', target, nil, nil, actor:HasEnemy(target)) end
-      if actor:HasState('idle') or actor:HasState('walk') then actor:SetState(actor:GetReactionForProtect(target)) end
+      if actor:HasEnemy(target) and (actor:HasState('idle') or actor:HasState('walk')) then actor:SetState(actor:GetReactionForProtect(target)) end
     end
   end
 end)
@@ -146,11 +154,7 @@ hook.Add('BGN_InitActor', 'BGN_AddWantedTargetsForNewNPCs', function(actor)
     for i = 1, wanted_count do
       local enemy = wanted_list[i].target
       actor:AddEnemy(enemy)
-      if actor:HasTeam('police') then
-        actor:SetState('defense')
-      elseif actor:HasTeam('residents') then
-        actor:SetState(actor:GetReactionForProtect(enemy))
-      end
+      if actor:HasEnemy(enemy) then actor:SetState('defense') end
     end
   end
 end)
@@ -163,6 +167,7 @@ hook.Add('PlayerDeath', 'BGN_ResetWantedModeForDeceasedPlayer', function(victim,
 end)
 
 local function UpdateWantedAndSetReaction(actor, enemy)
+  if actor:HasTeam(enemy) then return end
   -- a wanted player given a second chance to give up (sv_surrender.lua): don't turn the arrest into a fight
   local arrest = bgNPC.Modules.Get('player_arrest')
   if arrest:IsProtected(enemy) or (actor:HasState('arrest') and arrest:CanArrest(enemy)) then return end
@@ -187,7 +192,12 @@ timer.Create('BGN_Timer_ResetPlayersImpunityLimit', 1, 0, function()
   if impunity_limit_reduction_period == 0 then return end
   if impunity_last_reduction_period > CurTime() then return end
   impunity_last_reduction_period = CurTime() + impunity_limit_reduction_period
-  for _, ply in ipairs(player.GetHumans()) do
+  local targets = player.GetHumans()
+  for _, actor in ipairs(bgNPC.Actors.GetAll()) do
+    targets[#targets + 1] = actor:GetNPC()
+  end
+
+  for _, ply in ipairs(targets) do
     if IsValid(ply) then
       local current_impunity = ply.bgn_wanted_module_impunity or 0
       if current_impunity > 0 then ply.bgn_wanted_module_impunity = current_impunity - 1 end
@@ -217,8 +227,8 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
       if wait_time < 0 then wait_time = 0 end
       WantedClass:UpdateWaitTime(wait_time)
       for _, actor in ipairs(residents) do
-        if actor:IsAlive() then
-          local npc = actor:GetNPC()
+        local npc = actor:IsAlive() and actor:GetNPC()
+        if IsValid(npc) then
           local dist = npc:GetPos():DistToSqr(enemy:GetPos())
           if dist <= min_distance_detect then
             UpdateWantedAndSetReaction(actor, enemy)

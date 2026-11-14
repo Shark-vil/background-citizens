@@ -67,7 +67,7 @@ Source: `lua/background_npcs_core/actor/sh_actor.lua`.
 
 `actor:GetEnemy()`
 
-Returns the nearest valid enemy or NULL (delegates to GetNearEnemy).
+Returns the selected living enemy or NULL: a direct attacker from the last 5 seconds, then the siege/squad target, then the previous valid combat target, then the nearest living enemy. GetNearEnemy remains the distance-only query. CLIENT uses only its received local data; SERVER owns combat selection.
 
 Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
@@ -301,7 +301,7 @@ Source: `lua/background_npcs_core/actor/components/sh_combat.lua`.
 
 `actor:HasEnemy(ent)`
 
-Returns whether ent is in the enemy list.
+Returns whether ent is in the enemy list. SERVER returns false for a current teammate even if an old list entry remains; CLIENT reads its received list snapshot.
 
 Source: `lua/background_npcs_core/actor/components/sh_enemies.lua`.
 
@@ -625,6 +625,7 @@ Source: `lua/background_npcs_core/api/sh_points.lua`.
 
 ## Data contracts
 
+- `Points.GetRandom` returns a Vector or nil; an empty graph radius query stays empty instead of selecting elsewhere. NavMesh sampling uses actual areas. On CLIENT this API returns nil.
 - `Actors.Get`, `GetByUid`, `GetFirst` and nearest lookups can return nil. `GetAll`, type lists and NPC lists expose internal storage: do not mutate them.
 - `Config.GetActor` returns a cached resolved table or nil: copy before editing. After changing `bgNPC.cfg.actors`, call `Config.ClearCache`; existing actors keep their own copies.
 - `States.Register(name, group, callbacks)` registers behavior callbacks in each realm where executed. Execute AI callbacks on the server.

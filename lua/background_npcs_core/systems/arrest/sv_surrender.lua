@@ -27,11 +27,13 @@ local function IsDisarmed(ply)
 end
 
 hook.Add('EntityTakeDamage', 'BGN_Surrender_LastAttack', function(target, dmginfo)
-  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker())
+  local attacker = bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor())
+  local actor = bgNPC.Actors.Get(target)
+  if actor and actor:HasTeam(attacker) then return end
   if IsValid(attacker) and attacker ~= target and dmginfo:GetDamage() > 0 and (attacker:IsPlayer() or attacker:IsNPC() or attacker:IsNextBot()) and (target:IsPlayer() or target:IsNPC() or target:IsNextBot()) then attacker.bgn_last_attack = CurTime() end
 end)
 
--- An actor on foot the police hit while it holds no weapon and is not fighting gives up with this chance
+-- An actor on foot the police hit (and hunt: a stray bullet never arrests a bystander) while it holds no weapon and is not fighting gives up with this chance
 local UNARMED_SURRENDER_CHANCE = 30
 local COMBAT_STATES = {
   defense = true,
@@ -45,8 +47,8 @@ local COMBAT_STATES = {
 hook.Add('EntityTakeDamage', 'BGN_Surrender_Unarmed', function(target, dmginfo)
   if not cvar_mode:GetBool() or dmginfo:GetDamage() <= 0 or dmginfo:GetDamage() >= target:Health() then return end
   local suspect = bgNPC.Actors.Get(target)
-  local police = bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker()))
-  if not suspect or not police or not police:HasTeam('police') or suspect:HasTeam('police') or not suspect:IsAlive() or suspect:InVehicle() or IsValid(suspect:GetActiveWeapon()) or COMBAT_STATES[suspect:GetState()] or not bgNPC.Util.Chance(UNARMED_SURRENDER_CHANCE) then return end
+  local police = bgNPC.Actors.Get(bgNPC.Combat.ResolveVehicleAttacker(dmginfo:GetAttacker(), dmginfo:GetInflictor()))
+  if not suspect or not police or not police:HasTeam('police') or not police:HasEnemy(target) or suspect:HasTeam('police') or not suspect:IsAlive() or suspect:InVehicle() or IsValid(suspect:GetActiveWeapon()) or COMBAT_STATES[suspect:GetState()] or not bgNPC.Util.Chance(UNARMED_SURRENDER_CHANCE) then return end
   ArrestModule:Surrender(suspect, police)
 end)
 

@@ -81,7 +81,7 @@ local TAGS = {
   },
 }
 
-local LIFETIME, FADE, MAX_VISIBLE = 4, 0.35, 5
+local LIFETIME, FADE, STAGGER = 6, 0.35, 0.4
 local list = Notice.list or {}
 Notice.list = list
 local function IsRussian()
@@ -96,8 +96,12 @@ local function IsRussian()
   return language == 'ru' or language == 'russian'
 end
 
+local fonts = {}
 local function Font(size)
   local name = 'BGN.Notice.' .. size
+  -- Draw() asks for fonts every frame: create each size once, CreateFont per frame drops the FPS
+  if fonts[name] then return name end
+  fonts[name] = true
   surface.CreateFont(name, {
     font = 'Tahoma',
     size = size,
@@ -110,13 +114,22 @@ end
 local function Add(scope, name, old_value, new_value)
   local key = scope .. name
   local now = RealTime()
+  -- Every switch (0/1) makes a new plate; only a slider, which fires on every step, updates its plate in place
+  local is_switch = new_value == '0' or new_value == '1'
   for i, item in ipairs(list) do
-    if item.key == key then
-      item.new, item.born, item.dead = new_value, item.born, now + LIFETIME
+    if item.key == key and not is_switch then
+      item.new, item.dead = new_value, now + LIFETIME
+      -- keep the leaving order: the plates after it wait for it
+      for j = i + 1, #list do
+        list[j].dead = math.max(list[j].dead, list[j - 1].dead + STAGGER)
+      end
       return
     end
   end
 
+  -- Like the engine's notices: no cap, each one lives its own time, and they leave one by one in the order
+  -- they came (the list is ordered, so the gap to the previous one keeps `dead` increasing)
+  local last = list[#list]
   list[#list + 1] = {
     key = key,
     scope = scope,
@@ -124,12 +137,8 @@ local function Add(scope, name, old_value, new_value)
     old = old_value,
     new = new_value,
     born = now,
-    dead = now + LIFETIME
+    dead = math.max(now + LIFETIME, last and last.dead + STAGGER or 0)
   }
-
-  while #list > MAX_VISIBLE do
-    table.remove(list, 1)
-  end
 end
 
 local function Fallback(scope, name, new_value)

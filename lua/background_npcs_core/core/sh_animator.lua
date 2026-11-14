@@ -13,6 +13,7 @@
 			settings.loop            restart until stopped
 			settings.stop_on_damage  stop when the entity takes damage
 			settings.not_parent      do not parent the animator to the entity
+			settings.require_pvs     default true; false allows server gameplay animations without viewers
 		Animator.Stop(entity)
 		Animator.IsPlaying(entity)
 	Client hook:
@@ -86,14 +87,14 @@ if SERVER then
     if not name or not IsValid(entity) or entity:IsDormant() then return false end
     -- hidden (an actor in a car): the client copy would be drawn anyway, on an animator with no visible parent
     if entity:GetNoDraw() then return false end
-    if not AnyPlayerInPVS(entity) then return false end
+    settings = settings or {}
+    if settings.require_pvs ~= false and not AnyPlayerInPVS(entity) then return false end
     local model = animations[name]
     if not model then
       if not util.IsValidModel(name) then return false end
       model = name
     end
 
-    settings = settings or {}
     Animator.Stop(entity)
     local animator = ents.Create('prop_dynamic')
     if not IsValid(animator) then return false end

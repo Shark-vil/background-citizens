@@ -43,9 +43,9 @@ local function WitnessedHarm(victim, attacker, amount)
   local suspect = Combat.ResolveVehicleAttacker(attacker)
   if not allied or not IsValid(suspect) or suspect == victim or not Combat.IsAttacker(suspect) then return end
   for _, officer in ipairs(Actors.GetInRadius(victim:GetPos(), 2500)) do
-    if officer:IsAlive() and officer:HasTeam('police') and officer:HasTeam(allied) and not officer:HasTeam(suspect) then
+    if officer:IsAlive() and officer:HasTeam('police') and officer:HasTeam(allied) and not officer:HasTeam(suspect) and not Combat.IsAttackingEnemy(officer, victim, suspect) then
       local npc = officer:GetNPC()
-      if npc == victim or bgNPC.Vision.HasLineOfSight(npc, suspect, 'witness') or bgNPC.Vision.HasLineOfSight(npc, victim, 'witness') then
+      if npc == victim or Combat.CanWitness(officer, suspect) then
         suspects[suspect] = true
         officer.police_harm = officer.police_harm or {}
         local harm = officer.police_harm[suspect] or {
@@ -70,6 +70,8 @@ end
 local function MarkRangedAttack(victim, attacker)
   local suspect = Combat.ResolveVehicleAttacker(attacker)
   if not IsValid(victim) or not IsValid(suspect) or suspect == victim or not Combat.IsAttacker(suspect) then return end
+  local allied = Actors.Get(victim) or victim.BGN_ACTOR_OBJECT
+  if allied and allied:HasTeam(suspect) then return end
   if suspect:GetPos():DistToSqr(victim:GetPos()) <= RANGED_DIST_SQR then return end
   suspect.bgn_ranged_attack, suspects[suspect] = true, true
 end
@@ -77,8 +79,9 @@ end
 Combat.MarkRangedAttack = MarkRangedAttack
 hook.Add('PostEntityTakeDamage', 'BGN_PoliceWitnessedHarm', function(victim, dmg, took)
   if not took then return end
-  WitnessedHarm(victim, dmg:GetAttacker(), dmg:GetDamage())
-  if victim:IsPlayer() or victim:IsNPC() or victim:IsNextBot() then MarkRangedAttack(victim, dmg:GetAttacker()) end
+  local attacker = Combat.ResolveVehicleAttacker(dmg:GetAttacker(), dmg:GetInflictor())
+  WitnessedHarm(victim, attacker, dmg:GetDamage())
+  if victim:IsPlayer() or victim:IsNPC() or victim:IsNextBot() then MarkRangedAttack(victim, attacker) end
 end)
 
 hook.Add('BGN_PostVehicleDamage', 'BGN_PoliceWitnessedHarm', function(actor, attacker, amount)

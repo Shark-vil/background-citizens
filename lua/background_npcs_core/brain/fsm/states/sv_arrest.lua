@@ -25,16 +25,9 @@ hook.Add('BGN_PreCallForHelp', 'BGN_PlayerArrest', function(actor, enemy)
   return ArrestModule:GetTarget(enemy).arrested
 end)
 
-hook.Add('BGN_OnKilledActor', 'BGN_PlayerArrest', function(_, attacker)
-  if not ArrestModule:HasTarget(attacker) then return end
-  local ArrestComponent = ArrestModule:GetTarget(attacker)
-  if not ArrestComponent.arrested then return end
-  ArrestModule:NotSubjectToArrest(attacker)
-end)
-
-hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, target, reaction)
+hook.Add('BGN_ConfirmedDamage', 'BGN_PlayerArrest', function(attacker, target)
   if not GetConVar('bgn_arrest_mode'):GetBool() then return end
-  if attacker:IsPlayer() and WantedModule:HasWanted(attacker) then return end
+  if WantedModule:HasWanted(attacker) then return end
   local TargetActor = bgNPC.Actors.Get(target)
   local AttackerActor = bgNPC.Actors.Get(attacker)
   -- players and actors (NextBot actors too, not IsNPC): a gangster in a shoot-out may give up
@@ -51,21 +44,22 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
       end
     end
 
+    if PoliceActor:GetNPC() ~= target and not bgNPC.Combat.CanWitness(PoliceActor, attacker) then return end
     local enemy = bgNPC.Combat.ResolveEnemy(PoliceActor, target, attacker)
-    if enemy ~= attacker then
-      -- the officer shot a non-police actor (a gangster): the arrest below skips its damage reaction, so it answers here
-      if TargetActor and TargetActor ~= PoliceActor and not TargetActor:HasTeam('police') and reaction and TargetActor:EqualStateGroup('calm') then
-        TargetActor:AddEnemy(attacker)
-        TargetActor:SetState(reaction, nil, true)
-      end
+    if not IsValid(enemy) then return end
+    if not enemy:IsPlayer() and not bgNPC.Actors.Get(enemy) then
+      PoliceActor:AddEnemy(enemy)
+      return
+    end
 
+    if enemy ~= attacker then
       target = attacker
       attacker = enemy
       TargetActor = bgNPC.Actors.Get(target)
       AttackerActor = bgNPC.Actors.Get(attacker)
     end
 
-    ArrestModule:AddTarget(attacker, PoliceActor)
+    if not ArrestModule:AddTarget(attacker, PoliceActor) then return end
     if PoliceActor:InVehicle() then PoliceActor:ExitVehicle() end
     -- the surrender first: the arrest state checks it on start and shoots a target that isn't giving up
     if AttackerActor and not AttackerActor:HasState('arrest_surrender') and IsHurt(attacker) and bgNPC.Util.Chance(5) then
@@ -81,7 +75,7 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
       TargetActor:AddEnemy(attacker)
       if not TargetActor:EqualStateGroup('danger') then TargetActor:SetState('fear') end
     end
-    return false
+    return
   else
     local ArrestComponent = ArrestModule:GetTarget(attacker)
     if not ArrestComponent then return end
@@ -94,12 +88,10 @@ hook.Add('BGN_PreReactionTakeDamage', 'BGN_PlayerArrest', function(attacker, tar
         AttackerActor:SetState('arrest_surrender', nil, true)
         policeActor:AddTarget(attacker)
         policeActor:SetState('arrest', nil, true)
-        return true
+        return
       end
     end
-
-    -- any damage to any actor during the arrest ends it: the officers go back to combat, witnesses react as usual
-    if ArrestComponent.arrested then ArrestModule:NotSubjectToArrest(attacker) end
+    -- Harm limits were evaluated by ArrestModule:RecordDamage before this hook.
   end
 end)
 
@@ -109,16 +101,12 @@ local function OnSetDefense(actor)
   local TargetActor = bgNPC.Actors.Get(target)
   if not IsValid(target) or not ArrestModule:CanArrest(target) or (TargetActor and not TargetActor:HasState('arrest_surrender')) then
     actor:RemoveAllTargets()
-    if IsValid(target) then
-      actor:AddEnemy(target)
-      if target:IsPlayer() and target:Alive() and ArrestModule:HasTarget(target) and GetConVar('bgn_arrest_mode'):GetBool() and GetConVar('bgn_enable_wanted_mode'):GetBool() and not bgNPC.Modes.IsPeaceful() and not WantedModule:HasWanted(target) then WantedModule:AddWanted(target) end
-    end
+    if IsValid(target) then actor:AddEnemy(target) end
     return 'defense'
   end
 end
 
--- Detention is shared by every officer of the arrest, so each officer only adds or drops its own hold:
--- an officer far away used to reset the flag every tick and restart the warning and the countdown.
+-- Keep detention ownership explicit so an observing officer cannot restart the countdown.
 local function SetHold(ArrestComponent, actor, hold)
   local holders = ArrestComponent.holders
   holders[actor] = hold or nil
@@ -141,6 +129,9 @@ bgNPC.States.Register('arrest', 'guarded', {
       return
     end
 
+    ArrestModule:CheckCompliance(target, actor)
+    -- Escalation may remove an actor's arrest record when it becomes wanted.
+    if not ArrestModule:HasTarget(target) then return end
     local defense = OnSetDefense(actor)
     if defense then
       Leave(actor, function() actor:SetState(defense) end)
@@ -154,6 +145,7 @@ bgNPC.States.Register('arrest', 'guarded', {
     npc.bgn_arrest_aim_target = primary and target or nil
     actor:GetBody():SetEnemy(NULL)
     actor:GetBody():SetAlertLevel('alert')
+    if ArrestComponent.policeActor ~= actor then return end
     if npc:GetPos():DistToSqr(target:GetPos()) > 40000 then
       if actor:IsAnimationPlayed() then actor:ResetSequence() end
       actor:WalkToTarget(target, 'run')
