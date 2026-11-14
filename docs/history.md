@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 dialogue fix (publication not verified): random state phrases and ambient coughs no longer interrupt conversation participants, including gathering and player-interruption phases. See [conversations](systems/conversations.md).
+
 Local 2.5.1 follow-up fix (publication not verified): vehicle exits and lethal damage tolerate an already removed DV occupant entity; wanted detection skips living actors without a valid current entity. Stored character identity/health and normal exit obstruction checks are preserved. See [vehicles](systems/vehicles.md) and [regressions](systems/testing.md#core-engineering-audit-regressions).
 
 Local 2.5.1 engineering audit (publication not verified): corrected disabled mechanics, recurring services,
