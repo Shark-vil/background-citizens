@@ -44,6 +44,9 @@ lua.execute('''
     function vec.__sub(a,b) return Vector(a.x-b.x,a.y-b.y,a.z-b.z) end
     function vec.__mul(a,b) return Vector(a.x*b,a.y*b,a.z*b) end
     function vec:Distance(b) return math.sqrt(self:DistToSqr(b)) end
+    function vec:Dot(b) return self.x*b.x+self.y*b.y+self.z*b.z end
+    function vec:Cross(b) return Vector(self.y*b.z-self.z*b.y,self.z*b.x-self.x*b.z,self.x*b.y-self.y*b.x) end
+    function vec:GetNormalized() return self*(1/self:Distance(Vector())) end
     function vec:Angle() return Angle(0,0,0) end
     local ang={}; ang.__index=ang
     function Angle(p,y,r) return setmetatable({p=p or 0,y=y or 0,r=r or 0},ang) end

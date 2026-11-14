@@ -446,7 +446,7 @@ server.execute('''
     hook.Run('BGN_OnKilledActor',actor,a); assert(not wanted:HasWanted(a))
     hook.Run('BGN_OnKilledActor',actor,a); assert(wanted:HasWanted(a),'threshold fires on the specified kill')
     local detections=0
-    local npc={GetPos=function() return Vector(1000,0,0) end}
+    local npc={valid=true,GetPos=function() return Vector(1000,0,0) end}
     a.GetPos=function() return Vector(0,0,0) end
     local resident={IsAlive=function() return true end, GetNPC=function() return npc end,
         HasTeam=function() return false end,GetReactionForProtect=function() return 'fear' end,SetState=function() end,
@@ -1071,7 +1071,7 @@ vehicles.execute('''
         function e:GetMaxHealth() return self.maxhp end
         function e:SetHealth(v) self.hp=v end
         function e:SetMaxHealth(v) self.maxhp=v end
-        function e:GetPos() return self.pos end
+        function e:GetPos() assert(self.valid,'NULL GetPos'); return self.pos end
         function e:SetPos(v) self.pos=v end
         function e:GetAngles() return {y=0} end
         function e:Clip1() return self.clip1 end
@@ -1081,7 +1081,7 @@ vehicles.execute('''
         function e:GetActiveWeapon() return self.weapon end
         function e:Remove() self.valid=false; if self.weapon then self.weapon.valid=false end end
         function e:SetNW2Bool() end
-        function e:GetNWEntity() return self.seat end
+        function e:GetNWEntity() assert(self.valid,'NULL GetNWEntity'); return self.seat end
         function e:SetAngles() end
         function e:SetSkin() end
         function e:SetModelScale() end
@@ -1107,7 +1107,7 @@ vehicles.execute('''
         function a:GetAngles() return self.npc:GetAngles() end
         function a:GetType() return 'police' end
         function a:GetActiveWeapon() return self.npc.weapon end
-        function a:Health() return self.npc:Health() end
+        function a:Health() return IsValid(self.npc) and self.npc:Health() or self.vehicle_body and self.vehicle_body.health or 0 end
         function a:HasTeam(team) return team=='police' end
         function a:HasState(s) return self.state==s end
         function a:EqualStateGroup(g) return g=='calm' and (not self.state or self.state=='walk') end

@@ -137,12 +137,14 @@ end
 
 -- squeeze: other actors (the officers at the door) do not block the exit, only the world and props do
 local function FindVehicleExitPos(vehicle, saved, model, squeeze)
+  -- EntityRemoved evacuates a living character after its DV model has already gone.
+  model = IsValid(model) and model or nil
   local mins, maxs = vehicle:GetModelBounds()
   local pos = vehicle:GetPos()
-  local forward = model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
+  local forward = model and model.GetVehicleForward and model:GetVehicleForward() or vehicle:GetForward()
   local right = forward:Cross(vehicle:GetUp()):GetNormalized()
-  local seat = model:GetNWEntity('Seat')
-  local seat_pos = IsValid(seat) and seat:GetPos() or model:GetPos()
+  local seat = model and model:GetNWEntity('Seat')
+  local seat_pos = IsValid(seat) and seat:GetPos() or model and model:GetPos() or pos
   if seat == vehicle then
     local eyes = vehicle:GetAttachment(vehicle:LookupAttachment('vehicle_driver_eyes'))
     if eyes then seat_pos = eyes.Pos end
@@ -178,7 +180,7 @@ local function FindVehicleExitPos(vehicle, saved, model, squeeze)
     local ground = util.TraceLine({
       start = candidate,
       endpos = candidate - Vector(0, 0, 500),
-      filter = {model, vehicle}
+      filter = {vehicle, model}
     })
 
     -- A free floor below a bridge is not an exit beside the car.

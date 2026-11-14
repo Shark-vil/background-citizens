@@ -2,11 +2,13 @@
 
 ## Core engineering audit regressions
 
-`python tools/test_core_audit.py` runs 15 isolated LuaJIT/lupa tests from
+`python tools/test_core_audit.py` runs 17 isolated LuaJIT/lupa tests from
 `tests/sv_engineering_audit.lua`; SERVER `bgn_selftest` loads the same file on demand without live entities.
 The cases cover scheduler mutations, recurring services, mechanics, UID/snapshot reloads, client retirement,
 malformed/chunked network input, navigation, GOAP, appearance and gamemode spawn permission/accounting,
-regeneration, spawnmenu IO, string UID LOD and client seat downloads. All 15 fail against the starting `dev`
+regeneration, spawnmenu IO, string UID LOD and client seat downloads. Follow-up cases cover forced exit,
+blocked exits and lethal damage without the DV visual, plus wanted observers awaiting a replacement entity.
+All 17 fail against the starting `dev`
 with `--baseline` and pass after these changes. This models engine calls; it is not a native game result.
 See [audit decisions and remaining limits](../core-audit.md).
 

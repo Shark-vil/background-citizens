@@ -20,6 +20,8 @@
 
 ## Интеграция
 
+Серверная проверка обнаружения требует живого Actor и валидной текущей сущности. Сидящий наблюдатель, ожидающий замены тела, не обновляет таймер розыска до восстановления сущности; одного `Actor:IsAlive()` недостаточно, чтобы гарантировать её наличие в движке.
+
 Получайте `local wanted = bgNPC.Modules.Get('wanted')` после загрузки систем; до этого либо в другом окружении возможен nil. Запросы: `wanted:HasWanted(entity)`, `GetWanted(entity)`, `GetAllWanted()`. Изменяйте на SERVER через `AddWanted(entity, time)`, `RemoveWanted(entity)`; повторное добавление не сбрасывает и не продлевает таймер. Для защищённого актора residents/medics `AddWanted` возвращает nil. Возвращённая запись поддерживает `UpdateWanted(time)`, `SetLevel(level)`, `LevelUp()`, `LevelDown()`; неположительный SetLevel снимает розыск, значения выше 5 ограничиваются.
 
 Хуки: `BGN_AddWantedTarget`, `BGN_RemoveWantedTarget`, `BGN_WantedLevelUp`, `BGN_WantedLevelDown`. При `BGN_PlayerReady` сервер передаёт уже действующие записи. Клиентские настройки HUD не отключают серверную систему.

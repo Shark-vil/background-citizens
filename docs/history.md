@@ -1,5 +1,7 @@
 # Version history and documentation baseline
 
+Local 2.5.1 follow-up fix (publication not verified): vehicle exits and lethal damage tolerate an already removed DV occupant entity; wanted detection skips living actors without a valid current entity. Stored character identity/health and normal exit obstruction checks are preserved. See [vehicles](systems/vehicles.md) and [regressions](systems/testing.md#core-engineering-audit-regressions).
+
 Local 2.5.1 engineering audit (publication not verified): corrected disabled mechanics, recurring services,
 scheduler mutation, reload identity/snapshot counters, empty/sparse navigation queries, GOAP planning,
 appearance selection, regeneration and client receivers. Removed per-entity spawnmenu config IO;

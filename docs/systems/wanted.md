@@ -20,6 +20,8 @@ Nothing in the addon removes a civilian's `residents` team. Vehicle collisions a
 
 ## Integration
 
+SERVER detection requires both a living Actor and a valid current entity. A seated observer awaiting body replacement cannot refresh the wanted timer until its entity is restored; `Actor:IsAlive()` alone does not guarantee an engine entity exists.
+
 Obtain `local wanted = bgNPC.Modules.Get('wanted')` after systems load; it may be nil before then or in a different realm. Query `wanted:HasWanted(entity)`, `GetWanted(entity)` and `GetAllWanted()`. Change state on SERVER with `AddWanted(entity, time)` and `RemoveWanted(entity)`; adding an existing target does not reset or extend its timer. `AddWanted` returns nil for a protected resident/medic actor. The returned wanted record supports `UpdateWanted(time)`, `SetLevel(level)`, `LevelUp()` and `LevelDown()`; nonpositive SetLevel removes wanted, levels above 5 are capped.
 
 Hooks include `BGN_AddWantedTarget`, `BGN_RemoveWantedTarget`, `BGN_WantedLevelUp`, `BGN_WantedLevelDown`. The server sends existing records to a player on `BGN_PlayerReady`. Client UI options do not disable the authoritative server system.

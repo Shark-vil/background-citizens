@@ -465,3 +465,100 @@ bgNPC.Test.Add('audit.string_uid_lod', function(check)
   w.Resume('BGN_ActorUpdate')
   check(actor.lod_phase == 123 and actor.uid == 'custom-character', 'LOD uses a stable numeric phase without changing a custom UID')
 end)
+
+bgNPC.Test.Add('audit.vehicle_missing_model', function(check)
+  local w = World()
+  w.bgNPC.Actor = {}
+  w.bgNPC.Combat = {ResolveVehicleAttacker = function() end, IsAttacker = function() return false end}
+  w.bgNPC.Actors.GetAll = function() return {} end
+  w.bgNPC.Actors.Get = function() end
+  w.GetConVar = function() return {GetFloat = function() return 0 end} end
+  w.Load('actor/components/sh_vehicle.lua')
+  local model = {valid = false}
+  for _, name in ipairs({'GetNWEntity', 'GetVehicleForward', 'GetPos'}) do
+    model[name] = function() error('NULL entity: ' .. name) end
+  end
+
+  local car = {valid = true}
+  function car:GetModelBounds() return Vector(-100, -50, 0), Vector(100, 50, 80) end
+  function car:GetPos() return Vector(1000, 0, 0) end
+  function car:GetForward() return Vector(1, 0, 0) end
+  function car:GetUp() return Vector(0, 0, 1) end
+  function car:GetAngles() return Angle() end
+  function car:LocalToWorld(pos) return self:GetPos() + pos end
+  local provider = {IsValid = function() return true end, GetVehicle = function() return car end}
+  local saved = {health = 37, mins = Vector(-16, -16, 0), maxs = Vector(16, 16, 72), model = 'original.mdl', bodygroups = {}}
+  local actor = setmetatable({uid = 'crew', npc = model, vehicle = provider, vehicle_body = saved, enemies = {}}, {__index = w.bgNPC.Actor})
+  function actor:GetNPC() return self.npc end
+  function actor:Health() return saved.health end
+  function actor:GetAngles() return Angle() end
+  function actor:HasState() return false end
+  function actor:GetEnemy() end
+  function actor:CreateFakePlayerMethodsForNPC() end
+  function actor:Remove() self.is_removed = true end
+  local traces = 0
+  w.util.TraceLine = function(data)
+    traces = traces + 1
+    check(data.filter[1] == car, 'the chassis remains in the trace filter without a model')
+    return {Hit = true, HitNormal = Vector(0, 0, 1), HitPos = Vector(data.start.x, data.start.y, 0)}
+  end
+  w.util.TraceHull = function() return {Hit = true} end
+  w.util.IsInWorld = function() return true end
+  check(not actor:ExitVehicle(true) and actor.vehicle_body == saved and traces > 0, 'missing visual still searches exits; blocked geometry retains the character')
+  local corpse_pos, deaths = nil, 0
+  w.util.TraceHull = function() return {Hit = false} end
+  local function Body()
+    return setmetatable({valid = true, SetPos = function(_, pos) corpse_pos = pos end}, {__index = function() return function() end end})
+  end
+  local restored_health, detached
+  saved.class, saved.keyvalues, saved.weapons = 'npc_citizen', {}, {}
+  w.ents = {Create = function(class)
+    check(class == saved.class, 'exit restores the original body class')
+    local npc = Body()
+    npc.SetHealth = function(_, hp) restored_health = hp end
+    return npc
+  end}
+  w.bgNPC.Actors.Rebind = function(a, npc) a.npc = npc end
+  provider.driver = actor
+  function provider:SetDriver(value) detached = value == nil end
+  check(actor:ExitVehicle(true) and actor.uid == 'crew' and restored_health == 37 and detached and not actor.vehicle_body, 'forced exit restores stored health and keeps identity after model removal')
+  actor.npc, actor.vehicle, actor.vehicle_body = model, provider, saved
+  w.ents = {Create = function(class)
+    check(class == 'prop_ragdoll', 'lethal damage creates the original character corpse')
+    return Body()
+  end}
+  w.hook.Run = function(name) if name == 'OnNPCKilled' then deaths = deaths + 1 end end
+  actor:TakeVehicleDamage(100)
+  check(actor.is_removed and deaths == 1 and corpse_pos.x == 1000 and corpse_pos.z == 2, 'lethal damage works after visual removal and leaves the corpse beside the car')
+  actor:TakeVehicleDamage(100)
+  check(deaths == 1, 'a removed character cannot die twice')
+end)
+
+bgNPC.Test.Add('audit.wanted_missing_observer', function(check)
+  local w = World()
+  local detections, refreshes = 0, 0
+  local enemy = {valid = true, IsPlayer = function() return true end, GetPos = function() return Vector() end}
+  local wanted = {target = enemy, time_reset = 100, UpdateWaitTime = function() end, UpdateWanted = function() refreshes = refreshes + 1 end}
+  local asset = {GetAllWanted = function() return {wanted} end, ClearDeath = function() end}
+  local arrest = {IsProtected = function() return false end}
+  w.bgNPC.Modules = {Get = function(name) if name == 'wanted' then return asset elseif name == 'player_arrest' then return arrest end end}
+  w.bgNPC.Modes = {IsPeaceful = function() return false end}
+  w.GetConVar = function() return {GetBool = function() return true end, GetInt = function() return 0 end, GetFloat = function() return 0 end} end
+  local function Observer(valid, alive)
+    local npc = {valid = valid, GetPos = function() check(valid, 'NULL observer must not be queried'); return Vector() end}
+    return {
+      IsAlive = function() return alive end, GetNPC = function() return npc end,
+      HasTeam = function() return false end, EqualStateGroup = function() return true end,
+      HasState = function() return false end, AddEnemy = function() detections = detections + 1 end
+    }
+  end
+  local observers = {Observer(false, true), Observer(true, false), Observer(true, true)}
+  w.bgNPC.Actors.GetByTeam = function() return observers end
+  w.Load('systems/wanted/sv_wanted_actions.lua')
+  local update = w.timers.BGN_Timer_CheckingTheWantesStatusOfTargets
+  update()
+  check(detections == 1 and refreshes == 1, 'only a living observer with a current entity can refresh wanted status')
+  observers[3] = nil
+  update()
+  check(detections == 1 and refreshes == 1, 'an actor awaiting a replacement body cannot refresh wanted status alone')
+end)
