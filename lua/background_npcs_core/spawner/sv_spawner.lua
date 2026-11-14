@@ -13,6 +13,7 @@ local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local LocalToWorld = LocalToWorld
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
+local cvar_no_visibility_trace = GetConVar('bgn_spawn_no_visibility_trace')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
 --
@@ -64,7 +65,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
     local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
     -- Offscreen spots outside the block radius must stay available, as in 1.x.
     if in_view then
-      if not util.IsInWorld(node_position) then return false end
+      if cvar_no_visibility_trace:GetBool() or not util.IsInWorld(node_position) then return false end
       -- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
       -- and that counted as "hidden behind something" - actors appeared right in front of the player
       for b = 1, #BODY_POINTS do
@@ -76,7 +77,8 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 end
 
 local function FindFrontSpawnPosition(points, all_players, target_entity)
-  if not Chance(50) then return end
+  -- without the cover trace every in-view point is rejected, so the front search can't succeed
+  if cvar_no_visibility_trace:GetBool() or not Chance(50) then return end
   local checked = {}
   for i = 1, math.min(#points, 32) do
     local pos = points[i]:GetPos()
