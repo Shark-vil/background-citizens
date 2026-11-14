@@ -1,5 +1,6 @@
 ﻿--[[
-	Medics: every actor death (not in a vehicle, not killed by the police, seen by a living ally of the victim) is a call. A free medic takes it, otherwise one is spawned
+	Medics: every actor death (not in a vehicle, not killed by the police, seen by a living ally of the victim, not an enemy of the
+	residents nor of a team fighting them) is a call. A free medic takes it, otherwise one is spawned
 	near the body (bgNPC:FindSpawnPosition) with an ambulance when Decent Vehicle and the medic config have one.
 	The ambulance drives to the body with the siren (npc_dvbgn_police, actor.drive_target_pos), the medic gets out,
 	revives the actor (state "medic_revive") and drives away. A body can be revived for CORPSE_TIME seconds,
@@ -82,6 +83,25 @@ hook.Add('PostCleanupMap', 'BGN_Medics_ClearCalls', function()
   table.Empty(calls)
 end)
 
+-- @return boolean the actor is at war with the residents (either side counts)
+local function FightsResidents(actor)
+  local npc = actor:GetNPC()
+  for _, resident in ipairs(bgNPC.Actors.GetByTeam('residents')) do
+    if resident:HasEnemy(npc) or actor:HasEnemy(resident:GetNPC()) then return true end
+  end
+  return false
+end
+
+-- Only the innocent are saved: not an enemy of the residents, nor one of a team fighting them right now.
+-- Residents never pass as enemies of each other (HasEnemy), so they are always saved.
+local function IsInnocent(actor)
+  if FightsResidents(actor) then return false end
+  for _, other in ipairs(bgNPC.Actors.GetAll()) do
+    if other ~= actor and other:HasTeam(actor) and other:IsAlive() and bgNPC.Combat.IsFighting(other:GetNPC()) and FightsResidents(other) then return false end
+  end
+  return true
+end
+
 hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
   local npc = actor:GetNPC()
   ClearDangerAreas(npc)
@@ -114,7 +134,7 @@ hook.Add('BGN_OnKilledActor', 'BGN_Medics_Call', function(actor, attacker)
     end
   end
 
-  if not seen then return end
+  if not seen or not IsInnocent(actor) then return end
   calls[#calls + 1] = {
     pos = npc:GetPos(),
     npc = npc,
