@@ -264,7 +264,7 @@ end)
 
 bgNPC.Test.Add('audit.regeneration', function(check)
   local w = World()
-  local npc = {hp = 5, GetMaxHealth = function() return 100 end, IsEFlagSet = function() return false end}
+  local npc = {valid = true, hp = 5, GetMaxHealth = function() return 100 end, IsEFlagSet = function() return false end}
   function npc:Health() return self.hp end
   function npc:SetHealth(hp) self.hp = hp end
   local data = {regeneration = true, regeneration_time = 7, regeneration_max_health = 6}
@@ -562,3 +562,73 @@ bgNPC.Test.Add('audit.wanted_missing_observer', function(check)
   update()
   check(detections == 1 and refreshes == 1, 'an actor awaiting a replacement body cannot refresh wanted status alone')
 end)
+
+bgNPC.Test.Add('audit.relationship_missing_body', function(check)
+  local w = World()
+  local wanted_mode = false
+  w.GetConVar = function(name) return {GetBool = function() return name == 'bgn_enable_wanted_mode' and wanted_mode end} end
+  local npc, calls = {valid = false}, 0
+  local actor = {IsAlive = function() return true end, GetNPC = function() return npc end, HasEnemy = function() return true end}
+  local foreign = {valid = true, IsNPC = function() return true end, Health = function() return 100 end}
+  function foreign:Disposition(target)
+    check(w.IsValid(target), 'hostility polling cannot pass a removed body to the engine')
+    calls = calls + 1
+    return D_HT
+  end
+  w.bgNPC.Modes = {IsPeaceful = function() return false end}
+  w.bgNPC.Modules = {Get = function() return {AddWanted = function() npc.valid = false end} end}
+  w.bgNPC.Combat = {IsIgnored = function() return false end}
+  w.bgNPC.Actors.Get = function() end
+  w.bgNPC.Actors.GetAll = function() return {actor} end
+  w.ents = {GetAll = function() return {foreign} end}
+  w.Load('systems/sv_relationship.lua')
+  local poll = w.timers.BGN_SpotHostileNPC
+  poll()
+  check(calls == 0, 'missing occupants do not participate in disposition queries')
+  npc.valid = true
+  poll()
+  check(calls == 1, 'valid occupants remain eligible for hostility checks')
+  wanted_mode = true
+  actor.HasTeam = function() return true end
+  actor.HasEnemy = function() return false end
+  npc.GetPos = function() error('wanted callback removed the body') end
+  poll()
+  check(not npc.valid and calls == 2, 'wanted callbacks may remove an observer during polling')
+end)
+
+for name, path in pairs({
+  BGN_ActorsRegeneration = 'systems/npcs/sv_regeneration.lua',
+  BGN_ActorsResidentsRandomVoice = 'systems/npcs/sv_random_voice.lua',
+  BGN_Timer_ActorLookAtObject = 'systems/sv_npc_look_at_object.lua'
+}) do
+  bgNPC.Test.Add('audit.missing_body_' .. name, function(check)
+    local w = World()
+    local npc = {valid = false}
+    local calls = 0
+    for _, method in ipairs({'EmitSound', 'IsEFlagSet', 'GetPos'}) do
+      npc[method] = function()
+        check(npc.valid, 'engine access after body removal: ' .. method)
+        calls = calls + 1
+        if method == 'GetPos' then return Vector() end
+        return false
+      end
+    end
+    local actor = {IsAlive = function() return true end, GetNPC = function() return npc end,
+      EqualStateGroup = function() return true end, GetData = function() return {} end}
+    w.bgNPC.Actors.GetAll = function() return {actor} end
+    w.bgNPC.Actors.GetByTeam = w.bgNPC.Actors.GetAll
+    w.bgNPC.Table = {Random = function(t) return t[1] end}
+    w.bgNPC.Util = {Chance = function() return true end}
+    w.ents = {FindInSphere = function() return {{valid = true, GetPos = function() return Vector() end}} end}
+    w.bgNPC.Tasks.Budget = coroutine.yield
+    w.bgNPC.Vision = {NPCCanSeePos = function() error('scan continued after its body disappeared during a budget yield') end}
+    w.Load(path)
+    check(w.Resume(name) == 'suspended' and calls == 0, 'a missing body does not terminate the service')
+    npc.valid = true
+    w.Load(path)
+    w.Resume(name)
+    check(calls > 0, 'the service resumes engine work when a body is available')
+    npc.valid = false
+    check(w.Resume(name) == 'suspended', 'body removal across a yield is safe')
+  end)
+end

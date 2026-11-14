@@ -24,7 +24,7 @@ Absence of a direct internal caller was not used as grounds to delete public API
 |---|---|
 | Mechanics | Lua's `and/or` selection discarded explicit `false`. Boolean overrides now survive. The duplicate iNPC init hook is removed; actor initialization/rebind owns its flag. |
 | Recurring services | Door passage, player observation and ambient coughs returned after one pass. Explicit loops now keep them alive, including an initially empty server. Looking away resets continuous observation. |
-| Scheduler | Tasks changed the live order during iteration, skipping/repeating work. Each tick visits a snapshot of IDs once; additions start next tick, removals still take effect immediately. |
+| Scheduler | Tasks changed the live order during iteration, skipping/repeating work. Each tick visits a snapshot of IDs once; new IDs start next tick, removals take effect immediately; replacing an existing ID can run its new task in the same tick. |
 | Identity/lifetime | UID allocation and snapshot sequences restarted on Lua reload. The allocator persists and supplies sync sequences too. Client retirement marks the actor removed before delayed initialization can register it again; server entity removal stops its actor/brain. String UIDs get a numeric LOD phase without changing their identity. |
 | Navigation | Empty random queries could fail or fall back outside the requested graph radius. They now return nil. NavMesh sampling indexes the actual area list, independent of area IDs. Reload navigation after editing the mesh externally. |
 | GOAP | Counting unsatisfied facts overestimated the cost when one action changes several facts. The lower bound is now one action; goal conditions distinguish cache entries, and action registration invalidates cached plans. The 200-iteration search limit remains. |
@@ -84,3 +84,32 @@ body/brain validation. Externally changing GOAP action objects directly still re
 The audit does not replace existing state machines, remove features, alter default ConVar values or rewrite
 users' route/configuration files. The new player-owner argument is optional; existing server spawn calls keep
 their behavior. No game saves, generated site files or Legacy sources are part of the changes.
+
+## Independent recheck after d774aeb4
+
+The two audit commits were checked against `cde2f701`, including their callers and test fixtures.
+The mechanics/UID/client-retirement fixes, recurring loops, random navigation, GOAP lower bound/cache,
+spawn permission and appearance changes, config IO, serialization bounds, seat receiver and language
+argument fixes remain justified. `Table.Shuffle` already copies its input; `ResetStorage` resets exactly
+the same five registries. Neither removal needs reverting. NPC/NextBot adapters and FSM/GOAP boundaries
+remain unchanged. Legacy still contains the constant-first regeneration expressions; its code is a reference,
+not evidence of correctness under the current seated-character contract.
+
+The previous lifetime verification was incomplete. A living seated Actor can have a NULL engine body.
+Regeneration, ambient voices and foreign NPC disposition polling still assumed otherwise. The object scan
+also replaced a necessary `IsValid` check after yielding with `IsAlive`, introducing a regression. These
+services now validate the body before engine access; the scan also validates it after budget yields.
+The actor is retained for the existing vehicle recovery path. Four isolated tests cover these boundaries,
+service continuation and return to normal operation; the three coroutine cases failed before correction.
+Earlier mocks often made `IsAlive` track entity validity, masking this distinction.
+
+Performance conclusions are limited: removing per-entity disk reads and duplicate copies removes work;
+replacing two yields per candidate reduces scan latency, not necessarily CPU time per second. More frequent
+completed scans can increase throughput and CPU usage. The shared budget remains cooperative. The admissible
+GOAP heuristic corrects plan cost ordering but can explore more states within the unchanged 200-state cap.
+The scheduler snapshot trades one small allocation per tick for safe iteration; it was a correctness fix.
+No native frame-time improvement is established by these tests.
+
+Recheck validation: 21 audit cases, existing regression/LOD/debug/animation/carry/scenic/police/gang tests,
+seven build tests, full current-core GLua parsing, strict bilingual documentation build and diff checks.
+A running game was unavailable; native physics, multiplayer and optional-addon combinations remain unverified.

@@ -4,6 +4,7 @@
 local SCAN_RADIUS = 100
 local function ParseEntitiesForActorAsync(actor)
   local npc = actor:GetNPC()
+  if not IsValid(npc) then return end
   local npc_pos = npc:GetPos()
   local entities = ents.FindInSphere(npc_pos, SCAN_RADIUS)
   local look_hit -- the forward trace does not depend on the object: traced once per scan, on first need
@@ -12,7 +13,7 @@ local function ParseEntitiesForActorAsync(actor)
     local ent = entities[k]
     if not IsValid(ent) then continue end
     local ent_pos = ent:GetPos()
-    if not actor:IsAlive() or actor:GetNPC() ~= npc then break end
+    if not IsValid(npc) or not actor:IsAlive() or actor:GetNPC() ~= npc then break end
     if not bgNPC.Vision.NPCCanSeePos(npc, ent_pos, 85) then continue end
     local diff = (ent_pos - npc_pos):Angle().y - npc:GetAngles().y
     if diff < -180 then diff = diff + 360 end
