@@ -20,6 +20,7 @@
       end
     end
   end
+
   bgNPC.Config.ClearCache()
 end
 

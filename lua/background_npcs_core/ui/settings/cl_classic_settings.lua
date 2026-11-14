@@ -45,7 +45,7 @@ local PAGES = {
     id = 'States',
     title = 'bgn.settings.extension',
     admin = true,
-    items = {{'check', 'bgn_drop_money', 'bgn.settings.extension.drop_money'}, {'check', 'bgn_shot_sound_mode', 'bgn.settings.extension.shot_sound_mode'}, {'check', 'bgn_react_to_lethal_weapon', 'bgn.settings.extension.react_to_lethal_weapon'}, {'check', 'bgn_threat_search', 'bgn.settings.extension.threat_search'},{'check', 'bgn_disable_dialogues', 'bgn.settings.extension.disable_dialogues'}, {'check', 'bgn_module_replics_enable', 'bgn.settings.extension.replics_enable'}, {'check', 'bgn_all_models_random', 'bgn.settings.extension.all_models_random'}, {'check', 'bgn_module_custom_gestures', 'bgn.settings.extension.custom_gestures'}, {'check', 'bgn_module_tactical_groups', 'bgn.settings.extension.tactical_groups'},}
+    items = {{'check', 'bgn_drop_money', 'bgn.settings.extension.drop_money'}, {'check', 'bgn_shot_sound_mode', 'bgn.settings.extension.shot_sound_mode'}, {'check', 'bgn_react_to_lethal_weapon', 'bgn.settings.extension.react_to_lethal_weapon'}, {'check', 'bgn_threat_search', 'bgn.settings.extension.threat_search'}, {'check', 'bgn_disable_dialogues', 'bgn.settings.extension.disable_dialogues'}, {'check', 'bgn_module_replics_enable', 'bgn.settings.extension.replics_enable'}, {'check', 'bgn_all_models_random', 'bgn.settings.extension.all_models_random'}, {'check', 'bgn_module_custom_gestures', 'bgn.settings.extension.custom_gestures'}, {'check', 'bgn_module_tactical_groups', 'bgn.settings.extension.tactical_groups'},}
   },
   {
     id = 'Optimization',

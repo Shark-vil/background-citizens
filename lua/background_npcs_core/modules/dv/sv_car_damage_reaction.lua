@@ -18,10 +18,7 @@ hook.Add('EntityTakeDamage', 'BGN_DVCarsDamageReaction', function(target, dmginf
 
       -- another actor's car rams a police car: a civilian's ram is always ignored, others only get a reaction now and then
       local rammer = bgNPC.Actors.Get(attacker)
-      if police_inside and rammer and rammer:InVehicle() and (dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE)) then
-        if rammer:IsCivilian() or not bgNPC.Util.Chance(RAM_REACTION_CHANCE) then return end
-      end
-
+      if police_inside and rammer and rammer:InVehicle() and (dmginfo:IsDamageType(DMG_CRUSH) or dmginfo:IsDamageType(DMG_VEHICLE)) then if rammer:IsCivilian() or not bgNPC.Util.Chance(RAM_REACTION_CHANCE) then return end end
       for k = 1, #passengers do
         local actor = passengers[k]
         if actor and actor:IsAlive() then

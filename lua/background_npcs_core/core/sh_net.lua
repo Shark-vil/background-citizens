@@ -188,6 +188,7 @@ local function ReadValue(s, i, state)
       value, i = Read(s, i, state)
       if key ~= nil then t[key] = value end
     end
+
     state.depth = state.depth - 1
     return t, i + 1
   end
@@ -198,7 +199,10 @@ end
 Read = ReadValue
 -- @return table values, number count, boolean has_missing_entities
 function Net.Deserialize(s, value_limit)
-  local state = {remaining = value_limit}
+  local state = {
+    remaining = value_limit
+  }
+
   assert(string.sub(s, 1, 1) == 'n', 'bgNPC.Net: missing argument count')
   local text, i = ReadNumberUntil(s, 2, ';')
   local count = tonumber(text)
@@ -207,6 +211,7 @@ function Net.Deserialize(s, value_limit)
   for k = 1, count do
     values[k], i = ReadValue(s, i, state)
   end
+
   assert(i == #s + 1, 'bgNPC.Net: trailing data')
   return values, count, state.missing == true
 end
@@ -254,7 +259,9 @@ local function Dispatch(name, ply, payload)
     return
   end
 
-  if count > 256 then return end -- unpacking a hostile argument list can overflow the Lua stack
+  if count > 256 then -- unpacking a hostile argument list can overflow the Lua stack
+    return
+  end
 
   if CLIENT and missing and receiver.options.wait_entities then
     local give_up = RealTime() + WAIT_ENTITIES_TIME
@@ -430,6 +437,7 @@ net.Receive(CHANNEL, function(_, ply)
         for _, pending in pairs(buffers[sender]) do
           bytes = bytes + pending.bytes
         end
+
         if bytes > CLIENT_BUFFER_LIMIT then
           buffers[sender][id] = nil
           return

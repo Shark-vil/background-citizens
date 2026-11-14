@@ -363,6 +363,7 @@ do
         end
       end
     end
+
     local actor = bgNPC.Actor.Create(npc, npc_type)
     if actor and owner then
       npc:SetCreator(owner)
