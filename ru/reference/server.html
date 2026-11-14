@@ -1,0 +1,3016 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Setup, practical examples and Lua API for Background NPCs">
+      
+      
+        <meta name="author" content="Shark_vil">
+      
+      
+        <link rel="canonical" href="https://shark-vil.github.io/background-citizens/ru/reference/server.html">
+      
+      
+        <link rel="prev" href="../classes/actor/index.html">
+      
+      
+        <link rel="next" href="client.html">
+      
+      
+        
+          <link rel="alternate" href="../../reference/server.html" hreflang="en">
+        
+          <link rel="alternate" href="server.html" hreflang="ru">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Серверный API - Background NPCs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../index.html" title="Background NPCs" class="md-header__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Background NPCs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Серверный API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Выберите язык">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../reference/server.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="server.html" hreflang="ru" class="md-select__link">
+              Русский
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Shark-vil/background-citizens" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started.html" class="md-tabs__link">
+          
+  
+  
+  Руководство
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../systems/navigation.html" class="md-tabs__link">
+          
+  
+  
+  Системы
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture.html" class="md-tabs__link">
+          
+  
+  
+  Справочник
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Background NPCs" class="md-nav__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Background NPCs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Shark-vil/background-citizens" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Быстрый старт
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Примеры
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Решение проблем
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Creating-Custom-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Свои акторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Modification-of-Existing-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Изменение акторов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Actor-Config-Settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Параметры акторов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../information/More%20maps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Карты
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Системы
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Системы
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/navigation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Навигация
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/brains.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поведение
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/menu.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Меню настроек
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/ghost-crowd.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фоновая толпа
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/testing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режим тестирования
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/conversations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Разговоры
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/arrest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Арест
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/vehicles.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транспорт
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/wanted.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Розыск
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/gangs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Банды
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/medics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Медики и тела
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/voices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Голоса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systems/scenic.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сценические сцены
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Справочник
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Справочник
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-audit.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Инженерный аудит Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История версий
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сравнение с 1.13
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classes/actor/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API актора
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Серверный API
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="server.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Серверный API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#actor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Actor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shareenemymemory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ShareEnemyMemory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#addenemy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AddEnemy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#addtarget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AddTarget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#addteam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AddTeam
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoiddvvehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AvoidDVVehicle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callforhelp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CallForHelp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callstateaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CallStateAction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#checkmoveupdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CheckMoveUpdate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clearschedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ClearSchedule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#createfakeplayermethodsfornpc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CreateFakePlayerMethodsForNPC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#droptofloor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DropToFloor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enemiesrecalculate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EnemiesRecalculate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entervehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EnterVehicle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exitvehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExitVehicle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fearscream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FearScream
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#foldweapon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FoldWeapon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getactorweapon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetActorWeapon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbody" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetBody
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbrain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetBrain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getclosestpointinradius" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetClosestPointInRadius
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getclosestpointtopoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetClosestPointToPoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdistantpointinradius" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetDistantPointInRadius
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdistantpointtopoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetDistantPointToPoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getrandomstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetRandomState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getreactionfordamage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetReactionForDamage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getreactionforprotect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetReactionForProtect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getvehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetVehicle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getvehicleai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetVehicleAI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getvehiclegroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetVehicleGroup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getwalkpos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetWalkPos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getwalktarget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GetWalkTarget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#giveweapon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GiveWeapon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Init
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iscivilian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsCivilian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isexecutingcombatschedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsExecutingCombatSchedule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issequencefinished" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsSequenceFinished
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issequenceloopfinished" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsSequenceLoopFinished
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isstatedelay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsStateDelay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isstayingout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsStayingOut
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iswanted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IsWanted
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#playnextstaticsequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlayNextStaticSequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#playstaticsequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlayStaticSequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#policefights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PoliceFights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepareweapon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PrepareWeapon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#randomstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RandomState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recalculationtargets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RecalculationTargets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removeactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RemoveActor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removeallenemies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RemoveAllEnemies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removealltargets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RemoveAllTargets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removeenemy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RemoveEnemy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removetarget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RemoveTarget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resetsequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResetSequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resetstatedelay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResetStateDelay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#say" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Say
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sayreplic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SayReplic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setgender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetGender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetName
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setnextsequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetNextSequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setreaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetReaction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setschedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetSchedule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setstate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetState
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setstatedelay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetStateDelay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setteam" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetTeam
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setwalktype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SetWalkType
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shouldexitvehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ShouldExitVehicle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statelock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StateLock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stayoutoffight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StayOutOfFight
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stopwalk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StopWalk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#syncfunction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SyncFunction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#takevehicledamage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TakeVehicleDamage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#think" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Think
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatemovement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UpdateMovement
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatestatedata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UpdateStateData
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Voice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voicesay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VoiceSay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#walkdestinationexists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WalkDestinationExists
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#walktopos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WalkToPos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#walktotarget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WalkToTarget
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#walking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Пространства имён и сервисы
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="client.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Клиентский API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Общий API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Правила документации для ИИ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сборка документации
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="api">Серверный API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
+<p>Изменяйте игровой мир на SERVER. Многие методы объявлены в sh_-файлах для совместимости, но требуют серверного тела, мозга, провайдера или игрового модуля.</p>
+<p><code>bgNPC.Actor.New(...)</code> — конструктор класса без проверок фабрики. Для расширений используйте <code>bgNPC.Actor.Create(...)</code>. <code>actor:StopStaticSequence()</code> — алиас <code>ResetSequence()</code>.</p>
+<h2 id="actor">Actor<a class="headerlink" href="#actor" title="Permanent link">&para;</a></h2>
+<p><code>bgNPC.Combat.ResolveVehicleAttacker(attacker, inflictor)</code> определяет валидного владельца спецсредства осады по нападающему, затем по необязательному inflictor, после чего заменяет управляемый транспорт водителем. Без валидного владельца или замены транспорта возвращает переданного нападающего; для движковой сущности <code>IsVehicle()</code> без валидного водителя возвращает nil. Вызовы с одним аргументом сохраняются. Обработчики урона передают обе сущности до командных/защитных проверок. Исходник: <code>api/sv_combat.lua</code>.</p>
+<h3 id="shareenemymemory">ShareEnemyMemory<a class="headerlink" href="#shareenemymemory" title="Permanent link">&para;</a></h3>
+<p><code>actor:ShareEnemyMemory(source, enemy)</code> копирует замеченную другим актором позицию с исходным временем только если актор уже знает врага, память источника не старше 60 секунд и у получателя нет более новой известной позиции. Возвращает, была ли скопирована память. Не добавляет врагов и не меняет реакции. Исходник: <code>actor/components/sh_enemies.lua</code>.</p>
+<p><code>bgNPC.Combat.IsInCombatRadius(actor)</code> возвращает, есть ли у живого актора в бою хотя бы один живой известный враг в пределах фиксированных 1000 единиц включительно; условие не зависит от камер наблюдения. Исходник: <code>api/sv_combat.lua</code>.</p>
+<h3 id="addenemy">AddEnemy<a class="headerlink" href="#addenemy" title="Permanent link">&para;</a></h3>
+<p><code>actor:AddEnemy(ent, reaction, always_visible)</code></p>
+<p>Добавляет сущность/актора с необязательными reaction и always_visible; хуки и команды могут запретить добавление.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_enemies.lua</code>.</p>
+<p><a href="../classes/actor/functions/AddEnemy.html">Страница метода</a>.</p>
+<h3 id="addtarget">AddTarget<a class="headerlink" href="#addtarget" title="Permanent link">&para;</a></h3>
+<p><code>actor:AddTarget(ent)</code></p>
+<p>Добавляет валидную цель-сущность без дублей; требуется targets_controller.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_targets.lua</code>.</p>
+<p><a href="../classes/actor/functions/AddTarget.html">Страница метода</a>.</p>
+<h3 id="addteam">AddTeam<a class="headerlink" href="#addteam" title="Permanent link">&para;</a></h3>
+<p><code>actor:AddTeam(team_name)</code></p>
+<p>Добавляет непустое имя команды без дублей с тем же согласованием врагов/розыска/ареста, что у <code>SetTeam</code>.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_team.lua</code>.</p>
+<h3 id="avoiddvvehicle">AvoidDVVehicle<a class="headerlink" href="#avoiddvvehicle" title="Permanent link">&para;</a></h3>
+<p><code>actor:AvoidDVVehicle(goal)</code></p>
+<p>Внутреннее обновление обхода транспорта; возвращает активность обхода.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="callforhelp">CallForHelp<a class="headerlink" href="#callforhelp" title="Permanent link">&para;</a></h3>
+<p><code>actor:CallForHelp(enemy)</code></p>
+<p>Просит живых союзников в радиусе 1000 единиц с LOS к зовущему отреагировать на врага. Видеть врага необязательно; FOV не проверяется. Нужны механика <code>call_for_help</code>, допустимый враг и живой зовущий. <code>BGN_PreCallForHelp</code> отменяет вызов; защита ареста, запреты назначения врагов и пауза защиты сохраняются.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<p><a href="../classes/actor/functions/CallForHelp.html">Страница метода</a>.</p>
+<h3 id="callstateaction">CallStateAction<a class="headerlink" href="#callstateaction" title="Permanent link">&para;</a></h3>
+<p><code>actor:CallStateAction(state_name, func_name, ...)</code></p>
+<p>Вызывает callback с актором и дополнительными аргументами; nil state_name означает текущее состояние.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/CallStateAction.html">Страница метода</a>.</p>
+<h3 id="checkmoveupdate">CheckMoveUpdate<a class="headerlink" href="#checkmoveupdate" title="Permanent link">&para;</a></h3>
+<p><code>actor:CheckMoveUpdate(tag, time)</code></p>
+<p>Ограничивает частоту по тегу: первый вызов false, следующие true после истечения интервала.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="clearschedule">ClearSchedule<a class="headerlink" href="#clearschedule" title="Permanent link">&para;</a></h3>
+<p><code>actor:ClearSchedule()</code></p>
+<p>Устаревший API расписаний тела; предпочитайте WalkToPos/StopWalk.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/ClearSchedule.html">Страница метода</a>.</p>
+<h3 id="create">Create<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
+<p><code>bgNPC.Actor.Create(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)</code></p>
+<p>Проверяет сущность и ID типа, затем создаёт актора и регистрирует его; возвращает актор либо nil. Используйте bgNPC.Actor.Create(npc, npc_type). Дополнительные аргументы задают UID и отключают начальную синхронизацию/авторегистрацию. Не привязывайте сущность дважды.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="createfakeplayermethodsfornpc">CreateFakePlayerMethodsForNPC<a class="headerlink" href="#createfakeplayermethodsfornpc" title="Permanent link">&para;</a></h3>
+<p><code>actor:CreateFakePlayerMethodsForNPC()</code></p>
+<p>Внутренний адаптер совместимости NPC; не способ создания актора.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<h3 id="droptofloor">DropToFloor<a class="headerlink" href="#droptofloor" title="Permanent link">&para;</a></h3>
+<p><code>actor:DropToFloor()</code></p>
+<p>Передаёт размещение на полу телу либо валидной сущности.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="enemiesrecalculate">EnemiesRecalculate<a class="headerlink" href="#enemiesrecalculate" title="Permanent link">&para;</a></h3>
+<p><code>actor:EnemiesRecalculate()</code></p>
+<p>Обновляет счётчики, удаляет мёртвых/забытых врагов и назначает ближайшего телу; требуется валидное тело.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_enemies.lua</code>.</p>
+<p><a href="../classes/actor/functions/EnemiesRecalculate.html">Страница метода</a>.</p>
+<h3 id="entervehicle">EnterVehicle<a class="headerlink" href="#entervehicle" title="Permanent link">&para;</a></h3>
+<p><code>actor:EnterVehicle(vehicle, animate)</code></p>
+<p>Принимает валидную сущность машины, сам находит/создаёт её провайдер. Посадка проверяется повторно после задержки 0,5 с, синхронного результата успеха нет. С <code>animate</code> актор сначала останавливается и поворачивается к машине (без анимации); метод возвращает задержку в секундах. Actor/UID сохраняются, сущность заменяется.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<p><a href="../classes/actor/functions/EnterVehicle.html">Страница метода</a>.</p>
+<h3 id="exitvehicle">ExitVehicle<a class="headerlink" href="#exitvehicle" title="Permanent link">&para;</a></h3>
+<p><code>actor:ExitVehicle(forced)</code></p>
+<p>Возвращает true при завершённом выходе. Заблокированный выход сохраняет посадку. Воссоздаёт сохранённое тело NPC/NextBot.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<p><a href="../classes/actor/functions/ExitVehicle.html">Страница метода</a>.</p>
+<h3 id="fear">Fear<a class="headerlink" href="#fear" title="Permanent link">&para;</a></h3>
+<p><code>actor:Fear()</code></p>
+<p>Выполняет механику страха, если она включена.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<h3 id="fearscream">FearScream<a class="headerlink" href="#fearscream" title="Permanent link">&para;</a></h3>
+<p><code>actor:FearScream()</code></p>
+<p>Проигрывает голос страха, если это разрешено.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<p><a href="../classes/actor/functions/FearScream.html">Страница метода</a>.</p>
+<h3 id="foldweapon">FoldWeapon<a class="headerlink" href="#foldweapon" title="Permanent link">&para;</a></h3>
+<p><code>actor:FoldWeapon()</code></p>
+<p>Удаляет активное оружие, если не установлен disable_fold_weapon.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<p><a href="../classes/actor/functions/FoldWeapon.html">Страница метода</a>.</p>
+<h3 id="getactorweapon">GetActorWeapon<a class="headerlink" href="#getactorweapon" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetActorWeapon()</code></p>
+<p>Возвращает назначенный класс оружия, а не сущность. Это назначение не передаётся обычным клиентским снимком.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetActorWeapon.html">Страница метода</a>.</p>
+<h3 id="getbody">GetBody<a class="headerlink" href="#getbody" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetBody()</code></p>
+<p>Возвращает серверный адаптер тела либо nil; при посадке/выходе адаптер заменяется.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="getbrain">GetBrain<a class="headerlink" href="#getbrain" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetBrain()</code></p>
+<p>Возвращает серверный мозг либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="getclosestpointinradius">GetClosestPointInRadius<a class="headerlink" href="#getclosestpointinradius" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetClosestPointInRadius(radius)</code></p>
+<p>Возвращает ближайшую точку навигации вокруг актора либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetClosestPointInRadius.html">Страница метода</a>.</p>
+<h3 id="getclosestpointtopoint">GetClosestPointToPoint<a class="headerlink" href="#getclosestpointtopoint" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetClosestPointToPoint(pos, radius)</code></p>
+<p>Возвращает ближайшую к pos точку навигации в радиусе либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetClosestPointToPoint.html">Страница метода</a>.</p>
+<h3 id="getdistantpointinradius">GetDistantPointInRadius<a class="headerlink" href="#getdistantpointinradius" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetDistantPointInRadius(radius)</code></p>
+<p>Возвращает наиболее далёкую точку навигации вокруг актора либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetDistantPointInRadius.html">Страница метода</a>.</p>
+<h3 id="getdistantpointtopoint">GetDistantPointToPoint<a class="headerlink" href="#getdistantpointtopoint" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetDistantPointToPoint(pos, radius)</code></p>
+<p>Возвращает наиболее далёкую от pos точку навигации в радиусе либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetDistantPointToPoint.html">Страница метода</a>.</p>
+<h3 id="getrandomstate">GetRandomState<a class="headerlink" href="#getrandomstate" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetRandomState()</code></p>
+<p>Возвращает случайное имя по весам at_random либо none при пустых/нулевых весах.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetRandomState.html">Страница метода</a>.</p>
+<h3 id="getreactionfordamage">GetReactionForDamage<a class="headerlink" href="#getreactionfordamage" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetReactionForDamage(enemy)</code></p>
+<p>Выбирает реакцию мозгом либо по весам at_damage; разыскиваемые отступают вместо defense.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetReactionForDamage.html">Страница метода</a>.</p>
+<h3 id="getreactionforprotect">GetReactionForProtect<a class="headerlink" href="#getreactionforprotect" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetReactionForProtect(enemy)</code></p>
+<p>Выбирает реакцию at_protect с проверкой паузы и участия жителей.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetReactionForProtect.html">Страница метода</a>.</p>
+<h3 id="getvehicle">GetVehicle<a class="headerlink" href="#getvehicle" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetVehicle()</code></p>
+<p>Возвращает шасси либо nil; требуется серверный провайдер. Клиент проверяет посадку через InVehicle.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetVehicle.html">Страница метода</a>.</p>
+<h3 id="getvehicleai">GetVehicleAI<a class="headerlink" href="#getvehicleai" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetVehicleAI()</code></p>
+<p>Возвращает контроллер DV либо nil; требуется серверный провайдер.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<p><a href="../classes/actor/functions/GetVehicleAI.html">Страница метода</a>.</p>
+<h3 id="getvehiclegroup">GetVehicleGroup<a class="headerlink" href="#getvehiclegroup" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetVehicleGroup()</code></p>
+<p>Возвращает первую настроенную группу либо police/taxi/residents по роли.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<h3 id="getwalkpos">GetWalkPos<a class="headerlink" href="#getwalkpos" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetWalkPos()</code></p>
+<p>Возвращает текущую позицию назначения либо nil.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="getwalktarget">GetWalkTarget<a class="headerlink" href="#getwalktarget" title="Permanent link">&para;</a></h3>
+<p><code>actor:GetWalkTarget()</code></p>
+<p>Возвращает сущность следования (возможен NULL).</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="giveweapon">GiveWeapon<a class="headerlink" href="#giveweapon" title="Permanent link">&para;</a></h3>
+<p><code>actor:GiveWeapon(weapon_class)</code></p>
+<p>Меняет назначенный класс, не экипирует немедленно; nil очищает назначение.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<h3 id="init">Init<a class="headerlink" href="#init" title="Permanent link">&para;</a></h3>
+<p><code>actor:Init(npc, npc_type, custom_uid, not_sync_actor_on_client, not_auto_added_to_list)</code></p>
+<p>Внутренний конструктор. Используйте bgNPC.Actor.Create с проверками входных данных.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="iscivilian">IsCivilian<a class="headerlink" href="#iscivilian" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsCivilian()</code></p>
+<p>Возвращает true для residents, не входящих в police.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<h3 id="isexecutingcombatschedule">IsExecutingCombatSchedule<a class="headerlink" href="#isexecutingcombatschedule" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsExecutingCombatSchedule()</code></p>
+<p>Проверяет, занято ли серверное тело стрельбой/перезарядкой.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="issequencefinished">IsSequenceFinished<a class="headerlink" href="#issequencefinished" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsSequenceFinished()</code></p>
+<p>Проверяет завершение анимации с учётом длительности цикла.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/IsSequenceFinished.html">Страница метода</a>.</p>
+<h3 id="issequenceloopfinished">IsSequenceLoopFinished<a class="headerlink" href="#issequenceloopfinished" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsSequenceLoopFinished()</code></p>
+<p>Проверяет срок цикла; активный бесконечный цикл не завершён.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/IsSequenceLoopFinished.html">Страница метода</a>.</p>
+<h3 id="isstatedelay">IsStateDelay<a class="headerlink" href="#isstatedelay" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsStateDelay()</code></p>
+<p>Проверяет локальный state_delay; этот срок не передаётся обычным клиентским снимком. Используйте на сервере.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/IsStateDelay.html">Страница метода</a>.</p>
+<h3 id="isstayingout">IsStayingOut<a class="headerlink" href="#isstayingout" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsStayingOut()</code></p>
+<p>Проверяет срок воздержания от боя.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<h3 id="iswanted">IsWanted<a class="headerlink" href="#iswanted" title="Permanent link">&para;</a></h3>
+<p><code>actor:IsWanted()</code></p>
+<p>Проверяет текущую сущность в серверном модуле розыска.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<h3 id="playnextstaticsequence">PlayNextStaticSequence<a class="headerlink" href="#playnextstaticsequence" title="Permanent link">&para;</a></h3>
+<p><code>actor:PlayNextStaticSequence()</code></p>
+<p>Забирает анимацию из очереди; возвращает, начата ли её обработка.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/PlayNextStaticSequence.html">Страница метода</a>.</p>
+<h3 id="playstaticsequence">PlayStaticSequence<a class="headerlink" href="#playstaticsequence" title="Permanent link">&para;</a></h3>
+<p><code>actor:PlayStaticSequence(sequence_name, loop, loop_time, action)</code></p>
+<p>Возвращает boolean; loop_time nil/0 задаёт бесконечный цикл. Требует тело и доступную последовательность. action может вернуть true и запретить остановку.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/PlayStaticSequence.html">Страница метода</a>.</p>
+<h3 id="policefights">PoliceFights<a class="headerlink" href="#policefights" title="Permanent link">&para;</a></h3>
+<p><code>actor:PoliceFights(enemy)</code></p>
+<p>Проверяет, сражается ли полиция поблизости с enemy для ограничения участия жителей.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<h3 id="prepareweapon">PrepareWeapon<a class="headerlink" href="#prepareweapon" title="Permanent link">&para;</a></h3>
+<p><code>actor:PrepareWeapon(weapon_class, switching)</code></p>
+<p>Экипирует/выбирает заданный или назначенный класс через bgNPC.Combat.EquipActor.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_combat.lua</code>.</p>
+<p><a href="../classes/actor/functions/PrepareWeapon.html">Страница метода</a>.</p>
+<h3 id="randomstate">RandomState<a class="headerlink" href="#randomstate" title="Permanent link">&para;</a></h3>
+<p><code>actor:RandomState()</code></p>
+<p>Выбирает и применяет состояние по весам at_random, если PreRandomState не отменил выбор. Возвращает итоговое имя состояния.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/RandomState.html">Страница метода</a>.</p>
+<h3 id="recalculationtargets">RecalculationTargets<a class="headerlink" href="#recalculationtargets" title="Permanent link">&para;</a></h3>
+<p><code>actor:RecalculationTargets()</code></p>
+<p>Удаляет невалидные цели. Именно это имя реализовано; TargetsRecalculate отсутствует.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_targets.lua</code>.</p>
+<p><a href="../classes/actor/functions/RecalculationTargets.html">Страница метода</a>.</p>
+<h3 id="remove">Remove<a class="headerlink" href="#remove" title="Permanent link">&para;</a></h3>
+<p><code>actor:Remove()</code></p>
+<p>Снимает регистрацию и удаляет текущую сущность.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="removeactor">RemoveActor<a class="headerlink" href="#removeactor" title="Permanent link">&para;</a></h3>
+<p><code>actor:RemoveActor()</code></p>
+<p>Однократно снимает регистрацию, останавливает мозг, освобождает провайдер транспорта. Саму сущность не удаляет.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="removeallenemies">RemoveAllEnemies<a class="headerlink" href="#removeallenemies" title="Permanent link">&para;</a></h3>
+<p><code>actor:RemoveAllEnemies()</code></p>
+<p>Вызывает хуки удаления врагов, затем очищает оставшееся хранилище.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_enemies.lua</code>.</p>
+<p><a href="../classes/actor/functions/RemoveAllEnemies.html">Страница метода</a>.</p>
+<h3 id="removealltargets">RemoveAllTargets<a class="headerlink" href="#removealltargets" title="Permanent link">&para;</a></h3>
+<p><code>actor:RemoveAllTargets()</code></p>
+<p>Вызывает хуки удаления целей, затем принудительно очищает остаток.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_targets.lua</code>.</p>
+<p><a href="../classes/actor/functions/RemoveAllTargets.html">Страница метода</a>.</p>
+<h3 id="removeenemy">RemoveEnemy<a class="headerlink" href="#removeenemy" title="Permanent link">&para;</a></h3>
+<p><code>actor:RemoveEnemy(ent, index)</code></p>
+<p>Удаляет по сущности либо индексу (индекс приоритетен); хук может запретить. Возвращает оставшееся количество.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_enemies.lua</code>.</p>
+<p><a href="../classes/actor/functions/RemoveEnemy.html">Страница метода</a>.</p>
+<h3 id="removetarget">RemoveTarget<a class="headerlink" href="#removetarget" title="Permanent link">&para;</a></h3>
+<p><code>actor:RemoveTarget(ent, index)</code></p>
+<p>Удаляет цель по сущности либо индексу (индекс приоритетен); возвращает число оставшихся.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_targets.lua</code>.</p>
+<p><a href="../classes/actor/functions/RemoveTarget.html">Страница метода</a>.</p>
+<h3 id="resetsequence">ResetSequence<a class="headerlink" href="#resetsequence" title="Permanent link">&para;</a></h3>
+<p><code>actor:ResetSequence()</code></p>
+<p>Останавливает статическую анимацию, если callback не запретил и не запустил следующую.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/ResetSequence.html">Страница метода</a>.</p>
+<h3 id="resetstatedelay">ResetStateDelay<a class="headerlink" href="#resetstatedelay" title="Permanent link">&para;</a></h3>
+<p><code>actor:ResetStateDelay()</code></p>
+<p>Сбрасывает задержку перехода состояния.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/ResetStateDelay.html">Страница метода</a>.</p>
+<h3 id="say">Say<a class="headerlink" href="#say" title="Permanent link">&para;</a></h3>
+<p><code>actor:Say(say_text, say_time, voice_sound, animation_sequence)</code></p>
+<p>Рассылает текст (по умолчанию 5 с), при необходимости звук и анимацию.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_speech.lua</code>.</p>
+<p><a href="../classes/actor/functions/Say.html">Страница метода</a>.</p>
+<h3 id="sayreplic">SayReplic<a class="headerlink" href="#sayreplic" title="Permanent link">&para;</a></h3>
+<p><code>actor:SayReplic(replic_id, replic_index, say_time, voice_sound, animation_sequence)</code></p>
+<p>Рассылает ID/индекс фразы для клиентской локализации; отсутствующая фраза игнорируется.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_speech.lua</code>.</p>
+<h3 id="setgender">SetGender<a class="headerlink" href="#setgender" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetGender(gender_name)</code></p>
+<p>Задаёт строку пола; nil сбрасывает в unknown. Синхронизируется сервером.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetGender.html">Страница метода</a>.</p>
+<h3 id="setname">SetName<a class="headerlink" href="#setname" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetName(name)</code></p>
+<p>Меняет имя строкой; nil оставляет прежнее. Обычная серверная синхронизация передаёт имя клиентам.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetName.html">Страница метода</a>.</p>
+<h3 id="setnextsequence">SetNextSequence<a class="headerlink" href="#setnextsequence" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetNextSequence(sequence_name, loop, loop_time, action)</code></p>
+<p>Ставит одну последовательность в очередь с параметрами цикла и callback.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_animation.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetNextSequence.html">Страница метода</a>.</p>
+<h3 id="setreaction">SetReaction<a class="headerlink" href="#setreaction" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetReaction(reaction)</code></p>
+<p>Сохраняет строку реакции либо nil; не выполняет реакцию.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetReaction.html">Страница метода</a>.</p>
+<h3 id="setschedule">SetSchedule<a class="headerlink" href="#setschedule" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetSchedule(schedule)</code></p>
+<p>Устаревшие числовые schedule движка; NextBot поддерживает только часть.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetSchedule.html">Страница метода</a>.</p>
+<h3 id="setstate">SetState<a class="headerlink" href="#setstate" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetState(state, data, forced)</code></p>
+<p>Возвращает новую таблицу {state, data} либо nil при отказе. nil означает none. forced обходит обычные блокировки/задержки/validator, но проверки механики/жизни и предварительные хуки всё ещё могут отказать.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetState.html">Страница метода</a>.</p>
+<h3 id="setstatedelay">SetStateDelay<a class="headerlink" href="#setstatedelay" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetStateDelay(time)</code></p>
+<p>Задерживает обычные переходы на time секунд от CurTime().</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetStateDelay.html">Страница метода</a>.</p>
+<h3 id="setteam">SetTeam<a class="headerlink" href="#setteam" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetTeam(team_data)</code></p>
+<p>Заменяет список команд конкретного актора; nil очищает его. SERVER удаляет взаимные записи врагов с новыми союзниками и очищает боевые цели тел. Вступление в <code>residents</code> снимает розыск; общая команда с ведущим полицейским снимает арест этого актора. Используйте метод вместо прямого изменения <code>data.team</code>.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_team.lua</code>.</p>
+<h3 id="setwalktype">SetWalkType<a class="headerlink" href="#setwalktype" title="Permanent link">&para;</a></h3>
+<p><code>actor:SetWalkType(move_type)</code></p>
+<p>Принимает walk, run, числовой schedule либо nil (walk).</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/SetWalkType.html">Страница метода</a>.</p>
+<h3 id="shouldexitvehicle">ShouldExitVehicle<a class="headerlink" href="#shouldexitvehicle" title="Permanent link">&para;</a></h3>
+<p><code>actor:ShouldExitVehicle()</code></p>
+<p>Проверяет серверные условия выхода, не выполняя выход.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<h3 id="statelock">StateLock<a class="headerlink" href="#statelock" title="Permanent link">&para;</a></h3>
+<p><code>actor:StateLock(lock)</code></p>
+<p>Устанавливает блокировку перехода; nil/false снимает её.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/StateLock.html">Страница метода</a>.</p>
+<h3 id="stayoutoffight">StayOutOfFight<a class="headerlink" href="#stayoutoffight" title="Permanent link">&para;</a></h3>
+<p><code>actor:StayOutOfFight(time)</code></p>
+<p>Ограничивает участие через defense на time секунд (по умолчанию 15), сбрасывает план GOAP.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<h3 id="stopwalk">StopWalk<a class="headerlink" href="#stopwalk" title="Permanent link">&para;</a></h3>
+<p><code>actor:StopWalk()</code></p>
+<p>Очищает цели, преследование и обход DV, сбрасывает тип ходьбы.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/StopWalk.html">Страница метода</a>.</p>
+<h3 id="syncfunction">SyncFunction<a class="headerlink" href="#syncfunction" title="Permanent link">&para;</a></h3>
+<p><code>actor:SyncFunction(name, ply, data)</code></p>
+<p>Серверная обёртка совместимости: bgNPC.Net.Send(name, ply, self.uid, data). Приём через bgNPC.Net.Receive; SNet не нужен.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<p><a href="../classes/actor/functions/SyncFunction.html">Страница метода</a>.</p>
+<h3 id="takevehicledamage">TakeVehicleDamage<a class="headerlink" href="#takevehicledamage" title="Permanent link">&para;</a></h3>
+<p><code>actor:TakeVehicleDamage(amount, attacker, inflictor)</code></p>
+<p>Применяет урон пассажиру через реакции и здоровье персонажа; смерть вызывает хуки и удаляет актора.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_vehicle.lua</code>.</p>
+<h3 id="think">Think<a class="headerlink" href="#think" title="Permanent link">&para;</a></h3>
+<p><code>actor:Think()</code></p>
+<p>Устаревший вход: мозг обновляет общий сервис акторов. Не добавляйте второй Think-цикл.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/sh_actor.lua</code>.</p>
+<h3 id="updatemovement">UpdateMovement<a class="headerlink" href="#updatemovement" title="Permanent link">&para;</a></h3>
+<p><code>actor:UpdateMovement()</code></p>
+<p>Внутренний сервис следования пути; не добавляйте второй цикл обновления.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/UpdateMovement.html">Страница метода</a>.</p>
+<h3 id="updatestatedata">UpdateStateData<a class="headerlink" href="#updatestatedata" title="Permanent link">&para;</a></h3>
+<p><code>actor:UpdateStateData(data)</code></p>
+<p>Заменяет таблицу данных состояния целиком, не объединяет её.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_state.lua</code>.</p>
+<p><a href="../classes/actor/functions/UpdateStateData.html">Страница метода</a>.</p>
+<h3 id="voice">Voice<a class="headerlink" href="#voice" title="Permanent link">&para;</a></h3>
+<p><code>actor:Voice(voice_id, fallback)</code></p>
+<p>Рассылает событие голоса; каждый клиент выбирает язык/запасной звук. Боевые реплики ограничены по частоте на актора.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_speech.lua</code>.</p>
+<h3 id="voicesay">VoiceSay<a class="headerlink" href="#voicesay" title="Permanent link">&para;</a></h3>
+<p><code>actor:VoiceSay(sound_path, sound_level, pitch_percent, volume, channel, sound_flags, dsp)</code></p>
+<p>Проигрывает явный путь звука на сущности с параметрами EmitSound по умолчанию.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_speech.lua</code>.</p>
+<p><a href="../classes/actor/functions/VoiceSay.html">Страница метода</a>.</p>
+<h3 id="walkdestinationexists">WalkDestinationExists<a class="headerlink" href="#walkdestinationexists" title="Permanent link">&para;</a></h3>
+<p><code>actor:WalkDestinationExists()</code></p>
+<p>Проверяет наличие позиции либо валидной цели следования.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<h3 id="walktopos">WalkToPos<a class="headerlink" href="#walktopos" title="Permanent link">&para;</a></h3>
+<p><code>actor:WalkToPos(pos, move_type, path_type)</code></p>
+<p>Начинает движение к Vector либо node:GetPos(); nil останавливает. Нужен доступный путь; завершение сообщает BGN_ActorFinishedWalk.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/WalkToPos.html">Страница метода</a>.</p>
+<h3 id="walktotarget">WalkToTarget<a class="headerlink" href="#walktotarget" title="Permanent link">&para;</a></h3>
+<p><code>actor:WalkToTarget(target, move_type, path_type)</code></p>
+<p>Следует за сущностью с перестроением пути; nil/невалидная цель останавливает.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/WalkToTarget.html">Страница метода</a>.</p>
+<h3 id="walking">Walking<a class="headerlink" href="#walking" title="Permanent link">&para;</a></h3>
+<p><code>actor:Walking()</code></p>
+<p>Сообщает о движении тела; адаптер существует только на сервере.</p>
+<p>Исходник: <code>lua/background_npcs_core/actor/components/sh_movement.lua</code>.</p>
+<p><a href="../classes/actor/functions/Walking.html">Страница метода</a>.</p>
+<h2 id="_1">Пространства имён и сервисы<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Контракт / исходник</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden, owner)</code></td>
+<td>Создаёт актора; <code>owner</code> необязателен. Если передан, нужен допустимый живой игрок (или администратор); <code>PlayerSpawnNPC</code> может запретить разрешённый класс NPC до создания, затем задаётся creator и вызывается <code>PlayerSpawnedNPC</code> для учёта gamemode. Меню/Tool передают игрока, автоматическая популяция — нет. Проверяйте результат. Исходник: <code>spawner/sv_spawner.lua</code>.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Statistics.AddKill(attacker, actor)</code></td>
+<td>Учитывает и синхронизирует убийство.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Statistics.Reset(attacker)</code>, <code>ResetAll()</code></td>
+<td>Очищает и синхронизирует статистику.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Actors.Rebind(actor, npc)</code></td>
+<td>Внутренняя замена тела, реестров и ссылок с BGN_ActorEntityChanged. Используйте штатную посадку/выход.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Combat</code></td>
+<td>Оружие/навык, бой, определение нападающего в машине: <code>api/sv_combat.lua</code>.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Nav</code></td>
+<td>Провайдеры/загрузка/пути: <code>nav/sv_nav.lua</code>, <a href="../systems/navigation.html">навигация</a>.</td>
+</tr>
+<tr>
+<td><code>bgNPC.GOAP</code></td>
+<td>Действия/сенсоры планировщика: <a href="../systems/brains.html">мозги</a>.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Tasks</code></td>
+<td>Кооперативные задачи yield/wait/budget; <code>core/sh_tasks.lua</code>. У каждого окружения собственный планировщик.</td>
+</tr>
+<tr>
+<td><code>bgNPC.Modules.Get('wanted')</code></td>
+<td>Розыск: <a href="../systems/wanted.html">контракт и события</a>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>bgNPC.Combat.CanPoliceUseStunstick(officer, suspect)</code> возвращает SERVER-допустимость станстика по розыску, убийствам, личной памяти полицейского и тому, ранил ли кто-то из его врагов кого-либо с расстояния больше 500 единиц. <code>bgNPC.Combat.ResetPoliceThreat(suspect)</code> очищает признаки/счётчики убийств и записи пострадавших; применять для завершённого сброса, не при первоначальном объявлении розыска. <code>BGN_PostVehicleDamage(actor, attacker, amount)</code> вызывается на SERVER после изменения виртуального здоровья в машине, до обработки смерти.</p>
+<p><code>bgNPC.Combat.CanWitness(actor, attacker, check_view)</code> проверяет живого наблюдателя, допустимого нападающего, дистанцию до 2500 и LOS к нападающему; для нападающего ACTOR также нужен FOV. <code>check_view = true</code> требует FOV для любого нападающего. Возвращает логическое значение видимости и может вернуть сущность попадания LOS вторым значением. <code>BGN_ConfirmedDamage(attacker, target, amount)</code> вызывается на SERVER после фактического положительного урона, включая здоровье в машине, после записи инициатора и проверки порогов уже идущего ареста; начало ареста и свидетели обрабатывают это уведомление. Добровольная кулачная драка и игнорируемые нападающие исключены; дружелюбный режим сохраняет существующее переопределение реакций в пользу игрока вместо этого уведомления для конфликтов с игроком. <code>BGN_PostReactionTakeDamage</code> остаётся хуком реакции до применения урона и не подтверждает фактический урон. См. <a href="../systems/wanted.html#conflict-memory-and-witnesses">конфликты</a>.</p>
+<p><code>bgNPC.Combat.IsAttackingEnemy(actor, target, attacker)</code> возвращает SERVER boolean: цель уже является врагом наблюдателя, а между наблюдателем и нападающим нет вражды по спискам врагов и <code>D_HT</code> в любом направлении. Читает настроенные отношения ACTOR, отношения тел (включая NextBot) и доступные методы сущностей <code>Disposition</code>. Недопустимые сущности и прямое попадание по наблюдателю возвращают false; отсутствие необязательных методов не означает ненависть. Для этого исключения <code>ResolveEnemy</code> возвращает nil до выбора по инициатору, команде или розыску: наблюдатель не вмешивается в это попадание. Предикат не меняет команды, списки врагов или память конфликта.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../classes/actor/index.html" class="md-footer__link md-footer__link--prev" aria-label="Назад: API актора">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                API актора
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="client.html" class="md-footer__link md-footer__link--next" aria-label="Вперед: Клиентский API">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Клиентский API
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020 - 2021 Shark_vil
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Shark-vil/" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://discord.gg/wZwtQTU" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M492.5 69.8c-.2-.3-.4-.6-.8-.7-38.1-17.5-78.4-30-119.7-37.1-.4-.1-.8 0-1.1.1s-.6.4-.8.8c-5.5 9.9-10.5 20.2-14.9 30.6-44.6-6.8-89.9-6.8-134.4 0-4.5-10.5-9.5-20.7-15.1-30.6-.2-.3-.5-.6-.8-.8s-.7-.2-1.1-.2C162.5 39 122.2 51.5 84.1 69c-.3.1-.6.4-.8.7C7.1 183.5-13.8 294.6-3.6 404.2c0 .3.1.5.2.8s.3.4.5.6c44.4 32.9 94 58 146.8 74.2.4.1.8.1 1.1 0s.7-.4.9-.7c11.3-15.4 21.4-31.8 30-48.8.1-.2.2-.5.2-.8s0-.5-.1-.8-.2-.5-.4-.6-.4-.3-.7-.4c-15.8-6.1-31.2-13.4-45.9-21.9-.3-.2-.5-.4-.7-.6s-.3-.6-.3-.9 0-.6.2-.9.3-.5.6-.7c3.1-2.3 6.2-4.7 9.1-7.1.3-.2.6-.4.9-.4s.7 0 1 .1c96.2 43.9 200.4 43.9 295.5 0 .3-.1.7-.2 1-.2s.7.2.9.4c2.9 2.4 6 4.9 9.1 7.2.2.2.4.4.6.7s.2.6.2.9-.1.6-.3.9-.4.5-.6.6c-14.7 8.6-30 15.9-45.9 21.8-.2.1-.5.2-.7.4s-.3.4-.4.7-.1.5-.1.8.1.5.2.8c8.8 17 18.8 33.3 30 48.8.2.3.6.6.9.7s.8.1 1.1 0c52.9-16.2 102.6-41.3 147.1-74.2.2-.2.4-.4.5-.6s.2-.5.2-.8c12.3-126.8-20.5-236.9-86.9-334.5zm-302 267.7c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.4 59.2-52.8 59.2m195.4 0c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.2 59.2-52.8 59.2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://steamcommunity.com/id/shark_vil/" target="_blank" rel="noopener" title="steamcommunity.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M504 256c0 137-111.2 248-248.4 248-113.8 0-209.6-76.3-239-180.4l95.2 39.3c6.4 32.1 34.9 56.4 68.9 56.4 39.2 0 71.9-32.4 70.2-73.5l84.5-60.2c52.1 1.3 95.8-40.9 95.8-93.5 0-51.6-42-93.5-93.7-93.5s-93.7 42-93.7 93.5v1.2L184.6 279c-15.5-.9-30.7 3.4-43.5 12.1L8 236.1C18.2 108.4 125.1 8 255.6 8 392.8 8 504 119 504 256M163.7 384.3l-30.5-12.6c5.6 11.6 15.3 20.8 27.2 25.8 26.9 11.2 57.8-1.6 69-28.4 5.4-13 5.5-27.3.1-40.3S214 305.6 201 300.2c-12.9-5.4-26.7-5.2-38.9-.6l31.5 13c19.8 8.2 29.2 30.9 20.9 50.7-8.3 19.9-31 29.2-50.8 21m173.8-254.5a62.3 62.3 0 1 1 0 124.6 62.3 62.3 0 1 1 0-124.6m.1 109a46.8 46.8 0 1 0 0-93.6 46.8 46.8 0 1 0 0 93.6"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/channel/UCceZ68lbnrBGBPXgMPBOfoA" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.tracking", "navigation.sections", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

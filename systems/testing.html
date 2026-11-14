@@ -1,0 +1,2176 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Setup, practical examples and Lua API for Background NPCs">
+      
+      
+        <meta name="author" content="Shark_vil">
+      
+      
+        <link rel="canonical" href="https://shark-vil.github.io/background-citizens/systems/testing.html">
+      
+      
+        <link rel="prev" href="ghost-crowd.html">
+      
+      
+        <link rel="next" href="conversations.html">
+      
+      
+        
+          <link rel="alternate" href="testing.html" hreflang="en">
+        
+          <link rel="alternate" href="../ru/systems/testing.html" hreflang="ru">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Testing mode - Background NPCs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#testing-mode" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Background NPCs" class="md-header__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Background NPCs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Testing mode
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="testing.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../ru/systems/testing.html" hreflang="ru" class="md-select__link">
+              Русский
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Shark-vil/background-citizens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started.html" class="md-tabs__link">
+          
+  
+  
+  Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="navigation.html" class="md-tabs__link">
+          
+  
+  
+  Systems
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture.html" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Background NPCs" class="md-nav__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Background NPCs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Shark-vil/background-citizens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Creating-Custom-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom actors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Modification-of-Existing-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edit actors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Actor-Config-Settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actor settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../information/More%20maps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Systems
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Systems
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="navigation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Navigation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brains.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brains
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="menu.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ghost-crowd.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ghost crowd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing mode
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="testing.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-engineering-audit-regressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core engineering audit regressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-full-test-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the full test checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-fix-button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Fix button
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results-window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results window
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actor-overlay-and-regression-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actor overlay and regression checks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Actor overlay and regression checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spawnmenu-debug-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spawnmenu debug page
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#room-siege-developer-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Room siege developer checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dv-traffic-developer-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DV traffic developer checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combat-audit-regressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combat audit regressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conversations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conversations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="arrest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arrest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vehicles.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vehicles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="wanted.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wanted
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gangs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gangs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="medics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Medics and bodies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="voices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Voices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="scenic.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenic scenes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-audit.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core engineering audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison with 1.13
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classes/actor/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actor API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/client.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI documentation rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building the docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="testing-mode">Testing mode<a class="headerlink" href="#testing-mode" title="Permanent link">&para;</a></h1>
+<h2 id="core-engineering-audit-regressions">Core engineering audit regressions<a class="headerlink" href="#core-engineering-audit-regressions" title="Permanent link">&para;</a></h2>
+<p><code>python tools/test_core_audit.py</code> runs 21 isolated LuaJIT/lupa tests from
+<code>tests/sv_engineering_audit.lua</code>; SERVER <code>bgn_selftest</code> loads the same file on demand without live entities.
+The cases cover scheduler mutations, recurring services, mechanics, UID/snapshot reloads, client retirement,
+malformed/chunked network input, navigation, GOAP, appearance and gamemode spawn permission/accounting,
+regeneration, spawnmenu IO, string UID LOD and client seat downloads. Follow-up cases cover forced exit,
+blocked exits and lethal damage without the DV visual, plus wanted observers awaiting a replacement entity.
+Recheck cases cover missing bodies in regeneration, voices, relationships and scan budget yields.
+All 21 fail against the starting <code>dev</code>
+with <code>--baseline</code> and pass after these changes. This models engine calls; it is not a native game result.
+See <a href="../core-audit.html">audit decisions and remaining limits</a>.</p>
+<p>For interactive scenic and GOAP door checks, use the admin <a href="scenic.html#scene-debugger-tool">Scene debugger Tool</a>.
+<code>tools/scenic_tool.lua</code> exercises the real server Tool, native Undo, chair cleanup, model diagnostics and the
+one-cycle door test on both NPC and NextBot bodies through a temporary single-player bridge. Use an isolated
+<code>gm_bigcity_improved</code> lab with a NavMesh. Report: <code>data/bgn_scenic_tool_lab/tool.json</code>.
+Keep actor-remover and scenic maintenance tasks running: the cleanup cases verify that owned tests survive
+while an ordinary control actor is removed with <code>bgn_enable 0</code>; the fixture restores that setting afterwards.</p>
+<p><code>tools/door_hold.lua</code> is an opt-in fixture for an isolated single-player <code>gm_bigcity_improved</code> session through
+a temporary Lua bridge, not an addon autorun. It tests actual GOAP holding/breaching with all four NPC/NextBot
+body pairings and four door headings, physical knockback, stable actor/entity/health, restored door settings,
+blocked stand-up, forced-state rejection, holder/ragdoll removal and damage/death while down.
+Report: <code>data/bgn_door_lab/doors.json</code>.
+It creates stock test rigs and doors, briefly moves the observer, pauses automatic spawners and cleans up its
+objects/restores tasks and observer afterward. Run it in a lab, not an ongoing play session.
+<code>tools/seating_lab.lua</code> checks 32 seating cases on both bodies: two stock chair props at four headings,
+close and distant approach, BigCity custom bench seats, scenic chairs/benches and both ledge poses on male
+and female rigs. It checks direct pelvis support, facing the drop, stable placement and physics/seat restoration
+on exit. Run only in an isolated SP lab on port 27025; report: <code>data/bgn_seat_lab/seating.json</code>.</p>
+<p>Additional opt-in fixtures through the same temporary SP bridge:</p>
+<table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>Native checks</th>
+<th>Report under <code>data/bgn_scenic_overhaul_lab/</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tools/scenic_poses.lua</code></td>
+<td>NPC/NextBot poses, wall/door contact, indoor rejection, both couch sexes, complete pairs and brush ledges</td>
+<td><code>poses.json</code></td>
+</tr>
+<tr>
+<td><code>tools/carry_items.lua</code></td>
+<td>Tool/ordinary spawns: HL2 briefcase without a weapon/activity override, NextBot ration/suitcase/newspaper walk, hidden parcel, stowing, drop/expiry</td>
+<td><code>carry.json</code></td>
+</tr>
+<tr>
+<td><code>tools/ghost_carry.lua</code></td>
+<td>Run SERVER and CLIENT separately: empty hands in both ghost modes and NPC/NextBot materialization without carried items</td>
+<td><code>ghost-server.json</code>, <code>ghost-client.json</code></td>
+</tr>
+<tr>
+<td><code>tools/ragdoll_identity.lua</code></td>
+<td>Same actor/entity, latest health/max health, weapon/clip, incoming/outgoing relationships and wanted record after recovery</td>
+<td><code>identity.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>Fixtures use stock animation rigs for repeatability, clean up their own entities and restore changed settings.
+They do not establish support for every custom model or multiplayer behavior. <code>scenic_poses</code> uses real BSP
+geometry for its ledge test; it does not replace engine traces with stub results.
+<code>tools/carry_alignment.lua</code> is an opt-in CLIENT render-frame check in an isolated SP lab. It measures the newspaper lower grip against the fingertips, the 15-degree outward tilt and the upright briefcase handle against the index-finger grip. Inspect front and side screenshots for male/female rigs at idle and during actual walking; measurements do not replace the visual check. Reports: <code>data/bgn_paper_lab/alignment-idle.json</code> and <code>alignment-walk.json</code>.</p>
+<p>Offline checks (lupa): <code>python tools/test_regressions.py</code>, <code>python tools/test_scenic.py</code>, <code>python tools/test_carry_items.py</code>.</p>
+<p>A one-minute check that answers "nothing spawns" and "I'm an admin but can't change the settings" with facts.
+Open <strong>Settings → Tools → Testing</strong> (admins) or type a console command:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Who</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgn_test</code></td>
+<td>admins</td>
+<td>The full test (below).</td>
+</tr>
+<tr>
+<td><code>bgn_test_settings</code></td>
+<td>anyone</td>
+<td>Only the rights and settings checks. Run it first when settings won't change.</td>
+</tr>
+<tr>
+<td><code>bgn_test_report</code></td>
+<td>anyone</td>
+<td>Opens the results of the last test again.</td>
+</tr>
+<tr>
+<td><code>bgn_test_stop</code></td>
+<td>the player who started it, admins</td>
+<td>Stops a running test.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-the-full-test-checks">What the full test checks<a class="headerlink" href="#what-the-full-test-checks" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Addon and map</td>
+<td><code>bgn_enable</code>, navigation provider and points.</td>
+</tr>
+<tr>
+<td>Admin rights</td>
+<td>What the server and the client think of your group (<code>IsAdmin</code>, <code>IsSuperAdmin</code>, user group).</td>
+</tr>
+<tr>
+<td>Changing server settings</td>
+<td>The client sets the test cvar <code>bgn_test_server_value</code> the same way every settings row does, the server must receive it; then the server changes it itself and the client must see it.</td>
+</tr>
+<tr>
+<td>Changing client settings</td>
+<td>The test cvar <code>bgn_cl_test_value</code> is set and read back.</td>
+</tr>
+<tr>
+<td>Actors spawn on their own</td>
+<td>Actors exist or the regular spawner creates one within 15 s. If not, the most likely reason is named: addon off, zero limits, no navigation points, no spot out of sight, other addon.</td>
+</tr>
+<tr>
+<td>Actors spawn on demand</td>
+<td>One actor of each active type is created at free spots around you, ignoring limits and visibility rules. Wanted-only types are skipped.</td>
+</tr>
+<tr>
+<td>Cars</td>
+<td>Decent Vehicle is loaded, the map has its waypoints, the configured car models are installed; a driver is spawned with a car and has to get in. Missing Decent Vehicle is a warning, not an error.</td>
+</tr>
+<tr>
+<td>Actors don't vanish</td>
+<td>The spawned actors and cars must still exist 12 s later. An actor spawned over its type limit is expected to be removed (the log says so).</td>
+</tr>
+<tr>
+<td>Actor states</td>
+<td>Every actor has a valid entity and a known state, stands inside the world, walkers really move, and a forced <code>idle</code> / <code>walk</code> change is accepted.</td>
+</tr>
+<tr>
+<td>Where the actors are</td>
+<td>Actors closer than 700 units form a group. The camera flies over the four biggest ones, outlining the actors and marking the spot with a beam and a sphere. <strong>Space</strong> skips it. You are frozen and invulnerable meanwhile.</td>
+</tr>
+</tbody>
+</table>
+<p>Test actors and cars are removed at the end, the changed cvars are restored.</p>
+<h2 id="the-fix-button">The Fix button<a class="headerlink" href="#the-fix-button" title="Permanent link">&para;</a></h2>
+<p>Where the cause is obvious and the cure is a setting, an admin sees <strong>Fix</strong> on the row: the addon switched off, a zero total limit, all actor types off, a spawn radius with no points in it, block and visibility radii that leave no free spot, car support off. It restores the default values of just those console variables (the log lists them) and asks to run the test again. Rights, missing addons and maps without navigation have no button: they can't be fixed from a setting.</p>
+<h2 id="results-window">Results window<a class="headerlink" href="#results-window" title="Permanent link">&para;</a></h2>
+<p>It has the settings window's look, the same light / dark switch, and one row per check with an icon (passed,
+warning, failed) and a short plain sentence. <strong>Copy log</strong> puts the full technical report into the clipboard
+(it is also saved to <code>data/background_npcs/test_report.txt</code>); the server console prints it too. Paste it into
+a bug report. The sentences follow the interface language; the log is always English.</p>
+<div class="highlight"><pre><span></span><code>================================================================
+ Background NPCs - test report
+================================================================
+ Version  : 2.0.1
+ Map      : gm_construct
+ Server   : listen server, 2 player(s)
+ Result   : 8 passed, 1 warnings, 1 failed
+================================================================
+
+[FAIL] Admin rights
+       The server does not see you as an admin (your group: user). ...
+       | server: IsAdmin=false IsSuperAdmin=false group="user" listen host=false
+       | client: IsAdmin=false IsSuperAdmin=false group="user"
+</code></pre></div>
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>In single player and on a listen server the client and the server share console variables, so the server
+  settings check can pass without admin rights; it then ends with a warning. Run it on the real server.</li>
+<li>Only admins can run the full test; for others <code>bgn_test</code> runs the settings checks only.</li>
+<li>The two test cvars are also sliders in <strong>Tools → Testing</strong>: change them by hand to see what a normal row does.</li>
+<li>Source: <code>lua/background_npcs_core/debug/</code> (<code>sv_diag.lua</code> runs the checks, <code>cl_diag.lua</code> is the camera and
+  the window). A check is a function that calls <code>Section(id)</code>, <code>Log(...)</code> and <code>Result(status, phrase, ...)</code>;
+  phrases live in <code>resource/localization/&lt;lang&gt;/bgn_diag.properties</code>.</li>
+</ul>
+<h2 id="actor-overlay-and-regression-checks">Actor overlay and regression checks<a class="headerlink" href="#actor-overlay-and-regression-checks" title="Permanent link">&para;</a></h2>
+<p>Debugging is admin-only and requires <code>bgn_debug 1</code> (SERVER). CLIENT controls affect only the viewer.
+Inspection records existing decisions; it does not run sensors, roll reactions, advance plans or change stealth rules.</p>
+<h3 id="spawnmenu-debug-page">Spawnmenu debug page<a class="headerlink" href="#spawnmenu-debug-page" title="Permanent link">&para;</a></h3>
+<p>Open <strong>Q → Options → Background NPCs → Debugging</strong>, or <strong>Tools → Background NPCs: Debugging → Actor inspector</strong>.
+Choose an actor from the refreshed list or under the crosshair. Selection uses the actor UID, including across body
+replacement. Pinning prevents the inspector Tool's LMB from replacing it; an explicit menu selection still works.
+The default is one actor and its connections. Nearby overview is optional.</p>
+<p><strong>Tools → Background NPCs: Editor</strong> contains route points, spawn areas and seats. <strong>Background NPCs: Debugging</strong>
+contains actor inspection, navigation test, actor movement, scenes and carried items. Existing Tool IDs are preserved;
+the internal actor spawner remains hidden.</p>
+<table>
+<thead>
+<tr>
+<th>CLIENT cvar</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgn_cl_debug_mode</code></td>
+<td>0</td>
+<td>0: screen HUD; 1: world cards (3D2D); 2: geometry only.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_inspector</code></td>
+<td>1</td>
+<td>Screen HUD of the selected actor.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_bounds</code> / <code>bgn_cl_debug_labels</code></td>
+<td>1 / 1</td>
+<td>Bounds / world-card text.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_summary</code></td>
+<td>1</td>
+<td>Collection/render CPU time and geometry count in the HUD footer.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_draw_npc_path</code></td>
+<td>0</td>
+<td>Selected actor's existing SERVER path.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_targets</code></td>
+<td>1</td>
+<td>Known-enemy connections; these are memory, not current visibility.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_vision</code></td>
+<td>0</td>
+<td>Recorded gameplay sight checks and blockers.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_signals</code> / <code>bgn_cl_debug_history</code></td>
+<td>1 / 1</td>
+<td>Team signals / recent events.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_text_scale</code></td>
+<td>1</td>
+<td>Text scale 0.75–2; also scales with screen height, 20 px at 900p.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_distance</code> / <code>bgn_cl_debug_geometry_distance</code></td>
+<td>800 / 1500</td>
+<td>Independent text / geometry limits in HU, each 100–5000.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_wh</code> / <code>bgn_cl_debug_overview</code></td>
+<td>0 / 0</td>
+<td>Geometry through walls / nearby actor overview.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_related</code> / <code>bgn_cl_debug_cards</code></td>
+<td>16 / 8</td>
+<td>Relation limit 1–64 per list / visible-card limit 1–16.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_rate</code></td>
+<td>5</td>
+<td>Selected snapshot rate, 2–10 Hz.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_seconds</code> / <code>bgn_cl_debug_life</code></td>
+<td>30 / 2</td>
+<td>History window 1–30 s / line lifetime 0.2–10 s.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_blockers</code> / <code>bgn_cl_debug_markers</code></td>
+<td>1 / 1</td>
+<td>Sight blockers / scene and hand markers.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_marker_size</code></td>
+<td>12</td>
+<td>Marker size 2–48 HU.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_team_filter</code>, <code>type_filter</code>, <code>state_filter</code>, <code>event_filter</code></td>
+<td>empty</td>
+<td>Plain substring filters; all four names have the <code>bgn_cl_debug_</code> prefix. Event filter matches the event kind.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_freeze</code> / <code>bgn_cl_debug_technical</code></td>
+<td>0 / 0</td>
+<td>Freeze diagnostic data / show technical HUD identifiers.</td>
+</tr>
+</tbody>
+</table>
+<p>Less frequent settings are in <strong>Limits and filters</strong>. World cards use distance scaling and overlap suppression;
+text wraps, and long reports offer copyable details. List refresh preserves selection and camera.
+<strong>Freeze</strong> holds the displayed snapshot, not the game or the live camera.</p>
+<p>The compact HUD shows health, state, reaction, known enemies/targets, wanted status, movement, sight and recent events.
+<strong>Open details</strong> adds raw state/group, fight avoidance, model/animation, carry item, reaction weights, known-target
+last-seen times and the current cached GOAP plan/facts. FSM actors have no GOAP plan.
+A weighted reaction pick is a candidate, not proof that a later hook allowed that reaction. Attempted damage is
+recorded before cancellation; the reaction event does not establish actual health loss.</p>
+<p>Sight comes from the real <code>HasLineOfSight</code> / <code>CanSeeEntity</code> calls. Channels identify damage witnesses, shot witnesses,
+enemy memory, ally sharing, help, wanted detection and squads. Green is a successful check, red a failed check with
+its hit point and blocker (including map geometry), purple is remembered enemy knowledge, yellow is a signal.
+Rejected signals are red. Absence of a check means unknown. The view cone is drawn only after an actual direction
+test, using its recorded aim vector and the same dot-product threshold as <code>Util.IsInView</code>; its 100 HU length is
+illustrative. Plain LOS has no facing restriction. A remembered enemy can be currently unseen. Wanted proximity
+and radio broadcasts do not imply a successful sight trace. No debugger-generated observer ray is added.</p>
+<p>Team events identify sender → recipient and the target being discussed. Help, sharing, radio and squad handoffs
+record resulting enemy membership; witness-reaction vetoes are recorded separately. The wanted broadcast has no
+actor sender. This is a bounded journal of instrumented paths, not a complete log of every rejected AI branch.</p>
+<p>SERVER collects selected snapshots at the requested rate and shares collection work for matching subscriptions
+within a tick. The actor list is requested on demand (throttled to 1 Hz); overview updates at 2 Hz within 5000 HU.
+There is no automatic all-actor stream. Per observed UID: at most 256 events and 64 recent sight records; paths
+are capped at 256 points, rosters at 128 actors, and client geometry at 1024 segments. Truncation is reported.
+CLIENT builds text and a colored line mesh on snapshot/settings changes, then draws the cached batch each frame;
+scene/hand markers refresh at 2 Hz. No per-frame actor search or diagnostic visibility traces are used.
+The HUD costs measure collection and client render code, not whole-frame performance or network transmission.</p>
+<p><strong>Toggle actor first-person view</strong> follows the selected actor's eyes. F6, Escape or <strong>Return to your view</strong> exits.
+SERVER adds this camera to the admin's PVS and blocks movement/attacks. The player's body remains vulnerable.
+Death/removal, viewer death, lost rights, map cleanup, debug disable or lost subscription releases the camera.
+Heartbeats are every second, expiry is 3 s, and unfrozen geometry older than 2 s stops drawing. SERVER supplies the
+body-relative eye frame for NPCs/NextBots; CLIENT follows body interpolation. Only the viewed body's model
+renderer is temporarily suppressed and restored on exit; server <code>NoDraw</code> is preserved.</p>
+<p>Tool-specific checks:</p>
+<ul>
+<li><code>bgn_path_finder</code>: LMB start, RMB destination, R clear. Uses the active SERVER navigation provider; endpoint
+  markers and point count describe this requested path, separately from an actor's current path.</li>
+<li><code>bgn_actor_mover</code>: LMB actor, RMB destination, R/holster release. Walk/run and arrival tolerance are configurable.
+  One owner controls the actor; previous debugger/eternal/lock flags and state data are restored on release.
+  This Tool deliberately changes movement; it is not passive inspection.</li>
+<li><code>bgn_scenic_debug</code>: existing placement, inspection, GOAP-door test and owned cleanup/Undo remain. The preview
+  reuses placement checks, shows participant bounds and rejection reasons, and creates nothing. It uses the
+  minimum group layout without RNG; actual spawning may choose another size/orientation/model variant.</li>
+<li><code>bgn_carry_debug</code>: existing give/remove checks remain. Bone axes, prop bounds, model/animation compatibility
+  and briefcase handle-to-finger distance help inspect attachment; the number is geometric, not a rig-quality score.
+  Both special Tools share distance, WH, marker-size controls and copyable reports.</li>
+</ul>
+<p>Console equivalents: <code>bgn_debug_select [uid]</code>, <code>bgn_debug_details</code>, <code>bgn_debug_tool_details</code>, <code>bgn_debug_watch</code>,
+<code>bgn_debug_watch_stop</code>, <code>bgn_debug_clear</code>, <code>bgn_debug_pin</code>, <code>bgn_debug_freeze</code>.</p>
+<p><code>python tools/test_actor_debug.py</code> (lupa) checks permission/payload gates, read-only snapshots, bounded history,
+map blockers, recorded view direction, camera lifecycle, EN/RU keys and mover restoration. Native single-player
+verification on <code>gm_bigcity_improved</code> (1280×720, 1600×900, 1920×1080) covers menu categories, real damage/sight/blockers and team handoff,
+HUD/3D2D distance, NPC/NextBot camera, refresh/freeze, scene preview/owned removal, carry issuance/removal and cached
+mesh construction. Timing samples with 30/60/100 actors cover selected inspection and optional overview; they are
+not a general FPS guarantee. Multiplayer and arbitrary camera addons/custom rigs still need separate verification.</p>
+<p><code>python tools/test_regressions.py</code> (requires lupa) checks the Lua logic outside GMod. It covers safe actor health accessors in both realms, arrest module registration order, seated damage and police witnesses, passenger aim, exit placement by seat/model attachment, overlap rejection and blocked-side fallback. These checks do not verify live physics or every vehicle model.</p>
+<h2 id="room-siege-developer-checks">Room siege developer checks<a class="headerlink" href="#room-siege-developer-checks" title="Permanent link">&para;</a></h2>
+<p><code>bgn_selftest</code> includes <code>tests/sv_siege.lua</code>: isolated checks for one-exit pockets, alternative/incoming
+connections, outdoor rejection, animation/class requirements, door chance/fallback, shared deployment
+reservations, grenade clearance and the wait/cooldown. These do not establish real physics or map completeness.</p>
+<p><code>tools/siege.lua</code> is an opt-in SERVER fixture for an isolated single-player <code>gm_bigcity_improved</code> session,
+using the room near <code>setpos -748.617798 -4298.178223 -11071.968750</code>. It creates eight actors and exercises
+metropolice/combine operators with NPC and NextBot bodies, including a player target. It checks the double-leaf
+exit, missing-animation rejection, five front/three rear participants, silent waiting, one real projectile,
+entry into the room, actual damage/attribution against NPC targets, exit/damage cancellation and NPC capability
+restoration. It temporarily moves/arms the observer, pauses population
+tasks and cleans up/restores its own state. Run it through a temporary local SERVER bridge, never as an autorun
+or on a public server. Results: <code>garrysmod/data/bgn_siege_lab/verification.json</code>.</p>
+<h2 id="dv-traffic-developer-checks">DV traffic developer checks<a class="headerlink" href="#dv-traffic-developer-checks" title="Permanent link">&para;</a></h2>
+<p>Only BGN-created vehicles (<code>isBgnVehicle</code>) use the new recovery controller; the original DV remains a dependency. Police designation (<code>bgnPoliceVehicle</code>) persists across driver/group changes. Only actors on team <code>police</code> can drive or ride in these cars. Players may still take an empty police car.</p>
+<p>Pedestrians keep their detour side and intermediate goals. The 30% chance of ignoring road caution does not disable navigation around solid obstacles. Local traffic scans run at most twice per second, excluding dormant actors.</p>
+<p>Stalled drivers wait and honk before planning a bounded forward/reverse maneuver, including the opposite lane or sidewalk when space and ground support permit. Planning uses the shared task budget; control updates remain frequent. Red lights, scheduled stops and taxi passenger waits suppress recovery. Impossible maneuvers fall back to waiting and existing unseen-vehicle cleanup (<code>bgn_vehicle_cleanup_time</code>, default 120 seconds).</p>
+<p>The <code>tools/dv_*.lua</code> fixtures use a temporary single-player file bridge on <code>gm_bigcity_improved</code>. The bridge is not shipped as an addon autorun. <code>python tools/dv_lab.py server &lt;fixture.lua&gt;</code> sends a fixture to the running game. Reports go to <code>garrysmod/data/bgn_dv_lab/</code>.</p>
+<p>Fixtures cover police access (<code>dv_stage1</code>), chassis/axle alignment (<code>dv_headings</code>), NPC/NextBot detours (<code>dv_stage2</code>), blockers/turns and original-DV comparison (<code>dv_stage3</code>), scheduled-stop/no-path guards (<code>dv_guards</code>), two-way traffic (<code>dv_duel</code>), and stationary 10/30/60-car sensor benchmarks (<code>dv_benchmark</code>). Run one fixture at a time in a test session: they create entities and move the observer. Benchmark <code>ticks_per_second</code> measures server ticks, not rendering FPS. Python checks: <code>python tools/test_regressions.py</code> (requires lupa).</p>
+<p>Local vehicle planning targets mostly level streets. Other axle layouts and steep ramps need separate calibration.</p>
+<p>Police dismount for nearby actual enemies or critical vehicle damage; neutral observers no longer trigger dismounts or prevent returning. Previous crew may return to free passenger seats after their driver boards. <code>dv_return_lane.lua</code> exercises normal police return and physical alternate-lane recovery in an isolated lab. After two failed plans/maneuvers, idle traffic tries up to three nearby directed road segments with a different heading, respecting DV groups, road height, swept body clearance, ground support and reservations. A completed maneuver hands the driver to the new DV segment. Active destination missions and chases keep their routes. Progress during an alternate-lane maneuver means approaching its next target, not merely moving away from the jam.</p>
+<p>Alternate-lane tracking uses the measured rear axle for four-wheel simfphys cars, brakes and replans from the physical pose at gear changes, and skips failed lane endpoints for 30 seconds. Its bounded search allows 640 nodes; normal recovery keeps 160 nodes and its original body-center tracking. Lane endpoints must be ahead along their own directed segment. Critically damaged police cars are not boarded again. The fixture records the exact native waypoint handover; polling <code>PrevWaypoint</code> alone can miss it when DV immediately advances another waypoint. <code>BGNReturnLaneOnly=true</code> runs only the lane portion.</p>
+<p>Keep DV's native <code>DoTrace</code> interval: clear traces renew <code>StopByTrace</code> for only 0.1 seconds, so a 0.2-second scan interval causes false braking. Recovery requires speed below 25 HU/s and an obstacle or a heading error over 60 degrees; it refreshes DV traces while maneuvering and releases control when the forward route clears. Failed maneuvers restart the normal waiting period. Actor speed overrides retain DV's corner and traffic slowdown coefficients; absolute limits remain in HU/s.</p>
+<p><code>dv_damage_horn.lua</code> checks quiet waiting on an empty road, short honks (0.15 s, 8–14 s between requests) at a real blocker, surviving exits and fatal NPC/NextBot hits leaving ragdolls. Report: <code>damage_horn.json</code>. Honking requires a nearly stationary car and an entity hit by the forward sensor; world geometry does not trigger it. Exit floors more than 96 units above or below the car origin are rejected, keeping passengers aboard rather than placing them on another road level. Fatal seated occupants leave debris ragdolls subject to the engine's ragdoll limit.</p>
+<p>Vehicle occupants keep the same actor object and UID in the population registry. Boarding removes the real NPC/NextBot and its weapons; the existing DV driver/passenger anim entity represents the occupant. Exiting recreates the original body kind, appearance, health and equipment at a free hull-tested position. A blocked exit retains the seat. Removing a car removes its crew, including direct entity removal. Addon-private NPC data requires a <code>BGN_ActorEntityChanged(actor, old, new)</code> integration.</p>
+<p><code>dv_lifecycle.lua</code> checks simultaneous boarding, NPC/NextBot removal and recreation, stable identities/counts/targets, health/equipment, blocked exits, repeat boarding and direct car removal. <code>dv_lifecycle_guards.lua</code> checks lost/failed controllers, full seats, wanted/kill history and provider cleanup. Reports: <code>lifecycle.json</code> and <code>lifecycle_guards.json</code>. Both scenarios clean up their test entities.</p>
+<p>The admin <strong>Carried item debugger</strong> (<code>bgn_carry_debug</code>) issues a selected briefcase, parcel or newspaper with LMB and removes it with RMB. Aim at a living unarmed actor on foot in a calm state; model/body compatibility remains enforced. Test briefcases on male/female NPCs and NextBots through calm actions, running and combat: no physical briefcase should spawn.</p>
+<p>Carried visual models now move with their parent entity instead of keeping a separate world render origin, so a briefcase or newspaper does not remain culled at its old location after an actor teleport.</p>
+<p><code>bgn_selftest</code> also runs <code>tests/sv_conflicts.lua</code>: isolated modules/hooks cover initiator direction/reset/rebind/forgetting, confirmed arrest initiation, attacker visibility, caller-visible help, foreign hostility, distinct arrest victims, strict health/distance boundaries, refusal and shared player/actor wanted thresholds. They create no live entities and do not establish engine hook timing, traces or vehicle physics.</p>
+<p><code>tests/sv_pursuit.lua</code> checks stable/direct-attacker/group target priorities, observation of every enemy, original shared timestamps, hidden-target approach without standoff, visible-only cover, hidden squad columns, and the inclusive combat-radius boundary. Native integration also needs ordinary non-eternal actors with the remover enabled: observe a target through an open door, close it, then add reinforcements without manually seeding their memory. Verify pursuit/siege and no recycling inside the radius, then removal after leaving it; exercise NextBot unstuck protection separately.</p>
+<p><a id="combat-audit-regressions"></a></p>
+<h2 id="combat-audit-regressions">Combat audit regressions<a class="headerlink" href="#combat-audit-regressions" title="Permanent link">&para;</a></h2>
+<p><code>bgn_selftest</code> loads these SERVER tests on demand, without creating live entities:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Interaction checked</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tests/sv_pursuit.lua</code></td>
+<td>Real NPC adapter with modelled engine-memory refresh: search expires after more than 60 s and actual sightings renew it; real Rebind transfers hidden position/time and priorities in both realm branches; equipment follows the selected enemy with arrest fallback; both real NextBot teleport methods reject combat at 1000 and allow it at 1000.1, retaining siege protection.</td>
+</tr>
+<tr>
+<td><code>tests/sv_siege.lua</code></td>
+<td>Negotiation's <code>hold_fire</code> rejects both siege initiation and follower recruitment.</td>
+</tr>
+<tr>
+<td><code>tests/sv_negotiation.lua</code></td>
+<td>Weapon capabilities are removed and restored while door capabilities survive.</td>
+</tr>
+<tr>
+<td><code>tests/sv_conflicts.lua</code></td>
+<td>Friendly manhack damage is blocked in both owner/reaction hook orders, including ownership available only through inflictor; invalid owners are not substituted.</td>
+</tr>
+</tbody>
+</table>
+<p>An external LuaJIT/lupa run passed 36 tests across conflicts, lethal weapons, negotiation, pursuit, siege and GOAP planning after the fixes. The six affected checks failed against the earlier implementation. The external harness models engine APIs and is not a native <code>bgn_selftest</code> run. Native multiplayer, vehicle/door physics, real engine memory timing and script reload during these actions still require separate verification.</p>
+<p><code>tests/sv_team_damage.lua</code> runs 10 isolated regressions with real team, enemy, damage, wanted, arrest and vehicle-reaction modules: friendly NPC/NextBot hits with team damage off/on; help/report rejection; wanted broadcast and stale-entry cleanup; ordinary kills; SetTeam/AddTeam cleanup; repeated ramming of police on foot or in a car and a pedestrian run-over keep the driver in <code>residents</code>. <code>tools/test_police_force.py</code> also verifies a distant friendly hit is not a ranged threat. These are modelled engine calls, not native physics evidence.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="ghost-crowd.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Ghost crowd">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Ghost crowd
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="conversations.html" class="md-footer__link md-footer__link--next" aria-label="Next: Conversations">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Conversations
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020 - 2021 Shark_vil
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Shark-vil/" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://discord.gg/wZwtQTU" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M492.5 69.8c-.2-.3-.4-.6-.8-.7-38.1-17.5-78.4-30-119.7-37.1-.4-.1-.8 0-1.1.1s-.6.4-.8.8c-5.5 9.9-10.5 20.2-14.9 30.6-44.6-6.8-89.9-6.8-134.4 0-4.5-10.5-9.5-20.7-15.1-30.6-.2-.3-.5-.6-.8-.8s-.7-.2-1.1-.2C162.5 39 122.2 51.5 84.1 69c-.3.1-.6.4-.8.7C7.1 183.5-13.8 294.6-3.6 404.2c0 .3.1.5.2.8s.3.4.5.6c44.4 32.9 94 58 146.8 74.2.4.1.8.1 1.1 0s.7-.4.9-.7c11.3-15.4 21.4-31.8 30-48.8.1-.2.2-.5.2-.8s0-.5-.1-.8-.2-.5-.4-.6-.4-.3-.7-.4c-15.8-6.1-31.2-13.4-45.9-21.9-.3-.2-.5-.4-.7-.6s-.3-.6-.3-.9 0-.6.2-.9.3-.5.6-.7c3.1-2.3 6.2-4.7 9.1-7.1.3-.2.6-.4.9-.4s.7 0 1 .1c96.2 43.9 200.4 43.9 295.5 0 .3-.1.7-.2 1-.2s.7.2.9.4c2.9 2.4 6 4.9 9.1 7.2.2.2.4.4.6.7s.2.6.2.9-.1.6-.3.9-.4.5-.6.6c-14.7 8.6-30 15.9-45.9 21.8-.2.1-.5.2-.7.4s-.3.4-.4.7-.1.5-.1.8.1.5.2.8c8.8 17 18.8 33.3 30 48.8.2.3.6.6.9.7s.8.1 1.1 0c52.9-16.2 102.6-41.3 147.1-74.2.2-.2.4-.4.5-.6s.2-.5.2-.8c12.3-126.8-20.5-236.9-86.9-334.5zm-302 267.7c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.4 59.2-52.8 59.2m195.4 0c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.2 59.2-52.8 59.2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://steamcommunity.com/id/shark_vil/" target="_blank" rel="noopener" title="steamcommunity.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M504 256c0 137-111.2 248-248.4 248-113.8 0-209.6-76.3-239-180.4l95.2 39.3c6.4 32.1 34.9 56.4 68.9 56.4 39.2 0 71.9-32.4 70.2-73.5l84.5-60.2c52.1 1.3 95.8-40.9 95.8-93.5 0-51.6-42-93.5-93.7-93.5s-93.7 42-93.7 93.5v1.2L184.6 279c-15.5-.9-30.7 3.4-43.5 12.1L8 236.1C18.2 108.4 125.1 8 255.6 8 392.8 8 504 119 504 256M163.7 384.3l-30.5-12.6c5.6 11.6 15.3 20.8 27.2 25.8 26.9 11.2 57.8-1.6 69-28.4 5.4-13 5.5-27.3.1-40.3S214 305.6 201 300.2c-12.9-5.4-26.7-5.2-38.9-.6l31.5 13c19.8 8.2 29.2 30.9 20.9 50.7-8.3 19.9-31 29.2-50.8 21m173.8-254.5a62.3 62.3 0 1 1 0 124.6 62.3 62.3 0 1 1 0-124.6m.1 109a46.8 46.8 0 1 0 0-93.6 46.8 46.8 0 1 0 0 93.6"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/channel/UCceZ68lbnrBGBPXgMPBOfoA" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.expand", "navigation.tracking", "navigation.sections", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

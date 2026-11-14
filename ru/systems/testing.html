@@ -1,0 +1,2175 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Setup, practical examples and Lua API for Background NPCs">
+      
+      
+        <meta name="author" content="Shark_vil">
+      
+      
+        <link rel="canonical" href="https://shark-vil.github.io/background-citizens/ru/systems/testing.html">
+      
+      
+        <link rel="prev" href="ghost-crowd.html">
+      
+      
+        <link rel="next" href="conversations.html">
+      
+      
+        
+          <link rel="alternate" href="../../systems/testing.html" hreflang="en">
+        
+          <link rel="alternate" href="testing.html" hreflang="ru">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Режим тестирования - Background NPCs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          Перейти к содержанию
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="../index.html" title="Background NPCs" class="md-header__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Background NPCs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Режим тестирования
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Выберите язык">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../systems/testing.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="testing.html" hreflang="ru" class="md-select__link">
+              Русский
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Поиск">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Очистить" aria-label="Очистить" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Инициализация поиска
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Shark-vil/background-citizens" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Главная
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started.html" class="md-tabs__link">
+          
+  
+  
+  Руководство
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="navigation.html" class="md-tabs__link">
+          
+  
+  
+  Системы
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture.html" class="md-tabs__link">
+          
+  
+  
+  Справочник
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Background NPCs" class="md-nav__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Background NPCs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Shark-vil/background-citizens" title="Перейти к репозиторию" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Главная
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Руководство
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Руководство
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Быстрый старт
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Примеры
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Решение проблем
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Creating-Custom-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Свои акторы
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Modification-of-Existing-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Изменение акторов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Actor-Config-Settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Параметры акторов
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../information/More%20maps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Карты
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Системы
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Системы
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="navigation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Навигация
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brains.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Поведение
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="menu.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Меню настроек
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ghost-crowd.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Фоновая толпа
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режим тестирования
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="testing.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Режим тестирования
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Регрессии инженерного аудита Core
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Что проверяет полный тест
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Кнопка «Исправить»
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Окно результатов
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Примечания
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Отладочное отображение и регрессии
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Отладочное отображение и регрессии">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spawnmenu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Страница отладки в Spawnmenu
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проверка осады помещения разработчиком
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Проверка транспорта DV разработчиком
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Регрессии боевого аудита
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conversations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Разговоры
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="arrest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Арест
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vehicles.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Транспорт
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="wanted.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Розыск
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gangs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Банды
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="medics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Медики и тела
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="voices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Голоса
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="scenic.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сценические сцены
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Справочник
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Справочник
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Архитектура
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-audit.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Инженерный аудит Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    История версий
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сравнение с 1.13
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classes/actor/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API актора
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Серверный API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/client.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Клиентский API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Общий API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Правила документации для ИИ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Сборка документации
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">Режим тестирования<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="core">Регрессии инженерного аудита Core<a class="headerlink" href="#core" title="Permanent link">&para;</a></h2>
+<p><code>python tools/test_core_audit.py</code> запускает 21 изолированный LuaJIT/lupa-тест из
+<code>tests/sv_engineering_audit.lua</code>; SERVER <code>bgn_selftest</code> загружает тот же файл по запросу без живых сущностей.
+Проверяются изменение списка задач, постоянные службы, механики, UID/снимки после reload, удаление на клиенте,
+неверные/частичные сетевые данные, навигация, GOAP, внешность и права/учёт спавна gamemode,
+регенерация, IO spawnmenu, LOD строковых UID и клиентская загрузка сидений. Дополнительные случаи проверяют
+принудительный и заблокированный выход, смертельный урон без визуальной сущности DV и наблюдателей розыска,
+ожидающих замены сущности. Повторная проверка добавила отсутствие тела при регенерации, фоновых голосах,
+опросе отношений и уступке бюджета сканирования. Все 21 падают на исходном <code>dev</code>
+с <code>--baseline</code> и проходят после исправлений. Вызовы движка моделируются; это не нативная проверка игры.
+См. <a href="../core-audit.html">решения аудита и оставшиеся ограничения</a>.</p>
+<p>Для интерактивной проверки scenic и дверей GOAP используйте админский <a href="scenic.html">Tool «Отладка сцен»</a>.
+<code>tools/scenic_tool.lua</code> проверяет настоящий серверный Tool, обычный Undo, освобождение стула, диагностику моделей
+и один цикл взаимодействия с дверью на телах NPC и NextBot через временный одиночный мост. Нужен отдельный стенд
+<code>gm_bigcity_improved</code> с NavMesh. Отчёт: <code>data/bgn_scenic_tool_lab/tool.json</code>.
+Оставьте включёнными задачи автоудаления акторов и обслуживания scenic: проверки очистки подтверждают,
+что тест сохраняется, а обычный контрольный актор удаляется при <code>bgn_enable 0</code>; затем настройка восстанавливается.</p>
+<p><code>tools/door_hold.lua</code> — опциональный сценарий для отдельной одиночной сессии <code>gm_bigcity_improved</code> через временный
+Lua-мост, не autorun аддона. Проверяет реальный выбор GOAP для удерживания/выбивания во всех четырёх сочетаниях
+тел NPC/NextBot и при четырёх поворотах двери, физическое отбрасывание, сохранение актора/сущности/здоровья,
+восстановление настроек двери, заблокированный подъём, запрет принудительной смены состояния, удаление удерживающего
+или регдолла и урон/смерть лёжа.
+Отчёт: <code>data/bgn_door_lab/doors.json</code>. Создаёт стандартные тестовые модели и двери, временно перемещает наблюдателя,
+приостанавливает автоматический спавн, затем удаляет свои объекты и восстанавливает задачи и наблюдателя.
+Запускать на стенде, а не в текущей игровой сессии.
+<code>tools/seating_lab.lua</code> проверяет 32 случая посадки на обоих типах тела: два штатных пропа-стула с четырьмя
+поворотами, ближний и дальний подход, пользовательские места на скамейках BigCity, сценические стулья/скамейки
+и обе позы уступа на мужской и женской моделях. Проверяются опора под тазом, направление к перепаду высоты,
+неподвижность и восстановление физики/освобождение места после выхода. Запускать только на отдельном одиночном
+стенде с портом 27025; отчёт: <code>data/bgn_seat_lab/seating.json</code>.</p>
+<p>Дополнительные сценарии через тот же временный мост одиночного стенда:</p>
+<table>
+<thead>
+<tr>
+<th>Сценарий</th>
+<th>Проверки в движке</th>
+<th>Отчёт в <code>data/bgn_scenic_overhaul_lab/</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tools/scenic_poses.lua</code></td>
+<td>Позы NPC/NextBot, контакт со стеной/дверью, отклонение улицы, оба пола на диванах, целостность пары и уступы из brush-геометрии</td>
+<td><code>poses.json</code></td>
+</tr>
+<tr>
+<td><code>tools/carry_items.lua</code></td>
+<td>Tool/обычный спавн: кейс HL2 без оружия/смены активности, ходьба NextBot с пайком/чемоданом/газетой, скрытый паёк, убирание, бросок/удаление</td>
+<td><code>carry.json</code></td>
+</tr>
+<tr>
+<td><code>tools/ghost_carry.lua</code></td>
+<td>Отдельный запуск на SERVER и CLIENT: отсутствие предметов у обоих видов призраков и после превращения в NPC/NextBot</td>
+<td><code>ghost-server.json</code>, <code>ghost-client.json</code></td>
+</tr>
+<tr>
+<td><code>tools/ragdoll_identity.lua</code></td>
+<td>Тот же актор/сущность, последнее здоровье/максимум, оружие/магазин, входящие/исходящие отношения и запись розыска после подъёма</td>
+<td><code>identity.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>Для повторяемости используются штатные модели с анимациями. Сценарии удаляют свои сущности и возвращают
+изменённые настройки; они не подтверждают совместимость каждой сторонней модели или сетевой игры.
+<code>scenic_poses</code> проверяет уступ на настоящей BSP-геометрии, не подменяя результаты трассировки.
+<code>tools/carry_alignment.lua</code> — опциональная CLIENT-проверка в кадре отрисовки на отдельном одиночном стенде. Измеряет привязку нижнего хвата газеты к пальцам, наклон наружу на 15 градусов и вертикальную ручку кейса относительно хвата указательного пальца. Нужны также снимки спереди/сбоку мужской и женской моделей в ожидании и при реальной ходьбе; измерения не заменяют визуальную проверку. Отчёты: <code>data/bgn_paper_lab/alignment-idle.json</code> и <code>alignment-walk.json</code>.</p>
+<p>Проверки вне игры (lupa): <code>python tools/test_regressions.py</code>, <code>python tools/test_scenic.py</code>, <code>python tools/test_carry_items.py</code>.</p>
+<p>Минутная проверка, которая отвечает фактами на «ничего не спавнится» и «я админ, но не могу менять настройки».
+Откройте <strong>Настройки → Инструменты → Тестирование</strong> (для админов) или введите команду в консоли:</p>
+<table>
+<thead>
+<tr>
+<th>Команда</th>
+<th>Кому</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgn_test</code></td>
+<td>админам</td>
+<td>Полный тест (ниже).</td>
+</tr>
+<tr>
+<td><code>bgn_test_settings</code></td>
+<td>всем</td>
+<td>Только проверка прав и изменения настроек. Запустите её первой, если настройки не меняются.</td>
+</tr>
+<tr>
+<td><code>bgn_test_report</code></td>
+<td>всем</td>
+<td>Снова открывает результаты последнего теста.</td>
+</tr>
+<tr>
+<td><code>bgn_test_stop</code></td>
+<td>запустившему тест, админам</td>
+<td>Останавливает тест.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">Что проверяет полный тест<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Проверка</th>
+<th>Как</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Аддон и карта</td>
+<td><code>bgn_enable</code>, провайдер навигации и число точек.</td>
+</tr>
+<tr>
+<td>Права администратора</td>
+<td>Что сервер и клиент знают о вашей группе (<code>IsAdmin</code>, <code>IsSuperAdmin</code>, группа).</td>
+</tr>
+<tr>
+<td>Изменение серверных настроек</td>
+<td>Клиент меняет тестовый cvar <code>bgn_test_server_value</code> так же, как любая строка настроек, сервер должен его получить; затем сервер меняет значение сам, и клиент должен его увидеть.</td>
+</tr>
+<tr>
+<td>Изменение клиентских настроек</td>
+<td>Тестовый cvar <code>bgn_cl_test_value</code> меняется и читается обратно.</td>
+</tr>
+<tr>
+<td>Актёры появляются сами</td>
+<td>Актёры уже есть, или обычный спавнер создаёт хотя бы одного за 15 с. Если нет, называется вероятная причина: аддон выключен, нулевые лимиты, нет навигационных точек, нет места вне поля зрения, другой аддон.</td>
+</tr>
+<tr>
+<td>Актёры появляются по запросу</td>
+<td>По одному актёру каждого активного типа создаётся на свободных местах рядом с вами, мимо лимитов и правил видимости. Типы, которые появляются только при розыске, пропускаются.</td>
+</tr>
+<tr>
+<td>Машины</td>
+<td>Загружен Decent Vehicle, на карте есть его маршруты, модели машин из конфига установлены; создаётся водитель с машиной, и он должен сесть. Отсутствие Decent Vehicle это предупреждение, а не ошибка.</td>
+</tr>
+<tr>
+<td>Актёры не исчезают</td>
+<td>Созданные актёры и машины должны существовать через 12 с. Актёр, созданный сверх лимита своего типа, штатно удаляется (лог это отмечает).</td>
+</tr>
+<tr>
+<td>Состояния актёров</td>
+<td>У каждого актёра есть сущность и известное состояние, он стоит внутри мира, идущие действительно двигаются, а принудительная смена <code>idle</code> / <code>walk</code> принимается.</td>
+</tr>
+<tr>
+<td>Где находятся актёры</td>
+<td>Актёры ближе 700 единиц друг к другу образуют группу. Камера пролетает над четырьмя самыми большими, обводит актёров и отмечает место лучом и сферой. <strong>Пробел</strong> пропускает показ. На это время вы заморожены и неуязвимы.</td>
+</tr>
+</tbody>
+</table>
+<p>Тестовые актёры и машины удаляются в конце, изменённые cvar'ы возвращаются.</p>
+<h2 id="_3">Кнопка «Исправить»<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Если причина очевидна и лечится настройкой, админ видит в строке кнопку <strong>Исправить</strong>: аддон выключен, нулевой общий лимит, выключены все типы актёров, радиус появления без точек, радиусы блокировки и видимости не оставляют свободных мест, выключена поддержка машин. Кнопка возвращает значения по умолчанию только у этих консольных переменных (лог их перечисляет) и предлагает запустить тест снова. Для прав, отсутствующих аддонов и карт без навигации кнопки нет: настройкой это не исправить.</p>
+<h2 id="_4">Окно результатов<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>Оно выглядит как окно настроек, с тем же переключением светлой и тёмной темы, и содержит строку на каждую проверку:
+значок (пройдено, предупреждение, ошибка) и короткое понятное предложение. <strong>Копировать лог</strong> кладёт в буфер полный
+технический отчёт (он также сохраняется в <code>data/background_npcs/test_report.txt</code>, а консоль сервера его выводит).
+Вставьте его в сообщение об ошибке. Предложения следуют языку интерфейса, лог всегда на английском.</p>
+<h2 id="_5">Примечания<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<ul>
+<li>В одиночной игре и на listen-сервере клиент и сервер используют общие консольные переменные, поэтому проверка
+  серверных настроек может пройти и без прав администратора; тогда она заканчивается предупреждением. Запускайте её на настоящем сервере.</li>
+<li>Полный тест доступен только администраторам; у остальных <code>bgn_test</code> выполняет только проверку настроек.</li>
+<li>Два тестовых cvar'а есть и ползунками в <strong>Инструменты → Тестирование</strong>: меняйте их вручную, чтобы увидеть, как работает обычная строка.</li>
+<li>Исходники: <code>lua/background_npcs_core/debug/</code> (<code>sv_diag.lua</code> выполняет проверки, <code>cl_diag.lua</code> отвечает за камеру и окно).
+  Проверка это функция, вызывающая <code>Section(id)</code>, <code>Log(...)</code> и <code>Result(status, phrase, ...)</code>;
+  фразы лежат в <code>resource/localization/&lt;lang&gt;/bgn_diag.properties</code>.</li>
+</ul>
+<h2 id="_6">Отладочное отображение и регрессии<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>Отладка доступна администраторам при <code>bgn_debug 1</code> (SERVER). Настройки CLIENT меняют только отображение наблюдателя.
+Инспектор записывает существующие решения: не запускает сенсоры, не выбирает реакции заново, не продвигает планы
+и не меняет правила стелса.</p>
+<p><a id="spawnmenu-debug-page"></a></p>
+<h3 id="spawnmenu">Страница отладки в Spawnmenu<a class="headerlink" href="#spawnmenu" title="Permanent link">&para;</a></h3>
+<p>Откройте <strong>Q → Options → Background NPCs → Отладка</strong> либо <strong>Инструменты → Background NPCs: Отладка → Инспектор актёров</strong>.
+Выберите актёра из обновлённого списка или под прицелом. Выбор хранится по UID, включая замену тела.
+Закрепление запрещает ЛКМ инструмента инспекции менять выбор; явный выбор в меню остаётся доступен.
+Основной режим — один актёр и его связи; обзор ближайших включается отдельно.</p>
+<p><strong>Инструменты → Background NPCs: Редактор</strong> содержит точки маршрутов, зоны спавна и сиденья.
+<strong>Background NPCs: Отладка</strong> содержит инспектор, поиск пути, перемещение актёра, сцены и предметы в руках.
+Идентификаторы Tools сохранены; внутренний спавнер актёров остаётся скрытым.</p>
+<table>
+<thead>
+<tr>
+<th>Cvar CLIENT</th>
+<th>По умолчанию</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgn_cl_debug_mode</code></td>
+<td>0</td>
+<td>0: экранный HUD; 1: карточки в мире (3D2D); 2: только геометрия.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_inspector</code></td>
+<td>1</td>
+<td>Экранный HUD выбранного актёра.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_bounds</code> / <code>bgn_cl_debug_labels</code></td>
+<td>1 / 1</td>
+<td>Габариты / текст карточек в мире.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_summary</code></td>
+<td>1</td>
+<td>Время сбора/отрисовки и число отрезков внизу HUD.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_draw_npc_path</code></td>
+<td>0</td>
+<td>Существующий путь выбранного актёра с SERVER.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_targets</code></td>
+<td>1</td>
+<td>Связи с известными врагами: память, а не текущая видимость.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_vision</code></td>
+<td>0</td>
+<td>Записанные игровые проверки зрения и препятствия.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_signals</code> / <code>bgn_cl_debug_history</code></td>
+<td>1 / 1</td>
+<td>Сигналы команды / последние события.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_text_scale</code></td>
+<td>1</td>
+<td>Масштаб текста 0,75–2; учитывает высоту экрана, 20 px при 900p.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_distance</code> / <code>bgn_cl_debug_geometry_distance</code></td>
+<td>800 / 1500</td>
+<td>Независимые дальности текста / геометрии в HU, каждая 100–5000.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_wh</code> / <code>bgn_cl_debug_overview</code></td>
+<td>0 / 0</td>
+<td>Геометрия сквозь стены / обзор ближайших актёров.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_related</code> / <code>bgn_cl_debug_cards</code></td>
+<td>16 / 8</td>
+<td>Лимит связей 1–64 на список / видимых карточек 1–16.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_rate</code></td>
+<td>5</td>
+<td>Частота снимков выбранного актёра, 2–10 Гц.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_seconds</code> / <code>bgn_cl_debug_life</code></td>
+<td>30 / 2</td>
+<td>Окно истории 1–30 с / время линий 0,2–10 с.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_blockers</code> / <code>bgn_cl_debug_markers</code></td>
+<td>1 / 1</td>
+<td>Препятствия зрения / маркеры сцен и рук.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_marker_size</code></td>
+<td>12</td>
+<td>Размер маркеров 2–48 HU.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_team_filter</code>, <code>type_filter</code>, <code>state_filter</code>, <code>event_filter</code></td>
+<td>пусто</td>
+<td>Поиск подстроки; все четыре имени имеют префикс <code>bgn_cl_debug_</code>. Фильтр событий ищет по виду события.</td>
+</tr>
+<tr>
+<td><code>bgn_cl_debug_freeze</code> / <code>bgn_cl_debug_technical</code></td>
+<td>0 / 0</td>
+<td>Заморозка данных отладки / технические имена на HUD.</td>
+</tr>
+</tbody>
+</table>
+<p>Редкие настройки находятся в <strong>Ограничения и фильтры</strong>. Карточки масштабируются с расстоянием и подавляются
+при наложении; текст переносится, длинные отчёты доступны для копирования. Обновление списка сохраняет выбор
+и камеру. <strong>Зафиксировать снимок</strong> останавливает отображаемые данные, но не игру и не живую камеру.</p>
+<p>Компактный HUD показывает здоровье, состояние, реакцию, известных врагов/цели, розыск, движение, зрение и события.
+<strong>Открыть подробности</strong> добавляет исходное имя/группу состояния, отказ от боя, модель/анимацию, предмет в руках,
+веса реакций, время последнего наблюдения известных целей и сохранённый план/факты GOAP. У FSM плана GOAP нет.
+Взвешенный выбор реакции — кандидат, а не подтверждение разрешения последующими хуками. Попытка урона записывается
+до отмены; событие реакции не подтверждает фактическую потерю здоровья.</p>
+<p>Зрение берётся из настоящих вызовов <code>HasLineOfSight</code> / <code>CanSeeEntity</code>. Каналы различают свидетеля урона/выстрела,
+память врага, обмен между союзниками, помощь, розыск и группу. Зелёный — успешная проверка, красный — неуспешная
+с точкой попадания и препятствием, включая геометрию карты; фиолетовый — память о враге, жёлтый — сигнал.
+Отклонённый сигнал красный. Нет проверки — неизвестно. Конус появляется только после настоящей проверки
+направления, использует записанный вектор взгляда и тот же порог скалярного произведения, что <code>Util.IsInView</code>;
+длина 100 HU условная. Обычный LOS не ограничен поворотом головы. Известный враг может быть сейчас невидим.
+Обнаружение вблизи по розыску и радио не означают успешную трассировку. Отладчик не добавляет луч к игроку.</p>
+<p>События команды показывают отправителя → получателя и обсуждаемую цель. Помощь, обмен, радио и группа
+записывают итоговое наличие врага; запрет реакции свидетеля отмечается отдельно. У рассылки розыска нет
+актёра-отправителя. Это ограниченный журнал подключённых участков, а не запись всех отклонённых ветвей ИИ.</p>
+<p>SERVER собирает выбранные снимки с заданной частотой и переиспользует результат одинаковых подписок внутри
+одного такта. Список запрашивается явно, не чаще 1 Гц; обзор обновляется в 2 Гц в пределах 5000 HU.
+Автоматического потока всех актёров нет. На наблюдаемый UID: до 256 событий и 64 записей зрения; путь ограничен
+256 точками, список — 128 актёрами, клиентская геометрия — 1024 отрезками. Ограничения отмечаются в HUD.
+CLIENT строит текст и цветной mesh линий при снимке/настройке и рисует готовый пакет каждый кадр;
+маркеры сцен/рук обновляются в 2 Гц. Покадрового поиска актёров и отладочных трассировок зрения нет.
+Время в HUD измеряет сбор и клиентскую отрисовку, а не весь кадр или передачу по сети.</p>
+<p><strong>Вид от лица актёра</strong> следует за глазами. F6, Escape или <strong>Вернуться к своему виду</strong> освобождает камеру.
+SERVER добавляет камеру в PVS администратора и блокирует движение/атаки. Тело игрока остаётся уязвимым.
+Смерть/удаление, смерть наблюдателя, потеря прав, очистка карты, отключение отладки или потеря подписки
+освобождают камеру. Продление — раз в секунду, срок подписки — 3 с; незамороженная геометрия старше 2 с скрывается.
+SERVER передаёт положение глаз относительно тела NPC/NextBot; CLIENT следует за интерполяцией тела.
+Отрисовка только наблюдаемого тела временно подавляется и восстанавливается при выходе; серверный <code>NoDraw</code> сохраняется.</p>
+<p>Особенности Tools:</p>
+<ul>
+<li><code>bgn_path_finder</code>: ЛКМ — начало, ПКМ — назначение, R — сброс. Использует активную навигацию SERVER;
+  маркеры концов и число точек относятся к запрошенному пути, отдельно от текущего пути актёра.</li>
+<li><code>bgn_actor_mover</code>: ЛКМ — актёр, ПКМ — назначение, R/смена инструмента — освобождение. Настраиваются шаг/бег
+  и допуск прибытия. Управляет один владелец; прежние флаги debugger/eternal/блокировки и данные состояния
+  возвращаются при освобождении. Этот инструмент намеренно меняет движение и не является пассивной инспекцией.</li>
+<li><code>bgn_scenic_debug</code>: сохранены размещение, осмотр, тест двери GOAP и удаление своих объектов/Undo.
+  Предпросмотр переиспользует проверки размещения, показывает габариты участников и причины отказа, ничего
+  не создаёт. Использует минимальную группу без RNG; спавн может выбрать иной размер/поворот/вариант модели.</li>
+<li><code>bgn_carry_debug</code>: сохранены проверки выдачи/снятия. Оси костей, габариты предмета, совместимость модели/анимации
+  и расстояние от ручки кейса до пальца помогают проверить привязку; число геометрическое, не оценка качества рига.
+  Оба специальных инструмента имеют общие дальности, WH, размер маркеров и копируемый отчёт.</li>
+</ul>
+<p>Команды: <code>bgn_debug_select [uid]</code>, <code>bgn_debug_details</code>, <code>bgn_debug_tool_details</code>, <code>bgn_debug_watch</code>,
+<code>bgn_debug_watch_stop</code>, <code>bgn_debug_clear</code>, <code>bgn_debug_pin</code>, <code>bgn_debug_freeze</code>.</p>
+<p><code>python tools/test_actor_debug.py</code> (lupa) проверяет права/параметры, снимки без изменения ИИ, ограниченную историю,
+препятствия карты, записанный взгляд, жизненный цикл камеры, ключи EN/RU и восстановление после перемещения.
+В одиночной игре на <code>gm_bigcity_improved</code> (1280×720, 1600×900, 1920×1080) проверены категории, настоящий урон/зрение/препятствие и обмен
+врагом, HUD/3D2D и дальность, камера NPC/NextBot, обновление/заморозка, предпросмотр/удаление сцен, выдача/снятие
+предмета и кеширование mesh. Замеры на 30/60/100 актёрах покрывают инспекцию и дополнительный обзор;
+это не гарантия общего FPS. Мультиплеер, сторонние камеры и произвольные риги требуют отдельной проверки.</p>
+<p><code>python tools/test_regressions.py</code> (требуется lupa) проверяет Lua-логику вне GMod: безопасные методы здоровья актора на сервере и клиенте, порядок регистрации ареста, урон и свидетелей в машинах, направление взгляда пассажира, выход возле сиденья или заданного выхода модели, запрет пересечений и переход на свободную сторону. Эти проверки не подтверждают физику в игре и расположение выходов у всех моделей транспорта.</p>
+<h2 id="_7">Проверка осады помещения разработчиком<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p><code>bgn_selftest</code> включает <code>tests/sv_siege.lua</code>: изолированные проверки одного выхода, обходных/входящих связей,
+отклонения улицы, требований класса/анимаций, вероятности удара и запасного жеста, общего резервирования
+спецсредства, безопасности гранаты и таймеров ожидания/повторения. Они не подтверждают физику или полноту навигации карты.</p>
+<p><code>tools/siege.lua</code> — ручной SERVER-сценарий для отдельной single-player сессии <code>gm_bigcity_improved</code>,
+комната возле <code>setpos -748.617798 -4298.178223 -11071.968750</code>. Создаёт восемь акторов и проверяет операторов
+метрокоп/комбайн с телами NPC и NextBot, в том числе против игрока. Проверяет общий выход из двух створок,
+отказ без анимации, пять ближних/три дальних участника, тихое ожидание, одно настоящее спецсредство,
+его попадание в комнату, настоящий урон/его источник по целям-NPC, отмену при выходе/уроне и восстановление
+возможностей NPC. Временно перемещает/вооружает наблюдателя,
+приостанавливает задачи населения, убирает свои сущности и восстанавливает своё состояние. Запускать через
+временный локальный SERVER-мост, не как autorun и не на публичном сервере.
+Результаты: <code>garrysmod/data/bgn_siege_lab/verification.json</code>.</p>
+<h2 id="dv">Проверка транспорта DV разработчиком<a class="headerlink" href="#dv" title="Permanent link">&para;</a></h2>
+<p>Новая логика применяется только к созданным BGN машинам (<code>isBgnVehicle</code>), исходный DV остаётся зависимостью. Полицейская принадлежность сохраняется в <code>bgnPoliceVehicle</code>: водителем и пассажиром может быть только актёр команды <code>police</code>. Игроку по-прежнему доступна пустая машина.</p>
+<p>Пешеходы сохраняют сторону и точки обхода до завершения манёвра. 30% игнорирования осторожности перед дорогой не отключает навигацию вокруг твёрдого препятствия. Поиск транспорта выполняется не чаще раза в 0,5 секунды; спящие по LOD актёры его не выполняют.</p>
+<p>Застрявший транспорт сначала ждёт и сигналит, затем ищет ограниченный местный манёвр вперёд/назад, включая встречную полосу или тротуар. Проверяются корпус и опора. Поиск работает в планировщике с бюджетом; управление остаётся частым. Штатная остановка, красный свет и ожидание пассажира не считаются затором. При отсутствии пути остаются ожидание и существующая очистка невидимых машин (<code>bgn_vehicle_cleanup_time</code>, по умолчанию 120 секунд).</p>
+<p>Сценарии в <code>tools/</code> запускаются через временный локальный файловый мост только в одиночной игре на <code>gm_bigcity_improved</code>. Сам мост не входит в автозагрузку аддона. <code>dv_lab.py server &lt;сценарий.lua&gt;</code> отправляет сценарий уже запущенной игре; результаты записываются в <code>garrysmod/data/bgn_dv_lab/</code>.</p>
+<ul>
+<li><code>dv_stage1.lua</code>: доступ к полицейскому транспорту.</li>
+<li><code>dv_headings.lua</code>: направление корпуса и осей колёс четырёх моделей.</li>
+<li><code>dv_stage2.lua</code>: обход NPC; <code>BGNDVStage2Body='bgn_nextbot'</code> выбирает NextBot.</li>
+<li><code>dv_stage3.lua</code>: преграда; <code>BGNDVStage3Scenario='turn'</code> выбирает поворот, <code>BGNDVStage3Baseline=true</code> — исходный DV для сравнения.</li>
+<li><code>dv_guards.lua</code>: красный свет, ожидание такси, штатная остановка, физически замкнутое пространство.</li>
+<li><code>dv_duel.lua</code>: встречный разъезд.</li>
+<li><code>dv_benchmark.lua</code>: неподвижные машины, <code>BGNDVBenchCount=10|30|60</code>, <code>BGNDVBenchBaseline=true</code> для сравнения. Это замер датчиков, а не дорожного поведения. Поле <code>ticks_per_second</code> — серверные тики, не FPS отрисовки.</li>
+</ul>
+<p>Запускайте сценарии по одному в тестовой сессии; они создают сущности и перемещают наблюдателя. Для Python-регрессий: <code>python tools/test_regressions.py</code> (нужен lupa). Геометрия локального автомобильного поиска рассчитана на преимущественно ровные улицы; нестандартные оси и крутые рампы требуют отдельной калибровки.</p>
+<p>Полиция выходит при близком противнике либо критическом повреждении машины; нейтральный наблюдатель больше не вызывает выход и не запрещает возвращение. Прежний экипаж может занять свободные пассажирские места после посадки водителя. <code>dv_return_lane.lua</code> проверяет возврат полиции и физический переход на другую полосу в отдельной тестовой сцене. После двух неудачных поисков/манёвров обычный трафик пробует до трёх соседних дорожных сегментов с другим направлением: проверяются группы DV, высота дороги, габариты, опора и резервирование пути. Успешный манёвр передаёт управление DV на новом сегменте. Целевые поездки и погони сохраняют маршрут. Прогресс резервного перехода измеряется приближением к следующей точке, а не любым перемещением машины.</p>
+<p>Резервный переход учитывает заднюю ось четырёхколёсных simfphys, тормозит и пересчитывает путь из фактической позиции при смене хода, пропускает неудачные съезды на 30 с. Его поиск ограничен 640 узлами; обычный объезд сохраняет 160 узлов и прежнее управление относительно центра кузова. Конечная дорожная точка должна быть впереди по направлению своего сегмента. В критически повреждённую полицейскую машину экипаж не возвращается. Сценарий фиксирует сам вызов переключения маршрута: опрос <code>PrevWaypoint</code> может пропустить его, если DV сразу проходит следующую точку. <code>BGNReturnLaneOnly=true</code> запускает только автомобильную часть.</p>
+<p>Частота <code>DoTrace</code> остаётся штатной: свободная трасса продлевает <code>StopByTrace</code> лишь на 0,1 с, поэтому интервал проверки 0,2 с вызывает ложное торможение. Объезд включается при скорости ниже 25 HU/s и наличии препятствия либо отклонении курса более 60 градусов. Во время манёвра датчики обновляются, а освобождение пути возвращает управление DV. Неудачный манёвр заново запускает обычную паузу ожидания. Переопределения скорости актёра сохраняют штатные коэффициенты замедления DV; абсолютные лимиты остаются в HU/s.</p>
+<p><code>dv_damage_horn.lua</code> проверяет тишину на свободной дороге, короткий сигнал перед физическим препятствием (0,15 с, пауза 8–14 с), выход живых NPC/NextBot и появление ragdoll при смертельном уроне в машине. Отчёт: <code>damage_horn.json</code>. Сигнал требует почти неподвижной машины и попадания переднего датчика в сущность; геометрия карты его не вызывает. Точки выхода с перепадом более 96 единиц от позиции машины отклоняются: пассажир остаётся в салоне вместо выхода на другой уровень дороги. Тела погибших в салоне учитываются движком в лимите ragdoll.</p>
+<p>Пассажиры и водитель сохраняют тот же объект актёра и UID в реестре населения. При посадке настоящий NPC/NextBot и его оружие удаляются; актёра представляет уже существующая anim-сущность DV. При выходе исходный тип тела, внешность, здоровье и снаряжение восстанавливаются в свободной точке с проверкой габаритов. При перекрытом выходе актёр остаётся в машине. Удаление машины удаляет экипаж, в том числе при прямом Remove сущности. Для внутренних данных сторонних NPC нужен обработчик <code>BGN_ActorEntityChanged(actor, old, new)</code>.</p>
+<p><code>dv_lifecycle.lua</code> проверяет одновременную посадку, удаление и восстановление NPC/NextBot, сохранение UID/численности/целей, здоровья и оружия, перекрытый выход, повторную посадку и прямое удаление машины. <code>dv_lifecycle_guards.lua</code> — потерю и неудачное создание контроллера, заполненные места, сохранение розыска/истории убийств и очистку через провайдер. Отчёты: <code>lifecycle.json</code> и <code>lifecycle_guards.json</code>. Оба сценария убирают свои тестовые сущности.</p>
+<p>Админский Tool <strong>Отладка предметов в руках</strong> (<code>bgn_carry_debug</code>) выдаёт выбранный кейс, еду или газету по ЛКМ и убирает по ПКМ. Цель — живой безоружный актор вне машины в спокойном состоянии; совместимость тела/модели проверяется. Проверяйте кейсы у мужчин/женщин NPC и NextBot при мирных действиях, беге и бое: физический кейс появляться не должен.</p>
+<p>Клиентская модель предмета теперь перемещается вместе с родителем вместо отдельной мировой точки отрисовки: кейс или газета не остаются отсечёнными в прежней точке после телепортации актёра.</p>
+<p><code>bgn_selftest</code> также запускает <code>tests/sv_conflicts.lua</code>: изолированные модули/хуки проверяют направление/сброс/перенос/забывание инициатора, начало ареста по фактическому урону, видимость нападающего и зовущего, внешнюю враждебность, уникальных жертв при аресте, строгие пороги здоровья/дистанции, неподчинение и общий порог розыска игрока/ACTOR. Живые сущности не создаются; тесты не подтверждают порядок хуков движка, трассировки и физику машин.</p>
+<p><code>tests/sv_pursuit.lua</code> проверяет устойчивость и приоритет нападающего/групповой цели, наблюдение всех врагов, исходное время переданной памяти, подход к скрытой цели без удержания дистанции, укрытие только при видимости, колонну скрытой цели и включительную границу боевого радиуса. Для проверки в игре нужны обычные, не вечные акторы и включённое удаление населения: увидеть цель через открытую дверь, закрыть её, затем добавить подкрепление без ручного заполнения памяти. Проверить преследование/осаду и сохранение внутри радиуса, затем удаление за его пределами; отдельно проверить защиту NextBot от телепортации при застревании.</p>
+<p><a id="combat-audit-regressions"></a></p>
+<h2 id="_8">Регрессии боевого аудита<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p><code>bgn_selftest</code> загружает эти SERVER-тесты по запросу, без создания живых сущностей:</p>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Проверяемое взаимодействие</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tests/sv_pursuit.lua</code></td>
+<td>Настоящий NPC-адаптер с моделью обновления движковой памяти: поиск заканчивается спустя более 60 с, а реальное наблюдение его продлевает; настоящий Rebind переносит скрытую позицию/время и приоритеты в обеих ветвях окружения; оружие следует выбранному врагу с запасным выбором цели ареста; обе настоящие функции телепорта NextBot запрещают его в бою при 1000 и разрешают при 1000.1, сохраняя защиту осады.</td>
+</tr>
+<tr>
+<td><code>tests/sv_siege.lua</code></td>
+<td><code>hold_fire</code> переговоров запрещает начало осады и присоединение ведомого.</td>
+</tr>
+<tr>
+<td><code>tests/sv_negotiation.lua</code></td>
+<td>Возможности оружия снимаются и восстанавливаются, возможности дверей сохраняются.</td>
+</tr>
+<tr>
+<td><code>tests/sv_conflicts.lua</code></td>
+<td>Дружественный урон манхака блокируется при обоих порядках хуков владельца/реакции, включая владельца только через inflictor; недопустимый владелец не подставляется.</td>
+</tr>
+</tbody>
+</table>
+<p>Внешний запуск LuaJIT/lupa после исправлений прошёл 36 тестов конфликтов, опасного оружия, переговоров, преследования, осады и планировщика GOAP. Шесть затронутых проверок падали на прежней реализации. Внешняя среда моделирует API движка и не является нативным запуском <code>bgn_selftest</code>. Мультиплеер, физика транспорта/дверей, реальное время движковой памяти и scripts reload во время этих действий требуют отдельной проверки.</p>
+<p><code>tests/sv_team_damage.lua</code> выполняет 10 изолированных регрессий с настоящими модулями команд, врагов, урона, розыска, ареста и транспортной реакции: союзные попадания NPC/NextBot при командном уроне выкл./вкл.; отказ помощи/сообщения; рассылку розыска и очистку устаревшей записи; обычные убийства; очистку SetTeam/AddTeam; повторный таран пешего полицейского или полицейской машины и наезд на пешехода оставляют водителя в <code>residents</code>. <code>tools/test_police_force.py</code> также проверяет, что дальнее союзное попадание не создаёт угрозу стрелка. Вызовы движка моделируются; это не проверка настоящей физики.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  К началу
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="ghost-crowd.html" class="md-footer__link md-footer__link--prev" aria-label="Назад: Фоновая толпа">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Фоновая толпа
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="conversations.html" class="md-footer__link md-footer__link--next" aria-label="Вперед: Разговоры">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Разговоры
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020 - 2021 Shark_vil
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Shark-vil/" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://discord.gg/wZwtQTU" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M492.5 69.8c-.2-.3-.4-.6-.8-.7-38.1-17.5-78.4-30-119.7-37.1-.4-.1-.8 0-1.1.1s-.6.4-.8.8c-5.5 9.9-10.5 20.2-14.9 30.6-44.6-6.8-89.9-6.8-134.4 0-4.5-10.5-9.5-20.7-15.1-30.6-.2-.3-.5-.6-.8-.8s-.7-.2-1.1-.2C162.5 39 122.2 51.5 84.1 69c-.3.1-.6.4-.8.7C7.1 183.5-13.8 294.6-3.6 404.2c0 .3.1.5.2.8s.3.4.5.6c44.4 32.9 94 58 146.8 74.2.4.1.8.1 1.1 0s.7-.4.9-.7c11.3-15.4 21.4-31.8 30-48.8.1-.2.2-.5.2-.8s0-.5-.1-.8-.2-.5-.4-.6-.4-.3-.7-.4c-15.8-6.1-31.2-13.4-45.9-21.9-.3-.2-.5-.4-.7-.6s-.3-.6-.3-.9 0-.6.2-.9.3-.5.6-.7c3.1-2.3 6.2-4.7 9.1-7.1.3-.2.6-.4.9-.4s.7 0 1 .1c96.2 43.9 200.4 43.9 295.5 0 .3-.1.7-.2 1-.2s.7.2.9.4c2.9 2.4 6 4.9 9.1 7.2.2.2.4.4.6.7s.2.6.2.9-.1.6-.3.9-.4.5-.6.6c-14.7 8.6-30 15.9-45.9 21.8-.2.1-.5.2-.7.4s-.3.4-.4.7-.1.5-.1.8.1.5.2.8c8.8 17 18.8 33.3 30 48.8.2.3.6.6.9.7s.8.1 1.1 0c52.9-16.2 102.6-41.3 147.1-74.2.2-.2.4-.4.5-.6s.2-.5.2-.8c12.3-126.8-20.5-236.9-86.9-334.5zm-302 267.7c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.4 59.2-52.8 59.2m195.4 0c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.2 59.2-52.8 59.2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://steamcommunity.com/id/shark_vil/" target="_blank" rel="noopener" title="steamcommunity.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M504 256c0 137-111.2 248-248.4 248-113.8 0-209.6-76.3-239-180.4l95.2 39.3c6.4 32.1 34.9 56.4 68.9 56.4 39.2 0 71.9-32.4 70.2-73.5l84.5-60.2c52.1 1.3 95.8-40.9 95.8-93.5 0-51.6-42-93.5-93.7-93.5s-93.7 42-93.7 93.5v1.2L184.6 279c-15.5-.9-30.7 3.4-43.5 12.1L8 236.1C18.2 108.4 125.1 8 255.6 8 392.8 8 504 119 504 256M163.7 384.3l-30.5-12.6c5.6 11.6 15.3 20.8 27.2 25.8 26.9 11.2 57.8-1.6 69-28.4 5.4-13 5.5-27.3.1-40.3S214 305.6 201 300.2c-12.9-5.4-26.7-5.2-38.9-.6l31.5 13c19.8 8.2 29.2 30.9 20.9 50.7-8.3 19.9-31 29.2-50.8 21m173.8-254.5a62.3 62.3 0 1 1 0 124.6 62.3 62.3 0 1 1 0-124.6m.1 109a46.8 46.8 0 1 0 0-93.6 46.8 46.8 0 1 0 0 93.6"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/channel/UCceZ68lbnrBGBPXgMPBOfoA" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.tracking", "navigation.sections", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "search.result.more.one": "\u0415\u0449\u0451 1 \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.more.other": "\u0415\u0449\u0451 # \u043d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439: #", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.term.missing": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442", "select.version": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0435\u0440\u0441\u0438\u044e"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>

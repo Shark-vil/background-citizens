@@ -1,0 +1,2340 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Setup, practical examples and Lua API for Background NPCs">
+      
+      
+        <meta name="author" content="Shark_vil">
+      
+      
+        <link rel="canonical" href="https://shark-vil.github.io/background-citizens/systems/brains.html">
+      
+      
+        <link rel="prev" href="navigation.html">
+      
+      
+        <link rel="next" href="menu.html">
+      
+      
+        
+          <link rel="alternate" href="brains.html" hreflang="en">
+        
+          <link rel="alternate" href="../ru/systems/brains.html" hreflang="ru">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Brains - Background NPCs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#actor-brains" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Background NPCs" class="md-header__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Background NPCs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Brains
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="brains.html" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../ru/systems/brains.html" hreflang="ru" class="md-select__link">
+              Русский
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Shark-vil/background-citizens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting-started.html" class="md-tabs__link">
+          
+  
+  
+  Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="navigation.html" class="md-tabs__link">
+          
+  
+  
+  Systems
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture.html" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Background NPCs" class="md-nav__button md-logo" aria-label="Background NPCs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Background NPCs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Shark-vil/background-citizens" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Creating-Custom-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom actors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Modification-of-Existing-NPCs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edit actors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/Actor-Config-Settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actor settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../information/More%20maps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Systems
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Systems
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="navigation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Navigation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brains
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="brains.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Brains
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pursuing-an-occluded-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pursuing an occluded target
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaction-to-weapons-in-hands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaction to weapons in hands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#panic-and-threat-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Panic and threat search
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#donor-animations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Donor animations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bodies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bodies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#weapons-and-teams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weapons and teams
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-brain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a brain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fsm-brain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FSM brain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goap-brain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GOAP brain
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GOAP brain">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#door-shelter-and-breaching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Door shelter and breaching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sieging-a-single-exit-room" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sieging a single-exit room
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hostage-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hostage negotiation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extending" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extending
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#squads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Squads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LOD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#medics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Medics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gangs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gangs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delay-between-skirmishes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delay between skirmishes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#police-at-a-body" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Police at a body
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#onlookers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Onlookers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bodies_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bodies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cars
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related systems
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#police-weapon-choice-and-witnessed-harm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Police weapon choice and witnessed harm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nextbot-pistol-cadence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NextBot pistol cadence
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="menu.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ghost-crowd.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ghost crowd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="testing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conversations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conversations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="arrest.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arrest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vehicles.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vehicles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="wanted.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wanted
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gangs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gangs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="medics.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Medics and bodies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="voices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Voices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="scenic.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenic scenes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-audit.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core engineering audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version history
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison with 1.13
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classes/actor/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actor API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/client.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Client API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI documentation rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building the docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="actor-brains">Actor brains<a class="headerlink" href="#actor-brains" title="Permanent link">&para;</a></h1>
+<p>An actor is split into an <strong>actor</strong> (data and rules), a <strong>body</strong> (<code>actor.body</code>: everything that talks to the
+engine entity: movement, schedules, relationships, weapons, animation) and a <strong>brain</strong> (<code>actor.brain</code>: decisions).
+Bodies and brains exist on the server only.</p>
+<h2 id="pursuing-an-occluded-target">Pursuing an occluded target<a class="headerlink" href="#pursuing-an-occluded-target" title="Permanent link">&para;</a></h2>
+<p>SERVER keeps a stable combat target through <code>GetEnemy</code>: a recent direct attacker takes priority, followed by the siege/squad target and the previous valid enemy. Perception checks every enemy, so a nearer hidden enemy cannot prevent observation of another. Ordinary hidden positions are never refreshed from the current entity position. Teammates, radio backup and siege participants receive the last observed position with its original timestamp; sharing does not renew a sighting.</p>
+<p>When the target is hidden, <code>defense</code> advances to that remembered position without a minimum firing distance. A hidden-target squad uses a column anchored at the remembered position, without the visible-target 550-unit gap. Cover requires line of sight and ends when sight is lost. With no known position, the actor stops rather than navigating to the hidden entity's current position.</p>
+<p>A fixed 1000-unit combat radius (SERVER, no setting) protects a living combat actor from ordinary population removal/recycling and NextBot unstuck teleports while any living known enemy is within that radius, inclusive. It also gates the final respawn operation after asynchronous spawn search. Sieges remain busy until finished. Outside the radius the ordinary unseen timeout and eligibility rules apply. Death, admin cleanup and disabling the addon/type retain their separate paths.</p>
+<p>The 60-second search timeout uses the actor's observation/report timestamp, including its original age when shared. Rewriting an NPC's engine memory to steer pursuit does not renew that timeout. Wanted and always-visible exceptions remain. Body replacement transfers the remembered position, timestamp, stable target and recent attacker. Metrocop equipment uses the same selected target as combat, with the existing arrest-target fallback. Both NextBot unstuck teleport paths check the combat radius; normal movement and optional jumps remain available. See the <a href="wanted.html#combat-continuation">combat decision tree</a>.</p>
+<p><a id="lethal-weapons"></a></p>
+<h2 id="reaction-to-weapons-in-hands">Reaction to weapons in hands<a class="headerlink" href="#reaction-to-weapons-in-hands" title="Permanent link">&para;</a></h2>
+<p><code>bgn_react_to_lethal_weapon</code> is a SERVER setting, <strong>0 by default</strong>. When enabled, once per second living
+<code>residents</code>/<code>police</code> actors inspect players, NPCs and NextBots, including BGN actors. A target holding a
+learned lethal weapon must be within <strong>800 units inclusive</strong>, in front of the observer's eyes (FOV,
+including NextBot observers), and visible through LOS. Shared-team targets, existing enemies, ignored
+players and players in friend mode are skipped; peaceful mode disables reactions.</p>
+<p>The actor picks <code>GetReactionForDamage(target)</code> (<code>at_damage</code>), as when hurt. <code>ignore</code>/<code>none</code> adds no enemy.
+Otherwise it requests <code>AddEnemy(target, reaction)</code>; if accepted, it stores the reaction and, while calm,
+clears its targets and enters that state. Busy actors retain their state. Enemy-controller, team, arrest,
+medic and addon-hook restrictions still apply. This starts the ordinary FSM/GOAP behavior without
+fabricating damage, conflict records or a wanted assignment. Later police calls and enemy sharing use
+their ordinary rules; the 800-unit/FOV gate applies to initial detection, not those separate systems.
+Holstering the weapon or disabling the setting does not clear enemies; ordinary forgetting still applies.</p>
+<p>Learning is always active, including with the checkbox off. On <code>BGN_OnKilledActor</code>, SERVER checks the
+attacker's callable <code>GetActiveWeapon</code>, validates its returned entity and stores its <code>GetClass()</code>. The
+last damage must identify that same attacker. Explosion/vehicle damage and kills by a player inside a
+vehicle are excluded. No prefilled weapon list is supplied; the first qualifying kill teaches a class.
+Classification uses the weapon held at death, not the projectile/inflictor's class.</p>
+<p><code>systems/sv_lethal_weapons.lua</code> reads <code>data/background_npcs/lethal_weapons.json</code> once into a persistent
+SERVER cache, retained through script reloads. The JSON object maps class names to <code>true</code>; all maps share
+the file. Each new class updates the cache and rewrites the full object; duplicate kills and detection
+perform no file reads/writes. CLIENT receives only the setting through the existing cvar synchronization.
+An invalid file is reported and preserved without overwriting for that cache's lifetime; a write failure
+is reported while the learned class remains in memory. Offline edits take effect on the next server/map
+start. Isolated tests: <code>tests/sv_lethal_weapons.lua</code> via <code>bgn_selftest</code>.</p>
+<p><a id="threat-search"></a></p>
+<h2 id="panic-and-threat-search">Panic and threat search<a class="headerlink" href="#panic-and-threat-search" title="Permanent link">&para;</a></h2>
+<p><code>bgn_threat_search</code> is a SERVER setting, <strong>0 by default</strong> (Behavior → AI, Classic → Extensions).
+When enabled, one tick after <code>BGN_OnKilledActor</code> (after the ordinary witness reactions to the killing damage),
+SERVER looks for calm living allies of the victim (shared team, not in a vehicle, no enemy in the killer)
+that see the death and <strong>not</strong> the killer: within 1500 units of the victim, a clear <code>MASK_BLOCKLOS</code> trace
+<strong>from the victim's position to the actor's eyes</strong> (no view cone; the body itself is filtered out), and
+<code>Combat.CanWitness(actor, killer, true)</code> false. One who sees the killer is left to the ordinary witness reactions.
+The spawner never recycles or teleports an actor in <code>panic</code> or <code>search_threat</code>. Peaceful mode, ignored killers, non-combatant killers and
+deaths in a vehicle start nothing.</p>
+<ul>
+<li>Residents that are neither police nor medics enter <code>panic</code>: a scream, a run to a route point hidden from the
+  killer's position (<code>bgNPC.FindCover</code> now also takes a position), crouching there; after 15-25 s, <code>RandomState</code>.</li>
+<li>Police and <code>bandits</code> (gangs included) enter <code>search_threat</code>: they go to a random route point within 200 units of
+  where the killer stood, then patrol random points within 600 units of it (a new point on arrival or after 10 s); they walk instead of running within
+  1000 units of the killer. The search ends after 45 s or when the killer dies.</li>
+</ul>
+<p>The incident keeps the class of the killer's weapon at the moment of the kill (<code>GetActiveWeapon</code>; a weapon in
+<code>bgn_arrest_safe_weapons</code>, no weapon, or a player in a vehicle count as none). With a class, <strong>anyone</strong> holding it
+is a suspect, not only the killer: an innocent with the same weapon can be attacked. Without one, only the killer
+is recognized in person. Allies, ignored entities and players in friend mode are never suspects.
+Every 0.33 s (no faster than the brain update: 0.2 s near players, 1 s far away) the actor checks entities within
+500 units: distance, view cone, then <code>Vision.HasLineOfSight</code> last. The same suspect in <strong>3 checks in a row</strong>
+is recognized; a miss or another suspect starts over. <code>search_threat</code> then adds it with <code>GetReactionForDamage</code>
+(<code>ignore</code>/<code>none</code> → <code>defense</code>), <code>panic</code> with <code>run_from_danger</code>. A recognized player alone hears
+<code>sound/background_npcs/threat_alert.wav</code> from the actor at 60% volume (<code>EmitSound</code> with a one-player
+<code>RecipientFilter</code>); NPCs and other players hear nothing. A refused <code>AddEnemy</code> keeps the state.
+An enemy from another system (a shot, enemy sharing) ends either state as an attack does. Isolated tests:
+<code>tests/sv_threat_search.lua</code> via <code>bgn_selftest</code>.</p>
+<h2 id="donor-animations">Donor animations<a class="headerlink" href="#donor-animations" title="Permanent link">&para;</a></h2>
+<p><code>bgNPC.Animator</code> plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.</p>
+<p>The server checks active animation viewers every 0.25 seconds and sends the current animation when a ready player enters its PVS, including late connections. One-shot animations retain their original deadline; loops last until stopped. Stopping releases an NPC schedule frozen by Animator if it is still current and no static actor animation owns the body. The client copies skin, bodygroups, color, material, submaterials and model scale at animation start; subsequent appearance changes are not tracked. The <code>dance</code> state starts its animation after the previous state's animation is reset.</p>
+<p>SERVER <code>Animator.Play</code> normally requires a PVS viewer at startup. <code>settings.require_pvs = false</code> permits a
+gameplay animation without one; room sieges use it so a closed visibility portal does not prevent deployment.
+Late viewers still receive the remaining animation with its original deadline.</p>
+<h2 id="bodies">Bodies<a class="headerlink" href="#bodies" title="Permanent link">&para;</a></h2>
+<p><code>bgn_actor_body npc|nextbot</code> (default <code>npc</code>; the old value <code>auto</code> is the same as <code>npc</code>). By default actors are real HL2 NPCs (<code>NPCBody</code>), like in the old versions: other addons (model replacers, ragdoll and death mods, Bio-Annihilation 2, Followers) see only real NPCs (<code>IsNPC</code>, <code>OnNPCKilled</code>). With <code>nextbot</code>, on maps with a NavMesh, actors of the HL2 classes
+<code>npc_citizen</code>, <code>npc_metropolice</code> and <code>npc_combine_s</code> spawn as <code>bgn_nextbot</code> (NextBot, <code>NextBotBody</code>), and such addons may not work with them. The NextBot walks with the NavMesh path follower, opens doors (the ones allowed, see navigation.md "Doors"), gets unstuck, and
+shoots or hits with a real HL2 weapon held in its hand (players can't pick it up while the bot is alive; it drops
+the weapon on death, like an HL2 NPC). Shots start at the bot's right hand. The config <code>weapon_skill</code> works for
+NextBots too: the spread scales like the HL2 NPC cone (poor ×1.4, average ×1, good ×0.67, very good ×0.33,
+perfect ×0.2). HL2 NPCs that the bot hates are told to hate it back.</p>
+<p>In <code>nextbot</code> mode, SERVER counts each foreign HL2 NPC's dispositions towards all server players and applies the most frequent disposition (<code>D_HT</code>, <code>D_FR</code>, <code>D_LI</code>, <code>D_NU</code> or <code>D_ER</code>) to nearby BGN NextBot bodies. Ties and an empty player list resolve to <code>D_NU</code>. <code>systems/sv_nextbot_hostility.lua</code> refreshes this once per second within 2500 units, including changes away from hostility. Initialization uses the same vote for NextBot targets. Foreign NPC dispositions towards ordinary HL2 NPC actor bodies are preserved; detection reads their direct disposition towards the actor (see <a href="wanted.html#conflict-memory-and-witnesses">wanted and conflicts</a>). No hidden probe NPCs are created. HL2 NPC senses detect <code>bgn_nextbot</code> through <code>FL_OBJECT</code>, set before engine registration in <code>Initialize</code>. The periodic update is skipped in peaceful mode and with <code>bgn_ignore_another_npc</code>.</p>
+<p>After updating from the probe-based implementation, reload the map to clear legacy probes. <code>bgn_selftest</code> includes the player-disposition vote checks; mixed-player votes are pure logic tests.</p>
+<p>Without a weapon some models (Combine soldiers) have no plain idle/walk/run and would T-pose, so the bot falls
+back to the armed ones (<code>ACT_IDLE_SMG1</code>, <code>ACT_WALK_RIFLE</code>, <code>ACT_RUN_RIFLE</code>, then the pistol ones). Jumps are off by
+default (<code>bgn_nextbot_jump</code>, behavior settings): outside the protected combat radius a stuck bot waits and then teleports to the next path point, and a
+car hit only throws it. With the cvar on, a stuck bot jumps first and a hit adds a jump. An actor leaving a car is
+put at a spot free for its whole body, never inside the car.</p>
+<h2 id="weapons-and-teams">Weapons and teams<a class="headerlink" href="#weapons-and-teams" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Only actors whose weapon roll passed (<code>getting_weapon_chance</code>, 10% of citizens) are armed.</li>
+<li>An unarmed actor in <code>fear</code> / <code>run_from_danger</code> runs to a free weapon within 500 units (<code>pick_up_weapon</code>) and
+  fights with it. It was spawned without a weapon, so it always shoots with <code>WEAPON_PROFICIENCY_POOR</code>
+  (<code>actor.novice_shooter</code>, <code>bgNPC.Combat.ApplyWeaponSkill</code>). The same goes for an HL2 NPC that picked a weapon
+  up by its engine AI.</li>
+<li>A direct attacker with no shared team is added as an enemy on the first hit, even during an existing fight; reaction hooks can still cancel it.</li>
+<li>Actors of one team never damage or answer each other. <code>bgn_team_damage 1</code> lets the damage through,
+  they still don't react to it.</li>
+<li><strong>Team protection</strong>: nothing removes a civilian's <code>residents</code> team, vehicle collisions included (<a href="wanted.html">wanted</a>). Ordinary friendly hits/kills do not start fear, retaliation or wanted. <code>bgn_team_damage</code> affects health only.</li>
+<li><strong>Shared enemies</strong> (<code>systems/sv_enemy_sharing.lua</code>, <code>bgn_enemy_share_period</code>, default 2 s, <code>0</code> = off): an actor
+  with enemies (not in <code>fear</code>, not in a vehicle) tells every teammate within 1000 units that sees it (a trace from
+  the teammate's eyes to the actor) about the enemies the teammate does not know. A teammate in a car is skipped,
+  except an officer: it gets the enemy and steps out or fires from the car (<code>modules/dv/sv_move_to_target.lua</code>). A teammate in a calm state
+  switches to its <code>GetReactionForProtect</code> reaction; a busy one only gets the enemy. This keeps the others from
+  walking around while an officer already shoots at a player who is not wanted yet. Gang exceptions (all visible allies, without a distance cap or reaction roll) are described under <a href="gangs.html">gangs</a>.</li>
+<li>A wanted actor (<code>Actor:IsWanted</code>, wanted is lost by NPCs exactly like by players) hides: a <code>defense</code> reaction
+  turns into <code>retreat</code>, which fights back only when the enemy is within 190 units; <code>defense</code> returns to <code>retreat</code>
+  when the enemy is over 300 units away and the actor has under 50% of its max health.
+  <strong>Witness check</strong> (same timer): a calm actor not in a vehicle that sees a teammate in <code>fear</code>, <code>run_from_danger</code> or <code>dyspnea_danger</code> with enemies,
+  and itself sees one of that teammate's enemies within 1000 units, takes the enemy too and reacts like a calm one that
+  was asked for help. Fights and other danger states do not count. The scan starts from scared actors within 2500
+  units of a living player, so no traces are spent far from players. It needs both lines of sight, so a scared actor's panic spreads only as far as eyes reach.
+  <code>AddEnemy</code> guards (arrest protection, ignored entities, peaceful mode) still apply.</li>
+</ul>
+<p>Prop-chair seating (<code>sit_to_chair</code>) uses the configured chair models and offsets. The route handles the distant
+approach; within 300 units the body finishes moving to the chair, and seating begins within 60 units.
+This applies to both HL2 NPC and NextBot bodies. Custom map seats use <code>sit_to_chair_2</code>.</p>
+<h2 id="choosing-a-brain">Choosing a brain<a class="headerlink" href="#choosing-a-brain" title="Permanent link">&para;</a></h2>
+<p><code>bgn_brain auto|fsm|goap</code> (default <code>fsm</code>, the classic brain). In <code>auto</code> an actor gets the brain from its config field
+<code>brain = 'fsm' | 'goap'</code>, otherwise GOAP when the config has <code>weapons</code>, otherwise FSM.</p>
+<h2 id="fsm-brain">FSM brain<a class="headerlink" href="#fsm-brain" title="Permanent link">&para;</a></h2>
+<p>Runs the <code>update</code> callback of the current state (<code>bgNPC.States</code>), and picks a random state from <code>at_random</code>
+when the actor has none. Reactions to damage and threats are random picks from <code>at_damage</code> / <code>at_protect</code>.</p>
+<h2 id="goap-brain">GOAP brain<a class="headerlink" href="#goap-brain" title="Permanent link">&para;</a></h2>
+<p>Plans only the fight; everything else is the FSM brain. The config reactions (<code>at_damage</code> / <code>at_protect</code>, a
+weighted random pick, the same as in FSM) decide whether the actor fights at all: an officer that rolled <code>arrest</code>
+arrests, a citizen that rolled <code>fear</code> runs. The plan takes over once the actor is in <code>defense</code> (or <code>retreat</code>, the
+<code>defense</code> of a wanted actor) and keeps it until the enemies are gone or the state leaves the plan's own states
+(the FSM ended the fight, an arrest, a calm state); it never pulls the actor back into a fight. Having an enemy
+alone (shared enemies, a wanted target) does not start one. Earlier 2.3.1 builds also picked the reactions from
+the plan and attacked whenever the actor had an enemy, which made fights much more frequent than with FSM.</p>
+<ul>
+<li><strong>Facts</strong> are measured by sensors once per second (and right after damage or a new enemy):
+  <code>has_enemy</code>, <code>armed</code>, <code>is_police</code>, <code>low_health</code>, <code>enemy_close</code>, <code>enemy_armed</code>, <code>enemy_police</code>, <code>police_called</code>,
+  <code>wanted</code>, <code>in_cover</code>, <code>backup_called</code>, <code>outnumbered</code>, <code>surrendered</code>, <code>desperate</code>, <code>can_hold_door</code>, <code>enemy_bracing</code>, <code>can_siege</code>.
+  <code>outnumbered</code> is police only: two or more
+  living enemies of the officer within 2000 units, and more of them than living officers there (itself included).</li>
+<li><strong>Actions</strong> run states: <code>attack</code> → <code>defense</code>, <code>flee</code> → <code>fear</code>, <code>call_police</code> → <code>calling_police</code>,
+  <code>hide</code> → <code>retreat</code> (wanted actors only), <code>take_cover</code> → <code>take_cover</code>, <code>call_backup</code> → <code>call_backup</code>,
+  <code>surrender</code> → <code>arrest_surrender</code>, <code>hold_door</code> → <code>hold_door</code>, <code>breach_door</code> → <code>breach_door</code>, <code>siege</code> → <code>siege</code>.
+  An actor can only use actions whose state appears in its <code>at_damage</code> / <code>at_protect</code> config with a weight
+  above zero, except actions registered with <code>always = true</code> (<code>hide</code>, <code>take_cover</code>, <code>call_backup</code>, <code>surrender</code>,
+  <code>hold_door</code>, <code>breach_door</code>, <code>siege</code>).
+  A trait action is rolled once per actor: <code>call_police</code> with its config share (20 of 100 → 20%). <code>surrender</code> is
+  not a trait: it is rolled at every attempt (8%, see below).
+  An action stays running while its state moves on to a follow-up (<code>also</code>, e.g. <code>fear</code> → <code>run_from_danger</code>).
+  Any state change re-reads the facts at once, so an action that finished with its effects (<code>take_cover</code> sets
+  <code>in_cover</code>, <code>call_backup</code> sets <code>backup_called</code>) moves the plan on instead of failing. An action whose state is
+  already running (also after a replan) counts as entered. An action whose state moves to another action's state
+  without its effects is blocked for 5 s, then the plan is made again; a state outside the plan ends the fight.</li>
+<li><strong>Reactions</strong> (<code>GetReactionForDamage</code> / <code>GetReactionForProtect</code>) are the config roll, as in FSM. In <code>fear</code> an
+  armed actor switches to <code>defense</code> (as in FSM) unless the plan itself sent it to flee.</li>
+<li><strong>Chains.</strong> Fighting an armed enemy or, for an outnumbered officer, a crowd costs more out of cover, and an
+  outnumbered officer without backup pays more again, so the plans are <code>take_cover → attack</code> and, for an
+  outnumbered officer, <code>take_cover → call_backup → attack</code> (no cover found: <code>call_backup → attack</code> in the open):</li>
+<li><code>take_cover</code>: runs to the nearest nav point within 1000 units the enemy can't see at crouch height
+    (<code>bgNPC.FindCover</code>), crouches 3 s, then fights 10 s (<code>in_cover</code>) before the next cover. No cover found: it
+    fights.</li>
+<li><code>call_backup</code>: the outnumbered officer calls on the radio (<code>police_backup</code>); up to 3 free officers on foot
+    within 4000 units take the enemy and come, and with <code>bgn_enable_wanted_mode</code> on every enemy of the officer
+    (except police) becomes wanted, which sends all the police after it. Once per officer per minute.
+    Earlier 2.3.1 builds called backup against any armed enemy, without the wanted status.</li>
+<li><code>surrender</code>: a hurt gangster (<code>low_health</code>) facing the police gives up (goal <code>give_up</code>, above hiding) when an
+    officer within 700 units sees it and <code>bgn_arrest_mode</code> is on, and only with an 8% roll per attempt (a failed roll
+    blocks the action for 5 s, so the roll repeats every few seconds while the conditions hold): it says <code>give_up</code>, the officer (stepping out of
+    its car if needed) arrests it through <code>ArrestModule:Surrender</code> (<code>systems/arrest</code>). The plan never interrupts
+    <code>arrest_surrender</code>.</li>
+<li>Arrests are not planned: the arrest system (<code>systems/arrest</code>, <code>ArrestModule:CanArrest</code>) owns them, and it
+  only works on police without enemies.</li>
+<li><strong>Goals</strong> (<code>eliminate</code>, <code>survive</code>, <code>report</code>, <code>hide</code>, <code>give_up</code>, <code>shelter</code>) get a priority from the actor's <strong>set</strong>:
+  <code>police</code>, <code>gangster</code> or <code>citizen</code> (by team, or the config field <code>goap_set</code>). <code>hide</code> outranks ordinary combat
+  while wanted; an available door shelter has priority 30 when desperate.
+  A citizen reports (calls the police) an enemy farther than 700 units even when it is armed, unless it is hurt
+  (then it runs) or armed itself (then it fights).</li>
+<li>The planner (A* over fact bit masks) returns the cheapest action chain for the top goal. Plans are cached.</li>
+<li><code>ignore</code> in a reaction table keeps its random chance.</li>
+</ul>
+<p>Debug: <code>bgn_goap_debug</code> prints the set, goal, plan and facts of the actor you look at.</p>
+<h3 id="door-shelter-and-breaching">Door shelter and breaching<a class="headerlink" href="#door-shelter-and-breaching" title="Permanent link">&para;</a></h3>
+<p>These are server-driven actions for both NPC and NextBot bodies, not random scenic poses. Any non-police GOAP actor
+already fighting or fleeing can seek an open door when below 35% health, unarmed against an armed enemy,
+or facing more living enemies within 1000 units than itself plus nearby armed teammates. An ordinary flee
+reaction only borrows GOAP to seek shelter; it does not become an attack if no door fits or shelter ends.</p>
+<p><code>hold_door</code> searches within 400 units for an unlocked, unclaimed rotating door. It uses the leaf's <strong>closed</strong>
+geometry, moves to the side away from the enemy, stays outside the swing while closing, temporarily locks
+the door, then steps up and plays a supported <code>doorbracer_*</code> sequence. Approaching takes at most 10 s,
+closing/positioning 4 s, holding 12 s; another attempt waits 20 s. The action ends if the enemy dies, reaches
+the same side, disappears from the actor's enemies, or the door is removed. It releases its lock on exit.
+Models are never replaced to obtain an animation: without a supported brace sequence the action is unavailable.
+Supported doors are upright, unparented <code>prop_door_rotating</code> and <code>func_door_rotating</code>; sliding and moving-parent
+doors are skipped. Physics/world obstructions may prevent reaching or closing a door, ending the attempt.</p>
+<p>Police with an enemy actively holding the other side can choose <code>breach_door</code> within 800 units. They approach,
+kick (when the model has a suitable sequence), and open the door at 900 degrees/s, restoring its previous speed
+after 0.4 s. This only releases the holding actor's temporary lock; it does not force arbitrary map-locked doors.</p>
+<p>The holder enters <code>knocked_down</code>: a temporary server ragdoll receives the impulse, while the <strong>same</strong> original
+NPC/NextBot entity and actor/UID remain registered, hidden, non-solid and unable to move, shoot or board a car.
+The breach and physics contacts add no damage. Shots at the ragdoll are forwarded to the actor; lethal damage
+uses ordinary death/corpse handling. After 3 s it looks for a full standing hull within 96 units of the body;
+if blocked, it stays down and retries. On recovery it restores visibility, collision, equipment and the previous
+combat/flee behavior, keeping current health. Removing the temporary ragdoll also removes its hidden actor.
+Clients only display the server state/body; they do not choose actions or control doors.</p>
+<h3 id="sieging-a-single-exit-room">Sieging a single-exit room<a class="headerlink" href="#sieging-a-single-exit-room" title="Permanent link">&para;</a></h3>
+<p>SERVER GOAP fighters of class <code>npc_metropolice</code> or <code>npc_combine_s</code> can choose <code>siege</code> for an enemy last seen
+within 30 s, at a doorway within 1000 units. Enemy memory stores the last visible position; the tactic does not
+aim at a continuously updated position through walls. It requires a loaded NavMesh, including when pedestrian
+routes use the custom provider. Removing the doorway connections must leave a roofed pocket containing the
+remembered position, with no alternate connection around the cut. Adjacent door leaves count as one exit;
+narrow walled NavMesh passages without door entities are also considered if door candidates do not prove a pocket.
+If the target vanished within 300 units of a doorway and the remembered side proves no pocket, the far side of that doorway is tried as the pocket. An actor already inside the pocket never joins; a member that enters it leaves the siege for <code>defense</code> without cancelling the others.
+Searches are bounded to 128 areas, 900 units and one floor (80-unit height tolerance); ladders, unknown geometry,
+missing navigation or an unproven pocket decline the tactic. The scenic indoor check alone does not prove one exit.
+Incomplete NavMeshes can omit real escapes such as windows or jumps.</p>
+<p>One reservation controls the enemy/entrance. Up to five members of the initiating squad occupy separated
+positions outside it; other armed fighting teammates within 2000 units receive spaced waiting positions at
+least 650 units away (34-unit arrival tolerance). Existing squad membership is captured before the normal squad
+rebuild excludes siege participants. Without a current squad, the nearest eligible allies fill the five places.
+Only actors with a supported waiting animation join. Positioning has a 15 s limit; the 12 s silent wait starts
+after the front group is positioned and rear participants have withdrawn. Both NPC and NextBot bodies suppress
+ordinary shooting during the tactic; siege radio lines remain enabled. Followers can execute the state with an FSM brain;
+the initiating fighter requires GOAP.</p>
+<p>An officer holding fire for negotiation cannot initiate or join a siege. Negotiation also excludes actors already in a siege, so the two systems cannot restore each other's weapon capabilities.</p>
+<p>Narrow corridors fall back to separated positions along the passage instead of side positions. Members that
+cannot fit near the entrance try the rear positions; if a close eligible reinforcement cannot withdraw, the
+attempt ends rather than leaving an uncoordinated group crowding the active siege.</p>
+<p>After waiting, closed rotating doors are kicked with 35% probability or opened normally. An unsupported kick
+falls back to a supported opening gesture, and vice versa; without either animation the doorway is unavailable.
+Combine models can use their gun strike to breach. Existing door-opening/locked-door settings and held-door
+reservations still apply. The operator steps outside the swing and retries opening once if necessary. Doors
+must have started opening before deployment, and the payload path must be clear. Their automatic return delay is temporarily suspended and restored on
+exit; a previously locked door is relocked after the attempt. Door entities are preserved.</p>
+<p>The single operator deploys <strong>one</strong> <code>npc_manhack</code> (<code>npc_metropolice</code>, requires <code>deploy</code>) or <strong>one</strong>
+<code>npc_grenade_frag</code> (<code>npc_combine_s</code>, requires <code>grenThrow</code>). The selected model is never replaced.
+Existing donor animation playback prevents native NPC animation events from creating duplicate weapons.
+The grenade uses a traced ballistic path, a 3.5 s fuse and a blast-clearance check for non-enemy actors/players.
+The manhack gets a checked entry direction and two seconds of native directed flight, then ordinary AI;
+it is hostile (<code>D_HT</code>) to every current enemy of the operator, friendly (<code>D_LI</code>) to the operator's team, neutral (<code>D_NU</code>) to everyone else, never becomes wanted, is skipped by the relationship and NextBot-hostility updaters that would override its relations, and removes itself after 30 s. Weapon damage is attributed to its operator.
+The operator opens the door and releases the weapon from the same spot: the throw starts while the leaf is still
+swinging (a retry window of 1.5 s covers a blocked path), and the operator then returns to its slot during the
+fuse. The operator is not part of the blast-clearance check. The group holds another 6 s after deployment. The whole attempt is limited to 50 s and shares a 60 s target
+cooldown. Damage to a participant, loss of an enemy/operator, leaving the pocket, interruption by arrest or
+another state, map cleanup or a navigation reload ends it and restores body control. Clients display the
+state/animations; they do not choose the tactic or spawn weapons.</p>
+<p><a id="hostage-negotiation"></a></p>
+<h3 id="hostage-negotiation">Hostage negotiation<a class="headerlink" href="#hostage-negotiation" title="Permanent link">&para;</a></h3>
+<p><code>systems/sv_negotiation.lua</code> (SERVER). A frightened non-police actor within 100 units of a player target that stands
+closer to the officer than the target is a hostage: the target hides behind it, so approaching from behind does not
+count. Every officer whose selected target meets this rule holds fire (engine NPCs lose <code>CAP_USE_WEAPONS</code>, NextBots skip
+<code>UpdateCombat</code>), the first one offers to surrender and warns 5 s before the 20 s deadline. A negotiating officer in
+<code>defense</code> keeps its distance: closer than 600 units it stops approaching (squad slots included), closer than 400 it backs off. The talks end quietly when
+the shield stays gone for 3 s; they fail on the deadline or when the player kills anyone. After a failure the officers shoot
+again and the player is not offered talks until he is arrested, drops a wanted level, dies or 120 s pass.
+Negotiation with NPC targets is a separate story scenario and is not implemented.</p>
+<p>The hostage test currently uses radius, fear state and relative distance only; it does not check LOS to the hostage or alignment with the firing line. This rule has not been changed by the combat audit fixes.</p>
+<h3 id="extending">Extending<a class="headerlink" href="#extending" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">bgNPC</span><span class="p">.</span><span class="py">GOAP</span><span class="p">.</span><span class="nf">RegisterAction</span><span class="p">(</span><span class="s1">'duck'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nv">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'retreat'</span><span class="p">,</span><span class="w">                      </span><span class="c1">-- a registered state that performs the action</span>
+<span class="w">    </span><span class="nv">pre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">has_enemy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nv">enemy_armed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nv">effects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nv">cost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">function</span><span class="p">(</span><span class="nv">ws</span><span class="p">)</span><span class="w"> </span><span class="kr">return</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="kr">end</span><span class="p">,</span><span class="w">       </span><span class="c1">-- number or function(world_state)</span>
+<span class="w">    </span><span class="c1">-- optional: always = true (no config weight needed), trait = true + chance = 0.3 (rolled once per actor),</span>
+<span class="w">    </span><span class="c1">-- prepare = function(actor) return true end (sets up before the state starts; false blocks the action)</span>
+<span class="p">})</span>
+<span class="nv">bgNPC</span><span class="p">.</span><span class="py">GOAP</span><span class="p">.</span><span class="py">sensors</span><span class="p">.</span><span class="py">my_fact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">function</span><span class="p">(</span><span class="nv">actor</span><span class="p">,</span><span class="w"> </span><span class="nv">npc</span><span class="p">,</span><span class="w"> </span><span class="nv">enemy</span><span class="p">)</span><span class="w"> </span><span class="kr">return</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="kr">end</span>
+<span class="nv">bgNPC</span><span class="p">.</span><span class="py">GOAP</span><span class="p">.</span><span class="nf">RegisterSet</span><span class="p">(</span><span class="s1">'my_set'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">survive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">function</span><span class="p">(</span><span class="nv">ws</span><span class="p">)</span><span class="w"> </span><span class="kr">return</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="kr">end</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<h2 id="squads">Squads<a class="headerlink" href="#squads" title="Permanent link">&para;</a></h2>
+<p><code>bgn_module_tactical_groups</code> (on by default). Every second actors in <code>defense</code> of one team within 1200 units
+form squads of up to 5. The healthiest leads, its selected combat enemy becomes the target of every member.
+Formations face the target: <code>column</code> when nobody sees it, <code>wedge</code> with 4+ healthy members, <code>line</code> otherwise.
+The healthiest stand in front, the wounded (&lt; 40% health) form a rear rank. <code>defense</code> moves a member to
+<code>actor.squad.slot</code>; <code>bgNPC.Squads.list</code> holds the current squads.</p>
+<h2 id="lod">LOD<a class="headerlink" href="#lod" title="Permanent link">&para;</a></h2>
+<p>Actors far from players update less often (<code>bgn_lod_near_radius</code>); idle unarmed actors out of range sleep
+(<code>bgn_disable_logic_radius</code>). Hook: <code>BGN_ActorLODChanged(actor, lod)</code> (1 near, 2 far, 3 dormant).</p>
+<p>Distant unseen unarmed actors on foot now alternate pauses and active windows instead of remaining frozen. SERVER settings (Performance and classic Optimization): <code>bgn_logic_pause</code> = 2 s (0 disables pauses), <code>bgn_logic_active</code> = 1 s (minimum 0.1), <code>bgn_logic_stagger</code> = 0.25 s per UID. During active windows both engine movement and the brain resume; brain interval is 0.2 s. Phase is <code>(time - UID * stagger) modulo (pause + active)</code>, stable across list reordering. Windows overlap and phases wrap in larger crowds; this spreads transitions, not exclusive execution. Close/in-view actors, armed actors and vehicle occupants retain continuous simulation. Damage/enemy events immediately wake an actor for at least one second. LOD 3 now means intermittent simulation, not permanent sleep. Existing distance thresholds are retained; with near radius 2500 and disable radius 500, off-view actors beyond 2500 enter this cycle. Timings are observed on actor scheduler passes, not exact real-time deadlines.</p>
+<h2 id="medics">Medics<a class="headerlink" href="#medics" title="Permanent link">&para;</a></h2>
+<p>Actor type <code>medic</code> (<code>config/actors/sh_medic.lua</code>, limit 4: two pairs) is never spawned by the regular spawner. Every actor
+death outside a vehicle is a call (<code>bgNPC.Medics.calls</code>, kept 90 s). A free medic takes it, otherwise one is
+spawned near the body, with an ambulance when Decent Vehicle is on and the config has <code>vehicles</code>. The ambulance
+drives to the body like a police car on a chase, the medic gets out, kneels over the body for 6 s with voice
+lines and medkit sounds (state <code>medic_revive</code>), the actor comes back (same type, model and skin; its ragdoll is
+removed) and the medic returns to the car. A call closes when the body is gone (a client reports its ragdoll
+faded or was cleaned up, or the server ragdoll was removed) or after 90 s; the medic then walks back to its car
+and drives on with the siren off. The last 300 units to the body the medic walks straight, off the nav points.
+Some deaths cannot be saved: explosions, vehicle hits and overkill damage always, any other death with the chance
+<code>bgn_medic_hopeless_chance</code> (25 %; Behavior &gt; Medics). For those the medic still comes and kneels over the body, but
+instead of reviving says <code>medic_cannot_save</code> and leaves (<code>call.verdict</code>); only then does an officer take the body.
+Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team <code>police</code>), nor for one whose death no living ally of the victim saw, nor for an enemy of the residents or one whose team is fighting them.</p>
+<p>When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
+in that area pause: their responders stop heading to the body and return to their ambulance when possible.
+<code>bgn_medic_danger_time</code> defaults to 60 seconds (<code>0</code> disables the restriction), and
+<code>bgn_medic_danger_radius</code> defaults to 1500 units; both are in the behavior settings under Medics.
+The area reopens when the timer expires <strong>or</strong> the killer dies (player, NPC or NextBot actor).
+Areas belonging to other killers remain blocked. Pending calls can resume while their original 90-second
+lifetime remains; the restriction does not extend that lifetime.
+Hook: <code>BGN_ActorRevived(actor, call)</code>.</p>
+<ul>
+<li><strong>Pairs:</strong> a medic spawned for a call brings a partner when the limit allows (<code>medic_partner</code> on both). It rides
+  in the same ambulance (seats: 2), gets out with the medic, kneels beside the body (<code>call.partner</code>) and gets
+  back in with it; a partner within 400 units of the car is pulled in when the medic takes the wheel.</li>
+<li><strong>Ambulances:</strong> no new one when a player near the call (3000 units) already has an ambulance around; an empty
+  ambulance there is taken instead.</li>
+<li><strong>Attacked:</strong> by a player, the medic reviving keeps reviving (a life first) and its partner fights with fists
+  (state <code>brawl</code>); a medic not reviving fights itself. Below 30 % health a medic leaves the call (the partner
+  takes it over) and runs, by its car when one is near (<code>go_to_police_car</code>, then <code>fear</code>). Attacked by an actor,
+  it runs as before.</li>
+</ul>
+<h2 id="gangs">Gangs<a class="headerlink" href="#gangs" title="Permanent link">&para;</a></h2>
+<p>Two street gangs replace the plain <code>gangster</code> actor (kept disabled as their config base): <strong>Black Raven</strong>
+(<code>gangster_crows</code>, team <code>gang_crows</code>) and <strong>Red Wolf</strong> (<code>gangster_wolves</code>, team <code>gang_wolves</code>)
+(<code>config/actors/sh_gangs.lua</code>). Both keep the team <code>bandits</code> (police reactions, carjacking). A member is light
+(35 % are heavy, <code>heavy_chance</code>): light members wear HL2 citizen clothes and carry a pistol, heavy ones wear rebel gear
+and carry an SMG or a rifle (<code>systems/npcs/sv_gang_models.lua</code>). The clothes sheet of the model is replaced by the
+gang's recolor with <code>SetSubMaterial</code> (<code>materials/background_npcs/gangs/&lt;gang&gt;/&lt;class&gt;_&lt;sex&gt;</code>); the class is read from
+the model, so it survives revival and leaving a car. The recolors are made from the game's own textures by
+<code>tools/make_gang_skins.py</code> (needs <code>vpk</code>, <code>srctools</code>, <code>pillow</code>, <code>numpy</code>); the game files are not shipped.</p>
+<p><strong>Gang support and walking.</strong> Members walk in packs of up to three; all visible same-gang allies receive a threat without a chance roll or roster cap, including late arrivals. Combat support is independent of walking packs. See <a href="gangs.html">gangs</a> for visibility, sharing interval and war rules.</p>
+<p>Orphan bodies: <code>Actor:RemoveActor</code> leaves the entity to the engine, right for a death only. Every 2 s an NPC or
+NextBot that is an actor body (<code>BGN_ACTOR_OBJECT</code>, or <code>bgn_npc_class</code> from the spawner) without a live registered
+actor is removed after 3 seconds, even with <code>bgn_enable 0</code> (<code>spawner/sv_actor_remover.lua</code>, with <code>developer 1</code> the
+console names its class, health, type and last state). Health is not checked: an NPC killed while the LOD had its
+think turned off, or frozen by the animator, never finishes dying and stands with 0 health, frozen, without a label;
+the old check (alive bodies only) left those on the map for good. An actor removed in its first tick is no longer
+registered afterwards (it kept a slot of the type limit). A medic marked <code>eternal</code> for a call is released together
+with the call, so it no longer escapes the limit and the remover.</p>
+<p>Calling the police is skipped when the target is already wanted, or at least one living officer has it as an enemy or a target
+(<code>bgNPC.PoliceKnows</code>, <code>calling_police</code> state and the GOAP <code>police_called</code> sensor).</p>
+<h2 id="delay-between-skirmishes">Delay between skirmishes<a class="headerlink" href="#delay-between-skirmishes" title="Permanent link">&para;</a></h2>
+<p><code>bgn_fight_cooldown</code> (Behavior &gt; AI, 0-120 s, default 60, <code>0</code> = off, the old behavior). With a delay, the first <code>defense</code>
+reaction of the <code>at_protect</code> table (actors protecting their own) opens a window of that many seconds around the
+place (2500 units). While it lasts, protecting against <strong>another</strong> attacker in that area is ignored: the actor takes
+the <code>ignore</code> reaction and a call for help, enemy sharing or a witnessed hit adds no enemy to it. The police are never
+delayed, also an officer driving past in a car. Actors joining the skirmish that
+opened the window (same attacker), fights already going, places outside the area and the time after the window are
+not affected. A player, or an NPC / NextBot of another mod that is not one of our actors, as the attacker is never blocked (<code>systems/sv_fight_cooldown.lua</code>).</p>
+<h2 id="police-at-a-body">Police at a body<a class="headerlink" href="#police-at-a-body" title="Permanent link">&para;</a></h2>
+<p>Every actor death outside a vehicle also leaves a body for 60 s (<code>brain/fsm/states/sv_police_inspect_body.lua</code>).
+The nearest officer within 2000 units who walks or idles without enemies takes it (state <code>police_inspect_body</code>):
+runs to the body when it is farther than 600 units (walks when closer), says <code>police_body_arrive</code>, crouches over it, reports it on the radio (<code>police_body_report</code>) and writes it down
+(<code>police_body_notes</code>), 5 s each, then goes on patrolling. Bodies from a shoot-out are taken once the officers
+calm down; an enemy that appears during the inspection ends it at once and the officer reacts as to an attack. Bodies within 150 units are one scene with one officer. A body revived by a medic is dropped. A body a medic is on the way to waits until the medic has revived it or declared it hopeless.</p>
+<h2 id="onlookers">Onlookers<a class="headerlink" href="#onlookers" title="Permanent link">&para;</a></h2>
+<p>Every actor death outside a vehicle is also an incident for 45 s (<code>brain/fsm/states/sv_watch_incident.lua</code>).
+From 5 s after it, calm civilians walking or idling within 1500 units come one by one (35% per 2 s check, up to 4):
+they stand 150-280 units from the spot on their side, stare (<code>LineIdle*</code>), half of them say a <code>watch_incident</code> line,
+and go on after 12-25 s. A gunshot scares them like any calm actor; two of them may start a conversation.
+When the medics revive the actor (<code>BGN_ActorRevived</code>), the incident ends: no new onlookers come and those already there go on.</p>
+<h2 id="bodies_1">Bodies<a class="headerlink" href="#bodies_1" title="Permanent link">&para;</a></h2>
+<p><code>systems/sv_corpses.lua</code>, <code>systems/cl_corpses.lua</code>. Settings window: <strong>Behavior &gt; Bodies</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Cvar (server)</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bgn_corpse_cleanup</code></td>
+<td><code>0</code></td>
+<td>the bodies of dead actors (NPC and NextBot) fade out (off by default)</td>
+</tr>
+<tr>
+<td><code>bgn_corpse_cleanup_time</code></td>
+<td><code>60</code></td>
+<td>seconds after the death</td>
+</tr>
+</tbody>
+</table>
+<p>A body a medic is assigned to, or an officer is inspecting, waits until they are done (both end on their own:
+the call after 90 s, the inspection after its give-up time). Server ragdolls fade on the server, client ragdolls
+on every client. <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2120936972">npc_battle_cleanup</a> would
+remove a body in seconds, before a medic or an officer gets to it, so the actors' bodies are left to this
+setting: server ragdolls get its <code>doNotRemove</code> flag, its client-side corpse cleanup skips them.
+With <code>bgn_corpse_cleanup 0</code> (the default) the flag is not set and npc_battle_cleanup, if installed, removes the bodies as usual; without it they stay until the engine's own ragdoll limits remove them.</p>
+<h2 id="cars">Cars<a class="headerlink" href="#cars" title="Permanent link">&para;</a></h2>
+<p>Police dismount when a living enemy (or their current arrest target) is within 800 units or their vehicle has at most 20% health remaining. They stay seated while that enemy is driving away: the dismount waits until the enemy's car has stood still for about 6 seconds or the enemy gets out.</p>
+<p>A police car chasing a wanted player that falls more than 2800 units behind and is out of every player's view is not culled: its crew steps out and the car is rebuilt (a fresh car, the same actors and enemies) on a hidden road point 600-2200 units from the player, at most once per 8 seconds per player and only while fewer than <code>1 + wanted level</code> chasing cars are close. See <code>spawner/sv_police_pursuit.lua</code>. Spawn points also keep clear of the road ahead of a moving player.
+Simfphys health uses <code>GetCurHealth()</code> and <code>GetMaxHealth()</code>; vehicles without a positive maximum health do
+not trigger the damage condition. Neutral players do not trigger dismounts. Hits use the normal actor damage reactions, so a real attack can create an enemy and make police dismount. Direct vehicle removal removes its crew; forced ejection still requires a safe exit.</p>
+<p>Actors and Decent Vehicle cars; the state <code>go_to_police_car</code> (no longer police only) runs to the car and gets in.</p>
+<ul>
+<li><strong>Back to the car</strong> (<code>modules/dv/sv_return_to_vehicle.lua</code>, every 2 s): an actor within 1000 units of an allowed car returns when no enemy is within 1500 units. Neutral living players also delay civilians, but not police. Former crew may take free passenger seats after their driver returns. Police do not reboard critically damaged cars.</li>
+<li><strong>The enemy drives off</strong> (<code>sv_defense.lua</code>, every 2 s, 30 %): a player in a vehicle or an actor in a car; checked
+  before the squad move, so squad members go too.</li>
+<li><strong>Confiscation and carjacking</strong> (<code>data.seize</code>): when no car of its own is near, the police take a car of another
+  group ("police_seize") and bandits carjack one ("gangster_carjack"): whoever sits inside is thrown out
+  (<code>VEHICLE:Eject</code>, scared unless it is a teammate) and the car joins the actor's group (<code>VEHICLE:SetGroup</code>: the
+  police get the chase AI). Bandits on the run (<code>retreat</code>, <code>fear</code>, <code>run_from_danger</code>) within 700 units of such a
+  car take it too (35 % per check) and keep running in it.</li>
+</ul>
+<p>NextBots and cars (<code>systems/sv_nextbot_vehicle_hits.lua</code>): a NextBot has no physics object, so the engine deals it
+no crush damage. Every 0.1 s each moving car (players', Decent Vehicle ones) faster than 150 u/s hurts NextBots in
+its box and just ahead ((speed - 75) x 0.25, the driver is the attacker) and throws them. A NextBot whose enemy
+sits in a car shoots the car (the enemy is the car then, which has no health of its own).</p>
+<p>Which car: <code>VEHICLE:CanBoard</code>: an empty one the actor left, or of its group (<code>police</code>, <code>bandits</code>, <code>medics</code>, ...),
+never someone else's <code>residents</code> car (police and medics are residents too, citizens keep to their own).
+Former crew may also rejoin an occupied car if a passenger seat is free. A police vehicle keeps its police designation even after a group change; only police actors may drive or ride in it. Players can still take an empty police car.
+<code>VEHICLE:CanSeize</code>: a car of another group, empty or driven by an actor (never a player), not driven by a
+teammate. Only the police and bandits seize.</p>
+<p>Boarding removes the physical NPC/NextBot and binds the same logical actor to a DV anim entity; exiting recreates its original body and equipment. Exit placement prefers the closest model exit or the side and row of its own seat, checking full body clearance and overlap even with non-colliding actors. If all positions are blocked, it stays aboard. Seated hits retain the attacker and notify nearby witnesses through the normal damage hooks. Witness traces exclude their own chassis/seat and recognize another occupant's chassis; walls still block sight.</p>
+<p>BGN traffic can plan bounded forward/reverse maneuvers around blockers and, after repeated failures, try another accessible road segment. Red lights, scheduled stops and taxi waits suppress recovery. Cars honk briefly only at an entity blocking their forward sensor. These changes apply to BGN-created vehicles; DV remains required. See <a href="testing.html#dv-traffic-developer-checks">traffic checks and limitations</a>.</p>
+<h2 id="related-systems">Related systems<a class="headerlink" href="#related-systems" title="Permanent link">&para;</a></h2>
+<p><a href="gangs.html">Gangs</a> walk in packs of three and support visible allies; direct self-defense remains. <a href="medics.html">Medics and bodies</a> own calls/verdicts/cleanup. <a href="wanted.html">Wanted</a> and <a href="arrest.html">arrest</a> own pursuit/surrender. Stuck NextBots choose nearby free navigation space excluding vehicles; custom-chair placement uses seat height.</p>
+<h2 id="police-weapon-choice-and-witnessed-harm">Police weapon choice and witnessed harm<a class="headerlink" href="#police-weapon-choice-and-witnessed-harm" title="Permanent link">&para;</a></h2>
+<p>See <a href="arrest.html#police-weapon-choice-and-witnessed-harm">police weapon choice and harm memory</a>.</p>
+<h2 id="nextbot-pistol-cadence">NextBot pistol cadence<a class="headerlink" href="#nextbot-pistol-cadence" title="Permanent link">&para;</a></h2>
+<p>The stock pistol now fires groups of 1–3 individual shots, approximately 0.2 s apart, followed by a 0.45–0.8 s rest. These are separate, visibility/friendly-fire-checked shots, not multiple bullets in one attack. The 18-round magazine keeps the 1.8 s reload pause. Burst state resets on weapon/target changes and reload; other weapon profiles and scripted-weapon fallback remain unchanged. Combat checks quantize the intended intervals to engine ticks.</p>
+<p><code>python tools/test_police_force.py</code> checks witnessed distinct counts, thresholds, memory/reset/rebind, vehicle damage and pistol cadence. Live single-player checks compare native HL2 and NextBot shots and inspect arrest weapon retention; multiplayer and third-party weapon bases require separate verification.</p>
+<p>Movement updates run every 0.1 s for near actors and every 0.25 s for far or dormant ones (the node arrival radius is 150 units).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="navigation.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Navigation">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Navigation
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="menu.html" class="md-footer__link md-footer__link--next" aria-label="Next: Settings menu">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Settings menu
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2020 - 2021 Shark_vil
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Shark-vil/" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://discord.gg/wZwtQTU" target="_blank" rel="noopener" title="discord.gg" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M492.5 69.8c-.2-.3-.4-.6-.8-.7-38.1-17.5-78.4-30-119.7-37.1-.4-.1-.8 0-1.1.1s-.6.4-.8.8c-5.5 9.9-10.5 20.2-14.9 30.6-44.6-6.8-89.9-6.8-134.4 0-4.5-10.5-9.5-20.7-15.1-30.6-.2-.3-.5-.6-.8-.8s-.7-.2-1.1-.2C162.5 39 122.2 51.5 84.1 69c-.3.1-.6.4-.8.7C7.1 183.5-13.8 294.6-3.6 404.2c0 .3.1.5.2.8s.3.4.5.6c44.4 32.9 94 58 146.8 74.2.4.1.8.1 1.1 0s.7-.4.9-.7c11.3-15.4 21.4-31.8 30-48.8.1-.2.2-.5.2-.8s0-.5-.1-.8-.2-.5-.4-.6-.4-.3-.7-.4c-15.8-6.1-31.2-13.4-45.9-21.9-.3-.2-.5-.4-.7-.6s-.3-.6-.3-.9 0-.6.2-.9.3-.5.6-.7c3.1-2.3 6.2-4.7 9.1-7.1.3-.2.6-.4.9-.4s.7 0 1 .1c96.2 43.9 200.4 43.9 295.5 0 .3-.1.7-.2 1-.2s.7.2.9.4c2.9 2.4 6 4.9 9.1 7.2.2.2.4.4.6.7s.2.6.2.9-.1.6-.3.9-.4.5-.6.6c-14.7 8.6-30 15.9-45.9 21.8-.2.1-.5.2-.7.4s-.3.4-.4.7-.1.5-.1.8.1.5.2.8c8.8 17 18.8 33.3 30 48.8.2.3.6.6.9.7s.8.1 1.1 0c52.9-16.2 102.6-41.3 147.1-74.2.2-.2.4-.4.5-.6s.2-.5.2-.8c12.3-126.8-20.5-236.9-86.9-334.5zm-302 267.7c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.4 59.2-52.8 59.2m195.4 0c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.2 59.2-52.8 59.2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://steamcommunity.com/id/shark_vil/" target="_blank" rel="noopener" title="steamcommunity.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M504 256c0 137-111.2 248-248.4 248-113.8 0-209.6-76.3-239-180.4l95.2 39.3c6.4 32.1 34.9 56.4 68.9 56.4 39.2 0 71.9-32.4 70.2-73.5l84.5-60.2c52.1 1.3 95.8-40.9 95.8-93.5 0-51.6-42-93.5-93.7-93.5s-93.7 42-93.7 93.5v1.2L184.6 279c-15.5-.9-30.7 3.4-43.5 12.1L8 236.1C18.2 108.4 125.1 8 255.6 8 392.8 8 504 119 504 256M163.7 384.3l-30.5-12.6c5.6 11.6 15.3 20.8 27.2 25.8 26.9 11.2 57.8-1.6 69-28.4 5.4-13 5.5-27.3.1-40.3S214 305.6 201 300.2c-12.9-5.4-26.7-5.2-38.9-.6l31.5 13c19.8 8.2 29.2 30.9 20.9 50.7-8.3 19.9-31 29.2-50.8 21m173.8-254.5a62.3 62.3 0 1 1 0 124.6 62.3 62.3 0 1 1 0-124.6m.1 109a46.8 46.8 0 1 0 0-93.6 46.8 46.8 0 1 0 0 93.6"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.youtube.com/channel/UCceZ68lbnrBGBPXgMPBOfoA" target="_blank" rel="noopener" title="www.youtube.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.expand", "navigation.tracking", "navigation.sections", "toc.integrate", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
