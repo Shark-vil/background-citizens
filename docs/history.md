@@ -1,5 +1,11 @@
 # Version history and documentation baseline
 
+Local 2.5.1 engineering audit (publication not verified): corrected disabled mechanics, recurring services,
+scheduler mutation, reload identity/snapshot counters, empty/sparse navigation queries, GOAP planning,
+appearance selection, regeneration and client receivers. Removed per-entity spawnmenu config IO;
+player-owned spawns now use gamemode permission/counting hooks. Network uploads have explicit bounds.
+Architecture and defaults remain; see the [audit and verification limits](core-audit.md).
+
 Local 2.5.1 change (publication not verified): optional panic and threat search (`bgn_threat_search`, default off). An ally who sees a kill but not the killer (a trace from the victim, no view cone) panics (residents) or searches where the killer stood (police, gangs), walking within 1000 units of the killer; the spawner does not recycle them meanwhile. Anyone holding the killer's weapon class seen 3 checks in a row within 500 units in view becomes an enemy. See [brains](systems/brains.md#threat-search).
 
 Local 2.5.1 team protection change (publication not verified): the vehicle offender exception (`bgNPC.OffenderFromRamming`, `systems/sv_offender.lua`) is removed. Running over a civilian or ramming police no longer moves a civilian driver from `residents` to `offenders`; police in a car ignore a civilian driver's ram. See [wanted](systems/wanted.md).

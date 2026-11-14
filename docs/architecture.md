@@ -1,6 +1,6 @@
 # Project architecture
 
-Documentation baseline: **2.3.1**, branch `dev` at `7459c3c7` (2026-11-10). Tag `2.3.0` is `2258b49`; subsequent behavior is explicitly recorded in [version history](history.md). This describes the repository, not a promise that Workshop already contains these commits.
+Source baseline: **local 2.5.1**, `dev` at `cde2f701` (2026-11-14), plus the [core engineering audit](core-audit.md). Tag `2.5.1` is `a7f2d9da`; later branch behavior is recorded in [version history](history.md). This describes the repository, not a promise that Workshop already contains these commits.
 
 ## Runtime boundaries
 
@@ -25,6 +25,11 @@ A shared filename says where a file loads. It does not guarantee a method can dr
 7. Menu languages/UI/debug; custom `postload`; `BGN_PostLoadScripts`.
 
 Order matters: offender/state modules capture the registered arrest module. Reloading via `bgn_scripts_reload` reruns this loader; a map reload is the clean validation for changed bodies and persisted world state.
+
+The shared UID allocator survives script reload; SERVER snapshot sequences use that same monotonic allocator.
+CLIENT retirement marks the actor removed before pending initialization can register it again. Scheduler ticks
+visit a snapshot of task IDs, so task removal/replacement cannot invalidate the live iteration. Long-lived
+services own their repeat loops; returning from a task finishes it. See [audit contracts and limits](core-audit.md).
 
 ## Files and responsibilities
 
@@ -113,6 +118,12 @@ perception timer. `background_npcs/lethal_weapons.json` is read once per server/
 reuse the cache, and only a newly learned class rewrites the full file. See [held weapons](systems/brains.md#lethal-weapons).
 
 Cvar defaults are defined in `cvars/sh_cvars.lua`, `sv_cvars.lua`, `cl_cvars.lua`; registration and permissions are in `core/sh_cvars.lua`. Server settings are admin-controlled; client voice/UI options stay local. Actor definitions resolve `inherit` and `@type` references, cache the result and copy it on creation. After editing definitions, clear the config cache; existing actors retain their copy.
+
+`ui/spawnmenu/sv_spawnmenu.lua` loads `custom.dat` at initialization/reload, rather than on entity creation,
+and clears the resolved config cache after mapping changes. Player spawns from the menu and Actor spawner Tool
+pass an optional owner to the common spawner: `PlayerSpawnNPC` can veto before creation, and
+`PlayerSpawnedNPC` provides gamemode accounting after actor creation. Automatic population passes no owner.
+Network framing and client upload limits are described in the [audit](core-audit.md#transport-contract).
 
 GMod DATA paths are relative to `garrysmod/data/`, not this addon: `background_npcs/nodes`, `graph`, `seats`, `compile` (created by bootstrap), diagnostic `background_npcs/test_report.txt`. DV waypoints are separate from pedestrian routes. Preserve users' route files; legacy import/duplication conversion must not overwrite unrelated points. Compiled routes are Lua distribution artifacts generated from stored data.
 

@@ -625,6 +625,7 @@ Source: `lua/background_npcs_core/api/sh_points.lua`.
 
 ## Data contracts
 
+- `Points.GetRandom` returns a Vector or nil; an empty graph radius query stays empty instead of selecting elsewhere. NavMesh sampling uses actual areas. On CLIENT this API returns nil.
 - `Actors.Get`, `GetByUid`, `GetFirst` and nearest lookups can return nil. `GetAll`, type lists and NPC lists expose internal storage: do not mutate them.
 - `Config.GetActor` returns a cached resolved table or nil: copy before editing. After changing `bgNPC.cfg.actors`, call `Config.ClearCache`; existing actors keep their own copies.
 - `States.Register(name, group, callbacks)` registers behavior callbacks in each realm where executed. Execute AI callbacks on the server.

@@ -76,12 +76,18 @@ local cursor = 1
 hook.Add('Think', 'BGN_Tasks', function()
   local count = #order
   if count == 0 then return end
+  -- Tasks may add/remove tasks while running; each tick visits its original order once.
+  local snapshot = {}
+  for i = 1, count do
+    snapshot[i] = order[i]
+  end
+
   local start = SysTime()
   tick_deadline = start + budget_cvar:GetFloat() / 1000
   local now = CurTime()
   if cursor > count then cursor = 1 end
   for _ = 1, count do
-    local id = order[cursor]
+    local id = snapshot[cursor]
     cursor = cursor % count + 1
     local task = list[id]
     if task and task.wake <= now then
@@ -97,13 +103,11 @@ hook.Add('Think', 'BGN_Tasks', function()
       if not ok then
         ErrorNoHalt('[Background NPCs] Task "' .. tostring(id) .. '" error: ' .. tostring(err) .. '\n')
         if list[id] == task then Tasks.Remove(id) end
-        count = #order
       elseif coroutine.status(co) == 'dead' and list[id] == task then
         Tasks.Remove(id)
-        count = #order
       end
 
-      if SysTime() >= tick_deadline or count == 0 then break end
+      if SysTime() >= tick_deadline then break end
     end
   end
 

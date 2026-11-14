@@ -7,7 +7,7 @@ function TOOL:LeftClick(tr)
   if not bgNPC or not bgNPC.cfg or not bgNPC.cfg.actors then return false end
   if not bgNPC.cfg.actors[actorType] then return false end
   if SERVER then
-    local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10))
+    local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10), false, false, self:GetOwner())
     if not actor then return false end
     local npc = actor:GetNPC()
     if not IsValid(npc) then return false end

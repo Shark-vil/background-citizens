@@ -770,7 +770,7 @@ Source: `lua/background_npcs_core/actor/components/sh_movement.lua`.
 
 | API | Contract / source |
 |---|---|
-| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden)` | Creates an actor; implementation in `spawner/sv_spawner.lua`; check result before use. |
+| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden, owner)` | Creates an actor; `owner` is optional. When supplied, requires a valid living player (or admin), lets `PlayerSpawnNPC` veto the resolved NPC class before creation, sets creator and emits `PlayerSpawnedNPC` for gamemode counting. Menu/Tool pass their player; automatic population omits it. Check the result before use. Source: `spawner/sv_spawner.lua`. |
 | `bgNPC.Statistics.AddKill(attacker, actor)` | Adds and synchronizes a kill count. |
 | `bgNPC.Statistics.Reset(attacker)`, `ResetAll()` | Clears and synchronizes statistics. |
 | `bgNPC.Actors.Rebind(actor, npc)` | Internal body replacement; updates registries/references and emits `BGN_ActorEntityChanged`. Use the normal vehicle lifecycle instead of calling directly. |

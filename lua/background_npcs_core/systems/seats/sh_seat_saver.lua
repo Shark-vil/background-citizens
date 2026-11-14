@@ -31,9 +31,7 @@
     admin = true
   })
 else
-  bgNPC.Net.Receive('cl_bgn_tool_seat_load', function(ply, points)
-    local wep = ply:GetActiveWeapon()
-    if not IsValid(wep) or wep:GetClass() ~= 'gmod_tool' then return end
+  bgNPC.Net.Receive('cl_bgn_tool_seat_load', function(_, points)
     local tool = bgNPC.Util.GetActivePlayerTool('bgn_seat_tool')
     if not tool then return end
     for _, t in ipairs(tool.SeatPoints) do

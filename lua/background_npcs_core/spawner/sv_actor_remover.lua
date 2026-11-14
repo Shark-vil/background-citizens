@@ -17,7 +17,7 @@ hook.Add('EntityRemoved', 'BGN_ActorRemoveFromData', function(ent)
     return
   end
 
-  bgNPC.Actors.Unregister(ent)
+  if actor then actor:RemoveActor() else bgNPC.Actors.Unregister(ent) end
 end)
 
 local function FindExistCarAndEnterThis(actor)

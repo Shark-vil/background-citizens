@@ -8,12 +8,11 @@ local function ParseEntitiesForActorAsync(actor)
   local entities = ents.FindInSphere(npc_pos, SCAN_RADIUS)
   local look_hit -- the forward trace does not depend on the object: traced once per scan, on first need
   for k = 1, #entities do
+    bgNPC.Tasks.Budget()
     local ent = entities[k]
-    coroutine.yield()
     if not IsValid(ent) then continue end
     local ent_pos = ent:GetPos()
-    coroutine.yield()
-    if not IsValid(npc) then break end
+    if not actor:IsAlive() or actor:GetNPC() ~= npc then break end
     if not bgNPC.Vision.NPCCanSeePos(npc, ent_pos, 85) then continue end
     local diff = (ent_pos - npc_pos):Angle().y - npc:GetAngles().y
     if diff < -180 then diff = diff + 360 end
@@ -21,6 +20,7 @@ local function ParseEntitiesForActorAsync(actor)
     diff = math.abs(diff)
     local dist = npc_pos:Distance(ent_pos)
     hook.Run('BGN_ActorVisibleAtObject', actor, ent, dist, diff)
+    if not IsValid(npc) or actor:GetNPC() ~= npc then break end
     if npc:IsNPC() then
       if look_hit == nil then
         local start = npc:GetShootPos()

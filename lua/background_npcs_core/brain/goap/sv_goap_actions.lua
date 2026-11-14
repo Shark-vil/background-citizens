@@ -106,6 +106,7 @@ GOAP.Has = Has
 GOAP.actions = GOAP.actions or {}
 function GOAP.RegisterAction(name, def)
   GOAP.actions[name] = GOAP.Action(name, def)
+  GOAP.ClearCache()
 end
 
 GOAP.RegisterAction('attack', {

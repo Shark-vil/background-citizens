@@ -58,4 +58,10 @@
 
 Штатные флаги `mechanics` по умолчанию включены: `movement_controller`, `use_vehicle`, `call_for_help`, `fear`, `fear_scream`, `enemies_controller`, `targets_controller`, `states_controller`, `animator_controller`, `enhanced_npc_ignore`, `inpc_ignore`.
 
+Явное булево `false` выключает механику; отсутствующие/небулевы значения используют её значение по умолчанию.
+При `inpc_ignore = false` ядро не устанавливает флаг игнорирования iNPC при создании. Существующие акторы сохраняют свои копии.
+При `regeneration = true` поле `regeneration_time` задаёт интервал (по умолчанию 1 секунда),
+`regeneration_max_health` — потолок (по умолчанию максимальное здоровье сущности). Регенерация добавляет
+один HP за интервал и не уменьшает здоровье, уже превышающее потолок.
+
 Помощь в бою, значения cvars и модели: [банды](../systems/gangs.md). Источники — `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.

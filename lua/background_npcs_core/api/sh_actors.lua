@@ -158,7 +158,7 @@ if CLIENT then
     if uid then
       generations[uid] = math.huge
       local actor = Actors.GetByUid(uid)
-      if actor then Actors.UnregisterActor(actor) end
+      if actor then actor:RemoveActor() end
     elseif npc then
       Actors.Unregister(npc)
     end

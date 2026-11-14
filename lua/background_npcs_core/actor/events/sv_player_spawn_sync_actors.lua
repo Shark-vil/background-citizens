@@ -6,7 +6,6 @@ hook.Add('BGN_PlayerReady', 'BGN_PlayerFirstInitSpawnerHook', function(ply)
     local actor = actors[i]
     if actor:IsAlive() then
       local npc_type = actor:GetType()
-      local npc = actor:GetNPC()
       actor:GetBody():SetDisposition(ply, D_NU)
       timer.Simple(delay, function()
         if not IsValid(ply) or not actor:IsAlive() or not IsValid(actor:GetNPC()) then return end

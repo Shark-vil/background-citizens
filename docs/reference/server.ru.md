@@ -770,7 +770,7 @@
 
 | API | Контракт / исходник |
 |---|---|
-| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden)` | Создаёт актора по типу и позиции; `spawner/sv_spawner.lua`. Проверяйте результат. |
+| `bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden, owner)` | Создаёт актора; `owner` необязателен. Если передан, нужен допустимый живой игрок (или администратор); `PlayerSpawnNPC` может запретить разрешённый класс NPC до создания, затем задаётся creator и вызывается `PlayerSpawnedNPC` для учёта gamemode. Меню/Tool передают игрока, автоматическая популяция — нет. Проверяйте результат. Исходник: `spawner/sv_spawner.lua`. |
 | `bgNPC.Statistics.AddKill(attacker, actor)` | Учитывает и синхронизирует убийство. |
 | `bgNPC.Statistics.Reset(attacker)`, `ResetAll()` | Очищает и синхронизирует статистику. |
 | `bgNPC.Actors.Rebind(actor, npc)` | Внутренняя замена тела, реестров и ссылок с BGN_ActorEntityChanged. Используйте штатную посадку/выход. |

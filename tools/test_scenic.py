@@ -78,6 +78,7 @@ lua.execute('''
         spawns=spawns+1
         last_hidden=require_hidden
         local npc={valid=true,pos=pos,SetAngles=function(self,a) self.ang=a end,
+            SetNW2Bool=function() end,
             GetModel=function() return 'custom_actor_model.mdl' end,
             GetClass=function() return 'npc_metropolice' end,GetSequence=function() return 1 end,
             GetSequenceName=function() return 'adoorknock' end,EntIndex=function() return spawns end,
@@ -177,8 +178,8 @@ lua.execute('''
         assert((def.weight==0)==(manual_only[id]==true), 'only sky/brace and walking carry previews are manual-only')
         if def.weight>0 then automatic=automatic+1 end
     end
-    assert(total==28 and automatic==23 and not bgNPC.cfg.scenic.cowering)
-    for _,id in ipairs({'plaza','ground_sit','tired','ration','luggage'}) do
+    assert(total==26 and automatic==21 and not bgNPC.cfg.scenic.cowering)
+    for _,id in ipairs({'ground_sit','tired_wall','ration','luggage'}) do
         assert(not bgNPC.cfg.scenic[id].group and #bgNPC.cfg.scenic[id].members==1, 'solitary citizens must not expand into groups')
     end
     for _,id in ipairs({'couch_couple','couch_lying','radio_operator'}) do
@@ -348,7 +349,7 @@ lua.execute("""
     local mask,gravity=123,600
     local npc={valid=true,loco={GetGravity=function() return gravity end,
         SetGravity=function(_,v) gravity=v end},
-        GetSolidMask=function() return mask end,SetSolidMask=function(_,v) mask=v end}
+        GetSolidMask=function() return mask end,SetSolidMask=function(_,v) mask=v end,SetNW2Bool=function() end}
     local actor={GetNPC=function() return npc end,PlayStaticSequence=function() return true end}
     local data={seq='Sit_Chair',seated=true}
     bgNPC.States.Call('scenic_npc','start',actor,'scenic_npc',data)

@@ -48,7 +48,7 @@ end
 
 function GraphProvider:GetRandomPoint(center, radius, link_type)
   local graph = self.graph
-  local id = center and graph:GetRandom(center, radius, link_type) or graph:GetRandom(nil, nil, link_type)
+  local id = graph:GetRandom(center, radius, link_type)
   return id and graph:GetPos(id)
 end
 

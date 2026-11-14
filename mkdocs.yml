@@ -46,6 +46,7 @@ plugins:
           build: true
           nav_translations:
             Architecture: Архитектура
+            Core engineering audit: Инженерный аудит Core
             Version history: История версий
             Comparison with 1.13: Сравнение с 1.13
             AI documentation rules: Правила документации для ИИ
@@ -104,6 +105,7 @@ nav:
       - Scenic scenes: systems/scenic.md
   - Reference:
       - Architecture: architecture.md
+      - Core engineering audit: core-audit.md
       - Version history: history.md
       - Comparison with 1.13: migration.md
       - Actor API: classes/actor/index.md

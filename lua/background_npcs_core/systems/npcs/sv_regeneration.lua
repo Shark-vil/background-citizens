@@ -9,11 +9,10 @@
           actor._last_regeneration_update_time = actor._last_regeneration_update_time or 0
           if actor._last_regeneration_update_time < CurTime() then
             local npc = actor:GetNPC()
-            local regeneration_time = 1 or actor_data.regeneration_time
-            local max_health = npc:GetMaxHealth() or actor_data.regeneration_max_health
+            local regeneration_time = actor_data.regeneration_time or 1
+            local max_health = actor_data.regeneration_max_health or npc:GetMaxHealth()
             local current_health = npc:Health()
-            local new_health = math.Clamp(current_health + 1, 0, max_health)
-            npc:SetHealth(new_health)
+            if current_health < max_health then npc:SetHealth(math.min(current_health + 1, max_health)) end
             actor._last_regeneration_update_time = CurTime() + regeneration_time
           end
         end

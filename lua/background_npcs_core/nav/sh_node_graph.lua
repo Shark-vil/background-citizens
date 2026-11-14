@@ -261,7 +261,8 @@ end
 function NodeGraph:GetRandom(center, radius, link_type)
   if center then
     local list = self:GetInRadius(center, radius, link_type)
-    return list[math.random(#list)]
+    local id = bgNPC.Table.Random(list)
+    return id
   end
 
   if self.count == 0 then return nil end
@@ -275,7 +276,8 @@ function NodeGraph:GetRandom(center, radius, link_type)
   for id in pairs(self.pos) do
     if link_type == nil or self:HasLinks(id, link_type) then list[#list + 1] = id end
   end
-  return list[math.random(#list)]
+  local id = bgNPC.Table.Random(list)
+  return id
 end
 
 -- ---------------------------------------------------------------------------

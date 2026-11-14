@@ -20,6 +20,7 @@
       end
     end
   end
+  bgNPC.Config.ClearCache()
 end
 
 local function UpdateDataFile()
@@ -46,7 +47,7 @@ bgNPC.Net.Receive('BGN_ActorSpawnmenu', function(ply, actorType)
   if not IsValid(ply) or not IsValidActosConfig(actorType) then return end
   local tr = ply:GetEyeTrace()
   if not tr or not tr.Hit then return end
-  local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10))
+  local actor = bgNPC:SpawnActor(actorType, tr.HitPos + Vector(0, 0, 10), false, false, ply)
   if not actor then
     local error_message = bgNPC.Util.Lang({
       ['default'] = 'Failed to create actor',
@@ -124,7 +125,7 @@ end)
 
 hook.Add('PlayerSpawnedNPC', 'BGN_SpawnMenuChecker', function(ply, npc)
   timer.Simple(0, function()
-    if not IsValid(npc) or not IsValid(ply) then return end
+    if not IsValid(npc) or not IsValid(ply) or bgNPC.Actors.Get(npc) then return end
     local defaultTable = bgNPC.SpawnMenu.Creator['Default']
     if not defaultTable[ply] then return end
     local actorType = defaultTable[ply]
@@ -135,10 +136,15 @@ hook.Add('PlayerSpawnedNPC', 'BGN_SpawnMenuChecker', function(ply, npc)
   end)
 end)
 
-hook.Add('OnEntityCreated', 'BGN_InitServerSPawnmenu', function()
+local function LoadOverrides()
   local readData = ReadDataFile()
-  if readData then
+  if istable(readData) then
     bgNPC.SpawnMenu.Creator['NPC'] = readData
     UpdateServerConfig()
   end
-end)
+end
+
+hook.Remove('OnEntityCreated', 'BGN_InitServerSPawnmenu') -- retire the per-entity disk reader on script reload
+hook.Add('InitPostEntity', 'BGN_InitServerSPawnmenu', LoadOverrides)
+timer.Simple(0, LoadOverrides)
+hook.Add('PlayerDisconnected', 'BGN_SpawnmenuDefaults', function(ply) bgNPC.SpawnMenu.Creator.Default[ply] = nil end)
