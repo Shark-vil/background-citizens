@@ -1,4 +1,4 @@
---[[
+﻿--[[
 	Panic and threat search (cvar "bgn_threat_search", off by default).
 	A calm ally who sees an actor die but not the killer does not learn the killer: a resident (not police, not a medic)
 	panics and hides from where the killer stood (state "panic"), the police and gangs go there and search the area
@@ -31,7 +31,10 @@ bgNPC.ThreatSearch = ThreatSearch -- read by tests/
 -- @return string|nil class of the weapon in hand, nil for none or a safe one
 function ThreatSearch.WeaponClass(ent)
   if not IsValid(ent) or not isfunction(ent.GetActiveWeapon) then return end
-  if ent:IsPlayer() and ent:InVehicle() then return end -- a kill from a car: the gun in hand did not do it
+  if ent:IsPlayer() and ent:InVehicle() then -- a kill from a car: the gun in hand did not do it
+    return
+  end
+
   local weapon = ent:GetActiveWeapon()
   if not IsValid(weapon) then return end
   local class = weapon:GetClass()

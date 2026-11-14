@@ -3,8 +3,9 @@ local cvar_bgn_ignore_another_npc = GetConVar('bgn_ignore_another_npc')
 -- Initialize configured actor relationships without erasing a foreign NPC's own hostility.
 local function SetNPCRelationship(actor, another_npc)
   -- an officer's manhack keeps the relations the siege gave it (the priority 100 line below would override them)
-  if not actor:IsAlive() or another_npc.bgn_siege_owner then return end
+  if not actor:IsAlive() or not IsValid(another_npc) or another_npc.bgn_siege_owner then return end
   local actor_npc = actor:GetNPC()
+  if not IsValid(actor_npc) then return end
   local another_actor = bgNPC.Actors.Get(another_npc)
   local disposition = D_NU
   if another_actor and (bgNPC.Modes.IsPeaceful() or actor:HasTeam(another_actor)) then disposition = D_LI end
@@ -105,9 +106,11 @@ timer.Create('BGN_SpotHostileNPC', 1, 0, function()
     -- (not a player and not an actor, so Combat.IsAttacker is exactly this check)
     if (ent:IsNPC() or ent:IsNextBot()) and IsValid(ent) and not ent.bgn_siege_owner and not bgNPC.Actors.Get(ent) and ent:Health() > 0 and not bgNPC.Combat.IsIgnored(ent) and isfunction(ent.Disposition) then
       for _, actor in ipairs(actors) do
-        if actor:IsAlive() and ent:Disposition(actor:GetNPC()) == D_HT then
+        local npc = actor:IsAlive() and actor:GetNPC()
+        if IsValid(npc) and ent:Disposition(npc) == D_HT then
           if wanted_mode and (actor:HasTeam('residents') or actor:HasTeam('police')) then wanted:AddWanted(ent) end
-          if not actor:HasEnemy(ent) and actor:GetNPC():GetPos():DistToSqr(ent:GetPos()) <= 2500 ^ 2 and bgNPC.Vision.HasLineOfSight(actor:GetNPC(), ent, 'hostile') then
+          npc = actor:GetNPC() -- wanted hooks can replace or remove the observer's body
+          if IsValid(npc) and not actor:HasEnemy(ent) and npc:GetPos():DistToSqr(ent:GetPos()) <= 2500 ^ 2 and bgNPC.Vision.HasLineOfSight(npc, ent, 'hostile') then
             local reaction = actor:GetReactionForProtect(ent)
             if actor.protect_blocked_enemy ~= ent then
               actor:AddEnemy(ent, reaction)

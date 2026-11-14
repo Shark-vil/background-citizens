@@ -27,7 +27,7 @@ local PAGES = {
     id = 'Spawn',
     title = 'bgn.settings.spawn',
     admin = true,
-    items = {{'slider', 'bgn_spawn_radius', 'bgn.settings.spawn.spawn_radius', 0, 5000}, {'slider', 'bgn_spawn_radius_visibility', 'bgn.settings.spawn.spawn_radius_visibility', 0, 5000}, {'slider', 'bgn_vehicle_spawn_visibility_radius', 'bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000}, {'slider', 'bgn_spawn_block_radius', 'bgn.settings.spawn.spawn_block_radius', 0, 5000}, {'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1}, {'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600}, {'scenes'},}
+    items = {{'slider', 'bgn_spawn_radius', 'bgn.settings.spawn.spawn_radius', 0, 5000}, {'slider', 'bgn_spawn_radius_visibility', 'bgn.settings.spawn.spawn_radius_visibility', 0, 5000}, {'slider', 'bgn_vehicle_spawn_visibility_radius', 'bgn.settings.spawn.vehicle_spawn_visibility_radius', 0, 5000}, {'slider', 'bgn_spawn_block_radius', 'bgn.settings.spawn.spawn_block_radius', 0, 5000}, {'check', 'bgn_spawn_no_visibility_trace', 'bgn.settings.spawn.spawn_no_visibility_trace'}, {'slider', 'bgn_spawn_period', 'bgn.settings.spawn.spawn_period', 0, 50, 1}, {'slider', 'bgn_actor_unseen_time', 'bgn.settings.spawn.actor_unseen_time', 0, 600}, {'scenes'},}
   },
   {
     id = 'Wanted',
@@ -45,7 +45,7 @@ local PAGES = {
     id = 'States',
     title = 'bgn.settings.extension',
     admin = true,
-    items = {{'check', 'bgn_drop_money', 'bgn.settings.extension.drop_money'}, {'check', 'bgn_shot_sound_mode', 'bgn.settings.extension.shot_sound_mode'}, {'check', 'bgn_react_to_lethal_weapon', 'bgn.settings.extension.react_to_lethal_weapon'}, {'check', 'bgn_threat_search', 'bgn.settings.extension.threat_search'},{'check', 'bgn_disable_dialogues', 'bgn.settings.extension.disable_dialogues'}, {'check', 'bgn_module_replics_enable', 'bgn.settings.extension.replics_enable'}, {'check', 'bgn_all_models_random', 'bgn.settings.extension.all_models_random'}, {'check', 'bgn_module_custom_gestures', 'bgn.settings.extension.custom_gestures'}, {'check', 'bgn_module_tactical_groups', 'bgn.settings.extension.tactical_groups'},}
+    items = {{'check', 'bgn_drop_money', 'bgn.settings.extension.drop_money'}, {'check', 'bgn_shot_sound_mode', 'bgn.settings.extension.shot_sound_mode'}, {'check', 'bgn_react_to_lethal_weapon', 'bgn.settings.extension.react_to_lethal_weapon'}, {'check', 'bgn_threat_search', 'bgn.settings.extension.threat_search'}, {'check', 'bgn_disable_dialogues', 'bgn.settings.extension.disable_dialogues'}, {'check', 'bgn_module_replics_enable', 'bgn.settings.extension.replics_enable'}, {'check', 'bgn_all_models_random', 'bgn.settings.extension.all_models_random'}, {'check', 'bgn_module_custom_gestures', 'bgn.settings.extension.custom_gestures'}, {'check', 'bgn_module_tactical_groups', 'bgn.settings.extension.tactical_groups'},}
   },
   {
     id = 'Optimization',

@@ -13,10 +13,9 @@ local vector_0_0_1000 = Vector(0, 0, 1000)
 -- local LocalToWorld = LocalToWorld
 local cvar_bgn_spawn_radius = GetConVar('bgn_spawn_radius')
 local cvar_bgn_spawn_block_radius = GetConVar('bgn_spawn_block_radius')
+local cvar_no_visibility_trace = GetConVar('bgn_spawn_no_visibility_trace')
 local spawn_radius = cvar_bgn_spawn_radius:GetFloat()
 local block_radius = cvar_bgn_spawn_block_radius:GetFloat()
-local spawn_radius_sqrt = spawn_radius ^ 2
-local block_radius_sqrt = block_radius ^ 2
 --
 local function IsValidSpawnFilter(ent)
   if not IsValid(ent) then return false end
@@ -66,7 +65,7 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
     local in_view = bgNPC.Vision.PlayerCanSeePos(ply, node_position)
     -- Offscreen spots outside the block radius must stay available, as in 1.x.
     if in_view then
-      if not util.IsInWorld(node_position) then return false end
+      if cvar_no_visibility_trace:GetBool() or not util.IsInWorld(node_position) then return false end
       -- the body, not the floor point: a trace to a point on the floor stops on the floor just short of it,
       -- and that counted as "hidden behind something" - actors appeared right in front of the player
       for b = 1, #BODY_POINTS do
@@ -78,7 +77,8 @@ local function IsNotBlockSpawnPosition(node_position, all_players, target_entity
 end
 
 local function FindFrontSpawnPosition(points, all_players, target_entity)
-  if not Chance(50) then return end
+  -- without the cover trace every in-view point is rejected, so the front search can't succeed
+  if cvar_no_visibility_trace:GetBool() or not Chance(50) then return end
   local checked = {}
   for i = 1, math.min(#points, 32) do
     local pos = points[i]:GetPos()
@@ -101,8 +101,6 @@ end
 local function FindSpawnLocationProcess(all_players, settings)
   spawn_radius = cvar_bgn_spawn_radius:GetFloat()
   block_radius = cvar_bgn_spawn_block_radius:GetFloat()
-  spawn_radius_sqrt = spawn_radius ^ 2
-  block_radius_sqrt = block_radius ^ 2
   local desired_position = settings.position
   local teleport_radius = settings.radius or spawn_radius
   local target_entity = settings.target
@@ -117,8 +115,6 @@ local function FindSpawnLocationProcess(all_players, settings)
   elseif bgNPC.Points.Count() == 0 then
     spawn_radius = math.Clamp(spawn_radius, 0, 1500)
     block_radius = math.Clamp(block_radius, 0, 600)
-    spawn_radius_sqrt = spawn_radius ^ 2
-    block_radius_sqrt = block_radius ^ 2
     local dist_x = math.random(block_radius, spawn_radius)
     local dist_y = math.random(block_radius, spawn_radius)
     local dist_z = math.random(0, 100)
@@ -227,7 +223,7 @@ end
 do
   local random_models_storage = {}
   local table_HasValueBySeq = bgNPC.Table.HasValue
-  function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden)
+  function bgNPC:SpawnActor(npc_type, desiredPosition, enableSpawnEffect, require_hidden, owner)
     if player.GetCount() == 0 then return end
     if bgNPC.Util.IsVectorInWater(desiredPosition) then return end
     local npc_data = bgNPC.Config.GetActor(npc_type)
@@ -244,6 +240,11 @@ do
     local new_npc_data, new_npc_class = hook.Run('BGN_OverrideSpawnData', npc_type, npc_data, npc_class)
     if new_npc_data then npc_data = new_npc_data end
     if new_npc_class then npc_class = new_npc_class end
+    if owner ~= nil then
+      if not IsValid(owner) or not owner:IsPlayer() or (not owner:Alive() and not owner:IsAdmin()) then return end
+      if not hook.Run('PlayerSpawnNPC', owner, npc_class) then return end
+    end
+
     local npc = ents.Create(bgNPC.NextBotBody.ResolveClass(npc_class))
     if not IsValid(npc) then
       MsgN('[Background NPCs] ERROR: Actor with class - ' .. npc_class .. ' cannot be created!')
@@ -348,8 +349,8 @@ do
       -- Backward compatibility with the old version of the config
       local random_skin = npc_data.random_skin or npc_data.randomSkin
       if random_skin then
-        local skinNumber = math.random(0, npc:SkinCount())
-        if not hook.Run('BGN_PreSetActorSkin', skinNumber, npc, npc_type, npc_data) then npc:SetSkin(math.random(0, npc:SkinCount())) end
+        local skinNumber = math.random(0, math.max(0, npc:SkinCount() - 1))
+        if not hook.Run('BGN_PreSetActorSkin', skinNumber, npc, npc_type, npc_data) then npc:SetSkin(skinNumber) end
       end
     end
 
@@ -359,11 +360,17 @@ do
       if random_bodygroups then
         for _, bodygroup in ipairs(npc:GetBodyGroups()) do
           local id = bodygroup.id
-          local value = math.random(0, npc:GetBodygroupCount(id))
+          local value = math.random(0, math.max(0, npc:GetBodygroupCount(id) - 1))
           if not hook.Run('BGN_PreSetActorBodygroup', id, value, npc, npc_type, npc_data) then npc:SetBodygroup(id, value) end
         end
       end
     end
-    return bgNPC.Actor.Create(npc, npc_type)
+
+    local actor = bgNPC.Actor.Create(npc, npc_type)
+    if actor and owner then
+      npc:SetCreator(owner)
+      hook.Run('PlayerSpawnedNPC', owner, npc)
+    end
+    return actor
   end
 end

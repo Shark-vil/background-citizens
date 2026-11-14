@@ -10,6 +10,10 @@ places around a point (8 s at most), face each other and say the lines one after
 Text appears over the speaker's head, the voice plays on clients that have it on ([Voices](./voices.md)).
 Anything that changes one participant's state (danger, damage) ends the conversation for all.
 
+SERVER suppresses random state phrases and ambient coughs for all participants while gathering, talking
+or reacting to a player's interruption. These resume after the actor leaves the conversation;
+scripted lines and the conversation's player reactions still play normally on CLIENT.
+
 Scripts: `config/states/sh_conversations.lua`, phrases: `bgNPC.cfg.replics['conv_<id>']` in each language file.
 
 ```lua

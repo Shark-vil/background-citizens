@@ -465,7 +465,12 @@ bgNPC.Test.Add('police_call.proximity_only', function(check)
   caller.GetEnemy = function() return nil end
   check(state.pre_start(caller) == 'fear', 'a call cannot start before its target is available')
   caller.GetEnemy = function() return enemy end
-  w.bgNPC.Actor = {Helpers = {PickWeighted = function() return 'calling_police' end}}
+  w.bgNPC.Actor = {
+    Helpers = {
+      PickWeighted = function() return 'calling_police' end
+    }
+  }
+
   w.bgNPC.Assert = {}
   w.Load('actor/components/sh_state.lua')
   caller.data.at_damage, caller.data.at_protect = {}, {}

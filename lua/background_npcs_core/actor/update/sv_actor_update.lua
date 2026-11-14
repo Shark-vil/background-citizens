@@ -101,7 +101,8 @@ local function UpdateActor(actor, now, players)
   local pause = math.max(0, pause_time:GetFloat())
   local duration = math.max(0.1, active_time:GetFloat())
   -- Stable phases survive list reordering/removal; wraps intentionally share slots in large crowds.
-  local phase = (now - actor.uid * stagger:GetFloat()) % (pause + duration)
+  actor.lod_phase = actor.lod_phase or tonumber(actor.uid) or tonumber(util.CRC(tostring(actor.uid)))
+  local phase = (now - actor.lod_phase * stagger:GetFloat()) % (pause + duration)
   SetPaused(actor, lod == LOD_DORMANT and pause > 0 and phase >= duration)
   if (actor.next_enemies or 0) <= now then
     actor.next_enemies = now + ENEMIES_PERIOD

@@ -22,12 +22,12 @@ end
 
 function NavMeshProvider:Load()
   if not NavMeshProvider.IsAvailable() then return false, 'no navmesh' end
-  self.count = navmesh.GetNavAreaCount()
+  self.areas = navmesh.GetAllNavAreas() -- area IDs need not be consecutive
   return true
 end
 
 function NavMeshProvider:Count()
-  return self.count or 0
+  return self.areas and #self.areas or 0
 end
 
 function NavMeshProvider:GetPointsInRadius(center, radius, _, limit)
@@ -55,7 +55,7 @@ end
 function NavMeshProvider:GetAllPoints()
   local points = {}
   for _ = 1, MAX_POINTS do
-    local area = navmesh.GetNavAreaByID(math.random(self:Count()))
+    local area = bgNPC.Table.Random(self.areas or {})
     if IsWalkable(area) then points[#points + 1] = area:GetCenter() end
   end
   return points
@@ -63,13 +63,13 @@ end
 
 function NavMeshProvider:GetRandomPoint(center, radius)
   if not center then
-    local area = navmesh.GetNavAreaByID(math.random(self:Count()))
+    local area = bgNPC.Table.Random(self.areas or {})
     return IsWalkable(area) and area:GetRandomPoint() or nil
   end
 
   local areas = navmesh.Find(center, radius, STEP_HEIGHT * 4, STEP_HEIGHT * 4)
   for _ = 1, 8 do
-    local area = areas[math.random(#areas)]
+    local area = bgNPC.Table.Random(areas)
     if IsWalkable(area) then return area:GetRandomPoint() end
   end
 end

@@ -7,7 +7,7 @@ timer.Create('BGN_Timer_StateRandomizeReplics', 10, 0, function()
   local actors = bgNPC.Actors.GetAll()
   for i = 1, #actors do
     local actor = actors[i]
-    if not actor or not actor:IsAlive() or actor:InVehicle() or not Chance(15) then continue end
+    if not actor or not actor:IsAlive() or actor:InVehicle() or actor.conversation or not Chance(15) then continue end
     local data = actor:GetData()
     if not data or not data.replics then continue end
     if data.replics.state_names then

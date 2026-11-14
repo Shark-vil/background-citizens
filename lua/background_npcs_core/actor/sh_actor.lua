@@ -23,6 +23,8 @@ local Net = bgNPC.Net
 --
 local Actor = bgNPC.Class('BGN_Actor')
 bgNPC.Actor = Actor
+-- Actor initialization owns inpcIgnore; retire the duplicate hook on script reload.
+if SERVER then hook.Remove('BGN_InitActor', 'BGN_iNPC_IgnoreActors') end
 -- Shared helpers for the partial files.
 local H = {}
 Actor.Helpers = H
@@ -109,7 +111,8 @@ local function BuildMechanics(actor_data)
   local mechanics = {}
   for name, default_value in pairs(DEFAULT_MECHANICS) do
     local value = overrides[name]
-    mechanics[name] = isbool(value) and value or default_value
+    if not isbool(value) then value = default_value end
+    mechanics[name] = value
   end
 
   -- Custom mechanic flags (for example "ignore_limit") are passed through as is.

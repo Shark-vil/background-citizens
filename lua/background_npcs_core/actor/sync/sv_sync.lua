@@ -6,7 +6,6 @@
 local Serialize = bgNPC.Net.Serialize
 local SYNC_PERIOD = 0.25
 local MAX_SENDS_PER_TICK = 8
-local seq = 0 -- lets the client drop a dynamic part older than one it already applied
 local function BuildStatic(actor)
   return {
     npc = actor:GetNPC(),
@@ -62,7 +61,7 @@ bgNPC.Tasks.Add('BGN_SynchronizationService', function(yield, wait, budget)
                 sends = 0
               end
 
-              seq = seq + 1
+              local seq = bgNPC.Util.NextId() -- stays monotonic across script reloads
               bgNPC.Net.Send('bgn_actor_sync_data', ply, actor.uid, dynamic, send_static and static or nil, seq)
               hashes[ply] = {
                 static = static_hash,

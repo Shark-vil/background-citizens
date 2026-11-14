@@ -13,6 +13,7 @@ bgNPC.cvar.bgn_actor_unseen_time = 30
 bgNPC.cvar.bgn_wanted_detection_radius = 2500
 bgNPC.cvar.bgn_spawn_block_radius = 600
 bgNPC.cvar.bgn_spawn_period = 0
+bgNPC.cvar.bgn_spawn_no_visibility_trace = 0
 bgNPC.cvar.bgn_runtime_generator_grid_offset = 200
 bgNPC.cvar.bgn_tool_point_editor_autoparent = 1
 bgNPC.cvar.bgn_tool_point_editor_autoalignment = 1
@@ -150,6 +151,7 @@ bgNPC.CVars.Register('bgn_vehicle_spawn_visibility_radius', bgNPC.cvar.bgn_vehic
 bgNPC.CVars.Register('bgn_actor_unseen_time', bgNPC.cvar.bgn_actor_unseen_time, 'Seconds without any player seeing an actor before it can be removed or teleported. 0 allows immediate recycling out of sight.')
 bgNPC.CVars.Register('bgn_wanted_detection_radius', bgNPC.cvar.bgn_wanted_detection_radius, 'Distance at which residents can see a wanted target and keep the wanted timer active.')
 bgNPC.CVars.Register('bgn_spawn_block_radius', bgNPC.cvar.bgn_spawn_block_radius, 'Prohibits spawning NPCs within a given radius. Must not be more than the parameter - bgn_spawn_radius_ray_tracing. 0 - Disable checker')
+bgNPC.CVars.Register('bgn_spawn_no_visibility_trace', bgNPC.cvar.bgn_spawn_no_visibility_trace, 'Skip the cover trace for pedestrian spawn points: a point in any player\'s field of view is rejected even when it is hidden behind an obstacle. 1 - enabled, 0 - disabled (default).')
 bgNPC.CVars.Register('bgn_spawn_period', bgNPC.cvar.bgn_spawn_period, 'Pause between actor spawner passes. Changes apply immediately.')
 bgNPC.CVars.Register('bgn_point_z_limit', bgNPC.cvar.bgn_point_z_limit, 'Height limit between points. Used to correctly define child points.')
 bgNPC.CVars.Register('bgn_arrest_mode', bgNPC.cvar.bgn_arrest_mode, 'Includes a player arrest module. Attention! It won\'t do anything in the sandbox. By default, there is only a DarkRP compatible hook. If you activate this module in an unsupported gamemode, then after the arrest the NPCs will exclude you from the list of targets.')

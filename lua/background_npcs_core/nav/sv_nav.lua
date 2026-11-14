@@ -43,7 +43,8 @@ end
 -- @return Vector|nil
 function Provider:GetRandomPoint(center, radius, link_type)
   local points = self:GetPointsInRadius(center, radius, link_type)
-  return points[math.random(#points)]
+  local point = bgNPC.Table.Random(points)
+  return point
 end
 
 -- @return table|nil list of Vectors from start to goal (excluding start)

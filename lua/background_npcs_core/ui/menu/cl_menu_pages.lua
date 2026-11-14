@@ -226,6 +226,7 @@ Menu.AddPage('spawn', {
     page:Slider('bgn_spawn_radius', '#bgn.settings.spawn.spawn_radius', 0, 5000)
     page:Slider('bgn_spawn_radius_visibility', '#bgn.settings.spawn.spawn_radius_visibility', 0, 5000)
     page:Slider('bgn_spawn_block_radius', '#bgn.settings.spawn.spawn_block_radius', 0, 5000)
+    page:Toggle('bgn_spawn_no_visibility_trace', '#bgn.settings.spawn.spawn_no_visibility_trace')
     page:Slider('bgn_spawn_period', '#bgn.settings.spawn.spawn_period', 0, 50, {
       decimals = 1
     })

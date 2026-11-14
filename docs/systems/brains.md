@@ -339,7 +339,7 @@ and drives on with the siren off. The last 300 units to the body the medic walks
 Some deaths cannot be saved: explosions, vehicle hits and overkill damage always, any other death with the chance
 `bgn_medic_hopeless_chance` (25 %; Behavior > Medics). For those the medic still comes and kneels over the body, but
 instead of reviving says `medic_cannot_save` and leaves (`call.verdict`); only then does an officer take the body.
-Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`), nor for one whose death no living ally of the victim saw.
+Medics only take as enemies those who hurt them. Nobody comes for an actor killed by the police (team `police`), nor for one whose death no living ally of the victim saw, nor for an enemy of the residents or one whose team is fighting them.
 
 When a medic is killed, medic spawns and responses are blocked around the death position. Existing calls
 in that area pause: their responders stop heading to the body and return to their ambulance when possible.

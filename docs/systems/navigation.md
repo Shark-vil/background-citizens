@@ -66,6 +66,10 @@ bgNPC.Nav.GetInfo()       -- { provider, points, links, source }
 
 `bgNPC.NodeGraph` is the graph class behind the custom provider (spatial hash, typed links, A*).
 
+`Points.GetRandom` returns a Vector or nil when there are no suitable points; an empty graph radius query
+does not fall back to another part of the map. NavMesh samples use the loaded list of areas, not a guessed
+continuous range of area IDs. Run `bgn_nav_reload` after changing the mesh externally.
+
 ## Hooks
 
 | Hook | Realm | Arguments |

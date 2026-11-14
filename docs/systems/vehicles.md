@@ -8,6 +8,8 @@ Boarding preserves Actor/UID but replaces its entity; exit restores the saved bo
 SERVER also preserves the registered Actor/UID during forced ejection when another actor seizes a car, so the restored body continues its normal AI instead of becoming an orphan.
 SERVER also gives an actor that steps out of a moving car 3 seconds of immunity to damage from that same car.
 
+On SERVER, a living seated Actor may temporarily outlive its DV visual entity. Removing that entity attempts a forced exit using the chassis position/orientation when seat data is unavailable; stored health and Actor/UID survive a successful exit. If no safe exit exists, the removal handler retires the actor. Vehicle cleanup never restores bodies. Lethal damage can still place a corpse beside a valid car after its occupant visual has gone.
+
 ## Driving and verification
 
 [Emergency routing](navigation.md#emergency-cars-decent-vehicle), [traffic recovery and developer fixtures](testing.md#dv-traffic-developer-checks), [arrest in a car](arrest.md#car-break-in).

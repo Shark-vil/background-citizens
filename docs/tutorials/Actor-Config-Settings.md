@@ -405,4 +405,10 @@ Configs resolve through `bgNPC.Config.GetActor`, are cached and copied into each
 
 Built-in `mechanics` flags default to true: `movement_controller`, `use_vehicle`, `call_for_help`, `fear`, `fear_scream`, `enemies_controller`, `targets_controller`, `states_controller`, `animator_controller`, `enhanced_npc_ignore`, `inpc_ignore`.
 
+An explicit boolean `false` disables that mechanic; missing/non-boolean values use its default. For
+`inpc_ignore = false`, the core does not set the iNPC ignore flag during creation. Existing actors keep their copies.
+With `regeneration = true`, `regeneration_time` sets the interval (default 1 second) and
+`regeneration_max_health` sets the ceiling (default entity max health). Regeneration adds one HP per interval
+and never reduces health that already exceeds the ceiling.
+
 Combat support, cvar defaults and models: [gangs](../systems/gangs.md). Sources: `actor/sh_actor.lua`, `config/actors/sh_gangs.lua`, `brain/sv_brain.lua`.

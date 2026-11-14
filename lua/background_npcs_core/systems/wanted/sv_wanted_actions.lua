@@ -227,8 +227,8 @@ timer.Create('BGN_Timer_CheckingTheWantesStatusOfTargets', 1, 0, function()
       if wait_time < 0 then wait_time = 0 end
       WantedClass:UpdateWaitTime(wait_time)
       for _, actor in ipairs(residents) do
-        if actor:IsAlive() then
-          local npc = actor:GetNPC()
+        local npc = actor:IsAlive() and actor:GetNPC()
+        if IsValid(npc) then
           local dist = npc:GetPos():DistToSqr(enemy:GetPos())
           if dist <= min_distance_detect then
             UpdateWantedAndSetReaction(actor, enemy)
