@@ -3,6 +3,8 @@
 **Поведение → ИИ** и **Classic → Расширения** содержат чекбокс **Реакция на оружие в руках**
 (`bgn_react_to_lethal_weapon`, SERVER/администратор, по умолчанию `0`). Обучение продолжается и при
 выключенной настройке; см. [обнаружение, реакции и хранение классов оружия](brains.md#lethal-weapons).
+Там же чекбокс **Паника и поиск угрозы** (`bgn_threat_search`, SERVER/администратор, по умолчанию `0`);
+см. [панику и поиск угрозы](brains.md#threat-search).
 
 Откройте `bgn_menu`, значок Background NPCs в меню C или Spawn menu → Options → Background NPCs → Open settings. Ctrl+F ищет по подписям, подсказкам и именам cvar; Esc очищает поиск.
 

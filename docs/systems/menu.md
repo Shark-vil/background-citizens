@@ -36,6 +36,8 @@ Tools are split into **Background NPCs: Editor** (route points, spawn areas, sea
 **Behavior → AI** and **Classic → Extensions** contain **React to weapons in hands**
 (`bgn_react_to_lethal_weapon`, SERVER/admin, default `0`). Learning continues while off;
 see [detection, reactions and stored weapon classes](brains.md#lethal-weapons).
+They also contain **Panic and threat search** (`bgn_threat_search`, SERVER/admin, default `0`);
+see [panic and threat search](brains.md#threat-search).
 
 ## Spawn and recycling settings
 

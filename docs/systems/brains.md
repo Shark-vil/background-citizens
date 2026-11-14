@@ -46,6 +46,38 @@ An invalid file is reported and preserved without overwriting for that cache's l
 is reported while the learned class remains in memory. Offline edits take effect on the next server/map
 start. Isolated tests: `tests/sv_lethal_weapons.lua` via `bgn_selftest`.
 
+<a id="threat-search"></a>
+
+## Panic and threat search
+
+`bgn_threat_search` is a SERVER setting, **0 by default** (Behavior → AI, Classic → Extensions).
+When enabled, one tick after `BGN_OnKilledActor` (after the ordinary witness reactions to the killing damage),
+SERVER looks for calm living allies of the victim (shared team, not in a vehicle, no enemy in the killer)
+that see the death and **not** the killer: within 1500 units of the victim, a clear `MASK_BLOCKLOS` trace
+**from the victim's position to the actor's eyes** (no view cone; the body itself is filtered out), and
+`Combat.CanWitness(actor, killer, true)` false. One who sees the killer is left to the ordinary witness reactions.
+The spawner never recycles or teleports an actor in `panic` or `search_threat`. Peaceful mode, ignored killers, non-combatant killers and
+deaths in a vehicle start nothing.
+
+- Residents that are neither police nor medics enter `panic`: a scream, a run to a route point hidden from the
+  killer's position (`bgNPC.FindCover` now also takes a position), crouching there; after 15-25 s, `RandomState`.
+- Police and `bandits` (gangs included) enter `search_threat`: they go to a random route point within 200 units of
+  where the killer stood, then patrol random points within 600 units of it (a new point on arrival or after 10 s); they walk instead of running within
+  1000 units of the killer. The search ends after 45 s or when the killer dies.
+
+The incident keeps the class of the killer's weapon at the moment of the kill (`GetActiveWeapon`; a weapon in
+`bgn_arrest_safe_weapons`, no weapon, or a player in a vehicle count as none). With a class, **anyone** holding it
+is a suspect, not only the killer: an innocent with the same weapon can be attacked. Without one, only the killer
+is recognized in person. Allies, ignored entities and players in friend mode are never suspects.
+Every 0.33 s (no faster than the brain update: 0.2 s near players, 1 s far away) the actor checks entities within
+500 units: distance, view cone, then `Vision.HasLineOfSight` last. The same suspect in **3 checks in a row**
+is recognized; a miss or another suspect starts over. `search_threat` then adds it with `GetReactionForDamage`
+(`ignore`/`none` → `defense`), `panic` with `run_from_danger`. A recognized player alone hears
+`sound/background_npcs/threat_alert.wav` from the actor at 60% volume (`EmitSound` with a one-player
+`RecipientFilter`); NPCs and other players hear nothing. A refused `AddEnemy` keeps the state.
+An enemy from another system (a shot, enemy sharing) ends either state as an attack does. Isolated tests:
+`tests/sv_threat_search.lua` via `bgn_selftest`.
+
 ## Donor animations
 
 `bgNPC.Animator` plays gestures using a server-owned invisible donor model and clientside bone-merged copies of the character and its weapon. It requires compatible skeletons. Ordinary static sequences still play directly on the actor's body.

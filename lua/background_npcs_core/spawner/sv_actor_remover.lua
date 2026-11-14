@@ -36,7 +36,7 @@ local function TeleportActor(actor, pos)
 end
 
 -- states tied to other actors or to a spot: moved away, the others went on talking to empty air
-local BUSY_STATES = {'dialogue', 'arrest', 'arrest_surrender', 'medic_revive', 'police_inspect_body', 'sit_to_chair', 'sit_to_chair_2', 'scenic_npc', 'hold_door', 'breach_door', 'knocked_down', 'siege',}
+local BUSY_STATES = {'dialogue', 'arrest', 'arrest_surrender', 'medic_revive', 'police_inspect_body', 'sit_to_chair', 'sit_to_chair_2', 'scenic_npc', 'hold_door', 'breach_door', 'knocked_down', 'siege', 'panic', 'search_threat',}
 local cvar_unseen_time = GetConVar('bgn_actor_unseen_time')
 local function UpdateLastSeen(actor, players)
   local now = CurTime()
